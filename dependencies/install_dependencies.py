@@ -20,10 +20,14 @@ DEPENDENCY_MANIFEST = DEPS_DIR / "install_manifest.json"
 SYMBOLICA_WHEEL_DIR = WHEEL_DIR / "symbolica"
 GAMMALOOP_WHEEL_DIR = WHEEL_DIR / "gammaloop"
 
+MATHEMATICA_REFERENCE_DIR = REPO_ROOT / "Mathematica_reference"
+MATCHETE_DIR = MATHEMATICA_REFERENCE_DIR / "Matchete"
 SYMBOLICA_COMMUNITY_DIR = DEPS_DIR / "symbolica-community"
 SYMBOLICA_DIR = DEPS_DIR / "symbolica"
 GAMMALOOP_DIR = DEPS_DIR / "gammaloop"
 
+MATCHETE_URL = "https://gitlab.com/matchete/matchete.git"
+MATCHETE_BRANCH = "vectors"
 SYMBOLICA_COMMUNITY_URL = "https://github.com/symbolica-dev/symbolica-community.git"
 SYMBOLICA_URL = "https://github.com/symbolica-dev/symbolica.git"
 GAMMALOOP_URL = "https://github.com/alphal00p/gammaloop.git"
@@ -36,6 +40,7 @@ MANAGED_PATHS = (
     VENV_DIR,
     WHEEL_DIR,
     DEPENDENCY_MANIFEST,
+    MATCHETE_DIR,
     SYMBOLICA_COMMUNITY_DIR,
     SYMBOLICA_DIR,
     GAMMALOOP_DIR,
@@ -187,10 +192,12 @@ def reset_managed_state() -> None:
 
 
 def clone_branch(url: str, branch: str, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
     run(["git", "clone", "--depth", "1", "--branch", branch, url, destination])
 
 
 def clone_ref(url: str, ref: str, destination: Path) -> None:
+    destination.parent.mkdir(parents=True, exist_ok=True)
     run(["git", "clone", "--filter=blob:none", "--no-checkout", url, destination])
     run(["git", "checkout", ref], cwd=destination)
 
@@ -241,6 +248,19 @@ def discover_gammaloop_ref() -> str:
                 return match.group(1)
 
     return DEFAULT_GAMMALOOP_REF
+
+
+def ensure_matchete_reference(*, update_existing: bool) -> None:
+    if MATCHETE_DIR.exists() and not update_existing:
+        return
+
+    require_tool("git")
+    ensure_branch_checkout(
+        MATCHETE_URL,
+        MATCHETE_BRANCH,
+        MATCHETE_DIR,
+        update_existing=update_existing,
+    )
 
 
 def ensure_sources(*, update_existing: bool) -> None:
@@ -378,6 +398,13 @@ def write_dependency_manifest(
             "source_rev": optional_git_head(GAMMALOOP_DIR),
             "features": ["ufo_support", "python_abi"] if gammaloop_requested else [],
             "symbolica_features": ["gmp"] if gammaloop_requested else [],
+        },
+        "matchete": {
+            "requested": True,
+            "installed": MATCHETE_DIR.exists(),
+            "source_path": str(MATCHETE_DIR.relative_to(REPO_ROOT)),
+            "source_rev": optional_git_head(MATCHETE_DIR),
+            "branch": MATCHETE_BRANCH,
         },
     }
     DEPENDENCY_MANIFEST.write_text(
@@ -609,6 +636,11 @@ def main(argv: list[str] | None = None) -> int:
     args = parse_args(raw_args)
     include_gammaloop = not args.no_gammaloop
 
+    if args.reset:
+        reset_managed_state()
+
+    ensure_matchete_reference(update_existing=args.reset)
+
     if (
         not args.recompile
         and not args.reset
@@ -630,9 +662,6 @@ def main(argv: list[str] | None = None) -> int:
             f"and create/use {VENV_DIR} with {base_python_executable()}."
         )
 
-    if args.reset:
-        reset_managed_state()
-
     ensure_system_prerequisites()
     ensure_maturin()
     ensure_sources(update_existing=args.reset)
@@ -652,7 +681,9 @@ def main(argv: list[str] | None = None) -> int:
         symbolica_installed=True,
         gammaloop_installed=include_gammaloop,
     )
-    run([venv_python(), str(REPO_ROOT / "src" / "pychete.py")], env=venv_environment())
+    env = venv_environment()
+    env["PYTHONPATH"] = str(REPO_ROOT / "src") + os.pathsep + env.get("PYTHONPATH", "")
+    run([venv_python(), "-m", "pychete"], env=env)
     print_activation_hint()
     return 0
 

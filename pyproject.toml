@@ -1,0 +1,10 @@
+[project]
+name = "pychete"
+version = "0.0.1"
+description = "Symbolica-first Python port foundation for Matchete-style EFT matching."
+requires-python = ">=3.11"
+
+[tool.pytest.ini_options]
+pythonpath = ["src"]
+testpaths = ["tests"]
+addopts = "-ra"

@@ -9,6 +9,8 @@ def main() -> None:
     import symbolica.community.spenso
     import symbolica.community.vakint
 
+    from . import Theory, s
+
     local_versions = getattr(symbolica, "LOCAL_VERSIONS", None)
     if not isinstance(local_versions, dict):
         raise RuntimeError("symbolica.LOCAL_VERSIONS is missing or is not a dict")
@@ -18,7 +20,11 @@ def main() -> None:
     if missing:
         raise RuntimeError(f"symbolica.LOCAL_VERSIONS is missing keys: {sorted(missing)}")
 
-    print("Loaded Symbolica community modules: idenso, spenso, vakint")
+    theory = Theory("smoke")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    assert phi().format_plain()
+
+    print("Loaded pychete with Symbolica community modules: idenso, spenso, vakint")
     print("LOCAL_VERSIONS:")
     pprint(local_versions)
 
