@@ -3,13 +3,14 @@ from __future__ import annotations
 import json
 from dataclasses import dataclass, field
 from enum import StrEnum
+from html import escape
 from pathlib import Path
 from typing import Any, Iterable, TypeAlias
 
 from symbolica import Expression
 
 from .expr import is_head, list_expr
-from .symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, safe_symbol_name, symbol_data
+from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 
 class FieldMassKind(StrEnum):
@@ -33,10 +34,63 @@ class BuiltinIndexType(StrEnum):
 
 MassKindInput: TypeAlias = FieldMassKind | str
 MassSpec: TypeAlias = tuple[MassKindInput, str] | tuple[MassKindInput, str, Iterable[Expression]]
+JsonValue: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
+
+_EXPRESSION_DATA_KEY = "__pychete_expression__"
+_SYMBOL_ROLE_ORDER = {
+    SymbolRole.INDEX_TYPE.value: 0,
+    SymbolRole.GROUP.value: 1,
+    SymbolRole.INDEX.value: 2,
+    SymbolRole.COUPLING.value: 3,
+    SymbolRole.FIELD.value: 4,
+    SymbolRole.EXTERNAL.value: 5,
+    SymbolRole.LABEL.value: 6,
+}
 
 
 def _index_type_name(name: BuiltinIndexType | str) -> str:
     return name.value if isinstance(name, BuiltinIndexType) else name
+
+
+def _encode_symbol_data_value(value: Any) -> JsonValue:
+    if isinstance(value, Expression):
+        return {_EXPRESSION_DATA_KEY: canonical_string(value)}
+    if isinstance(value, list):
+        return [_encode_symbol_data_value(item) for item in value]
+    if isinstance(value, tuple):
+        return [_encode_symbol_data_value(item) for item in value]
+    if isinstance(value, dict):
+        return {str(key): _encode_symbol_data_value(item) for key, item in value.items()}
+    if isinstance(value, StrEnum):
+        return value.value
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    raise TypeError(f"Cannot serialize Symbolica symbol data value {value!r}")
+
+
+def _decode_symbol_data_value(value: Any) -> Any:
+    if isinstance(value, dict):
+        if set(value) == {_EXPRESSION_DATA_KEY}:
+            return expression_from_canonical(str(value[_EXPRESSION_DATA_KEY]))
+        return {str(key): _decode_symbol_data_value(item) for key, item in value.items()}
+    if isinstance(value, list):
+        return [_decode_symbol_data_value(item) for item in value]
+    return value
+
+
+def _symbol_data_payload(label: Expression) -> dict[str, JsonValue]:
+    payload: dict[str, JsonValue] = {}
+    for key in SymbolDataKey:
+        try:
+            payload[key.value] = _encode_symbol_data_value(label.get_symbol_data(key.value))
+        except KeyError:
+            continue
+    return payload
+
+
+def _symbol_manifest_sort_key(entry: dict[str, Any]) -> tuple[int, str, str]:
+    role = str(entry.get("role", ""))
+    return (_SYMBOL_ROLE_ORDER.get(role, 100), role, str(entry.get("name", "")))
 
 
 def field_mass_kind_from_label(label: Expression) -> FieldMassKind:
@@ -117,6 +171,13 @@ class IndexType:
     symbol: Expression
     dimension: int | None = None
 
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{IndexType}}\left({latex_string(self.symbol)}\right)$"
+
+    def _repr_html_(self) -> str:
+        dim = "" if self.dimension is None else f" dimension={escape(str(self.dimension))}"
+        return f"<code>IndexType({escape(display_string(self.symbol))}{dim})</code>"
+
     def to_json(self) -> dict[str, Any]:
         return {
             "name": self.name,
@@ -137,6 +198,12 @@ class CouplingDefinition:
         if not indices:
             indices = ()
         return s.Coupling(self.label, list_expr(*indices), coupling_eft_order_from_label(self.label))
+
+    def _repr_latex_(self) -> str:
+        return f"${latex_string(self.expr())}$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>{escape(display_string(self.expr()))}</code>"
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -177,6 +244,14 @@ class FieldDefinition:
     def mass_expr(self) -> Expression | None:
         return field_mass_expr_from_label(self.label)
 
+    def _repr_latex_(self) -> str:
+        return f"${latex_string(self.expr())}$"
+
+    def _repr_html_(self) -> str:
+        mass = self.mass_expr()
+        mass_part = "" if mass is None else f" mass={escape(display_string(mass))}"
+        return f"<code>{escape(display_string(self.expr()))}{mass_part}</code>"
+
     def to_json(self) -> dict[str, Any]:
         return {
             "name": self.name,
@@ -213,6 +288,12 @@ class FieldHandle:
     def __call__(self, *indices: Expression, derivatives: Iterable[Expression] = ()) -> Expression:
         return self.definition.expr(*indices, derivatives=derivatives)
 
+    def _repr_latex_(self) -> str:
+        return self.definition._repr_latex_()
+
+    def _repr_html_(self) -> str:
+        return self.definition._repr_html_()
+
 
 class CouplingHandle:
     def __init__(self, theory: Theory, definition: CouplingDefinition) -> None:
@@ -230,13 +311,20 @@ class CouplingHandle:
     def __call__(self, *indices: Expression) -> Expression:
         return self.definition.expr(*indices)
 
+    def _repr_latex_(self) -> str:
+        return self.definition._repr_latex_()
+
+    def _repr_html_(self) -> str:
+        return self.definition._repr_html_()
+
 
 class Theory:
     """Stateful top-level object for pychete definitions and current Lagrangian."""
 
-    schema_version = 1
+    schema_version = 2
 
     def __init__(self, name: str) -> None:
+        s.register_builtins()
         self.name = safe_symbol_name(name)
         self._symbols: dict[str, Expression] = {}
         self.index_types: dict[str, IndexType] = {}
@@ -266,6 +354,65 @@ class Theory:
                 data=symbol_data_payload,
             )
         return self._symbols[key]
+
+    def symbol_manifest(self) -> list[dict[str, Any]]:
+        entries: list[dict[str, Any]] = []
+        for key, expr in self._symbols.items():
+            role_name, name = key.split(":", 1)
+            entries.append(
+                {
+                    "name": name,
+                    "role": role_name,
+                    "symbol": canonical_string(expr),
+                    "tags": expr.get_tags(),
+                    "data": _symbol_data_payload(expr),
+                }
+            )
+        return sorted(entries, key=_symbol_manifest_sort_key)
+
+    def _restore_symbol_manifest(self, entries: Iterable[dict[str, Any]]) -> None:
+        s.register_builtins()
+        for entry in sorted(entries, key=_symbol_manifest_sort_key):
+            name = str(entry["name"])
+            role = str(entry["role"])
+            raw_data = entry.get("data", {})
+            if not isinstance(raw_data, dict):
+                raise ValueError(f"Symbol manifest entry for {role}:{name} has non-object data")
+            data = _decode_symbol_data_value(raw_data)
+            symbol = self.symbol(name, role=role, data=data)
+            expected = entry.get("symbol")
+            if expected is not None and canonical_string(symbol) != expected:
+                raise ValueError(f"Symbol manifest restored {role}:{name} as {canonical_string(symbol)}, expected {expected}")
+            expected_tags = set(str(tag) for tag in entry.get("tags", []))
+            actual_tags = set(symbol.get_tags())
+            if expected_tags and actual_tags != expected_tags:
+                raise ValueError(f"Symbol manifest restored {role}:{name} with tags {sorted(actual_tags)}, expected {sorted(expected_tags)}")
+
+    def _parse_registered_expression(self, text: str) -> Expression:
+        expr = expression_from_canonical(text)
+        self._validate_registered_expression(expr)
+        return expr
+
+    def _validate_registered_expression(self, expr: Expression) -> None:
+        builtin_symbols = s.builtin_symbols_by_canonical_name()
+        builtin_namespace = f"{s.namespace}::"
+        theory_namespace = f"{self.name}::"
+        for symbol in expr.get_all_symbols():
+            canonical = canonical_string(symbol)
+            if canonical.startswith(builtin_namespace):
+                if canonical not in builtin_symbols:
+                    raise ValueError(f"Unregistered pychete builtin symbol in expression: {canonical}")
+                continue
+            if not canonical.startswith(theory_namespace):
+                continue
+            role = symbol_data(symbol, SymbolDataKey.ROLE)
+            label = symbol_data(symbol, SymbolDataKey.LABEL)
+            owner = symbol_data(symbol, SymbolDataKey.THEORY)
+            if not isinstance(role, str) or label is None or owner != self.name:
+                raise ValueError(f"Unregistered pychete theory symbol in expression: {canonical}")
+            key = f"{role}:{label}"
+            if key not in self._symbols or not bool(symbol == self._symbols[key]):
+                raise ValueError(f"Pychete expression references symbol outside the restored registry: {canonical}")
 
     def define_index_type(self, name: BuiltinIndexType | str, dimension: int | None = None) -> IndexType:
         name_key = _index_type_name(name)
@@ -453,18 +600,30 @@ class Theory:
                     dirac = dirac - mass * s.NCM(s.Bar(field_expr), field_expr)
                 out = out + dirac
             else:
-                out = out + s.head("FreeLag")(definition.label)
+                out = out + s.FreeLag(definition.label)
         return out
 
     def set_lagrangian(self, lagrangian: Expression) -> Expression:
+        self._validate_registered_expression(lagrangian)
         self.lagrangian = lagrangian.expand()
         self.analysis = AnalysisState(lagrangian=self.lagrangian)
         return self.lagrangian
+
+    def _repr_latex_(self) -> str:
+        if self.lagrangian is not None:
+            return f"${latex_string(self.lagrangian)}$"
+        return rf"$\mathrm{{Theory}}\left({self.name}\right)$"
+
+    def _repr_html_(self) -> str:
+        if self.lagrangian is not None:
+            return f"<div><strong>Theory {escape(self.name)}</strong><br><code>{escape(display_string(self.lagrangian))}</code></div>"
+        return f"<div><strong>Theory {escape(self.name)}</strong></div>"
 
     def to_json_obj(self) -> dict[str, Any]:
         return {
             "schema_version": self.schema_version,
             "theory_name": self.name,
+            "symbols": self.symbol_manifest(),
             "index_types": {name: value.to_json() for name, value in sorted(self.index_types.items())},
             "groups": self.groups,
             "fields": {name: value.to_json() for name, value in sorted(self.fields.items())},
@@ -480,14 +639,17 @@ class Theory:
 
     @classmethod
     def from_json_obj(cls, obj: dict[str, Any]) -> Theory:
+        s.register_builtins()
         theory = cls(obj["theory_name"])
+        if "symbols" in obj:
+            theory._restore_symbol_manifest(obj["symbols"])
         for name, data in obj.get("index_types", {}).items():
             if name != BuiltinIndexType.LORENTZ.value:
                 theory.define_index_type(name, data.get("dimension"))
         for name, data in obj.get("couplings", {}).items():
             theory.define_coupling(
                 name,
-                indices=[expression_from_canonical(x) for x in data.get("indices", [])],
+                indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
                 eft_order=int(data.get("eft_order", 0)),
                 self_conjugate=bool(data.get("self_conjugate", False)),
             )
@@ -496,16 +658,16 @@ class Theory:
             mass = None
             if mass_label is not None:
                 mass_kind = FieldMassKind.from_user(data.get("mass_kind", FieldMassKind.LIGHT.value))
-                mass_indices = [expression_from_canonical(x) for x in data.get("mass_indices", [])]
+                mass_indices = [theory._parse_registered_expression(x) for x in data.get("mass_indices", [])]
                 mass_name = _coupling_name_for_label(theory, str(mass_label))
                 mass = (mass_kind, mass_name, mass_indices)
             theory.define_field(
                 name,
-                expression_from_canonical(data["type"]),
-                indices=[expression_from_canonical(x) for x in data.get("indices", [])],
+                theory._parse_registered_expression(data["type"]),
+                indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
                 self_conjugate=bool(data.get("self_conjugate", False)),
                 mass=mass,
             )
         if obj.get("lagrangian"):
-            theory.set_lagrangian(expression_from_canonical(obj["lagrangian"]))
+            theory.set_lagrangian(theory._parse_registered_expression(obj["lagrangian"]))
         return theory

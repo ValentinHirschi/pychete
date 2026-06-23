@@ -1,10 +1,15 @@
 from __future__ import annotations
 
+import os
 from pathlib import Path
+import subprocess
+import sys
+import textwrap
 
 from symbolica import PrintMode
 
-from pychete import FieldMassKind, PycheteState, Theory, load_state, s
+from pychete import FieldMassKind, PycheteState, Theory, collect_indices, load_state, s
+from pychete.matching import HeavyScalarSolution
 
 
 FORMAT_OPTIONS = {
@@ -158,3 +163,89 @@ def test_saved_state_reloads_active_lagrangian_with_pretty_printing(tmp_path: Pa
     assert restored.active is not None
     assert restored.active.lagrangian is not None
     assert _format_lagrangian(restored.active, PrintMode.Latex) == _format_lagrangian(theory, PrintMode.Latex)
+
+
+def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path: Path) -> None:
+    path = tmp_path / "pychete_state.json"
+    project_root = Path(__file__).resolve().parents[3]
+    env = os.environ.copy()
+    env["PYTHONPATH"] = str(project_root / "src")
+
+    save_script = textwrap.dedent(
+        """
+        from pathlib import Path
+        import sys
+
+        from pychete import FieldMassKind, PycheteState, Theory, s
+
+        theory = Theory("cold_pretty")
+        phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+        lam = theory.define_coupling("lambda")
+        theory.set_lagrangian(theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4)
+        state = PycheteState()
+        state.add_theory(theory)
+        state.save_state(Path(sys.argv[1]))
+        """
+    )
+    subprocess.run([sys.executable, "-c", save_script, str(path)], check=True, env=env)
+
+    load_script = textwrap.dedent(
+        """
+        from pathlib import Path
+        import sys
+
+        from symbolica import PrintMode
+
+        from pychete import load_state
+
+        format_options = {
+            "max_line_length": None,
+            "color_top_level_sum": False,
+            "color_builtin_symbols": False,
+            "bracket_level_colors": None,
+            "print_ring": False,
+            "multiplication_operator": "*",
+            "num_exp_as_superscript": False,
+        }
+
+        state = load_state(Path(sys.argv[1]))
+        theory = state.active
+        assert theory is not None
+        assert theory.lagrangian is not None
+        assert theory.field_handle("phi").label.get_symbol_data("mass_label") == theory.coupling_handle("m").label
+        assert theory._symbols["index:d"].get_symbol_data("role") == "index"
+        assert theory._symbols["index:d"].get_symbol_data("label") == "d"
+        symbolica = theory.lagrangian.format(mode=PrintMode.Symbolica, **format_options)
+        latex = theory.lagrangian.format(mode=PrintMode.Latex, **format_options)
+        assert symbolica == "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d](phi)^2"
+        assert latex == r"-\\frac{1}{2} \\phi^{2} m^{2}-\\frac{1}{24} \\phi^{4} \\lambda+\\frac{1}{2} D_{d}\\left(\\phi\\right)^{2}"
+        assert "Field(" not in symbolica
+        assert "Coupling(" not in symbolica
+        """
+    )
+    subprocess.run([sys.executable, "-c", load_script, str(path)], check=True, env=env)
+
+
+def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
+    theory = _phi4_theory()
+    phi = theory.field_handle("phi")
+    lam = theory.coupling_handle("lambda")
+    index_info = collect_indices(theory.lorentz_index("mu"))[0]
+    solution = HeavyScalarSolution(field=phi.definition, orders={1: phi()})
+    state = PycheteState()
+    state.add_theory(theory)
+
+    objects = (
+        theory,
+        state,
+        phi,
+        lam,
+        phi.definition,
+        lam.definition,
+        index_info,
+        solution,
+    )
+
+    for obj in objects:
+        assert obj._repr_latex_()
+        assert obj._repr_html_()

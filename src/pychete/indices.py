@@ -2,11 +2,12 @@ from __future__ import annotations
 
 from collections import Counter
 from dataclasses import dataclass
+from html import escape
 
 from symbolica import Expression, Replacement
 
 from .expr import as_int, index_pattern, is_head, power_pattern
-from .symbols import SymbolRole, canonical_string, s
+from .symbols import SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import Theory
 
 
@@ -15,6 +16,13 @@ class IndexInfo:
     expr: Expression
     label: Expression
     representation: Expression
+
+    def _repr_latex_(self) -> str:
+        return f"${latex_string(self.expr)}$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>{escape(display_string(self.expr))}</code>"
+
 
 def index_info(expr: Expression) -> IndexInfo:
     if not is_head(expr, s.Index):

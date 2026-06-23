@@ -15,7 +15,7 @@ def test_state_checkpoint_has_active_theory_and_theory_mapping() -> None:
 
     payload = json.loads(state.to_json())
 
-    assert payload["schema_version"] == 1
+    assert payload["schema_version"] == 2
     assert payload["active_theory"] == "state_model"
     assert "state_model" in payload["theories"]
     assert payload["theories"]["state_model"]["lagrangian"] is not None

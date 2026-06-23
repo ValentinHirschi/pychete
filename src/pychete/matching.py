@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from html import escape
 
 from symbolica import Expression, Replacement
 
@@ -12,7 +13,7 @@ from .expr import (
     list_items,
 )
 from .functional import FieldVariation, apply_cd, derive_eom
-from .symbols import s
+from .symbols import display_string, latex_string, s
 from .theory import FieldDefinition, Theory
 
 
@@ -37,6 +38,12 @@ class HeavyScalarSolution:
         for _, expr in sorted(self.conjugate_orders.items()):
             out = out + expr
         return out.expand()
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{{self.field.name}}}: {latex_string(self.inclusive)}$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>{escape(self.field.name)}: {escape(display_string(self.inclusive))}</code>"
 
 
 def _zero_field_label(expr: Expression, label: Expression, *, conjugate: bool = False) -> Expression:

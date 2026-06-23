@@ -408,6 +408,58 @@ class SymbolStore:
     """Central store for every reusable Symbolica symbol used by pychete."""
 
     namespace = "pychete"
+    builtin_registry_names = (
+        "List",
+        "Field",
+        "Coupling",
+        "Index",
+        "FieldStrength",
+        "Bar",
+        "CD",
+        "Delta",
+        "Metric",
+        "FlavorSum",
+        "NCM",
+        "DiracProduct",
+        "Gamma",
+        "Proj",
+        "CG",
+        "EOM",
+        "HeavyFieldOrder",
+        "FreeLag",
+        "Scalar",
+        "Fermion",
+        "Vector",
+        "Ghost",
+        "AntiGhost",
+        "Lorentz",
+        "U1",
+        "SU",
+        "fund",
+        "adj",
+        "PR",
+        "PL",
+        "FieldLabelWildcard",
+        "FieldTypeWildcard",
+        "FieldIndicesWildcard",
+        "FieldDerivativesWildcard",
+        "IndexLabelWildcard",
+        "IndexRepresentationWildcard",
+        "PowBaseWildcard",
+        "PowExponentWildcard",
+        "CDIndexWildcard",
+        "CDBodyWildcard",
+        "CouplingLabelWildcard",
+        "CouplingIndicesWildcard",
+        "CouplingOrderWildcard",
+        "FieldStrengthLabelWildcard",
+        "FieldStrengthLorentzWildcard",
+        "FieldStrengthIndicesWildcard",
+        "FieldStrengthDerivativesWildcard",
+        "EFTExpansionParameter",
+        "CDVariationParameter",
+        "FunctionalVariationParameter",
+    )
 
     def head(self, name: str, **kwargs: Any) -> Expression:
         kwargs.setdefault("print", _print_builtin)
@@ -416,6 +468,14 @@ class SymbolStore:
     def user(self, namespace: str, name: str, **kwargs: Any) -> Expression:
         kwargs.setdefault("print", _print_user_symbol)
         return _sym(f"{namespace}::{safe_symbol_name(name)}", **kwargs)
+
+    def register_builtins(self) -> None:
+        for name in self.builtin_registry_names:
+            getattr(self, name)
+
+    def builtin_symbols_by_canonical_name(self) -> dict[str, Expression]:
+        self.register_builtins()
+        return {canonical_string(getattr(self, name)): getattr(self, name) for name in self.builtin_registry_names}
 
     @cached_property
     def zero(self) -> Expression:
@@ -512,6 +572,10 @@ class SymbolStore:
     @cached_property
     def HeavyFieldOrder(self) -> Expression:
         return self.head("HeavyFieldOrder")
+
+    @cached_property
+    def FreeLag(self) -> Expression:
+        return self.head("FreeLag")
 
     @cached_property
     def Scalar(self) -> Expression:
@@ -688,6 +752,24 @@ def canonical_string(expr: Expression) -> str:
         include_attributes=False,
         custom_print_mode={_CUSTOM_PRINT_MODE_KEY: _CANONICAL_PRINT_MODE},
     )
+
+
+def display_string(expr: Expression, mode: PrintMode = PrintMode.Symbolica) -> str:
+    return expr.format(
+        max_terms=None,
+        mode=mode,
+        max_line_length=None,
+        color_top_level_sum=False,
+        color_builtin_symbols=False,
+        bracket_level_colors=None,
+        print_ring=False,
+        multiplication_operator="*",
+        num_exp_as_superscript=False,
+    )
+
+
+def latex_string(expr: Expression) -> str:
+    return display_string(expr, PrintMode.Latex)
 
 
 def expression_from_canonical(text: str) -> Expression:

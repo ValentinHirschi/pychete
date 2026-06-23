@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import json
 from dataclasses import dataclass, field
+from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -12,7 +13,7 @@ from .theory import Theory
 class PycheteState:
     theories: dict[str, Theory] = field(default_factory=dict)
     active_theory: str | None = None
-    schema_version: int = 1
+    schema_version: int = 2
 
     def add_theory(self, theory: Theory, *, active: bool = True) -> Theory:
         self.theories[theory.name] = theory
@@ -38,6 +39,14 @@ class PycheteState:
 
     def save_state(self, path: str | Path) -> None:
         self.write_json(path)
+
+    def _repr_latex_(self) -> str:
+        active = "" if self.active_theory is None else rf",\ active={self.active_theory}"
+        return rf"$\mathrm{{PycheteState}}\left(n={len(self.theories)}{active}\right)$"
+
+    def _repr_html_(self) -> str:
+        active = "" if self.active_theory is None else f" active={escape(self.active_theory)}"
+        return f"<code>PycheteState(n={len(self.theories)}{active})</code>"
 
     @property
     def active(self) -> Theory | None:
