@@ -2,22 +2,17 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 
-from symbolica import Expression
+from symbolica import Expression, Replacement
 
 from .eft import series_eft
 from .expr import (
-    collect_bar_field_atoms,
-    collect_field_atoms,
-    expr_key,
-    bar_field_inner,
-    field_derivatives,
-    field_label,
-    is_head,
-    replace_many,
-    transform,
+    bar_field_pattern,
+    field_pattern,
+    is_zero,
+    list_items,
 )
-from .functional import apply_cd, derive_eom
-from .symbols import canonical_string, s
+from .functional import FieldVariation, apply_cd, derive_eom
+from .symbols import s
 from .theory import FieldDefinition, Theory
 
 
@@ -45,20 +40,12 @@ class HeavyScalarSolution:
 
 
 def _zero_field_label(expr: Expression, label: Expression, *, conjugate: bool = False) -> Expression:
-    label_key = expr_key(label)
-
-    def visitor(sub: Expression) -> Expression | None:
-        if not conjugate and is_head(sub, s.Field) and expr_key(field_label(sub)) == label_key:
-            return s.zero
-        if conjugate and is_head(sub, s.Bar) and is_head(sub[0], s.Field) and expr_key(field_label(sub[0])) == label_key:
-            return s.zero
-        return None
-
-    return transform(expr, visitor).expand()
+    pattern = bar_field_pattern(label) if conjugate else field_pattern(label)
+    return expr.replace(pattern, s.zero).expand()
 
 
-def _mass_squared(theory: Theory, field: FieldDefinition) -> Expression:
-    mass = theory.mass_expr(field)
+def _mass_squared(field: FieldDefinition) -> Expression:
+    mass = field.mass_expr()
     if mass is None:
         raise ValueError(f"Heavy field {field.name} has no mass coupling")
     return mass**2
@@ -85,7 +72,7 @@ def _solve_orders_from_source(theory: Theory, source: Expression, mass2: Express
                 value = (-_box(theory, previous_nonzero, order) / mass2).expand()
 
         orders[order] = value
-        if order % 2 == 1 and canonical_string(value.expand()) != "0":
+        if order % 2 == 1 and not is_zero(value):
             previous_nonzero = value
     return orders
 
@@ -95,12 +82,12 @@ def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order
     solutions: dict[str, HeavyScalarSolution] = {}
 
     for field in theory.fields.values():
-        if not field.heavy or canonical_string(field.type) != canonical_string(s.Scalar):
+        if not field.heavy or not bool(field.type_expr == s.Scalar):
             continue
 
-        mass2 = _mass_squared(theory, field)
+        mass2 = _mass_squared(field)
 
-        if field.self_conjugate:
+        if field.is_self_conjugate:
             eom = derive_eom(theory, lagrangian, field, eft_order=eft_order)
             source = _zero_field_label(eom, field.label)
             solution = HeavyScalarSolution(
@@ -108,9 +95,9 @@ def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order
                 orders=_solve_orders_from_source(theory, source, mass2, eft_order=eft_order),
             )
         else:
-            eom = derive_eom(theory, lagrangian, field, eft_order=eft_order, variation="bar")
+            eom = derive_eom(theory, lagrangian, field, eft_order=eft_order, variation=FieldVariation.BAR)
             source = _zero_field_label(eom, field.label)
-            conjugate_eom = derive_eom(theory, lagrangian, field, eft_order=eft_order, variation="field")
+            conjugate_eom = derive_eom(theory, lagrangian, field, eft_order=eft_order, variation=FieldVariation.FIELD)
             conjugate_source = _zero_field_label(conjugate_eom, field.label, conjugate=True)
             solution = HeavyScalarSolution(
                 field=field,
@@ -123,30 +110,24 @@ def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order
     return solutions
 
 
-def _replace_heavy_fields(theory: Theory, expr: Expression, solutions: dict[str, HeavyScalarSolution]) -> Expression:
-    replacements: list[tuple[Expression, Expression]] = []
-    field_solution_by_label = {
-        expr_key(solution.field.label): solution
-        for solution in solutions.values()
-    }
-    for atom in collect_bar_field_atoms(expr):
-        inner = bar_field_inner(atom)
-        solution = field_solution_by_label.get(expr_key(field_label(inner)))
-        if solution is None:
-            continue
-        replacement = apply_cd(field_derivatives(inner), solution.inclusive_conjugate)
-        replacements.append((atom, replacement))
-    for atom in collect_field_atoms(expr):
-        solution = field_solution_by_label.get(expr_key(field_label(atom)))
-        if solution is None:
-            continue
-        replacement = apply_cd(field_derivatives(atom), solution.inclusive)
-        replacements.append((atom, replacement))
-    return replace_many(expr, replacements).expand()
+def _replace_heavy_fields(expr: Expression, solutions: dict[str, HeavyScalarSolution]) -> Expression:
+    replacements: list[Replacement] = []
+    for solution in solutions.values():
+        label = solution.field.label
+
+        def bar_solution(match: dict[Expression, Expression], solution: HeavyScalarSolution = solution) -> Expression:
+            return apply_cd(list_items(match[s.FieldDerivativesWildcard]), solution.inclusive_conjugate)
+
+        def field_solution(match: dict[Expression, Expression], solution: HeavyScalarSolution = solution) -> Expression:
+            return apply_cd(list_items(match[s.FieldDerivativesWildcard]), solution.inclusive)
+
+        replacements.append(Replacement(bar_field_pattern(label), bar_solution))
+        replacements.append(Replacement(field_pattern(label), field_solution))
+    return expr.replace_multiple(replacements).expand() if replacements else expr.expand()
 
 
 def match_tree(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
     solutions = solve_heavy_scalar_eoms(theory, lagrangian, eft_order=eft_order)
-    replaced = _replace_heavy_fields(theory, lagrangian, solutions)
+    replaced = _replace_heavy_fields(lagrangian, solutions)
     truncated = series_eft(replaced.expand(), theory, eft_order=eft_order, heavy_field_dimension=False)
     return truncated.expand()

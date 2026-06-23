@@ -35,3 +35,35 @@ class PycheteState:
 
     def write_json(self, path: str | Path) -> None:
         Path(path).write_text(self.to_json(), encoding="utf-8")
+
+    def save_state(self, path: str | Path) -> None:
+        self.write_json(path)
+
+    @property
+    def active(self) -> Theory | None:
+        if self.active_theory is None:
+            return None
+        return self.theories[self.active_theory]
+
+    @classmethod
+    def from_json_obj(cls, obj: dict[str, Any]) -> PycheteState:
+        state = cls(schema_version=int(obj.get("schema_version", 1)))
+        state.theories = {
+            name: Theory.from_json_obj(theory_obj)
+            for name, theory_obj in obj.get("theories", {}).items()
+        }
+        active_theory = obj.get("active_theory")
+        state.active_theory = str(active_theory) if active_theory is not None else None
+        return state
+
+    @classmethod
+    def from_json(cls, text: str) -> PycheteState:
+        return cls.from_json_obj(json.loads(text))
+
+    @classmethod
+    def read_json(cls, path: str | Path) -> PycheteState:
+        return cls.from_json(Path(path).read_text(encoding="utf-8"))
+
+
+def load_state(path: str | Path) -> PycheteState:
+    return PycheteState.read_json(path)

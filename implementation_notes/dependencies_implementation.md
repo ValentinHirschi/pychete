@@ -39,7 +39,7 @@
 - Tightened item (a): when launched from an active virtualenv, `install_dependencies.py` now re-execs itself with the base Python executable and removes `VIRTUAL_ENV`/`PYTHONHOME` from the child environment before continuing. If Python cannot identify a distinct base executable, it still ignores the caller venv for managed subprocesses.
 - Added `tests/test_symbolica_local_versions.py` for pytest. The test imports `symbolica` and verifies that `LOCAL_VERSIONS` is a top-level dictionary containing non-empty `symbolica`, `vakint`, `spenso`, and `idenso` revision strings.
 - Populated `README.md` with a minimal project description and online references for Matchete/Machete.
-- Populated `AGENT.md` with test-running instructions, the ban on `sympy`/`scipy`, required use of Symbolica/idenso/spenso/vakint, and local source/stub locations for API discovery.
+- Populated `AGENTS.md` with test-running instructions, the ban on `sympy`/`scipy`, required use of Symbolica/idenso/spenso/vakint, and local source/stub locations for API discovery.
 - Extended `install_dependencies.py` to patch GammaLoop's Cargo workspace to the local Symbolica checkout, build the GammaLoop Python API wheel in release mode, install it into `dependencies/.venv`, and include `import gammaloop` in the installer smoke test.
 - Extended pytest coverage so `tests/test_symbolica_local_versions.py` verifies that `gammaloop` imports and exposes `GammaLoopAPI`.
 - Added `--no-gammaloop` to `install_dependencies.py` because the GammaLoop release build is slow. The installer writes `dependencies/install_manifest.json`; pytest only imports/checks GammaLoop when that manifest says GammaLoop was requested. The manifest records that GammaLoop uses the `ufo_support,python_abi` feature set and local Symbolica with `gmp` enabled when requested.
@@ -48,3 +48,79 @@
   - GammaLoop build was skipped.
   - `dependencies/install_manifest.json` recorded `"gammaloop": {"requested": false, "installed": false, ...}`.
   - `dependencies/.venv/bin/python -m pytest tests -q` reported `1 passed, 1 skipped`.
+
+### Native Symbolica primitive audit
+
+- Fast-forwarded `master` to `origin/master` before starting the audit.
+- Read the local Symbolica Python stubs under `dependencies/symbolica-community/python/symbolica/` and the standalone `dependencies/symbolica/symbolica.pyi` stub, including the core `Expression`, `Replacement`, `Transformer`, polynomial, matrix, graph, integer, idenso, spenso, and vakint APIs.
+- Replaced pychete's sequential `replace_many` loop with a wrapper around Symbolica's native `Replacement` and `Expression.replace_multiple`.
+- Replaced field and index discovery helpers that walked expression trees in Python with Symbolica pattern matching through `Expression.match`, `Expression.matches`, and `Expression.replace_wildcards`.
+- Replaced simple atom-tree inspection with native `Expression.get_type`, `Expression.get_name`, and `int(Expression)` where applicable.
+- Replaced heavy-field zeroing with native `Expression.replace` against explicit field/bar-field patterns.
+- Renamed the agent guide to `AGENTS.md` and expanded it with explicit Symbolica/idenso/spenso/vakint API names that future agents must check before implementing Python-side symbolic logic.
+- Ran a second native-primitive pass and removed the now-unnecessary `replace_many`, `atom_type`, `head_name`, `is_var`, `is_num`, `field_indices`, `has_field_label`, `contains_any_field`, and `expr_key` helpers.
+- Moved reusable Symbolica pattern wildcards into the central `SymbolStore`.
+- Updated remaining replacement call sites to construct `Replacement` objects and call `Expression.replace_multiple` directly.
+- Replaced remaining symbolic type/string comparisons with native Symbolica equality and function-head checks.
+- Switched field/index de-duplication and counters to use Symbolica `Expression` hash/equality directly instead of canonical-string keys.
+- Rewrote index counting around Symbolica pattern matching: literal `Index(...)` matches provide base counts, while `pow_base_**pow_exponent_` matches add integer-power multiplicities without a recursive atom-type walker.
+- Added unit coverage for pattern-based index counts in normalized powers, nested powers, and non-integer powers.
+- Updated `AGENTS.md` to explicitly prefer Symbolica pattern matching before atom-type dispatch and to clarify that parsing one-off numeric coefficients is acceptable while reusable pychete symbols stay centralized.
+- Replaced the Python-side covariant-derivative sum/product/power walker with a Symbolica-native variation pipeline:
+  - `CD`, `Bar[Field]`, and tagged `Field` atoms are matched by Symbolica wildcard replacement rules.
+  - callable `Replacement` right-hand sides encode each atom as `atom + variation_parameter * derivative`.
+  - `Expression.series` and `Expression.coefficient` extract the linear variation, so Symbolica supplies the algebraic product, sum, and power rules.
+- Added unit coverage for covariant derivatives of products, integer and fractional powers, barred fields, nested `CD` atoms, and non-field couplings.
+- Checked Symbolica's `Expression.match`, `Expression.matches`, `Expression.replace_iter`, `Expression.replace`, `Expression.replace_multiple`, `Expression.replace_wildcards`, and binding implementation for native match collection support.
+- Tightened `matching_subexpressions` into a thin wrapper over the Rust-backed `Expression.match(...)` iterator:
+  - `pattern_matches` returns all matches from Symbolica, preserving multiplicity.
+  - `matching_subexpressions` only de-duplicates those native matches by Symbolica expression equality.
+- Replaced EFT dimension recursion and manual series truncation with Symbolica-native weighting:
+  - matched pychete atoms are weighted with the formal `s.EFTExpansionParameter`;
+  - `Expression.series` performs inclusive truncation;
+  - `Expression.coefficient_list` performs exact-order extraction;
+  - marker powers are decoded back by native replacement.
+- Added focused EFT tests for exact and inclusive truncation, heavy-field weighting, `CD` weighting, field-strength weighting, and fermion half dimensions.
+- Added `mypy` to the managed dependency installer and added `tests/test_static_typing.py`, which runs `python -m mypy` inside pytest.
+- Replaced stringly-typed internal theory categories with enums:
+  - `FieldMassKind` now stores `HEAVY`, `LIGHT`, and `MASSLESS` field mass status internally.
+  - `BuiltinIndexType` now stores built-in index defaults such as `LORENTZ` and `FLAVOR`.
+  - Public string input remains accepted at parser/API boundaries and is normalized immediately.
+- Added `SymbolRole` for pychete symbol tags/roles and wired it through `Theory.symbol`.
+- Switched pychete collectors to Symbolica tag-restricted patterns:
+  - field and barred-field collectors require `FieldLabelWildcard.req_tag(SymbolRole.FIELD)`;
+  - coupling collectors require `CouplingLabelWildcard.req_tag(SymbolRole.COUPLING)`;
+  - index collectors/counting require `IndexLabelWildcard.req_tag(SymbolRole.INDEX)`;
+  - field-strength collectors require tagged field labels.
+- Removed field enumeration from `partial_functional_derivative`; it now uses an exact target variation plus a wildcard `Bar[Field]` no-op protector in one native `replace_multiple` call, then extracts the linear variation with Symbolica `series`/`coefficient`.
+- Added `FieldVariation` for EOM variation modes instead of internal raw `"auto"`, `"field"`, and `"bar"` strings.
+- Added `SymbolDataKey` and started storing localized metadata directly on Symbolica symbols:
+  - field labels now store field type, indices, self-conjugacy, mass kind, mass label, and mass indices;
+  - coupling labels now store index structure, EFT order, and self-conjugacy;
+  - index-type and group labels store their local definition metadata.
+- Replaced mass reconstruction and EFT heavy-field checks with field-label symbol-data reads instead of Python-side scans/lookups.
+- Added `src/pychete/api.py` as the canonical public API index and changed package-root `pychete` to re-export that API.
+- Added tests proving public API re-export consistency and field-label symbol-data mass metadata.
+- Replaced exact-atom collection in heavy-field substitution with label-specific Symbolica wildcard replacement rules and callable `Replacement` right-hand sides.
+- Replaced exact-atom collection in EFT weighting with Symbolica wildcard replacement rules over `CD`, `Bar[Field]`, `FieldStrength`, tagged `Field`, and tagged `Coupling`.
+- Moved more theory behavior onto symbol data:
+  - field expression construction now reads field type from the field-label symbol data;
+  - coupling expression construction now reads EFT order from the coupling-label symbol data;
+  - JSON serialization now reads field/coupling type, index, mass, self-conjugacy, and order metadata from symbol data;
+  - JSON deserialization now preserves the serialized mass coupling label and mass indices instead of inventing a synthetic `<field>_mass` symbol.
+- Added tests for JSON mass-symbol-data preservation, tag-restricted functional bar protection, and the public API index.
+- Removed the remaining `collect_*_atoms` helper layer from `expr.py`; EOM derivative-set discovery, index counting/discovery, and tests now use `Expression.match(...)` plus `pattern.replace_wildcards(...)` directly where matching subexpressions are needed.
+- Updated `AGENTS.md` to state explicitly that `Expression.match(pattern, restriction)` is the native collect-subexpressions primitive and should be preferred over Python tree-walk collectors.
+- Added Symbolica custom print callbacks for pychete built-in symbols and theory-created symbols:
+  - built-in heads such as `Field`, `Coupling`, `Index`, `FieldStrength`, `Bar`, `CD`, `NCM`, `Gamma`, `Metric`, `Delta`, and all type/group/projector symbols now hide internal `pychete::...` names in human print modes;
+  - theory symbols created through `Theory.symbol` print their stored physical labels while preserving role/tag/data metadata;
+  - `canonical_string(...)` now explicitly requests a pychete canonical custom print mode so JSON and checkpoints keep parse-stable namespace-qualified Symbolica syntax.
+- Added `PycheteState.save_state(...)`, `PycheteState.from_json(...)`, `PycheteState.read_json(...)`, `PycheteState.active`, and public `load_state(...)`; restored theories rebuild their symbols through the normal decorated constructors and preserve the active lagrangian.
+- Added tests covering:
+  - exact phi4 lagrangian snapshots in `PrintMode.Symbolica`, `PrintMode.Latex`, `PrintMode.Mathematica`, `PrintMode.Sympy`, and `PrintMode.Typst`;
+  - exact heavy-scalar lagrangian snapshots in the same five print modes;
+  - every reusable pychete built-in symbol/head formatting without leaking `pychete::` in those modes;
+  - state save/load with an active theory and active lagrangian that still pretty-prints after reload.
+- Validation after this pass:
+  - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests -q` reported `39 passed, 1 skipped`.

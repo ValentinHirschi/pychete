@@ -6,7 +6,7 @@
 
 - Created `first_shot_user.md` and recorded the initial implementation prompt plus all follow-up prompts.
 - This file is the running implementation journal for the first pychete implementation.
-- The repository already had uncommitted changes in `.gitignore`, `AGENT.md`, and `dependencies/install_dependencies.py`; they are being preserved and treated as existing worktree state.
+- The repository already had uncommitted changes in `.gitignore`, `AGENTS.md`, and `dependencies/install_dependencies.py`; they are being preserved and treated as existing worktree state.
 
 ### Repository state
 

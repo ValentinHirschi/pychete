@@ -12,7 +12,7 @@
 >
 > However, for now you should plan for how to design the top-level python object that will mimick the top-level associationMaps/data structure that Machete employs to represent lagrangian, fields, representation etc... but do a search yourself and come up with what would be the structures to capture at this point.
 > However be mindful that as much as possible should be encoded *DIRECTLY IN THE SYMBOLLICA EXPRESSIONS" and not as python structures. Python structures are fine in some warranted case, but more often than not you should adopt conventions for the symbolica function head, variable names etc..
-> Also , do *NOT* always use string parsing to build expressions, but instead use a global store in smtg like utils.py which contains *ALL* the symbolica symbols ever used in pychete and then reference them to build expressions. I.e. do not do *E("phi(flavor(quark),b)")* but instead have those symbols fetched fromt he global store "s" and then do `s.phi(s.flavor(s.quark),S("b"))` , i.e. only use string parsing when it's clear it won't ever be reused. Same for pattern matching placeholder. Also update AGENT.md with these guidelines.
+> Also , do *NOT* always use string parsing to build expressions, but instead use a global store in smtg like utils.py which contains *ALL* the symbolica symbols ever used in pychete and then reference them to build expressions. I.e. do not do *E("phi(flavor(quark),b)")* but instead have those symbols fetched fromt he global store "s" and then do `s.phi(s.flavor(s.quark),S("b"))` , i.e. only use string parsing when it's clear it won't ever be reused. Same for pattern matching placeholder. Also update AGENTS.md with these guidelines.
 >
 > Ok, with this in mind, the first goal will be as follows:
 >
@@ -36,7 +36,7 @@
 
 > You seem to be having symbolica license issues, make sure to use the one specified in ~/.bashrc (and load it in the environment variable SYMBOLICA_LICENSE) to avoid all of such issues
 
-> (and add that information to AGENT.md too)
+> (and add that information to AGENTS.md too)
 
 > OK before you implement the plan, give me a "goal statement" that details all milestones and which I can assign you as goal after you started the implementation of the plan.
 

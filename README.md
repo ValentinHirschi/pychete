@@ -4,6 +4,13 @@
 Mathematica code for automated effective-field-theory matching fully to
 Python + Symbolica.
 
+Development guidance is in `AGENTS.md`. In particular, new symbolic work must
+check and prefer native Symbolica, idenso, spenso, and vakint primitives before
+adding Python-side symbolic algorithms.
+
+The intended public Python API is listed in `src/pychete/api.py` and re-exported
+from the package root.
+
 References:
 
 - Matchete source repository: <https://gitlab.com/matchete/matchete>

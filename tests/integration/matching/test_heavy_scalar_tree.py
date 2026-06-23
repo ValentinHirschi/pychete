@@ -1,13 +1,13 @@
 from __future__ import annotations
 
-from pychete import Theory, derive_eom, match_tree, solve_heavy_scalar_eoms, s
+from pychete import FieldMassKind, Theory, derive_eom, match_tree, solve_heavy_scalar_eoms, s
 
 from tests.conftest import assert_expr_equal
 
 
 def _heavy_scalar_theory() -> tuple[Theory, object, object, object]:
     theory = Theory("heavy_scalar")
-    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=("Heavy", "M"))
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
     light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     g = theory.define_coupling("g", self_conjugate=True)
     return theory, heavy, light, g
@@ -51,8 +51,8 @@ def test_heavy_scalar_tree_match_through_dimension_six() -> None:
 
 def test_tree_match_supports_several_independent_diagonal_heavy_scalars() -> None:
     theory = Theory("two_heavy_scalars")
-    s_field = theory.define_field("S", s.Scalar, self_conjugate=True, mass=("Heavy", "MS"))
-    t_field = theory.define_field("T", s.Scalar, self_conjugate=True, mass=("Heavy", "MT"))
+    s_field = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "MS"))
+    t_field = theory.define_field("T", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "MT"))
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     g_s = theory.define_coupling("gS", self_conjugate=True)
     g_t = theory.define_coupling("gT", self_conjugate=True)
@@ -80,7 +80,7 @@ def test_tree_match_supports_several_independent_diagonal_heavy_scalars() -> Non
 
 def test_complex_heavy_scalar_tree_match_solves_field_and_conjugate() -> None:
     theory = Theory("complex_heavy")
-    heavy = theory.define_field("S", s.Scalar, self_conjugate=False, mass=("Heavy", "M"))
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=False, mass=(FieldMassKind.HEAVY, "M"))
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     y = theory.define_coupling("y")
     yb = theory.define_coupling("yb")

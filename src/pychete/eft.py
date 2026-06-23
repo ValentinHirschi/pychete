@@ -1,17 +1,31 @@
 from __future__ import annotations
 
-from symbolica import Expression
-from symbolica.core import AtomType
+from symbolica import Expression, Replacement
 
-from .expr import as_int, atom_type, expr_key, factors, field_derivatives, field_label, field_type, is_head, pow_parts, sum_expr, terms
-from .symbols import canonical_string, s
-from .theory import Theory
+from .expr import (
+    as_int,
+    bar_field_inner,
+    bar_field_pattern,
+    cd_pattern,
+    coupling_pattern,
+    field_derivatives,
+    field_label,
+    field_pattern,
+    field_strength_pattern,
+    field_type,
+    list_items,
+)
+from .symbols import SymbolRole, canonical_string, s
+from .theory import FieldMassKind, Theory, field_mass_kind_from_label
 
 
 def type_dimension(type_expr: Expression) -> int | float:
-    if canonical_string(type_expr) == canonical_string(s.Fermion):
-        return 1.5
-    return 1
+    scaled = _scaled_type_dimension(type_expr)
+    return scaled // 2 if scaled % 2 == 0 else scaled / 2
+
+
+def _scaled_type_dimension(type_expr: Expression) -> int:
+    return 3 if bool(type_expr == s.Fermion) else 2
 
 
 def _coupling_order(expr: Expression) -> int:
@@ -21,54 +35,143 @@ def _coupling_order(expr: Expression) -> int:
     return order
 
 
+def _coupling_scaled_order(expr: Expression) -> int:
+    return 2 * _coupling_order(expr)
+
+
+def _marker_power(scaled_dimension: int) -> Expression:
+    if scaled_dimension == 0:
+        return s.one
+    if scaled_dimension == 1:
+        return s.EFTExpansionParameter
+    return s.EFTExpansionParameter**scaled_dimension
+
+
+def _unscale_dimension(scaled_dimension: int) -> int | float:
+    return scaled_dimension // 2 if scaled_dimension % 2 == 0 else scaled_dimension / 2
+
+
+def _is_heavy_field_label(theory: Theory | None, label: Expression) -> bool:
+    return field_mass_kind_from_label(label) is FieldMassKind.HEAVY
+
+
+def _field_scaled_dimension(expr: Expression, theory: Theory | None, *, heavy_field_dimension: bool) -> int:
+    dim = 2 * len(field_derivatives(expr)) + _scaled_type_dimension(field_type(expr))
+    if heavy_field_dimension and _is_heavy_field_label(theory, field_label(expr)):
+        dim += 2
+    return dim
+
+
+def _field_strength_scaled_dimension(expr: Expression) -> int:
+    return 2 * len(list_items(expr[3])) + 4
+
+
+def _cd_scaled_dimension(expr: Expression, theory: Theory | None, *, heavy_field_dimension: bool) -> int:
+    return _scaled_operator_dimension(expr[1], theory, heavy_field_dimension=heavy_field_dimension) + 2
+
+
+def _eft_weight_replacements(theory: Theory | None, *, heavy_field_dimension: bool) -> tuple[Replacement, ...]:
+    cd_pat = cd_pattern()
+    bar_pat = bar_field_pattern()
+    field_strength_pat = field_strength_pattern()
+    field_pat = field_pattern()
+    coupling_pat = coupling_pattern()
+
+    def weighted(atom: Expression, scaled_dimension: int) -> Expression:
+        return atom if scaled_dimension == 0 else atom * _marker_power(scaled_dimension)
+
+    def cd_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = cd_pat.replace_wildcards(match)
+        return weighted(atom, _cd_scaled_dimension(atom, theory, heavy_field_dimension=heavy_field_dimension))
+
+    def bar_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = bar_pat.replace_wildcards(match)
+        return weighted(atom, _field_scaled_dimension(bar_field_inner(atom), theory, heavy_field_dimension=heavy_field_dimension))
+
+    def field_strength_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = field_strength_pat.replace_wildcards(match)
+        return weighted(atom, _field_strength_scaled_dimension(atom))
+
+    def field_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = field_pat.replace_wildcards(match)
+        return weighted(atom, _field_scaled_dimension(atom, theory, heavy_field_dimension=heavy_field_dimension))
+
+    def coupling_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = coupling_pat.replace_wildcards(match)
+        return weighted(atom, _coupling_scaled_order(atom))
+
+    field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    coupling_label_is_tagged = s.CouplingLabelWildcard.req_tag(SymbolRole.COUPLING.value)
+    return (
+        Replacement(cd_pat, cd_weight),
+        Replacement(bar_pat, bar_weight, field_label_is_tagged),
+        Replacement(field_strength_pat, field_strength_weight, s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)),
+        Replacement(field_pat, field_weight, field_label_is_tagged),
+        Replacement(coupling_pat, coupling_weight, coupling_label_is_tagged),
+    )
+
+
+def _eft_weighted_expression(
+    expr: Expression,
+    theory: Theory | None,
+    *,
+    heavy_field_dimension: bool,
+) -> Expression:
+    return expr.replace_multiple(_eft_weight_replacements(theory, heavy_field_dimension=heavy_field_dimension))
+
+
+def _marker_key_scaled_dimension(key: Expression) -> int | None:
+    if bool(key == s.one):
+        return 0
+    if bool(key == s.EFTExpansionParameter):
+        return 1
+
+    pattern = s.EFTExpansionParameter ** s.PowExponentWildcard
+    for match in key.match(pattern):
+        n = as_int(match[s.PowExponentWildcard])
+        if n is not None:
+            return n
+    return None
+
+
+def _scaled_operator_dimension(expr: Expression, theory: Theory | None, *, heavy_field_dimension: bool) -> int:
+    weighted = _eft_weighted_expression(expr, theory, heavy_field_dimension=heavy_field_dimension).expand()
+    dimensions = [
+        dimension
+        for key, _ in weighted.coefficient_list(s.EFTExpansionParameter)
+        if (dimension := _marker_key_scaled_dimension(key)) is not None
+    ]
+    return min(dimensions, default=0)
+
+
 def operator_dimension(expr: Expression, theory: Theory | None = None, *, heavy_field_dimension: bool = True) -> float:
-    kind = atom_type(expr)
-    if kind is AtomType.Num:
-        return 0
-    if kind is AtomType.Var:
-        return 0
-    if kind is AtomType.Add:
-        return min(operator_dimension(t, theory, heavy_field_dimension=heavy_field_dimension) for t in terms(expr))
-    if kind is AtomType.Mul:
-        return sum(operator_dimension(f, theory, heavy_field_dimension=heavy_field_dimension) for f in factors(expr))
-    parts = pow_parts(expr)
-    if parts is not None:
-        base, exponent = parts
-        n = as_int(exponent)
-        if n is None:
-            return 0
-        return n * operator_dimension(base, theory, heavy_field_dimension=heavy_field_dimension)
-    if is_head(expr, s.Coupling):
-        return _coupling_order(expr)
-    if is_head(expr, s.Field):
-        dim = len(field_derivatives(expr)) + type_dimension(field_type(expr))
-        if heavy_field_dimension and theory is not None:
-            label = expr_key(field_label(expr))
-            for definition in theory.fields.values():
-                if expr_key(definition.label) == label and definition.heavy:
-                    dim += 1
-                    break
-        return dim
-    if is_head(expr, s.FieldStrength):
-        return len(expr[3]) + 2
-    if is_head(expr, s.Bar):
-        return operator_dimension(expr[0], theory, heavy_field_dimension=heavy_field_dimension)
-    return 0
+    return _unscale_dimension(_scaled_operator_dimension(expr, theory, heavy_field_dimension=heavy_field_dimension))
 
 
 def series_eft(
     expr: Expression,
     theory: Theory | None = None,
     *,
-    eft_order: int | tuple[int],
+    eft_order: int | tuple[int, ...],
     heavy_field_dimension: bool = True,
 ) -> Expression:
-    expanded = expr.expand()
-    exact = isinstance(eft_order, tuple)
-    order = eft_order[0] if exact else eft_order
-    kept: list[Expression] = []
-    for term in terms(expanded):
-        dim = operator_dimension(term, theory, heavy_field_dimension=heavy_field_dimension)
-        if (dim == order) if exact else (dim <= order):
-            kept.append(term)
-    return sum_expr(kept).expand()
+    if isinstance(eft_order, tuple):
+        if len(eft_order) != 1:
+            raise ValueError("exact EFT order must be passed as a one-item tuple")
+        exact = True
+        order = eft_order[0]
+    else:
+        exact = False
+        order = eft_order
+    scaled_order = 2 * order
+    weighted = _eft_weighted_expression(expr, theory, heavy_field_dimension=heavy_field_dimension).expand()
+
+    if exact:
+        out = s.zero
+        for key, coefficient in weighted.coefficient_list(s.EFTExpansionParameter):
+            if _marker_key_scaled_dimension(key) == scaled_order:
+                out = out + coefficient
+        return out.expand()
+
+    truncated = weighted.series(s.EFTExpansionParameter, 0, scaled_order).to_expression()
+    return truncated.replace(s.EFTExpansionParameter, s.one).expand()

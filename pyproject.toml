@@ -8,3 +8,11 @@ requires-python = ">=3.11"
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
+
+[tool.mypy]
+python_version = "3.11"
+mypy_path = "src"
+files = ["src/pychete"]
+show_error_codes = true
+pretty = true
+warn_unused_ignores = true

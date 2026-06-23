@@ -174,7 +174,7 @@ def create_venv() -> None:
 def ensure_maturin() -> None:
     create_venv()
     env = venv_environment()
-    run([venv_python(), "-m", "pip", "install", "--upgrade", "pip", "maturin", "pytest"], env=env)
+    run([venv_python(), "-m", "pip", "install", "--upgrade", "pip", "maturin", "pytest", "mypy"], env=env)
     run([venv_python(), "-m", "maturin", "--version"], env=env)
 
 

@@ -2,7 +2,10 @@ from __future__ import annotations
 
 import json
 
-from pychete import Theory, canonical_string, s
+from symbolica import S
+
+from pychete import BuiltinIndexType, FieldMassKind, SymbolDataKey, SymbolRole, Theory, canonical_string, s
+from pychete.expr import coupling_pattern, field_pattern, index_pattern, matching_subexpressions
 from pychete.symbols import expression_from_canonical
 
 
@@ -14,13 +17,13 @@ def test_field_and_mass_coupling_definitions_follow_matchete_orders() -> None:
         "CapitalPhi",
         s.Scalar,
         indices=[flavor.symbol],
-        mass=("Heavy", "MCapitalPhi", [flavor.symbol]),
+        mass=(FieldMassKind.HEAVY, "MCapitalPhi", [flavor.symbol]),
     )
     light = theory.define_field(
         "psi",
         s.Fermion,
         indices=[flavor.symbol],
-        mass=("Light", "mpsi", [flavor.symbol, flavor.symbol]),
+        mass=(FieldMassKind.LIGHT, "mpsi", [flavor.symbol, flavor.symbol]),
     )
 
     assert theory.fields[heavy.name].heavy is True
@@ -28,6 +31,51 @@ def test_field_and_mass_coupling_definitions_follow_matchete_orders() -> None:
     assert theory.couplings["mpsi"].eft_order == 1
     assert canonical_string(heavy(theory.index("f", flavor.symbol))).startswith("pychete::Field")
     assert canonical_string(light(theory.index("f", flavor.symbol))).startswith("pychete::Field")
+
+
+def test_field_symbol_data_stores_local_mass_metadata() -> None:
+    theory = Theory("field_symbol_data")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    heavy = theory.define_field(
+        "CapitalPhi",
+        s.Scalar,
+        indices=[flavor.symbol],
+        mass=(FieldMassKind.HEAVY, "MCapitalPhi", [flavor.symbol]),
+    )
+
+    label = heavy.label
+    assert label.get_symbol_data(SymbolDataKey.MASS_KIND.value) == FieldMassKind.HEAVY.value
+    assert label.get_symbol_data(SymbolDataKey.MASS_LABEL.value) == theory.coupling_handle("MCapitalPhi").label
+    assert label.get_symbol_data(SymbolDataKey.MASS_INDICES.value) == [flavor.symbol]
+    assert theory.mass_expr(heavy.definition) == theory.coupling_handle("MCapitalPhi")(flavor.symbol)
+
+
+def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:
+    theory = Theory("enum_defs")
+    heavy = theory.define_field("H", s.Scalar, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("l", s.Scalar, mass=("Light", "m"))
+
+    assert theory.fields[heavy.name].mass_kind is FieldMassKind.HEAVY
+    assert theory.fields[light.name].mass_kind is FieldMassKind.LIGHT
+    assert BuiltinIndexType.LORENTZ.value in theory.index_types
+    assert canonical_string(theory.index("mu")).endswith("pychete::Lorentz)")
+
+
+def test_symbol_collectors_require_role_tags_on_user_labels() -> None:
+    theory = Theory("tagged_collectors")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    lam = theory.define_coupling("lambda")
+    mu = theory.lorentz_index("mu")
+
+    untagged_field = s.Field(S("plain_field_label"), s.Scalar, s.List(), s.List())
+    untagged_coupling = s.Coupling(S("plain_coupling_label"), s.List(), 0)
+    untagged_index = s.Index(S("plain_index_label"), s.Lorentz)
+
+    expr = phi() + lam() + mu + untagged_field + untagged_coupling + untagged_index
+
+    assert matching_subexpressions(expr, field_pattern(), s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)) == (phi(),)
+    assert matching_subexpressions(expr, coupling_pattern(), s.CouplingLabelWildcard.req_tag(SymbolRole.COUPLING.value)) == (lam(),)
+    assert matching_subexpressions(expr, index_pattern(), s.IndexLabelWildcard.req_tag(SymbolRole.INDEX.value)) == (mu,)
 
 
 def test_pretty_json_checkpoint_contains_full_lagrangian_expression() -> None:
@@ -40,4 +88,21 @@ def test_pretty_json_checkpoint_contains_full_lagrangian_expression() -> None:
     assert payload["schema_version"] == 1
     assert payload["theory_name"] == "json_scalar"
     assert payload["lagrangian"] == canonical_string(lagrangian)
-    assert expression_from_canonical(payload["lagrangian"]).format_plain() == payload["lagrangian"]
+    assert canonical_string(expression_from_canonical(payload["lagrangian"])) == payload["lagrangian"]
+
+
+def test_json_checkpoint_preserves_mass_symbol_data() -> None:
+    theory = Theory("json_mass_data")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    heavy = theory.define_field(
+        "CapitalPhi",
+        s.Scalar,
+        indices=[flavor.symbol],
+        mass=(FieldMassKind.HEAVY, "MCapitalPhi", [flavor.symbol]),
+    )
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    restored_heavy = restored.field_handle("CapitalPhi")
+
+    assert canonical_string(restored_heavy.definition.mass_expr()) == canonical_string(heavy.definition.mass_expr())
+    assert restored_heavy.label.get_symbol_data(SymbolDataKey.MASS_KIND.value) == FieldMassKind.HEAVY.value
+    assert restored_heavy.label.get_symbol_data(SymbolDataKey.MASS_LABEL.value) == restored.coupling_handle("MCapitalPhi").label

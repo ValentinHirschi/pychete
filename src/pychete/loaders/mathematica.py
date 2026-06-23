@@ -6,8 +6,8 @@ from pathlib import Path
 from symbolica import Expression
 from symbolica.core import AtomType, ParseMode
 
-from ..expr import args, atom_type, head_name, product_expr, sum_expr
-from ..symbols import safe_symbol_name, s
+from ..expr import args, product_expr, sum_expr
+from ..symbols import SymbolRole, safe_symbol_name, s
 from ..theory import Theory
 
 
@@ -134,14 +134,14 @@ def _normalize_expression(text: str) -> str:
 
 
 def _plain_name(expr: Expression) -> str:
-    tree = expr.to_atom_tree()
-    if tree.head is None:
+    kind = expr.get_type()
+    if kind is not AtomType.Var and kind is not AtomType.Fn:
         raise ValueError("Expression does not have a symbol name")
-    return tree.head.split("::")[-1]
+    return expr.get_name().split("::")[-1]
 
 
 def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
-    kind = atom_type(expr)
+    kind = expr.get_type()
     if kind is AtomType.Num:
         return expr
     if kind is AtomType.Var:
@@ -156,7 +156,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             return theory.field_handle(name)()
         if name in theory.couplings:
             return theory.coupling_handle(name)()
-        return theory.symbol(name, role="external")
+        return theory.symbol(name, role=SymbolRole.EXTERNAL)
     if kind is AtomType.Add:
         return sum_expr(_convert_expression(child, theory, env) for child in args(expr))
     if kind is AtomType.Mul:

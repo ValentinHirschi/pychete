@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from pychete import Theory, s
+from pychete import FieldMassKind, Theory, s
 
 
 def build() -> Theory:
     theory = Theory("VLF_toy_model")
     theory.define_gauge_group("U1e", s.U1, "e", "A")
-    capital_psi = theory.define_field("CapitalPsi", s.Fermion, mass=("Heavy", "M"))
+    capital_psi = theory.define_field("CapitalPsi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
     psi = theory.define_field("psi", s.Fermion, mass=0)
-    phi = theory.define_field("phi", s.Scalar, mass=("Light", "m"), self_conjugate=True)
+    phi = theory.define_field("phi", s.Scalar, mass=(FieldMassKind.LIGHT, "m"), self_conjugate=True)
     y = theory.define_coupling("y")
 
     lint = -y() * s.NCM(s.Bar(psi()), s.PR, capital_psi()) * phi()

@@ -1,32 +1,32 @@
 from __future__ import annotations
 
-from symbolica import Expression
-from symbolica.core import AtomType
+from enum import StrEnum
+
+from symbolica import Expression, Replacement
 
 from .expr import (
-    args,
-    atom_type,
-    bar_field_inner,
-    collect_bar_field_atoms,
-    collect_bar_field_atoms_for_label,
-    collect_field_atoms,
-    collect_field_atoms_for_label,
-    expr_key,
-    factors,
-    field_derivatives,
-    field_label,
-    field_type,
+    bar_field_pattern,
+    cd_pattern,
+    field_pattern,
     field_with_derivatives,
-    is_head,
-    list_expr,
-    pow_parts,
-    product_expr,
-    replace_many,
-    sum_expr,
-    terms,
+    is_zero,
+    list_items,
 )
-from .symbols import canonical_string, s
+from .symbols import SymbolRole, canonical_string, s
 from .theory import FieldDefinition, FieldHandle, Theory
+
+
+class FieldVariation(StrEnum):
+    AUTO = "auto"
+    FIELD = "field"
+    BAR = "bar"
+
+    @classmethod
+    def from_user(cls, value: FieldVariation | str) -> FieldVariation:
+        try:
+            return cls(value)
+        except ValueError as exc:
+            raise ValueError("variation must be FieldVariation.AUTO, FieldVariation.FIELD, or FieldVariation.BAR") from exc
 
 
 def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expression) -> Expression:
@@ -37,64 +37,75 @@ def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expressio
 
 
 def _single_cd(index: Expression, expr: Expression) -> Expression:
-    kind = atom_type(expr)
-    if kind is AtomType.Num or kind is AtomType.Var:
-        return s.zero
-    if kind is AtomType.Add:
-        return sum_expr(_single_cd(index, term) for term in terms(expr))
-    if kind is AtomType.Mul:
-        facs = list(factors(expr))
-        pieces = []
-        for i, factor in enumerate(facs):
-            df = _single_cd(index, factor)
-            if canonical_string(df.expand()) != "0":
-                pieces.append(product_expr([*facs[:i], df, *facs[i + 1 :]]))
-        return sum_expr(pieces)
-    parts = pow_parts(expr)
-    if parts is not None:
-        base, exponent = parts
-        n = exponent.to_atom_tree().head
-        if n is None:
-            return s.zero
-        try:
-            n_int = int(n)
-        except ValueError:
-            return s.zero
-        if n_int == 0:
-            return s.zero
-        return n_int * (base ** (n_int - 1)) * _single_cd(index, base)
-    if is_head(expr, s.Field):
-        return field_with_derivatives(expr, (*field_derivatives(expr), index))
-    if is_head(expr, s.Bar):
-        inner_derivative = _single_cd(index, expr[0])
-        if canonical_string(inner_derivative.expand()) == "0":
-            return s.zero
-        return s.Bar(inner_derivative)
-    if is_head(expr, s.CD):
-        return s.CD(expr[0], _single_cd(index, expr[1]))
-    return s.zero
+    varied = expr.replace_multiple(_cd_variation_replacements(index))
+    return varied.series(s.CDVariationParameter, 0, 1).to_expression().coefficient(s.CDVariationParameter).expand()
 
 
-def _variation_atoms(lagrangian: Expression) -> tuple[Expression, ...]:
-    return (*collect_bar_field_atoms(lagrangian), *collect_field_atoms(lagrangian))
+def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
+    field_pat = field_pattern()
+    bar_pat = bar_field_pattern()
+    cd_pat = cd_pattern()
+
+    def field_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = field_pat.replace_wildcards(match)
+        derivative = s.Field(
+            match[s.FieldLabelWildcard],
+            match[s.FieldTypeWildcard],
+            match[s.FieldIndicesWildcard],
+            s.List(*list_items(match[s.FieldDerivativesWildcard]), index),
+        )
+        return matched + s.CDVariationParameter * derivative
+
+    def bar_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = bar_pat.replace_wildcards(match)
+        derivative = s.Bar(
+            s.Field(
+                match[s.FieldLabelWildcard],
+                match[s.FieldTypeWildcard],
+                match[s.FieldIndicesWildcard],
+                s.List(*list_items(match[s.FieldDerivativesWildcard]), index),
+            )
+        )
+        return matched + s.CDVariationParameter * derivative
+
+    def cd_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = cd_pat.replace_wildcards(match)
+        body_derivative = _single_cd(index, match[s.CDBodyWildcard])
+        derivative = s.zero if is_zero(body_derivative) else s.CD(match[s.CDIndexWildcard], body_derivative)
+        return matched + s.CDVariationParameter * derivative
+
+    field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    return (
+        Replacement(cd_pat, cd_variation),
+        Replacement(bar_pat, bar_variation, field_label_is_tagged),
+        Replacement(field_pat, field_variation, field_label_is_tagged),
+    )
 
 
 def partial_functional_derivative(lagrangian: Expression, target_field: Expression) -> Expression:
-    fields = _variation_atoms(lagrangian)
-    replacements: list[tuple[Expression, Expression]] = []
-    inverse: list[tuple[Expression, Expression]] = []
-    target_var: Expression | None = None
-    for i, field in enumerate(fields):
-        tmp = s.head(f"fd_tmp_{i}")
-        replacements.append((field, tmp))
-        inverse.append((tmp, field))
-        if expr_key(field) == expr_key(target_field):
-            target_var = tmp
-    if target_var is None:
-        return s.zero
-    encoded = replace_many(lagrangian, replacements)
-    differentiated = encoded.derivative(target_var)
-    return replace_many(differentiated, inverse).expand()
+    target_replacement = Replacement(target_field, target_field + s.FunctionalVariationParameter)
+    bar_protector = Replacement(
+        bar_field_pattern(),
+        bar_field_pattern(),
+        s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value),
+    )
+    replacements = (
+        [target_replacement, bar_protector]
+        if bool(target_field.matches(bar_field_pattern(), partial=False))
+        else [bar_protector, target_replacement]
+    )
+    varied = lagrangian.replace_multiple(replacements)
+    return (
+        varied.series(s.FunctionalVariationParameter, 0, 1)
+        .to_expression()
+        .coefficient(s.FunctionalVariationParameter)
+        .expand()
+    )
+
+
+def _field_derivative_sets(lagrangian: Expression, label: Expression, *, barred: bool) -> set[tuple[Expression, ...]]:
+    pattern = bar_field_pattern(label) if barred else field_pattern(label)
+    return {list_items(match[s.FieldDerivativesWildcard]) for match in lagrangian.match(pattern)}
 
 
 def derive_eom(
@@ -103,7 +114,7 @@ def derive_eom(
     field: FieldHandle | FieldDefinition | str,
     *,
     eft_order: int = 6,
-    variation: str = "auto",
+    variation: FieldVariation | str = FieldVariation.AUTO,
 ) -> Expression:
     if isinstance(field, str):
         definition = theory.fields[field]
@@ -112,24 +123,21 @@ def derive_eom(
     else:
         definition = field
 
-    if variation == "auto":
-        variation = "field" if definition.self_conjugate else "bar"
-    if variation not in {"field", "bar"}:
-        raise ValueError("variation must be 'auto', 'field', or 'bar'")
+    variation_mode = FieldVariation.from_user(variation)
+    if variation_mode is FieldVariation.AUTO:
+        variation_mode = FieldVariation.FIELD if definition.is_self_conjugate else FieldVariation.BAR
 
-    if variation == "bar":
-        atoms = collect_bar_field_atoms_for_label(lagrangian, definition.label)
-        derivative_sets = {field_derivatives(bar_field_inner(atom)) for atom in atoms}
+    if variation_mode is FieldVariation.BAR:
+        derivative_sets = _field_derivative_sets(lagrangian, definition.label, barred=True)
     else:
-        atoms = collect_field_atoms_for_label(lagrangian, definition.label)
-        derivative_sets = {field_derivatives(atom) for atom in atoms}
+        derivative_sets = _field_derivative_sets(lagrangian, definition.label, barred=False)
     derivative_sets.add(())
 
     residual = s.zero
     base = definition.expr()
     for derivatives in sorted(derivative_sets, key=lambda d: (len(d), tuple(canonical_string(x) for x in d))):
         target = field_with_derivatives(base, derivatives)
-        if variation == "bar":
+        if variation_mode is FieldVariation.BAR:
             target = s.Bar(target)
         partial = partial_functional_derivative(lagrangian, target)
         if len(derivatives) == 0:

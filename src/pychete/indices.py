@@ -3,11 +3,10 @@ from __future__ import annotations
 from collections import Counter
 from dataclasses import dataclass
 
-from symbolica import Expression
-from symbolica.core import AtomType
+from symbolica import Expression, Replacement
 
-from .expr import args, as_int, atom_type, expr_key, is_head, pow_parts, replace_many, unique_subexpressions
-from .symbols import canonical_string, s
+from .expr import as_int, index_pattern, is_head, power_pattern
+from .symbols import SymbolRole, canonical_string, s
 from .theory import Theory
 
 
@@ -17,11 +16,6 @@ class IndexInfo:
     label: Expression
     representation: Expression
 
-    @property
-    def key(self) -> str:
-        return expr_key(self.expr)
-
-
 def index_info(expr: Expression) -> IndexInfo:
     if not is_head(expr, s.Index):
         raise ValueError(f"Expected Index expression, got {canonical_string(expr)}")
@@ -29,45 +23,47 @@ def index_info(expr: Expression) -> IndexInfo:
 
 
 def collect_indices(expr: Expression) -> tuple[IndexInfo, ...]:
-    return tuple(index_info(sub) for sub in unique_subexpressions(expr, lambda sub: is_head(sub, s.Index)))
+    return tuple(index_info(sub) for sub in _matched_index_atoms(expr, unique=True))
 
 
-def _index_counts(expr: Expression) -> Counter[str]:
-    counts: Counter[str] = Counter()
-    _count_indices(expr, counts, multiplier=1)
+def _matched_index_atoms(expr: Expression, *, unique: bool) -> tuple[Expression, ...]:
+    pattern = index_pattern()
+    matches = (
+        pattern.replace_wildcards(match)
+        for match in expr.match(pattern, s.IndexLabelWildcard.req_tag(SymbolRole.INDEX.value))
+    )
+    return tuple(dict.fromkeys(matches)) if unique else tuple(matches)
+
+
+def _index_counts(expr: Expression) -> Counter[Expression]:
+    counts: Counter[Expression] = Counter()
+    for index in _matched_index_atoms(expr, unique=False):
+        counts[index] += 1
+
+    pow_pat = power_pattern()
+    for match in expr.match(pow_pat):
+        n = as_int(match[s.PowExponentWildcard])
+        if n is None:
+            continue
+        for index, count in _index_counts(match[s.PowBaseWildcard]).items():
+            counts[index] += (n - 1) * count
+
     return counts
-
-
-def _count_indices(expr: Expression, counts: Counter[str], *, multiplier: int) -> None:
-    if is_head(expr, s.Index):
-        counts[expr_key(expr)] += multiplier
-        return
-    parts = pow_parts(expr)
-    if parts is not None:
-        base, exponent = parts
-        n = as_int(exponent)
-        _count_indices(base, counts, multiplier=multiplier * (n if n is not None else 1))
-        return
-    kind = atom_type(expr)
-    if kind is AtomType.Num or kind is AtomType.Var:
-        return
-    for child in args(expr):
-        _count_indices(child, counts, multiplier=multiplier)
 
 
 def open_indices(expr: Expression) -> tuple[IndexInfo, ...]:
     counts = _index_counts(expr)
-    return tuple(info for info in collect_indices(expr) if counts[info.key] == 1)
+    return tuple(info for info in collect_indices(expr) if counts[info.expr] == 1)
 
 
 def dummy_indices(expr: Expression) -> tuple[IndexInfo, ...]:
     counts = _index_counts(expr)
-    return tuple(info for info in collect_indices(expr) if counts[info.key] > 1)
+    return tuple(info for info in collect_indices(expr) if counts[info.expr] > 1)
 
 
 def relabel_dummy_indices(theory: Theory, expr: Expression, *, prefix: str = "d") -> Expression:
     replacements: list[tuple[Expression, Expression]] = []
-    for i, info in enumerate(sorted(dummy_indices(expr), key=lambda item: (canonical_string(item.representation), item.key))):
-        new_label = theory.symbol(f"{prefix}{i}", role="index")
+    for i, info in enumerate(sorted(dummy_indices(expr), key=lambda item: (canonical_string(item.representation), canonical_string(item.expr)))):
+        new_label = theory.symbol(f"{prefix}{i}", role=SymbolRole.INDEX)
         replacements.append((info.expr, s.Index(new_label, info.representation)))
-    return replace_many(expr, replacements)
+    return expr.replace_multiple([Replacement(old, new) for old, new in replacements])

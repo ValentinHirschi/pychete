@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pychete import Theory, s
+from pychete import FieldMassKind, Theory, s
 from pychete.loaders import load_matchete_model, load_python_model
 
 
@@ -39,7 +39,7 @@ def test_vlf_toy_model_asset_loads_without_runtime_reference_dependency() -> Non
     assert {"A", "CapitalPsi", "psi", "phi"} <= set(theory.fields)
     assert {"e", "M", "m", "y"} <= set(theory.couplings)
     assert theory.fields["CapitalPsi"].heavy is True
-    assert theory.fields["phi"].mass_kind == "light"
+    assert theory.fields["phi"].mass_kind is FieldMassKind.LIGHT
     assert theory.lagrangian is not None
 
 
