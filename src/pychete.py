@@ -1,0 +1,27 @@
+from __future__ import annotations
+
+from pprint import pprint
+
+
+def main() -> None:
+    import symbolica
+    import symbolica.community.idenso
+    import symbolica.community.spenso
+    import symbolica.community.vakint
+
+    local_versions = getattr(symbolica, "LOCAL_VERSIONS", None)
+    if not isinstance(local_versions, dict):
+        raise RuntimeError("symbolica.LOCAL_VERSIONS is missing or is not a dict")
+
+    expected = {"symbolica", "spenso", "idenso", "vakint"}
+    missing = expected.difference(local_versions)
+    if missing:
+        raise RuntimeError(f"symbolica.LOCAL_VERSIONS is missing keys: {sorted(missing)}")
+
+    print("Loaded Symbolica community modules: idenso, spenso, vakint")
+    print("LOCAL_VERSIONS:")
+    pprint(local_versions)
+
+
+if __name__ == "__main__":
+    main()

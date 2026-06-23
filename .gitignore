@@ -1,0 +1,12 @@
+__pycache__/
+*.pyc
+
+# Keep the installer tracked while generated dependency content stays ignored.
+!dependencies/
+!dependencies/install_dependencies.py
+dependencies/install_manifest.json
+dependencies/.venv/
+dependencies/gammaloop/
+dependencies/symbolica/
+dependencies/symbolica-community/
+dependencies/wheels/
