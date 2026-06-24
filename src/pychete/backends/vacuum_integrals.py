@@ -160,8 +160,6 @@ def _single_scale_integral_from_mass_squared(
 ) -> Expression:
     if beta < 1:
         return Expression.num(0)
-    if alpha < 0:
-        raise ValueError("massless propagator powers must be non-negative")
     regulator = epsilon_symbol() if epsilon is None else epsilon
     scale_squared = mu_r_squared_symbol() if mu_r_squared is None else mu_r_squared
     normalization = imaginary_unit_symbol() * numerator / (16 * Expression.PI**2)
@@ -198,8 +196,6 @@ def _multi_scale_integral_from_mass_squareds(
     epsilon: Expression | None = None,
     mu_r_squared: Expression | None = None,
 ) -> Expression:
-    if alpha < 0:
-        raise ValueError("massless propagator powers must be non-negative")
     if not mass_powers:
         return Expression.num(0)
     if len(mass_powers) == 1:
@@ -306,6 +302,8 @@ def _topology_data(topology_expr: Expression) -> tuple[tuple[tuple[Expression, i
         if bool(mass_squared == Expression.num(0)):
             massless_power += power
             continue
+        if power < 1:
+            raise ValueError("massive vakint propagator powers must be positive integers for internal evaluation")
         for index, (existing_mass, existing_power) in enumerate(mass_powers):
             if bool(mass_squared == existing_mass):
                 mass_powers[index] = (existing_mass, existing_power + power)
@@ -323,8 +321,8 @@ def _topology_mass_powers(topology_expr: Expression) -> tuple[tuple[Expression, 
     for match in topology_expr.match(pattern):
         power_expr = power_wildcard.replace_wildcards(match)
         power = as_int(power_expr)
-        if power is None or power < 1:
-            raise ValueError("vakint propagator powers must be positive integers for internal evaluation")
+        if power is None:
+            raise ValueError("vakint propagator powers must be integers for internal evaluation")
         mass_powers.append((mass_wildcard.replace_wildcards(match), power))
     return tuple(mass_powers)
 

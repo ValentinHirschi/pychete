@@ -51,7 +51,10 @@ discoveries, dependency patches, blockers, and remaining work.
 - Add `helper_mathematica_scripts/` with Wolfram scripts that load Matchete and
   export model definitions, validation expected outputs, supertraces, matching
   conditions, and selected unit-test fixtures into pychete-owned serialized
-  assets.
+  assets. Keep optional top-level `scripts/` wrappers checked in for users who
+  have Mathematica and want a convenient export/convert entry point, while
+  keeping the maintained helper implementation and all normal pytest/runtime
+  paths Matchete- and Mathematica-independent.
 - Treat the direct Python Mathematica loader as a documented supported-subset
   loader for simple declarative model assets and saved-result snippets only.
   For complicated Mathematica models, use Wolfram/Matchete helper scripts to

@@ -51,7 +51,10 @@ discoveries, dependency patches, blockers, and remaining work.
 - Add `helper_mathematica_scripts/` with Wolfram scripts that load Matchete and
   export model definitions, validation expected outputs, supertraces, matching
   conditions, and selected unit-test fixtures into pychete-owned serialized
-  assets.
+  assets. Keep optional top-level `scripts/` wrappers checked in for users who
+  have Mathematica and want a convenient export/convert entry point, while
+  keeping the maintained helper implementation and all normal pytest/runtime
+  paths Matchete- and Mathematica-independent.
 - Treat the direct Python Mathematica loader as a documented supported-subset
   loader for simple declarative model assets and saved-result snippets only.
   For complicated Mathematica models, use Wolfram/Matchete helper scripts to
@@ -2701,6 +2704,36 @@ discoveries, dependency patches, blockers, and remaining work.
   - kept `evaluate_one_loop_single_scale_vakint_expression(...)` as the strict
     single-scale massive helper and added tests for two-mass, massless/massive,
     and all-massless scalar topology cases.
+- Ported two concrete Matchete `Validation/Tests/LoopIntegration.wl`
+  scalar-evaluation cases into the pychete-owned internal integral backend:
+  - `Prop[m]^2 Prop[0]^2`, where the zero-mass denominator contributes a
+    massless propagator power and the result is proportional to
+    `-I/m^4 * (1/epsilon + log(mu^2/m^2) + 2)` in pychete's explicit
+    `1/(16*pi^2)` normalization convention;
+  - `Prop[m]^2 Prop[0]^-2`, where the negative zero-mass power represents a
+    loop-momentum numerator power after tensor reduction and the result is
+    proportional to `I*m^4 * (3/epsilon + 3 log(mu^2/m^2) + 2)`;
+  - the generic internal scalar evaluator now accepts negative zero-mass
+    propagator powers, continues to reject non-integer powers, and keeps
+    massive propagator powers strictly positive;
+  - the optional top-level conversion scripts remain checked in under
+    `scripts/` as convenience wrappers over `helper_mathematica_scripts/`, and
+    pychete runtime code plus normal pytest continue to consume committed
+    pychete fixtures only.
+- Verification for the Matchete massless-power loop-integration slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py
+    tests/integration/matching/test_fluctuation_operator.py
+    tests/unit/definitions/test_public_api.py -q'` passed: 53 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 193 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

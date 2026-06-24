@@ -127,6 +127,35 @@ def test_internal_vakint_expression_sets_scaleless_massless_topologies_to_zero()
     assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), Expression.num(0))
 
 
+def test_internal_vakint_expression_matches_matchete_massive_with_massless_denominator_case() -> None:
+    mass = S("m")
+    expression = vakint.one_loop_vacuum_integral(Expression.num(1), (mass**2, Expression.num(0)), powers=(2, 2))
+    eps = vacuum_integrals.epsilon_symbol()
+    mu = vacuum_integrals.mu_r_squared_symbol()
+    expected = (
+        -vacuum_integrals.imaginary_unit_symbol()
+        / (16 * Expression.PI**2 * mass**4)
+        * (Expression.num(1) / eps + mu.log() - 2 * mass.log() + 2)
+    )
+
+    assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), expected)
+
+
+def test_internal_vakint_expression_matches_matchete_massive_with_momentum_numerator_case() -> None:
+    mass = S("m")
+    expression = vakint.one_loop_vacuum_integral(Expression.num(1), (mass**2, Expression.num(0)), powers=(2, -2))
+    eps = vacuum_integrals.epsilon_symbol()
+    mu = vacuum_integrals.mu_r_squared_symbol()
+    expected = (
+        vacuum_integrals.imaginary_unit_symbol()
+        * mass**4
+        / (16 * Expression.PI**2)
+        * (3 / eps + 3 * (mu.log() - 2 * mass.log()) + 2)
+    )
+
+    assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), expected)
+
+
 @pytest.mark.parametrize(
     "expression, message",
     [
