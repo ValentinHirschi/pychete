@@ -2470,6 +2470,30 @@ discoveries, dependency patches, blockers, and remaining work.
   manifest.
 - `git diff --check` passed after the vakint tensor-reduction/evaluation
   boundary slice.
+- Completed the internal single-scale vacuum-integral comparison slice:
+  - added `pychete.backends.vacuum_integrals` with
+    `evaluate_one_loop_single_scale_vacuum_integral(...)`, pychete's first
+    internal Matchete-style analytic one-loop tadpole evaluator;
+  - the current evaluator covers the one-loop, one-propagator, power-one,
+    finite-through-pole single-scale massive tadpole in the same MSbar
+    convention used by vakint when `number_of_terms_in_epsilon_expansion=2`;
+  - re-exported the evaluator through `pychete.api` and package-root
+    `pychete`;
+  - added a real native-vakint comparison test proving the internal pychete
+    result equals `vakint.evaluate(...)` for the same single-scale topology.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/backends/test_vacuum_integrals_backend.py
+  tests/unit/backends/test_vakint_backend.py
+  tests/unit/definitions/test_public_api.py -q'` passed after the internal
+  single-scale comparison slice: 21 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the internal single-scale comparison
+  slice: 179 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the internal single-scale comparison slice: no issues
+  found in 25 source files.
+- `git diff --check` passed after the internal single-scale comparison slice.
 
 ## Remaining Work
 
@@ -2497,9 +2521,10 @@ discoveries, dependency patches, blockers, and remaining work.
   topologies.
 - Implement the pychete-owned analytic vacuum-integral backend for one-loop
   vacuum integral evaluation after tensor reduction, following Matchete's
-  treatment for single-scale, zero-mass, and mixed-mass cases. Native vakint
-  remains available for topology-independent tensor reduction and supported
-  single-scale massive analytic evaluation cross-checks.
+  treatment for higher single-scale propagator powers, zero-mass, and
+  mixed-mass cases. Native vakint remains available for topology-independent
+  tensor reduction and supported single-scale massive analytic evaluation
+  cross-checks.
 - Extend the new compact Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
   artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or

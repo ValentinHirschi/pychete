@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .eft import operator_dimension, series_eft
+from .backends.vacuum_integrals import evaluate_one_loop_single_scale_vacuum_integral
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
     FluctuationBasis,
@@ -86,6 +87,7 @@ __all__ = [
     "display_string",
     "dummy_indices",
     "evaluator_probe_equal",
+    "evaluate_one_loop_single_scale_vacuum_integral",
     "load_state",
     "latex_string",
     "open_indices",
