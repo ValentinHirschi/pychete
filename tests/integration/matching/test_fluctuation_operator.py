@@ -1204,6 +1204,13 @@ def test_one_loop_setup_can_evaluate_single_scale_integrals_internally() -> None
         setup.interaction_power_type_internal_integral_sum(tensor_reduce=False),
         vacuum_integrals_backend.evaluate_one_loop_single_scale_vakint_expression(raw_interaction),
     )
+    assert_expr_equal(
+        setup.interaction_power_type_internal_integral_sum(tensor_reduce=False, combine_terms=True),
+        vacuum_integrals_backend.evaluate_one_loop_single_scale_vakint_expression(
+            raw_interaction,
+            combine_terms=True,
+        ),
+    )
 
     tensor_reduce_engine = FakeKernelVakintEngine()
     assert_expr_equal(

@@ -2734,6 +2734,38 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 193 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Added the first pychete-side coverage of Matchete
+  `SimplifyMassFunction`-style finite loop-function cancellation:
+  - rescanned the Symbolica stubs for `Expression.together()` and used that
+    native common-denominator primitive rather than adding a Python LF/IBP
+    reducer;
+  - added an opt-in `combine_terms=True` path to
+    `evaluate_one_loop_single_scale_vakint_expression(...)`,
+    `evaluate_one_loop_vakint_expression(...)`,
+    `OneLoopSetup.power_type_internal_integral_sum(...)`, and
+    `OneLoopSetup.interaction_power_type_internal_integral_sum(...)`;
+  - ported the Matchete
+    `SimplifyMassFunction: 2 mass complicated sum full reduction` validation
+    case through pychete's vakint-topology representation, where the evaluated
+    and combined result is pychete's explicit loop normalization times
+    `1/(6 Md^2 Mq^2)`;
+  - left the default evaluated form expanded for compatibility with existing
+    tests and callers, so expensive common-denominator combination remains an
+    explicit request.
+- Verification for the native loop-function combination slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py
+    tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_can_evaluate_single_scale_integrals_internally
+    -q'` passed: 14 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 194 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

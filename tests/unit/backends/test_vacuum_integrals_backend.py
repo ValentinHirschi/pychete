@@ -7,6 +7,16 @@ from pychete.backends import vakint, vacuum_integrals
 from tests.conftest import assert_expr_equal
 
 
+def _loop_function_topology(masses: tuple[Expression, ...], powers: tuple[int, ...]) -> Expression:
+    alpha = powers[-1]
+    mass_squareds = tuple(mass**2 for mass in masses)
+    prop_powers = tuple(powers[:-1])
+    if alpha:
+        mass_squareds += (Expression.num(0),)
+        prop_powers += (alpha,)
+    return vakint.one_loop_vacuum_integral(Expression.num(1), mass_squareds, powers=prop_powers)
+
+
 def test_internal_single_scale_tadpoles_match_vakint_finite_order_evaluation() -> None:
     mass = S("M")
     numerator = S("num")
@@ -154,6 +164,30 @@ def test_internal_vakint_expression_matches_matchete_massive_with_momentum_numer
     )
 
     assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), expected)
+
+
+def test_internal_vakint_expression_combines_matchete_mass_function_full_reduction_case() -> None:
+    md = S("Md")
+    mq = S("Mq")
+    expression = (
+        _loop_function_topology((md, mq), (2, 2, 0))
+        + _loop_function_topology((md, mq), (3, 1, 0))
+        - _loop_function_topology((md, mq), (3, 2, -1))
+        - _loop_function_topology((md, mq), (4, 1, -1))
+        + _loop_function_topology((mq, md), (3, 1, 0))
+        - _loop_function_topology((mq, md), (3, 2, -1))
+        - _loop_function_topology((mq, md), (4, 1, -1))
+    )
+    expected = (
+        vacuum_integrals.imaginary_unit_symbol()
+        / (16 * Expression.PI**2)
+        / (6 * md**2 * mq**2)
+    )
+
+    assert_expr_equal(
+        vacuum_integrals.evaluate_one_loop_vakint_expression(expression, combine_terms=True),
+        expected,
+    )
 
 
 @pytest.mark.parametrize(

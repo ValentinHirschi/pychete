@@ -1232,12 +1232,15 @@ class OneLoopSetup:
         tensor_reduce_engine: Any | None = None,
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
     ) -> Expression:
         """Evaluate single-scale power-type vacuum integrals with pychete.
 
         Native vakint remains responsible for optional topology-independent
         tensor reduction. The scalar single-scale massive topology evaluation
-        is then performed by pychete's internal analytic backend.
+        is then performed by pychete's internal analytic backend. Set
+        ``combine_terms`` to route the evaluated expression through
+        Symbolica's native ``together()`` common-denominator pass.
         """
 
         raw = self.power_type_vakint_integral_sum(
@@ -1254,6 +1257,7 @@ class OneLoopSetup:
             raw,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
         )
 
     def interaction_power_type_vakint_integral_sum(
@@ -1299,13 +1303,16 @@ class OneLoopSetup:
         tensor_reduce_engine: Any | None = None,
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
     ) -> Expression:
         """Evaluate single-scale interaction-power vacuum integrals with pychete.
 
         This is the internal analytic counterpart to
         ``interaction_power_type_vakint_integral_sum(stage="evaluated")`` for
         one-loop scalar topologies that are massive and single-scale after
-        optional vakint tensor reduction.
+        optional vakint tensor reduction. Set ``combine_terms`` to route the
+        evaluated expression through Symbolica's native ``together()``
+        common-denominator pass.
         """
 
         raw = self.interaction_power_type_vakint_integral_sum(
@@ -1324,6 +1331,7 @@ class OneLoopSetup:
             raw,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
         )
 
     def interaction_power_type_vakint_epsilon_coefficient(

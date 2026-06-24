@@ -88,6 +88,7 @@ def evaluate_one_loop_single_scale_vakint_expression(
     *,
     epsilon: Expression | None = None,
     mu_r_squared: Expression | None = None,
+    combine_terms: bool = False,
 ) -> Expression:
     """Evaluate single-scale massive one-loop ``vakint::topo`` factors.
 
@@ -95,7 +96,10 @@ def evaluate_one_loop_single_scale_vakint_expression(
     tensor reduction, where numerator algebra has already been handled and the
     remaining scalar topology is a one-loop, single-mass, massive vacuum
     topology. Unsupported zero-mass or mixed-mass topologies raise
-    ``ValueError`` instead of delegating to native vakint.
+    ``ValueError`` instead of delegating to native vakint. When
+    ``combine_terms`` is set, the evaluated result is passed through
+    Symbolica's native ``Expression.together()`` to expose cancellations across
+    finite sums of loop functions.
     """
 
     pattern = _topology_pattern()
@@ -113,7 +117,10 @@ def evaluate_one_loop_single_scale_vakint_expression(
             mu_r_squared=mu_r_squared,
         )
 
-    return expr.replace(pattern, evaluate_topology).expand()
+    return _finish_evaluated_expression(
+        expr.replace(pattern, evaluate_topology).expand(),
+        combine_terms=combine_terms,
+    )
 
 
 def evaluate_one_loop_vakint_expression(
@@ -121,6 +128,7 @@ def evaluate_one_loop_vakint_expression(
     *,
     epsilon: Expression | None = None,
     mu_r_squared: Expression | None = None,
+    combine_terms: bool = False,
 ) -> Expression:
     """Evaluate scalar one-loop ``vakint::topo`` factors with pychete.
 
@@ -129,7 +137,9 @@ def evaluate_one_loop_vakint_expression(
     nonzero masses are combined, and multiscale topologies are reduced to
     derivatives of single-scale massive integrals with respect to mass-squared
     variables. Tensor numerators should be reduced before this scalar
-    evaluation stage.
+    evaluation stage. When ``combine_terms`` is set, the evaluated result is
+    passed through Symbolica's native ``Expression.together()`` to expose
+    cancellations across finite sums of loop functions.
     """
 
     pattern = _topology_pattern()
@@ -146,7 +156,16 @@ def evaluate_one_loop_vakint_expression(
             mu_r_squared=mu_r_squared,
         )
 
-    return expr.replace(pattern, evaluate_topology).expand()
+    return _finish_evaluated_expression(
+        expr.replace(pattern, evaluate_topology).expand(),
+        combine_terms=combine_terms,
+    )
+
+
+def _finish_evaluated_expression(expr: Expression, *, combine_terms: bool) -> Expression:
+    if combine_terms:
+        return expr.together()
+    return expr
 
 
 def _single_scale_integral_from_mass_squared(
