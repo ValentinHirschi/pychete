@@ -182,6 +182,35 @@ def test_conjugate_representation_lookup_uses_underlying_registered_metadata() -
         raise AssertionError("unregistered conjugate representation metadata lookup was accepted")
 
 
+def test_cg_tensors_store_symbolica_metadata_and_survive_json_restore() -> None:
+    theory = Theory("cg_metadata")
+    su2 = theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    fund = su2(s.fund)
+    eps = theory.define_cg_tensor(
+        "eps2",
+        [fund, fund],
+        tensor=S("raw_eps_tensor"),
+        source="First@InvariantTensors[SU@2, {{1}, {1}}]",
+    )
+
+    i = S("i")
+    j = S("j")
+    expr = eps(i, j)
+
+    assert eps.label.get_symbol_data(SymbolDataKey.CG_REPRESENTATIONS.value) == [fund, fund]
+    assert eps.label.get_symbol_data(SymbolDataKey.CG_TENSOR.value) == S("raw_eps_tensor")
+    assert eps.label.get_symbol_data(SymbolDataKey.CG_SOURCE.value) == "First@InvariantTensors[SU@2, {{1}, {1}}]"
+    assert "cg_tensor_rank_2" in _local_tags(eps.label)
+    assert expr == s.CG(eps.label, s.List(i, j))
+    assert theory.cg_tensors["eps2"].representation_exprs == (fund, fund)
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    restored_eps = restored.cg_tensor_handle("eps2")
+    assert restored_eps.label.get_symbol_data(SymbolDataKey.CG_REPRESENTATIONS.value) == [fund, fund]
+    assert restored_eps.label.get_symbol_data(SymbolDataKey.CG_TENSOR.value) == S("raw_eps_tensor")
+    assert restored_eps(S("i"), S("j")) == expr
+
+
 def test_field_symbol_data_stores_field_roles_and_propagation_flags() -> None:
     theory = Theory("field_roles")
     ghost = theory.define_field("c", s.Ghost, mass=(FieldMassKind.HEAVY, "Mc"))

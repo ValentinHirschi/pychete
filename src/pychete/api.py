@@ -26,6 +26,8 @@ from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import (
     BuiltinIndexType,
+    CGTensorDefinition,
+    CGTensorHandle,
     CouplingHandle,
     FieldChirality,
     FieldHandle,
@@ -41,6 +43,8 @@ from .validation import NumericProbeResult, evaluator_probe_equal
 
 __all__ = [
     "BuiltinIndexType",
+    "CGTensorDefinition",
+    "CGTensorHandle",
     "CouplingHandle",
     "FieldHandle",
     "FieldChirality",

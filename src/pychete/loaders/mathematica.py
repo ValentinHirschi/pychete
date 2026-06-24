@@ -509,6 +509,8 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             return theory.field_handle(name)()
         if name in theory.couplings:
             return theory.coupling_handle(name)()
+        if name in theory.cg_tensors:
+            return theory.cg_tensor_handle(name)()
         return theory.symbol(name, role=SymbolRole.EXTERNAL)
     if kind is AtomType.Add:
         return sum_expr(_convert_expression(child, theory, env) for child in args(expr))
@@ -588,6 +590,8 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             return symmetry_heads[name](*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.groups:
             return theory.symbol(name, role=SymbolRole.GROUP)(*(_convert_expression(child, theory, env) for child in args(expr)))
+        if name in theory.cg_tensors:
+            return theory.cg_tensor_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.fields:
             return theory.field_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.couplings:
@@ -713,6 +717,14 @@ def _load_matchete_model_into(
                 declared_group,
                 label,
                 dynkin=_eval_expression_list(raw_args[2], theory),
+            )
+        elif head == "DefineCG":
+            if len(raw_args) < 3:
+                raise NotImplementedError(f"Unsupported DefineCG: {statement}")
+            theory.define_cg_tensor(
+                _clean_name(raw_args[0]),
+                _eval_expression_list(raw_args[1], theory),
+                source=_preprocess_names(raw_args[2].strip()),
             )
         elif head == "DefineField":
             if len(raw_args) < 2:

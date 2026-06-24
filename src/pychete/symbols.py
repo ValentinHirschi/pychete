@@ -415,6 +415,7 @@ class SymbolRole(StrEnum):
     INDEX_TYPE = "index_type"
     GROUP = "group"
     REPRESENTATION = "representation"
+    CG_TENSOR = "cg_tensor"
     EXTERNAL = "external"
 
 
@@ -451,6 +452,9 @@ class SymbolDataKey(StrEnum):
     REPRESENTATION_DYNKIN = "representation_dynkin"
     REPRESENTATION_DIMENSION = "representation_dimension"
     REPRESENTATION_REALITY = "representation_reality"
+    CG_REPRESENTATIONS = "cg_representations"
+    CG_TENSOR = "cg_tensor"
+    CG_SOURCE = "cg_source"
 
 
 class SymbolStore:

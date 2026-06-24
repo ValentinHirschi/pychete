@@ -50,6 +50,8 @@ def test_public_api_methods_have_docstrings() -> None:
             "define_field",
             "field_handle",
             "coupling_handle",
+            "cg_tensor_handle",
+            "define_cg_tensor",
             "define_gauge_group",
             "define_global_group",
             "define_representation",
@@ -73,6 +75,7 @@ def test_public_api_methods_have_docstrings() -> None:
         ],
         pychete.FieldHandle: ["__call__"],
         pychete.CouplingHandle: ["__call__"],
+        pychete.CGTensorHandle: ["__call__"],
         pychete.PycheteState: [
             "add_theory",
             "add_expression",

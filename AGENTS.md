@@ -131,6 +131,14 @@ role tags and `representation_group`, `representation_dynkin`,
 `representation_dimension`, and `representation_reality` symbol data, never
 plain external symbols.
 
+Clebsch-Gordan tensors must be registered through
+`Theory.define_cg_tensor(...)`. Model-specific tensors such as Matchete's
+`C4[i,j,k,M]` must become theory-owned `cg_tensor` labels used through the
+central `CG(label, indices)` head, with `cg_representations`, optional
+`cg_tensor`, and `cg_source` symbol data. Do not leave them as plain external
+functions, and do not hand-roll contractions in Python; lower them through
+spenso/idenso backend adapters.
+
 Every reusable pychete built-in symbol must be created through the central
 `SymbolStore` so it receives pychete's custom Symbolica print callback. Human
 printing should look good in `PrintMode.Symbolica`, `PrintMode.Latex`,

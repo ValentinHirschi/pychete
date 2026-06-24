@@ -225,11 +225,12 @@ _SYMBOL_ROLE_ORDER = {
     SymbolRole.INDEX_TYPE.value: 0,
     SymbolRole.GROUP.value: 1,
     SymbolRole.REPRESENTATION.value: 2,
-    SymbolRole.INDEX.value: 3,
-    SymbolRole.COUPLING.value: 4,
-    SymbolRole.FIELD.value: 5,
-    SymbolRole.EXTERNAL.value: 6,
-    SymbolRole.LABEL.value: 7,
+    SymbolRole.CG_TENSOR.value: 3,
+    SymbolRole.INDEX.value: 4,
+    SymbolRole.COUPLING.value: 5,
+    SymbolRole.FIELD.value: 6,
+    SymbolRole.EXTERNAL.value: 7,
+    SymbolRole.LABEL.value: 8,
 }
 
 
@@ -311,6 +312,9 @@ def _normalized_restored_symbol_data(role: str, data: dict[str, Any]) -> dict[st
         normalized.setdefault(SymbolDataKey.REPRESENTATION_DYNKIN.value, [])
         normalized.setdefault(SymbolDataKey.REPRESENTATION_DIMENSION.value, -1)
         normalized.setdefault(SymbolDataKey.REPRESENTATION_REALITY.value, RepresentationReality.UNKNOWN.value)
+    elif role == SymbolRole.CG_TENSOR.value:
+        normalized.setdefault(SymbolDataKey.CG_REPRESENTATIONS.value, [])
+        normalized.setdefault(SymbolDataKey.CG_SOURCE.value, "")
     return normalized
 
 
@@ -463,6 +467,26 @@ def representation_reality_from_label(label: Expression) -> RepresentationRealit
     return RepresentationReality.from_user(str(value))
 
 
+def cg_representations_from_label(label: Expression) -> tuple[Expression, ...]:
+    return _expression_list_from_symbol_data(label, SymbolDataKey.CG_REPRESENTATIONS)
+
+
+def cg_tensor_from_label(label: Expression) -> Expression | None:
+    value = symbol_data(label, SymbolDataKey.CG_TENSOR)
+    if value is None:
+        return None
+    if not isinstance(value, Expression):
+        raise ValueError(f"CG tensor data is not stored as an expression on {canonical_string(label)}")
+    return value
+
+
+def cg_source_from_label(label: Expression) -> str | None:
+    value = symbol_data(label, SymbolDataKey.CG_SOURCE)
+    if value is None or value == "":
+        return None
+    return str(value)
+
+
 def _coupling_name_for_label(theory: Theory, label_text: str) -> str:
     for definition in theory.couplings.values():
         if canonical_string(definition.label) == label_text:
@@ -561,6 +585,10 @@ def _representation_symbol_tags(group: str, reality: RepresentationReality) -> t
     return (f"representation_group_{safe_symbol_name(group)}", f"representation_reality_{reality.value}")
 
 
+def _cg_tensor_symbol_tags(rank: int) -> tuple[str, ...]:
+    return (f"cg_tensor_rank_{rank}",)
+
+
 def _group_entry(
     *,
     name: str,
@@ -638,6 +666,58 @@ class RepresentationDefinition:
             "dynkin": [canonical_string(item) for item in self.dynkin_exprs],
             "dimension": self.dimension_value,
             "reality": self.reality_kind.value,
+        }
+
+
+@dataclass(frozen=True)
+class CGTensorDefinition:
+    """Registered metadata for a Clebsch-Gordan tensor label."""
+
+    name: str
+    label: Expression
+    representations: tuple[Expression, ...] = ()
+    tensor: Expression | None = None
+    source: str | None = None
+
+    @property
+    def representation_exprs(self) -> tuple[Expression, ...]:
+        """Index representations carried by this CG tensor."""
+
+        return cg_representations_from_label(self.label)
+
+    @property
+    def tensor_expr(self) -> Expression | None:
+        """Backend tensor expression stored on the label, if available."""
+
+        return cg_tensor_from_label(self.label)
+
+    @property
+    def source_text(self) -> str | None:
+        """Original model/backend source string, if no expression was stored."""
+
+        return cg_source_from_label(self.label)
+
+    def expr(self, *indices: Expression) -> Expression:
+        """Build a Symbolica ``CG(label, indices)`` tensor atom."""
+
+        return s.CG(self.label, list_expr(*indices))
+
+    def _repr_latex_(self) -> str:
+        return f"${latex_string(self.expr())}$"
+
+    def _repr_html_(self) -> str:
+        reps = ", ".join(escape(display_string(rep)) for rep in self.representation_exprs)
+        return f"<code>CGTensor({escape(display_string(self.label))}; reps=({reps}))</code>"
+
+    def to_json(self) -> dict[str, Any]:
+        tensor = self.tensor_expr
+        source = self.source_text
+        return {
+            "name": self.name,
+            "label": canonical_string(self.label),
+            "representations": [canonical_string(rep) for rep in self.representation_exprs],
+            "tensor": canonical_string(tensor) if tensor is not None else None,
+            "source": source,
         }
 
 
@@ -919,6 +999,37 @@ class CouplingHandle:
         return self.definition._repr_html_()
 
 
+class CGTensorHandle:
+    """Callable handle for constructing a registered Clebsch-Gordan tensor."""
+
+    def __init__(self, theory: Theory, definition: CGTensorDefinition) -> None:
+        self.theory = theory
+        self.definition = definition
+
+    @property
+    def label(self) -> Expression:
+        """Symbolica label used internally for this CG tensor."""
+
+        return self.definition.label
+
+    @property
+    def name(self) -> str:
+        """User-facing CG tensor name."""
+
+        return self.definition.name
+
+    def __call__(self, *indices: Expression) -> Expression:
+        """Build this CG tensor with concrete indices."""
+
+        return self.definition.expr(*indices)
+
+    def _repr_latex_(self) -> str:
+        return self.definition._repr_latex_()
+
+    def _repr_html_(self) -> str:
+        return self.definition._repr_html_()
+
+
 class Theory:
     """Metadata context for fields, couplings, groups, and index types.
 
@@ -940,6 +1051,7 @@ class Theory:
         self.groups: dict[str, dict[str, Any]] = {}
         self.representation_labels: dict[str, Expression] = {}
         self.representations: dict[str, RepresentationDefinition] = {}
+        self.cg_tensors: dict[str, CGTensorDefinition] = {}
         self.define_index_type(BuiltinIndexType.LORENTZ)
 
     def symbol(
@@ -1020,6 +1132,10 @@ class Theory:
                 group = str(data.get(SymbolDataKey.REPRESENTATION_GROUP.value, "unknown"))
                 reality = RepresentationReality.from_user(data.get(SymbolDataKey.REPRESENTATION_REALITY.value, RepresentationReality.UNKNOWN.value))
                 tags.extend(_representation_symbol_tags(group, reality))
+            elif role == SymbolRole.CG_TENSOR.value:
+                reps = data.get(SymbolDataKey.CG_REPRESENTATIONS.value, [])
+                rank = len(reps) if isinstance(reps, list) else 0
+                tags.extend(_cg_tensor_symbol_tags(rank))
             symbol = self.symbol(name, role=role, data=data, tags=tags)
             if role == SymbolRole.REPRESENTATION.value:
                 self.representation_labels[name] = symbol
@@ -1330,6 +1446,57 @@ class Theory:
         """Return the callable handle for a registered coupling."""
 
         return CouplingHandle(self, self.couplings[name])
+
+    def cg_tensor_handle(self, name: str) -> CGTensorHandle:
+        """Return the callable handle for a registered CG tensor."""
+
+        return CGTensorHandle(self, self.cg_tensors[name])
+
+    def define_cg_tensor(
+        self,
+        name: str,
+        representations: Iterable[Expression],
+        *,
+        tensor: Expression | None = None,
+        source: str | None = None,
+    ) -> CGTensorHandle:
+        """Register a Clebsch-Gordan tensor over group representations.
+
+        The registered label is theory-owned Symbolica data. Calling the
+        returned handle creates ``CG(label, List(indices...))`` expressions,
+        which can later be lowered to spenso tensor structures by the backend
+        adapter.
+        """
+
+        if name in self.cg_tensors:
+            return CGTensorHandle(self, self.cg_tensors[name])
+        representations_tuple = tuple(representations)
+        if not representations_tuple:
+            raise ValueError("CG tensors must declare at least one representation")
+        for representation in representations_tuple:
+            self.representation_definition(representation)
+        cg_data: dict[str, Any] = {
+            SymbolDataKey.NAME.value: name,
+            SymbolDataKey.CG_REPRESENTATIONS.value: list(representations_tuple),
+            SymbolDataKey.CG_SOURCE.value: source or "",
+        }
+        if tensor is not None:
+            cg_data[SymbolDataKey.CG_TENSOR.value] = tensor
+        label = self.symbol(
+            name,
+            role=SymbolRole.CG_TENSOR,
+            data=cg_data,
+            tags=_cg_tensor_symbol_tags(len(representations_tuple)),
+        )
+        definition = CGTensorDefinition(
+            name=name,
+            label=label,
+            representations=representations_tuple,
+            tensor=tensor,
+            source=source,
+        )
+        self.cg_tensors[name] = definition
+        return CGTensorHandle(self, definition)
 
     def define_gauge_group(self, name: str, group_type: Expression, coupling: str, field: str) -> None:
         """Register a gauge group, its coupling, and its vector field."""
@@ -1674,6 +1841,7 @@ class Theory:
             "index_types": {name: value.to_json() for name, value in sorted(self.index_types.items())},
             "groups": self.groups,
             "representations": {name: value.to_json() for name, value in sorted(self.representations.items())},
+            "cg_tensors": {name: value.to_json() for name, value in sorted(self.cg_tensors.items())},
             "fields": {name: value.to_json() for name, value in sorted(self.fields.items())},
             "couplings": {name: value.to_json() for name, value in sorted(self.couplings.items())},
         }
@@ -1718,6 +1886,14 @@ class Theory:
                 dynkin=[theory._parse_registered_expression(x) for x in data.get("dynkin", [])],
                 dimension=data.get("dimension"),
                 reality=data.get("reality", RepresentationReality.UNKNOWN.value),
+            )
+        for name, data in obj.get("cg_tensors", {}).items():
+            tensor_text = data.get("tensor")
+            theory.define_cg_tensor(
+                str(name),
+                [theory._parse_registered_expression(x) for x in data.get("representations", [])],
+                tensor=theory._parse_registered_expression(str(tensor_text)) if tensor_text is not None else None,
+                source=str(data["source"]) if data.get("source") is not None else None,
             )
         for name, data in obj.get("couplings", {}).items():
             self_conjugate_data = data.get("self_conjugate", False)

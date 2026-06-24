@@ -1255,6 +1255,40 @@ discoveries, dependency patches, blockers, and remaining work.
   tests'` passed after the conjugate-representation lookup slice: 125 passed,
   1 skipped. The skip is the existing GammaLoop API import check because
   GammaLoop was not requested in the current dependency manifest.
+- Added the CG tensor metadata and loader slice needed by Matchete models such
+  as `Scalar_quadruplet` and later CG-manipulation validation tests:
+  - checked the spenso Python stub and confirmed it exposes `Representation`,
+    `Slot`, `TensorName`, `TensorStructure`, `TensorLibrary`, and
+    `TensorNetwork` APIs suitable for later tensor-network lowering, while
+    this slice only preserves model metadata and symbolic atoms;
+  - introduced public `CGTensorDefinition` and `CGTensorHandle`, exported
+    through `pychete.api` and the package root;
+  - added `Theory.define_cg_tensor(...)` and `Theory.cg_tensor_handle(...)`;
+  - created theory-owned `cg_tensor` labels with `cg_representations`,
+    optional `cg_tensor`, and `cg_source` Symbolica symbol data, plus
+    rank tags such as `cg_tensor_rank_3`;
+  - serialized and restored `cg_tensors` after groups/representations and
+    before fields/couplings, so named CG tensors survive state reloads before
+    lagrangian expressions reference them;
+  - taught the Matchete loader to parse `DefineCG[name, reps, source]` and to
+    lower named calls such as `C4[i,j,M]` into the central
+    `CG(cg_tensor_C4, List(i,j,M))` head instead of untyped external functions;
+  - intentionally stored unsupported Mathematica tensor-generation calls such
+    as `First@InvariantTensors[...]` as source text for now. Actual component
+    tensor construction and contraction remain a spenso/idenso backend adapter
+    task.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py
+  tests/unit/definitions/test_public_api.py'` passed after the CG tensor
+  metadata slice: 33 passed.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m mypy'`
+  passed after the CG tensor metadata slice: no issues found in 24 source
+  files.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests'` passed after the CG tensor metadata slice: 127 passed, 1 skipped.
+  The skip is the existing GammaLoop API import check because GammaLoop was not
+  requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1266,6 +1300,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
   including backend-computed representation dimensions/reality,
   real/complex counting, and later model-specific SMEFT basis classifications.
+- Add the spenso/idenso backend adapter that lowers registered `CG` tensor
+  atoms to tensor-library/network objects and implements contractions,
+  simplifications, and invariant-tensor construction.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
   preliminary vakint one-loop topology lowering, including physical loop

@@ -183,6 +183,41 @@ def test_matchete_loader_preserves_custom_representations(tmp_path: Path) -> Non
     assert "representation_group_SU2L" in _local_tags(label)
 
 
+def test_matchete_loader_preserves_defined_cg_tensors(tmp_path: Path) -> None:
+    model = tmp_path / "cg_tensors.m"
+    model.write_text(
+        "\n".join(
+            [
+                "DefineGaugeGroup[SU2L, SU@2, gL, W];",
+                "DefineRepresentation[SU2L[quad], SU2L, {3}];",
+                "DefineCG[C4, {SU2L[fund], Bar@SU2L[fund], Bar@SU2L[quad]},",
+                "    First@InvariantTensors[SU@2, {{1}, CRep@{1}, CRep@{3}}, Normalization->2]];",
+                "DefineField[Theta, Scalar, Indices->SU2L[quad], Mass->{Heavy, MTheta}];",
+                "Module[{i,j,M}, C4[i,j,M] Theta[M]];",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    theory, expressions = load_matchete_model(model, theory_name="loader_cg_tensors")
+
+    c4 = theory.cg_tensor_handle("C4")
+    reps = c4.definition.representation_exprs
+    assert set(expressions) == {"lagrangian"}
+    assert len(reps) == 3
+    assert canonical_string(reps[0]) == "loader_cg_tensors::group_SU2L(pychete::fund)"
+    assert canonical_string(reps[1]) == "pychete::Bar(loader_cg_tensors::group_SU2L(pychete::fund))"
+    assert canonical_string(reps[2]) == "pychete::Bar(loader_cg_tensors::group_SU2L(loader_cg_tensors::representation_quad))"
+    assert c4.definition.source_text is not None
+    assert "InvariantTensors" in c4.definition.source_text
+    assert (
+        "pychete::CG(loader_cg_tensors::cg_tensor_C4,"
+        "pychete::List(loader_cg_tensors::external_i,loader_cg_tensors::external_j,loader_cg_tensors::external_M))"
+        in canonical_string(expressions["lagrangian"])
+    )
+    assert "external_C4" not in canonical_string(expressions["lagrangian"])
+
+
 def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:
     theory, expressions = load_matchete_model(Path("assets/models/SM.m"), include_lagrangian=False)
 
