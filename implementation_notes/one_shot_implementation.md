@@ -2886,6 +2886,42 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 196 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Promoted the public one-loop entry point to the internal minimal-subtraction
+  preview:
+  - `match_one_loop(...)` and therefore
+    `Theory.match(..., loop_order=1)` now call
+    `OneLoopSetup.interaction_power_type_internal_minimal_subtraction_result(...)`
+    with `tensor_reduce=False` and `combine_terms=True`;
+  - the public result's off-shell/on-shell EFT Lagrangians are now the
+    epsilon^0 finite part of the internally evaluated interaction-power
+    aggregate rather than the unrenormalized pole-plus-finite aggregate;
+  - lower-level diagnostic builders remain available:
+    `interaction_power_type_internal_matching_result(...)` still exposes the
+    unrenormalized internal integral result, and
+    `interaction_power_type_matching_result(...)` still exposes raw/native
+    vakint staging;
+  - updated the public one-loop tree/integration test to assert
+    `stage == "interaction_power_type_internal_minimal_subtraction_result"`,
+    the minimal-subtraction metadata, the internal counterterm diagnostic, and
+    finite-part EFT Lagrangians.
+- Verification for the public one-loop minimal-subtraction switch so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_request_returns_incomplete_internal_minimal_subtraction_result
+    tests/unit/definitions/test_public_api.py -q'` passed: 5 passed.
+- Final verification for the public one-loop minimal-subtraction switch:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_request_returns_incomplete_internal_minimal_subtraction_result
+    tests/unit/definitions/test_public_api.py -q'` passed: 5 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 196 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -2910,12 +2946,12 @@ discoveries, dependency patches, blockers, and remaining work.
   remaining generator/structure support outside native SU(3) HEP tensors,
   contractions, simplifications, and invariant-tensor construction, using
   idenso where gamma/colour/index algebra is the right backend.
-- Extend the current public interaction-power internal-integral result into a
-  physically normalized one-loop matching result, including phase conventions,
-  loop-momentum sign conventions, propagator insertion ordering for multi-mode
-  blocks, tensor reductions, scheme-specific renormalization beyond the current
-  minimal-subtraction preview, and validation against Matchete fixtures and
-  known native backend topologies.
+- Extend the current public interaction-power internal minimal-subtraction
+  preview into a fully physical one-loop matching result, including phase
+  conventions, loop-momentum sign conventions, propagator insertion ordering
+  for multi-mode blocks, tensor reductions, scheme-specific renormalization
+  beyond the current minimal-subtraction preview, and validation against
+  Matchete fixtures and known native backend topologies.
 - Extend the pychete-owned analytic vacuum-integral backend beyond the new
   scalar one-loop zero/mixed/single-scale evaluator into broader Matchete loop
   function behavior: canonical LF-style simplification, higher numerator

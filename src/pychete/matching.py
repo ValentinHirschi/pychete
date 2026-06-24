@@ -3272,15 +3272,19 @@ def _block_matrix(block: FluctuationOperatorBlock) -> Matrix:
 def match_one_loop(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> MatchingResult:
     """Run the current internal-analytic one-loop matching pipeline.
 
-    This returns an explicitly incomplete ``MatchingResult`` built from the
-    interaction-only fluctuation operator and pychete's internal analytic
-    scalar vacuum-integral backend. The result metadata carries
+    This returns an explicitly incomplete minimal-subtraction preview built
+    from the interaction-only fluctuation operator and pychete's internal
+    analytic scalar vacuum-integral backend. The result metadata carries
     ``complete=False`` until the remaining Matchete-level matching stages are
     implemented and validated.
     """
 
     theory._validate_registered_expression(lagrangian)
-    return one_loop_setup(theory, lagrangian, eft_order=eft_order).interaction_power_type_internal_matching_result(
+    return one_loop_setup(
+        theory,
+        lagrangian,
+        eft_order=eft_order,
+    ).interaction_power_type_internal_minimal_subtraction_result(
         tensor_reduce=False,
         combine_terms=True,
     )
