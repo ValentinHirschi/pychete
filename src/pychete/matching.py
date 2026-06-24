@@ -791,6 +791,12 @@ class OneLoopSetup:
 
         return len(self.power_type_contributions())
 
+    @property
+    def interaction_power_type_contribution_count(self) -> int:
+        """Number of cyclically unique interaction-power contributions."""
+
+        return len(self.interaction_power_type_contributions())
+
     def supertrace_expression_map(self, *, prefix: str = "supertrace_kernel") -> dict[str, Expression]:
         """Return deterministic named expressions for generated trace kernels."""
 
@@ -1008,14 +1014,22 @@ class OneLoopSetup:
     def power_type_traces(self) -> tuple[SupertraceBlockTrace, ...]:
         """Return cyclically unique traces used for power-type contributions."""
 
-        traces: list[SupertraceBlockTrace] = []
-        seen: set[tuple[str, ...]] = set()
-        for trace in self.block_traces:
-            if trace.cyclic_sector_key in seen:
-                continue
-            seen.add(trace.cyclic_sector_key)
-            traces.append(trace)
-        return tuple(traces)
+        return _cyclically_unique_traces(self.block_traces)
+
+    def interaction_power_type_traces(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> tuple[SupertraceBlockTrace, ...]:
+        """Return cyclically unique interaction-only traces."""
+
+        return _cyclically_unique_traces(
+            self.interaction_block_traces(
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
+        )
 
     def power_type_contributions(
         self,
@@ -1034,11 +1048,52 @@ class OneLoopSetup:
             for trace in self.power_type_traces()
         )
 
+    def interaction_power_type_contributions(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> tuple[PowerTypeSupertraceContribution, ...]:
+        """Return EFT-truncated interaction-power contribution objects."""
+
+        return tuple(
+            PowerTypeSupertraceContribution(
+                theory=self.theory,
+                trace=trace,
+                eft_order=self.eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            )
+            for trace in self.interaction_power_type_traces(
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
+        )
+
     def power_type_expression_map(self, *, prefix: str = "power_type_supertrace") -> dict[str, Expression]:
         """Return deterministic expressions for power-type contributions."""
 
         entries: dict[str, Expression] = {}
         for contribution in self.power_type_contributions():
+            entries.update(contribution.to_expression_map(prefix=prefix))
+        return entries
+
+    def interaction_power_type_expression_map(
+        self,
+        *,
+        prefix: str = "interaction_power_type_supertrace",
+        heavy_field_dimension: bool = False,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> dict[str, Expression]:
+        """Return deterministic expressions for interaction-power contributions."""
+
+        entries: dict[str, Expression] = {}
+        for contribution in self.interaction_power_type_contributions(
+            heavy_field_dimension=heavy_field_dimension,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        ):
             entries.update(contribution.to_expression_map(prefix=prefix))
         return entries
 
@@ -1048,6 +1103,24 @@ class OneLoopSetup:
         return sum_expr(
             contribution.eft_numerator_expression
             for contribution in self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
+        ).expand()
+
+    def interaction_power_type_eft_lagrangian(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> Expression:
+        """Return the summed interaction-power off-shell contribution."""
+
+        return sum_expr(
+            contribution.eft_numerator_expression
+            for contribution in self.interaction_power_type_contributions(
+                heavy_field_dimension=heavy_field_dimension,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
         ).expand()
 
     def power_type_vakint_integral_sum(
@@ -1075,6 +1148,101 @@ class OneLoopSetup:
         if selected is VakintIntegralStage.TENSOR_REDUCED:
             return vakint.tensor_reduce(raw, engine=engine)
         return vakint.evaluate(raw, engine=engine)
+
+    def interaction_power_type_vakint_integral_sum(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+    ) -> Expression:
+        """Return the summed interaction-power contribution at a vakint stage."""
+
+        raw = sum_expr(
+            contribution.vakint_integral_expression(include_light=include_light)
+            for contribution in self.interaction_power_type_contributions(
+                heavy_field_dimension=heavy_field_dimension,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
+        ).expand()
+        selected = VakintIntegralStage.from_user(stage)
+        if selected is VakintIntegralStage.RAW:
+            return raw
+        from .backends import vakint
+
+        if selected is VakintIntegralStage.CANONICAL:
+            return vakint.to_canonical(raw, short_form=short_form, engine=engine)
+        if selected is VakintIntegralStage.TENSOR_REDUCED:
+            return vakint.tensor_reduce(raw, engine=engine)
+        return vakint.evaluate(raw, engine=engine)
+
+    def interaction_power_type_matching_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the current interaction-power one-loop preview result."""
+
+        numerator_sum = self.interaction_power_type_eft_lagrangian(
+            heavy_field_dimension=heavy_field_dimension,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
+        vakint_sum = self.interaction_power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            stage=selected_vakint_stage,
+            short_form=vakint_short_form,
+            engine=vakint_engine,
+        )
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=vakint_sum,
+            on_shell_eft_lagrangian=vakint_sum,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces={
+                **self.interaction_power_type_expression_map(
+                    prefix="interaction_power_type_supertrace",
+                    heavy_field_dimension=heavy_field_dimension,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                ),
+                "interaction_power_type_eft_lagrangian": numerator_sum,
+                "interaction_power_type_vakint_integral_sum": vakint_sum,
+                f"interaction_power_type_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
+            },
+            metadata={
+                "stage": "interaction_power_type_vakint_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "on_shell_reduced": False,
+                "vakint_stage": selected_vakint_stage.value,
+                "uses_interaction_operator": True,
+            },
+        )
 
     def power_type_vakint_epsilon_coefficient(
         self,
@@ -1503,8 +1671,11 @@ class OneLoopSetup:
             **self.vakint_integral_expression_map(prefix=f"{prefix}.vakint_integral"),
             **self.operator_vakint_integral_expression_map(prefix=f"{prefix}.operator_vakint_integral"),
             **self.power_type_expression_map(prefix=f"{prefix}.power_type_supertrace"),
+            **self.interaction_power_type_expression_map(prefix=f"{prefix}.interaction_power_type_supertrace"),
             f"{prefix}[power_type_eft_lagrangian]": self.power_type_eft_lagrangian(),
             f"{prefix}[power_type_vakint_integral_sum]": self.power_type_vakint_integral_sum(),
+            f"{prefix}[interaction_power_type_eft_lagrangian]": self.interaction_power_type_eft_lagrangian(),
+            f"{prefix}[interaction_power_type_vakint_integral_sum]": self.interaction_power_type_vakint_integral_sum(),
         }
         return entries
 
@@ -2486,6 +2657,17 @@ def _mode_index(modes: tuple[FluctuationMode, ...], field: Expression) -> int:
         if canonical_string(mode.field) == key:
             return index
     raise KeyError(f"Fluctuation basis has no field {key!r}")
+
+
+def _cyclically_unique_traces(traces: Iterable[SupertraceBlockTrace]) -> tuple[SupertraceBlockTrace, ...]:
+    unique: list[SupertraceBlockTrace] = []
+    seen: set[tuple[str, ...]] = set()
+    for trace in traces:
+        if trace.cyclic_sector_key in seen:
+            continue
+        seen.add(trace.cyclic_sector_key)
+        unique.append(trace)
+    return tuple(unique)
 
 
 def _sector_indices(modes: tuple[FluctuationMode, ...], sector: FluctuationSector) -> tuple[int, ...]:

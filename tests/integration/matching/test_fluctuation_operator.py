@@ -866,6 +866,45 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     assert_expr_equal(interaction_traces["heavy-light-heavy"].expression, y() ** 2 * light() ** 2)
     interaction_supertraces = setup.interaction_supertrace_expression_map()
     assert_expr_equal(interaction_supertraces["interaction_supertrace_kernel[heavy-heavy]"], Expression.num(0))
+    assert setup.interaction_power_type_contribution_count == 3
+    assert tuple(trace.name for trace in setup.interaction_power_type_traces()) == (
+        "heavy-heavy",
+        "heavy-heavy-heavy",
+        "heavy-light-heavy",
+    )
+    interaction_power_map = setup.interaction_power_type_expression_map()
+    assert_expr_equal(
+        interaction_power_map["interaction_power_type_supertrace[heavy-heavy,eft_numerator]"],
+        Expression.num(0),
+    )
+    assert_expr_equal(
+        interaction_power_map["interaction_power_type_supertrace[heavy-light-heavy,eft_numerator]"],
+        -y() ** 2 * light() ** 2 / 2,
+    )
+    assert_expr_equal(setup.interaction_power_type_eft_lagrangian(), -y() ** 2 * light() ** 2 / 2)
+    expected_interaction_vakint = vakint_backend.one_loop_vacuum_integral(
+        -y() ** 2 * light() ** 2 / 2,
+        (heavy_mass**2, light_mass**2),
+    )
+    assert_expr_equal(setup.interaction_power_type_vakint_integral_sum(), expected_interaction_vakint)
+    canonical_engine = FakeKernelVakintEngine()
+    canonical_interaction_sum = setup.interaction_power_type_vakint_integral_sum(
+        stage=VakintIntegralStage.CANONICAL,
+        short_form=True,
+        engine=canonical_engine,
+    )
+    assert canonical_engine.calls == [("to_canonical", expected_interaction_vakint, True)]
+    assert_expr_equal(canonical_interaction_sum, S("canonical")(expected_interaction_vakint))
+    interaction_result = setup.interaction_power_type_matching_result()
+    assert interaction_result.metadata["stage"] == "interaction_power_type_vakint_result"
+    assert interaction_result.metadata["uses_interaction_operator"] is True
+    assert interaction_result.metadata["power_type_contribution_count"] == 3
+    assert interaction_result.metadata["interaction_power_type_contribution_count"] == 3
+    assert_expr_equal(interaction_result.off_shell_eft_lagrangian, expected_interaction_vakint)
+    assert_expr_equal(
+        interaction_result.expression("interaction_power_type_eft_lagrangian"),
+        -y() ** 2 * light() ** 2 / 2,
+    )
     setup_map = setup.to_expression_map()
     assert_expr_equal(
         setup_map[f"one_loop_setup.fluctuation_operator_interaction[{canonical_string(light())},{canonical_string(light())}]"],
@@ -874,6 +913,14 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     assert_expr_equal(
         setup_map["one_loop_setup.interaction_supertrace_kernel[heavy-light-heavy]"],
         y() ** 2 * light() ** 2,
+    )
+    assert_expr_equal(
+        setup_map["one_loop_setup.interaction_power_type_supertrace[heavy-light-heavy,eft_numerator]"],
+        -y() ** 2 * light() ** 2 / 2,
+    )
+    assert_expr_equal(
+        setup_map["one_loop_setup[interaction_power_type_vakint_integral_sum]"],
+        expected_interaction_vakint,
     )
 
 
