@@ -803,6 +803,20 @@ discoveries, dependency patches, blockers, and remaining work.
     Lagrangians expose the kinetic operator as
     `-DifferentialOperator({d0, d0}) - m^2` while their algebraic Hessian entry
     remains the mass term.
+- Completed the thirty-seventh implementation slice:
+  - added `FluctuationOperator.momentum_entry(...)` and
+    `momentum_expression_map(...)` for lowering contracted
+    `DifferentialOperator` derivative pairs to loop-momentum powers;
+  - the lowering uses a Symbolica `Expression.replace(...)` callable over the
+    central `DifferentialOperator` head, mapping paired Lorentz derivative slots
+    such as `{mu, mu}` to `-LoopMomentumSquared` and therefore scalar inverse
+    operators to `q^2 - m^2`;
+  - `OneLoopSetup.to_expression_map(...)` now includes the
+    `fluctuation_operator_momentum` namespace alongside algebraic and
+    differential operator entries;
+  - added focused tests for real and barred complex scalar momentum entries,
+    deterministic momentum expression maps, setup expression-map exposure, and
+    public API docstring coverage.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1671,15 +1685,31 @@ discoveries, dependency patches, blockers, and remaining work.
   matrix slice: 153 passed, 1 skipped. The skip is the existing GammaLoop API
   import check because GammaLoop was not requested in the current dependency
   manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_exposes_euler_lagrange_differential_entries
+  tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
+  tests/integration/matching/test_fluctuation_operator.py::test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs
+  tests/unit/definitions/test_public_api.py -q'` passed after the
+  fluctuation-operator momentum-lowering slice: 7 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the
+  fluctuation-operator momentum-lowering slice: 36 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the fluctuation-operator momentum-lowering slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the fluctuation-operator momentum-lowering
+  slice: 153 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
 - Use the four committed default Matchete matching fixtures as acceptance
   targets for the pychete one-loop matching engine.
-- Lower the new `FluctuationOperator.differential_entry(...)` bridge from
-  explicit `DifferentialOperator` slots into backend-ready propagator and
-  momentum-space kernels, including vector/gauge Lorentz structures and
-  integration-by-parts convention validation against Matchete fixtures.
+- Extend the new paired-derivative momentum lowering beyond scalar contracted
+  derivative pairs into open derivative slots, vector/gauge Lorentz structures,
+  and backend-ready propagator kernels with integration-by-parts convention
+  validation against Matchete fixtures.
 - Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
   and spin/Lorentz mode metadata into backend-evaluated vector Lorentz traces,
   real/complex coefficient placement in actual supertrace kernels, and later

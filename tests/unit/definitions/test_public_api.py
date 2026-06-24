@@ -131,6 +131,8 @@ def test_public_api_methods_have_docstrings() -> None:
             "block",
             "differential_entry",
             "entry",
+            "momentum_entry",
+            "momentum_expression_map",
             "mode_for",
             "supertrace_plan",
             "to_expression_map",

@@ -92,6 +92,12 @@ def test_fluctuation_operator_exposes_euler_lagrange_differential_entries() -> N
         expression_map[f"fluctuation_operator_differential[{canonical_string(heavy())},{canonical_string(heavy())}]"],
         operator.differential_entry(heavy, heavy),
     )
+    assert_expr_equal(operator.momentum_entry(heavy, heavy), s.LoopMomentumSquared - mass**2)
+    momentum_map = operator.momentum_expression_map()
+    assert_expr_equal(
+        momentum_map[f"fluctuation_operator_momentum[{canonical_string(heavy())},{canonical_string(heavy())}]"],
+        operator.momentum_entry(heavy, heavy),
+    )
 
 
 def test_fluctuation_operator_differential_entries_handle_barred_complex_scalars() -> None:
@@ -110,6 +116,8 @@ def test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
     assert_expr_equal(operator.entry(phi, barred_phi), -mass**2)
     assert_expr_equal(operator.differential_entry(barred_phi, phi), expected)
     assert_expr_equal(operator.differential_entry(phi, barred_phi), expected)
+    assert_expr_equal(operator.momentum_entry(barred_phi, phi), s.LoopMomentumSquared - mass**2)
+    assert_expr_equal(operator.momentum_entry(phi, barred_phi), s.LoopMomentumSquared - mass**2)
 
 
 def test_fluctuation_operator_protects_unselected_barred_fields() -> None:
@@ -537,9 +545,11 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
         setup.power_type_eft_lagrangian(),
         -Expression.num(3) - y() ** 2 * light() ** 2 / 2,
     )
-    assert setup.to_expression_map()
+    setup_map = setup.to_expression_map()
+    assert setup_map
+    assert any("fluctuation_operator_momentum" in key for key in setup_map)
     assert_expr_equal(
-        setup.to_expression_map()["one_loop_setup[power_type_eft_lagrangian]"],
+        setup_map["one_loop_setup[power_type_eft_lagrangian]"],
         setup.power_type_eft_lagrangian(),
     )
     preview = setup.power_type_matching_preview()

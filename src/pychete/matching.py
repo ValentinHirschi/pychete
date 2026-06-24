@@ -1295,6 +1295,9 @@ class OneLoopSetup:
         entries = {
             f"{prefix}[uv_lagrangian]": self.uv_lagrangian,
             **self.fluctuation_operator.to_expression_map(prefix=f"{prefix}.fluctuation_operator"),
+            **self.fluctuation_operator.momentum_expression_map(
+                prefix=f"{prefix}.fluctuation_operator_momentum",
+            ),
             **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
@@ -1340,6 +1343,39 @@ class FluctuationOperator:
         row_index = self._basis_index(_fluctuation_basis_expression(self.theory, row))
         column_index = self._basis_index(_fluctuation_basis_expression(self.theory, column))
         return self.differential_matrix[row_index][column_index]
+
+    def momentum_entry(
+        self,
+        row: FluctuationBasisItem,
+        column: FluctuationBasisItem,
+        *,
+        loop_momentum_squared: Expression | None = None,
+    ) -> Expression:
+        """Return one differential entry lowered to loop-momentum powers."""
+
+        return _lower_differential_operators_to_momentum(
+            self.differential_entry(row, column),
+            loop_momentum_squared=loop_momentum_squared,
+        )
+
+    def momentum_expression_map(
+        self,
+        *,
+        prefix: str = "fluctuation_operator_momentum",
+        loop_momentum_squared: Expression | None = None,
+    ) -> dict[str, Expression]:
+        """Return deterministic momentum-lowered operator entries."""
+
+        entries: dict[str, Expression] = {}
+        for row in self.basis:
+            for column in self.basis:
+                key = f"{prefix}[{canonical_string(row)},{canonical_string(column)}]"
+                entries[key] = self.momentum_entry(
+                    row,
+                    column,
+                    loop_momentum_squared=loop_momentum_squared,
+                )
+        return entries
 
     def to_expression_map(self, *, prefix: str = "fluctuation_operator") -> dict[str, Expression]:
         """Return deterministic named entries suitable for ``MatchingResult``."""
@@ -1774,6 +1810,36 @@ def _differential_operator_term(coefficient: Expression, derivatives: tuple[Expr
     if not derivatives:
         return coefficient
     return coefficient * s.DifferentialOperator(list_expr(*derivatives))
+
+
+def _lower_differential_operators_to_momentum(
+    expr: Expression,
+    *,
+    loop_momentum_squared: Expression | None = None,
+) -> Expression:
+    momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+    pattern = s.DifferentialOperator(s.FieldDerivativesWildcard)
+
+    def lower_operator(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        derivatives = list_items(match[s.FieldDerivativesWildcard])
+        power = _contracted_derivative_pair_power(derivatives)
+        if power is None:
+            return matched
+        if power == 0:
+            return Expression.num(1)
+        return (-momentum_squared) ** power
+
+    return expr.replace(pattern, lower_operator).expand()
+
+
+def _contracted_derivative_pair_power(derivatives: tuple[Expression, ...]) -> int | None:
+    if len(derivatives) % 2 != 0:
+        return None
+    for left, right in zip(derivatives[::2], derivatives[1::2], strict=True):
+        if not bool(left == right):
+            return None
+    return len(derivatives) // 2
 
 
 def _field_definition_from_label(theory: Theory, label: Expression) -> FieldDefinition:
