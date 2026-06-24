@@ -98,3 +98,24 @@ def test_idenso_bridge_simplifies_pychete_dirac_products_inside_ncm() -> None:
         ),
         s.NCM(S("left"), s.DiracProduct(s.Gamma(mu), s.PL), S("right")),
     )
+
+
+def test_idenso_bridge_simplifies_contiguous_dirac_subwords_inside_mixed_ncm() -> None:
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.NCM(S("left"), s.PR, s.Gamma(mu), s.PR, S("right"))),
+        Expression.num(0),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.NCM(S("left"), s.PR, s.Gamma(mu), s.PL, S("right"))),
+        s.NCM(S("left"), s.DiracProduct(s.Gamma(mu), s.PL), S("right")),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.NCM(S("left"), s.Gamma(mu), s.Gamma(mu), S("right"))),
+        4 * s.NCM(S("left"), S("right")),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.NCM(S("left"), s.Gamma(mu), s.Gamma(mu))),
+        4 * S("left"),
+    )

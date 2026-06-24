@@ -556,6 +556,12 @@ discoveries, dependency patches, blockers, and remaining work.
   `gamma_mu gamma_nu gamma_mu`. Unsupported native outputs with Lorentz metric
   factors are intentionally left undecoded until pychete has a full metric
   lowering policy for those forms.
+- Symbolica's fixed-arity replacement rules remain the most practical native
+  matching surface for mixed `NCM(...)` chains because the current public
+  `Expression.match`/`replace_multiple` API does not expose a variadic sequence
+  wildcard. The mixed-chain adapter therefore uses Symbolica to match bounded
+  `NCM` arities, then applies native idenso only to contiguous Dirac subwords;
+  all gamma/projector algebra still happens in idenso.
 - Matchete previous matching-result files store the stages pychete needs:
   `"UV Lagrangian"`, `"Off-shell EFT Lagrangian"`,
   `"On-shell EFT Lagrangian"`, `"SuperTraces"`, and
@@ -1167,6 +1173,28 @@ discoveries, dependency patches, blockers, and remaining work.
     the next equality-moving slice must handle full field-endpoint open-chain
     orientation/conjugation and remaining vakint normalization rather than only
     compact `DiracProduct` identities.
+- Completed the fifty-second implementation slice:
+  - extended `simplify_pychete_dirac_algebra(...)` with a mixed-`NCM`
+    contiguous-subword pass: Symbolica replacement rules match bounded
+    `NCM(...)` arities, the adapter identifies contiguous runs of pychete
+    Dirac factors inside the chain, and each run is lowered to native
+    spenso/idenso for the actual gamma/projector simplification;
+  - supported native outputs are reinserted carefully into the surrounding
+    noncommutative chain: zero Dirac subwords annihilate the whole chain,
+    scalar outputs such as `gamma_mu gamma_mu -> 4` are extracted as
+    commutative coefficients, and non-scalar supported outputs are kept as
+    compact `DiracProduct(...)` operands;
+  - unsupported native outputs are left untouched, preserving the original
+    mixed `NCM(...)` chain until pychete has a full Lorentz-metric and
+    field-endpoint lowering policy;
+  - added focused backend tests for `NCM(left, P_R, gamma_mu, P_R, right) -> 0`,
+    `NCM(left, P_R, gamma_mu, P_L, right) ->
+    NCM(left, DiracProduct(gamma_mu, P_L), right)`, and scalar extraction from
+    `NCM(left, gamma_mu, gamma_mu, right)`;
+  - added an integration-level test proving
+    `PowerTypeSupertraceContribution.numerator_expression` applies this mixed
+    `NCM` bridge before EFT truncation, so the one-loop matching path benefits
+    from the backend adapter rather than only direct backend callers.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1365,6 +1393,22 @@ discoveries, dependency patches, blockers, and remaining work.
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
 - `git diff --check` passed after the compact DiracProduct bridge slice.
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/backends/test_idenso_backend.py
+  tests/integration/matching/test_fluctuation_operator.py::test_power_type_numerator_simplifies_mixed_ncm_dirac_subwords_before_eft_truncation
+  -q` passed after the mixed `NCM` contiguous-subword bridge slice: 9 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the mixed `NCM`
+  contiguous-subword bridge slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  -q` passed after the mixed `NCM` contiguous-subword bridge slice: 1 passed.
+  The default-target canonical frontier remains unchanged by this slice.
+- `dependencies/.venv/bin/python -m pytest tests -q` passed after the mixed
+  `NCM` contiguous-subword bridge slice: 167 passed, 1 skipped. The skip is
+  the existing GammaLoop API import check because GammaLoop was not requested
+  in the current dependency manifest.
+- `git diff --check` passed after the mixed `NCM` contiguous-subword bridge
+  slice.
 - `dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py`
   passed: 3 passed.
 - `dependencies/.venv/bin/python -m mypy` passed: no issues found in 18 source
@@ -2365,11 +2409,12 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend the new compact Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
   artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or
-  unsupported compact `DiracProduct` gamma/projector identities, but they still
-  need proper field-endpoint orientation, conjugation normalization,
-  `NCM(bar(field), DiracProduct(...), field)` lowering into idenso chain
-  expressions, and final vakint evaluation before they can canonically agree
-  with Matchete's saved `DiracProduct[...]` expressions.
+  unsupported compact `DiracProduct` gamma/projector identities, and mixed
+  `NCM` chains now simplify contiguous supported Dirac subwords. The remaining
+  gap is proper field-endpoint orientation, conjugation normalization,
+  full `NCM(bar(field), ..., field)` lowering into idenso chain expressions
+  with spinor endpoints, and final vakint evaluation before pychete can
+  canonically agree with Matchete's saved `DiracProduct[...]` expressions.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.

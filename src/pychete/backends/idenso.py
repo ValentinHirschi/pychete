@@ -119,6 +119,7 @@ def simplify_pychete_dirac_algebra(expr: Expression) -> Expression:
     out = simplify_pychete_dirac_projectors(expr)
     out = out.replace_multiple(_dirac_product_replacements())
     out = out.replace_multiple(_ncm_dirac_word_replacements())
+    out = out.replace_multiple(_mixed_ncm_dirac_subword_replacements())
     return simplify_pychete_dirac_projectors(out).expand()
 
 
@@ -204,6 +205,22 @@ def _ncm_dirac_word_replacements() -> tuple[Replacement, ...]:
     return _dirac_word_replacements(s.NCM, "ncm")
 
 
+@cache
+def _mixed_ncm_dirac_subword_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
+        wildcards = _dirac_word_wildcards("mixed_ncm", arity)
+        pattern = s.NCM(*wildcards)
+        replacements.append(
+            Replacement(
+                pattern,
+                _mixed_ncm_dirac_subword_replacement(pattern, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
 def _dirac_word_replacements(head: Expression, kind: str) -> tuple[Replacement, ...]:
     replacements: list[Replacement] = []
     for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
@@ -234,8 +251,104 @@ def _dirac_word_replacement(
     return replace_word
 
 
+def _mixed_ncm_dirac_subword_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_mixed_chain(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        simplified = _simplify_mixed_ncm_dirac_subwords(tuple(match[wildcard] for wildcard in wildcards))
+        return matched if simplified is None else simplified
+
+    return replace_mixed_chain
+
+
 def _dirac_word_wildcards(kind: str, arity: int) -> tuple[Expression, ...]:
     return tuple(s.head(f"dirac_{kind}_{arity}_{index}_") for index in range(arity))
+
+
+def _simplify_mixed_ncm_dirac_subwords(operands: tuple[Expression, ...]) -> Expression | None:
+    output_operands: list[Expression] = []
+    coefficient = Expression.num(1)
+    changed = False
+    run_operands: list[Expression] = []
+    run_factors: list[Expression] = []
+
+    def flush_run() -> bool:
+        nonlocal coefficient, changed, run_operands, run_factors
+        if not run_operands:
+            return True
+        if len(run_factors) < 2:
+            output_operands.extend(run_operands)
+            run_operands = []
+            run_factors = []
+            return True
+        simplified = _native_dirac_word(tuple(run_factors))
+        split = None if simplified is None else _split_mixed_ncm_dirac_result(simplified)
+        if split is None:
+            output_operands.extend(run_operands)
+        else:
+            scalar, replacement_operands = split
+            if bool(scalar == Expression.num(0)):
+                return False
+            coefficient = (coefficient * scalar).expand()
+            output_operands.extend(replacement_operands)
+            changed = True
+        run_operands = []
+        run_factors = []
+        return True
+
+    for operand in operands:
+        factors_to_simplify = _flatten_pychete_dirac_factors((operand,))
+        if factors_to_simplify is None:
+            if not flush_run():
+                return Expression.num(0)
+            output_operands.append(operand)
+            continue
+        run_operands.append(operand)
+        run_factors.extend(factors_to_simplify)
+    if not flush_run():
+        return Expression.num(0)
+    if not changed:
+        return None
+    return _ncm_with_commutative_coefficient(coefficient, tuple(output_operands))
+
+
+def _split_mixed_ncm_dirac_result(expr: Expression) -> tuple[Expression, tuple[Expression, ...]] | None:
+    if bool(expr == Expression.num(0)):
+        return Expression.num(0), ()
+    if bool(expr == Expression.num(1)):
+        return Expression.num(1), ()
+    if expr.get_type() is AtomType.Num:
+        return expr, ()
+    if _flatten_pychete_dirac_factors((expr,)) is not None:
+        return Expression.num(1), (expr,)
+    if expr.get_type() is not AtomType.Mul:
+        return None
+
+    coefficient = Expression.num(1)
+    nonnumeric: list[Expression] = []
+    for factor in factors(expr):
+        if factor.get_type() is AtomType.Num:
+            coefficient = (coefficient * factor).expand()
+        else:
+            nonnumeric.append(factor)
+    if len(nonnumeric) > 1:
+        return None
+    if not nonnumeric:
+        return coefficient, ()
+    if _flatten_pychete_dirac_factors((nonnumeric[0],)) is None:
+        return None
+    return coefficient, (nonnumeric[0],)
+
+
+def _ncm_with_commutative_coefficient(coefficient: Expression, operands: tuple[Expression, ...]) -> Expression:
+    if bool(coefficient == Expression.num(0)):
+        return Expression.num(0)
+    if not operands:
+        return coefficient
+    body = operands[0] if len(operands) == 1 else s.NCM(*operands)
+    return body if bool(coefficient == Expression.num(1)) else (coefficient * body).expand()
 
 
 def _flatten_pychete_dirac_factors(operands: tuple[Expression, ...]) -> tuple[Expression, ...] | None:

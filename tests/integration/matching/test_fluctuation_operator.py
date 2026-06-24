@@ -11,6 +11,7 @@ from pychete import (
     FluctuationStatistics,
     MatchingResult,
     OneLoopNormalization,
+    PowerTypeSupertraceContribution,
     SupertraceBlockTrace,
     Theory,
     VakintIntegralStage,
@@ -1256,6 +1257,21 @@ def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> N
         numerator,
         (s.PR * scalar() ** 2 * y() ** 2 + s.PL * scalar() ** 2 * s.Bar(y()) ** 2) / 2,
     )
+
+
+def test_power_type_numerator_simplifies_mixed_ncm_dirac_subwords_before_eft_truncation() -> None:
+    theory = Theory("power_type_mixed_ncm_dirac")
+    mu = theory.dummy_index(0)
+    trace = SupertraceBlockTrace(
+        theory=theory,
+        name="mixed_ncm_dirac",
+        blocks=(),
+        modes=(),
+        expression=s.NCM(S("left"), s.PR, s.Gamma(mu), s.PR, S("right")),
+    )
+    contribution = PowerTypeSupertraceContribution(theory=theory, trace=trace, eft_order=6)
+
+    assert_expr_equal(contribution.numerator_expression, Expression.num(0))
 
 
 def test_one_loop_setup_routes_generated_kernels_through_vakint_engine() -> None:
