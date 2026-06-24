@@ -2925,10 +2925,10 @@ def match_one_loop(theory: Theory, lagrangian: Expression, *, eft_order: int = 6
     """Run the current native-backed one-loop matching pipeline.
 
     This returns an explicitly incomplete ``MatchingResult`` built from the
-    generated power-type supertraces and selected raw vakint topology sum. The
-    result metadata carries ``complete=False`` until the remaining Matchete-level
-    matching stages are implemented and validated.
+    interaction-only fluctuation operator and selected raw vakint topology sum.
+    The result metadata carries ``complete=False`` until the remaining
+    Matchete-level matching stages are implemented and validated.
     """
 
     theory._validate_registered_expression(lagrangian)
-    return one_loop_setup(theory, lagrangian, eft_order=eft_order).power_type_matching_result()
+    return one_loop_setup(theory, lagrangian, eft_order=eft_order).interaction_power_type_matching_result()

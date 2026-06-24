@@ -72,7 +72,7 @@ class ValidationFixture:
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
     ) -> MatchingResult:
-        """Build the current incomplete one-loop preview from fixture expressions."""
+        """Build the current incomplete interaction-power preview from fixture expressions."""
 
         theory = self.theory()
         setup = theory.one_loop_setup(
@@ -81,7 +81,7 @@ class ValidationFixture:
             max_trace_order=max_trace_order,
             include_light_only=include_light_only,
         )
-        result = setup.power_type_matching_preview(
+        result = setup.interaction_power_type_matching_result(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
             vakint_stage=vakint_stage,

@@ -70,9 +70,10 @@ def test_one_loop_match_request_returns_incomplete_native_backed_result() -> Non
     assert isinstance(result, MatchingResult)
     assert result.metadata["loop_order"] == 1
     assert result.metadata["complete"] is False
-    assert result.metadata["stage"] == "power_type_vakint_result"
-    assert "power_type_vakint_integral_sum" in result.supertraces
-    assert_expr_equal(result.off_shell_eft_lagrangian, result.expression("power_type_vakint_integral_sum"))
+    assert result.metadata["stage"] == "interaction_power_type_vakint_result"
+    assert result.metadata["uses_interaction_operator"] is True
+    assert "interaction_power_type_vakint_integral_sum" in result.supertraces
+    assert_expr_equal(result.off_shell_eft_lagrangian, result.expression("interaction_power_type_vakint_integral_sum"))
     result.validate()
 
 

@@ -187,13 +187,15 @@ def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathe
         fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
         preview = fixture.one_loop_preview(max_trace_order=3)
 
-        assert preview.metadata["stage"] == "power_type_vakint_result"
+        assert preview.metadata["stage"] == "interaction_power_type_vakint_result"
         assert preview.metadata["complete"] is False
+        assert preview.metadata["uses_interaction_operator"] is True
         assert preview.metadata["fixture"] == fixture.name
         assert preview.metadata["fixture_kind"] == "model_definition"
         assert preview.metadata["lagrangian_expression"] == "lagrangian"
         assert preview.metadata["supertrace_kernel_count"] == 11
         assert preview.metadata["power_type_contribution_count"] == 6
+        assert preview.metadata["interaction_power_type_contribution_count"] == 6
         assert len(preview.supertraces) == 21
         preview.validate()
 

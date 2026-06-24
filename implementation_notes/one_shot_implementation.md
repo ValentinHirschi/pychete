@@ -913,6 +913,24 @@ discoveries, dependency patches, blockers, and remaining work.
     `interaction_power_type_vakint_result` `MatchingResult`, and carries
     explicit `uses_interaction_operator` plus
     `interaction_power_type_contribution_count` metadata.
+- Completed the forty-second implementation slice:
+  - routed `match_one_loop(...)` and therefore
+    `Theory.match(..., loop_order=1)` to
+    `OneLoopSetup.interaction_power_type_matching_result(...)`, making the
+    public one-loop entry point use the free-propagator/interaction-insertion
+    split instead of the legacy full-block power preview;
+  - kept `OneLoopSetup.power_type_matching_preview(...)` and
+    `power_type_matching_result(...)` available as explicit legacy inspection
+    paths, so earlier diagnostics remain accessible while the public matching
+    API moves toward the physically relevant propagator expansion;
+  - updated `ValidationFixture.one_loop_preview(...)` to build the current
+    interaction-power preview from committed model fixtures, preserving the
+    Mathematica-independent fixture workflow while exposing
+    `metadata["uses_interaction_operator"] == True`;
+  - updated focused public-entry tests to assert
+    `metadata["stage"] == "interaction_power_type_vakint_result"` and the
+    `interaction_power_type_vakint_integral_sum` expression namespace for both
+    direct `Theory.match(..., loop_order=1)` and fixture-backed previews.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1867,6 +1885,25 @@ discoveries, dependency patches, blockers, and remaining work.
   156 passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the interaction-power contribution slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_request_returns_incomplete_native_backed_result
+  tests/integration/validation/test_validation_fixtures.py::test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+  -q'` passed after the public one-loop interaction-power routing slice:
+  3 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the public one-loop interaction-power routing slice:
+  no issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the public one-loop
+  interaction-power routing slice: 39 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the public one-loop interaction-power
+  routing slice: 156 passed, 1 skipped. The skip is the existing GammaLoop API
+  import check because GammaLoop was not requested in the current dependency
+  manifest.
+- `git diff --check` passed after the public one-loop interaction-power routing
+  slice.
 
 ## Remaining Work
 
@@ -1875,7 +1912,7 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
   full propagator expansion beyond the new scalar operator-derived denominator,
-  interaction-insertion, and interaction-power contribution chains, and
+  interaction-insertion, public interaction-power contribution chain, and
   integration-by-parts convention validation against Matchete fixtures.
 - Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
   and spin/Lorentz mode metadata into backend-evaluated vector Lorentz traces,
@@ -1886,12 +1923,12 @@ discoveries, dependency patches, blockers, and remaining work.
   remaining generator/structure support outside native SU(3) HEP tensors,
   contractions, simplifications, and invariant-tensor construction, using
   idenso where gamma/colour/index algebra is the right backend.
-- Extend the current `SupertracePlan`/`PropagatorPlan` power-type vakint result
-  into a physically normalized one-loop matching result, including phase
-  conventions, loop-momentum sign conventions, propagator insertion ordering
-  for multi-mode blocks, tensor reductions, scheme-specific renormalization
-  beyond the current minimal-subtraction preview, and validation against known
-  native backend topologies.
+- Extend the current public interaction-power vakint result into a physically
+  normalized one-loop matching result, including phase conventions,
+  loop-momentum sign conventions, propagator insertion ordering for multi-mode
+  blocks, tensor reductions, scheme-specific renormalization beyond the current
+  minimal-subtraction preview, and validation against known native backend
+  topologies.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
