@@ -2,24 +2,57 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from html import escape
-from typing import Iterable, Sequence, TypeAlias
+from typing import Iterable, Iterator, Sequence, TypeAlias
 
 from symbolica import Expression, Replacement
 
 from .eft import series_eft
 from .expr import (
     bar_field_pattern,
+    bar_field_inner,
+    field_label,
     field_pattern,
+    field_with_derivatives,
     is_bar_field,
     is_zero,
     list_items,
 )
 from .functional import apply_cd, derive_eom
 from .symbols import SymbolRole, canonical_string, display_string, latex_string, s
-from .theory import FieldDefinition, FieldHandle, FieldVariation, Theory
+from .theory import (
+    FieldDefinition,
+    FieldHandle,
+    FieldMassKind,
+    FieldVariation,
+    Theory,
+    field_mass_kind_from_label,
+    field_self_conjugate_from_label,
+)
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
+
+
+@dataclass(frozen=True)
+class FluctuationBasis:
+    """Discovered fluctuation fields split into heavy and light sectors."""
+
+    theory: Theory
+    entries: tuple[Expression, ...]
+    heavy: tuple[Expression, ...]
+    light: tuple[Expression, ...]
+
+    def __iter__(self) -> Iterator[Expression]:
+        return iter(self.entries)
+
+    def __len__(self) -> int:
+        return len(self.entries)
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{FluctuationBasis}}\left(H={len(self.heavy)},\ L={len(self.light)}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>FluctuationBasis(heavy={len(self.heavy)} light={len(self.light)})</code>"
 
 
 @dataclass(frozen=True)
@@ -257,18 +290,20 @@ class OneLoopMatchingNotImplementedError(NotImplementedError):
 def fluctuation_operator(
     theory: Theory,
     lagrangian: Expression,
-    fields: Iterable[FluctuationBasisItem],
+    fields: FluctuationBasis | Iterable[FluctuationBasisItem] | None = None,
 ) -> FluctuationOperator:
-    """Extract the Symbolica Hessian over an explicit fluctuation basis.
+    """Extract the Symbolica Hessian over a fluctuation basis.
 
     The current implementation computes the algebraic Hessian with respect to
-    exact field expressions in ``fields``. Derivative-valued field expressions
-    may be supplied explicitly as independent basis entries; full differential
-    operator assembly is a later one-loop matching stage.
+    exact field expressions in ``fields``. If ``fields`` is omitted, pychete
+    discovers a basis from tagged field atoms in ``lagrangian``. Derivative-
+    valued field expressions may be supplied explicitly as independent basis
+    entries; full differential operator assembly is a later one-loop matching
+    stage.
     """
 
     theory._validate_registered_expression(lagrangian)
-    basis = tuple(_fluctuation_basis_expression(theory, field) for field in fields)
+    basis = _normalize_fluctuation_basis(theory, lagrangian, fields)
     if not basis:
         raise ValueError("at least one fluctuation field is required")
     _validate_unique_fluctuation_basis(basis)
@@ -286,6 +321,16 @@ def fluctuation_operator(
         for row_variable in variables
     )
     return FluctuationOperator(theory=theory, basis=basis, matrix=matrix)
+
+
+def fluctuation_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasis:
+    """Discover fluctuation fields in a Lagrangian with Symbolica patterns."""
+
+    theory._validate_registered_expression(lagrangian)
+    fields = _discover_fluctuation_basis(lagrangian)
+    heavy = tuple(field for field in fields if _basis_mass_kind(field) is FieldMassKind.HEAVY)
+    light = tuple(field for field in fields if _basis_mass_kind(field) is FieldMassKind.LIGHT)
+    return FluctuationBasis(theory=theory, entries=fields, heavy=heavy, light=light)
 
 
 def _optional_expression(result: MatchingResult, name: str) -> Expression | None:
@@ -309,10 +354,51 @@ def _fluctuation_basis_expression(theory: Theory, field: FluctuationBasisItem) -
     return field
 
 
+def _normalize_fluctuation_basis(
+    theory: Theory,
+    lagrangian: Expression,
+    fields: FluctuationBasis | Iterable[FluctuationBasisItem] | None,
+) -> tuple[Expression, ...]:
+    if fields is None:
+        return fluctuation_basis(theory, lagrangian).entries
+    if isinstance(fields, FluctuationBasis):
+        if fields.theory.name != theory.name:
+            raise ValueError(f"Fluctuation basis belongs to {fields.theory.name!r}, not {theory.name!r}")
+        return fields.entries
+    return tuple(_fluctuation_basis_expression(theory, field) for field in fields)
+
+
 def _validate_unique_fluctuation_basis(basis: tuple[Expression, ...]) -> None:
     keys = [canonical_string(field) for field in basis]
     if len(set(keys)) != len(keys):
         raise ValueError("fluctuation basis fields must be unique")
+
+
+def _discover_fluctuation_basis(lagrangian: Expression) -> tuple[Expression, ...]:
+    cond = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    entries: dict[str, Expression] = {}
+    for pattern in (bar_field_pattern(), field_pattern()):
+        for match in lagrangian.match(pattern, cond):
+            _add_discovered_fluctuation(entries, pattern.replace_wildcards(match))
+    return tuple(entries[key] for key in sorted(entries))
+
+
+def _add_discovered_fluctuation(entries: dict[str, Expression], expr: Expression) -> None:
+    field = bar_field_inner(expr) if is_bar_field(expr) else expr
+    base = field_with_derivatives(field, ())
+    if field_self_conjugate_from_label(field_label(base)):
+        _add_basis_entry(entries, base)
+        return
+    _add_basis_entry(entries, s.Bar(base))
+    _add_basis_entry(entries, base)
+
+
+def _add_basis_entry(entries: dict[str, Expression], field: Expression) -> None:
+    entries.setdefault(canonical_string(field), field)
+
+
+def _basis_mass_kind(field: Expression) -> FieldMassKind:
+    return field_mass_kind_from_label(field_label(bar_field_inner(field) if is_bar_field(field) else field))
 
 
 def _fluctuation_variable(index: int) -> Expression:

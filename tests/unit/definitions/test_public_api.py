@@ -55,6 +55,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "free_lag",
             "derive_eom",
             "solve_heavy_scalar_eoms",
+            "fluctuation_basis",
             "fluctuation_operator",
             "match",
             "to_json_obj",

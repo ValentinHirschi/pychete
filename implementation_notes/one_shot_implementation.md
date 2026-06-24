@@ -320,6 +320,22 @@ discoveries, dependency patches, blockers, and remaining work.
   - added tests for scalar Hessian entries, barred-field protection, explicit
     barred-field basis entries, duplicate-basis validation, and public API
     docstrings.
+- Completed the sixteenth implementation slice:
+  - added public `FluctuationBasis` as the first structured heavy/light
+    fluctuation-sector carrier;
+  - added `Theory.fluctuation_basis(...)`, which discovers field atoms with
+    Symbolica `Expression.match` and `req_tag("field")` restrictions rather
+    than Python tree walking;
+  - classified discovered basis entries into heavy and light sectors from
+    Symbolica field-label data via `field_mass_kind_from_label(...)`;
+  - taught `Theory.fluctuation_operator(...)` to use the discovered basis when
+    no explicit basis is supplied, while preserving the explicit-basis path;
+  - added a theory-ownership guard so a `FluctuationBasis` cannot accidentally
+    be reused with a different theory;
+  - added tests that derivative-bearing fields are reduced to their base field
+    entries, complex fields contribute barred and unbarred entries,
+    unregistered/untagged field-like atoms are ignored, and automatic Hessian
+    extraction uses the discovered basis.
 
 ## Backend/API Discoveries
 
@@ -414,6 +430,11 @@ discoveries, dependency patches, blockers, and remaining work.
   scope is algebraic Hessian extraction over an explicit basis; assembling full
   differential operators from derivative-valued fields remains a later
   one-loop matching stage.
+- Automatic fluctuation-basis discovery now uses Symbolica pattern matching
+  over `Field(...)` and `Bar(Field(...))` atoms with `req_tag("field")` on the
+  field label wildcard. This keeps unregistered field-like test atoms out of
+  the basis and makes heavy/light classification depend on Symbolica symbol
+  data instead of name conventions.
 
 ## Test Status
 
@@ -561,6 +582,17 @@ discoveries, dependency patches, blockers, and remaining work.
   fluctuation-operator slice: 95 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the fluctuation-basis slice: 12 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the fluctuation-basis
+  slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  fluctuation-basis slice: 98 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
@@ -569,6 +601,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend `FluctuationOperator` extraction from algebraic Hessians over explicit
   basis entries to full differential fluctuation operators, including
   derivative-valued fields and integration-by-parts conventions.
+- Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
+  including spin/statistics signs, real/complex counting, ghosts, Goldstones,
+  background fields, and non-propagating fields.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.

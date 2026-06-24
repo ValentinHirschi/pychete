@@ -13,7 +13,7 @@ from .expr import is_head, list_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
-    from .matching import FluctuationBasisItem, FluctuationOperator, HeavyScalarSolution, MatchingResult
+    from .matching import FluctuationBasis, FluctuationBasisItem, FluctuationOperator, HeavyScalarSolution, MatchingResult
 
 
 class FieldMassKind(StrEnum):
@@ -977,13 +977,24 @@ class Theory:
     def fluctuation_operator(
         self,
         lagrangian: Expression,
-        fields: Iterable[FluctuationBasisItem],
+        fields: FluctuationBasis | Iterable[FluctuationBasisItem] | None = None,
     ) -> FluctuationOperator:
-        """Extract the algebraic fluctuation-operator Hessian for fields."""
+        """Extract the algebraic fluctuation-operator Hessian for fields.
+
+        When ``fields`` is omitted, pychete discovers a deterministic
+        fluctuation basis from field atoms in ``lagrangian``.
+        """
 
         from .matching import fluctuation_operator
 
         return fluctuation_operator(self, lagrangian, fields)
+
+    def fluctuation_basis(self, lagrangian: Expression) -> FluctuationBasis:
+        """Discover heavy and light fluctuation fields in a Lagrangian."""
+
+        from .matching import fluctuation_basis
+
+        return fluctuation_basis(self, lagrangian)
 
     def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int = 0) -> Expression | MatchingResult:
         """Match a Lagrangian through the requested loop order.
