@@ -1298,6 +1298,9 @@ class OneLoopSetup:
             **self.fluctuation_operator.momentum_expression_map(
                 prefix=f"{prefix}.fluctuation_operator_momentum",
             ),
+            **self.fluctuation_operator.propagator_denominator_expression_map(
+                prefix=f"{prefix}.fluctuation_operator_denominator",
+            ),
             **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
@@ -1375,6 +1378,57 @@ class FluctuationOperator:
                     column,
                     loop_momentum_squared=loop_momentum_squared,
                 )
+        return entries
+
+    def propagator_denominator_entry(
+        self,
+        row: FluctuationBasisItem,
+        column: FluctuationBasisItem,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> Expression | None:
+        """Return a recognized scalar propagator denominator for one entry."""
+
+        row_expr = _fluctuation_basis_expression(self.theory, row)
+        column_expr = _fluctuation_basis_expression(self.theory, column)
+        denominator = _momentum_entry_propagator_denominator(
+            self.momentum_entry(
+                row_expr,
+                column_expr,
+                loop_momentum_squared=loop_momentum_squared,
+            ),
+            loop_momentum_squared=loop_momentum_squared,
+        )
+        if denominator is None or not require_registered_mass:
+            return denominator
+        if not _same_field_label(row_expr, column_expr):
+            return None
+        expected_mass_squared = _fluctuation_mass_squared(self.mode_for(column_expr))
+        return denominator if is_zero((denominator[1] - expected_mass_squared).expand()) else None
+
+    def propagator_denominator_expression_map(
+        self,
+        *,
+        prefix: str = "fluctuation_operator_denominator",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> dict[str, Expression]:
+        """Return recognized propagator denominators for operator entries."""
+
+        entries: dict[str, Expression] = {}
+        for row in self.basis:
+            for column in self.basis:
+                denominator = self.propagator_denominator_entry(
+                    row,
+                    column,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+                if denominator is None:
+                    continue
+                key = f"{prefix}[{canonical_string(row)},{canonical_string(column)}]"
+                entries[key] = denominator
         return entries
 
     def to_expression_map(self, *, prefix: str = "fluctuation_operator") -> dict[str, Expression]:
@@ -1833,6 +1887,47 @@ def _lower_differential_operators_to_momentum(
     return expr.replace(pattern, lower_operator).expand()
 
 
+def _momentum_entry_propagator_denominator(
+    expr: Expression,
+    *,
+    loop_momentum_squared: Expression | None = None,
+) -> Expression | None:
+    momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+    momentum_coefficient = _coefficient_of_momentum_power(expr, momentum_squared, 1)
+    if momentum_coefficient is None:
+        return None
+    if not bool(momentum_coefficient == Expression.num(1)):
+        return None
+    if _has_unsupported_momentum_powers(expr, momentum_squared):
+        return None
+    constant = _coefficient_of_momentum_power(expr, momentum_squared, 0)
+    mass_squared = Expression.num(0) if constant is None else (-constant).expand()
+    return s.PropagatorDenominator(momentum_squared, mass_squared)
+
+
+def _coefficient_of_momentum_power(expr: Expression, momentum_squared: Expression, power: int) -> Expression | None:
+    if power == 0:
+        target = Expression.num(1)
+    elif power == 1:
+        target = momentum_squared
+    else:
+        target = momentum_squared**power
+    for key, coefficient in expr.coefficient_list(momentum_squared):
+        if bool(key == target):
+            return coefficient.expand()
+    return None
+
+
+def _has_unsupported_momentum_powers(expr: Expression, momentum_squared: Expression) -> bool:
+    for key, coefficient in expr.coefficient_list(momentum_squared):
+        if is_zero(coefficient):
+            continue
+        if bool(key == Expression.num(1)) or bool(key == momentum_squared):
+            continue
+        return True
+    return False
+
+
 def _contracted_derivative_pair_power(derivatives: tuple[Expression, ...]) -> int | None:
     if len(derivatives) % 2 != 0:
         return None
@@ -1840,6 +1935,12 @@ def _contracted_derivative_pair_power(derivatives: tuple[Expression, ...]) -> in
         if not bool(left == right):
             return None
     return len(derivatives) // 2
+
+
+def _same_field_label(left: Expression, right: Expression) -> bool:
+    left_base = bar_field_inner(left) if is_bar_field(left) else left
+    right_base = bar_field_inner(right) if is_bar_field(right) else right
+    return bool(field_label(left_base) == field_label(right_base))
 
 
 def _field_definition_from_label(theory: Theory, label: Expression) -> FieldDefinition:

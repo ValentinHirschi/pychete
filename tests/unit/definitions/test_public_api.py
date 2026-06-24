@@ -134,6 +134,8 @@ def test_public_api_methods_have_docstrings() -> None:
             "momentum_entry",
             "momentum_expression_map",
             "mode_for",
+            "propagator_denominator_entry",
+            "propagator_denominator_expression_map",
             "supertrace_plan",
             "to_expression_map",
         ],

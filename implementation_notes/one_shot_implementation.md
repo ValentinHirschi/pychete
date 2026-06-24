@@ -817,6 +817,23 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests for real and barred complex scalar momentum entries,
     deterministic momentum expression maps, setup expression-map exposure, and
     public API docstring coverage.
+- Completed the thirty-eighth implementation slice:
+  - added `FluctuationOperator.propagator_denominator_entry(...)` and
+    `propagator_denominator_expression_map(...)` to recognize scalar inverse
+    operators of the form `LoopMomentumSquared - mass^2` as neutral
+    `PropagatorDenominator(LoopMomentumSquared, mass^2)` expressions;
+  - the recognizer uses native Symbolica `Expression.coefficient_list(...)` to
+    verify a linear loop-momentum-squared coefficient and reject unsupported
+    higher powers instead of decomposing terms by hand in Python;
+  - denominator extraction requires agreement with registered field mass
+    metadata by default, so interaction-dependent diagonal entries are not
+    silently treated as free propagator masses; callers may opt out for
+    inspection with `require_registered_mass=False`;
+  - `OneLoopSetup.to_expression_map(...)` now exposes recognized denominators
+    under the `fluctuation_operator_denominator` namespace;
+  - added focused tests for free real scalars, barred complex scalars,
+    deterministic denominator maps, interaction-mass rejection, opt-out
+    inspection, and public API docstring coverage.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1701,6 +1718,25 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the fluctuation-operator momentum-lowering
   slice: 153 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_exposes_euler_lagrange_differential_entries
+  tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
+  tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_denominator_extraction_rejects_interaction_masses
+  tests/unit/definitions/test_public_api.py -q'` passed after the
+  fluctuation-operator denominator extraction slice: 7 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the
+  fluctuation-operator denominator extraction slice: 37 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the fluctuation-operator denominator extraction slice:
+  no issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the fluctuation-operator denominator
+  extraction slice: 154 passed, 1 skipped. The skip is the existing GammaLoop
+  API import check because GammaLoop was not requested in the current
+  dependency manifest.
+- `git diff --check` passed after the fluctuation-operator denominator
+  extraction slice.
 
 ## Remaining Work
 
@@ -1708,7 +1744,7 @@ discoveries, dependency patches, blockers, and remaining work.
   targets for the pychete one-loop matching engine.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
-  and backend-ready propagator kernels with integration-by-parts convention
+  propagator expansion/insertion ordering, and integration-by-parts convention
   validation against Matchete fixtures.
 - Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
   and spin/Lorentz mode metadata into backend-evaluated vector Lorentz traces,

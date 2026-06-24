@@ -98,6 +98,15 @@ def test_fluctuation_operator_exposes_euler_lagrange_differential_entries() -> N
         momentum_map[f"fluctuation_operator_momentum[{canonical_string(heavy())},{canonical_string(heavy())}]"],
         operator.momentum_entry(heavy, heavy),
     )
+    assert_expr_equal(
+        operator.propagator_denominator_entry(heavy, heavy),
+        s.PropagatorDenominator(s.LoopMomentumSquared, mass**2),
+    )
+    denominator_map = operator.propagator_denominator_expression_map()
+    assert_expr_equal(
+        denominator_map[f"fluctuation_operator_denominator[{canonical_string(heavy())},{canonical_string(heavy())}]"],
+        operator.propagator_denominator_entry(heavy, heavy),
+    )
 
 
 def test_fluctuation_operator_differential_entries_handle_barred_complex_scalars() -> None:
@@ -118,6 +127,31 @@ def test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
     assert_expr_equal(operator.differential_entry(phi, barred_phi), expected)
     assert_expr_equal(operator.momentum_entry(barred_phi, phi), s.LoopMomentumSquared - mass**2)
     assert_expr_equal(operator.momentum_entry(phi, barred_phi), s.LoopMomentumSquared - mass**2)
+    assert_expr_equal(
+        operator.propagator_denominator_entry(barred_phi, phi),
+        s.PropagatorDenominator(s.LoopMomentumSquared, mass**2),
+    )
+    assert_expr_equal(
+        operator.propagator_denominator_entry(phi, barred_phi),
+        s.PropagatorDenominator(s.LoopMomentumSquared, mass**2),
+    )
+
+
+def test_fluctuation_operator_denominator_extraction_rejects_interaction_masses() -> None:
+    theory = Theory("fluctuation_denominator_interaction")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(phi) - y() * heavy() * phi() ** 2 / 2
+
+    operator = theory.fluctuation_operator(lagrangian)
+
+    assert_expr_equal(operator.momentum_entry(phi, phi), s.LoopMomentumSquared - y() * heavy())
+    assert operator.propagator_denominator_entry(phi, phi) is None
+    assert_expr_equal(
+        operator.propagator_denominator_entry(phi, phi, require_registered_mass=False),
+        s.PropagatorDenominator(s.LoopMomentumSquared, y() * heavy()),
+    )
 
 
 def test_fluctuation_operator_protects_unselected_barred_fields() -> None:
