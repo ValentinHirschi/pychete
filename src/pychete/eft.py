@@ -14,6 +14,7 @@ from .expr import (
     field_strength_pattern,
     field_type,
     list_items,
+    sum_expr,
 )
 from .symbols import SymbolRole, canonical_string, s
 from .theory import FieldMassKind, Theory, field_mass_kind_from_label
@@ -144,6 +145,16 @@ def _scaled_operator_dimension(expr: Expression, theory: Theory | None, *, heavy
     return min(dimensions, default=0)
 
 
+def _select_weighted_eft_terms(weighted: Expression, scaled_order: int, *, exact: bool) -> Expression:
+    selected = (
+        coefficient
+        for key, coefficient in weighted.coefficient_list(s.EFTExpansionParameter)
+        if (dimension := _marker_key_scaled_dimension(key)) is not None
+        and ((dimension == scaled_order) if exact else (dimension <= scaled_order))
+    )
+    return sum_expr(selected).expand()
+
+
 def operator_dimension(expr: Expression, theory: Theory | None = None, *, heavy_field_dimension: bool = True) -> float:
     """Return the minimum EFT operator dimension appearing in ``expr``."""
 
@@ -173,13 +184,4 @@ def series_eft(
         order = eft_order
     scaled_order = 2 * order
     weighted = _eft_weighted_expression(expr, theory, heavy_field_dimension=heavy_field_dimension).expand()
-
-    if exact:
-        out = Expression.num(0)
-        for key, coefficient in weighted.coefficient_list(s.EFTExpansionParameter):
-            if _marker_key_scaled_dimension(key) == scaled_order:
-                out = out + coefficient
-        return out.expand()
-
-    truncated = weighted.series(s.EFTExpansionParameter, 0, scaled_order).to_expression()
-    return truncated.replace(s.EFTExpansionParameter, Expression.num(1)).expand()
+    return _select_weighted_eft_terms(weighted, scaled_order, exact=exact)

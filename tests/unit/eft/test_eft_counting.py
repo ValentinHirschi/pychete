@@ -27,7 +27,7 @@ def test_series_eft_counts_inverse_light_masses() -> None:
     assert_expr_equal(series_eft(expr, theory, eft_order=6), expected)
 
 
-def test_series_eft_uses_symbolica_series_for_exact_and_inclusive_orders() -> None:
+def test_series_eft_uses_symbolica_marker_coefficients_for_exact_and_inclusive_orders() -> None:
     theory = Theory("eft_exact")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     m = theory.coupling_handle("m")

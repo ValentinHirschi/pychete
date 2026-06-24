@@ -708,10 +708,21 @@ discoveries, dependency patches, blockers, and remaining work.
 - The four committed default Matchete model fixtures now all build the first
   `heavy-heavy` one-loop setup kernel without Mathematica. This validates the
   fixture-to-setup path for `VLF_toy_model`, `Singlet_Scalar_Extension`,
-  `E_VLL`, and `S1S3LQs` at the current setup depth. A broader preview over
-  these fixtures still hits the later EFT-series truncation bottleneck, so the
-  next engine work must push that stage further into native Symbolica/backend
-  operations or add a more selective truncation path.
+  `E_VLL`, and `S1S3LQs` at the current setup depth. At this point, broader
+  preview generation exposed a later EFT-series truncation bottleneck.
+- Rescanned Symbolica's `Expression.coefficient_list` and `Expression.series`
+  APIs for EFT truncation. `series_eft(...)` now uses the same native
+  marker-coefficient extraction for inclusive and exact EFT-order selection,
+  instead of asking Symbolica to build a full formal series for the inclusive
+  path. This remains native Symbolica algebra over the `EFTExpansionParameter`
+  marker but avoids the large-series bottleneck observed when building
+  power-type previews for real model fixtures.
+- With coefficient-list EFT truncation, the four committed default Matchete
+  model fixtures now build the first incomplete one-loop
+  `power_type_matching_preview(...)` without Mathematica. The preview is still
+  explicitly marked incomplete and only covers the first `heavy-heavy` kernel
+  at `max_trace_order=1`, but this moves the default target fixtures one stage
+  further along the actual pychete one-loop result surface.
 
 ## Test Status
 
@@ -1051,6 +1062,17 @@ discoveries, dependency patches, blockers, and remaining work.
   expression-matrix-supertrace-fallback slice: 115 passed, 1 skipped. The skip
   is the existing GammaLoop API import check because GammaLoop was not
   requested in the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/eft/test_eft_counting.py
+  tests/integration/validation/test_validation_fixtures.py
+  tests/integration/matching/test_fluctuation_operator.py`
+  passed after the coefficient-list-EFT-truncation slice: 35 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  coefficient-list-EFT-truncation slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  coefficient-list-EFT-truncation slice: 115 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 
