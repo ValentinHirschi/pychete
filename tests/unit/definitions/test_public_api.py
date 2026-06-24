@@ -108,6 +108,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "power_type_contributions",
             "power_type_eft_lagrangian",
             "power_type_expression_map",
+            "power_type_matching_result",
             "power_type_matching_preview",
             "power_type_traces",
             "power_type_vakint_integral_sum",

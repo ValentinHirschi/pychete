@@ -187,7 +187,7 @@ def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathe
         fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
         preview = fixture.one_loop_preview(max_trace_order=3)
 
-        assert preview.metadata["stage"] == "power_type_preview"
+        assert preview.metadata["stage"] == "power_type_vakint_result"
         assert preview.metadata["complete"] is False
         assert preview.metadata["fixture"] == fixture.name
         assert preview.metadata["fixture_kind"] == "model_definition"

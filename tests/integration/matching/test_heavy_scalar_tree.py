@@ -1,9 +1,8 @@
 from __future__ import annotations
 
-import pytest
 from symbolica import Expression
 
-from pychete import FieldMassKind, OneLoopMatchingNotImplementedError, Theory, canonical_string, s
+from pychete import FieldMassKind, MatchingResult, Theory, canonical_string, s
 
 from tests.conftest import assert_expr_equal
 
@@ -62,12 +61,19 @@ def test_tree_match_loop_order_zero_preserves_existing_result() -> None:
     )
 
 
-def test_one_loop_match_request_fails_loudly_until_engine_lands() -> None:
+def test_one_loop_match_request_returns_incomplete_native_backed_result() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()
     lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
 
-    with pytest.raises(OneLoopMatchingNotImplementedError, match="One-loop matching is not implemented"):
-        theory.match(lagrangian, eft_order=6, loop_order=1)
+    result = theory.match(lagrangian, eft_order=6, loop_order=1)
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["loop_order"] == 1
+    assert result.metadata["complete"] is False
+    assert result.metadata["stage"] == "power_type_vakint_result"
+    assert "power_type_vakint_integral_sum" in result.supertraces
+    assert_expr_equal(result.off_shell_eft_lagrangian, result.expression("power_type_vakint_integral_sum"))
+    result.validate()
 
 
 def test_one_theory_can_match_two_lagrangians_without_cross_talk() -> None:

@@ -398,14 +398,14 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
     preview = setup.power_type_matching_preview()
     assert isinstance(preview, MatchingResult)
     assert preview.theory is theory
-    assert preview.metadata["stage"] == "power_type_preview"
+    assert preview.metadata["stage"] == "power_type_vakint_result"
     assert preview.metadata["complete"] is False
     assert preview.metadata["loop_order"] == 1
     assert preview.metadata["eft_order"] == 6
     assert preview.metadata["max_trace_order"] == 2
     assert preview.metadata["power_type_contribution_count"] == 3
-    assert_expr_equal(preview.off_shell_eft_lagrangian, setup.power_type_eft_lagrangian())
-    assert_expr_equal(preview.on_shell_eft_lagrangian, setup.power_type_eft_lagrangian())
+    assert_expr_equal(preview.off_shell_eft_lagrangian, setup.power_type_vakint_integral_sum())
+    assert_expr_equal(preview.on_shell_eft_lagrangian, setup.power_type_vakint_integral_sum())
     assert_expr_equal(preview.expression("power_type_eft_lagrangian"), setup.power_type_eft_lagrangian())
     assert_expr_equal(
         preview.expression("power_type_supertrace[heavy-light-heavy,eft_numerator]"),
@@ -560,6 +560,14 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         setup.power_type_matching_preview().expression("power_type_vakint_integral_sum"),
         expected_power_type_vakint_sum,
     )
+    assert_expr_equal(
+        setup.power_type_matching_result().off_shell_eft_lagrangian,
+        expected_power_type_vakint_sum,
+    )
+    assert_expr_equal(
+        setup.power_type_matching_result().expression("power_type_eft_lagrangian"),
+        setup.power_type_eft_lagrangian(),
+    )
     preview_engine = FakeKernelVakintEngine()
     canonical_preview = setup.power_type_matching_preview(
         vakint_stage=VakintIntegralStage.CANONICAL,
@@ -576,6 +584,7 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         canonical_preview.expression("power_type_vakint_integral_sum[canonical]"),
         S("canonical")(expected_power_type_vakint_sum),
     )
+    assert_expr_equal(canonical_preview.off_shell_eft_lagrangian, S("canonical")(expected_power_type_vakint_sum))
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.supertrace_propagator_kernel[") for key in setup.to_expression_map())

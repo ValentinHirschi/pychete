@@ -807,7 +807,7 @@ class OneLoopSetup:
             return vakint.tensor_reduce(raw, engine=engine)
         return vakint.evaluate(raw, engine=engine)
 
-    def power_type_matching_preview(
+    def power_type_matching_result(
         self,
         *,
         heavy_field_dimension: bool = False,
@@ -816,9 +816,15 @@ class OneLoopSetup:
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
     ) -> MatchingResult:
-        """Return an explicitly incomplete matching-result preview for power-type terms."""
+        """Return the current incomplete one-loop result for power-type terms.
 
-        off_shell = self.power_type_eft_lagrangian(heavy_field_dimension=heavy_field_dimension)
+        The returned EFT Lagrangians are the aggregate power-type contribution
+        after lowering to the selected native vakint stage. Metadata keeps the
+        result explicitly incomplete until the full Matchete-level matching
+        pipeline, on-shell reduction, and SMEFT-condition extraction land.
+        """
+
+        numerator_sum = self.power_type_eft_lagrangian(heavy_field_dimension=heavy_field_dimension)
         selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
         vakint_sum = self.power_type_vakint_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
@@ -829,19 +835,19 @@ class OneLoopSetup:
         )
         supertraces = {
             **self.power_type_expression_map(prefix="power_type_supertrace"),
-            "power_type_eft_lagrangian": off_shell,
+            "power_type_eft_lagrangian": numerator_sum,
             "power_type_vakint_integral_sum": vakint_sum,
             f"power_type_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
         }
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
-            off_shell_eft_lagrangian=off_shell,
-            on_shell_eft_lagrangian=off_shell,
+            off_shell_eft_lagrangian=vakint_sum,
+            on_shell_eft_lagrangian=vakint_sum,
             fluctuation_operators=self.fluctuation_operator.to_expression_map(),
             supertraces=supertraces,
             metadata={
-                "stage": "power_type_preview",
+                "stage": "power_type_vakint_result",
                 "complete": False,
                 "loop_order": 1,
                 "eft_order": self.eft_order,
@@ -851,6 +857,29 @@ class OneLoopSetup:
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
             },
+        )
+
+    def power_type_matching_preview(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the current incomplete power-type matching result.
+
+        This compatibility alias keeps the older preview method name while the
+        result now uses the vakint-staged aggregate as the EFT Lagrangian.
+        """
+
+        return self.power_type_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
         )
 
     def vakint_integral_expression_map(
@@ -1785,18 +1814,13 @@ def match_tree(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) ->
 
 
 def match_one_loop(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> MatchingResult:
-    """Run pychete's one-loop matching pipeline.
+    """Run the current native-backed one-loop matching pipeline.
 
-    The public API entry point exists so callers cannot accidentally receive a
-    tree-level result for a one-loop request. The engine body is intentionally
-    not stubbed with fake physics: it must be filled by the Symbolica/idenso/
-    spenso/vakint pipeline and validated against the committed Matchete
-    fixtures.
+    This returns an explicitly incomplete ``MatchingResult`` built from the
+    generated power-type supertraces and selected raw vakint topology sum. The
+    result metadata carries ``complete=False`` until the remaining Matchete-level
+    matching stages are implemented and validated.
     """
 
     theory._validate_registered_expression(lagrangian)
-    raise OneLoopMatchingNotImplementedError(
-        "One-loop matching is not implemented yet. The committed default "
-        "Matchete matching fixtures are available as acceptance targets under "
-        "assets/validation/pychete/*.matching_fixture.json."
-    )
+    return one_loop_setup(theory, lagrangian, eft_order=eft_order).power_type_matching_result()

@@ -1862,9 +1862,10 @@ class Theory:
         """Match a Lagrangian through the requested loop order.
 
         ``loop_order=0`` preserves pychete's existing tree-level heavy-scalar
-        matching behavior and returns an expression. ``loop_order=1`` is the
-        reserved public entry point for the one-loop matching engine and raises
-        ``OneLoopMatchingNotImplementedError`` until that engine is complete.
+        matching behavior and returns an expression. ``loop_order=1`` returns
+        the current native-backed one-loop ``MatchingResult`` and keeps
+        ``metadata["complete"]`` false until the full Matchete-level engine is
+        implemented.
         """
 
         from .matching import match_one_loop, match_tree

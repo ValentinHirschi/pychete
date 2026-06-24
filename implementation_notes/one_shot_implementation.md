@@ -285,11 +285,12 @@ discoveries, dependency patches, blockers, and remaining work.
   - exported the comparison result types and
     `OneLoopMatchingNotImplementedError` through the public API;
   - added an explicit `loop_order` argument to `Theory.match(...)`, preserving
-    the existing tree-level behavior for `loop_order=0` and failing loudly for
-    `loop_order=1` until the real one-loop engine is implemented;
+    the existing tree-level behavior for `loop_order=0`; later slices now route
+    `loop_order=1` to an explicitly incomplete native-backed
+    `MatchingResult`;
   - added tests that tree matching remains unchanged, one-loop requests cannot
-    silently return tree-level results, and fixture comparisons report
-    canonical mismatches.
+    silently return tree-level results, and fixture comparisons report canonical
+    mismatches.
 - Completed the fourteenth implementation slice:
   - extended `MatchingResult.compare_to(...)` with optional Symbolica
     evaluator-backed numeric probes for expressions that fail canonical
@@ -541,11 +542,13 @@ discoveries, dependency patches, blockers, and remaining work.
   72 matching conditions. The fixture key convention is intentionally canonical
   and machine-oriented; a later public presentation layer can display those
   left-hand sides using `display_string(...)` or `latex_string(...)`.
-- `Theory.match(..., loop_order=1)` now has an explicit public contract but
-  intentionally raises `OneLoopMatchingNotImplementedError`. This is preferable
-  to returning a fake `MatchingResult`: the next matching-engine slices must
-  fill the pipeline stages and satisfy `MatchingResult.compare_to(...)` against
-  the committed default fixtures.
+- `Theory.match(..., loop_order=1)` now has an explicit public contract. It
+  returns the current native-backed, explicitly incomplete one-loop
+  `MatchingResult` rather than a tree-level expression, with
+  `metadata["complete"] == False`. The next matching-engine slices must fill
+  the remaining pipeline stages and satisfy `MatchingResult.compare_to(...)`
+  against the committed default fixtures before this can be considered a full
+  one-loop implementation.
 - `MatchingResult.compare_to(...)` now directly supports the approved fallback
   policy for hard-to-canonicalize expressions: canonical strings are compared
   first, and only canonical mismatches are optionally sent through
@@ -702,6 +705,25 @@ discoveries, dependency patches, blockers, and remaining work.
     atoms lower to `spenso::t(...)`, structure constants lower to
     `spenso::f(...)`, and the one-loop tensor-network route receives a native
     HEP tensor library.
+- Completed the thirty-first implementation slice:
+  - added `OneLoopSetup.power_type_matching_result(...)`, which packages the
+    current native-backed power-type one-loop result as a `MatchingResult`;
+  - the result uses the selected `power_type_vakint_integral_sum(...)` stage as
+    both the off-shell and not-yet-reduced on-shell EFT Lagrangian, while
+    retaining the EFT-truncated numerator sum as
+    `supertraces["power_type_eft_lagrangian"]`;
+  - kept `OneLoopSetup.power_type_matching_preview(...)` as a compatibility
+    alias to the new result method, so fixture preview helpers now exercise the
+    vakint-staged result path;
+  - routed `Theory.match(..., loop_order=1)` and `match_one_loop(...)` to this
+    incomplete native-backed result instead of raising
+    `OneLoopMatchingNotImplementedError`;
+  - preserved the explicit incompleteness contract through
+    `metadata["complete"] == False`, `metadata["stage"] ==
+    "power_type_vakint_result"`, and `metadata["on_shell_reduced"] == False`;
+  - added tests proving the public one-loop match entry point returns a
+    structured result, the result EFT Lagrangian is the vakint aggregate, and
+    the older preview helper retains the numerator aggregate for inspection.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -752,8 +774,7 @@ discoveries, dependency patches, blockers, and remaining work.
   numerators, EFT-truncated numerators through the existing Symbolica-backed
   `series_eft(...)`, and vakint topology expressions built from the truncated
   numerators. This is the first structured bridge from setup kernels toward
-  final `MatchingResult.supertraces`, while `Theory.match(loop_order=1)` still
-  correctly refuses to return an incomplete matching result.
+  final `MatchingResult.supertraces`.
 - Added aggregate power-type inspection outputs on `OneLoopSetup`.
   `power_type_eft_lagrangian(...)` now sums the cyclically unique
   EFT-truncated power-type numerators into a single off-shell contribution, and
@@ -763,18 +784,12 @@ discoveries, dependency patches, blockers, and remaining work.
   `series_eft(...)`, the integral shape is built through the vakint adapter,
   and the final algebraic cleanup is delegated to Symbolica `Expression.expand`.
   This gives the future `MatchingResult.off_shell_eft_lagrangian` and
-  `MatchingResult.supertraces` stages a concrete intermediate value without
-  making `Theory.match(loop_order=1)` return a partial result.
+  `MatchingResult.supertraces` stages a concrete intermediate value.
 - Added `OneLoopSetup.power_type_matching_preview(...)`, which builds an
   explicitly incomplete `MatchingResult` from the current one-loop setup
-  stages. The preview carries the UV Lagrangian, fluctuation-operator map,
-  individual power-type supertrace expressions, the aggregate off-shell
-  power-type contribution, the aggregate vakint topology sum, and metadata
-  marking `complete=False`, `stage="power_type_preview"`, and
-  `on_shell_reduced=False`. This starts wiring the existing setup outputs into
-  the final structured result surface while preserving the guard that
-  `Theory.match(loop_order=1)` must not return until the full one-loop engine
-  exists.
+  stages. Later slices promoted the vakint topology sum to the result EFT
+  Lagrangian, but the result remains marked `complete=False` until full
+  on-shell reduction and matching-condition extraction are implemented.
 - Added public `VakintIntegralStage` selectors and routed aggregate power-type
   vakint sums through the native vakint adapter. `power_type_vakint_integral_sum`
   now supports raw, canonical, tensor-reduced, and evaluated stages, delegating
@@ -1492,6 +1507,20 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the native SU(3) HEP CG lowering slice:
   146 passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_heavy_scalar_tree.py
+  tests/integration/matching/test_fluctuation_operator.py::test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data
+  tests/integration/validation/test_validation_fixtures.py::test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica
+  tests/unit/definitions/test_public_api.py -q'` passed after the one-loop
+  power-type result entry-point slice: 14 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the one-loop power-type result entry-point slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the one-loop power-type result entry-point
+  slice: 146 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1508,12 +1537,11 @@ discoveries, dependency patches, blockers, and remaining work.
   remaining generator/structure support outside native SU(3) HEP tensors,
   contractions, simplifications, and invariant-tensor construction, using
   idenso where gamma/colour/index algebra is the right backend.
-- Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
-  supertrace terms beyond the new neutral denominator-slot expressions and
-  preliminary vakint one-loop topology lowering, including physical loop
-  normalization and phase conventions, physical loop-momentum sign conventions,
-  propagator insertion ordering for multi-mode blocks, tensor reductions, and
-  validation against known native backend topologies.
+- Extend the current `SupertracePlan`/`PropagatorPlan` power-type vakint result
+  into a physically normalized one-loop matching result, including phase
+  conventions, loop-momentum sign conventions, propagator insertion ordering
+  for multi-mode blocks, tensor reductions, pole extraction, and validation
+  against known native backend topologies.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
