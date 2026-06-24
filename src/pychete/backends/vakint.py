@@ -5,7 +5,7 @@ from typing import Any, Mapping, Sequence
 
 from symbolica import Expression, S
 
-from ..expr import product_expr, sum_expr
+from ..expr import factors, is_head, product_expr, sum_expr
 from .common import import_backend
 
 
@@ -196,25 +196,60 @@ def to_canonical(
 ) -> Expression:
     """Canonicalize a vakint integral expression with native vakint."""
 
+    _raise_for_native_unsafe_topologies(integral_expression)
     return _engine(engine).to_canonical(integral_expression, short_form)
 
 
 def tensor_reduce(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Reduce vakint tensor integrals to scalar integrals with native vakint."""
 
+    _raise_for_native_unsafe_topologies(integral_expression)
     return _engine(engine).tensor_reduce(integral_expression)
 
 
 def evaluate_integral(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Evaluate only the integral factor of a vakint expression."""
 
+    _raise_for_native_unsafe_topologies(integral_expression)
     return _engine(engine).evaluate_integral(integral_expression)
 
 
 def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Run vakint's complete tensor reduction and integral evaluation."""
 
+    _raise_for_native_unsafe_topologies(integral_expression)
     return _engine(engine).evaluate(integral_expression)
+
+
+def _raise_for_native_unsafe_topologies(integral_expression: Expression) -> None:
+    """Reject topology shapes that currently abort inside native vakint."""
+
+    if any(_topology_contains_zero_mass_propagator(topology) for topology in _topologies(integral_expression)):
+        raise ValueError(
+            "native vakint currently aborts on generated one-loop topologies with "
+            "zero-mass propagators; keep this expression at the raw stage or use a "
+            "patched vakint backend"
+        )
+
+
+def _topologies(integral_expression: Expression) -> tuple[Expression, ...]:
+    pattern = _topology_pattern()
+    return tuple(pattern.replace_wildcards(match) for match in integral_expression.match(pattern))
+
+
+@cache
+def _topology_pattern() -> Expression:
+    return symbol("topo")(S("vakint_topology_factors_"))
+
+
+def _topology_contains_zero_mass_propagator(topology_expr: Expression) -> bool:
+    if not is_head(topology_expr, symbol("topo")) or len(topology_expr) != 1:
+        return False
+    return any(_is_zero_mass_propagator(factor) for factor in factors(topology_expr[0]))
+
+
+def _is_zero_mass_propagator(expr: Expression) -> bool:
+    return is_head(expr, symbol("prop")) and len(expr) == 5 and bool(expr[3] == Expression.num(0))
 
 
 def epsilon_coefficient(expr: Expression, power: int, *, epsilon: Expression | None = None) -> Expression:

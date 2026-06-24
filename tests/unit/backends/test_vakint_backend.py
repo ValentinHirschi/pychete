@@ -4,7 +4,7 @@ from dataclasses import dataclass, field
 from typing import Any
 
 import pytest
-from symbolica import S
+from symbolica import Expression, S
 
 from pychete.backends import vakint
 from pychete.symbols import canonical_string
@@ -70,6 +70,17 @@ def test_vakint_adapters_delegate_integral_operations_to_engine() -> None:
         "evaluate_integral",
         "evaluate",
     ]
+
+
+@pytest.mark.parametrize("operation", [vakint.to_canonical, vakint.tensor_reduce, vakint.evaluate_integral, vakint.evaluate])
+def test_vakint_adapters_reject_native_unsafe_massless_topologies_before_engine_call(operation: Any) -> None:
+    engine = FakeVakintEngine()
+    expr = vakint.one_loop_vacuum_integral(S("numerator"), (Expression.num(0), S("M") ** 2))
+
+    with pytest.raises(ValueError, match="zero-mass propagators"):
+        operation(expr, engine=engine)
+
+    assert engine.calls == []
 
 
 def test_vakint_one_loop_vacuum_topology_builders_use_native_namespace() -> None:

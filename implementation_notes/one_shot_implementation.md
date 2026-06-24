@@ -562,6 +562,13 @@ discoveries, dependency patches, blockers, and remaining work.
   wildcard. The mixed-chain adapter therefore uses Symbolica to match bounded
   `NCM` arities, then applies native idenso only to contiguous Dirac subwords;
   all gamma/projector algebra still happens in idenso.
+- Probed native vakint with `verify_numerator_identification=False` on
+  coefficient-bearing one-loop topologies. Massive scalar topologies can be
+  delegated, but a generated mixed massless/massive one-loop topology currently
+  aborts the Python process inside native vakint while looking for a mass
+  symbol. pychete therefore guards native vakint stage calls for zero-mass
+  generated topologies and raises a Python `ValueError` until a local vakint
+  patch or upstream fix is available.
 - Matchete previous matching-result files store the stages pychete needs:
   `"UV Lagrangian"`, `"Off-shell EFT Lagrangian"`,
   `"On-shell EFT Lagrangian"`, `"SuperTraces"`, and
@@ -1195,6 +1202,22 @@ discoveries, dependency patches, blockers, and remaining work.
     `PowerTypeSupertraceContribution.numerator_expression` applies this mixed
     `NCM` bridge before EFT truncation, so the one-loop matching path benefits
     from the backend adapter rather than only direct backend callers.
+- Completed the fifty-third implementation slice:
+  - added a pychete-side preflight guard around native vakint
+    `to_canonical(...)`, `tensor_reduce(...)`, `evaluate_integral(...)`, and
+    `evaluate(...)` calls for generated one-loop topologies with zero-mass
+    propagators;
+  - this guard was added after a managed-venv probe showed that native vakint
+    can abort the Python process, rather than raising a catchable exception,
+    for a mixed massless/massive generated topology even when
+    `verify_numerator_identification=False` is passed to the native engine;
+  - the guard uses Symbolica matching to find `vakint::topo(...)` subexpressions
+    and only inspects the matched `vakint::prop(..., mass_squared, ...)` mass
+    slots at the backend boundary; no integral reduction or symbolic
+    integration logic was implemented in Python;
+  - added unit coverage proving unsafe massless topologies raise `ValueError`
+    before a fake native engine is called, preserving the existing delegation
+    behavior for massive topologies.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1408,6 +1431,23 @@ discoveries, dependency patches, blockers, and remaining work.
   the existing GammaLoop API import check because GammaLoop was not requested
   in the current dependency manifest.
 - `git diff --check` passed after the mixed `NCM` contiguous-subword bridge
+  slice.
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/backends/test_vakint_backend.py -q` passed after the native-vakint
+  zero-mass topology guard slice: 11 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the native-vakint
+  zero-mass topology guard slice: no issues found in 24 source files.
+- A direct managed-venv probe of
+  `vakint.to_canonical(vakint.one_loop_vacuum_integral(num, (0, m^2)), engine=vakint.create_engine(verify_numerator_identification=False))`
+  now raises a catchable Python `ValueError` before entering native vakint.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  -q` passed after the native-vakint zero-mass topology guard slice: 1 passed.
+- `dependencies/.venv/bin/python -m pytest tests -q` passed after the
+  native-vakint zero-mass topology guard slice: 171 passed, 1 skipped. The skip
+  is the existing GammaLoop API import check because GammaLoop was not
+  requested in the current dependency manifest.
+- `git diff --check` passed after the native-vakint zero-mass topology guard
   slice.
 - `dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py`
   passed: 3 passed.
@@ -2406,6 +2446,10 @@ discoveries, dependency patches, blockers, and remaining work.
   blocks, tensor reductions, scheme-specific renormalization beyond the current
   minimal-subtraction preview, and validation against known native backend
   topologies.
+- Patch or otherwise extend local vakint so generated one-loop topologies with
+  massless propagators can be canonicalized/evaluated without aborting the
+  Python process. pychete currently guards those native calls and keeps such
+  expressions at the raw stage.
 - Extend the new compact Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
   artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or
