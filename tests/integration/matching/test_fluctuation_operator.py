@@ -21,6 +21,7 @@ from pychete import (
 )
 from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
+from pychete.backends import vacuum_integrals as vacuum_integrals_backend
 from pychete.backends import vakint as vakint_backend
 
 from tests.conftest import assert_expr_equal
@@ -1180,6 +1181,32 @@ def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficie
         loop_factor * (S("double") / eps**2 + S("single") / eps),
     )
     assert_expr_equal(normalized_evaluated.expression("interaction_power_type_normalized_vakint_finite_part"), loop_factor * S("finite"))
+
+
+def test_one_loop_setup_can_evaluate_single_scale_integrals_internally() -> None:
+    theory = Theory("one_loop_setup_internal_integrals")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) - y() * heavy() ** 3 / 6
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+
+    raw_power = setup.power_type_vakint_integral_sum()
+    raw_interaction = setup.interaction_power_type_vakint_integral_sum()
+    assert_expr_equal(
+        setup.power_type_internal_integral_sum(tensor_reduce=False),
+        vacuum_integrals_backend.evaluate_one_loop_single_scale_vakint_expression(raw_power),
+    )
+    assert_expr_equal(
+        setup.interaction_power_type_internal_integral_sum(tensor_reduce=False),
+        vacuum_integrals_backend.evaluate_one_loop_single_scale_vakint_expression(raw_interaction),
+    )
+
+    tensor_reduce_engine = FakeKernelVakintEngine()
+    assert_expr_equal(
+        setup.interaction_power_type_internal_integral_sum(tensor_reduce_engine=tensor_reduce_engine),
+        vacuum_integrals_backend.evaluate_one_loop_single_scale_vakint_expression(S("reduced")(raw_interaction)),
+    )
+    assert tensor_reduce_engine.calls == [("tensor_reduce", raw_interaction, None)]
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:

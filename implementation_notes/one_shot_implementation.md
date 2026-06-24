@@ -2655,6 +2655,30 @@ discoveries, dependency patches, blockers, and remaining work.
     Python converter;
   - `scripts/README.md` documents this as a convenience-only workflow for
     users with Mathematica, not a pychete runtime or pytest dependency.
+- Extended the pychete-owned one-loop vacuum-integral backend for
+  single-scale massive topologies:
+  - `evaluate_one_loop_single_scale_vacuum_integral(...)` now supports
+    positive integer propagator powers through the finite-order convention
+    matched to native vakint with
+    `number_of_terms_in_epsilon_expansion=2`;
+  - added
+    `evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared(...)`
+    for direct evaluation of vakint-style mass-squared slots, preserving
+    vakint's `log(mursq) - log(mass_squared)` convention and the
+    `M^2 -> 2 log(M)` presentation where the mass slot is a literal square;
+  - added `evaluate_one_loop_single_scale_vakint_expression(...)`, which uses
+    Symbolica pattern matching and replacement over `vakint::topo(...)` atoms
+    to evaluate scalar single-scale massive topology factors after optional
+    tensor reduction, while rejecting zero-mass and mixed-mass topologies;
+  - added `OneLoopSetup.power_type_internal_integral_sum(...)` and
+    `interaction_power_type_internal_integral_sum(...)` so the one-loop
+    pipeline can use native vakint for topology-independent tensor reduction
+    and pychete's internal analytic evaluator for the scalar single-scale
+    integral evaluation stage;
+  - added tests comparing internal results to real native vakint evaluation
+    for powers 1 through 5 and for bare mass-squared slots, plus setup-level
+    tests proving optional tensor-reduction delegation before internal
+    evaluation.
 
 ## Remaining Work
 
@@ -2685,12 +2709,11 @@ discoveries, dependency patches, blockers, and remaining work.
   blocks, tensor reductions, scheme-specific renormalization beyond the current
   minimal-subtraction preview, and validation against known native backend
   topologies.
-- Implement the pychete-owned analytic vacuum-integral backend for one-loop
-  vacuum integral evaluation after tensor reduction, following Matchete's
-  treatment for higher single-scale propagator powers, zero-mass, and
-  mixed-mass cases. Native vakint remains available for topology-independent
-  tensor reduction and supported single-scale massive analytic evaluation
-  cross-checks.
+- Extend the pychete-owned analytic vacuum-integral backend beyond the new
+  single-scale massive finite-order evaluator into Matchete's one-loop
+  zero-mass and mixed-mass cases after tensor reduction. Native vakint remains
+  available for topology-independent tensor reduction and supported
+  single-scale massive analytic evaluation cross-checks.
 - Extend the new compact Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
   artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or

@@ -1223,6 +1223,39 @@ class OneLoopSetup:
             return vakint.tensor_reduce(raw, engine=engine)
         return vakint.evaluate(raw, engine=engine)
 
+    def power_type_internal_integral_sum(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+    ) -> Expression:
+        """Evaluate single-scale power-type vacuum integrals with pychete.
+
+        Native vakint remains responsible for optional topology-independent
+        tensor reduction. The scalar single-scale massive topology evaluation
+        is then performed by pychete's internal analytic backend.
+        """
+
+        raw = self.power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+        )
+        if tensor_reduce:
+            from .backends import vakint
+
+            raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+        from .backends import vacuum_integrals
+
+        return vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(
+            raw,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+        )
+
     def interaction_power_type_vakint_integral_sum(
         self,
         *,
@@ -1254,6 +1287,44 @@ class OneLoopSetup:
         if selected is VakintIntegralStage.TENSOR_REDUCED:
             return vakint.tensor_reduce(raw, engine=engine)
         return vakint.evaluate(raw, engine=engine)
+
+    def interaction_power_type_internal_integral_sum(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+    ) -> Expression:
+        """Evaluate single-scale interaction-power vacuum integrals with pychete.
+
+        This is the internal analytic counterpart to
+        ``interaction_power_type_vakint_integral_sum(stage="evaluated")`` for
+        one-loop scalar topologies that are massive and single-scale after
+        optional vakint tensor reduction.
+        """
+
+        raw = self.interaction_power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        if tensor_reduce:
+            from .backends import vakint
+
+            raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+        from .backends import vacuum_integrals
+
+        return vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(
+            raw,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+        )
 
     def interaction_power_type_vakint_epsilon_coefficient(
         self,
