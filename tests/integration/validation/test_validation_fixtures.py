@@ -182,6 +182,18 @@ def test_committed_default_matching_fixtures_load_structured_results_without_mat
         result.validate()
 
 
+def test_default_model_fixtures_build_first_one_loop_setup_kernel_without_mathematica() -> None:
+    for model in ("VLF_toy_model", "Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
+        fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
+        theory = fixture.theory()
+        setup = theory.one_loop_setup(fixture.expression("lagrangian"), eft_order=6, max_trace_order=1)
+
+        assert setup.supertrace_kernel_count == 1
+        assert tuple(trace.name for trace in setup.block_traces) == ("heavy-heavy",)
+        assert setup.fluctuation_operator.modes
+        theory._validate_registered_expression(setup.block_traces[0].expression)
+
+
 def test_matching_result_comparison_reports_canonical_differences() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.matching_fixture.json"))
     reference = fixture.matching_result("matchete_previous")

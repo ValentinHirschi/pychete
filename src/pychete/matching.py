@@ -37,6 +37,7 @@ from .theory import (
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
+ExpressionMatrix: TypeAlias = tuple[tuple[Expression, ...], ...]
 
 
 class FluctuationStatistics(StrEnum):
@@ -1537,6 +1538,16 @@ def _supertrace_block_product(blocks: tuple[FluctuationOperatorBlock, ...]) -> E
     trace_modes = blocks[0].rows
     if not trace_modes or any(not block.rows or not block.columns for block in blocks):
         return Expression.num(0)
+    try:
+        return _supertrace_block_product_matrix(blocks)
+    except ValueError as exc:
+        if "rational polynomial" not in str(exc):
+            raise
+        return _supertrace_block_product_expression(blocks)
+
+
+def _supertrace_block_product_matrix(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:
+    trace_modes = blocks[0].rows
     product = _block_matrix(blocks[0])
     for block in blocks[1:]:
         product = product @ _block_matrix(block)
@@ -1544,6 +1555,31 @@ def _supertrace_block_product(blocks: tuple[FluctuationOperatorBlock, ...]) -> E
     for index, mode in enumerate(trace_modes):
         out = out + Expression.num(mode.supertrace_sign) * product[index, index].to_expression()
     return out.expand()
+
+
+def _supertrace_block_product_expression(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:
+    product_matrix = blocks[0].matrix
+    for block in blocks[1:]:
+        product_matrix = _expression_matrix_multiply(product_matrix, block.matrix)
+    return sum_expr(
+        Expression.num(mode.supertrace_sign) * product_matrix[index][index]
+        for index, mode in enumerate(blocks[0].rows)
+    ).expand()
+
+
+def _expression_matrix_multiply(left: ExpressionMatrix, right: ExpressionMatrix) -> ExpressionMatrix:
+    if not left or not right:
+        return ()
+    row_count = len(left)
+    inner_count = len(right)
+    column_count = len(right[0])
+    return tuple(
+        tuple(
+            sum_expr(left[row][inner] * right[inner][column] for inner in range(inner_count)).expand()
+            for column in range(column_count)
+        )
+        for row in range(row_count)
+    )
 
 
 def _block_matrix(block: FluctuationOperatorBlock) -> Matrix:

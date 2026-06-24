@@ -698,6 +698,20 @@ discoveries, dependency patches, blockers, and remaining work.
   a selected aggregate vakint stage and records the stage in metadata, giving
   the future one-loop result pipeline an explicit native-backend hook without
   creating a default vakint engine unless the user requests a non-raw stage.
+- Rescanned Symbolica's `Matrix` stub and confirmed that the native matrix type
+  is rational-polynomial based. `SupertracePlan` now keeps the native
+  `Matrix.from_nested(...)`/matrix-product path as the default, but falls back
+  to expression-matrix multiplication only when Symbolica rejects entries that
+  cannot be converted to rational polynomials. This fallback is intentionally
+  narrow and exists to unblock indexed/backend-function expressions in real
+  model fixtures; it is not a replacement for native Symbolica matrix algebra.
+- The four committed default Matchete model fixtures now all build the first
+  `heavy-heavy` one-loop setup kernel without Mathematica. This validates the
+  fixture-to-setup path for `VLF_toy_model`, `Singlet_Scalar_Extension`,
+  `E_VLL`, and `S1S3LQs` at the current setup depth. A broader preview over
+  these fixtures still hits the later EFT-series truncation bottleneck, so the
+  next engine work must push that stage further into native Symbolica/backend
+  operations or add a more selective truncation path.
 
 ## Test Status
 
@@ -1025,6 +1039,18 @@ discoveries, dependency patches, blockers, and remaining work.
   power-type-vakint-stage slice: 113 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the expression-matrix-supertrace-fallback slice: 35 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  expression-matrix-supertrace-fallback slice: no issues found in 24 source
+  files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  expression-matrix-supertrace-fallback slice: 115 passed, 1 skipped. The skip
+  is the existing GammaLoop API import check because GammaLoop was not
+  requested in the current dependency manifest.
 
 ## Remaining Work
 

@@ -267,6 +267,19 @@ def test_supertrace_plan_builds_weighted_block_trace_with_symbolica_matrix_produ
     assert heavy_light_mixing.to_expression_map()
 
 
+def test_supertrace_plan_falls_back_for_non_polynomial_matrix_entries() -> None:
+    theory = Theory("supertrace_expression_matrix_fallback")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    coefficient = S("external::F")
+    lagrangian = coefficient(light()) * heavy() ** 2 / 2
+
+    plan = theory.fluctuation_operator(lagrangian).supertrace_plan()
+    trace = plan.block_trace("heavy_heavy", plan.heavy_heavy)
+
+    assert_expr_equal(trace.expression, coefficient(light()))
+
+
 def test_supertrace_plan_rejects_non_closed_block_trace() -> None:
     theory = Theory("supertrace_bad_block_trace")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
