@@ -5,12 +5,13 @@ from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy
 from .matching import HeavyScalarSolution, MatchingResult
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
-from .theory import BuiltinIndexType, CouplingHandle, FieldHandle, FieldMassKind, FieldVariation, Theory
+from .theory import BuiltinIndexType, CouplingHandle, FieldChirality, FieldHandle, FieldMassKind, FieldVariation, Theory
 
 __all__ = [
     "BuiltinIndexType",
     "CouplingHandle",
     "FieldHandle",
+    "FieldChirality",
     "FieldMassKind",
     "FieldVariation",
     "HeavyScalarSolution",

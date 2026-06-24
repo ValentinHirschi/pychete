@@ -50,6 +50,34 @@ class FieldVariation(StrEnum):
             raise ValueError("variation must be FieldVariation.AUTO, FieldVariation.FIELD, or FieldVariation.BAR") from exc
 
 
+class FieldChirality(StrEnum):
+    """Chirality metadata for fermion fields."""
+
+    NONE = "none"
+    LEFT = "left"
+    RIGHT = "right"
+
+    @classmethod
+    def from_user(cls, value: FieldChirality | str | bool | None) -> FieldChirality:
+        """Normalize a user-provided chirality value."""
+
+        if value is None or value is False:
+            return cls.NONE
+        if value is True:
+            raise ValueError("chirality must be false/none, LeftHanded, or RightHanded")
+        normalized = str(value).replace("_", "").replace("-", "").lower()
+        if normalized in {"none", "false", "0"}:
+            return cls.NONE
+        if normalized in {"left", "lefthanded"}:
+            return cls.LEFT
+        if normalized in {"right", "righthanded"}:
+            return cls.RIGHT
+        try:
+            return cls(str(value).lower())
+        except ValueError as exc:
+            raise ValueError(f"unsupported chirality {value!r}") from exc
+
+
 class BuiltinIndexType(StrEnum):
     """Built-in index representations understood by pychete."""
 
@@ -145,6 +173,15 @@ def _expression_list_from_symbol_data(label: Expression, key: SymbolDataKey) -> 
 
 def field_indices_from_label(label: Expression) -> tuple[Expression, ...]:
     return _expression_list_from_symbol_data(label, SymbolDataKey.INDICES)
+
+
+def field_charges_from_label(label: Expression) -> tuple[Expression, ...]:
+    return _expression_list_from_symbol_data(label, SymbolDataKey.CHARGES)
+
+
+def field_chirality_from_label(label: Expression) -> FieldChirality:
+    value = symbol_data(label, SymbolDataKey.CHIRALITY, FieldChirality.NONE.value)
+    return FieldChirality.from_user(str(value))
 
 
 def field_mass_indices_from_label(label: Expression) -> tuple[Expression, ...]:
@@ -254,6 +291,8 @@ class FieldDefinition:
     label: Expression
     type: Expression
     indices: tuple[Expression, ...] = ()
+    charges: tuple[Expression, ...] = ()
+    chirality: FieldChirality = FieldChirality.NONE
     self_conjugate: bool = False
     mass_kind: FieldMassKind = FieldMassKind.LIGHT
     mass_label: Expression | None = None
@@ -276,6 +315,18 @@ class FieldDefinition:
         """Whether the field equals its conjugate."""
 
         return field_self_conjugate_from_label(self.label)
+
+    @property
+    def charge_exprs(self) -> tuple[Expression, ...]:
+        """Gauge-charge expressions stored on the field label."""
+
+        return field_charges_from_label(self.label)
+
+    @property
+    def chirality_kind(self) -> FieldChirality:
+        """Chirality stored on the field label."""
+
+        return field_chirality_from_label(self.label)
 
     def expr(self, *indices: Expression, derivatives: Iterable[Expression] = ()) -> Expression:
         """Build a Symbolica field expression."""
@@ -301,6 +352,8 @@ class FieldDefinition:
             "label": canonical_string(self.label),
             "type": canonical_string(self.type_expr),
             "indices": [canonical_string(i) for i in field_indices_from_label(self.label)],
+            "charges": [canonical_string(i) for i in field_charges_from_label(self.label)],
+            "chirality": field_chirality_from_label(self.label).value,
             "self_conjugate": self.is_self_conjugate,
             "mass_kind": field_mass_kind_from_label(self.label).value,
             "mass_label": canonical_string(mass_label) if (mass_label := field_mass_label_from_label(self.label)) is not None else None,
@@ -598,18 +651,26 @@ class Theory:
         type_expr: Expression,
         *,
         indices: Iterable[Expression] = (),
+        charges: Iterable[Expression] = (),
+        chirality: FieldChirality | str | bool | None = FieldChirality.NONE,
         self_conjugate: bool = False,
         mass: int | MassSpec | None = None,
     ) -> FieldHandle:
         """Register or return a field.
 
         ``type_expr`` is usually one of ``s.Scalar``, ``s.Fermion``, or a
-        vector type such as ``s.Vector(group_symbol)``. The ``mass`` argument
-        may be ``0``/``None`` or ``(FieldMassKind, coupling_name[, indices])``.
+        vector type such as ``s.Vector(group_symbol)``. ``charges`` stores
+        U(1)-charge expressions such as ``theory.group_charge("U1Y", 1/2)``.
+        The ``mass`` argument may be ``0``/``None`` or
+        ``(FieldMassKind, coupling_name[, indices])``.
         """
 
         if name in self.fields:
             return FieldHandle(self, self.fields[name])
+
+        chirality_kind = FieldChirality.from_user(chirality)
+        if chirality_kind is not FieldChirality.NONE and (not bool(type_expr == s.Fermion) or self_conjugate):
+            raise ValueError("chirality can only be set for non-self-conjugate fermion fields")
 
         mass_kind = FieldMassKind.LIGHT
         mass_label: Expression | None = None
@@ -630,10 +691,13 @@ class Theory:
             mass_label = mass_handle.label
 
         indices_tuple = tuple(indices)
+        charges_tuple = tuple(charges)
         field_data: dict[str, Any] = {
             SymbolDataKey.NAME.value: name,
             SymbolDataKey.FIELD_TYPE.value: type_expr,
             SymbolDataKey.INDICES.value: list(indices_tuple),
+            SymbolDataKey.CHARGES.value: list(charges_tuple),
+            SymbolDataKey.CHIRALITY.value: chirality_kind.value,
             SymbolDataKey.SELF_CONJUGATE.value: int(self_conjugate),
             SymbolDataKey.MASS_KIND.value: mass_kind.value,
             SymbolDataKey.MASS_INDICES.value: list(mass_indices),
@@ -645,6 +709,8 @@ class Theory:
             label=self.symbol(name, role=SymbolRole.FIELD, data=field_data),
             type=type_expr,
             indices=indices_tuple,
+            charges=charges_tuple,
+            chirality=chirality_kind,
             self_conjugate=self_conjugate,
             mass_kind=mass_kind,
             mass_label=mass_label,
@@ -684,6 +750,14 @@ class Theory:
             "coupling": coupling_handle.name,
             "field": vector.name,
         }
+
+    def group_charge(self, group: str, charge: Expression | int | float) -> Expression:
+        """Build a gauge-charge expression for a registered group."""
+
+        if group not in self.groups:
+            raise KeyError(f"Unknown group {group!r}")
+        charge_expr = charge if isinstance(charge, Expression) else Expression.num(charge)
+        return self.symbol(group, role=SymbolRole.GROUP)(charge_expr)
 
     def mass_expr(self, field_def: FieldDefinition) -> Expression | None:
         """Return the mass expression associated with a field definition."""
@@ -832,6 +906,8 @@ class Theory:
                 name,
                 theory._parse_registered_expression(data["type"]),
                 indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
+                charges=[theory._parse_registered_expression(x) for x in data.get("charges", [])],
+                chirality=FieldChirality.from_user(data.get("chirality", FieldChirality.NONE.value)),
                 self_conjugate=bool(data.get("self_conjugate", False)),
                 mass=mass,
             )

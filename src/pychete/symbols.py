@@ -399,6 +399,8 @@ class SymbolDataKey(StrEnum):
     LABEL = "label"
     NAME = "name"
     FIELD_TYPE = "field_type"
+    CHARGES = "charges"
+    CHIRALITY = "chirality"
     INDICES = "indices"
     EFT_ORDER = "eft_order"
     SELF_CONJUGATE = "self_conjugate"

@@ -40,6 +40,9 @@ def test_vlf_toy_model_asset_loads_without_runtime_reference_dependency() -> Non
     assert {"A", "Psi", "psi", "phi"} <= set(theory.fields)
     assert {"e", "M", "m", "y"} <= set(theory.couplings)
     assert theory.fields["Psi"].heavy is True
+    assert len(theory.fields["Psi"].charge_exprs) == 1
+    assert canonical_string(theory.fields["Psi"].charge_exprs[0]) == "VLF_toy_model::group_U1e(1)"
+    assert canonical_string(theory.fields["psi"].charge_exprs[0]) == "VLF_toy_model::group_U1e(1)"
     assert theory.fields["phi"].mass_kind is FieldMassKind.LIGHT
     assert set(expressions) == {"lagrangian"}
     theory._validate_registered_expression(expressions["lagrangian"])

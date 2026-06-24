@@ -4,7 +4,7 @@ import json
 
 from symbolica import S
 
-from pychete import BuiltinIndexType, FieldMassKind, SymbolDataKey, SymbolRole, Theory, canonical_string, collect_indices, s
+from pychete import BuiltinIndexType, FieldChirality, FieldMassKind, SymbolDataKey, SymbolRole, Theory, canonical_string, collect_indices, s
 from pychete.expr import coupling_pattern, field_pattern, matching_subexpressions
 
 
@@ -47,6 +47,30 @@ def test_field_symbol_data_stores_local_mass_metadata() -> None:
     assert label.get_symbol_data(SymbolDataKey.MASS_LABEL.value) == theory.coupling_handle("MPhi").label
     assert label.get_symbol_data(SymbolDataKey.MASS_INDICES.value) == [flavor.symbol]
     assert theory.mass_expr(heavy.definition) == theory.coupling_handle("MPhi")(flavor.symbol)
+
+
+def test_field_symbol_data_stores_charges_and_chirality() -> None:
+    theory = Theory("field_charge_data")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    charge = theory.group_charge("U1Y", S("qY"))
+    fermion = theory.define_field(
+        "l",
+        s.Fermion,
+        charges=[charge],
+        chirality=FieldChirality.LEFT,
+        mass=0,
+    )
+
+    label = fermion.label
+    assert label.get_symbol_data(SymbolDataKey.CHARGES.value) == [charge]
+    assert label.get_symbol_data(SymbolDataKey.CHIRALITY.value) == FieldChirality.LEFT.value
+    assert fermion.definition.charge_exprs == (charge,)
+    assert fermion.definition.chirality_kind is FieldChirality.LEFT
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    restored_field = restored.field_handle("l")
+    assert restored_field.definition.chirality_kind is FieldChirality.LEFT
+    assert [canonical_string(charge_expr) for charge_expr in restored_field.definition.charge_exprs] == [canonical_string(charge)]
 
 
 def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:

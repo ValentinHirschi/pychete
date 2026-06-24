@@ -151,6 +151,14 @@ discoveries, dependency patches, blockers, and remaining work.
     calls require the NumPy array API at runtime;
   - pinned the managed NumPy dependency to `numpy<2.5` because NumPy 2.5 stubs
     require Python 3.12 syntax while pychete's mypy target is Python 3.11.
+- Completed the fourth implementation slice:
+  - added `FieldChirality` and stored field chirality in Symbolica symbol data;
+  - added field gauge-charge metadata stored in Symbolica symbol data;
+  - added `Theory.group_charge(...)` for Pythonic U(1)-charge construction;
+  - taught the supported Matchete model loader path to preserve simple
+    `Charges`, `Indices`, and `Chiral` field options;
+  - updated the VLF toy model Python asset so the Python and supported
+    Mathematica assets agree on U(1) charge metadata.
 
 ## Backend/API Discoveries
 
@@ -169,6 +177,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Directly tested `Expression.evaluator` and `Expression.evaluator_multiple` in
   the managed venv. Both return NumPy arrays; without NumPy installed the
   Symbolica evaluator path aborts before Python can raise a normal exception.
+- Matchete `DefineField` stores `Charges`, `Indices`, and `Chiral` as first-class
+  field options. The pychete representation now persists the first simple slice
+  of that metadata through Symbolica symbol data and JSON checkpoints.
 
 ## Test Status
 
@@ -197,6 +208,17 @@ discoveries, dependency patches, blockers, and remaining work.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the numeric-probe
   slice: 63 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/models/test_model_loaders.py
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_public_api.py` passed after the field metadata
+  slice: 16 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the field metadata slice:
+  no issues found in 19 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the field
+  metadata slice: 64 passed, 1 skipped. The skip is the existing GammaLoop API
+  import check because GammaLoop was not requested in the current dependency
+  manifest.
 
 ## Remaining Work
 
@@ -208,4 +230,6 @@ discoveries, dependency patches, blockers, and remaining work.
   fixture schema.
 - Use `evaluator_probe_equal` in fixture comparison tests when canonical
   equality is insufficient.
+- Extend field metadata further for background fields, Goldstones, ghosts,
+  representation reality, and SMEFT basis data.
 - Extend the theory metadata and matching engine toward one-loop matching.

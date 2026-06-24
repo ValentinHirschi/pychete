@@ -8,7 +8,7 @@ from symbolica.core import AtomType, ParseMode
 
 from ..expr import args, product_expr, sum_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
-from ..theory import Theory
+from ..theory import FieldChirality, Theory
 
 
 _COMMENT_RE = re.compile(r"\(\*.*?\*\)", re.DOTALL)
@@ -98,6 +98,10 @@ def _parse_mass(raw: str) -> int | tuple[str, str]:
     raise NotImplementedError(f"Unsupported Mass option: {raw}")
 
 
+def _parse_chirality(raw: str) -> FieldChirality:
+    return FieldChirality.from_user(_clean_name(raw))
+
+
 def _options(raw_parts: list[str]) -> dict[str, str]:
     out: dict[str, str] = {}
     for part in raw_parts:
@@ -153,6 +157,10 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             return s.PR
         if name == "PL":
             return s.PL
+        if name == "fund":
+            return s.fund
+        if name == "adj":
+            return s.adj
         if name in theory.fields:
             return theory.field_handle(name)()
         if name in theory.couplings:
@@ -176,6 +184,8 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
         if name == "FreeLag":
             names = [_clean_name(_plain_name(child)) for child in args(expr)]
             return theory.free_lag(*names)
+        if name in theory.groups:
+            return theory.symbol(name, role=SymbolRole.GROUP)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.fields:
             return theory.field_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.couplings:
@@ -187,6 +197,15 @@ def _eval_expression(text: str, theory: Theory, env: dict[str, Expression]) -> E
     normalized = _normalize_expression(text)
     parsed = Expression.parse(normalized, mode=ParseMode.Mathematica)
     return _convert_expression(parsed, theory, env).expand()
+
+
+def _eval_expression_list(text: str, theory: Theory) -> list[Expression]:
+    normalized = _preprocess_names(text.strip())
+    if normalized.startswith("{") and normalized.endswith("}"):
+        items = _split_top_level(normalized[1:-1], ",")
+    else:
+        items = [normalized]
+    return [_eval_expression(item, theory, {}) for item in items if item.strip()]
 
 
 def _eval_module(args_raw: list[str], theory: Theory) -> Expression:
@@ -231,6 +250,9 @@ def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> 
             theory.define_field(
                 _clean_name(raw_args[0]),
                 _field_type(raw_args[1]),
+                indices=_eval_expression_list(opts["Indices"], theory) if "Indices" in opts else (),
+                charges=_eval_expression_list(opts["Charges"], theory) if "Charges" in opts else (),
+                chirality=_parse_chirality(opts["Chiral"]) if "Chiral" in opts else FieldChirality.NONE,
                 self_conjugate=_parse_bool(opts["SelfConjugate"]) if "SelfConjugate" in opts else False,
                 mass=_parse_mass(opts["Mass"]) if "Mass" in opts else None,
             )
