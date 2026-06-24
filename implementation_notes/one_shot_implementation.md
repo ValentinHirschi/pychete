@@ -649,6 +649,24 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused backend and matching tests proving registered CG atoms lower,
     untagged `CG`-like atoms are ignored, and supertrace kernels reach spenso
     without pychete `CG` heads.
+- Completed the twenty-eighth implementation slice:
+  - added `pychete.backends.spenso.cg_tensor_library_tensor_to_spenso(...)`,
+    creating native spenso `LibraryTensor` objects for registered pychete CG
+    tensors from explicit component arrays or opt-in generated symbolic
+    components;
+  - added `pychete.backends.spenso.register_cg_tensor_in_spenso_library(...)`
+    and `pychete.backends.spenso.cg_tensor_library_to_spenso(...)`, registering
+    pychete CG tensors into native spenso `TensorLibrary` objects;
+  - deliberately rejected registration without component data unless
+    `symbolic_components=True`, avoiding the unsafe zero-tensor behavior that
+    an empty sparse placeholder would imply;
+  - threaded optional `cg_components_by_name` and `symbolic_cg_components`
+    arguments through `evaluate_pychete_tensor_network(...)`,
+    `SupertraceBlockTrace.evaluate_tensor_network(...)`, and
+    `OneLoopSetup.evaluate_tensor_networks(...)`;
+  - added focused tests for native library lookup, symbolic component
+    generation, wrong-sized component rejection, and one-loop trace evaluation
+    with a generated spenso CG library.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -780,6 +798,12 @@ discoveries, dependency patches, blockers, and remaining work.
   replacements receive wildcard bindings and are suitable for lowering matched
   atoms to backend-native expressions, while Symbolica owns the traversal over
   the larger expression.
+- Rescanned spenso's `LibraryTensor` and `TensorLibrary` stubs and exercised
+  `LibraryTensor.dense(...)`, `LibraryTensor.sparse(...)`, and
+  `TensorLibrary.register(...)` in the managed venv. `LibraryTensor.sparse(...)`
+  creates an initially zero sparse tensor, so pychete must not use it as an
+  unknown-component placeholder. Dense tensors with explicit or generated
+  symbolic entries are the safe formal registration path for now.
 
 ## Test Status
 
@@ -1384,6 +1408,18 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the CG-to-spenso expression lowering
   slice: 134 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/backends/test_spenso_backend.py
+  tests/integration/matching/test_fluctuation_operator.py::test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_routes_generated_kernels_through_spenso
+  -q'` passed after the spenso CG library registration slice: 14 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the spenso CG library registration slice: no issues
+  found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the spenso CG library registration slice:
+  138 passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1397,9 +1433,9 @@ discoveries, dependency patches, blockers, and remaining work.
   real/complex counting, and later model-specific SMEFT basis classifications.
 - Extend the new spenso metadata bridge from native `Representation`,
   `TensorStructure`, `TensorIndices`, and expression-wide CG replacement into
-  full tensor-library registration, contractions, simplifications, and
-  invariant-tensor construction, using idenso where gamma/colour/index algebra
-  is the right backend.
+  real component data for built-in invariant tensors, contractions,
+  simplifications, and invariant-tensor construction, using idenso where
+  gamma/colour/index algebra is the right backend.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
   preliminary vakint one-loop topology lowering, including physical loop

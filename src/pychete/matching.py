@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from html import escape
 from itertools import product
-from typing import Any, Iterable, Iterator, Sequence, TypeAlias
+from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeAlias
 
 from symbolica import Expression, Matrix, Replacement
 
@@ -489,6 +489,8 @@ class SupertraceBlockTrace:
         self,
         *,
         library: Any | None = None,
+        cg_components_by_name: Mapping[str, Sequence[Expression | int | float | complex]] | None = None,
+        symbolic_cg_components: bool = False,
         function_library: Any | None = None,
         n_steps: int | None = None,
         mode: Any | None = None,
@@ -501,6 +503,8 @@ class SupertraceBlockTrace:
             self.theory,
             self.expression,
             library=library,
+            cg_components_by_name=cg_components_by_name,
+            symbolic_cg_components=symbolic_cg_components,
             function_library=function_library,
             n_steps=n_steps,
             mode=mode,
@@ -999,6 +1003,8 @@ class OneLoopSetup:
         self,
         *,
         library: Any | None = None,
+        cg_components_by_name: Mapping[str, Sequence[Expression | int | float | complex]] | None = None,
+        symbolic_cg_components: bool = False,
         function_library: Any | None = None,
         n_steps: int | None = None,
         mode: Any | None = None,
@@ -1010,6 +1016,8 @@ class OneLoopSetup:
             block_traces=tuple(
                 trace.evaluate_tensor_network(
                     library=library,
+                    cg_components_by_name=cg_components_by_name,
+                    symbolic_cg_components=symbolic_cg_components,
                     function_library=function_library,
                     n_steps=n_steps,
                     mode=mode,

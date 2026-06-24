@@ -146,6 +146,12 @@ metadata bridge from pychete theory definitions to native spenso objects. Use
 `pychete.backends.spenso.evaluate_pychete_tensor_network(...)` when lowering
 whole expressions; these functions use Symbolica's replacement engine with
 `cg_tensor` tag restrictions and then delegate tensor-network work to spenso.
+Use `pychete.backends.spenso.cg_tensor_library_tensor_to_spenso(...)`,
+`pychete.backends.spenso.register_cg_tensor_in_spenso_library(...)`, and
+`pychete.backends.spenso.cg_tensor_library_to_spenso(...)` when registering CG
+tensors in native spenso libraries. Do not register empty sparse CG tensors as
+placeholders: provide explicit component data, or opt into generated symbolic
+components when a formal component-level tensor library is intended.
 Built-in Matchete CG labels such as `gen[group[rep]]`, `eps[group]`,
 `fStruct[group]`, `dSym[group]`, and `del[group[rep]]` must resolve to the
 auto-registered theory-owned CG tensor labels, not to generic external

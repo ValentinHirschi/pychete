@@ -691,16 +691,16 @@ def test_one_loop_setup_routes_generated_kernels_through_spenso(monkeypatch: pyt
 
 def test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso(monkeypatch: pytest.MonkeyPatch) -> None:
     theory = Theory("supertrace_spenso_cg")
-    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
-    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    eps = theory.cg_tensor_handle("eps_SU2F")
     trace = SupertraceBlockTrace(
         theory=theory,
         name="cg_kernel",
         blocks=(),
         modes=(),
-        expression=generator(S("A"), S("i"), S("j")),
+        expression=eps(S("i"), S("j")),
     )
-    calls: list[Expression] = []
+    calls: list[tuple[Expression, object | None]] = []
 
     def fake_evaluate_tensor_network(
         expr: Expression,
@@ -710,7 +710,7 @@ def test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso(monke
         n_steps: int | None = None,
         mode: object | None = None,
     ) -> FakeTensorNetwork:
-        calls.append(expr)
+        calls.append((expr, library))
         return FakeTensorNetwork(expr)
 
     def fake_tensor_network_result_scalar(network: FakeTensorNetwork) -> Expression:
@@ -719,10 +719,11 @@ def test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso(monke
     monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
     monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
 
-    evaluated = trace.evaluate_tensor_network()
+    evaluated = trace.evaluate_tensor_network(symbolic_cg_components=True)
 
     assert len(calls) == 1
-    assert canonical_string(calls[0]).startswith("spenso_python::pychete_supertrace_spenso_cg_cg_gen_SU3c_fund(")
-    assert "pychete::CG" not in canonical_string(calls[0])
+    assert canonical_string(calls[0][0]).startswith("spenso_python::pychete_supertrace_spenso_cg_cg_eps_SU2F(")
+    assert "pychete::CG" not in canonical_string(calls[0][0])
+    assert type(calls[0][1]).__name__ == "TensorLibrary"
     assert evaluated.name == trace.name
-    assert_expr_equal(evaluated.expression, S("tensor")(calls[0]))
+    assert_expr_equal(evaluated.expression, S("tensor")(calls[0][0]))

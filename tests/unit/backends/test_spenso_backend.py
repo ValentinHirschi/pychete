@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from symbolica import Expression, S
 
-from pychete import RepresentationReality, Theory, s
+from pychete import RepresentationReality, SymbolDataKey, SymbolRole, Theory, s
 from pychete.backends import spenso
 from pychete.symbols import canonical_string
 
@@ -110,6 +110,87 @@ def test_spenso_backend_evaluates_pychete_tensor_network_after_cg_lowering(monke
     assert isinstance(network, FakeNetwork)
     assert calls == [network.lowered]
     assert canonical_string(calls[0]).startswith("spenso_python::pychete_spenso_bridge_eval_cg_gen_SU3c_fund(")
+
+
+def test_spenso_backend_registers_cg_tensor_components_in_native_library() -> None:
+    theory = Theory("spenso_bridge_library")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    eps = theory.cg_tensor_handle("eps_SU2F")
+    components = tuple(S(f"eps{i}") for i in range(4))
+
+    tensor = spenso.cg_tensor_library_tensor_to_spenso(theory, eps, components=components)
+    library = spenso.register_cg_tensor_in_spenso_library(theory, eps, components=components)
+    structure = spenso.cg_tensor_structure_to_spenso(theory, eps)
+    registered = library[structure.get_name().to_expression()]
+
+    assert type(tensor).__name__ == "LibraryTensor"
+    assert canonical_string(tensor.structure().get_name().to_expression()) == "spenso_python::pychete_spenso_bridge_library_cg_eps_SU2F"
+    assert type(registered).__name__ == "TensorStructure"
+    assert len(registered) == 4
+    assert canonical_string(registered.get_name().to_expression()) == "spenso_python::pychete_spenso_bridge_library_cg_eps_SU2F"
+
+
+def test_spenso_backend_can_build_symbolic_cg_tensor_library() -> None:
+    theory = Theory("spenso_bridge_symbolic_library")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+
+    library = spenso.cg_tensor_library_to_spenso(theory, symbolic_components=True)
+    structure = spenso.cg_tensor_structure_to_spenso(theory, "eps_SU2F")
+    registered = library[structure.get_name().to_expression()]
+    component = theory.symbol(
+        "spenso_component_eps_SU2F_0",
+        role=SymbolRole.EXTERNAL,
+    )
+
+    assert type(registered).__name__ == "TensorStructure"
+    assert component.get_symbol_data(SymbolDataKey.CG_SOURCE.value) == "generated:spenso_symbolic_component"
+    assert component.get_symbol_data(SymbolDataKey.CG_TENSOR.value) == theory.cg_tensor_handle("eps_SU2F").label
+
+
+def test_spenso_backend_rejects_cg_library_registration_without_components() -> None:
+    theory = Theory("spenso_bridge_library_errors")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    eps = theory.cg_tensor_handle("eps_SU2F")
+
+    try:
+        spenso.cg_tensor_library_tensor_to_spenso(theory, eps)
+    except ValueError as exc:
+        assert "requires explicit components" in str(exc)
+    else:
+        raise AssertionError("CG tensor library tensor was created without component data")
+
+    try:
+        spenso.cg_tensor_library_tensor_to_spenso(theory, eps, components=(S("only_one"),))
+    except ValueError as exc:
+        assert "expects 4 components" in str(exc)
+    else:
+        raise AssertionError("CG tensor library tensor accepted the wrong number of components")
+
+
+def test_spenso_backend_evaluates_pychete_tensor_network_with_registered_cg_library(monkeypatch) -> None:
+    theory = Theory("spenso_bridge_eval_library")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    eps = theory.cg_tensor_handle("eps_SU2F")
+    calls: list[object] = []
+
+    class FakeNetwork:
+        def __init__(self, lowered: Expression) -> None:
+            self.lowered = lowered
+
+    def fake_evaluate_tensor_network(lowered: Expression, **kwargs) -> FakeNetwork:
+        calls.append(kwargs["library"])
+        return FakeNetwork(lowered)
+
+    monkeypatch.setattr(spenso, "evaluate_tensor_network", fake_evaluate_tensor_network)
+
+    network = spenso.evaluate_pychete_tensor_network(
+        theory,
+        eps(S("i"), S("j")),
+        cg_components_by_name={"eps_SU2F": tuple(S(f"eps{i}") for i in range(4))},
+    )
+
+    assert isinstance(network, FakeNetwork)
+    assert type(calls[0]).__name__ == "TensorLibrary"
 
 
 def test_spenso_backend_rejects_dimensionless_representations() -> None:
