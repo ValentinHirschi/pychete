@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import pytest
+
 from pychete import Theory, canonical_string, dummy_indices, open_indices, relabel_dummy_indices, s
 from pychete.indices import _index_counts
 
@@ -26,16 +28,52 @@ def test_dummy_relabeling_is_deterministic_without_theory_owned_labels() -> None
     relabeled = relabel_dummy_indices(phi(a) * phi(a))
     canonical = canonical_string(relabeled)
 
-    assert "pychete::index_d0" in canonical
+    assert "pychete::dummy_index(0)" in canonical
     assert "indices_relabel::index_d0" not in canonical
     assert "pychete::index_a" not in canonical
 
 
-def test_index_labels_are_central_across_theories() -> None:
+def test_dummy_relabeling_handles_compound_dummy_index_labels() -> None:
+    theory = Theory("indices_relabel_compound")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    phi = theory.define_field("phi", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
+    a = theory.index("a", flavor.symbol)
+    once = relabel_dummy_indices(phi(a) * phi(a))
+
+    twice = relabel_dummy_indices(once, prefix="x")
+    canonical = canonical_string(twice)
+
+    assert "python::x0" in canonical
+    assert "pychete::dummy_index(0)" not in canonical
+    assert [canonical_string(info.label) for info in dummy_indices(twice)] == ["python::x0"]
+
+
+def test_dummy_relabeling_custom_prefix_uses_raw_symbolica_names() -> None:
+    theory = Theory("indices_custom_relabel")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    phi = theory.define_field("phi", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
+    a = theory.index("a", flavor.symbol)
+
+    relabeled = relabel_dummy_indices(phi(a) * phi(a), prefix="x")
+
+    assert "python::x0" in canonical_string(relabeled)
+
+
+def test_dummy_relabeling_invalid_custom_prefix_raises() -> None:
+    theory = Theory("indices_invalid_relabel")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    phi = theory.define_field("phi", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
+    a = theory.index("a", flavor.symbol)
+
+    with pytest.raises(TypeError, match="Invalid character"):
+        relabel_dummy_indices(phi(a) * phi(a), prefix="bad prefix")
+
+
+def test_index_labels_are_plain_symbols_across_theories() -> None:
     first = Theory("first_indices")
     second = Theory("second_indices")
 
-    assert canonical_string(first.lorentz_index("mu")[0]) == "pychete::index_mu"
+    assert canonical_string(first.lorentz_index("mu")[0]) == "python::mu"
     assert canonical_string(first.lorentz_index("mu")[0]) == canonical_string(second.lorentz_index("mu")[0])
 
 

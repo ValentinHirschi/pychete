@@ -3,7 +3,7 @@ from __future__ import annotations
 from pychete import FieldMassKind, Theory, s
 
 
-def build() -> Theory:
+def build():
     theory = Theory("VLF_toy_model")
     theory.define_gauge_group("U1e", s.U1, "e", "A")
     heavy_psi = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
@@ -12,5 +12,5 @@ def build() -> Theory:
     y = theory.define_coupling("y")
 
     lint = -y() * s.NCM(s.Bar(psi()), s.PR, heavy_psi()) * phi()
-    theory.set_lagrangian(theory.free_lag("A", heavy_psi, psi, phi) + lint + s.Bar(lint))
-    return theory
+    lagrangian = theory.free_lag("A", heavy_psi, psi, phi) + lint + s.Bar(lint)
+    return theory, {"lagrangian": lagrangian}

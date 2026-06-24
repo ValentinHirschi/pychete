@@ -4,10 +4,10 @@ from collections import Counter
 from dataclasses import dataclass
 from html import escape
 
-from symbolica import Expression, Replacement
+from symbolica import Expression, Replacement, S
 
 from .expr import as_int, index_pattern, is_head, power_pattern
-from .symbols import SymbolRole, canonical_string, display_string, latex_string, s
+from .symbols import canonical_string, display_string, latex_string, s
 
 
 @dataclass(frozen=True)
@@ -35,10 +35,7 @@ def collect_indices(expr: Expression) -> tuple[IndexInfo, ...]:
 
 def _matched_index_atoms(expr: Expression, *, unique: bool) -> tuple[Expression, ...]:
     pattern = index_pattern()
-    matches = (
-        pattern.replace_wildcards(match)
-        for match in expr.match(pattern, s.IndexLabelWildcard.req_tag(SymbolRole.INDEX.value))
-    )
+    matches = (pattern.replace_wildcards(match) for match in expr.match(pattern))
     return tuple(dict.fromkeys(matches)) if unique else tuple(matches)
 
 
@@ -71,6 +68,6 @@ def dummy_indices(expr: Expression) -> tuple[IndexInfo, ...]:
 def relabel_dummy_indices(expr: Expression, *, prefix: str = "d") -> Expression:
     replacements: list[tuple[Expression, Expression]] = []
     for i, info in enumerate(sorted(dummy_indices(expr), key=lambda item: (canonical_string(item.representation), canonical_string(item.expr)))):
-        new_label = s.index_label(f"{prefix}{i}")
+        new_label = s.dummy_index(i) if prefix == "d" else S(f"{prefix}{i}")
         replacements.append((info.expr, s.Index(new_label, info.representation)))
     return expr.replace_multiple([Replacement(old, new) for old, new in replacements])

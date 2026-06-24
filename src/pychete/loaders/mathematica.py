@@ -205,10 +205,11 @@ def _eval_module(args_raw: list[str], theory: Theory) -> Expression:
     return result
 
 
-def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> Theory:
+def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> tuple[Theory, dict[str, Expression]]:
     model_path = Path(path)
     text = _preprocess_names(_strip_comments(model_path.read_text(encoding="utf-8")))
     theory = Theory(theory_name or model_path.stem)
+    expressions: dict[str, Expression] = {}
 
     for statement in _split_top_level(text, ";"):
         if not statement:
@@ -238,8 +239,10 @@ def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> 
                 raise NotImplementedError(f"Unsupported DefineCoupling: {statement}")
             theory.define_coupling(_clean_name(raw_args[0]))
         elif head == "Module":
-            theory.set_lagrangian(_eval_module(raw_args, theory))
+            lagrangian = _eval_module(raw_args, theory)
+            theory._validate_registered_expression(lagrangian)
+            expressions["lagrangian"] = lagrangian
         else:
             raise NotImplementedError(f"Unsupported Matchete construct: {head}")
 
-    return theory
+    return theory, expressions

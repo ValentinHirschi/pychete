@@ -32,9 +32,7 @@ def main() -> None:
     )
     lam = theory.define_coupling("lambda")
 
-    lagrangian = theory.set_lagrangian(
-        theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
-    )
+    lagrangian = theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
 
     print("Symbolica:")
     print(lagrangian.format(mode=PrintMode.Symbolica, **FORMAT_OPTIONS))

@@ -6,7 +6,7 @@ import subprocess
 import sys
 import textwrap
 
-from symbolica import PrintMode
+from symbolica import Expression, PrintMode
 
 from pychete import FieldMassKind, PycheteState, Theory, canonical_string, collect_indices, load_state, s
 from pychete.matching import HeavyScalarSolution
@@ -23,65 +23,64 @@ FORMAT_OPTIONS = {
 }
 
 
-def _phi4_theory() -> Theory:
+def _phi4_theory() -> tuple[Theory, Expression]:
     theory = Theory("phi4_pretty")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     lam = theory.define_coupling("lambda")
-    theory.set_lagrangian(theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4)
-    return theory
+    lagrangian = theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
+    return theory, lagrangian
 
 
-def _heavy_scalar_theory() -> Theory:
+def _heavy_scalar_theory() -> tuple[Theory, Expression]:
     theory = Theory("heavy_pretty")
     heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     g = theory.define_coupling("g")
-    theory.set_lagrangian(theory.free_lag(heavy, phi) - s.half * g() * heavy() * phi() ** 2)
-    return theory
+    lagrangian = theory.free_lag(heavy, phi) - s.half * g() * heavy() * phi() ** 2
+    return theory, lagrangian
 
 
-def _format_lagrangian(theory: Theory, mode: PrintMode) -> str:
-    assert theory.lagrangian is not None
-    return theory.lagrangian.format(mode=mode, **FORMAT_OPTIONS)
+def _format_lagrangian(lagrangian: Expression, mode: PrintMode) -> str:
+    return lagrangian.format(mode=mode, **FORMAT_OPTIONS)
 
 
 def test_phi4_lagrangian_prints_cleanly_in_all_symbolica_modes() -> None:
-    theory = _phi4_theory()
+    _, lagrangian = _phi4_theory()
 
-    assert _format_lagrangian(theory, PrintMode.Symbolica) == (
-        "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d](phi)^2"
+    assert _format_lagrangian(lagrangian, PrintMode.Symbolica) == (
+        "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d0](phi)^2"
     )
-    assert _format_lagrangian(theory, PrintMode.Latex) == (
-        r"-\frac{1}{2} \phi^{2} m^{2}-\frac{1}{24} \phi^{4} \lambda+\frac{1}{2} D_{d}\left(\phi\right)^{2}"
+    assert _format_lagrangian(lagrangian, PrintMode.Latex) == (
+        r"-\frac{1}{2} \phi^{2} m^{2}-\frac{1}{24} \phi^{4} \lambda+\frac{1}{2} D_{d0}\left(\phi\right)^{2}"
     )
-    assert _format_lagrangian(theory, PrintMode.Mathematica) == (
-        r"-1/2*\[Phi]^2*m^2-1/24*\[Phi]^4*\[Lambda]+1/2*CD[{d}, \[Phi]]^2"
+    assert _format_lagrangian(lagrangian, PrintMode.Mathematica) == (
+        r"-1/2*\[Phi]^2*m^2-1/24*\[Phi]^4*\[Lambda]+1/2*CD[{d0}, \[Phi]]^2"
     )
-    assert _format_lagrangian(theory, PrintMode.Sympy) == (
-        "-1/2*phi**2*m**2-1/24*phi**4*lambda+1/2*D[d](phi)**2"
+    assert _format_lagrangian(lagrangian, PrintMode.Sympy) == (
+        "-1/2*phi**2*m**2-1/24*phi**4*lambda+1/2*D[d0](phi)**2"
     )
-    assert _format_lagrangian(theory, PrintMode.Typst) == (
-        "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d](phi)^2"
+    assert _format_lagrangian(lagrangian, PrintMode.Typst) == (
+        "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d0](phi)^2"
     )
 
 
 def test_heavy_scalar_lagrangian_prints_cleanly_in_all_symbolica_modes() -> None:
-    theory = _heavy_scalar_theory()
+    _, lagrangian = _heavy_scalar_theory()
 
-    assert _format_lagrangian(theory, PrintMode.Symbolica) == (
-        "-1/2*S*phi^2*g-1/2*S^2*M^2+1/2*D[d](S)^2+1/2*D[d](phi)^2"
+    assert _format_lagrangian(lagrangian, PrintMode.Symbolica) == (
+        "-1/2*S*phi^2*g-1/2*S^2*M^2+1/2*D[d0](S)^2+1/2*D[d0](phi)^2"
     )
-    assert _format_lagrangian(theory, PrintMode.Latex) == (
-        r"-\frac{1}{2} S \phi^{2} g-\frac{1}{2} S^{2} M^{2}+\frac{1}{2} D_{d}\left(S\right)^{2}+\frac{1}{2} D_{d}\left(\phi\right)^{2}"
+    assert _format_lagrangian(lagrangian, PrintMode.Latex) == (
+        r"-\frac{1}{2} S \phi^{2} g-\frac{1}{2} S^{2} M^{2}+\frac{1}{2} D_{d0}\left(S\right)^{2}+\frac{1}{2} D_{d0}\left(\phi\right)^{2}"
     )
-    assert _format_lagrangian(theory, PrintMode.Mathematica) == (
-        r"-1/2*S*\[Phi]^2*g-1/2*S^2*M^2+1/2*CD[{d}, S]^2+1/2*CD[{d}, \[Phi]]^2"
+    assert _format_lagrangian(lagrangian, PrintMode.Mathematica) == (
+        r"-1/2*S*\[Phi]^2*g-1/2*S^2*M^2+1/2*CD[{d0}, S]^2+1/2*CD[{d0}, \[Phi]]^2"
     )
-    assert _format_lagrangian(theory, PrintMode.Sympy) == (
-        "-1/2*S*phi**2*g-1/2*S**2*M**2+1/2*D[d](S)**2+1/2*D[d](phi)**2"
+    assert _format_lagrangian(lagrangian, PrintMode.Sympy) == (
+        "-1/2*S*phi**2*g-1/2*S**2*M**2+1/2*D[d0](S)**2+1/2*D[d0](phi)**2"
     )
-    assert _format_lagrangian(theory, PrintMode.Typst) == (
-        "-1/2*S*phi^2*g-1/2*S^2*M^2+1/2*D[d](S)^2+1/2*D[d](phi)^2"
+    assert _format_lagrangian(lagrangian, PrintMode.Typst) == (
+        "-1/2*S*phi^2*g-1/2*S^2*M^2+1/2*D[d0](S)^2+1/2*D[d0](phi)^2"
     )
 
 
@@ -119,6 +118,7 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         phi(),
         lam(),
         mu,
+        s.dummy_index(0),
         s.FieldStrength(phi.label, s.List(mu, nu), s.List(), s.List()),
         s.Bar(phi()),
         s.CD(mu, phi()),
@@ -174,9 +174,10 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
 
 
 def test_saved_state_reloads_active_lagrangian_with_pretty_printing(tmp_path: Path) -> None:
-    theory = _phi4_theory()
+    theory, lagrangian = _phi4_theory()
     state = PycheteState()
     state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
     path = tmp_path / "pychete_state.json"
 
     state.save_state(path)
@@ -184,8 +185,8 @@ def test_saved_state_reloads_active_lagrangian_with_pretty_printing(tmp_path: Pa
 
     assert restored.active_theory == theory.name
     assert restored.active is not None
-    assert restored.active.lagrangian is not None
-    assert _format_lagrangian(restored.active, PrintMode.Latex) == _format_lagrangian(theory, PrintMode.Latex)
+    restored_lagrangian = restored.get_expression("lagrangian")
+    assert _format_lagrangian(restored_lagrangian, PrintMode.Latex) == _format_lagrangian(lagrangian, PrintMode.Latex)
 
 
 def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path: Path) -> None:
@@ -204,9 +205,10 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
         theory = Theory("cold_pretty")
         phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
         lam = theory.define_coupling("lambda")
-        theory.set_lagrangian(theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4)
+        lagrangian = theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
         state = PycheteState()
         state.add_theory(theory)
+        state.add_expression("lagrangian", theory, lagrangian)
         state.save_state(Path(sys.argv[1]))
         """
     )
@@ -234,15 +236,15 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
         state = load_state(Path(sys.argv[1]))
         theory = state.active
         assert theory is not None
-        assert theory.lagrangian is not None
+        lagrangian = state.get_expression("lagrangian")
         assert theory.field_handle("phi").label.get_symbol_data("mass_label") == theory.coupling_handle("m").label
         assert "index:d" not in theory._symbols
-        assert "pychete::index_d" in canonical_string(theory.lagrangian)
-        assert any(canonical_string(info.label) == "pychete::index_d" for info in collect_indices(theory.lagrangian))
-        symbolica = theory.lagrangian.format(mode=PrintMode.Symbolica, **format_options)
-        latex = theory.lagrangian.format(mode=PrintMode.Latex, **format_options)
-        assert symbolica == "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d](phi)^2"
-        assert latex == r"-\\frac{1}{2} \\phi^{2} m^{2}-\\frac{1}{24} \\phi^{4} \\lambda+\\frac{1}{2} D_{d}\\left(\\phi\\right)^{2}"
+        assert "pychete::Index(pychete::dummy_index(0),pychete::Lorentz)" in canonical_string(lagrangian)
+        assert any(canonical_string(info.label) == "pychete::dummy_index(0)" for info in collect_indices(lagrangian))
+        symbolica = lagrangian.format(mode=PrintMode.Symbolica, **format_options)
+        latex = lagrangian.format(mode=PrintMode.Latex, **format_options)
+        assert symbolica == "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d0](phi)^2"
+        assert latex == r"-\\frac{1}{2} \\phi^{2} m^{2}-\\frac{1}{24} \\phi^{4} \\lambda+\\frac{1}{2} D_{d0}\\left(\\phi\\right)^{2}"
         assert "Field(" not in symbolica
         assert "Coupling(" not in symbolica
         """
@@ -251,13 +253,14 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
 
 
 def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
-    theory = _phi4_theory()
+    theory, lagrangian = _phi4_theory()
     phi = theory.field_handle("phi")
     lam = theory.coupling_handle("lambda")
     index_info = collect_indices(theory.lorentz_index("mu"))[0]
     solution = HeavyScalarSolution(field=phi.definition, orders={1: phi()})
     state = PycheteState()
     state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
 
     objects = (
         theory,

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from symbolica import S
 
-from pychete import FieldMassKind, Theory, derive_eom, s
+from pychete import FieldMassKind, Theory, s
 from pychete.functional import apply_cd, partial_functional_derivative
 
 from tests.conftest import assert_expr_equal
@@ -12,7 +12,7 @@ def test_phi4_scalar_eom_matches_matchete_reference_shape() -> None:
     theory = Theory("phi4")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     lam = theory.define_coupling("lambda", self_conjugate=True)
-    mu = theory.lorentz_index("d")
+    mu = theory.dummy_index(0)
 
     lagrangian = theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
     expected = (
@@ -21,7 +21,7 @@ def test_phi4_scalar_eom_matches_matchete_reference_shape() -> None:
         - s.sixth * lam() * phi() ** 3
     )
 
-    assert_expr_equal(derive_eom(theory, lagrangian, phi), expected)
+    assert_expr_equal(theory.derive_eom(lagrangian, phi), expected)
 
 
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:

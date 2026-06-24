@@ -12,9 +12,9 @@ from .expr import (
     is_zero,
     list_items,
 )
-from .functional import FieldVariation, apply_cd, derive_eom
+from .functional import apply_cd, derive_eom
 from .symbols import display_string, latex_string, s
-from .theory import FieldDefinition, Theory
+from .theory import FieldDefinition, FieldVariation, Theory
 
 
 @dataclass(frozen=True)
@@ -59,7 +59,7 @@ def _mass_squared(field: FieldDefinition) -> Expression:
 
 
 def _box(theory: Theory, expr: Expression, order: int) -> Expression:
-    mu = theory.lorentz_index(f"u{order}")
+    mu = theory.dummy_index(order)
     return apply_cd((mu, mu), expr)
 
 
@@ -85,7 +85,8 @@ def _solve_orders_from_source(theory: Theory, source: Expression, mass2: Express
 
 
 def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyScalarSolution]:
-    lagrangian = theory.set_lagrangian(lagrangian)
+    theory._validate_registered_expression(lagrangian)
+    lagrangian = lagrangian.expand()
     solutions: dict[str, HeavyScalarSolution] = {}
 
     for field in theory.fields.values():
@@ -111,7 +112,6 @@ def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order
                 orders=_solve_orders_from_source(theory, source, mass2, eft_order=eft_order),
                 conjugate_orders=_solve_orders_from_source(theory, conjugate_source, mass2, eft_order=eft_order),
             )
-        theory.analysis.heavy_scalar_solutions[field.name] = solution.orders
         solutions[field.name] = solution
 
     return solutions

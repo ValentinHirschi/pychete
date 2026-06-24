@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
-from functools import cache, cached_property
+from functools import cached_property
 from typing import Any
 
 from symbolica import Expression, PrintMode, S
@@ -178,7 +178,16 @@ def _print_coupling(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -
 
 
 def _print_index(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
-    return _format_child(expr[0], mode, kwargs)
+    label = expr[0]
+    if label.get_type() is AtomType.Var:
+        return _display_name(_local_name(label), mode)
+    return _format_child(label, mode, kwargs)
+
+
+def _print_dummy_index(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    if len(expr) == 1:
+        return f"d{_format_child(expr[0], mode, kwargs)}"
+    return _call("d", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode)
 
 
 def _print_field_strength(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
@@ -261,6 +270,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "Field": lambda: _print_field(expr, mode, kwargs),
         "Coupling": lambda: _print_coupling(expr, mode, kwargs),
         "Index": lambda: _print_index(expr, mode, kwargs),
+        "dummy_index": lambda: _print_dummy_index(expr, mode, kwargs),
         "FieldStrength": lambda: _print_field_strength(expr, mode, kwargs),
         "Bar": lambda: _print_bar(expr, mode, kwargs),
         "CD": lambda: _print_cd(expr, mode, kwargs),
@@ -410,6 +420,7 @@ class SymbolStore:
         "Field",
         "Coupling",
         "Index",
+        "dummy_index",
         "FieldStrength",
         "Bar",
         "CD",
@@ -466,19 +477,6 @@ class SymbolStore:
         kwargs.setdefault("print", _print_user_symbol)
         return _sym(f"{namespace}::{safe_symbol_name(name)}", **kwargs)
 
-    @cache
-    def index_label(self, name: str) -> Expression:
-        label = safe_symbol_name(name)
-        return self.user(
-            self.namespace,
-            f"index_{label}",
-            tags=[SymbolRole.PROJECT.value, SymbolRole.INDEX.value],
-            data={
-                SymbolDataKey.ROLE.value: SymbolRole.INDEX.value,
-                SymbolDataKey.LABEL.value: label,
-            },
-        )
-
     def register_builtins(self) -> None:
         for name in self.builtin_registry_names:
             getattr(self, name)
@@ -530,6 +528,10 @@ class SymbolStore:
     @cached_property
     def Index(self) -> Expression:
         return self.head("Index")
+
+    @cached_property
+    def dummy_index(self) -> Expression:
+        return self.head("dummy_index")
 
     @cached_property
     def FieldStrength(self) -> Expression:
@@ -783,14 +785,8 @@ def latex_string(expr: Expression) -> str:
     return display_string(expr, PrintMode.Latex)
 
 
-def _register_central_index_labels_in_text(text: str) -> None:
-    pattern = rf"{re.escape(s.namespace)}::index_([0-9A-Za-z_]+)"
-    for match in re.finditer(pattern, text):
-        s.index_label(match.group(1))
-
-
 def expression_from_canonical(text: str) -> Expression:
-    _register_central_index_labels_in_text(text)
+    s.register_builtins()
     return Expression.parse(text)
 
 

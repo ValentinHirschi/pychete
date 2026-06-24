@@ -1,22 +1,24 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
+from dataclasses import dataclass
 from enum import StrEnum
 from html import escape
 from pathlib import Path
-from typing import Any, Iterable, TypeAlias
+from typing import TYPE_CHECKING, Any, Iterable, TypeAlias
 
-from symbolica import Expression
+from symbolica import Expression, S
 
 from .expr import is_head, list_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
+
+if TYPE_CHECKING:
+    from .matching import HeavyScalarSolution
 
 
 class FieldMassKind(StrEnum):
     HEAVY = "heavy"
     LIGHT = "light"
-    MASSLESS = "massless"
 
     @classmethod
     def from_user(cls, value: FieldMassKind | str) -> FieldMassKind:
@@ -25,6 +27,19 @@ class FieldMassKind(StrEnum):
             return cls(normalized)
         except ValueError as exc:
             raise ValueError(f"unsupported mass kind {value!r}") from exc
+
+
+class FieldVariation(StrEnum):
+    AUTO = "auto"
+    FIELD = "field"
+    BAR = "bar"
+
+    @classmethod
+    def from_user(cls, value: FieldVariation | str) -> FieldVariation:
+        try:
+            return cls(value)
+        except ValueError as exc:
+            raise ValueError("variation must be FieldVariation.AUTO, FieldVariation.FIELD, or FieldVariation.BAR") from exc
 
 
 class BuiltinIndexType(StrEnum):
@@ -93,28 +108,8 @@ def _symbol_manifest_sort_key(entry: dict[str, Any]) -> tuple[int, str, str]:
     return (_SYMBOL_ROLE_ORDER.get(role, 100), role, str(entry.get("name", "")))
 
 
-def _central_index_label_name(symbol: Expression) -> str | None:
-    canonical = canonical_string(symbol)
-    prefix = f"{s.namespace}::index_"
-    if not canonical.startswith(prefix):
-        return None
-    local_name = symbol.get_name().split("::")[-1]
-    if not local_name.startswith("index_"):
-        return None
-    return local_name.removeprefix("index_")
-
-
-def _is_central_index_label(symbol: Expression) -> bool:
-    has_data = (
-        symbol_data(symbol, SymbolDataKey.ROLE) == SymbolRole.INDEX.value
-        and symbol_data(symbol, SymbolDataKey.LABEL) is not None
-        and symbol_data(symbol, SymbolDataKey.THEORY) is None
-    )
-    return has_data or _central_index_label_name(symbol) is not None
-
-
 def field_mass_kind_from_label(label: Expression) -> FieldMassKind:
-    value = symbol_data(label, SymbolDataKey.MASS_KIND, FieldMassKind.MASSLESS.value)
+    value = symbol_data(label, SymbolDataKey.MASS_KIND, FieldMassKind.LIGHT.value)
     return FieldMassKind.from_user(str(value))
 
 
@@ -242,7 +237,7 @@ class FieldDefinition:
     type: Expression
     indices: tuple[Expression, ...] = ()
     self_conjugate: bool = False
-    mass_kind: FieldMassKind = FieldMassKind.MASSLESS
+    mass_kind: FieldMassKind = FieldMassKind.LIGHT
     mass_label: Expression | None = None
     mass_indices: tuple[Expression, ...] = ()
 
@@ -283,13 +278,6 @@ class FieldDefinition:
             "mass_label": canonical_string(mass_label) if (mass_label := field_mass_label_from_label(self.label)) is not None else None,
             "mass_indices": [canonical_string(i) for i in field_mass_indices_from_label(self.label)],
         }
-
-
-@dataclass
-class AnalysisState:
-    lagrangian: Expression | None = None
-    eoms: dict[str, Expression] = field(default_factory=dict)
-    heavy_scalar_solutions: dict[str, dict[int, Expression]] = field(default_factory=dict)
 
 
 class FieldHandle:
@@ -339,7 +327,7 @@ class CouplingHandle:
 
 
 class Theory:
-    """Stateful top-level object for pychete definitions and current Lagrangian."""
+    """Metadata context for pychete definitions and expression validation."""
 
     schema_version = 2
 
@@ -351,8 +339,6 @@ class Theory:
         self.fields: dict[str, FieldDefinition] = {}
         self.couplings: dict[str, CouplingDefinition] = {}
         self.groups: dict[str, dict[str, Any]] = {}
-        self.lagrangian: Expression | None = None
-        self.analysis = AnalysisState()
         self.define_index_type(BuiltinIndexType.LORENTZ)
 
     def symbol(self, name: str, *, role: SymbolRole | str = SymbolRole.LABEL, data: dict[str, Any] | None = None) -> Expression:
@@ -420,10 +406,14 @@ class Theory:
         for symbol in expr.get_all_symbols():
             canonical = canonical_string(symbol)
             if canonical.startswith(builtin_namespace):
-                if canonical in builtin_symbols or _is_central_index_label(symbol):
+                if canonical in builtin_symbols:
                     continue
                 raise ValueError(f"Unregistered pychete builtin symbol in expression: {canonical}")
             if not canonical.startswith(theory_namespace):
+                role = symbol_data(symbol, SymbolDataKey.ROLE)
+                owner = symbol_data(symbol, SymbolDataKey.THEORY)
+                if role is not None or owner is not None:
+                    raise ValueError(f"Pychete expression references symbol from a different theory: {canonical}")
                 continue
             role = symbol_data(symbol, SymbolDataKey.ROLE)
             label = symbol_data(symbol, SymbolDataKey.LABEL)
@@ -462,7 +452,7 @@ class Theory:
         label: str | Expression,
         representation: BuiltinIndexType | str | Expression = BuiltinIndexType.LORENTZ,
     ) -> Expression:
-        label_expr = label if isinstance(label, Expression) else s.index_label(label)
+        label_expr = label if isinstance(label, Expression) else S(safe_symbol_name(label))
         if isinstance(representation, Expression):
             rep_expr = representation
         else:
@@ -471,6 +461,17 @@ class Theory:
 
     def lorentz_index(self, label: str) -> Expression:
         return self.index(label, s.Lorentz)
+
+    def dummy_index(
+        self,
+        number: int,
+        representation: BuiltinIndexType | str | Expression = BuiltinIndexType.LORENTZ,
+    ) -> Expression:
+        if isinstance(representation, Expression):
+            rep_expr = representation
+        else:
+            rep_expr = self.define_index_type(representation).symbol
+        return s.Index(s.dummy_index(number), rep_expr)
 
     def define_coupling(
         self,
@@ -515,15 +516,13 @@ class Theory:
         if name in self.fields:
             return FieldHandle(self, self.fields[name])
 
-        mass_kind = FieldMassKind.MASSLESS
+        mass_kind = FieldMassKind.LIGHT
         mass_label: Expression | None = None
         mass_indices: tuple[Expression, ...] = ()
         if mass not in (None, 0):
             if not isinstance(mass, tuple) or len(mass) < 2:
                 raise ValueError("mass must be 0/None or (FieldMassKind.HEAVY|FieldMassKind.LIGHT, label[, indices])")
             mass_kind = FieldMassKind.from_user(mass[0])
-            if mass_kind is FieldMassKind.MASSLESS:
-                raise ValueError("mass kind for a massive field must be FieldMassKind.HEAVY or FieldMassKind.LIGHT")
             mass_name = mass[1]
             mass_indices = tuple(mass[2]) if len(mass) > 2 else ()
             order = 0 if mass_kind is FieldMassKind.HEAVY else 1
@@ -557,7 +556,6 @@ class Theory:
             mass_indices=mass_indices,
         )
         self.fields[name] = definition
-        self.analysis = AnalysisState()
         return FieldHandle(self, definition)
 
     def field_handle(self, name: str) -> FieldHandle:
@@ -594,7 +592,7 @@ class Theory:
         for item in field_names_or_handles:
             handle = item if isinstance(item, FieldHandle) else self.field_handle(item)
             definition = handle.definition
-            mu = self.lorentz_index("d")
+            mu = self.dummy_index(0)
             field_expr = handle()
             type_expr = definition.type_expr
             is_self_conjugate = definition.is_self_conjugate
@@ -610,7 +608,7 @@ class Theory:
                         kinetic = kinetic - mass**2 * s.Bar(field_expr) * field_expr
                 out = out + kinetic
             elif is_head(type_expr, s.Vector):
-                nu = self.lorentz_index("e")
+                nu = self.dummy_index(1)
                 strength = s.FieldStrength(definition.label, list_expr(mu, nu), list_expr(), list_expr())
                 out = out - s.twenty_fourth * 6 * strength**2
             elif bool(type_expr == s.Fermion):
@@ -623,20 +621,32 @@ class Theory:
                 out = out + s.FreeLag(definition.label)
         return out
 
-    def set_lagrangian(self, lagrangian: Expression) -> Expression:
-        self._validate_registered_expression(lagrangian)
-        self.lagrangian = lagrangian.expand()
-        self.analysis = AnalysisState(lagrangian=self.lagrangian)
-        return self.lagrangian
+    def derive_eom(
+        self,
+        lagrangian: Expression,
+        field: FieldHandle | FieldDefinition | str,
+        *,
+        eft_order: int = 6,
+        variation: FieldVariation | str = FieldVariation.AUTO,
+    ) -> Expression:
+        from .functional import derive_eom
+
+        return derive_eom(self, lagrangian, field, eft_order=eft_order, variation=variation)
+
+    def solve_heavy_scalar_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyScalarSolution]:
+        from .matching import solve_heavy_scalar_eoms
+
+        return solve_heavy_scalar_eoms(self, lagrangian, eft_order=eft_order)
+
+    def match(self, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
+        from .matching import match_tree
+
+        return match_tree(self, lagrangian, eft_order=eft_order)
 
     def _repr_latex_(self) -> str:
-        if self.lagrangian is not None:
-            return f"${latex_string(self.lagrangian)}$"
         return rf"$\mathrm{{Theory}}\left({self.name}\right)$"
 
     def _repr_html_(self) -> str:
-        if self.lagrangian is not None:
-            return f"<div><strong>Theory {escape(self.name)}</strong><br><code>{escape(display_string(self.lagrangian))}</code></div>"
         return f"<div><strong>Theory {escape(self.name)}</strong></div>"
 
     def to_json_obj(self) -> dict[str, Any]:
@@ -648,7 +658,6 @@ class Theory:
             "groups": self.groups,
             "fields": {name: value.to_json() for name, value in sorted(self.fields.items())},
             "couplings": {name: value.to_json() for name, value in sorted(self.couplings.items())},
-            "lagrangian": canonical_string(self.lagrangian) if self.lagrangian is not None else None,
         }
 
     def to_json(self, *, indent: int = 2) -> str:
@@ -688,6 +697,4 @@ class Theory:
                 self_conjugate=bool(data.get("self_conjugate", False)),
                 mass=mass,
             )
-        if obj.get("lagrangian"):
-            theory.set_lagrangian(theory._parse_registered_expression(obj["lagrangian"]))
         return theory

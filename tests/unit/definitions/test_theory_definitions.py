@@ -4,9 +4,8 @@ import json
 
 from symbolica import S
 
-from pychete import BuiltinIndexType, FieldMassKind, SymbolDataKey, SymbolRole, Theory, canonical_string, s
-from pychete.expr import coupling_pattern, field_pattern, index_pattern, matching_subexpressions
-from pychete.symbols import expression_from_canonical
+from pychete import BuiltinIndexType, FieldMassKind, SymbolDataKey, SymbolRole, Theory, canonical_string, collect_indices, s
+from pychete.expr import coupling_pattern, field_pattern, matching_subexpressions
 
 
 def test_field_and_mass_coupling_definitions_follow_matchete_orders() -> None:
@@ -54,14 +53,19 @@ def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:
     theory = Theory("enum_defs")
     heavy = theory.define_field("H", s.Scalar, mass=(FieldMassKind.HEAVY, "M"))
     light = theory.define_field("l", s.Scalar, mass=("Light", "m"))
+    zero_mass = theory.define_field("phi", s.Scalar, mass=0)
 
+    assert {kind.value for kind in FieldMassKind} == {"heavy", "light"}
     assert theory.fields[heavy.name].mass_kind is FieldMassKind.HEAVY
     assert theory.fields[light.name].mass_kind is FieldMassKind.LIGHT
+    assert theory.fields[zero_mass.name].mass_kind is FieldMassKind.LIGHT
+    assert theory.fields[zero_mass.name].mass_label is None
+    assert theory.fields[zero_mass.name].mass_expr() is None
     assert BuiltinIndexType.LORENTZ.value in theory.index_types
     assert canonical_string(theory.index("mu")).endswith("pychete::Lorentz)")
 
 
-def test_symbol_collectors_require_role_tags_on_user_labels() -> None:
+def test_symbol_collectors_require_role_tags_on_user_labels_except_indices() -> None:
     theory = Theory("tagged_collectors")
     phi = theory.define_field("phi", s.Scalar, mass=0)
     lam = theory.define_coupling("lambda")
@@ -75,23 +79,29 @@ def test_symbol_collectors_require_role_tags_on_user_labels() -> None:
 
     assert matching_subexpressions(expr, field_pattern(), s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)) == (phi(),)
     assert matching_subexpressions(expr, coupling_pattern(), s.CouplingLabelWildcard.req_tag(SymbolRole.COUPLING.value)) == (lam(),)
-    assert matching_subexpressions(expr, index_pattern(), s.IndexLabelWildcard.req_tag(SymbolRole.INDEX.value)) == (mu,)
+    assert {canonical_string(info.expr) for info in collect_indices(expr)} == {
+        canonical_string(mu),
+        canonical_string(untagged_index),
+    }
 
 
-def test_pretty_json_checkpoint_contains_full_lagrangian_expression() -> None:
+def test_theory_json_checkpoint_contains_metadata_without_lagrangian_expression() -> None:
     theory = Theory("json_scalar")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
-    lagrangian = theory.set_lagrangian(theory.free_lag(phi))
+    lagrangian = theory.free_lag(phi)
 
     payload = json.loads(theory.to_json())
 
     assert payload["schema_version"] == 2
     assert payload["theory_name"] == "json_scalar"
-    assert payload["lagrangian"] == canonical_string(lagrangian)
+    assert "lagrangian" not in payload
     assert "field" in {entry["role"] for entry in payload["symbols"]}
     assert all(entry["role"] != "index" for entry in payload["symbols"])
-    assert "pychete::index_d" in payload["lagrangian"]
-    assert canonical_string(expression_from_canonical(payload["lagrangian"])) == payload["lagrangian"]
+    assert payload["fields"]["phi"]["mass_kind"] == FieldMassKind.LIGHT.value
+    assert payload["fields"]["phi"]["mass_label"] is None
+    theory._validate_registered_expression(lagrangian)
+    assert "pychete::Index(pychete::dummy_index(0),pychete::Lorentz)" in canonical_string(lagrangian)
+    assert "pychete::index_d" not in canonical_string(lagrangian)
 
 
 def test_json_checkpoint_preserves_mass_symbol_data() -> None:

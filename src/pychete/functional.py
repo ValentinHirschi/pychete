@@ -1,7 +1,5 @@
 from __future__ import annotations
 
-from enum import StrEnum
-
 from symbolica import Expression, Replacement
 
 from .expr import (
@@ -13,20 +11,7 @@ from .expr import (
     list_items,
 )
 from .symbols import SymbolRole, canonical_string, s
-from .theory import FieldDefinition, FieldHandle, Theory
-
-
-class FieldVariation(StrEnum):
-    AUTO = "auto"
-    FIELD = "field"
-    BAR = "bar"
-
-    @classmethod
-    def from_user(cls, value: FieldVariation | str) -> FieldVariation:
-        try:
-            return cls(value)
-        except ValueError as exc:
-            raise ValueError("variation must be FieldVariation.AUTO, FieldVariation.FIELD, or FieldVariation.BAR") from exc
+from .theory import FieldDefinition, FieldHandle, FieldVariation, Theory
 
 
 def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expression) -> Expression:
@@ -116,6 +101,7 @@ def derive_eom(
     eft_order: int = 6,
     variation: FieldVariation | str = FieldVariation.AUTO,
 ) -> Expression:
+    theory._validate_registered_expression(lagrangian)
     if isinstance(field, str):
         definition = theory.fields[field]
     elif isinstance(field, FieldHandle):
@@ -146,9 +132,7 @@ def derive_eom(
             contribution = apply_cd(tuple(reversed(derivatives)), partial)
             residual = residual + ((-1) ** len(derivatives)) * contribution
 
-    result = residual.expand()
-    theory.analysis.eoms[definition.name] = result
-    return result
+    return residual.expand()
 
 
 def eom_expression(theory: Theory, lagrangian: Expression, field: FieldHandle | FieldDefinition | str, *, eft_order: int = 6) -> Expression:

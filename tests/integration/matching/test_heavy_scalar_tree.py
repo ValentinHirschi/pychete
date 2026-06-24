@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from pychete import FieldMassKind, Theory, derive_eom, match_tree, solve_heavy_scalar_eoms, s
+from pychete import FieldMassKind, Theory, canonical_string, s
 
 from tests.conftest import assert_expr_equal
 
@@ -15,16 +15,16 @@ def _heavy_scalar_theory() -> tuple[Theory, object, object, object]:
 
 def test_heavy_scalar_eom_and_fixed_order_solution_match_reference() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()
-    mu = theory.lorentz_index("d")
-    u3 = theory.lorentz_index("u3")
+    mu = theory.dummy_index(0)
+    u3 = theory.dummy_index(3)
     mass = theory.coupling_handle("M")
     lagrangian = theory.free_lag(heavy, phi) - s.half * g() * heavy() * phi() ** 2
 
-    eom = derive_eom(theory, lagrangian, heavy)
+    eom = theory.derive_eom(lagrangian, heavy)
     expected_eom = -mass() ** 2 * heavy() - heavy(derivatives=[mu, mu]) - s.half * g() * phi() ** 2
     assert_expr_equal(eom, expected_eom)
 
-    solution = solve_heavy_scalar_eoms(theory, lagrangian, eft_order=6)["S"]
+    solution = theory.solve_heavy_scalar_eoms(lagrangian, eft_order=6)["S"]
     assert_expr_equal(solution.orders[1], -s.half * g() * phi() ** 2 / mass() ** 2)
     assert_expr_equal(solution.orders[2], s.zero)
     assert_expr_equal(
@@ -35,11 +35,11 @@ def test_heavy_scalar_eom_and_fixed_order_solution_match_reference() -> None:
 
 def test_heavy_scalar_tree_match_through_dimension_six() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()
-    mu = theory.lorentz_index("d")
+    mu = theory.dummy_index(0)
     mass = theory.coupling_handle("M")
     lagrangian = theory.free_lag(heavy, phi) - s.half * g() * heavy() * phi() ** 2
 
-    matched = match_tree(theory, lagrangian, eft_order=6)
+    matched = theory.match(lagrangian, eft_order=6)
     expected = (
         s.half * phi(derivatives=[mu]) ** 2
         + (s.half / 4) * g() ** 2 * phi() ** 4 / mass() ** 2
@@ -49,6 +49,29 @@ def test_heavy_scalar_tree_match_through_dimension_six() -> None:
     assert_expr_equal(matched, expected)
 
 
+def test_one_theory_can_match_two_lagrangians_without_cross_talk() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    h = theory.define_coupling("h", self_conjugate=True)
+    mass = theory.coupling_handle("M")
+    lagrangian_g = theory.free_lag(heavy, phi) - s.half * g() * heavy() * phi() ** 2
+    lagrangian_h = theory.free_lag(heavy, phi) - h() * heavy() * phi() ** 3
+
+    solution_g = theory.solve_heavy_scalar_eoms(lagrangian_g, eft_order=6)["S"]
+    solution_h = theory.solve_heavy_scalar_eoms(lagrangian_h, eft_order=6)["S"]
+    assert_expr_equal(solution_g.orders[1], -s.half * g() * phi() ** 2 / mass() ** 2)
+    assert_expr_equal(solution_h.orders[1], -h() * phi() ** 3 / mass() ** 2)
+
+    matched_g = theory.match(lagrangian_g, eft_order=6)
+    matched_h = theory.match(lagrangian_h, eft_order=6)
+    matched_g_text = canonical_string(matched_g)
+    matched_h_text = canonical_string(matched_h)
+
+    assert "heavy_scalar::coupling_g" in matched_g_text
+    assert "heavy_scalar::coupling_h" not in matched_g_text
+    assert "heavy_scalar::coupling_h" in matched_h_text
+    assert "heavy_scalar::coupling_g" not in matched_h_text
+
+
 def test_tree_match_supports_several_independent_diagonal_heavy_scalars() -> None:
     theory = Theory("two_heavy_scalars")
     s_field = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "MS"))
@@ -56,7 +79,7 @@ def test_tree_match_supports_several_independent_diagonal_heavy_scalars() -> Non
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     g_s = theory.define_coupling("gS", self_conjugate=True)
     g_t = theory.define_coupling("gT", self_conjugate=True)
-    mu = theory.lorentz_index("d")
+    mu = theory.dummy_index(0)
     m_s = theory.coupling_handle("MS")
     m_t = theory.coupling_handle("MT")
 
@@ -66,7 +89,7 @@ def test_tree_match_supports_several_independent_diagonal_heavy_scalars() -> Non
         - s.half * g_t() * t_field() * phi() ** 2
     )
 
-    matched = match_tree(theory, lagrangian, eft_order=6)
+    matched = theory.match(lagrangian, eft_order=6)
     expected = (
         s.half * phi(derivatives=[mu]) ** 2
         + (s.half / 4) * g_s() ** 2 * phi() ** 4 / m_s() ** 2
@@ -85,15 +108,15 @@ def test_complex_heavy_scalar_tree_match_solves_field_and_conjugate() -> None:
     y = theory.define_coupling("y")
     yb = theory.define_coupling("yb")
     mass = theory.coupling_handle("M")
-    mu = theory.lorentz_index("d")
-    u3 = theory.lorentz_index("u3")
+    mu = theory.dummy_index(0)
+    u3 = theory.dummy_index(3)
     lagrangian = (
         theory.free_lag(heavy, phi)
         - y() * s.Bar(heavy()) * phi() ** 2
         - yb() * heavy() * phi() ** 2
     )
 
-    solution = solve_heavy_scalar_eoms(theory, lagrangian, eft_order=6)["S"]
+    solution = theory.solve_heavy_scalar_eoms(lagrangian, eft_order=6)["S"]
     assert_expr_equal(solution.orders[1], -y() * phi() ** 2 / mass() ** 2)
     assert_expr_equal(solution.conjugate_orders[1], -yb() * phi() ** 2 / mass() ** 2)
     assert_expr_equal(
@@ -101,7 +124,7 @@ def test_complex_heavy_scalar_tree_match_solves_field_and_conjugate() -> None:
         2 * y() * (phi(derivatives=[u3]) ** 2 + phi() * phi(derivatives=[u3, u3])) / mass() ** 4,
     )
 
-    matched = match_tree(theory, lagrangian, eft_order=6)
+    matched = theory.match(lagrangian, eft_order=6)
     expected = (
         s.half * phi(derivatives=[mu]) ** 2
         + y() * yb() * phi() ** 4 / mass() ** 2
