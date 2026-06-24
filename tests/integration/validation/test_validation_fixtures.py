@@ -124,12 +124,7 @@ def test_default_matching_target_manifest_lists_initial_models() -> None:
         "E_VLL",
         "S1S3LQs",
     ]
-    assert {model["name"]: model["status"] for model in models} == {
-        "VLF_toy_model": "matching_fixture_committed",
-        "Singlet_Scalar_Extension": "pending_matching_fixture",
-        "E_VLL": "pending_matching_fixture",
-        "S1S3LQs": "pending_matching_fixture",
-    }
+    assert all(model["status"] == "matching_fixture_committed" for model in models)
     for model in models:
         assert Path(model["model_asset"]).is_file()
         assert Path(model["model_fixture"]).is_file()
@@ -161,17 +156,24 @@ def test_default_model_definition_fixtures_load_without_mathematica() -> None:
         theory.symbol_manifest()
 
 
-def test_committed_vlf_matching_fixture_loads_structured_result_without_mathematica() -> None:
-    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.matching_fixture.json"))
-    result = fixture.matching_result("matchete_previous")
+def test_committed_default_matching_fixtures_load_structured_results_without_mathematica() -> None:
+    expected = {
+        "VLF_toy_model": {"supertraces": 13, "conditions": 0},
+        "Singlet_Scalar_Extension": {"supertraces": 24, "conditions": 72},
+        "E_VLL": {"supertraces": 50, "conditions": 72},
+        "S1S3LQs": {"supertraces": 27, "conditions": 72},
+    }
 
-    assert fixture.kind == "matching_result"
-    assert fixture.source["matchete_runtime_required"] is False
-    assert fixture.source["matching_conditions_included"] is False
-    assert result.theory.name == "VLF_toy_model"
-    assert result.metadata["loop_order"] == 1
-    assert result.metadata["eft_order"] == 6
-    assert len(result.supertraces) == 13
-    assert result.matching_conditions == {}
-    assert "hFermion-lScalar" in result.supertraces
-    result.validate()
+    for model, counts in expected.items():
+        fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.matching_fixture.json"))
+        result = fixture.matching_result("matchete_previous")
+
+        assert fixture.kind == "matching_result"
+        assert fixture.source["matchete_runtime_required"] is False
+        assert fixture.source["matching_condition_count"] == counts["conditions"]
+        assert result.theory.name == model
+        assert result.metadata["loop_order"] == 1
+        assert result.metadata["eft_order"] == 6
+        assert len(result.supertraces) == counts["supertraces"]
+        assert len(result.matching_conditions) == counts["conditions"]
+        result.validate()

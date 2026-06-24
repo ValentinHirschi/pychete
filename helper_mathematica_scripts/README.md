@@ -16,10 +16,9 @@ fixture converter will become stricter as the one-loop matching data model
 lands.
 
 `convert_matchete_previous_results.py` converts existing Matchete validation
-result files into committed pychete `MatchingResult` fixtures. The current
-converter supports the `VLF_toy_model` previous result, whose Matchete
-`Matching Conditions` entry is `None`; nontrivial matching-condition rule lists
-are left for the next converter slice.
+result files into committed pychete `MatchingResult` fixtures. Matching
+condition rules are stored as RHS expressions keyed by the canonical pychete
+expression for the Matchete rule left-hand side.
 
 Run the converter from the repository root with the managed environment:
 
@@ -27,5 +26,5 @@ Run the converter from the repository root with the managed environment:
 source "$HOME/.bashrc"
 PYTHONPATH=src dependencies/.venv/bin/python \
   helper_mathematica_scripts/convert_matchete_previous_results.py \
-  --models VLF_toy_model
+  --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs
 ```

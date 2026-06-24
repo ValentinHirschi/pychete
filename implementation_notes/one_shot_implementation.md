@@ -260,6 +260,21 @@ discoveries, dependency patches, blockers, and remaining work.
   - added pytest coverage for Matchete internal-head parsing and for loading
     the committed VLF matching fixture as a structured `MatchingResult` with
     13 supertraces and no Mathematica runtime.
+- Completed the twelfth implementation slice:
+  - extended `convert_matchete_previous_results.py` to lower nontrivial
+    Matchete `Matching Conditions` rule lists into pychete fixture
+    expressions;
+  - matching-condition RHS expressions are stored in the fixture state and
+    keyed by the canonical pychete expression for the Matchete rule left-hand
+    side, preserving the rule target without adding a new fixture schema;
+  - regenerated the VLF matching fixture with explicit matching-condition
+    metadata and generated committed matching fixtures for the remaining
+    default targets: `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`;
+  - updated the default matching target manifest so all four initial models
+    now point at committed pychete-owned matching fixtures;
+  - added validation coverage that loads all four default matching fixtures
+    without Mathematica and validates their structured `MatchingResult`
+    expressions.
 
 ## Backend/API Discoveries
 
@@ -331,6 +346,11 @@ discoveries, dependency patches, blockers, and remaining work.
   Matchete parser now preserves it as a Symbolica built-in rather than creating
   a pychete external `log` head. Matchete's `I` parses as Symbolica's imaginary
   numeric atom, so no custom imaginary-unit handling was needed.
+- The default Matchete matching-condition rule lists all lower through the
+  current parser for the three non-VLF targets. Each of those fixtures carries
+  72 matching conditions. The fixture key convention is intentionally canonical
+  and machine-oriented; a later public presentation layer can display those
+  left-hand sides using `display_string(...)` or `latex_string(...)`.
 
 ## Test Status
 
@@ -435,25 +455,28 @@ discoveries, dependency patches, blockers, and remaining work.
   matching-fixture slice: 86 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py
+  tests/unit/loaders/test_mathematica_result_parser.py` passed after the
+  default matching-fixture conversion slice: 10 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the default
+  matching-fixture conversion slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the default
+  matching-fixture conversion slice: 86 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 
-- Add committed validation fixture assets for the remaining three default
-  Matchete matching integration models. Model input assets and model-definition
-  fixtures now exist for all four default targets and the SM parent; the VLF
-  one-loop matching-result fixture is committed, while
-  `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs` still need matching-result
-  fixtures.
+- Use the four committed default Matchete matching fixtures as acceptance
+  targets for the pychete one-loop matching engine.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
 - Lower S1/S3 local CG helper heads and other tensor contractions through the
   new spenso/idenso adapter layer.
-- Extend the previous-result converter to lower nontrivial Matchete
-  `Matching Conditions` rule lists with pattern indices into pychete fixture
-  expressions.
-- Convert the remaining raw Matchete snapshots into pychete-owned fixture JSON
-  that pytest can consume without Mathematica.
+- Expand the converter/fixture path to additional mappable Matchete validation
+  assets beyond the default matching targets.
 - Use `evaluator_probe_equal` in fixture comparison tests when canonical
   equality is insufficient.
 - Extend field metadata further for background fields, Goldstones, ghosts,

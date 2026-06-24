@@ -15,31 +15,34 @@
       "name": "Singlet_Scalar_Extension",
       "model_asset": "assets/models/Singlet_Scalar_Extension.m",
       "model_fixture": "assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json",
+      "matching_fixture": "assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json",
       "parent_assets": [
         "assets/models/SM.m"
       ],
       "reference_result": "Validation/MatchingResults/previous/Singlet_Scalar_Extension-EFT.m",
-      "status": "pending_matching_fixture"
+      "status": "matching_fixture_committed"
     },
     {
       "name": "E_VLL",
       "model_asset": "assets/models/E_VLL.m",
       "model_fixture": "assets/validation/pychete/E_VLL.model_fixture.json",
+      "matching_fixture": "assets/validation/pychete/E_VLL.matching_fixture.json",
       "parent_assets": [
         "assets/models/SM.m"
       ],
       "reference_result": "Validation/MatchingResults/previous/E_VLL-EFT.m",
-      "status": "pending_matching_fixture"
+      "status": "matching_fixture_committed"
     },
     {
       "name": "S1S3LQs",
       "model_asset": "assets/models/S1S3LQs.m",
       "model_fixture": "assets/validation/pychete/S1S3LQs.model_fixture.json",
+      "matching_fixture": "assets/validation/pychete/S1S3LQs.matching_fixture.json",
       "parent_assets": [
         "assets/models/SM.m"
       ],
       "reference_result": "Validation/MatchingResults/previous/S1S3LQs-EFT.m",
-      "status": "pending_matching_fixture"
+      "status": "matching_fixture_committed"
     }
   ]
 }

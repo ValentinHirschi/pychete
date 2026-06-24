@@ -55,7 +55,9 @@
     "matchete_model": "VLF_toy_model",
     "matchete_runtime_required": false,
     "matchete_version": "0.3.0",
-    "matching_conditions_exclusion": "Matchete stores None for VLF_toy_model matching conditions.",
+    "matching_condition_count": 0,
+    "matching_condition_key_format": "canonical pychete expression for the Matchete rule left-hand side",
+    "matching_conditions_exclusion": "Matchete stores None for this model's matching conditions.",
     "matching_conditions_included": false,
     "model_fixture": "assets/validation/pychete/VLF_toy_model.model_fixture.json",
     "reference_result": "Validation/MatchingResults/previous/VLF_toy_model-EFT.m"

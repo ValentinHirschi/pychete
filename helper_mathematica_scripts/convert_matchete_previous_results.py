@@ -8,10 +8,12 @@ from pathlib import Path
 from pychete.loaders import parse_matchete_expression
 from pychete.loaders.mathematica import _split_top_level, _strip_comments
 from pychete.state import PycheteState
+from pychete.symbols import canonical_string
+from pychete.theory import Theory
 from pychete.validation_fixtures import load_validation_fixture
 
 
-DEFAULT_MODELS = ("VLF_toy_model",)
+DEFAULT_MODELS = ("VLF_toy_model", "Singlet_Scalar_Extension", "E_VLL", "S1S3LQs")
 
 
 def _split_rule(text: str) -> tuple[str, str]:
@@ -77,6 +79,26 @@ def _expression_name(prefix: str, label: str) -> str:
     return f"{prefix}_{normalized}"
 
 
+def _rule_list(text: str) -> list[tuple[str, str]]:
+    value = text.strip()
+    if value == "None":
+        return []
+    if not value.startswith("{") or not value.endswith("}"):
+        raise ValueError(f"Expected a Wolfram rule list or None, got {value[:120]}")
+    return [_split_rule(part) for part in _split_top_level(value[1:-1], ",")]
+
+
+def _add_matching_conditions(state: PycheteState, theory: Theory, text: str) -> dict[str, str]:
+    condition_refs: dict[str, str] = {}
+    for i, (lhs_text, rhs_text) in enumerate(_rule_list(text), start=1):
+        lhs = parse_matchete_expression(lhs_text, theory)
+        rhs = parse_matchete_expression(rhs_text, theory)
+        expression_name = f"matchete_matching_condition_{i:03d}"
+        condition_refs[canonical_string(lhs)] = expression_name
+        state.add_expression(expression_name, theory, rhs)
+    return condition_refs
+
+
 def _build_fixture(model: str, reference_root: Path, fixtures_dir: Path) -> dict[str, object]:
     model_fixture_path = fixtures_dir / f"{model}.model_fixture.json"
     result_path = reference_root / "Validation" / "MatchingResults" / "previous" / f"{model}-EFT.m"
@@ -84,12 +106,6 @@ def _build_fixture(model: str, reference_root: Path, fixtures_dir: Path) -> dict
     theory = model_fixture.theory()
     result = _association(result_path.read_text(encoding="utf-8"))
     supertraces = _association(result["SuperTraces"])
-    matching_conditions_text = result["Matching Conditions"].strip()
-    if matching_conditions_text != "None":
-        raise NotImplementedError(
-            f"{model} has nontrivial matching conditions. The next converter "
-            "slice must lower Wolfram rule-list conditions before exporting it."
-        )
 
     state = PycheteState()
     state.add_theory(theory)
@@ -115,6 +131,8 @@ def _build_fixture(model: str, reference_root: Path, fixtures_dir: Path) -> dict
         expression_name = _expression_name("matchete_supertrace", label)
         supertrace_refs[label] = expression_name
         state.add_expression(expression_name, theory, parse_matchete_expression(expression_text, theory))
+    matching_condition_refs = _add_matching_conditions(state, theory, result["Matching Conditions"])
+    matching_conditions_included = bool(matching_condition_refs)
 
     return {
         "schema_version": 1,
@@ -127,8 +145,12 @@ def _build_fixture(model: str, reference_root: Path, fixtures_dir: Path) -> dict
             "model_fixture": str(model_fixture_path),
             "matchete_model": _string_key(result["Model"]),
             "matchete_version": _string_key(result["Version"]),
-            "matching_conditions_included": False,
-            "matching_conditions_exclusion": "Matchete stores None for VLF_toy_model matching conditions.",
+            "matching_conditions_included": matching_conditions_included,
+            "matching_condition_count": len(matching_condition_refs),
+            "matching_condition_key_format": "canonical pychete expression for the Matchete rule left-hand side",
+            "matching_conditions_exclusion": None
+            if matching_conditions_included
+            else "Matchete stores None for this model's matching conditions.",
         },
         "state": state.to_json_obj(),
         "expressions": sorted(state.expressions),
@@ -136,7 +158,7 @@ def _build_fixture(model: str, reference_root: Path, fixtures_dir: Path) -> dict
             "matchete_previous": {
                 "theory": theory.name,
                 **stage_names,
-                "matching_conditions": {},
+                "matching_conditions": matching_condition_refs,
                 "fluctuation_operators": {},
                 "supertraces": supertrace_refs,
                 "metadata": {
