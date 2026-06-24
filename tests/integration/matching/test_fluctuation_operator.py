@@ -3,7 +3,16 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import FieldMassKind, FluctuationSector, FluctuationStatistics, MatchingResult, Theory, canonical_string, s
+from pychete import (
+    FieldMassKind,
+    FluctuationSector,
+    FluctuationStatistics,
+    MatchingResult,
+    Theory,
+    VakintIntegralStage,
+    canonical_string,
+    s,
+)
 from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vakint as vakint_backend
@@ -476,9 +485,49 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         )
     ).expand()
     assert_expr_equal(setup.power_type_vakint_integral_sum(), expected_power_type_vakint_sum)
+    canonical_power_engine = FakeKernelVakintEngine()
+    canonical_power_sum = setup.power_type_vakint_integral_sum(
+        stage=VakintIntegralStage.CANONICAL,
+        short_form=True,
+        engine=canonical_power_engine,
+    )
+    assert canonical_power_engine.calls == [("to_canonical", expected_power_type_vakint_sum, True)]
+    assert_expr_equal(canonical_power_sum, S("canonical")(expected_power_type_vakint_sum))
+    reduced_power_engine = FakeKernelVakintEngine()
+    reduced_power_sum = setup.power_type_vakint_integral_sum(
+        stage=VakintIntegralStage.TENSOR_REDUCED,
+        engine=reduced_power_engine,
+    )
+    assert reduced_power_engine.calls == [("tensor_reduce", expected_power_type_vakint_sum, None)]
+    assert_expr_equal(reduced_power_sum, S("reduced")(expected_power_type_vakint_sum))
+    evaluated_power_engine = FakeKernelVakintEngine()
+    evaluated_power_sum = setup.power_type_vakint_integral_sum(
+        stage=VakintIntegralStage.EVALUATED,
+        engine=evaluated_power_engine,
+    )
+    assert evaluated_power_engine.calls == [("evaluate", expected_power_type_vakint_sum, None)]
+    assert_expr_equal(evaluated_power_sum, S("evaluated")(expected_power_type_vakint_sum))
+    with pytest.raises(ValueError, match="vakint integral stage"):
+        setup.power_type_vakint_integral_sum(stage="bad-stage")
     assert_expr_equal(
         setup.power_type_matching_preview().expression("power_type_vakint_integral_sum"),
         expected_power_type_vakint_sum,
+    )
+    preview_engine = FakeKernelVakintEngine()
+    canonical_preview = setup.power_type_matching_preview(
+        vakint_stage=VakintIntegralStage.CANONICAL,
+        vakint_short_form=True,
+        vakint_engine=preview_engine,
+    )
+    assert preview_engine.calls == [("to_canonical", expected_power_type_vakint_sum, True)]
+    assert canonical_preview.metadata["vakint_stage"] == "canonical"
+    assert_expr_equal(
+        canonical_preview.expression("power_type_vakint_integral_sum"),
+        S("canonical")(expected_power_type_vakint_sum),
+    )
+    assert_expr_equal(
+        canonical_preview.expression("power_type_vakint_integral_sum[canonical]"),
+        S("canonical")(expected_power_type_vakint_sum),
     )
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())

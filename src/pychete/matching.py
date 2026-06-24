@@ -63,6 +63,24 @@ class FluctuationSector(StrEnum):
             raise ValueError("fluctuation sector must be 'all', 'heavy', or 'light'") from exc
 
 
+class VakintIntegralStage(StrEnum):
+    """Native vakint processing stage for lowered one-loop integral expressions."""
+
+    RAW = "raw"
+    CANONICAL = "canonical"
+    TENSOR_REDUCED = "tensor_reduced"
+    EVALUATED = "evaluated"
+
+    @classmethod
+    def from_user(cls, value: VakintIntegralStage | str) -> VakintIntegralStage:
+        """Normalize a user-provided vakint integral stage selector."""
+
+        try:
+            return cls(value)
+        except ValueError as exc:
+            raise ValueError("vakint integral stage must be 'raw', 'canonical', 'tensor_reduced', or 'evaluated'") from exc
+
+
 @dataclass(frozen=True)
 class FluctuationMode:
     """Metadata for one field entry in a fluctuation basis."""
@@ -754,30 +772,52 @@ class OneLoopSetup:
         *,
         heavy_field_dimension: bool = False,
         include_light: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        short_form: bool | None = None,
+        engine: Any | None = None,
     ) -> Expression:
-        """Return the summed power-type contribution lowered to vakint topology form."""
+        """Return the summed power-type contribution at a native vakint stage."""
 
-        return sum_expr(
+        raw = sum_expr(
             contribution.vakint_integral_expression(include_light=include_light)
             for contribution in self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
         ).expand()
+        selected = VakintIntegralStage.from_user(stage)
+        if selected is VakintIntegralStage.RAW:
+            return raw
+        from .backends import vakint
+
+        if selected is VakintIntegralStage.CANONICAL:
+            return vakint.to_canonical(raw, short_form=short_form, engine=engine)
+        if selected is VakintIntegralStage.TENSOR_REDUCED:
+            return vakint.tensor_reduce(raw, engine=engine)
+        return vakint.evaluate(raw, engine=engine)
 
     def power_type_matching_preview(
         self,
         *,
         heavy_field_dimension: bool = False,
         include_light: bool = True,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
     ) -> MatchingResult:
         """Return an explicitly incomplete matching-result preview for power-type terms."""
 
         off_shell = self.power_type_eft_lagrangian(heavy_field_dimension=heavy_field_dimension)
+        selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
+        vakint_sum = self.power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            stage=selected_vakint_stage,
+            short_form=vakint_short_form,
+            engine=vakint_engine,
+        )
         supertraces = {
             **self.power_type_expression_map(prefix="power_type_supertrace"),
             "power_type_eft_lagrangian": off_shell,
-            "power_type_vakint_integral_sum": self.power_type_vakint_integral_sum(
-                heavy_field_dimension=heavy_field_dimension,
-                include_light=include_light,
-            ),
+            "power_type_vakint_integral_sum": vakint_sum,
+            f"power_type_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
         }
         return MatchingResult(
             theory=self.theory,
@@ -795,6 +835,7 @@ class OneLoopSetup:
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 "power_type_contribution_count": self.power_type_contribution_count,
                 "on_shell_reduced": False,
+                "vakint_stage": selected_vakint_stage.value,
             },
         )
 

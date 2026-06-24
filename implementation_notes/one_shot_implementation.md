@@ -690,6 +690,14 @@ discoveries, dependency patches, blockers, and remaining work.
   the final structured result surface while preserving the guard that
   `Theory.match(loop_order=1)` must not return until the full one-loop engine
   exists.
+- Added public `VakintIntegralStage` selectors and routed aggregate power-type
+  vakint sums through the native vakint adapter. `power_type_vakint_integral_sum`
+  now supports raw, canonical, tensor-reduced, and evaluated stages, delegating
+  non-raw work to `vakint.to_canonical`, `vakint.tensor_reduce`, and
+  `vakint.evaluate` respectively. `power_type_matching_preview(...)` can carry
+  a selected aggregate vakint stage and records the stage in metadata, giving
+  the future one-loop result pipeline an explicit native-backend hook without
+  creating a default vakint engine unless the user requests a non-raw stage.
 
 ## Test Status
 
@@ -1005,6 +1013,16 @@ discoveries, dependency patches, blockers, and remaining work.
   power-type-preview-result slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   power-type-preview-result slice: 113 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the power-type-vakint-stage slice: 24 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  power-type-vakint-stage slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  power-type-vakint-stage slice: 113 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
 

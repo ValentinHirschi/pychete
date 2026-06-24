@@ -20,6 +20,7 @@ from .matching import (
     PropagatorPlan,
     SupertraceBlockTrace,
     SupertracePlan,
+    VakintIntegralStage,
 )
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
@@ -56,6 +57,7 @@ __all__ = [
     "SymbolDataKey",
     "SymbolRole",
     "Theory",
+    "VakintIntegralStage",
     "canonical_string",
     "collect_indices",
     "display_string",
