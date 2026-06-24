@@ -72,8 +72,8 @@ def test_vakint_adapters_delegate_integral_operations_to_engine() -> None:
     ]
 
 
-@pytest.mark.parametrize("operation", [vakint.to_canonical, vakint.tensor_reduce, vakint.evaluate_integral, vakint.evaluate])
-def test_vakint_adapters_reject_native_unsafe_massless_topologies_before_engine_call(operation: Any) -> None:
+@pytest.mark.parametrize("operation", [vakint.to_canonical, vakint.evaluate_integral, vakint.evaluate])
+def test_vakint_adapters_reject_zero_mass_topologies_before_engine_call(operation: Any) -> None:
     engine = FakeVakintEngine()
     expr = vakint.one_loop_vacuum_integral(S("numerator"), (Expression.num(0), S("M") ** 2))
 
@@ -81,6 +81,41 @@ def test_vakint_adapters_reject_native_unsafe_massless_topologies_before_engine_
         operation(expr, engine=engine)
 
     assert engine.calls == []
+
+
+@pytest.mark.parametrize("operation", [vakint.to_canonical, vakint.evaluate_integral, vakint.evaluate])
+def test_vakint_adapters_reject_mixed_mass_topologies_before_engine_call(operation: Any) -> None:
+    engine = FakeVakintEngine()
+    expr = vakint.one_loop_vacuum_integral(S("numerator"), (S("M1") ** 2, S("M2") ** 2))
+
+    with pytest.raises(ValueError, match="mixed-mass topologies"):
+        operation(expr, engine=engine)
+
+    assert engine.calls == []
+
+
+@pytest.mark.parametrize(
+    "expr",
+    [
+        vakint.one_loop_vacuum_integral(S("numerator"), (Expression.num(0), S("M") ** 2)),
+        vakint.one_loop_vacuum_integral(S("numerator"), (S("M1") ** 2, S("M2") ** 2)),
+    ],
+)
+def test_vakint_adapters_delegate_tensor_reduction_for_unsupported_analytic_topologies(expr: Expression) -> None:
+    engine = FakeVakintEngine()
+
+    assert canonical_string(vakint.tensor_reduce(expr, engine=engine)) == canonical_string(S("reduced")(expr))
+    assert [name for name, _args in engine.calls] == ["tensor_reduce"]
+
+
+def test_vakint_adapters_delegate_single_scale_massive_topologies_to_engine() -> None:
+    engine = FakeVakintEngine()
+    expr = vakint.one_loop_vacuum_integral(S("numerator"), (S("M") ** 2, S("M") ** 2), powers=(1, 2))
+
+    assert canonical_string(vakint.to_canonical(expr, short_form=True, engine=engine)) == canonical_string(
+        S("canonical")(expr)
+    )
+    assert [name for name, _args in engine.calls] == ["to_canonical"]
 
 
 def test_vakint_one_loop_vacuum_topology_builders_use_native_namespace() -> None:

@@ -38,8 +38,11 @@ discoveries, dependency patches, blockers, and remaining work.
   scripts may load Matchete to generate serialized pychete fixtures under the
   repo, but tests load only those committed fixtures.
 - Use Symbolica as the symbolic engine, idenso/spenso for gamma, colour,
-  metric, and tensor algebra, and vakint for vacuum integral canonicalization,
-  tensor reduction, and evaluation.
+  metric, and tensor algebra. Use pychete's own Matchete-style analytic backend
+  for one-loop vacuum integral evaluation after tensor reduction, including
+  single-scale, zero-mass, and mixed-mass cases. Use vakint for
+  topology-independent tensor reduction and as an optional supported backend or
+  cross-check for single-scale massive analytic evaluations.
 - Compare results by pychete canonical equality, backed by Symbolica evaluator
   numeric probes for hard-to-canonicalize expressions.
 
@@ -73,8 +76,10 @@ discoveries, dependency patches, blockers, and remaining work.
   `collect`, `derivative`, `Transformer`, and evaluator APIs before adding
   Python traversal logic.
 - Route gamma/colour/metric simplification through idenso adapters,
-  tensor/CG contraction through spenso adapters, and vacuum integrals through
-  vakint adapters.
+  tensor/CG contraction through spenso adapters, topology-independent tensor
+  reduction through vakint where useful, one-loop analytic vacuum-integral
+  evaluation through a pychete-owned Matchete-style backend, and supported
+  single-scale massive cross-checks through vakint adapters.
 - If idenso/spenso/vakint are insufficient, add patch files under
   `dependencies/patches/`, make `dependencies/install_dependencies.py` apply
   them after clone/reset and before build, and test the patched behavior from
@@ -566,9 +571,12 @@ discoveries, dependency patches, blockers, and remaining work.
   coefficient-bearing one-loop topologies. Massive scalar topologies can be
   delegated, but a generated mixed massless/massive one-loop topology currently
   aborts the Python process inside native vakint while looking for a mass
-  symbol. pychete therefore guards native vakint stage calls for zero-mass
-  generated topologies and raises a Python `ValueError` until a local vakint
-  patch or upstream fix is available.
+  symbol. pychete therefore guards native vakint analytic evaluation calls for
+  unsupported generated topologies and raises a Python `ValueError`; zero-mass
+  and mixed-mass analytic evaluation belongs in pychete's separate
+  Matchete-style integral backend rather than a local vakint patch. Native
+  vakint tensor reduction remains usable because the numerator reduction is
+  topology-independent.
 - Matchete previous matching-result files store the stages pychete needs:
   `"UV Lagrangian"`, `"Off-shell EFT Lagrangian"`,
   `"On-shell EFT Lagrangian"`, `"SuperTraces"`, and
@@ -2421,6 +2429,47 @@ discoveries, dependency patches, blockers, and remaining work.
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
 - `git diff --check` passed after the NCM/Bar variation-linearization slice.
+- Current backend design update: native vakint tensor reduction is
+  topology-independent and may be used on numerator structures before analytic
+  integration, including for zero-mass or mixed-mass topologies. pychete should
+  own the Matchete-style one-loop analytic vacuum-integral evaluator for
+  single-scale, zero-mass, and mixed-mass cases. Native vakint analytic
+  evaluation remains useful as an optional supported backend and cross-check
+  for single-scale massive integrals, but zero-mass and mixed-mass analytic
+  evaluation must not be delegated to vakint's numerical methods.
+- Completed the vakint tensor-reduction/evaluation boundary slice:
+  - added a generic managed dependency-patch workflow to
+    `dependencies/install_dependencies.py`, including idempotent `git apply`
+    handling and manifest discovery for future dependency patches;
+  - removed the planned local vakint zero-mass propagator patch because the
+    correct architecture is pychete-side analytic evaluation for one-loop
+    vacuum integrals, with vakint kept as a single-scale optional backend and
+    cross-check;
+  - tightened `pychete.backends.vakint` analytic evaluation/canonicalization
+    calls so they inspect matched `vakint::topo(...)` / `vakint::prop(...)`
+    expressions with Symbolica pattern matching and raise before entering
+    native vakint unless every generated topology has one nonzero mass scale;
+  - kept `pychete.backends.vakint.tensor_reduce(...)` delegating to native
+    vakint for zero-mass and mixed-mass topology expressions because numerator
+    tensor reduction is topology-independent;
+  - added tests proving zero-mass and mixed-mass topologies are rejected before
+    analytic engine calls, delegated for tensor reduction, and repeated
+    equal-mass topologies still delegate to the native vakint engine.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/dependencies/test_install_dependencies.py
+  tests/unit/backends/test_vakint_backend.py -q'` passed after the vakint
+  tensor-reduction/evaluation boundary slice: 18 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py -q'`
+  passed after updating mixed-mass integration expectations for the vakint
+  tensor-reduction/evaluation boundary slice: 36 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the vakint tensor-reduction/evaluation
+  boundary slice: 178 passed, 1 skipped. The skip is the existing GammaLoop API
+  import check because GammaLoop was not requested in the current dependency
+  manifest.
+- `git diff --check` passed after the vakint tensor-reduction/evaluation
+  boundary slice.
 
 ## Remaining Work
 
@@ -2446,10 +2495,11 @@ discoveries, dependency patches, blockers, and remaining work.
   blocks, tensor reductions, scheme-specific renormalization beyond the current
   minimal-subtraction preview, and validation against known native backend
   topologies.
-- Patch or otherwise extend local vakint so generated one-loop topologies with
-  massless propagators can be canonicalized/evaluated without aborting the
-  Python process. pychete currently guards those native calls and keeps such
-  expressions at the raw stage.
+- Implement the pychete-owned analytic vacuum-integral backend for one-loop
+  vacuum integral evaluation after tensor reduction, following Matchete's
+  treatment for single-scale, zero-mass, and mixed-mass cases. Native vakint
+  remains available for topology-independent tensor reduction and supported
+  single-scale massive analytic evaluation cross-checks.
 - Extend the new compact Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
   artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or

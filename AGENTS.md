@@ -57,7 +57,13 @@ Use:
 - Symbolica for all symbolic and algebraic manipulations.
 - idenso for gamma-matrix and colour algebra.
 - spenso for tensor-network evaluations when needed.
-- vakint for integration and pole identification of massive vacuum integrals.
+- pychete's own Matchete-style analytic backend for one-loop vacuum integral
+  evaluation, including single-scale, zero-mass, and mixed-mass cases after
+  tensor reduction.
+- vakint for topology-independent tensor reduction of vacuum-integral
+  numerators, and as a supported optional backend/cross-check for single-scale
+  massive analytic evaluations. Zero-mass or mixed-mass vacuum integral
+  evaluation must not be delegated to vakint's numerical methods.
 
 The installer builds the GammaLoop API against the local Symbolica checkout
 with Symbolica's `gmp` feature enabled. GMP is an accepted dependency for this
@@ -326,9 +332,10 @@ evaluation before writing Python tensor logic: `Representation`,
 `CompiledTensorEvaluator.evaluate_complex`, `TensorFunctionLibrary`,
 `initialize`.
 
-For vakint, check and use these exact APIs for vacuum integral canonicalization,
-tensor reduction, epsilon/pole extraction, and evaluation before writing Python
-logic: `Vakint`, `Vakint.numerical_result_from_expression`,
+For vakint, check and use these exact APIs for topology-independent tensor
+reduction and optional single-scale massive vacuum integral cross-checks or
+backend comparisons before writing Python logic: `Vakint`,
+`Vakint.numerical_result_from_expression`,
 `Vakint.numerical_evaluation`, `Vakint.numerical_result_to_expression`,
 `Vakint.to_canonical`, `Vakint.tensor_reduce`, `Vakint.evaluate_integral`,
 `Vakint.evaluate`, `VakintEvaluationMethod.new_alphaloop_method`,

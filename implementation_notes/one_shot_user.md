@@ -38,8 +38,11 @@ discoveries, dependency patches, blockers, and remaining work.
   scripts may load Matchete to generate serialized pychete fixtures under the
   repo, but tests load only those committed fixtures.
 - Use Symbolica as the symbolic engine, idenso/spenso for gamma, colour,
-  metric, and tensor algebra, and vakint for vacuum integral canonicalization,
-  tensor reduction, and evaluation.
+  metric, and tensor algebra. Use pychete's own Matchete-style analytic backend
+  for one-loop vacuum integral evaluation after tensor reduction, including
+  single-scale, zero-mass, and mixed-mass cases. Use vakint for
+  topology-independent tensor reduction and as an optional supported backend or
+  cross-check for single-scale massive analytic evaluations.
 - Compare results by pychete canonical equality, backed by Symbolica evaluator
   numeric probes for hard-to-canonicalize expressions.
 
@@ -73,8 +76,10 @@ discoveries, dependency patches, blockers, and remaining work.
   `collect`, `derivative`, `Transformer`, and evaluator APIs before adding
   Python traversal logic.
 - Route gamma/colour/metric simplification through idenso adapters,
-  tensor/CG contraction through spenso adapters, and vacuum integrals through
-  vakint adapters.
+  tensor/CG contraction through spenso adapters, topology-independent tensor
+  reduction through vakint where useful, one-loop analytic vacuum-integral
+  evaluation through a pychete-owned Matchete-style backend, and supported
+  single-scale massive cross-checks through vakint adapters.
 - If idenso/spenso/vakint are insufficient, add patch files under
   `dependencies/patches/`, make `dependencies/install_dependencies.py` apply
   them after clone/reset and before build, and test the patched behavior from

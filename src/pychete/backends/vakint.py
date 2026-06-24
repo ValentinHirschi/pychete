@@ -5,7 +5,7 @@ from typing import Any, Mapping, Sequence
 
 from symbolica import Expression, S
 
-from ..expr import factors, is_head, product_expr, sum_expr
+from ..expr import is_head, product_expr, sum_expr
 from .common import import_backend
 
 
@@ -196,40 +196,55 @@ def to_canonical(
 ) -> Expression:
     """Canonicalize a vakint integral expression with native vakint."""
 
-    _raise_for_native_unsafe_topologies(integral_expression)
+    _raise_for_native_analytic_integral_scope(integral_expression)
     return _engine(engine).to_canonical(integral_expression, short_form)
 
 
 def tensor_reduce(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
-    """Reduce vakint tensor integrals to scalar integrals with native vakint."""
+    """Reduce tensor numerators with native vakint.
 
-    _raise_for_native_unsafe_topologies(integral_expression)
+    This operation is topology-independent and is allowed before pychete's own
+    analytic handling of zero-mass or mixed-mass vacuum-integral topologies.
+    """
+
     return _engine(engine).tensor_reduce(integral_expression)
 
 
 def evaluate_integral(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Evaluate only the integral factor of a vakint expression."""
 
-    _raise_for_native_unsafe_topologies(integral_expression)
+    _raise_for_native_analytic_integral_scope(integral_expression)
     return _engine(engine).evaluate_integral(integral_expression)
 
 
 def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Run vakint's complete tensor reduction and integral evaluation."""
 
-    _raise_for_native_unsafe_topologies(integral_expression)
+    _raise_for_native_analytic_integral_scope(integral_expression)
     return _engine(engine).evaluate(integral_expression)
 
 
-def _raise_for_native_unsafe_topologies(integral_expression: Expression) -> None:
-    """Reject topology shapes that currently abort inside native vakint."""
+def _raise_for_native_analytic_integral_scope(integral_expression: Expression) -> None:
+    """Reject integral evaluation outside native vakint's analytic single-scale scope."""
 
-    if any(_topology_contains_zero_mass_propagator(topology) for topology in _topologies(integral_expression)):
-        raise ValueError(
-            "native vakint currently aborts on generated one-loop topologies with "
-            "zero-mass propagators; keep this expression at the raw stage or use a "
-            "patched vakint backend"
-        )
+    for topology_expr in _topologies(integral_expression):
+        masses = _topology_mass_squareds(topology_expr)
+        if not masses:
+            continue
+        zero_masses = tuple(mass for mass in masses if bool(mass == Expression.num(0)))
+        if zero_masses:
+            raise ValueError(
+                "native vakint is only used for analytically supported single-scale "
+                "massive vacuum integrals; zero-mass propagators must be handled by "
+                "pychete's separate integral backend"
+            )
+        reference_mass = masses[0]
+        if any(not bool(mass == reference_mass) for mass in masses[1:]):
+            raise ValueError(
+                "native vakint is only used for analytically supported single-scale "
+                "massive vacuum integrals; mixed-mass topologies must be handled by "
+                "pychete's separate integral backend"
+            )
 
 
 def _topologies(integral_expression: Expression) -> tuple[Expression, ...]:
@@ -242,14 +257,28 @@ def _topology_pattern() -> Expression:
     return symbol("topo")(S("vakint_topology_factors_"))
 
 
-def _topology_contains_zero_mass_propagator(topology_expr: Expression) -> bool:
+def _topology_mass_squareds(topology_expr: Expression) -> tuple[Expression, ...]:
     if not is_head(topology_expr, symbol("topo")) or len(topology_expr) != 1:
-        return False
-    return any(_is_zero_mass_propagator(factor) for factor in factors(topology_expr[0]))
+        return ()
+    pattern = _propagator_pattern()
+    mass = _propagator_mass_pattern()
+    return tuple(mass.replace_wildcards(match) for match in topology_expr.match(pattern))
 
 
-def _is_zero_mass_propagator(expr: Expression) -> bool:
-    return is_head(expr, symbol("prop")) and len(expr) == 5 and bool(expr[3] == Expression.num(0))
+@cache
+def _propagator_pattern() -> Expression:
+    return symbol("prop")(
+        S("vakint_prop_id_"),
+        S("vakint_prop_edge_"),
+        S("vakint_prop_momentum_"),
+        S("vakint_prop_mass_squared_"),
+        S("vakint_prop_power_"),
+    )
+
+
+@cache
+def _propagator_mass_pattern() -> Expression:
+    return S("vakint_prop_mass_squared_")
 
 
 def epsilon_coefficient(expr: Expression, power: int, *, epsilon: Expression | None = None) -> Expression:

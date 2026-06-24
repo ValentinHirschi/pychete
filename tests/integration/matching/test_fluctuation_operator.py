@@ -794,20 +794,16 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         repeated_heavy_integral,
     )
     canonical_engine = FakeKernelVakintEngine()
-    canonicalized = setup.canonicalize_vakint_integral_expression_map(short_form=True, engine=canonical_engine)
-    assert len(canonical_engine.calls) == setup.supertrace_kernel_count
-    assert ("to_canonical", vakint_integral, True) in canonical_engine.calls
-    assert_expr_equal(canonicalized["vakint_integral[hScalar-lScalar]"], S("canonical")(vakint_integral))
+    with pytest.raises(ValueError, match="mixed-mass topologies"):
+        setup.canonicalize_vakint_integral_expression_map(short_form=True, engine=canonical_engine)
     reduction_engine = FakeKernelVakintEngine()
     reduced = setup.tensor_reduce_vakint_integral_expression_map(engine=reduction_engine)
     assert len(reduction_engine.calls) == setup.supertrace_kernel_count
     assert ("tensor_reduce", vakint_integral, None) in reduction_engine.calls
     assert_expr_equal(reduced["vakint_integral[hScalar-lScalar]"], S("reduced")(vakint_integral))
     evaluation_engine = FakeKernelVakintEngine()
-    evaluated = setup.evaluate_vakint_integral_expression_map(engine=evaluation_engine)
-    assert len(evaluation_engine.calls) == setup.supertrace_kernel_count
-    assert ("evaluate", vakint_integral, None) in evaluation_engine.calls
-    assert_expr_equal(evaluated["vakint_integral[hScalar-lScalar]"], S("evaluated")(vakint_integral))
+    with pytest.raises(ValueError, match="mixed-mass topologies"):
+        setup.evaluate_vakint_integral_expression_map(engine=evaluation_engine)
     contribution = next(item for item in setup.power_type_contributions() if item.name == "hScalar-lScalar")
     assert_expr_equal(contribution.prefactor, -Expression.num(1) / 2)
     assert_expr_equal(contribution.numerator_expression, -trace.expression / 2)
@@ -826,13 +822,12 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     ).expand()
     assert_expr_equal(setup.power_type_vakint_integral_sum(), expected_power_type_vakint_sum)
     canonical_power_engine = FakeKernelVakintEngine()
-    canonical_power_sum = setup.power_type_vakint_integral_sum(
-        stage=VakintIntegralStage.CANONICAL,
-        short_form=True,
-        engine=canonical_power_engine,
-    )
-    assert canonical_power_engine.calls == [("to_canonical", expected_power_type_vakint_sum, True)]
-    assert_expr_equal(canonical_power_sum, S("canonical")(expected_power_type_vakint_sum))
+    with pytest.raises(ValueError, match="mixed-mass topologies"):
+        setup.power_type_vakint_integral_sum(
+            stage=VakintIntegralStage.CANONICAL,
+            short_form=True,
+            engine=canonical_power_engine,
+        )
     reduced_power_engine = FakeKernelVakintEngine()
     reduced_power_sum = setup.power_type_vakint_integral_sum(
         stage=VakintIntegralStage.TENSOR_REDUCED,
@@ -841,12 +836,11 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert reduced_power_engine.calls == [("tensor_reduce", expected_power_type_vakint_sum, None)]
     assert_expr_equal(reduced_power_sum, S("reduced")(expected_power_type_vakint_sum))
     evaluated_power_engine = FakeKernelVakintEngine()
-    evaluated_power_sum = setup.power_type_vakint_integral_sum(
-        stage=VakintIntegralStage.EVALUATED,
-        engine=evaluated_power_engine,
-    )
-    assert evaluated_power_engine.calls == [("evaluate", expected_power_type_vakint_sum, None)]
-    assert_expr_equal(evaluated_power_sum, S("evaluated")(expected_power_type_vakint_sum))
+    with pytest.raises(ValueError, match="mixed-mass topologies"):
+        setup.power_type_vakint_integral_sum(
+            stage=VakintIntegralStage.EVALUATED,
+            engine=evaluated_power_engine,
+        )
     with pytest.raises(ValueError, match="vakint integral stage"):
         setup.power_type_vakint_integral_sum(stage="bad-stage")
     assert_expr_equal(
@@ -862,22 +856,12 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         setup.power_type_eft_lagrangian(),
     )
     preview_engine = FakeKernelVakintEngine()
-    canonical_preview = setup.power_type_matching_preview(
-        vakint_stage=VakintIntegralStage.CANONICAL,
-        vakint_short_form=True,
-        vakint_engine=preview_engine,
-    )
-    assert preview_engine.calls == [("to_canonical", expected_power_type_vakint_sum, True)]
-    assert canonical_preview.metadata["vakint_stage"] == "canonical"
-    assert_expr_equal(
-        canonical_preview.expression("power_type_vakint_integral_sum"),
-        S("canonical")(expected_power_type_vakint_sum),
-    )
-    assert_expr_equal(
-        canonical_preview.expression("power_type_vakint_integral_sum[canonical]"),
-        S("canonical")(expected_power_type_vakint_sum),
-    )
-    assert_expr_equal(canonical_preview.off_shell_eft_lagrangian, S("canonical")(expected_power_type_vakint_sum))
+    with pytest.raises(ValueError, match="mixed-mass topologies"):
+        setup.power_type_matching_preview(
+            vakint_stage=VakintIntegralStage.CANONICAL,
+            vakint_short_form=True,
+            vakint_engine=preview_engine,
+        )
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.supertrace_propagator_kernel[") for key in setup.to_expression_map())
@@ -978,13 +962,12 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     )
     assert_expr_equal(setup.interaction_power_type_vakint_integral_sum(), expected_interaction_vakint)
     canonical_engine = FakeKernelVakintEngine()
-    canonical_interaction_sum = setup.interaction_power_type_vakint_integral_sum(
-        stage=VakintIntegralStage.CANONICAL,
-        short_form=True,
-        engine=canonical_engine,
-    )
-    assert canonical_engine.calls == [("to_canonical", expected_interaction_vakint, True)]
-    assert_expr_equal(canonical_interaction_sum, S("canonical")(expected_interaction_vakint))
+    with pytest.raises(ValueError, match="mixed-mass topologies"):
+        setup.interaction_power_type_vakint_integral_sum(
+            stage=VakintIntegralStage.CANONICAL,
+            short_form=True,
+            engine=canonical_engine,
+        )
     interaction_result = setup.interaction_power_type_matching_result()
     assert interaction_result.metadata["stage"] == "interaction_power_type_vakint_result"
     assert interaction_result.metadata["uses_interaction_operator"] is True
@@ -998,22 +981,21 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     )
     assert_expr_equal(interaction_result.expression("hScalar-lScalar"), expected_interaction_vakint)
     named_engine = FakeKernelVakintEngine()
-    named_canonical_result = setup.interaction_power_type_matching_result(
-        named_supertrace_stage=VakintIntegralStage.CANONICAL,
-        named_supertrace_short_form=True,
+    named_reduced_result = setup.interaction_power_type_matching_result(
+        named_supertrace_stage=VakintIntegralStage.TENSOR_REDUCED,
         named_supertrace_engine=named_engine,
     )
     expected_named_calls = [
-        ("to_canonical", contribution.vakint_integral_expression(), True)
+        ("tensor_reduce", contribution.vakint_integral_expression(), None)
         for contribution in setup.interaction_power_type_contributions()
     ]
     assert named_engine.calls == expected_named_calls
-    assert named_canonical_result.metadata["vakint_stage"] == "raw"
-    assert named_canonical_result.metadata["named_supertrace_stage"] == "canonical"
-    assert_expr_equal(named_canonical_result.off_shell_eft_lagrangian, expected_interaction_vakint)
+    assert named_reduced_result.metadata["vakint_stage"] == "raw"
+    assert named_reduced_result.metadata["named_supertrace_stage"] == "tensor_reduced"
+    assert_expr_equal(named_reduced_result.off_shell_eft_lagrangian, expected_interaction_vakint)
     assert_expr_equal(
-        named_canonical_result.expression("hScalar-lScalar"),
-        S("canonical")(expected_interaction_vakint),
+        named_reduced_result.expression("hScalar-lScalar"),
+        S("reduced")(expected_interaction_vakint),
     )
     matchete_hbar_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
     assert_expr_equal(one_loop_normalization_factor(None), Expression.num(1))
@@ -1067,13 +1049,10 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
 def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients() -> None:
     theory = Theory("one_loop_setup_poles")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
-    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     y = theory.define_coupling("y", self_conjugate=True)
     heavy_mass = theory.mass_expr(heavy.definition)
-    light_mass = theory.mass_expr(light.definition)
     assert heavy_mass is not None
-    assert light_mass is not None
-    lagrangian = -heavy_mass**2 * heavy() ** 2 / 2 - light_mass**2 * light() ** 2 / 2 - y() * heavy() * light() ** 2 / 2
+    lagrangian = theory.free_lag(heavy) - y() * heavy() ** 3 / 6
     setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
     expected_raw = setup.power_type_vakint_integral_sum()
     expected_interaction_raw = setup.interaction_power_type_vakint_integral_sum()

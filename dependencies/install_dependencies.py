@@ -17,6 +17,7 @@ DEPS_DIR = Path(__file__).resolve().parent
 VENV_DIR = DEPS_DIR / ".venv"
 WHEEL_DIR = DEPS_DIR / "wheels"
 DEPENDENCY_MANIFEST = DEPS_DIR / "install_manifest.json"
+PATCHES_DIR = DEPS_DIR / "patches"
 SYMBOLICA_WHEEL_DIR = WHEEL_DIR / "symbolica"
 GAMMALOOP_WHEEL_DIR = WHEEL_DIR / "gammaloop"
 
@@ -358,6 +359,82 @@ symbolica = { path = "../symbolica" }
     cargo_toml.write_text(text.rstrip() + "\n", encoding="utf-8")
 
 
+def dependency_patch_specs() -> tuple[tuple[str, Path, Path], ...]:
+    return (
+        ("gammaloop", GAMMALOOP_DIR, PATCHES_DIR / "gammaloop"),
+        ("symbolica", SYMBOLICA_DIR, PATCHES_DIR / "symbolica"),
+        ("symbolica_community", SYMBOLICA_COMMUNITY_DIR, PATCHES_DIR / "symbolica-community"),
+    )
+
+
+def dependency_patch_manifest_entries() -> list[dict[str, str]]:
+    entries: list[dict[str, str]] = []
+    for dependency, _target_dir, patch_dir in dependency_patch_specs():
+        if not patch_dir.exists():
+            continue
+        for patch_path in sorted(patch_dir.glob("*.patch")):
+            entries.append(
+                {
+                    "dependency": dependency,
+                    "path": display_path(patch_path),
+                }
+            )
+    return entries
+
+
+def display_path(path: Path) -> str:
+    try:
+        return str(path.relative_to(REPO_ROOT))
+    except ValueError:
+        return str(path)
+
+
+def apply_dependency_patch(target_dir: Path, patch_path: Path) -> bool:
+    check = run(
+        ["git", "apply", "--check", patch_path],
+        cwd=target_dir,
+        capture=True,
+        check=False,
+    )
+    if check.returncode == 0:
+        run(["git", "apply", patch_path], cwd=target_dir)
+        print(f"Applied dependency patch: {display_path(patch_path)}")
+        return True
+
+    reverse = run(
+        ["git", "apply", "--reverse", "--check", patch_path],
+        cwd=target_dir,
+        capture=True,
+        check=False,
+    )
+    if reverse.returncode == 0:
+        print(f"Dependency patch already applied: {display_path(patch_path)}")
+        return False
+
+    diagnostics = "".join(
+        part
+        for part in (check.stdout, check.stderr, reverse.stdout, reverse.stderr)
+        if part
+    ).strip()
+    raise DependencySetupError(
+        f"Could not apply dependency patch {display_path(patch_path)}"
+        + (f":\n{diagnostics}" if diagnostics else ".")
+    )
+
+
+def apply_dependency_patches() -> None:
+    for _dependency, target_dir, patch_dir in dependency_patch_specs():
+        if not patch_dir.exists():
+            continue
+        if not target_dir.exists():
+            raise DependencySetupError(
+                f"Cannot apply patches from {patch_dir.relative_to(REPO_ROOT)} because "
+                f"{target_dir.relative_to(REPO_ROOT)} is missing."
+            )
+        for patch_path in sorted(patch_dir.glob("*.patch")):
+            apply_dependency_patch(target_dir, patch_path)
+
+
 def git_head(path: Path) -> str:
     completed = run(["git", "rev-parse", "HEAD"], cwd=path, capture=True)
     return completed.stdout.strip()
@@ -407,6 +484,7 @@ def write_dependency_manifest(
             "source_rev": optional_git_head(MATCHETE_DIR),
             "branch": MATCHETE_BRANCH,
         },
+        "dependency_patches": dependency_patch_manifest_entries(),
     }
     DEPENDENCY_MANIFEST.write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
@@ -472,6 +550,7 @@ def patch_sources() -> None:
     patch_symbolica_community_cargo()
     patch_symbolica_community_module()
     patch_gammaloop_cargo()
+    apply_dependency_patches()
 
 
 BASE_SMOKE_TEST = """
