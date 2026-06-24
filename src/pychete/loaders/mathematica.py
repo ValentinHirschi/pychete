@@ -26,7 +26,8 @@ from symbolica.core import AtomType, ParseMode
 
 from ..expr import args, as_int, list_expr, product_expr, sum_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
-from ..theory import CouplingSelfConjugate, FieldChirality, FieldRole, Theory
+from ..theory import Theory
+from ..theory_metadata import CouplingSelfConjugate, FieldChirality, FieldRole
 
 
 _COMMENT_RE = re.compile(r"\(\*.*?\*\)", re.DOTALL)

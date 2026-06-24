@@ -32,14 +32,14 @@ from .matching_options import (
 )
 from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
-from .theory import (
+from .theory import Theory
+from .theory_metadata import (
     FieldChirality,
     FieldDefinition,
     FieldHandle,
     FieldMassKind,
     FieldRole,
     FieldVariation,
-    Theory,
     field_chirality_from_label,
     field_mass_expr_from_label,
     field_mass_kind_from_label,

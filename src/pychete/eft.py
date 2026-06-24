@@ -17,7 +17,8 @@ from .expr import (
     sum_expr,
 )
 from .symbols import SymbolRole, canonical_string, s
-from .theory import FieldMassKind, Theory, field_mass_kind_from_label
+from .theory import Theory
+from .theory_metadata import FieldMassKind, field_mass_kind_from_label
 
 
 def type_dimension(type_expr: Expression) -> int | float:

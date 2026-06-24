@@ -9,7 +9,8 @@ from .eft import series_eft
 from .expr import bar_field_pattern, field_pattern, is_zero, list_items
 from .functional import apply_cd, derive_eom
 from .symbols import display_string, latex_string, s
-from .theory import FieldDefinition, FieldVariation, Theory
+from .theory import Theory
+from .theory_metadata import FieldDefinition, FieldVariation
 
 
 @dataclass(frozen=True)

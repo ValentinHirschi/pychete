@@ -22,12 +22,12 @@ from .expr import (
     terms,
 )
 from .symbols import SymbolRole, canonical_string, s
-from .theory import (
+from .theory import Theory
+from .theory_metadata import (
     CouplingSelfConjugate,
     FieldDefinition,
     FieldHandle,
     FieldVariation,
-    Theory,
     coupling_self_conjugate_from_label,
     field_self_conjugate_from_label,
 )

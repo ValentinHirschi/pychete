@@ -2573,6 +2573,33 @@ discoveries, dependency patches, blockers, and remaining work.
   1 skipped. The skip is the existing GammaLoop API import check because
   GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the tree matching extraction.
+- Completed the third code-organization refactor slice:
+  - extracted theory metadata enums, type aliases, Symbolica symbol-data
+    accessors, registered definition dataclasses, and lightweight handles into
+    `src/pychete/theory_metadata.py`;
+  - kept compatibility re-exports through `src/pychete/theory.py` while making
+    `pychete.api`, `matching.py`, `functional.py`, `eft.py`, the Mathematica
+    loader, `tree_matching.py`, and the spenso bridge import metadata from the
+    new focused module;
+  - reduced `theory.py` from roughly 1,990 lines to roughly 1,040 lines so it
+    now focuses on the `Theory` registry/orchestration class, JSON
+    restoration, and public theory methods;
+  - added an explicit `theory_metadata.__all__` for discoverability of the
+    metadata surface.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/definitions
+  tests/integration/models/test_model_loaders.py
+  tests/integration/validation/test_validation_fixtures.py
+  tests/integration/matching/test_heavy_scalar_tree.py -q'` passed after the
+  theory metadata extraction: 76 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the theory metadata extraction: no issues found in 29
+  source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the theory metadata extraction: 179
+  passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the theory metadata extraction.
 
 ## Remaining Work
 

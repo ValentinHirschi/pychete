@@ -10,7 +10,8 @@ from symbolica import Expression, Replacement
 from .common import import_backend
 from ..expr import args, cg_tensor_pattern, is_head
 from ..symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, s, safe_symbol_name
-from ..theory import CGTensorDefinition, CGTensorHandle, RepresentationReality, Theory
+from ..theory import Theory
+from ..theory_metadata import CGTensorDefinition, CGTensorHandle, RepresentationReality
 
 TensorComponent = Expression | int | float | complex
 

@@ -22,7 +22,8 @@ from .matching_options import OneLoopNormalization, VakintIntegralStage, one_loo
 from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
-from .theory import (
+from .theory import Theory
+from .theory_metadata import (
     BuiltinIndexType,
     CGTensorDefinition,
     CGTensorHandle,
@@ -35,7 +36,6 @@ from .theory import (
     GroupKind,
     RepresentationDefinition,
     RepresentationReality,
-    Theory,
 )
 from .tree_matching import HeavyScalarSolution
 from .validation import NumericProbeResult, evaluator_probe_equal
