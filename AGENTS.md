@@ -409,8 +409,10 @@ pychete fixtures and must not require `wolframscript`, Mathematica, or a
 runnable Matchete checkout.
 
 Keep optional user-facing entry points for this route under the top-level
-`scripts/` directory, such as `scripts/export_matchete_model_state.wls` and
-`scripts/convert_matchete_model_state.py`. These scripts are convenience
+`scripts/` directory, including `scripts/export_matchete_model_state.wls`,
+`scripts/convert_matchete_model_state.py`,
+`scripts/export_matchete_matching_snapshots.wls`, and
+`scripts/convert_matchete_previous_results.py`. These scripts are convenience
 wrappers for users who already have Mathematica and Matchete available; they
 must not be imported by pychete runtime code, required by pytest, or treated as
 the canonical validation path. The maintained implementation may live under

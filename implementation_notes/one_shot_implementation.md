@@ -2823,6 +2823,31 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 195 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Extended the optional top-level Matchete conversion route:
+  - added `scripts/export_matchete_matching_snapshots.wls` as a convenience
+    wrapper over the maintained raw matching-snapshot helper;
+  - added `scripts/convert_matchete_previous_results.py` as a convenience
+    wrapper over the maintained previous-result-to-fixture converter;
+  - updated `scripts/README.md`, `AGENTS.md`, and the copied user notes to
+    make clear that both model-state and matching-result conversion wrappers
+    should remain committed for users with Mathematica, while pychete runtime
+    code and normal pytest remain fully Matchete- and Mathematica-independent;
+  - added pytest coverage that checks the top-level wrappers are present and
+    delegate to maintained helper implementations instead of becoming runtime
+    dependencies.
+- Verification for the top-level optional conversion-script slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_matchete_model_state_converter.py -q'` passed:
+    3 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 196 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

@@ -5,6 +5,8 @@ the read-only Matchete reference checkout available. They are not imported by
 pychete and are not used by pytest; normal pychete runtime and tests remain
 Mathematica- and Matchete-independent.
 
+## Loaded Model State
+
 Export loaded Matchete model state:
 
 ```sh
@@ -21,5 +23,26 @@ PYTHONPATH=src dependencies/.venv/bin/python scripts/convert_matchete_model_stat
   --fixtures-dir assets/validation/pychete
 ```
 
+## Previous Matching Results
+
+Export raw matching snapshots for development inspection:
+
+```sh
+wolframscript -file scripts/export_matchete_matching_snapshots.wls \
+  --out /tmp/pychete_matching_snapshots \
+  --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs
+```
+
+Convert Matchete's committed previous matching-result files into pychete-owned
+fixtures:
+
+```sh
+PYTHONPATH=src dependencies/.venv/bin/python scripts/convert_matchete_previous_results.py \
+  --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs \
+  --fixtures-dir assets/validation/pychete
+```
+
 The committed fixtures under `assets/validation/pychete/` are the artifacts
-used by pychete tests and users who do not have Mathematica.
+used by pychete tests and users who do not have Mathematica. These scripts are
+optional convenience wrappers over `helper_mathematica_scripts/`; pychete does
+not depend on Mathematica or Matchete at runtime.

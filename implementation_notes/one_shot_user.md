@@ -140,3 +140,8 @@ discoveries, dependency patches, blockers, and remaining work.
   directory. This does not change the core rule: pychete runtime code and
   pytest remain completely Matchete- and Mathematica-independent, and committed
   pychete-owned fixtures are the normal validation/user artifacts.
+- Keep both the loaded-model-state conversion route and the previous
+  matching-result conversion route discoverable under the top-level `scripts/`
+  directory. The maintained implementation can still live under
+  `helper_mathematica_scripts/`, but the user-facing convenience wrappers
+  should stay committed with pychete.
