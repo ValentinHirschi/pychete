@@ -13,7 +13,7 @@ from .expr import is_head, list_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
-    from .matching import HeavyScalarSolution, MatchingResult
+    from .matching import FluctuationBasisItem, FluctuationOperator, HeavyScalarSolution, MatchingResult
 
 
 class FieldMassKind(StrEnum):
@@ -973,6 +973,17 @@ class Theory:
         from .matching import solve_heavy_scalar_eoms
 
         return solve_heavy_scalar_eoms(self, lagrangian, eft_order=eft_order)
+
+    def fluctuation_operator(
+        self,
+        lagrangian: Expression,
+        fields: Iterable[FluctuationBasisItem],
+    ) -> FluctuationOperator:
+        """Extract the algebraic fluctuation-operator Hessian for fields."""
+
+        from .matching import fluctuation_operator
+
+        return fluctuation_operator(self, lagrangian, fields)
 
     def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int = 0) -> Expression | MatchingResult:
         """Match a Lagrangian through the requested loop order.

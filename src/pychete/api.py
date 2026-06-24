@@ -3,6 +3,7 @@ from __future__ import annotations
 from .eft import operator_dimension, series_eft
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
+    FluctuationOperator,
     HeavyScalarSolution,
     MatchingExpressionComparison,
     MatchingResult,
@@ -21,6 +22,7 @@ __all__ = [
     "FieldChirality",
     "FieldMassKind",
     "FieldVariation",
+    "FluctuationOperator",
     "HeavyScalarSolution",
     "MatchingExpressionComparison",
     "MatchingResult",

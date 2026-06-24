@@ -264,6 +264,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
         off_shell_eft_lagrangian=lagrangian,
         on_shell_eft_lagrangian=lagrangian,
     )
+    fluctuation_operator = theory.fluctuation_operator(lagrangian, [phi])
     state = PycheteState()
     state.add_theory(theory)
     state.add_expression("lagrangian", theory, lagrangian)
@@ -277,6 +278,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
         lam.definition,
         index_info,
         solution,
+        fluctuation_operator,
         matching_result,
     )
 

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from html import escape
-from typing import Iterable, Sequence
+from typing import Iterable, Sequence, TypeAlias
 
 from symbolica import Expression, Replacement
 
@@ -10,13 +10,55 @@ from .eft import series_eft
 from .expr import (
     bar_field_pattern,
     field_pattern,
+    is_bar_field,
     is_zero,
     list_items,
 )
 from .functional import apply_cd, derive_eom
-from .symbols import canonical_string, display_string, latex_string, s
-from .theory import FieldDefinition, FieldVariation, Theory
+from .symbols import SymbolRole, canonical_string, display_string, latex_string, s
+from .theory import FieldDefinition, FieldHandle, FieldVariation, Theory
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
+
+FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
+
+
+@dataclass(frozen=True)
+class FluctuationOperator:
+    """Quadratic fluctuation operator extracted from a Lagrangian."""
+
+    theory: Theory
+    basis: tuple[Expression, ...]
+    matrix: tuple[tuple[Expression, ...], ...]
+
+    def entry(self, row: FluctuationBasisItem, column: FluctuationBasisItem) -> Expression:
+        """Return one matrix entry identified by its row and column fields."""
+
+        row_index = self._basis_index(_fluctuation_basis_expression(self.theory, row))
+        column_index = self._basis_index(_fluctuation_basis_expression(self.theory, column))
+        return self.matrix[row_index][column_index]
+
+    def to_expression_map(self, *, prefix: str = "fluctuation_operator") -> dict[str, Expression]:
+        """Return deterministic named entries suitable for ``MatchingResult``."""
+
+        entries: dict[str, Expression] = {}
+        for row in self.basis:
+            for column in self.basis:
+                key = f"{prefix}[{canonical_string(row)},{canonical_string(column)}]"
+                entries[key] = self.entry(row, column)
+        return entries
+
+    def _basis_index(self, field: Expression) -> int:
+        key = canonical_string(field)
+        for index, basis_field in enumerate(self.basis):
+            if canonical_string(basis_field) == key:
+                return index
+        raise KeyError(f"Fluctuation basis has no field {key!r}")
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{FluctuationOperator}}\left({len(self.basis)}\times {len(self.basis)}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>FluctuationOperator({len(self.basis)}x{len(self.basis)})</code>"
 
 
 @dataclass(frozen=True)
@@ -212,6 +254,40 @@ class OneLoopMatchingNotImplementedError(NotImplementedError):
     """Raised while the one-loop matching engine is still under construction."""
 
 
+def fluctuation_operator(
+    theory: Theory,
+    lagrangian: Expression,
+    fields: Iterable[FluctuationBasisItem],
+) -> FluctuationOperator:
+    """Extract the Symbolica Hessian over an explicit fluctuation basis.
+
+    The current implementation computes the algebraic Hessian with respect to
+    exact field expressions in ``fields``. Derivative-valued field expressions
+    may be supplied explicitly as independent basis entries; full differential
+    operator assembly is a later one-loop matching stage.
+    """
+
+    theory._validate_registered_expression(lagrangian)
+    basis = tuple(_fluctuation_basis_expression(theory, field) for field in fields)
+    if not basis:
+        raise ValueError("at least one fluctuation field is required")
+    _validate_unique_fluctuation_basis(basis)
+    variables = tuple(_fluctuation_variable(index) for index, _ in enumerate(basis))
+    encoded = _encode_fluctuation_basis(lagrangian, basis, variables)
+    matrix = tuple(
+        tuple(
+            _decode_fluctuation_basis(
+                encoded.derivative(row_variable).derivative(column_variable),
+                basis,
+                variables,
+            ).expand()
+            for column_variable in variables
+        )
+        for row_variable in variables
+    )
+    return FluctuationOperator(theory=theory, basis=basis, matrix=matrix)
+
+
 def _optional_expression(result: MatchingResult, name: str) -> Expression | None:
     try:
         return result.expression(name)
@@ -221,6 +297,61 @@ def _optional_expression(result: MatchingResult, name: str) -> Expression | None
 
 def _canonical_expr(expr: Expression) -> str:
     return canonical_string(expr.expand())
+
+
+def _fluctuation_basis_expression(theory: Theory, field: FluctuationBasisItem) -> Expression:
+    if isinstance(field, FieldHandle):
+        return field()
+    if isinstance(field, FieldDefinition):
+        return field.expr()
+    if isinstance(field, str):
+        return theory.field_handle(field)()
+    return field
+
+
+def _validate_unique_fluctuation_basis(basis: tuple[Expression, ...]) -> None:
+    keys = [canonical_string(field) for field in basis]
+    if len(set(keys)) != len(keys):
+        raise ValueError("fluctuation basis fields must be unique")
+
+
+def _fluctuation_variable(index: int) -> Expression:
+    return s.user(
+        "pychete_internal",
+        f"fluctuation_{index}",
+        tags=[SymbolRole.PROJECT.value, "fluctuation_variable"],
+        data={"role": "fluctuation_variable", "index": index},
+    )
+
+
+def _encode_fluctuation_basis(
+    lagrangian: Expression,
+    basis: tuple[Expression, ...],
+    variables: tuple[Expression, ...],
+) -> Expression:
+    barred_replacements: list[Replacement] = []
+    unbarred_replacements: list[Replacement] = []
+    for field, variable in zip(basis, variables, strict=True):
+        replacement = Replacement(field, variable)
+        if is_bar_field(field):
+            barred_replacements.append(replacement)
+        else:
+            unbarred_replacements.append(replacement)
+    bar_protector = Replacement(
+        bar_field_pattern(),
+        bar_field_pattern(),
+        s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value),
+    )
+    return lagrangian.replace_multiple([*barred_replacements, bar_protector, *unbarred_replacements])
+
+
+def _decode_fluctuation_basis(
+    expr: Expression,
+    basis: tuple[Expression, ...],
+    variables: tuple[Expression, ...],
+) -> Expression:
+    replacements = [Replacement(variable, field) for field, variable in zip(basis, variables, strict=True)]
+    return expr.replace_multiple(replacements)
 
 
 @dataclass(frozen=True)

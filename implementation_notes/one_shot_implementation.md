@@ -304,6 +304,22 @@ discoveries, dependency patches, blockers, and remaining work.
     package-root public API now that comparison objects expose probe evidence;
   - added tests covering a trigonometric identity that is evaluator-equal but
     not canonically equal under the current Symbolica expansion policy.
+- Completed the fifteenth implementation slice:
+  - added public `FluctuationOperator` as the first structured one-loop
+    pipeline carrier for quadratic fluctuation data;
+  - added `Theory.fluctuation_operator(...)`, which extracts the algebraic
+    Hessian for an explicit fluctuation basis by encoding selected field
+    expressions as temporary Symbolica variables, applying native
+    `Expression.derivative`, and decoding any residual temporary variables back
+    to the original field expressions;
+  - protected unselected barred fields with a Symbolica replacement-rule
+    protector, while still allowing explicitly selected `Bar(Field(...))`
+    entries to participate as independent basis variables;
+  - exported `FluctuationOperator` through the package-root public API and
+    added Jupyter-friendly repr hooks;
+  - added tests for scalar Hessian entries, barred-field protection, explicit
+    barred-field basis entries, duplicate-basis validation, and public API
+    docstrings.
 
 ## Backend/API Discoveries
 
@@ -391,6 +407,13 @@ discoveries, dependency patches, blockers, and remaining work.
   `evaluator_probe_equal(...)`, which uses `Expression.evaluator_multiple`.
   The first regression test uses `sin(x)^2 + cos(x)^2` versus `1`, confirming
   the evaluator path can prove equality when canonical expansion does not.
+- The first fluctuation-operator extraction layer now uses Symbolica native
+  primitives only for symbolic work: `Expression.replace_multiple` for
+  simultaneous field-to-variable encoding, `Expression.derivative` for Hessian
+  entries, and `Expression.replace_multiple` again for decoding. The current
+  scope is algebraic Hessian extraction over an explicit basis; assembling full
+  differential operators from derivative-valued fields remains a later
+  one-loop matching stage.
 
 ## Test Status
 
@@ -527,11 +550,25 @@ discoveries, dependency patches, blockers, and remaining work.
   comparison-probe slice: 91 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the fluctuation-operator slice: 9 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the fluctuation-operator
+  slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  fluctuation-operator slice: 95 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
 - Use the four committed default Matchete matching fixtures as acceptance
   targets for the pychete one-loop matching engine.
+- Extend `FluctuationOperator` extraction from algebraic Hessians over explicit
+  basis entries to full differential fluctuation operators, including
+  derivative-valued fields and integration-by-parts conventions.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
