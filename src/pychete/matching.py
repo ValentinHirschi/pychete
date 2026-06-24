@@ -42,6 +42,23 @@ class FluctuationStatistics(StrEnum):
     FERMIONIC = "fermionic"
 
 
+class FluctuationSector(StrEnum):
+    """Sector selector for fluctuation operator blocks."""
+
+    ALL = "all"
+    HEAVY = "heavy"
+    LIGHT = "light"
+
+    @classmethod
+    def from_user(cls, value: FluctuationSector | str) -> FluctuationSector:
+        """Normalize a user-provided fluctuation-sector selector."""
+
+        try:
+            return cls(value)
+        except ValueError as exc:
+            raise ValueError("fluctuation sector must be 'all', 'heavy', or 'light'") from exc
+
+
 @dataclass(frozen=True)
 class FluctuationMode:
     """Metadata for one field entry in a fluctuation basis."""
@@ -144,12 +161,54 @@ class FluctuationBasis:
 
 
 @dataclass(frozen=True)
+class FluctuationOperatorBlock:
+    """Rectangular block of a fluctuation operator matrix."""
+
+    theory: Theory
+    row_sector: FluctuationSector
+    column_sector: FluctuationSector
+    rows: tuple[FluctuationMode, ...]
+    columns: tuple[FluctuationMode, ...]
+    matrix: tuple[tuple[Expression, ...], ...]
+
+    def entry(self, row: FluctuationBasisItem, column: FluctuationBasisItem) -> Expression:
+        """Return one block entry identified by row and column fields."""
+
+        row_index = _mode_index(self.rows, _fluctuation_basis_expression(self.theory, row))
+        column_index = _mode_index(self.columns, _fluctuation_basis_expression(self.theory, column))
+        return self.matrix[row_index][column_index]
+
+    def to_expression_map(self, *, prefix: str = "fluctuation_operator_block") -> dict[str, Expression]:
+        """Return deterministic named expressions for this block."""
+
+        entries: dict[str, Expression] = {}
+        for row in self.rows:
+            for column in self.columns:
+                key = (
+                    f"{prefix}[{self.row_sector.value},{self.column_sector.value},"
+                    f"{canonical_string(row.field)},{canonical_string(column.field)}]"
+                )
+                entries[key] = self.entry(row.field, column.field)
+        return entries
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{FluctuationOperatorBlock}}\left({len(self.rows)}\times {len(self.columns)}\right)$"
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>FluctuationOperatorBlock({self.row_sector.value},{self.column_sector.value} "
+            f"{len(self.rows)}x{len(self.columns)})</code>"
+        )
+
+
+@dataclass(frozen=True)
 class FluctuationOperator:
     """Quadratic fluctuation operator extracted from a Lagrangian."""
 
     theory: Theory
     basis: tuple[Expression, ...]
     matrix: tuple[tuple[Expression, ...], ...]
+    modes: tuple[FluctuationMode, ...] = ()
 
     def entry(self, row: FluctuationBasisItem, column: FluctuationBasisItem) -> Expression:
         """Return one matrix entry identified by its row and column fields."""
@@ -174,6 +233,36 @@ class FluctuationOperator:
             if canonical_string(basis_field) == key:
                 return index
         raise KeyError(f"Fluctuation basis has no field {key!r}")
+
+    def mode_for(self, field: FluctuationBasisItem) -> FluctuationMode:
+        """Return metadata for one field expression in this operator basis."""
+
+        if not self.modes:
+            raise ValueError("This fluctuation operator does not carry basis mode metadata")
+        requested = _fluctuation_basis_expression(self.theory, field)
+        return self.modes[_mode_index(self.modes, requested)]
+
+    def block(
+        self,
+        row_sector: FluctuationSector | str,
+        column_sector: FluctuationSector | str,
+    ) -> FluctuationOperatorBlock:
+        """Return a heavy/light sector block of the fluctuation matrix."""
+
+        if not self.modes:
+            raise ValueError("This fluctuation operator does not carry basis mode metadata")
+        row_selector = FluctuationSector.from_user(row_sector)
+        column_selector = FluctuationSector.from_user(column_sector)
+        row_indices = _sector_indices(self.modes, row_selector)
+        column_indices = _sector_indices(self.modes, column_selector)
+        return FluctuationOperatorBlock(
+            theory=self.theory,
+            row_sector=row_selector,
+            column_sector=column_selector,
+            rows=tuple(self.modes[index] for index in row_indices),
+            columns=tuple(self.modes[index] for index in column_indices),
+            matrix=tuple(tuple(self.matrix[row][column] for column in column_indices) for row in row_indices),
+        )
 
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{FluctuationOperator}}\left({len(self.basis)}\times {len(self.basis)}\right)$"
@@ -391,7 +480,8 @@ def fluctuation_operator(
     """
 
     theory._validate_registered_expression(lagrangian)
-    basis = _normalize_fluctuation_basis(theory, lagrangian, fields)
+    basis_info = _normalize_fluctuation_basis(theory, lagrangian, fields)
+    basis = basis_info.entries
     if not basis:
         raise ValueError("at least one fluctuation field is required")
     _validate_unique_fluctuation_basis(basis)
@@ -408,7 +498,7 @@ def fluctuation_operator(
         )
         for row_variable in variables
     )
-    return FluctuationOperator(theory=theory, basis=basis, matrix=matrix)
+    return FluctuationOperator(theory=theory, basis=basis, matrix=matrix, modes=basis_info.modes)
 
 
 def fluctuation_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasis:
@@ -444,14 +534,15 @@ def _normalize_fluctuation_basis(
     theory: Theory,
     lagrangian: Expression,
     fields: FluctuationBasis | Iterable[FluctuationBasisItem] | None,
-) -> tuple[Expression, ...]:
+) -> FluctuationBasis:
     if fields is None:
-        return fluctuation_basis(theory, lagrangian).entries
+        return fluctuation_basis(theory, lagrangian)
     if isinstance(fields, FluctuationBasis):
         if fields.theory.name != theory.name:
             raise ValueError(f"Fluctuation basis belongs to {fields.theory.name!r}, not {theory.name!r}")
-        return fields.entries
-    return tuple(_fluctuation_basis_expression(theory, field) for field in fields)
+        return fields
+    basis = tuple(_fluctuation_basis_expression(theory, field) for field in fields)
+    return FluctuationBasis(theory=theory, modes=tuple(_fluctuation_mode(theory, field) for field in basis))
 
 
 def _validate_unique_fluctuation_basis(basis: tuple[Expression, ...]) -> None:
@@ -501,6 +592,22 @@ def _fluctuation_mode(theory: Theory, field: Expression) -> FluctuationMode:
 
 def _fluctuation_statistics(field_type: Expression) -> FluctuationStatistics:
     return FluctuationStatistics.FERMIONIC if bool(field_type == s.Fermion) else FluctuationStatistics.BOSONIC
+
+
+def _mode_index(modes: tuple[FluctuationMode, ...], field: Expression) -> int:
+    key = canonical_string(field)
+    for index, mode in enumerate(modes):
+        if canonical_string(mode.field) == key:
+            return index
+    raise KeyError(f"Fluctuation basis has no field {key!r}")
+
+
+def _sector_indices(modes: tuple[FluctuationMode, ...], sector: FluctuationSector) -> tuple[int, ...]:
+    if sector is FluctuationSector.ALL:
+        return tuple(range(len(modes)))
+    if sector is FluctuationSector.HEAVY:
+        return tuple(index for index, mode in enumerate(modes) if mode.is_heavy)
+    return tuple(index for index, mode in enumerate(modes) if mode.is_light)
 
 
 def _fluctuation_variable(index: int) -> Expression:

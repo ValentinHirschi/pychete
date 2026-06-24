@@ -87,6 +87,12 @@ def test_public_api_methods_have_docstrings() -> None:
             "assert_equal",
         ],
         pychete.FluctuationOperator: [
+            "block",
+            "entry",
+            "mode_for",
+            "to_expression_map",
+        ],
+        pychete.FluctuationOperatorBlock: [
             "entry",
             "to_expression_map",
         ],

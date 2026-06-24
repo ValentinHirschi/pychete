@@ -349,6 +349,19 @@ discoveries, dependency patches, blockers, and remaining work.
     supertrace sign;
   - added tests for scalar and fermion mode metadata, public API docstrings,
     and Jupyter repr hooks.
+- Completed the eighteenth implementation slice:
+  - added public `FluctuationSector` enum selectors for `all`, `heavy`, and
+    `light` fluctuation sectors;
+  - added public `FluctuationOperatorBlock` as a rectangular sector block of a
+    fluctuation operator matrix;
+  - taught `FluctuationOperator` to retain the `FluctuationMode` metadata used
+    to build its basis, so later pipeline stages can address matrix entries by
+    sector and mode;
+  - added `FluctuationOperator.mode_for(...)` and
+    `FluctuationOperator.block(...)`;
+  - added tests for heavy-light and light-heavy block extraction, all-sector
+    full-matrix blocks, invalid sector selectors, public API docstrings, and
+    Jupyter repr hooks.
 
 ## Backend/API Discoveries
 
@@ -453,6 +466,10 @@ discoveries, dependency patches, blockers, and remaining work.
   `s.Fermion` labels from all bosonic field types using Symbolica field-type
   data; full spin/multiplicity coefficients are still intentionally deferred
   until the degree-of-freedom metadata model is extended.
+- `FluctuationOperator` now keeps mode metadata and can return deterministic
+  heavy/light sector blocks. This is the first structural split needed for
+  later supertrace generation, where heavy-heavy, heavy-light, light-heavy, and
+  light-light blocks have distinct roles.
 
 ## Test Status
 
@@ -620,6 +637,17 @@ discoveries, dependency patches, blockers, and remaining work.
   metadata slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   fluctuation-mode metadata slice: 99 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the fluctuation-sector block slice: 16 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the fluctuation-sector
+  block slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  fluctuation-sector block slice: 102 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
 

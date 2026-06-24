@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import FieldMassKind, FluctuationStatistics, Theory, canonical_string, s
+from pychete import FieldMassKind, FluctuationSector, FluctuationStatistics, Theory, canonical_string, s
 
 from tests.conftest import assert_expr_equal
 
@@ -141,3 +141,44 @@ def test_fluctuation_basis_modes_carry_statistics_and_mass_metadata() -> None:
         canonical_string(s.Bar(fermion())),
         canonical_string(fermion()),
     }
+
+
+def test_fluctuation_operator_extracts_heavy_light_sector_blocks() -> None:
+    theory = Theory("fluctuation_sector_blocks")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    g = theory.define_coupling("g", self_conjugate=True)
+    lagrangian = -g() * heavy() * light() ** 2 / 2
+
+    operator = theory.fluctuation_operator(lagrangian)
+    heavy_light = operator.block(FluctuationSector.HEAVY, FluctuationSector.LIGHT)
+    light_heavy = operator.block("light", "heavy")
+
+    assert tuple(mode.field for mode in heavy_light.rows) == (heavy(),)
+    assert tuple(mode.field for mode in heavy_light.columns) == (light(),)
+    assert_expr_equal(heavy_light.entry(heavy, light), -g() * light())
+    assert_expr_equal(light_heavy.entry(light, heavy), -g() * light())
+    assert heavy_light.to_expression_map()
+
+
+def test_fluctuation_operator_all_sector_block_preserves_full_matrix() -> None:
+    theory = Theory("fluctuation_sector_all")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    lagrangian = heavy() ** 2 + light() ** 2
+
+    operator = theory.fluctuation_operator(lagrangian)
+    full = operator.block("all", "all")
+
+    assert full.rows == operator.modes
+    assert full.columns == operator.modes
+    assert full.matrix == operator.matrix
+
+
+def test_fluctuation_operator_rejects_unknown_sector_selector() -> None:
+    theory = Theory("fluctuation_bad_sector")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    operator = theory.fluctuation_operator(phi() ** 2)
+
+    with pytest.raises(ValueError, match="fluctuation sector"):
+        operator.block("bad", "heavy")
