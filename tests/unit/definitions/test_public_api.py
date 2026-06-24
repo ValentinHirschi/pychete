@@ -16,9 +16,11 @@ def test_lagrangian_manipulations_are_theory_methods_not_top_level_exports() -> 
     assert "derive_eom" not in pychete.__all__
     assert "match_tree" not in pychete.__all__
     assert "solve_heavy_scalar_eoms" not in pychete.__all__
+    assert "load_validation_fixture" not in pychete.__all__
     assert not hasattr(pychete, "derive_eom")
     assert not hasattr(pychete, "match_tree")
     assert not hasattr(pychete, "solve_heavy_scalar_eoms")
+    assert not hasattr(pychete, "load_validation_fixture")
 
     assert callable(pychete.Theory.derive_eom)
     assert callable(pychete.Theory.solve_heavy_scalar_eoms)
@@ -71,6 +73,11 @@ def test_public_api_methods_have_docstrings() -> None:
             "from_json_obj",
             "from_json",
             "read_json",
+        ],
+        pychete.MatchingResult: [
+            "expression",
+            "expression_names",
+            "validate",
         ],
     }
     missing = [

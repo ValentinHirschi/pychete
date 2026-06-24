@@ -8,7 +8,7 @@ import textwrap
 
 from symbolica import Expression, PrintMode
 
-from pychete import FieldMassKind, PycheteState, Theory, canonical_string, collect_indices, load_state, s
+from pychete import FieldMassKind, MatchingResult, PycheteState, Theory, canonical_string, collect_indices, load_state, s
 from pychete.matching import HeavyScalarSolution
 
 
@@ -258,6 +258,12 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
     lam = theory.coupling_handle("lambda")
     index_info = collect_indices(theory.lorentz_index("mu"))[0]
     solution = HeavyScalarSolution(field=phi.definition, orders={1: phi()})
+    matching_result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=lagrangian,
+        off_shell_eft_lagrangian=lagrangian,
+        on_shell_eft_lagrangian=lagrangian,
+    )
     state = PycheteState()
     state.add_theory(theory)
     state.add_expression("lagrangian", theory, lagrangian)
@@ -271,6 +277,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
         lam.definition,
         index_info,
         solution,
+        matching_result,
     )
 
     for obj in objects:

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from html import escape
 
 from symbolica import Expression, Replacement
@@ -15,6 +15,68 @@ from .expr import (
 from .functional import apply_cd, derive_eom
 from .symbols import display_string, latex_string, s
 from .theory import FieldDefinition, FieldVariation, Theory
+
+
+@dataclass(frozen=True)
+class MatchingResult:
+    """Structured output of a pychete matching calculation.
+
+    The result stores the major expression stages used by one-loop matching so
+    tests and notebooks can inspect individual supertraces, off-shell and
+    on-shell EFT Lagrangians, and final matching conditions without relying on
+    Matchete's Mathematica data structures.
+    """
+
+    theory: Theory
+    uv_lagrangian: Expression
+    off_shell_eft_lagrangian: Expression
+    on_shell_eft_lagrangian: Expression
+    matching_conditions: dict[str, Expression] = field(default_factory=dict)
+    fluctuation_operators: dict[str, Expression] = field(default_factory=dict)
+    supertraces: dict[str, Expression] = field(default_factory=dict)
+    metadata: dict[str, str | int | float | bool | None] = field(default_factory=dict)
+
+    def expression(self, name: str) -> Expression:
+        """Return a named expression stage from the matching result."""
+
+        if name == "uv_lagrangian":
+            return self.uv_lagrangian
+        if name == "off_shell_eft_lagrangian":
+            return self.off_shell_eft_lagrangian
+        if name == "on_shell_eft_lagrangian":
+            return self.on_shell_eft_lagrangian
+        for collection in (self.matching_conditions, self.fluctuation_operators, self.supertraces):
+            if name in collection:
+                return collection[name]
+        raise KeyError(f"Matching result has no expression {name!r}")
+
+    def expression_names(self) -> tuple[str, ...]:
+        """Return all named expression stages available on the result."""
+
+        return (
+            "uv_lagrangian",
+            "off_shell_eft_lagrangian",
+            "on_shell_eft_lagrangian",
+            *self.matching_conditions,
+            *self.fluctuation_operators,
+            *self.supertraces,
+        )
+
+    def validate(self) -> None:
+        """Validate every stored expression against the owning theory."""
+
+        for name in self.expression_names():
+            self.theory._validate_registered_expression(self.expression(name))
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{MatchingResult}}\left({self.theory.name},\ {len(self.supertraces)}\ \mathrm{{supertraces}}\right)$"
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>MatchingResult(theory={escape(self.theory.name)} "
+            f"supertraces={len(self.supertraces)} "
+            f"matching_conditions={len(self.matching_conditions)})</code>"
+        )
 
 
 @dataclass(frozen=True)

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .eft import operator_dimension, series_eft
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
-from .matching import HeavyScalarSolution
+from .matching import HeavyScalarSolution, MatchingResult
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import BuiltinIndexType, CouplingHandle, FieldHandle, FieldMassKind, FieldVariation, Theory
@@ -14,6 +14,7 @@ __all__ = [
     "FieldMassKind",
     "FieldVariation",
     "HeavyScalarSolution",
+    "MatchingResult",
     "PycheteState",
     "StateExpression",
     "SymbolDataKey",

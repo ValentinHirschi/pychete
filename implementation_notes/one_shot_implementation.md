@@ -132,6 +132,15 @@ discoveries, dependency patches, blockers, and remaining work.
     `VLF_toy_model`, `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`;
   - added development-only Mathematica helper script scaffolding for raw
     Matchete matching snapshots.
+- Completed the second implementation slice:
+  - added public `MatchingResult` as the structured carrier for UV Lagrangian,
+    fluctuation operators, individual supertraces, off-shell EFT Lagrangian,
+    on-shell EFT Lagrangian, matching conditions, and metadata;
+  - added validation fixture support for reconstructing `MatchingResult` from
+    committed JSON expression references;
+  - kept `load_validation_fixture` out of the package-root public API while
+    promoting `MatchingResult` as a public result object;
+  - added Jupyter repr coverage for `MatchingResult`.
 
 ## Backend/API Discoveries
 
@@ -143,6 +152,10 @@ discoveries, dependency patches, blockers, and remaining work.
 - Existing vakint APIs include `to_canonical`, `tensor_reduce`,
   `evaluate_integral`, and `evaluate`, which map directly onto the planned loop
   integral backend.
+- Rescanned the Symbolica Python stub sections for `Expression.match`,
+  `Expression.matches`, `Expression.evaluator`, and `Expression.evaluator_multiple`.
+  The numeric-probe validation layer should use these evaluator APIs rather than
+  Python substitution/evaluation.
 
 ## Test Status
 
@@ -153,6 +166,17 @@ discoveries, dependency patches, blockers, and remaining work.
 - `dependencies/.venv/bin/python -m pytest tests` passed: 58 passed, 1 skipped.
   The skip is the existing GammaLoop API import check because GammaLoop was not
   requested in the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed: 10 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the `MatchingResult`
+  slice: no issues found in 18 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  `MatchingResult` slice: 60 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
@@ -160,4 +184,6 @@ discoveries, dependency patches, blockers, and remaining work.
   integration models.
 - Convert raw Matchete snapshots into pychete-owned fixture JSON that pytest can
   consume without Mathematica.
+- Add the first real matching-result fixture asset using the `MatchingResult`
+  fixture schema.
 - Extend the theory metadata and matching engine toward one-loop matching.

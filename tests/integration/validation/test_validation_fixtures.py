@@ -6,6 +6,7 @@ from pathlib import Path
 import pytest
 
 from pychete.loaders import load_python_model
+from pychete.matching import MatchingResult
 from pychete.state import PycheteState
 from pychete.validation_fixtures import load_validation_fixture
 
@@ -26,6 +27,27 @@ def _fixture_obj_from_model(path: Path) -> dict[str, object]:
         },
         "state": state.to_json_obj(),
         "expressions": sorted(expressions),
+        "matching_results": {
+            "default": {
+                "theory": theory.name,
+                "uv_lagrangian": "lagrangian",
+                "off_shell_eft_lagrangian": "lagrangian",
+                "on_shell_eft_lagrangian": "lagrangian",
+                "matching_conditions": {
+                    "toy_condition": "lagrangian",
+                },
+                "fluctuation_operators": {
+                    "toy_operator": "lagrangian",
+                },
+                "supertraces": {
+                    "toy_supertrace": "lagrangian",
+                },
+                "metadata": {
+                    "loop_order": 1,
+                    "fixture": True,
+                },
+            },
+        },
     }
 
 
@@ -41,6 +63,19 @@ def test_validation_fixture_restores_theory_before_expressions(tmp_path: Path) -
     theory._validate_registered_expression(fixture.expression("lagrangian"))
 
 
+def test_validation_fixture_restores_structured_matching_result(tmp_path: Path) -> None:
+    fixture_path = tmp_path / "fixture.json"
+    fixture_path.write_text(json.dumps(_fixture_obj_from_model(Path("assets/models/VLF_toy_model.py"))), encoding="utf-8")
+
+    result = load_validation_fixture(fixture_path).matching_result()
+
+    assert isinstance(result, MatchingResult)
+    assert result.theory.name == "VLF_toy_model"
+    assert result.metadata["loop_order"] == 1
+    assert result.expression("toy_supertrace").format_plain() == result.uv_lagrangian.format_plain()
+    result.validate()
+
+
 def test_validation_fixture_rejects_missing_expression_reference(tmp_path: Path) -> None:
     obj = _fixture_obj_from_model(Path("assets/models/VLF_toy_model.py"))
     obj["expressions"] = ["lagrangian", "off_shell_eft_lagrangian"]
@@ -48,6 +83,20 @@ def test_validation_fixture_rejects_missing_expression_reference(tmp_path: Path)
     fixture_path.write_text(json.dumps(obj), encoding="utf-8")
 
     with pytest.raises(ValueError, match="missing expressions"):
+        load_validation_fixture(fixture_path)
+
+
+def test_validation_fixture_rejects_missing_matching_result_expression(tmp_path: Path) -> None:
+    obj = _fixture_obj_from_model(Path("assets/models/VLF_toy_model.py"))
+    matching_results = obj["matching_results"]
+    assert isinstance(matching_results, dict)
+    default = matching_results["default"]
+    assert isinstance(default, dict)
+    default["supertraces"] = {"broken": "missing_supertrace"}
+    fixture_path = tmp_path / "fixture.json"
+    fixture_path.write_text(json.dumps(obj), encoding="utf-8")
+
+    with pytest.raises(ValueError, match="missing expression"):
         load_validation_fixture(fixture_path)
 
 
