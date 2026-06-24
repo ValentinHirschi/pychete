@@ -720,9 +720,16 @@ discoveries, dependency patches, blockers, and remaining work.
 - With coefficient-list EFT truncation, the four committed default Matchete
   model fixtures now build the first incomplete one-loop
   `power_type_matching_preview(...)` without Mathematica. The preview is still
-  explicitly marked incomplete and only covers the first `heavy-heavy` kernel
-  at `max_trace_order=1`, but this moves the default target fixtures one stage
-  further along the actual pychete one-loop result surface.
+  explicitly marked incomplete, but this moves the default target fixtures one
+  stage further along the actual pychete one-loop result surface.
+- Added `ValidationFixture.one_loop_preview(...)` as the fixture-backed entry
+  point for building the current incomplete one-loop preview from committed
+  pychete assets. This keeps normal pytest Mathematica-independent while giving
+  future Matchete acceptance tests a stable path from fixture state to candidate
+  `MatchingResult`. The default target model fixtures now build
+  `power_type_matching_preview(...)` through this helper at
+  `max_trace_order=3`, covering eleven generated kernels and six cyclically
+  unique power-type contributions per model.
 
 ## Test Status
 
@@ -1071,6 +1078,17 @@ discoveries, dependency patches, blockers, and remaining work.
   coefficient-list-EFT-truncation slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   coefficient-list-EFT-truncation slice: 115 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py
+  tests/unit/eft/test_eft_counting.py
+  tests/integration/matching/test_fluctuation_operator.py`
+  passed after the fixture-one-loop-preview-helper slice: 35 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  fixture-one-loop-preview-helper slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  fixture-one-loop-preview-helper slice: 115 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
 

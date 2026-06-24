@@ -7,7 +7,7 @@ from typing import Any
 
 from symbolica import Expression
 
-from .matching import MatchingResult
+from .matching import MatchingResult, VakintIntegralStage
 from .state import PycheteState
 from .theory import Theory
 
@@ -57,6 +57,51 @@ class ValidationFixture:
             fluctuation_operators=_expression_map(self, spec.get("fluctuation_operators", {}), "fluctuation_operators"),
             supertraces=_expression_map(self, spec.get("supertraces", {}), "supertraces"),
             metadata=_metadata(spec.get("metadata", {})),
+        )
+
+    def one_loop_preview(
+        self,
+        *,
+        lagrangian: str = "lagrangian",
+        eft_order: int = 6,
+        max_trace_order: int = 2,
+        include_light_only: bool = False,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Build the current incomplete one-loop preview from fixture expressions."""
+
+        theory = self.theory()
+        setup = theory.one_loop_setup(
+            self.expression(lagrangian),
+            eft_order=eft_order,
+            max_trace_order=max_trace_order,
+            include_light_only=include_light_only,
+        )
+        result = setup.power_type_matching_preview(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
+        )
+        return MatchingResult(
+            theory=result.theory,
+            uv_lagrangian=result.uv_lagrangian,
+            off_shell_eft_lagrangian=result.off_shell_eft_lagrangian,
+            on_shell_eft_lagrangian=result.on_shell_eft_lagrangian,
+            matching_conditions=result.matching_conditions,
+            fluctuation_operators=result.fluctuation_operators,
+            supertraces=result.supertraces,
+            metadata={
+                **result.metadata,
+                "fixture": self.name,
+                "fixture_kind": self.kind,
+                "lagrangian_expression": lagrangian,
+            },
         )
 
     @classmethod

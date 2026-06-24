@@ -182,21 +182,19 @@ def test_committed_default_matching_fixtures_load_structured_results_without_mat
         result.validate()
 
 
-def test_default_model_fixtures_build_first_one_loop_preview_without_mathematica() -> None:
+def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica() -> None:
     for model in ("VLF_toy_model", "Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
         fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
-        theory = fixture.theory()
-        setup = theory.one_loop_setup(fixture.expression("lagrangian"), eft_order=6, max_trace_order=1)
-        preview = setup.power_type_matching_preview()
+        preview = fixture.one_loop_preview(max_trace_order=3)
 
-        assert setup.supertrace_kernel_count == 1
-        assert tuple(trace.name for trace in setup.block_traces) == ("heavy-heavy",)
-        assert setup.fluctuation_operator.modes
-        theory._validate_registered_expression(setup.block_traces[0].expression)
         assert preview.metadata["stage"] == "power_type_preview"
         assert preview.metadata["complete"] is False
-        assert preview.metadata["power_type_contribution_count"] == 1
-        assert len(preview.supertraces) == 6
+        assert preview.metadata["fixture"] == fixture.name
+        assert preview.metadata["fixture_kind"] == "model_definition"
+        assert preview.metadata["lagrangian_expression"] == "lagrangian"
+        assert preview.metadata["supertrace_kernel_count"] == 11
+        assert preview.metadata["power_type_contribution_count"] == 6
+        assert len(preview.supertraces) == 21
         preview.validate()
 
 
