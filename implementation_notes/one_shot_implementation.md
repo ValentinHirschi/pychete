@@ -159,6 +159,14 @@ discoveries, dependency patches, blockers, and remaining work.
     `Charges`, `Indices`, and `Chiral` field options;
   - updated the VLF toy model Python asset so the Python and supported
     Mathematica assets agree on U(1) charge metadata.
+- Completed the fifth implementation slice:
+  - added the first committed pychete-owned fixture asset at
+    `assets/validation/pychete/VLF_toy_model.model_fixture.json`;
+  - added pytest coverage that loads this committed asset without Mathematica
+    and compares it to the Python VLF model asset;
+  - fixed `Theory.from_json_obj` so the group registry is restored alongside
+    group symbols, which is required for `Theory.group_charge(...)` after
+    loading fixtures or checkpoints.
 
 ## Backend/API Discoveries
 
@@ -180,6 +188,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Matchete `DefineField` stores `Charges`, `Indices`, and `Chiral` as first-class
   field options. The pychete representation now persists the first simple slice
   of that metadata through Symbolica symbol data and JSON checkpoints.
+- The first committed fixture asset surfaced that restoring group symbols is not
+  enough: the Python `Theory.groups` registry must also be restored before later
+  code can build charges or inspect gauge-field metadata.
 
 ## Test Status
 
@@ -219,11 +230,22 @@ discoveries, dependency patches, blockers, and remaining work.
   metadata slice: 64 passed, 1 skipped. The skip is the existing GammaLoop API
   import check because GammaLoop was not requested in the current dependency
   manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py
+  tests/unit/definitions/test_theory_definitions.py` passed after the committed
+  fixture slice: 14 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the committed fixture
+  slice: no issues found in 19 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the committed
+  fixture slice: 65 passed, 1 skipped. The skip is the existing GammaLoop API
+  import check because GammaLoop was not requested in the current dependency
+  manifest.
 
 ## Remaining Work
 
 - Add committed validation fixture assets for the four default Matchete matching
-  integration models.
+  integration models. A model-definition fixture now exists for `VLF_toy_model`;
+  actual one-loop matching-result fixtures are still pending.
 - Convert raw Matchete snapshots into pychete-owned fixture JSON that pytest can
   consume without Mathematica.
 - Add the first real matching-result fixture asset using the `MatchingResult`

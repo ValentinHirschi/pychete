@@ -8,6 +8,7 @@ import pytest
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult
 from pychete.state import PycheteState
+from pychete.symbols import canonical_string
 from pychete.validation_fixtures import load_validation_fixture
 
 
@@ -61,6 +62,18 @@ def test_validation_fixture_restores_theory_before_expressions(tmp_path: Path) -
     assert theory.name == "VLF_toy_model"
     assert {"A", "Psi", "psi", "phi"} <= set(theory.fields)
     theory._validate_registered_expression(fixture.expression("lagrangian"))
+
+
+def test_committed_vlf_model_fixture_is_mathematica_independent() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    expected_theory, expected_expressions = load_python_model(Path("assets/models/VLF_toy_model.py"))
+
+    theory = fixture.theory()
+    assert fixture.kind == "model_definition"
+    assert fixture.source["matchete_runtime_required"] is False
+    assert theory.to_json_obj() == expected_theory.to_json_obj()
+    assert canonical_string(fixture.expression("lagrangian")) == canonical_string(expected_expressions["lagrangian"])
+    assert canonical_string(theory.fields["Psi"].charge_exprs[0]) == "VLF_toy_model::group_U1e(1)"
 
 
 def test_validation_fixture_restores_structured_matching_result(tmp_path: Path) -> None:

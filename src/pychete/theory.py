@@ -887,6 +887,15 @@ class Theory:
         for name, data in obj.get("index_types", {}).items():
             if name != BuiltinIndexType.LORENTZ.value:
                 theory.define_index_type(name, data.get("dimension"))
+        theory.groups = {
+            str(name): {
+                "name": str(data["name"]),
+                "type": str(data["type"]),
+                "coupling": str(data["coupling"]),
+                "field": str(data["field"]),
+            }
+            for name, data in obj.get("groups", {}).items()
+        }
         for name, data in obj.get("couplings", {}).items():
             theory.define_coupling(
                 name,

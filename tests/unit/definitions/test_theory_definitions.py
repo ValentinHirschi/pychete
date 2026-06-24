@@ -71,6 +71,8 @@ def test_field_symbol_data_stores_charges_and_chirality() -> None:
     restored_field = restored.field_handle("l")
     assert restored_field.definition.chirality_kind is FieldChirality.LEFT
     assert [canonical_string(charge_expr) for charge_expr in restored_field.definition.charge_exprs] == [canonical_string(charge)]
+    assert restored.groups == theory.groups
+    assert canonical_string(restored.group_charge("U1Y", S("qY"))) == canonical_string(charge)
 
 
 def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:

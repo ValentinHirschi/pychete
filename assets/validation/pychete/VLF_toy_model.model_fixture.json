@@ -1,0 +1,332 @@
+{
+  "expressions": [
+    "lagrangian"
+  ],
+  "kind": "model_definition",
+  "name": "VLF_toy_model_model_definition",
+  "schema_version": 1,
+  "source": {
+    "asset": "assets/models/VLF_toy_model.py",
+    "matchete_runtime_required": false,
+    "model": "VLF_toy_model"
+  },
+  "state": {
+    "active_theory": "VLF_toy_model",
+    "expressions": {
+      "lagrangian": {
+        "expression": "-pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List()))-pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::PR,pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List()))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::Gamma(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)),pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::Gamma(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz))))+pychete::Bar(-pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::PR,pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List())))-1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2+1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)))^2-1/4*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz),pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::List(),pychete::List())^2",
+        "theory": "VLF_toy_model"
+      }
+    },
+    "schema_version": 3,
+    "theories": {
+      "VLF_toy_model": {
+        "couplings": {
+          "M": {
+            "eft_order": 0,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_M",
+            "name": "M",
+            "self_conjugate": true
+          },
+          "e": {
+            "eft_order": 0,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_e",
+            "name": "e",
+            "self_conjugate": true
+          },
+          "m": {
+            "eft_order": 1,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_m",
+            "name": "m",
+            "self_conjugate": true
+          },
+          "y": {
+            "eft_order": 0,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_y",
+            "name": "y",
+            "self_conjugate": false
+          }
+        },
+        "fields": {
+          "A": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_A",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "A",
+            "self_conjugate": true,
+            "type": "pychete::Vector(VLF_toy_model::group_U1e)"
+          },
+          "Psi": {
+            "charges": [
+              "VLF_toy_model::group_U1e(1)"
+            ],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_Psi",
+            "mass_indices": [],
+            "mass_kind": "heavy",
+            "mass_label": "VLF_toy_model::coupling_M",
+            "name": "Psi",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "phi": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_phi",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": "VLF_toy_model::coupling_m",
+            "name": "phi",
+            "self_conjugate": true,
+            "type": "pychete::Scalar"
+          },
+          "psi": {
+            "charges": [
+              "VLF_toy_model::group_U1e(1)"
+            ],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_psi",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "psi",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          }
+        },
+        "groups": {
+          "U1e": {
+            "coupling": "e",
+            "field": "A",
+            "name": "U1e",
+            "type": "pychete::U1"
+          }
+        },
+        "index_types": {
+          "Lorentz": {
+            "dimension": null,
+            "name": "Lorentz",
+            "symbol": "pychete::Lorentz"
+          }
+        },
+        "schema_version": 2,
+        "symbols": [
+          {
+            "data": {
+              "group_coupling": "e",
+              "group_field": "A",
+              "group_type": {
+                "__pychete_expression__": "pychete::U1"
+              },
+              "label": "U1e",
+              "name": "U1e",
+              "role": "group",
+              "theory": "VLF_toy_model"
+            },
+            "name": "U1e",
+            "role": "group",
+            "symbol": "VLF_toy_model::group_U1e",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "eft_order": 0,
+              "indices": [],
+              "label": "M",
+              "name": "M",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "theory": "VLF_toy_model"
+            },
+            "name": "M",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_M",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "eft_order": 0,
+              "indices": [],
+              "label": "e",
+              "name": "e",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "theory": "VLF_toy_model"
+            },
+            "name": "e",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_e",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "eft_order": 1,
+              "indices": [],
+              "label": "m",
+              "name": "m",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "theory": "VLF_toy_model"
+            },
+            "name": "m",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_m",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "eft_order": 0,
+              "indices": [],
+              "label": "y",
+              "name": "y",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "theory": "VLF_toy_model"
+            },
+            "name": "y",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_y",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(VLF_toy_model::group_U1e)"
+              },
+              "indices": [],
+              "label": "A",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "A",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "VLF_toy_model"
+            },
+            "name": "A",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_A",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "VLF_toy_model::group_U1e(1)"
+                }
+              ],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [],
+              "label": "Psi",
+              "mass_indices": [],
+              "mass_kind": "heavy",
+              "mass_label": {
+                "__pychete_expression__": "VLF_toy_model::coupling_M"
+              },
+              "name": "Psi",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "VLF_toy_model"
+            },
+            "name": "Psi",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_Psi",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Scalar"
+              },
+              "indices": [],
+              "label": "phi",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "mass_label": {
+                "__pychete_expression__": "VLF_toy_model::coupling_m"
+              },
+              "name": "phi",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "VLF_toy_model"
+            },
+            "name": "phi",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_phi",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "VLF_toy_model::group_U1e(1)"
+                }
+              ],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [],
+              "label": "psi",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "psi",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "VLF_toy_model"
+            },
+            "name": "psi",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_psi",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          }
+        ],
+        "theory_name": "VLF_toy_model"
+      }
+    }
+  }
+}
