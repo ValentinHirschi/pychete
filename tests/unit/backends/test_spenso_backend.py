@@ -147,6 +147,34 @@ def test_spenso_backend_can_build_symbolic_cg_tensor_library() -> None:
     assert component.get_symbol_data(SymbolDataKey.CG_TENSOR.value) == theory.cg_tensor_handle("eps_SU2F").label
 
 
+def test_spenso_backend_builds_builtin_delta_and_epsilon_components() -> None:
+    theory = Theory("spenso_bridge_builtin_components")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+
+    assert spenso.builtin_cg_tensor_components(theory, "eps_SU2F") == (0, 1, -1, 0)
+    assert spenso.builtin_cg_tensor_components(theory, "del_SU2F_fund") == (1, 0, 0, 1)
+    assert spenso.builtin_cg_tensor_components(theory, "gen_SU2F_fund") is None
+
+
+def test_spenso_backend_registers_supported_builtin_components_only() -> None:
+    theory = Theory("spenso_bridge_builtin_library")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+
+    library = spenso.cg_tensor_library_to_spenso(theory, builtin_components=True)
+    eps_structure = spenso.cg_tensor_structure_to_spenso(theory, "eps_SU2F")
+    del_structure = spenso.cg_tensor_structure_to_spenso(theory, "del_SU2F_fund")
+    gen_structure = spenso.cg_tensor_structure_to_spenso(theory, "gen_SU2F_fund")
+
+    assert type(library[eps_structure.get_name().to_expression()]).__name__ == "TensorStructure"
+    assert type(library[del_structure.get_name().to_expression()]).__name__ == "TensorStructure"
+    try:
+        library[gen_structure.get_name().to_expression()]
+    except RuntimeError as exc:
+        assert "invalid key" in str(exc).lower() or "not found" in str(exc).lower() or "missing" in str(exc).lower()
+    else:
+        raise AssertionError("unsupported generator tensor was registered as a built-in component tensor")
+
+
 def test_spenso_backend_rejects_cg_library_registration_without_components() -> None:
     theory = Theory("spenso_bridge_library_errors")
     theory.define_global_group("SU2F", s.SU(Expression.num(2)))
@@ -187,6 +215,32 @@ def test_spenso_backend_evaluates_pychete_tensor_network_with_registered_cg_libr
         theory,
         eps(S("i"), S("j")),
         cg_components_by_name={"eps_SU2F": tuple(S(f"eps{i}") for i in range(4))},
+    )
+
+    assert isinstance(network, FakeNetwork)
+    assert type(calls[0]).__name__ == "TensorLibrary"
+
+
+def test_spenso_backend_evaluates_pychete_tensor_network_with_builtin_cg_library(monkeypatch) -> None:
+    theory = Theory("spenso_bridge_eval_builtin_library")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    eps = theory.cg_tensor_handle("eps_SU2F")
+    calls: list[object] = []
+
+    class FakeNetwork:
+        def __init__(self, lowered: Expression) -> None:
+            self.lowered = lowered
+
+    def fake_evaluate_tensor_network(lowered: Expression, **kwargs) -> FakeNetwork:
+        calls.append(kwargs["library"])
+        return FakeNetwork(lowered)
+
+    monkeypatch.setattr(spenso, "evaluate_tensor_network", fake_evaluate_tensor_network)
+
+    network = spenso.evaluate_pychete_tensor_network(
+        theory,
+        eps(S("i"), S("j")),
+        builtin_cg_components=True,
     )
 
     assert isinstance(network, FakeNetwork)

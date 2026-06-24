@@ -719,7 +719,7 @@ def test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso(monke
     monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
     monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
 
-    evaluated = trace.evaluate_tensor_network(symbolic_cg_components=True)
+    evaluated = trace.evaluate_tensor_network(builtin_cg_components=True)
 
     assert len(calls) == 1
     assert canonical_string(calls[0][0]).startswith("spenso_python::pychete_supertrace_spenso_cg_cg_eps_SU2F(")

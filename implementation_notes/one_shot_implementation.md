@@ -667,6 +667,22 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests for native library lookup, symbolic component
     generation, wrong-sized component rejection, and one-loop trace evaluation
     with a generated spenso CG library.
+- Completed the twenty-ninth implementation slice:
+  - added `pychete.backends.spenso.builtin_cg_tensor_components(...)` for the
+    finite built-in invariant tensors that pychete can safely construct today:
+    `builtin:del` identity tensors and `builtin:eps` Levi-Civita tensors;
+  - extended CG tensor library registration with `builtin_components=True`,
+    registering only supported built-ins and deliberately leaving generator,
+    antisymmetric structure, and symmetric structure tensors unregistered until
+    they are supplied by spenso/idenso-native support or explicit component
+    data;
+  - threaded `builtin_cg_components` through
+    `evaluate_pychete_tensor_network(...)`,
+    `SupertraceBlockTrace.evaluate_tensor_network(...)`, and
+    `OneLoopSetup.evaluate_tensor_networks(...)`;
+  - added focused tests for SU(2) epsilon components, fundamental delta
+    components, selective built-in registration, and one-loop trace evaluation
+    through a built-in spenso CG tensor library.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -804,6 +820,12 @@ discoveries, dependency patches, blockers, and remaining work.
   creates an initially zero sparse tensor, so pychete must not use it as an
   unknown-component placeholder. Dense tensors with explicit or generated
   symbolic entries are the safe formal registration path for now.
+- For built-in CG components, `del[...]` and `eps[...]` are finite component
+  tensors that can be constructed deterministically from representation
+  dimensions and handed to spenso as dense `LibraryTensor` objects. Generator
+  and structure-constant tensors are not constructed locally in Python in this
+  slice; they still need idenso/spenso-native support or explicit component
+  input.
 
 ## Test Status
 
@@ -1420,6 +1442,18 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the spenso CG library registration slice:
   138 passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/backends/test_spenso_backend.py
+  tests/integration/matching/test_fluctuation_operator.py::test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_routes_generated_kernels_through_spenso
+  -q'` passed after the built-in delta/epsilon CG component slice: 17 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the built-in delta/epsilon CG component slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the built-in delta/epsilon CG component
+  slice: 141 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1433,7 +1467,7 @@ discoveries, dependency patches, blockers, and remaining work.
   real/complex counting, and later model-specific SMEFT basis classifications.
 - Extend the new spenso metadata bridge from native `Representation`,
   `TensorStructure`, `TensorIndices`, and expression-wide CG replacement into
-  real component data for built-in invariant tensors, contractions,
+  real component data for generators and structure tensors, contractions,
   simplifications, and invariant-tensor construction, using idenso where
   gamma/colour/index algebra is the right backend.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop

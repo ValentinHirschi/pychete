@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping, Sequence
 from functools import lru_cache
+from itertools import permutations
 from typing import Any
 
 from symbolica import Expression, Replacement
@@ -92,6 +93,50 @@ def indexed_cg_tensor_to_spenso(theory: Theory, expr: Expression) -> Any:
     return structure.index(*(args(expr[1])))
 
 
+def _cg_tensor_dimensions(theory: Theory, definition: CGTensorDefinition) -> tuple[int, ...]:
+    dimensions = tuple(theory.representation_dimension(representation) for representation in definition.representation_exprs)
+    if any(dimension is None for dimension in dimensions):
+        raise ValueError(f"CG tensor {definition.name!r} has representation without dimension metadata")
+    return tuple(int(dimension) for dimension in dimensions if dimension is not None)
+
+
+def _permutation_sign(values: tuple[int, ...]) -> int:
+    inversions = sum(1 for i, left in enumerate(values) for right in values[i + 1 :] if left > right)
+    return -1 if inversions % 2 else 1
+
+
+def _row_major_index(values: tuple[int, ...], dimension: int) -> int:
+    index = 0
+    for value in values:
+        index = index * dimension + value
+    return index
+
+
+def builtin_cg_tensor_components(
+    theory: Theory,
+    cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle,
+) -> tuple[int, ...] | None:
+    """Return finite component data for supported built-in CG tensors."""
+
+    definition = _cg_tensor_definition(theory, cg_tensor)
+    source = definition.source_text
+    dimensions = _cg_tensor_dimensions(theory, definition)
+    if source == "builtin:del":
+        if len(dimensions) != 2 or dimensions[0] != dimensions[1]:
+            raise ValueError(f"Delta CG tensor {definition.name!r} must have two equal dimensions")
+        dimension = dimensions[0]
+        return tuple(1 if i == j else 0 for i in range(dimension) for j in range(dimension))
+    if source == "builtin:eps":
+        if len(set(dimensions)) != 1 or len(dimensions) != dimensions[0]:
+            raise ValueError(f"Epsilon CG tensor {definition.name!r} must have rank equal to its common dimension")
+        dimension = dimensions[0]
+        components = [0 for _ in range(dimension**dimension)]
+        for values in permutations(range(dimension)):
+            components[_row_major_index(values, dimension)] = _permutation_sign(values)
+        return tuple(components)
+    return None
+
+
 def _symbolic_cg_components(theory: Theory, definition: CGTensorDefinition, count: int) -> tuple[Expression, ...]:
     return tuple(
         theory.symbol(
@@ -113,6 +158,7 @@ def cg_tensor_library_tensor_to_spenso(
     cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle,
     *,
     components: Sequence[TensorComponent] | None = None,
+    builtin_components: bool = False,
     symbolic_components: bool = False,
 ) -> Any:
     """Create a native spenso ``LibraryTensor`` for a registered CG tensor."""
@@ -122,12 +168,18 @@ def cg_tensor_library_tensor_to_spenso(
     if components is not None and symbolic_components:
         raise ValueError("Pass either explicit components or symbolic_components=True, not both")
     if components is None:
-        if not symbolic_components:
+        if builtin_components:
+            components = builtin_cg_tensor_components(theory, definition)
+        if components is not None:
+            component_values: Sequence[TensorComponent] = tuple(components)
+        elif not symbolic_components:
             raise ValueError(
                 "CG tensor library registration requires explicit components; "
-                "pass symbolic_components=True to create formal component symbols"
+                "pass builtin_components=True for supported built-ins or "
+                "symbolic_components=True to create formal component symbols"
             )
-        component_values: Sequence[TensorComponent] = _symbolic_cg_components(theory, definition, len(structure))
+        else:
+            component_values = _symbolic_cg_components(theory, definition, len(structure))
     else:
         component_values = tuple(components)
     if len(component_values) != len(structure):
@@ -143,6 +195,7 @@ def register_cg_tensor_in_spenso_library(
     *,
     library: Any | None = None,
     components: Sequence[TensorComponent] | None = None,
+    builtin_components: bool = False,
     symbolic_components: bool = False,
 ) -> Any:
     """Register one pychete CG tensor in a native spenso ``TensorLibrary``."""
@@ -153,6 +206,7 @@ def register_cg_tensor_in_spenso_library(
             theory,
             cg_tensor,
             components=components,
+            builtin_components=builtin_components,
             symbolic_components=symbolic_components,
         )
     )
@@ -164,13 +218,15 @@ def cg_tensor_library_to_spenso(
     *,
     library: Any | None = None,
     components_by_name: Mapping[str, Sequence[TensorComponent]] | None = None,
+    builtin_components: bool = False,
     symbolic_components: bool = False,
 ) -> Any:
     """Register pychete CG tensors in a native spenso ``TensorLibrary``."""
 
-    if components_by_name is None and not symbolic_components:
+    if components_by_name is None and not builtin_components and not symbolic_components:
         raise ValueError(
-            "CG tensor library construction requires components_by_name or symbolic_components=True"
+            "CG tensor library construction requires components_by_name, "
+            "builtin_components=True, or symbolic_components=True"
         )
     tensor_library = empty_tensor_library() if library is None else library
     explicit_components = {} if components_by_name is None else dict(components_by_name)
@@ -179,6 +235,8 @@ def cg_tensor_library_to_spenso(
         raise KeyError(f"Unknown CG tensor component data for {unknown}")
     for name in sorted(theory.cg_tensors):
         components = explicit_components.get(name)
+        if components is None and builtin_components:
+            components = builtin_cg_tensor_components(theory, name)
         if components is None and not symbolic_components:
             continue
         register_cg_tensor_in_spenso_library(
@@ -186,6 +244,7 @@ def cg_tensor_library_to_spenso(
             name,
             library=tensor_library,
             components=components,
+            builtin_components=False,
             symbolic_components=components is None,
         )
     return tensor_library
@@ -296,6 +355,7 @@ def evaluate_pychete_tensor_network(
     *,
     library: Any | None = None,
     cg_components_by_name: Mapping[str, Sequence[TensorComponent]] | None = None,
+    builtin_cg_components: bool = False,
     symbolic_cg_components: bool = False,
     function_library: Any | None = None,
     n_steps: int | None = None,
@@ -303,11 +363,12 @@ def evaluate_pychete_tensor_network(
 ) -> Any:
     """Lower pychete CG tensors and execute a native spenso tensor network."""
 
-    if cg_components_by_name is not None or symbolic_cg_components:
+    if cg_components_by_name is not None or builtin_cg_components or symbolic_cg_components:
         library = cg_tensor_library_to_spenso(
             theory,
             library=library,
             components_by_name=cg_components_by_name,
+            builtin_components=builtin_cg_components,
             symbolic_components=symbolic_cg_components,
         )
     return evaluate_tensor_network(
@@ -320,6 +381,7 @@ def evaluate_pychete_tensor_network(
 
 
 __all__ = [
+    "builtin_cg_tensor_components",
     "cg_tensor_library_tensor_to_spenso",
     "cg_tensor_library_to_spenso",
     "cg_tensor_structure_to_spenso",

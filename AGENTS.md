@@ -151,7 +151,12 @@ Use `pychete.backends.spenso.cg_tensor_library_tensor_to_spenso(...)`,
 `pychete.backends.spenso.cg_tensor_library_to_spenso(...)` when registering CG
 tensors in native spenso libraries. Do not register empty sparse CG tensors as
 placeholders: provide explicit component data, or opt into generated symbolic
-components when a formal component-level tensor library is intended.
+components when a formal component-level tensor library is intended. For
+supported built-in tensors, pass `builtin_components=True`; currently this is
+only valid for finite `del[...]` identity tensors and `eps[...]` Levi-Civita
+tensors. Do not invent component arrays for generators or structure constants;
+use spenso/idenso native support or add a documented backend patch/adapter when
+those components are needed.
 Built-in Matchete CG labels such as `gen[group[rep]]`, `eps[group]`,
 `fStruct[group]`, `dSym[group]`, and `del[group[rep]]` must resolve to the
 auto-registered theory-owned CG tensor labels, not to generic external
