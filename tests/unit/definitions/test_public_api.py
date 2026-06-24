@@ -24,6 +24,7 @@ def test_lagrangian_manipulations_are_theory_methods_not_top_level_exports() -> 
 
     assert callable(pychete.Theory.derive_eom)
     assert callable(pychete.Theory.solve_heavy_scalar_eoms)
+    assert callable(pychete.Theory.one_loop_setup)
     assert callable(pychete.Theory.match)
 
 
@@ -57,6 +58,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "solve_heavy_scalar_eoms",
             "fluctuation_basis",
             "fluctuation_operator",
+            "one_loop_setup",
             "match",
             "to_json_obj",
             "to_json",
@@ -85,6 +87,12 @@ def test_public_api_methods_have_docstrings() -> None:
         ],
         pychete.MatchingResultComparison: [
             "assert_equal",
+        ],
+        pychete.OneLoopSetup: [
+            "max_trace_order",
+            "supertrace_expression_map",
+            "supertrace_kernel_count",
+            "to_expression_map",
         ],
         pychete.FluctuationOperator: [
             "block",

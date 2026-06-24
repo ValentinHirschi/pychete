@@ -273,3 +273,34 @@ def test_supertrace_plan_generates_closed_block_traces_by_order() -> None:
 
     with pytest.raises(ValueError, match="at least 1"):
         plan.closed_block_traces(0)
+
+
+def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> None:
+    theory = Theory("one_loop_setup")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = heavy() ** 2 + light() ** 2 - y() * heavy() * light() ** 2 / 2
+
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    trace_names = tuple(trace.name for trace in setup.block_traces)
+    trace_map = setup.supertrace_expression_map()
+
+    assert setup.theory is theory
+    assert setup.uv_lagrangian == lagrangian
+    assert setup.eft_order == 6
+    assert setup.max_trace_order == 2
+    assert setup.supertrace_kernel_count == 4
+    assert trace_names == (
+        "heavy-heavy",
+        "heavy-heavy-heavy",
+        "heavy-light-heavy",
+        "light-heavy-light",
+    )
+    assert setup.fluctuation_operator.basis == (heavy(), light())
+    assert setup.supertrace_plan.heavy_mode_count == 1
+    assert_expr_equal(trace_map["supertrace_kernel[heavy-light-heavy]"], y() ** 2 * light() ** 2)
+    assert setup.to_expression_map()
+
+    with pytest.raises(ValueError, match="max_trace_order"):
+        theory.one_loop_setup(lagrangian, max_trace_order=0)

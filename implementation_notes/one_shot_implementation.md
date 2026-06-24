@@ -404,6 +404,23 @@ discoveries, dependency patches, blockers, and remaining work.
     matrix product to the Symbolica Matrix path from the previous slice;
   - added tests for order-one and order-two closed paths, the light-only toggle,
     generated kernel expressions, order validation, and public API docstrings.
+- Completed the twenty-second implementation slice:
+  - added public `OneLoopSetup` as the current one-loop pipeline carrier before
+    propagator expansion and loop integration;
+  - added `Theory.one_loop_setup(...)`, which validates the UV Lagrangian,
+    extracts the Symbolica-backed fluctuation operator, builds the supertrace
+    plan, and generates closed block-trace kernels up to a requested order;
+  - kept `Theory.match(..., loop_order=1)` unchanged and still failing loudly:
+    the new setup API exposes real prepared inputs without returning a fake
+    completed `MatchingResult`;
+  - added deterministic expression-map helpers for setup outputs and generated
+    supertrace kernels so future matching-result stages and validation fixtures
+    can consume the same names;
+  - exported `OneLoopSetup` through the public API and added Jupyter-friendly
+    repr hooks;
+  - added tests for one-loop setup construction, generated kernel names and
+    expressions, expression-map export, invalid trace-order validation, public
+    API docstrings, and Jupyter repr coverage.
 
 ## Backend/API Discoveries
 
@@ -534,6 +551,11 @@ discoveries, dependency patches, blockers, and remaining work.
   native Symbolica Matrix multiplication, and future slices still need to add
   propagator insertion ordering, EFT truncation, tensor reduction, and vakint
   integral evaluation.
+- `OneLoopSetup` is now the public way to inspect the current real one-loop
+  pipeline inputs without pretending matching is complete. It connects the
+  existing Symbolica-backed Hessian extraction, heavy/light block plan, and
+  closed block-kernel generation into one structured object while leaving
+  `Theory.match(..., loop_order=1)` reserved for the final end-to-end engine.
 
 ## Test Status
 
@@ -744,6 +766,17 @@ discoveries, dependency patches, blockers, and remaining work.
   closed-supertrace-path slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   closed-supertrace-path slice: 106 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the one-loop-setup slice: 21 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the one-loop-setup
+  slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  one-loop-setup slice: 107 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
 

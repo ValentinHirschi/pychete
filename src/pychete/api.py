@@ -14,6 +14,7 @@ from .matching import (
     MatchingResult,
     MatchingResultComparison,
     OneLoopMatchingNotImplementedError,
+    OneLoopSetup,
     SupertraceBlockTrace,
     SupertracePlan,
 )
@@ -41,6 +42,7 @@ __all__ = [
     "MatchingResultComparison",
     "NumericProbeResult",
     "OneLoopMatchingNotImplementedError",
+    "OneLoopSetup",
     "PycheteState",
     "StateExpression",
     "SupertraceBlockTrace",

@@ -325,6 +325,59 @@ class SupertracePlan:
 
 
 @dataclass(frozen=True)
+class OneLoopSetup:
+    """Prepared one-loop matching inputs before propagator expansion."""
+
+    theory: Theory
+    uv_lagrangian: Expression
+    eft_order: int
+    fluctuation_operator: FluctuationOperator
+    supertrace_plan: SupertracePlan
+    block_traces: tuple[SupertraceBlockTrace, ...]
+
+    @property
+    def max_trace_order(self) -> int:
+        """Largest generated block-trace order."""
+
+        if not self.block_traces:
+            return 0
+        return max(trace.order for trace in self.block_traces)
+
+    @property
+    def supertrace_kernel_count(self) -> int:
+        """Number of generated supertrace block kernels."""
+
+        return len(self.block_traces)
+
+    def supertrace_expression_map(self, *, prefix: str = "supertrace_kernel") -> dict[str, Expression]:
+        """Return deterministic named expressions for generated trace kernels."""
+
+        entries: dict[str, Expression] = {}
+        for trace in self.block_traces:
+            entries.update(trace.to_expression_map(prefix=prefix))
+        return entries
+
+    def to_expression_map(self, *, prefix: str = "one_loop_setup") -> dict[str, Expression]:
+        """Return deterministic expressions produced by this setup stage."""
+
+        entries = {
+            f"{prefix}[uv_lagrangian]": self.uv_lagrangian,
+            **self.fluctuation_operator.to_expression_map(prefix=f"{prefix}.fluctuation_operator"),
+            **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
+        }
+        return entries
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{OneLoopSetup}}\left({self.theory.name},\ {self.supertrace_kernel_count}\right)$"
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>OneLoopSetup(theory={escape(self.theory.name)} "
+            f"kernels={self.supertrace_kernel_count} max_order={self.max_trace_order})</code>"
+        )
+
+
+@dataclass(frozen=True)
 class FluctuationOperator:
     """Quadratic fluctuation operator extracted from a Lagrangian."""
 
@@ -642,6 +695,36 @@ def fluctuation_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasi
     theory._validate_registered_expression(lagrangian)
     fields = _discover_fluctuation_basis(lagrangian)
     return FluctuationBasis(theory=theory, modes=tuple(_fluctuation_mode(theory, field) for field in fields))
+
+
+def one_loop_setup(
+    theory: Theory,
+    lagrangian: Expression,
+    *,
+    eft_order: int = 6,
+    max_trace_order: int = 2,
+    include_light_only: bool = False,
+) -> OneLoopSetup:
+    """Prepare the current native-backed one-loop matching input stages."""
+
+    if max_trace_order < 1:
+        raise ValueError("max_trace_order must be at least 1")
+    theory._validate_registered_expression(lagrangian)
+    operator = fluctuation_operator(theory, lagrangian)
+    plan = operator.supertrace_plan()
+    block_traces = tuple(
+        trace
+        for order in range(1, max_trace_order + 1)
+        for trace in plan.closed_block_traces(order, include_light_only=include_light_only)
+    )
+    return OneLoopSetup(
+        theory=theory,
+        uv_lagrangian=lagrangian,
+        eft_order=eft_order,
+        fluctuation_operator=operator,
+        supertrace_plan=plan,
+        block_traces=block_traces,
+    )
 
 
 def _optional_expression(result: MatchingResult, name: str) -> Expression | None:

@@ -13,7 +13,14 @@ from .expr import is_head, list_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
-    from .matching import FluctuationBasis, FluctuationBasisItem, FluctuationOperator, HeavyScalarSolution, MatchingResult
+    from .matching import (
+        FluctuationBasis,
+        FluctuationBasisItem,
+        FluctuationOperator,
+        HeavyScalarSolution,
+        MatchingResult,
+        OneLoopSetup,
+    )
 
 
 class FieldMassKind(StrEnum):
@@ -995,6 +1002,26 @@ class Theory:
         from .matching import fluctuation_basis
 
         return fluctuation_basis(self, lagrangian)
+
+    def one_loop_setup(
+        self,
+        lagrangian: Expression,
+        *,
+        eft_order: int = 6,
+        max_trace_order: int = 2,
+        include_light_only: bool = False,
+    ) -> OneLoopSetup:
+        """Prepare native-backed one-loop matching inputs without evaluating loops."""
+
+        from .matching import one_loop_setup
+
+        return one_loop_setup(
+            self,
+            lagrangian,
+            eft_order=eft_order,
+            max_trace_order=max_trace_order,
+            include_light_only=include_light_only,
+        )
 
     def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int = 0) -> Expression | MatchingResult:
         """Match a Lagrangian through the requested loop order.
