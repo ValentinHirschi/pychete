@@ -135,6 +135,14 @@ def test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
         operator.propagator_denominator_entry(phi, barred_phi),
         s.PropagatorDenominator(s.LoopMomentumSquared, mass**2),
     )
+    assert_expr_equal(
+        operator.propagator_denominator_for_mode(barred_phi),
+        s.PropagatorDenominator(s.LoopMomentumSquared, mass**2),
+    )
+    assert_expr_equal(
+        operator.propagator_denominator_for_mode(phi),
+        s.PropagatorDenominator(s.LoopMomentumSquared, mass**2),
+    )
 
 
 def test_fluctuation_operator_denominator_extraction_rejects_interaction_masses() -> None:
@@ -148,6 +156,10 @@ def test_fluctuation_operator_denominator_extraction_rejects_interaction_masses(
 
     assert_expr_equal(operator.momentum_entry(phi, phi), s.LoopMomentumSquared - y() * heavy())
     assert operator.propagator_denominator_entry(phi, phi) is None
+    assert_expr_equal(
+        operator.propagator_denominator_for_mode(phi),
+        s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(0)),
+    )
     assert_expr_equal(
         operator.propagator_denominator_entry(phi, phi, require_registered_mass=False),
         s.PropagatorDenominator(s.LoopMomentumSquared, y() * heavy()),
@@ -782,6 +794,41 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert any(key.startswith("one_loop_setup.vakint_integral[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.power_type_supertrace[") for key in setup.to_expression_map())
     assert any(key == "one_loop_setup[power_type_vakint_integral_sum]" for key in setup.to_expression_map())
+
+
+def test_one_loop_setup_builds_operator_derived_propagator_insertions() -> None:
+    theory = Theory("one_loop_setup_operator_denominators")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    trace = next(trace for trace in setup.block_traces if trace.name == "heavy-light-heavy")
+    heavy_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)
+    light_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2)
+    expected_chain = ((heavy_denominator,), (light_denominator,))
+    expected_mass_chain = ((heavy_mass**2,), (light_mass**2,))
+    expected_kernel = s.SupertraceKernel(trace.expression, s.List(s.List(heavy_denominator), s.List(light_denominator)))
+    expected_vakint = vakint_backend.one_loop_vacuum_integral(trace.expression, (heavy_mass**2, light_mass**2))
+
+    assert setup.operator_propagator_denominator_chain(trace) == expected_chain
+    assert setup.operator_propagator_mass_squared_chain("heavy-light-heavy") == expected_mass_chain
+    assert_expr_equal(setup.operator_propagator_expression(trace), expected_kernel)
+    assert_expr_equal(setup.operator_vakint_integral_expression("heavy-light-heavy"), expected_vakint)
+    operator_decorated = setup.supertrace_operator_propagator_expression_map(skip_unrecognized=False)
+    operator_integrals = setup.operator_vakint_integral_expression_map(skip_unrecognized=False)
+    assert_expr_equal(
+        operator_decorated["supertrace_operator_propagator_kernel[heavy-light-heavy]"],
+        expected_kernel,
+    )
+    assert_expr_equal(operator_integrals["operator_vakint_integral[heavy-light-heavy]"], expected_vakint)
+    setup_map = setup.to_expression_map()
+    assert any(key.startswith("one_loop_setup.supertrace_operator_propagator_kernel[") for key in setup_map)
+    assert any(key.startswith("one_loop_setup.operator_vakint_integral[") for key in setup_map)
 
 
 def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients() -> None:

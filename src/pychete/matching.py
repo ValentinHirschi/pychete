@@ -816,6 +816,147 @@ class OneLoopSetup:
             for trace in self.block_traces
         }
 
+    def operator_propagator_denominator_chain(
+        self,
+        trace: SupertraceBlockTrace | str,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+        require_registered_mass: bool = True,
+    ) -> tuple[tuple[Expression, ...], ...]:
+        """Return inverse-operator denominators aligned with one trace path."""
+
+        selected_trace = self._trace(trace)
+        chain: list[tuple[Expression, ...]] = []
+        for block in selected_trace.blocks:
+            denominators: list[Expression] = []
+            for mode in block.rows:
+                if not include_light and mode.is_light:
+                    continue
+                denominator = self.fluctuation_operator.propagator_denominator_for_mode(
+                    mode.field,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+                if denominator is None:
+                    raise ValueError(
+                        "Could not recognize a free propagator denominator for "
+                        f"{canonical_string(mode.field)} in trace {selected_trace.name!r}"
+                    )
+                denominators.append(denominator)
+            chain.append(tuple(denominators))
+        return tuple(chain)
+
+    def operator_propagator_mass_squared_chain(
+        self,
+        trace: SupertraceBlockTrace | str,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+        require_registered_mass: bool = True,
+    ) -> tuple[tuple[Expression, ...], ...]:
+        """Return mass-squared slots extracted from inverse-operator denominators."""
+
+        return tuple(
+            tuple(_propagator_denominator_mass_squared(denominator) for denominator in slot)
+            for slot in self.operator_propagator_denominator_chain(
+                trace,
+                loop_momentum_squared=loop_momentum_squared,
+                include_light=include_light,
+                require_registered_mass=require_registered_mass,
+            )
+        )
+
+    def operator_propagator_expression(
+        self,
+        trace: SupertraceBlockTrace | str,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+        require_registered_mass: bool = True,
+    ) -> Expression:
+        """Return one trace kernel decorated with inverse-operator denominators."""
+
+        selected_trace = self._trace(trace)
+        chain = self.operator_propagator_denominator_chain(
+            selected_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            include_light=include_light,
+            require_registered_mass=require_registered_mass,
+        )
+        return s.SupertraceKernel(selected_trace.expression, list_expr(*(list_expr(*slot) for slot in chain)))
+
+    def supertrace_operator_propagator_expression_map(
+        self,
+        *,
+        prefix: str = "supertrace_operator_propagator_kernel",
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+        require_registered_mass: bool = True,
+        skip_unrecognized: bool = True,
+    ) -> dict[str, Expression]:
+        """Return generated traces decorated with inverse-operator denominators."""
+
+        entries: dict[str, Expression] = {}
+        for trace in self.block_traces:
+            try:
+                entries[f"{prefix}[{trace.name}]"] = self.operator_propagator_expression(
+                    trace,
+                    loop_momentum_squared=loop_momentum_squared,
+                    include_light=include_light,
+                    require_registered_mass=require_registered_mass,
+                )
+            except ValueError:
+                if not skip_unrecognized:
+                    raise
+        return entries
+
+    def operator_vakint_integral_expression(
+        self,
+        trace: SupertraceBlockTrace | str,
+        *,
+        include_light: bool = True,
+        require_registered_mass: bool = True,
+    ) -> Expression:
+        """Lower one trace to vakint using inverse-operator mass slots."""
+
+        from .backends import vakint
+
+        selected_trace = self._trace(trace)
+        return vakint.one_loop_vacuum_integral(
+            selected_trace.expression,
+            _flatten_expression_slots(
+                self.operator_propagator_mass_squared_chain(
+                    selected_trace,
+                    include_light=include_light,
+                    require_registered_mass=require_registered_mass,
+                )
+            ),
+        )
+
+    def operator_vakint_integral_expression_map(
+        self,
+        *,
+        prefix: str = "operator_vakint_integral",
+        include_light: bool = True,
+        require_registered_mass: bool = True,
+        skip_unrecognized: bool = True,
+    ) -> dict[str, Expression]:
+        """Return vakint topologies built from inverse-operator denominators."""
+
+        entries: dict[str, Expression] = {}
+        for trace in self.block_traces:
+            try:
+                entries[f"{prefix}[{trace.name}]"] = self.operator_vakint_integral_expression(
+                    trace,
+                    include_light=include_light,
+                    require_registered_mass=require_registered_mass,
+                )
+            except ValueError:
+                if not skip_unrecognized:
+                    raise
+        return entries
+
     def power_type_traces(self) -> tuple[SupertraceBlockTrace, ...]:
         """Return cyclically unique traces used for power-type contributions."""
 
@@ -1304,12 +1445,24 @@ class OneLoopSetup:
             **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
+            **self.supertrace_operator_propagator_expression_map(
+                prefix=f"{prefix}.supertrace_operator_propagator_kernel",
+            ),
             **self.vakint_integral_expression_map(prefix=f"{prefix}.vakint_integral"),
+            **self.operator_vakint_integral_expression_map(prefix=f"{prefix}.operator_vakint_integral"),
             **self.power_type_expression_map(prefix=f"{prefix}.power_type_supertrace"),
             f"{prefix}[power_type_eft_lagrangian]": self.power_type_eft_lagrangian(),
             f"{prefix}[power_type_vakint_integral_sum]": self.power_type_vakint_integral_sum(),
         }
         return entries
+
+    def _trace(self, trace: SupertraceBlockTrace | str) -> SupertraceBlockTrace:
+        if isinstance(trace, SupertraceBlockTrace):
+            return trace
+        for candidate in self.block_traces:
+            if candidate.name == trace:
+                return candidate
+        raise KeyError(f"One-loop setup has no trace {trace!r}")
 
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{OneLoopSetup}}\left({self.theory.name},\ {self.supertrace_kernel_count}\right)$"
@@ -1406,6 +1559,46 @@ class FluctuationOperator:
             return None
         expected_mass_squared = _fluctuation_mass_squared(self.mode_for(column_expr))
         return denominator if is_zero((denominator[1] - expected_mass_squared).expand()) else None
+
+    def propagator_denominator_for_mode(
+        self,
+        field: FluctuationBasisItem,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> Expression | None:
+        """Return the free propagator denominator attached to one basis mode."""
+
+        mode = self.mode_for(field)
+        columns: tuple[Expression, ...]
+        if mode.self_conjugate:
+            columns = (mode.field,)
+        else:
+            columns = (_conjugate_fluctuation_field(mode.field), mode.field)
+        for column in columns:
+            try:
+                denominator = self.propagator_denominator_entry(
+                    mode.field,
+                    column,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+            except KeyError:
+                continue
+            if denominator is not None:
+                return denominator
+            if require_registered_mass:
+                entry = self.momentum_entry(
+                    mode.field,
+                    column,
+                    loop_momentum_squared=loop_momentum_squared,
+                )
+                if _has_unit_linear_momentum_part(entry, loop_momentum_squared=loop_momentum_squared):
+                    return s.PropagatorDenominator(
+                        s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared,
+                        _fluctuation_mass_squared(self.mode_for(column)),
+                    )
+        return None
 
     def propagator_denominator_expression_map(
         self,
@@ -1905,6 +2098,16 @@ def _momentum_entry_propagator_denominator(
     return s.PropagatorDenominator(momentum_squared, mass_squared)
 
 
+def _propagator_denominator_mass_squared(denominator: Expression) -> Expression:
+    if not is_head(denominator, s.PropagatorDenominator):
+        raise ValueError(f"Expected PropagatorDenominator, got {canonical_string(denominator)}")
+    return denominator[1]
+
+
+def _conjugate_fluctuation_field(field: Expression) -> Expression:
+    return bar_field_inner(field) if is_bar_field(field) else s.Bar(field)
+
+
 def _coefficient_of_momentum_power(expr: Expression, momentum_squared: Expression, power: int) -> Expression | None:
     if power == 0:
         target = Expression.num(1)
@@ -1926,6 +2129,21 @@ def _has_unsupported_momentum_powers(expr: Expression, momentum_squared: Express
             continue
         return True
     return False
+
+
+def _has_unit_linear_momentum_part(
+    expr: Expression,
+    *,
+    loop_momentum_squared: Expression | None = None,
+) -> bool:
+    momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+    momentum_coefficient = _coefficient_of_momentum_power(expr, momentum_squared, 1)
+    if momentum_coefficient is None:
+        return False
+    return bool(momentum_coefficient == Expression.num(1)) and not _has_unsupported_momentum_powers(
+        expr,
+        momentum_squared,
+    )
 
 
 def _contracted_derivative_pair_power(derivatives: tuple[Expression, ...]) -> int | None:

@@ -834,6 +834,35 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests for free real scalars, barred complex scalars,
     deterministic denominator maps, interaction-mass rejection, opt-out
     inspection, and public API docstring coverage.
+- Completed the thirty-ninth implementation slice:
+  - added `FluctuationOperator.propagator_denominator_for_mode(...)` so a basis
+    mode can recover its free propagator denominator directly from the
+    momentum-lowered fluctuation operator, including off-diagonal barred/
+    unbarred complex-scalar kinetic entries;
+  - added `OneLoopSetup.operator_propagator_denominator_chain(...)`,
+    `operator_propagator_mass_squared_chain(...)`,
+    `operator_propagator_expression(...)`,
+    `supertrace_operator_propagator_expression_map(...)`,
+    `operator_vakint_integral_expression(...)`, and
+    `operator_vakint_integral_expression_map(...)` to align recognized free
+    denominators with each closed supertrace path and lower those operator-
+    derived mass slots to vakint topologies;
+  - the mode-level lookup first uses the strict denominator recognizer and then
+    uses native Symbolica `Expression.coefficient_list(...)` through the shared
+    unit-linear loop-momentum check to recover the registered free mass when a
+    diagonal entry also contains interaction insertions such as `q^2 - m^2 -
+    H*y`;
+  - bulk expression maps skip unrecognized traces by default so algebraic toy
+    setups without kinetic terms still export stable preview data, while direct
+    chain/integral methods and `skip_unrecognized=False` keep the operator path
+    strict for matching workflows;
+  - `OneLoopSetup.to_expression_map(...)` now includes recognized
+    `supertrace_operator_propagator_kernel` and `operator_vakint_integral`
+    namespaces when inverse-operator denominators are available;
+  - added focused tests for complex scalar mode denominator recovery,
+    operator-derived scalar propagator insertion chains, decorated kernels,
+    vakint topology lowering, setup expression-map exposure, and public API
+    docstring coverage.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1737,6 +1766,25 @@ discoveries, dependency patches, blockers, and remaining work.
   dependency manifest.
 - `git diff --check` passed after the fluctuation-operator denominator
   extraction slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
+  tests/integration/matching/test_fluctuation_operator.py::test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_operator_derived_propagator_insertions
+  tests/unit/definitions/test_public_api.py -q'` passed after the
+  operator-derived propagator insertion slice: 8 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the operator-derived
+  propagator insertion slice: 38 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the operator-derived propagator insertion slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the operator-derived propagator insertion
+  slice: 155 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the operator-derived propagator insertion
+  slice.
 
 ## Remaining Work
 
@@ -1744,8 +1792,9 @@ discoveries, dependency patches, blockers, and remaining work.
   targets for the pychete one-loop matching engine.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
-  propagator expansion/insertion ordering, and integration-by-parts convention
-  validation against Matchete fixtures.
+  full propagator expansion beyond the new scalar operator-derived insertion
+  chains, and integration-by-parts convention validation against Matchete
+  fixtures.
 - Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
   and spin/Lorentz mode metadata into backend-evaluated vector Lorentz traces,
   real/complex coefficient placement in actual supertrace kernels, and later
