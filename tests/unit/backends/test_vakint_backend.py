@@ -71,6 +71,21 @@ def test_vakint_adapters_delegate_integral_operations_to_engine() -> None:
     ]
 
 
+def test_vakint_one_loop_vacuum_topology_builders_use_native_namespace() -> None:
+    m1 = S("M1sq")
+    m2 = S("M2sq")
+    expected_topology = S("vakint::topo")(
+        S("vakint::prop")(1, S("vakint::edge")(1, 1), S("vakint::k")(1), m1, 1)
+        * S("vakint::prop")(2, S("vakint::edge")(1, 1), S("vakint::k")(1), m2, 2)
+    )
+
+    topology = vakint.one_loop_vacuum_topology((m1, m2), powers=(1, 2))
+    integral = vakint.one_loop_vacuum_integral(S("numerator"), (m1, m2), powers=(1, 2))
+
+    assert canonical_string(topology) == canonical_string(expected_topology)
+    assert canonical_string(integral) == canonical_string(S("numerator") * expected_topology)
+
+
 def test_vakint_adapters_delegate_numerical_operations_to_engine() -> None:
     engine = FakeVakintEngine()
     expr = S("series")

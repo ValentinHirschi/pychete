@@ -341,6 +341,18 @@ class SupertraceBlockTrace:
 
         return tuple((block.row_sector, block.column_sector) for block in self.blocks)
 
+    def propagator_mass_squared_chain(self, *, include_light: bool = True) -> tuple[tuple[Expression, ...], ...]:
+        """Return mass-squared slots aligned with the row modes of each block."""
+
+        return tuple(
+            tuple(
+                _fluctuation_mass_squared(mode)
+                for mode in block.rows
+                if include_light or mode.is_heavy
+            )
+            for block in self.blocks
+        )
+
     def propagator_denominator_chain(
         self,
         *,
@@ -351,11 +363,13 @@ class SupertraceBlockTrace:
 
         return tuple(
             tuple(
-                _fluctuation_propagator(mode).denominator(loop_momentum_squared=loop_momentum_squared)
-                for mode in block.rows
-                if include_light or mode.is_heavy
+                s.PropagatorDenominator(
+                    s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared,
+                    mass_squared,
+                )
+                for mass_squared in slot
             )
-            for block in self.blocks
+            for slot in self.propagator_mass_squared_chain(include_light=include_light)
         )
 
     def propagator_expression(
@@ -371,6 +385,16 @@ class SupertraceBlockTrace:
             include_light=include_light,
         )
         return s.SupertraceKernel(self.expression, list_expr(*(list_expr(*slot) for slot in chain)))
+
+    def vakint_integral_expression(self, *, include_light: bool = True) -> Expression:
+        """Return this trace kernel lowered to vakint's one-loop topology form."""
+
+        from .backends import vakint
+
+        return vakint.one_loop_vacuum_integral(
+            self.expression,
+            _flatten_expression_slots(self.propagator_mass_squared_chain(include_light=include_light)),
+        )
 
     def to_expression_map(self, *, prefix: str = "supertrace_block_trace") -> dict[str, Expression]:
         """Return this trace kernel as a deterministic named expression."""
@@ -597,6 +621,77 @@ class OneLoopSetup:
             for trace in self.block_traces
         }
 
+    def vakint_integral_expression_map(
+        self,
+        *,
+        prefix: str = "vakint_integral",
+        include_light: bool = True,
+    ) -> dict[str, Expression]:
+        """Return generated trace kernels lowered to vakint topology expressions."""
+
+        return {
+            f"{prefix}[{trace.name}]": trace.vakint_integral_expression(include_light=include_light)
+            for trace in self.block_traces
+        }
+
+    def canonicalize_vakint_integral_expression_map(
+        self,
+        *,
+        prefix: str = "vakint_integral",
+        short_form: bool | None = None,
+        engine: Any | None = None,
+        include_light: bool = True,
+    ) -> dict[str, Expression]:
+        """Canonicalize generated vakint integral expressions with native vakint."""
+
+        from .backends import vakint
+
+        return {
+            name: vakint.to_canonical(expr, short_form=short_form, engine=engine)
+            for name, expr in self.vakint_integral_expression_map(
+                prefix=prefix,
+                include_light=include_light,
+            ).items()
+        }
+
+    def tensor_reduce_vakint_integral_expression_map(
+        self,
+        *,
+        prefix: str = "vakint_integral",
+        engine: Any | None = None,
+        include_light: bool = True,
+    ) -> dict[str, Expression]:
+        """Tensor-reduce generated vakint integral expressions with native vakint."""
+
+        from .backends import vakint
+
+        return {
+            name: vakint.tensor_reduce(expr, engine=engine)
+            for name, expr in self.vakint_integral_expression_map(
+                prefix=prefix,
+                include_light=include_light,
+            ).items()
+        }
+
+    def evaluate_vakint_integral_expression_map(
+        self,
+        *,
+        prefix: str = "vakint_integral",
+        engine: Any | None = None,
+        include_light: bool = True,
+    ) -> dict[str, Expression]:
+        """Evaluate generated vakint integral expressions with native vakint."""
+
+        from .backends import vakint
+
+        return {
+            name: vakint.evaluate(expr, engine=engine)
+            for name, expr in self.vakint_integral_expression_map(
+                prefix=prefix,
+                include_light=include_light,
+            ).items()
+        }
+
     @property
     def propagator_count(self) -> int:
         """Number of heavy propagators planned by default."""
@@ -708,6 +803,7 @@ class OneLoopSetup:
             **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
+            **self.vakint_integral_expression_map(prefix=f"{prefix}.vakint_integral"),
         }
         return entries
 
@@ -1163,6 +1259,14 @@ def _fluctuation_propagator(mode: FluctuationMode) -> FluctuationPropagator:
         mass=mass,
         mass_squared=mass_squared,
     )
+
+
+def _fluctuation_mass_squared(mode: FluctuationMode) -> Expression:
+    return Expression.num(0) if mode.mass_squared is None else mode.mass_squared
+
+
+def _flatten_expression_slots(slots: Iterable[Iterable[Expression]]) -> tuple[Expression, ...]:
+    return tuple(item for slot in slots for item in slot)
 
 
 def _fluctuation_statistics(field_type: Expression) -> FluctuationStatistics:

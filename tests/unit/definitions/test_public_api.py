@@ -89,7 +89,9 @@ def test_public_api_methods_have_docstrings() -> None:
             "assert_equal",
         ],
         pychete.OneLoopSetup: [
+            "canonicalize_vakint_integral_expression_map",
             "canonicalize_integrals",
+            "evaluate_vakint_integral_expression_map",
             "evaluate_integrals",
             "evaluate_tensor_networks",
             "max_trace_order",
@@ -99,8 +101,10 @@ def test_public_api_methods_have_docstrings() -> None:
             "supertrace_expression_map",
             "supertrace_propagator_expression_map",
             "supertrace_kernel_count",
+            "tensor_reduce_vakint_integral_expression_map",
             "tensor_reduce_integrals",
             "to_expression_map",
+            "vakint_integral_expression_map",
         ],
         pychete.FluctuationOperator: [
             "block",
@@ -153,9 +157,11 @@ def test_public_api_methods_have_docstrings() -> None:
             "order",
             "propagator_denominator_chain",
             "propagator_expression",
+            "propagator_mass_squared_chain",
             "simplify_index_algebra",
             "tensor_reduce_integrals",
             "to_expression_map",
+            "vakint_integral_expression",
         ],
     }
     missing = [

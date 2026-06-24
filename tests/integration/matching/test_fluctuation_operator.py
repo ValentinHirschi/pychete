@@ -6,6 +6,7 @@ from symbolica import Expression, S
 from pychete import FieldMassKind, FluctuationSector, FluctuationStatistics, Theory, canonical_string, s
 from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
+from pychete.backends import vakint as vakint_backend
 
 from tests.conftest import assert_expr_equal
 
@@ -374,7 +375,13 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert_expr_equal(heavy_mode.mass, heavy_mass)
     assert_expr_equal(light_mode.mass_squared, light_mass**2)
     trace = next(trace for trace in setup.block_traces if trace.name == "heavy-light-heavy")
+    mass_chain = trace.propagator_mass_squared_chain()
     chain = trace.propagator_denominator_chain()
+    assert len(mass_chain) == 2
+    assert len(mass_chain[0]) == 1
+    assert len(mass_chain[1]) == 1
+    assert_expr_equal(mass_chain[0][0], heavy_mass**2)
+    assert_expr_equal(mass_chain[1][0], light_mass**2)
     assert len(chain) == 2
     assert len(chain[0]) == 1
     assert len(chain[1]) == 1
@@ -389,9 +396,31 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         decorated["supertrace_propagator_kernel[heavy-light-heavy]"],
         trace.propagator_expression(),
     )
+    vakint_integral = vakint_backend.one_loop_vacuum_integral(trace.expression, (heavy_mass**2, light_mass**2))
+    assert_expr_equal(trace.vakint_integral_expression(), vakint_integral)
+    assert_expr_equal(
+        setup.vakint_integral_expression_map()["vakint_integral[heavy-light-heavy]"],
+        vakint_integral,
+    )
+    canonical_engine = FakeKernelVakintEngine()
+    canonicalized = setup.canonicalize_vakint_integral_expression_map(short_form=True, engine=canonical_engine)
+    assert len(canonical_engine.calls) == setup.supertrace_kernel_count
+    assert ("to_canonical", vakint_integral, True) in canonical_engine.calls
+    assert_expr_equal(canonicalized["vakint_integral[heavy-light-heavy]"], S("canonical")(vakint_integral))
+    reduction_engine = FakeKernelVakintEngine()
+    reduced = setup.tensor_reduce_vakint_integral_expression_map(engine=reduction_engine)
+    assert len(reduction_engine.calls) == setup.supertrace_kernel_count
+    assert ("tensor_reduce", vakint_integral, None) in reduction_engine.calls
+    assert_expr_equal(reduced["vakint_integral[heavy-light-heavy]"], S("reduced")(vakint_integral))
+    evaluation_engine = FakeKernelVakintEngine()
+    evaluated = setup.evaluate_vakint_integral_expression_map(engine=evaluation_engine)
+    assert len(evaluation_engine.calls) == setup.supertrace_kernel_count
+    assert ("evaluate", vakint_integral, None) in evaluation_engine.calls
+    assert_expr_equal(evaluated["vakint_integral[heavy-light-heavy]"], S("evaluated")(vakint_integral))
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.supertrace_propagator_kernel[") for key in setup.to_expression_map())
+    assert any(key.startswith("one_loop_setup.vakint_integral[") for key in setup.to_expression_map())
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -639,6 +639,22 @@ discoveries, dependency patches, blockers, and remaining work.
   generated trace kernels decorated with denominator slots, so the next vakint
   lowering slice has explicit Symbolica input rather than implicit Python-side
   bookkeeping.
+- Rescanned vakint's Python stub and local Rust source for the accepted
+  integral shape. vakint expects sums of numerator terms times
+  `vakint::topo(vakint::prop(...)*...)`, with tensor reduction and evaluation
+  delegated through `Vakint.to_canonical`, `Vakint.tensor_reduce`, and
+  `Vakint.evaluate`.
+- `pychete.backends.vakint` now has explicit Symbolica constructors for
+  `vakint::k`, `vakint::edge`, `vakint::prop`, `vakint::topo`, one-loop
+  vacuum topologies, and one-loop vacuum integrals. The one-loop setup can now
+  lower each supertrace block trace into that vakint topology form with
+  `SupertraceBlockTrace.vakint_integral_expression(...)` and
+  `OneLoopSetup.vakint_integral_expression_map(...)`.
+- `OneLoopSetup` also exposes native-delegating map methods for canonicalizing,
+  tensor-reducing, and evaluating those lowered vakint integral expressions.
+  This is still a structural lowering stage: the expressions use the current
+  denominator-slot ordering and need subsequent physics work for final
+  propagator sign conventions, EFT expansion, and known-topology validation.
 
 ## Test Status
 
@@ -914,6 +930,17 @@ discoveries, dependency patches, blockers, and remaining work.
   supertrace-denominator-chain slice: 112 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/backends/test_vakint_backend.py
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the vakint-topology-lowering slice: 28 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  vakint-topology-lowering slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  vakint-topology-lowering slice: 113 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 
@@ -926,10 +953,11 @@ discoveries, dependency patches, blockers, and remaining work.
   including spin/statistics signs, real/complex counting, ghosts, Goldstones,
   background fields, and non-propagating fields.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
-  supertrace terms beyond the new neutral denominator-slot expressions,
-  including physical loop-momentum sign conventions, propagator insertion
-  ordering for multi-mode blocks, EFT-order truncation, tensor reductions, and
-  integral calls through the native backends.
+  supertrace terms beyond the new neutral denominator-slot expressions and
+  preliminary vakint one-loop topology lowering, including physical
+  loop-momentum sign conventions, propagator insertion ordering for multi-mode
+  blocks, EFT-order truncation, tensor reductions, and integral calls through
+  known native backend topologies.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.

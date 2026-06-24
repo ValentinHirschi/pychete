@@ -3,8 +3,9 @@ from __future__ import annotations
 from functools import cache
 from typing import Any, Mapping, Sequence
 
-from symbolica import Expression
+from symbolica import Expression, S
 
+from ..expr import product_expr
 from .common import import_backend
 
 
@@ -12,6 +13,73 @@ def native_module():
     """Return the native vakint Python module."""
 
     return import_backend("symbolica.community.vakint")
+
+
+def symbol(name: str) -> Expression:
+    """Return a Symbolica symbol in vakint's namespace."""
+
+    return S(f"vakint::{name}")
+
+
+def loop_momentum(loop_id: int = 1) -> Expression:
+    """Return vakint's loop-momentum expression ``k(loop_id)``."""
+
+    return symbol("k")(loop_id)
+
+
+def edge(left: int = 1, right: int = 1) -> Expression:
+    """Return a vakint graph edge expression."""
+
+    return symbol("edge")(left, right)
+
+
+def propagator(
+    prop_id: int,
+    mass_squared: Expression,
+    *,
+    loop_id: int = 1,
+    power: int = 1,
+    edge_left: int = 1,
+    edge_right: int = 1,
+) -> Expression:
+    """Build one vakint ``prop`` factor for a single-loop vacuum topology."""
+
+    return symbol("prop")(prop_id, edge(edge_left, edge_right), loop_momentum(loop_id), mass_squared, power)
+
+
+def topology(propagators: Sequence[Expression]) -> Expression:
+    """Build a vakint ``topo`` expression from propagator factors."""
+
+    return symbol("topo")(product_expr(propagators))
+
+
+def one_loop_vacuum_topology(
+    mass_squareds: Sequence[Expression],
+    *,
+    powers: Sequence[int] | None = None,
+) -> Expression:
+    """Build a one-loop vacuum topology with one propagator per mass."""
+
+    if powers is not None and len(powers) != len(mass_squareds):
+        raise ValueError("powers must match the number of mass-squared entries")
+    prop_powers = tuple(1 for _ in mass_squareds) if powers is None else tuple(powers)
+    return topology(
+        tuple(
+            propagator(index, mass_squared, power=power)
+            for index, (mass_squared, power) in enumerate(zip(mass_squareds, prop_powers, strict=True), start=1)
+        )
+    )
+
+
+def one_loop_vacuum_integral(
+    numerator: Expression,
+    mass_squareds: Sequence[Expression],
+    *,
+    powers: Sequence[int] | None = None,
+) -> Expression:
+    """Build a vakint one-loop vacuum integral from a numerator and masses."""
+
+    return numerator * one_loop_vacuum_topology(mass_squareds, powers=powers)
 
 
 def new_alphaloop_method() -> Any:
@@ -130,8 +198,10 @@ def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> E
 __all__ = [
     "create_engine",
     "default_engine",
+    "edge",
     "evaluate",
     "evaluate_integral",
+    "loop_momentum",
     "native_module",
     "new_alphaloop_method",
     "new_fmft_method",
@@ -141,7 +211,12 @@ __all__ = [
     "numerical_result",
     "numerical_result_from_expression",
     "numerical_result_to_expression",
+    "one_loop_vacuum_integral",
+    "one_loop_vacuum_topology",
+    "propagator",
+    "symbol",
     "tensor_reduce",
     "to_canonical",
+    "topology",
     "vakint_expression",
 ]
