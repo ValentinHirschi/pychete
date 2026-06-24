@@ -224,6 +224,24 @@ discoveries, dependency patches, blockers, and remaining work.
     heads until the CG adapter layer can lower them through spenso/idenso;
   - added tests proving those child Lagrangians parse from the pychete-owned
     model assets and restore from committed fixtures without Mathematica.
+- Completed the tenth implementation slice:
+  - added `pychete.backends.idenso` as a thin native delegation layer for
+    `cook_function`, `cook_indices`, `dirac_adjoint`, `expand_bis`,
+    `expand_color`, `expand_metrics`, `expand_mink`, `expand_mink_bis`,
+    `list_dangling`, `simplify_color`, `simplify_gamma`,
+    `simplify_metrics`, `to_dots`, `wrap_dummies`, and `wrap_indices`;
+  - added `pychete.backends.spenso` as a thin native delegation layer for
+    empty and HEP tensor libraries, tensor-network construction, execution,
+    and scalar/tensor result extraction;
+  - added `pychete.backends.vakint` as a thin native delegation layer for
+    evaluation-method factories, engine construction/caching,
+    `VakintExpression`, numerical-result conversion, canonicalization,
+    tensor reduction, integral-only evaluation, and full integral evaluation;
+  - routed the existing `pychete.group_algebra.idenso` shim through the new
+    idenso adapter so older internal imports use the same native boundary;
+  - added focused pytest coverage for native idenso delegation, cheap spenso
+    tensor-library/network paths, and vakint delegation with a fake engine so
+    tests do not instantiate vakint's expensive topology-processing engine.
 
 ## Backend/API Discoveries
 
@@ -277,6 +295,12 @@ discoveries, dependency patches, blockers, and remaining work.
   the SM parent Lagrangian yet; S1/S3 local CG helper calls are preserved as
   registered external Symbolica heads until they are routed through the planned
   spenso/idenso CG adapter layer.
+- Rescanned and exercised the idenso/spenso/vakint Python stubs before adding
+  backend adapters. Native idenso no-ops safely on plain Symbolica symbols for
+  the covered simplifier/index wrappers, spenso can cheaply construct empty and
+  HEP tensor libraries plus scalar tensor networks, and vakint method factories
+  import cheaply while full `Vakint(...)` engine construction should remain a
+  cached or caller-provided operation because it processes known topologies.
 
 ## Test Status
 
@@ -363,6 +387,14 @@ discoveries, dependency patches, blockers, and remaining work.
   child-Lagrangian fixture slice: 73 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest tests/unit/backends` passed after
+  the backend-adapter slice: 10 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the backend-adapter
+  slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  backend-adapter slice: 83 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
@@ -373,6 +405,8 @@ discoveries, dependency patches, blockers, and remaining work.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
+- Lower S1/S3 local CG helper heads and other tensor contractions through the
+  new spenso/idenso adapter layer.
 - Convert raw Matchete snapshots into pychete-owned fixture JSON that pytest can
   consume without Mathematica.
 - Add the first real one-loop matching-result fixture asset using the
