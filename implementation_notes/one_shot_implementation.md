@@ -2631,6 +2631,30 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after adding the model-state exporter/converter:
   181 passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
+- Regenerated the four default model-definition fixtures from a real
+  Matchete-loaded state using the optional Wolfram exporter/converter path:
+  - ran `export_matchete_model_state.wls` through local `wolframscript` for
+    `VLF_toy_model`, `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`;
+  - converted the resulting `matchete_loaded_model_state` RawJSON files into
+    committed pychete `model_definition` fixtures with no converter warnings;
+  - the refreshed fixture counts are:
+    `VLF_toy_model` fields/couplings/groups/representations/CG tensors =
+    4/4/1/0/0,
+    `Singlet_Scalar_Extension` = 10/13/3/4/16,
+    `E_VLL` = 10/10/3/4/16, and `S1S3LQs` = 11/17/3/4/16;
+  - the three SM-parent fixtures now carry Matchete-derived representation and
+    CG tensor metadata instead of the earlier direct-loader subset fixtures;
+  - the current order-three one-loop preview from all four refreshed fixtures
+    exposes 25 kernels, 11 interaction-power contributions, and 47 named
+    supertraces, while remaining explicitly incomplete.
+- Added optional top-level `scripts/` wrappers for the Mathematica conversion
+  route:
+  - `scripts/export_matchete_model_state.wls` delegates to the maintained
+    helper Wolfram exporter;
+  - `scripts/convert_matchete_model_state.py` delegates to the maintained
+    Python converter;
+  - `scripts/README.md` documents this as a convenience-only workflow for
+    users with Mathematica, not a pychete runtime or pytest dependency.
 
 ## Remaining Work
 

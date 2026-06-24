@@ -6,26 +6,198 @@
   "name": "E_VLL_model_definition",
   "schema_version": 1,
   "source": {
-    "asset": "assets/models/E_VLL.m",
-    "contains_lagrangian": true,
+    "generator": "helper_mathematica_scripts/convert_matchete_model_state.py",
     "matchete_runtime_required": false,
     "model": "E_VLL",
-    "parent_assets": [
-      "assets/models/SM.m"
-    ],
-    "parent_lagrangian_included": false
+    "upstream_generator": "export_matchete_model_state.wls",
+    "warnings": []
   },
   "state": {
     "active_theory": "E_VLL",
     "expressions": {
       "lagrangian": {
-        "expression": "-pychete::Coupling(E_VLL::coupling_ME,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())),pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List()))-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(E_VLL::external_i),pychete::List())*pychete::Coupling(E_VLL::coupling_yE,pychete::List(E_VLL::external_p),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(E_VLL::external_i,E_VLL::external_p),pychete::List())),pychete::PR,pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List()))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())),pychete::Gamma(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)),pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz))))+pychete::Bar(-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(E_VLL::external_i),pychete::List())*pychete::Coupling(E_VLL::coupling_yE,pychete::List(E_VLL::external_p),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(E_VLL::external_i,E_VLL::external_p),pychete::List())),pychete::PR,pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())))",
+        "expression": "-pychete::Coupling(E_VLL::coupling_ME,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())),pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List()))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))-pychete::Bar(pychete::Coupling(E_VLL::coupling_yE,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),0))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List()))+pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(E_VLL::coupling_mu2,pychete::List(),2)*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List()))-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(E_VLL::coupling_yE,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List()))-1/2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(2),E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(E_VLL::coupling_lambda,pychete::List(),0)*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(2),E_VLL::group_SU2L(pychete::fund))),pychete::List()))-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(E_VLL::coupling_Yd,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),pychete::List()))-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(E_VLL::coupling_Ye,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),pychete::List()))-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(2),E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Coupling(E_VLL::coupling_Yu,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),0))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(pychete::Bar(E_VLL::external_eps(E_VLL::group_SU2L)),pychete::List(pychete::Bar(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::Bar(pychete::Index(pychete::dummy_index(2),E_VLL::group_SU2L(pychete::fund)))))-pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Coupling(E_VLL::coupling_Yd,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),0))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List()))-pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Coupling(E_VLL::coupling_Ye,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),0))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List()))-pychete::Coupling(E_VLL::coupling_Yu,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),0)*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(E_VLL::cg_tensor_eps_SU2L,pychete::List(pychete::Index(pychete::dummy_index(2),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))))+pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))),pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),E_VLL::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))-1/4*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU3c(pychete::adj))),pychete::List())^2/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^2-1/4*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(pychete::Index(pychete::dummy_index(1),E_VLL::group_SU2L(pychete::adj))),pychete::List())^2/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^2-1/4*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2/pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0)^2",
         "theory": "E_VLL"
       }
     },
     "schema_version": 3,
     "theories": {
       "E_VLL": {
+        "cg_tensors": {
+          "dSym_SU2L": {
+            "label": "E_VLL::cg_tensor_dSym_SU2L",
+            "name": "dSym_SU2L",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:dSym",
+            "tensor": null
+          },
+          "dSym_SU3c": {
+            "label": "E_VLL::cg_tensor_dSym_SU3c",
+            "name": "dSym_SU3c",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:dSym",
+            "tensor": null
+          },
+          "del_SU2L_adj": {
+            "label": "E_VLL::cg_tensor_del_SU2L_adj",
+            "name": "del_SU2L_adj",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "del_SU2L_fund": {
+            "label": "E_VLL::cg_tensor_del_SU2L_fund",
+            "name": "del_SU2L_fund",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::fund)",
+              "pychete::Bar(E_VLL::group_SU2L(pychete::fund))"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "del_SU3c_adj": {
+            "label": "E_VLL::cg_tensor_del_SU3c_adj",
+            "name": "del_SU3c_adj",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "del_SU3c_fund": {
+            "label": "E_VLL::cg_tensor_del_SU3c_fund",
+            "name": "del_SU3c_fund",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::fund)",
+              "pychete::Bar(E_VLL::group_SU3c(pychete::fund))"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "eps_SU2L": {
+            "label": "E_VLL::cg_tensor_eps_SU2L",
+            "name": "eps_SU2L",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::fund)",
+              "E_VLL::group_SU2L(pychete::fund)"
+            ],
+            "source": "builtin:eps",
+            "tensor": null
+          },
+          "eps_SU3c": {
+            "label": "E_VLL::cg_tensor_eps_SU3c",
+            "name": "eps_SU3c",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::fund)",
+              "E_VLL::group_SU3c(pychete::fund)",
+              "E_VLL::group_SU3c(pychete::fund)"
+            ],
+            "source": "builtin:eps",
+            "tensor": null
+          },
+          "fStruct_SU2L": {
+            "label": "E_VLL::cg_tensor_fStruct_SU2L",
+            "name": "fStruct_SU2L",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:fStruct",
+            "tensor": null
+          },
+          "fStruct_SU3c": {
+            "label": "E_VLL::cg_tensor_fStruct_SU3c",
+            "name": "fStruct_SU3c",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:fStruct",
+            "tensor": null
+          },
+          "gen_SU2L_adj": {
+            "label": "E_VLL::cg_tensor_gen_SU2L_adj",
+            "name": "gen_SU2L_adj",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "gen_SU2L_fund": {
+            "label": "E_VLL::cg_tensor_gen_SU2L_fund",
+            "name": "gen_SU2L_fund",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::fund)",
+              "pychete::Bar(E_VLL::group_SU2L(pychete::fund))"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "gen_SU3c_adj": {
+            "label": "E_VLL::cg_tensor_gen_SU3c_adj",
+            "name": "gen_SU3c_adj",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "gen_SU3c_fund": {
+            "label": "E_VLL::cg_tensor_gen_SU3c_fund",
+            "name": "gen_SU3c_fund",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::fund)",
+              "pychete::Bar(E_VLL::group_SU3c(pychete::fund))"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "tFundf_SU2L": {
+            "label": "E_VLL::cg_tensor_tFundf_SU2L",
+            "name": "tFundf_SU2L",
+            "representations": [
+              "E_VLL::group_SU2L(pychete::fund)",
+              "pychete::Bar(E_VLL::group_SU2L(pychete::fund))",
+              "E_VLL::group_SU2L(pychete::adj)",
+              "E_VLL::group_SU2L(pychete::adj)"
+            ],
+            "source": "SparseArray[Automatic, {2, 2, 3, 3}, 0, {1, {{0, 6, 12}, {{1, 1, 3}, {1, 3, 1}, {2, 1, 2}, {2, 2, 1}, {2, 2, 3}, {2, 3, 2}, {1, 1, 2}, {1, 2, 1}, {1, 2, 3}, {1, 3, 2}, {2, 1, 3}, {2, 3, 1}}}, {1/2, -1/2, I/2, -1/2*I, -1/2, 1/2, -1/2*I, I/2, -1/2, 1/2, -1/2, 1/2}}]",
+            "tensor": null
+          },
+          "tFundf_SU3c": {
+            "label": "E_VLL::cg_tensor_tFundf_SU3c",
+            "name": "tFundf_SU3c",
+            "representations": [
+              "E_VLL::group_SU3c(pychete::fund)",
+              "pychete::Bar(E_VLL::group_SU3c(pychete::fund))",
+              "E_VLL::group_SU3c(pychete::adj)",
+              "E_VLL::group_SU3c(pychete::adj)"
+            ],
+            "source": "SparseArray[Automatic, {3, 3, 8, 8}, 0, {1, {{0, 32, 64, 100}, {{1, 1, 8}, {1, 3, 6}, {1, 6, 3}, {1, 8, 1}, {2, 1, 2}, {2, 1, 7}, {2, 2, 1}, {2, 2, 8}, {2, 3, 4}, {2, 4, 3}, {2, 4, 6}, {2, 6, 4}, {2, 7, 1}, {2, 7, 8}, {2, 8, 2}, {2, 8, 7}, {3, 1, 4}, {3, 1, 5}, {3, 2, 3}, {3, 2, 6}, {3, 3, 2}, {3, 3, 7}, {3, 4, 1}, {3, 4, 8}, {3, 5, 1}, {3, 5, 8}, {3, 6, 2}, {3, 6, 7}, {3, 7, 3}, {3, 7, 6}, {3, 8, 4}, {3, 8, 5}, {1, 1, 2}, {1, 1, 7}, {1, 2, 1}, {1, 2, 8}, {1, 3, 4}, {1, 4, 3}, {1, 4, 6}, {1, 6, 4}, {1, 7, 1}, {1, 7, 8}, {1, 8, 2}, {1, 8, 7}, {2, 2, 7}, {2, 3, 6}, {2, 6, 3}, {2, 7, 2}, {3, 1, 3}, {3, 1, 6}, {3, 2, 4}, {3, 2, 5}, {3, 3, 1}, {3, 3, 8}, {3, 4, 2}, {3, 4, 7}, {3, 5, 2}, {3, 5, 7}, {3, 6, 1}, {3, 6, 8}, {3, 7, 4}, {3, 7, 5}, {3, 8, 3}, {3, 8, 6}, {1, 1, 4}, {1, 1, 5}, {1, 2, 3}, {1, 2, 6}, {1, 3, 2}, {1, 3, 7}, {1, 4, 1}, {1, 4, 8}, {1, 5, 1}, {1, 5, 8}, {1, 6, 2}, {1, 6, 7}, {1, 7, 3}, {1, 7, 6}, {1, 8, 4}, {1, 8, 5}, {2, 1, 3}, {2, 1, 6}, {2, 2, 4}, {2, 2, 5}, {2, 3, 1}, {2, 3, 8}, {2, 4, 2}, {2, 4, 7}, {2, 5, 2}, {2, 5, 7}, {2, 6, 1}, {2, 6, 8}, {2, 7, 4}, {2, 7, 5}, {2, 8, 3}, {2, 8, 6}, {3, 1, 8}, {3, 2, 7}, {3, 7, 2}, {3, 8, 1}}}, {1/2, 1/2, -1/2, -1/2, -1/4*I, 1/4, I/4, 1/4, I/2, -1/2*I, -1/2, 1/2, -1/4, I/4, -1/4, -1/4*I, I/4, (I/4)*Sqrt[3], I/4, 1/4, -1/4*I, -1/4, -1/4*I, -1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], -1/4, I/4, 1/4, -1/4*I, 1/4, Sqrt[3]/4, I/4, 1/4, -1/4*I, 1/4, -1/2*I, I/2, -1/2, 1/2, -1/4, -1/4*I, -1/4, I/4, 1/2, -1/2, 1/2, -1/2, I/4, -1/4, -1/4*I, (I/4)*Sqrt[3], -1/4*I, -1/4, I/4, 1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], 1/4, -1/4*I, -1/4, Sqrt[3]/4, 1/4, I/4, -1/4*I, (-1/4*I)*Sqrt[3], -1/4*I, 1/4, I/4, -1/4, I/4, -1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], -1/4, -1/4*I, 1/4, I/4, 1/4, Sqrt[3]/4, -1/4*I, -1/4, I/4, (-1/4*I)*Sqrt[3], I/4, -1/4, -1/4*I, 1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], 1/4, I/4, -1/4, Sqrt[3]/4, 1/4, -1/4*I, -1/2, -1/2, 1/2, 1/2}}]",
+            "tensor": null
+          }
+        },
         "couplings": {
           "ME": {
             "diagonal": [],
@@ -164,46 +336,56 @@
           "B": {
             "charges": [],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "E_VLL::field_B",
             "mass_indices": [],
             "mass_kind": "light",
             "mass_label": null,
             "name": "B",
+            "propagating": true,
             "self_conjugate": true,
-            "type": "pychete::Vector(E_VLL::group_U1Y)"
+            "type": "pychete::Vector(E_VLL::group_U1Y)",
+            "zero_mode": false
           },
           "EE": {
             "charges": [
               "E_VLL::group_U1Y(-1)"
             ],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "E_VLL::field_EE",
             "mass_indices": [],
             "mass_kind": "heavy",
             "mass_label": "E_VLL::coupling_ME",
             "name": "EE",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "G": {
             "charges": [],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "E_VLL::field_G",
             "mass_indices": [],
             "mass_kind": "light",
             "mass_label": null,
             "name": "G",
+            "propagating": true,
             "self_conjugate": true,
-            "type": "pychete::Vector(E_VLL::group_SU3c)"
+            "type": "pychete::Vector(E_VLL::group_SU3c)",
+            "zero_mode": false
           },
           "H": {
             "charges": [
               "E_VLL::group_U1Y(1/2)"
             ],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [
               "E_VLL::group_SU2L(pychete::fund)"
             ],
@@ -212,26 +394,32 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "H",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Scalar"
+            "type": "pychete::Scalar",
+            "zero_mode": false
           },
           "W": {
             "charges": [],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "E_VLL::field_W",
             "mass_indices": [],
             "mass_kind": "light",
             "mass_label": null,
             "name": "W",
+            "propagating": true,
             "self_conjugate": true,
-            "type": "pychete::Vector(E_VLL::group_SU2L)"
+            "type": "pychete::Vector(E_VLL::group_SU2L)",
+            "zero_mode": false
           },
           "d": {
             "charges": [
               "E_VLL::group_U1Y(-1/3)"
             ],
             "chirality": "right",
+            "field_role": "physical",
             "indices": [
               "E_VLL::group_SU3c(pychete::fund)",
               "E_VLL::index_type_Flavor"
@@ -241,14 +429,17 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "d",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "e": {
             "charges": [
               "E_VLL::group_U1Y(-1)"
             ],
             "chirality": "right",
+            "field_role": "physical",
             "indices": [
               "E_VLL::index_type_Flavor"
             ],
@@ -257,14 +448,17 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "e",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "l": {
             "charges": [
               "E_VLL::group_U1Y(-1/2)"
             ],
             "chirality": "left",
+            "field_role": "physical",
             "indices": [
               "E_VLL::group_SU2L(pychete::fund)",
               "E_VLL::index_type_Flavor"
@@ -274,14 +468,17 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "l",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "q": {
             "charges": [
               "E_VLL::group_U1Y(1/6)"
             ],
             "chirality": "left",
+            "field_role": "physical",
             "indices": [
               "E_VLL::group_SU3c(pychete::fund)",
               "E_VLL::group_SU2L(pychete::fund)",
@@ -292,14 +489,17 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "q",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "u": {
             "charges": [
               "E_VLL::group_U1Y(2/3)"
             ],
             "chirality": "right",
+            "field_role": "physical",
             "indices": [
               "E_VLL::group_SU3c(pychete::fund)",
               "E_VLL::index_type_Flavor"
@@ -309,26 +509,34 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "u",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           }
         },
         "groups": {
           "SU2L": {
+            "abelian": false,
             "coupling": "gL",
             "field": "W",
+            "kind": "gauge",
             "name": "SU2L",
             "type": "pychete::SU(2)"
           },
           "SU3c": {
+            "abelian": false,
             "coupling": "gs",
             "field": "G",
+            "kind": "gauge",
             "name": "SU3c",
             "type": "pychete::SU(3)"
           },
           "U1Y": {
+            "abelian": true,
             "coupling": "gY",
             "field": "B",
+            "kind": "gauge",
             "name": "U1Y",
             "type": "pychete::U1"
           }
@@ -343,6 +551,44 @@
             "dimension": null,
             "name": "Lorentz",
             "symbol": "pychete::Lorentz"
+          }
+        },
+        "representations": {
+          "E_VLL::group_SU2L(pychete::adj)": {
+            "dimension": 3,
+            "dynkin": [],
+            "expr": "E_VLL::group_SU2L(pychete::adj)",
+            "group": "SU2L",
+            "label": "pychete::adj",
+            "name": "adj",
+            "reality": "real"
+          },
+          "E_VLL::group_SU2L(pychete::fund)": {
+            "dimension": 2,
+            "dynkin": [],
+            "expr": "E_VLL::group_SU2L(pychete::fund)",
+            "group": "SU2L",
+            "label": "pychete::fund",
+            "name": "fund",
+            "reality": "pseudoreal"
+          },
+          "E_VLL::group_SU3c(pychete::adj)": {
+            "dimension": 8,
+            "dynkin": [],
+            "expr": "E_VLL::group_SU3c(pychete::adj)",
+            "group": "SU3c",
+            "label": "pychete::adj",
+            "name": "adj",
+            "reality": "real"
+          },
+          "E_VLL::group_SU3c(pychete::fund)": {
+            "dimension": 3,
+            "dynkin": [],
+            "expr": "E_VLL::group_SU3c(pychete::fund)",
+            "group": "SU3c",
+            "label": "pychete::fund",
+            "name": "fund",
+            "reality": "complex"
           }
         },
         "schema_version": 2,
@@ -365,8 +611,10 @@
           },
           {
             "data": {
+              "group_abelian": 0,
               "group_coupling": "gL",
               "group_field": "W",
+              "group_kind": "gauge",
               "group_type": {
                 "__pychete_expression__": "pychete::SU(2)"
               },
@@ -380,13 +628,17 @@
             "symbol": "E_VLL::group_SU2L",
             "tags": [
               "python::pychete",
-              "python::group"
+              "python::group",
+              "python::group_kind_gauge",
+              "python::non_abelian"
             ]
           },
           {
             "data": {
+              "group_abelian": 0,
               "group_coupling": "gs",
               "group_field": "G",
+              "group_kind": "gauge",
               "group_type": {
                 "__pychete_expression__": "pychete::SU(3)"
               },
@@ -400,13 +652,17 @@
             "symbol": "E_VLL::group_SU3c",
             "tags": [
               "python::pychete",
-              "python::group"
+              "python::group",
+              "python::group_kind_gauge",
+              "python::non_abelian"
             ]
           },
           {
             "data": {
+              "group_abelian": 1,
               "group_coupling": "gY",
               "group_field": "B",
+              "group_kind": "gauge",
               "group_type": {
                 "__pychete_expression__": "pychete::U1"
               },
@@ -420,7 +676,448 @@
             "symbol": "E_VLL::group_U1Y",
             "tags": [
               "python::pychete",
-              "python::group"
+              "python::group",
+              "python::group_kind_gauge",
+              "python::abelian"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:dSym",
+              "label": "dSym_SU2L",
+              "name": "dSym_SU2L",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "dSym_SU2L",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_dSym_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:dSym",
+              "label": "dSym_SU3c",
+              "name": "dSym_SU3c",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "dSym_SU3c",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_dSym_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU2L_adj",
+              "name": "del_SU2L_adj",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "del_SU2L_adj",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_del_SU2L_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(E_VLL::group_SU2L(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU2L_fund",
+              "name": "del_SU2L_fund",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "del_SU2L_fund",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_del_SU2L_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU3c_adj",
+              "name": "del_SU3c_adj",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "del_SU3c_adj",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_del_SU3c_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(E_VLL::group_SU3c(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU3c_fund",
+              "name": "del_SU3c_fund",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "del_SU3c_fund",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_del_SU3c_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                }
+              ],
+              "cg_source": "builtin:eps",
+              "label": "eps_SU2L",
+              "name": "eps_SU2L",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "eps_SU2L",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_eps_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                }
+              ],
+              "cg_source": "builtin:eps",
+              "label": "eps_SU3c",
+              "name": "eps_SU3c",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "eps_SU3c",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_eps_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:fStruct",
+              "label": "fStruct_SU2L",
+              "name": "fStruct_SU2L",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "fStruct_SU2L",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_fStruct_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:fStruct",
+              "label": "fStruct_SU3c",
+              "name": "fStruct_SU3c",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "fStruct_SU3c",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_fStruct_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU2L_adj",
+              "name": "gen_SU2L_adj",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "gen_SU2L_adj",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_gen_SU2L_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(E_VLL::group_SU2L(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU2L_fund",
+              "name": "gen_SU2L_fund",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "gen_SU2L_fund",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_gen_SU2L_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU3c_adj",
+              "name": "gen_SU3c_adj",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "gen_SU3c_adj",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_gen_SU3c_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(E_VLL::group_SU3c(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU3c_fund",
+              "name": "gen_SU3c_fund",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "gen_SU3c_fund",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_gen_SU3c_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(E_VLL::group_SU2L(pychete::fund))"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "SparseArray[Automatic, {2, 2, 3, 3}, 0, {1, {{0, 6, 12}, {{1, 1, 3}, {1, 3, 1}, {2, 1, 2}, {2, 2, 1}, {2, 2, 3}, {2, 3, 2}, {1, 1, 2}, {1, 2, 1}, {1, 2, 3}, {1, 3, 2}, {2, 1, 3}, {2, 3, 1}}}, {1/2, -1/2, I/2, -1/2*I, -1/2, 1/2, -1/2*I, I/2, -1/2, 1/2, -1/2, 1/2}}]",
+              "label": "tFundf_SU2L",
+              "name": "tFundf_SU2L",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "tFundf_SU2L",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_tFundf_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_4"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(E_VLL::group_SU3c(pychete::fund))"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "SparseArray[Automatic, {3, 3, 8, 8}, 0, {1, {{0, 32, 64, 100}, {{1, 1, 8}, {1, 3, 6}, {1, 6, 3}, {1, 8, 1}, {2, 1, 2}, {2, 1, 7}, {2, 2, 1}, {2, 2, 8}, {2, 3, 4}, {2, 4, 3}, {2, 4, 6}, {2, 6, 4}, {2, 7, 1}, {2, 7, 8}, {2, 8, 2}, {2, 8, 7}, {3, 1, 4}, {3, 1, 5}, {3, 2, 3}, {3, 2, 6}, {3, 3, 2}, {3, 3, 7}, {3, 4, 1}, {3, 4, 8}, {3, 5, 1}, {3, 5, 8}, {3, 6, 2}, {3, 6, 7}, {3, 7, 3}, {3, 7, 6}, {3, 8, 4}, {3, 8, 5}, {1, 1, 2}, {1, 1, 7}, {1, 2, 1}, {1, 2, 8}, {1, 3, 4}, {1, 4, 3}, {1, 4, 6}, {1, 6, 4}, {1, 7, 1}, {1, 7, 8}, {1, 8, 2}, {1, 8, 7}, {2, 2, 7}, {2, 3, 6}, {2, 6, 3}, {2, 7, 2}, {3, 1, 3}, {3, 1, 6}, {3, 2, 4}, {3, 2, 5}, {3, 3, 1}, {3, 3, 8}, {3, 4, 2}, {3, 4, 7}, {3, 5, 2}, {3, 5, 7}, {3, 6, 1}, {3, 6, 8}, {3, 7, 4}, {3, 7, 5}, {3, 8, 3}, {3, 8, 6}, {1, 1, 4}, {1, 1, 5}, {1, 2, 3}, {1, 2, 6}, {1, 3, 2}, {1, 3, 7}, {1, 4, 1}, {1, 4, 8}, {1, 5, 1}, {1, 5, 8}, {1, 6, 2}, {1, 6, 7}, {1, 7, 3}, {1, 7, 6}, {1, 8, 4}, {1, 8, 5}, {2, 1, 3}, {2, 1, 6}, {2, 2, 4}, {2, 2, 5}, {2, 3, 1}, {2, 3, 8}, {2, 4, 2}, {2, 4, 7}, {2, 5, 2}, {2, 5, 7}, {2, 6, 1}, {2, 6, 8}, {2, 7, 4}, {2, 7, 5}, {2, 8, 3}, {2, 8, 6}, {3, 1, 8}, {3, 2, 7}, {3, 7, 2}, {3, 8, 1}}}, {1/2, 1/2, -1/2, -1/2, -1/4*I, 1/4, I/4, 1/4, I/2, -1/2*I, -1/2, 1/2, -1/4, I/4, -1/4, -1/4*I, I/4, (I/4)*Sqrt[3], I/4, 1/4, -1/4*I, -1/4, -1/4*I, -1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], -1/4, I/4, 1/4, -1/4*I, 1/4, Sqrt[3]/4, I/4, 1/4, -1/4*I, 1/4, -1/2*I, I/2, -1/2, 1/2, -1/4, -1/4*I, -1/4, I/4, 1/2, -1/2, 1/2, -1/2, I/4, -1/4, -1/4*I, (I/4)*Sqrt[3], -1/4*I, -1/4, I/4, 1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], 1/4, -1/4*I, -1/4, Sqrt[3]/4, 1/4, I/4, -1/4*I, (-1/4*I)*Sqrt[3], -1/4*I, 1/4, I/4, -1/4, I/4, -1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], -1/4, -1/4*I, 1/4, I/4, 1/4, Sqrt[3]/4, -1/4*I, -1/4, I/4, (-1/4*I)*Sqrt[3], I/4, -1/4, -1/4*I, 1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], 1/4, I/4, -1/4, Sqrt[3]/4, 1/4, -1/4*I, -1/2, -1/2, 1/2, 1/2}}]",
+              "label": "tFundf_SU3c",
+              "name": "tFundf_SU3c",
+              "role": "cg_tensor",
+              "theory": "E_VLL"
+            },
+            "name": "tFundf_SU3c",
+            "role": "cg_tensor",
+            "symbol": "E_VLL::cg_tensor_tFundf_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_4"
             ]
           },
           {
@@ -683,6 +1380,7 @@
             "data": {
               "charges": [],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Vector(E_VLL::group_U1Y)"
               },
@@ -691,16 +1389,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "B",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 1,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "B",
             "role": "field",
             "symbol": "E_VLL::field_B",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -711,6 +1413,7 @@
                 }
               ],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -722,22 +1425,27 @@
                 "__pychete_expression__": "E_VLL::coupling_ME"
               },
               "name": "EE",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "EE",
             "role": "field",
             "symbol": "E_VLL::field_EE",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
             "data": {
               "charges": [],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Vector(E_VLL::group_SU3c)"
               },
@@ -746,16 +1454,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "G",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 1,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "G",
             "role": "field",
             "symbol": "E_VLL::field_G",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -766,6 +1478,7 @@
                 }
               ],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Scalar"
               },
@@ -778,22 +1491,27 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "H",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "H",
             "role": "field",
             "symbol": "E_VLL::field_H",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
             "data": {
               "charges": [],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Vector(E_VLL::group_SU2L)"
               },
@@ -802,16 +1520,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "W",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 1,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "W",
             "role": "field",
             "symbol": "E_VLL::field_W",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -822,6 +1544,7 @@
                 }
               ],
               "chirality": "right",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -837,16 +1560,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "d",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "d",
             "role": "field",
             "symbol": "E_VLL::field_d",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -857,6 +1584,7 @@
                 }
               ],
               "chirality": "right",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -869,16 +1597,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "e",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "e",
             "role": "field",
             "symbol": "E_VLL::field_e",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -889,6 +1621,7 @@
                 }
               ],
               "chirality": "left",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -904,16 +1637,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "l",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "l",
             "role": "field",
             "symbol": "E_VLL::field_l",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -924,6 +1661,7 @@
                 }
               ],
               "chirality": "left",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -942,16 +1680,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "q",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "q",
             "role": "field",
             "symbol": "E_VLL::field_q",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -962,6 +1704,7 @@
                 }
               ],
               "chirality": "right",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -977,41 +1720,31 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "u",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "E_VLL"
+              "theory": "E_VLL",
+              "zero_mode": 0
             },
             "name": "u",
             "role": "field",
             "symbol": "E_VLL::field_u",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
             "data": {
-              "label": "i",
+              "label": "eps",
               "role": "external",
               "theory": "E_VLL"
             },
-            "name": "i",
+            "name": "eps",
             "role": "external",
-            "symbol": "E_VLL::external_i",
-            "tags": [
-              "python::pychete",
-              "python::external"
-            ]
-          },
-          {
-            "data": {
-              "label": "p",
-              "role": "external",
-              "theory": "E_VLL"
-            },
-            "name": "p",
-            "role": "external",
-            "symbol": "E_VLL::external_p",
+            "symbol": "E_VLL::external_eps",
             "tags": [
               "python::pychete",
               "python::external"

@@ -6,26 +6,198 @@
   "name": "Singlet_Scalar_Extension_model_definition",
   "schema_version": 1,
   "source": {
-    "asset": "assets/models/Singlet_Scalar_Extension.m",
-    "contains_lagrangian": true,
+    "generator": "helper_mathematica_scripts/convert_matchete_model_state.py",
     "matchete_runtime_required": false,
     "model": "Singlet_Scalar_Extension",
-    "parent_assets": [
-      "assets/models/SM.m"
-    ],
-    "parent_lagrangian_included": false
+    "upstream_generator": "export_matchete_model_state.wls",
+    "warnings": []
   },
   "state": {
     "active_theory": "Singlet_Scalar_Extension",
     "expressions": {
       "lagrangian": {
-        "expression": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List()))-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List()))-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2-1/6*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^3*pychete::Coupling(Singlet_Scalar_Extension::coupling_muphi,pychete::List(),0)-1/24*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(Singlet_Scalar_Extension::coupling_lambdaphi,pychete::List(),0)+1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)))^2",
+        "expression": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(Singlet_Scalar_Extension::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_mu2,pychete::List(),2)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))-1/2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_lambda,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_Yd,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),0)*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(Singlet_Scalar_Extension::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List()))-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_Ye,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),0)*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(Singlet_Scalar_Extension::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List()))-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Coupling(Singlet_Scalar_Extension::coupling_Yu,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),0))*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(Singlet_Scalar_Extension::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List()))*pychete::CG(pychete::Bar(Singlet_Scalar_Extension::external_eps(Singlet_Scalar_Extension::group_SU2L)),pychete::List(pychete::Bar(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Bar(pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::group_SU2L(pychete::fund)))))-pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Coupling(Singlet_Scalar_Extension::coupling_Yd,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),0))*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(Singlet_Scalar_Extension::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List()))-pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Coupling(Singlet_Scalar_Extension::coupling_Ye,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),0))*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(Singlet_Scalar_Extension::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List()))-pychete::Coupling(Singlet_Scalar_Extension::coupling_Yu,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_q,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(Singlet_Scalar_Extension::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List()))*pychete::CG(Singlet_Scalar_Extension::cg_tensor_eps_SU2L,pychete::List(pychete::Index(pychete::dummy_index(2),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))))+pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(Singlet_Scalar_Extension::field_e,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(Singlet_Scalar_Extension::field_u,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(Singlet_Scalar_Extension::field_d,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(Singlet_Scalar_Extension::field_l,pychete::Fermion,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::index_type_Flavor)),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))-1/4*pychete::FieldStrength(Singlet_Scalar_Extension::field_G,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU3c(pychete::adj))),pychete::List())^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_gs,pychete::List(),0)^2-1/4*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::adj))),pychete::List())^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2-1/4*pychete::FieldStrength(Singlet_Scalar_Extension::field_B,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(1),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2-1/6*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^3*pychete::Coupling(Singlet_Scalar_Extension::coupling_muphi,pychete::List(),0)-1/24*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(Singlet_Scalar_Extension::coupling_lambdaphi,pychete::List(),0)+1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2",
         "theory": "Singlet_Scalar_Extension"
       }
     },
     "schema_version": 3,
     "theories": {
       "Singlet_Scalar_Extension": {
+        "cg_tensors": {
+          "dSym_SU2L": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_dSym_SU2L",
+            "name": "dSym_SU2L",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:dSym",
+            "tensor": null
+          },
+          "dSym_SU3c": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_dSym_SU3c",
+            "name": "dSym_SU3c",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:dSym",
+            "tensor": null
+          },
+          "del_SU2L_adj": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_del_SU2L_adj",
+            "name": "del_SU2L_adj",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "del_SU2L_fund": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_del_SU2L_fund",
+            "name": "del_SU2L_fund",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
+              "pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "del_SU3c_adj": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_del_SU3c_adj",
+            "name": "del_SU3c_adj",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "del_SU3c_fund": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_del_SU3c_fund",
+            "name": "del_SU3c_fund",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "pychete::Bar(Singlet_Scalar_Extension::group_SU3c(pychete::fund))"
+            ],
+            "source": "builtin:del",
+            "tensor": null
+          },
+          "eps_SU2L": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_eps_SU2L",
+            "name": "eps_SU2L",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+            ],
+            "source": "builtin:eps",
+            "tensor": null
+          },
+          "eps_SU3c": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_eps_SU3c",
+            "name": "eps_SU3c",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+            ],
+            "source": "builtin:eps",
+            "tensor": null
+          },
+          "fStruct_SU2L": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_fStruct_SU2L",
+            "name": "fStruct_SU2L",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:fStruct",
+            "tensor": null
+          },
+          "fStruct_SU3c": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_fStruct_SU3c",
+            "name": "fStruct_SU3c",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:fStruct",
+            "tensor": null
+          },
+          "gen_SU2L_adj": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_gen_SU2L_adj",
+            "name": "gen_SU2L_adj",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "gen_SU2L_fund": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_gen_SU2L_fund",
+            "name": "gen_SU2L_fund",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
+              "pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "gen_SU3c_adj": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_gen_SU3c_adj",
+            "name": "gen_SU3c_adj",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "gen_SU3c_fund": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_gen_SU3c_fund",
+            "name": "gen_SU3c_fund",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "pychete::Bar(Singlet_Scalar_Extension::group_SU3c(pychete::fund))"
+            ],
+            "source": "builtin:gen",
+            "tensor": null
+          },
+          "tFundf_SU2L": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_tFundf_SU2L",
+            "name": "tFundf_SU2L",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
+              "pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+            ],
+            "source": "SparseArray[Automatic, {2, 2, 3, 3}, 0, {1, {{0, 6, 12}, {{1, 1, 3}, {1, 3, 1}, {2, 1, 2}, {2, 2, 1}, {2, 2, 3}, {2, 3, 2}, {1, 1, 2}, {1, 2, 1}, {1, 2, 3}, {1, 3, 2}, {2, 1, 3}, {2, 3, 1}}}, {1/2, -1/2, I/2, -1/2*I, -1/2, 1/2, -1/2*I, I/2, -1/2, 1/2, -1/2, 1/2}}]",
+            "tensor": null
+          },
+          "tFundf_SU3c": {
+            "label": "Singlet_Scalar_Extension::cg_tensor_tFundf_SU3c",
+            "name": "tFundf_SU3c",
+            "representations": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "pychete::Bar(Singlet_Scalar_Extension::group_SU3c(pychete::fund))",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+              "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+            ],
+            "source": "SparseArray[Automatic, {3, 3, 8, 8}, 0, {1, {{0, 32, 64, 100}, {{1, 1, 8}, {1, 3, 6}, {1, 6, 3}, {1, 8, 1}, {2, 1, 2}, {2, 1, 7}, {2, 2, 1}, {2, 2, 8}, {2, 3, 4}, {2, 4, 3}, {2, 4, 6}, {2, 6, 4}, {2, 7, 1}, {2, 7, 8}, {2, 8, 2}, {2, 8, 7}, {3, 1, 4}, {3, 1, 5}, {3, 2, 3}, {3, 2, 6}, {3, 3, 2}, {3, 3, 7}, {3, 4, 1}, {3, 4, 8}, {3, 5, 1}, {3, 5, 8}, {3, 6, 2}, {3, 6, 7}, {3, 7, 3}, {3, 7, 6}, {3, 8, 4}, {3, 8, 5}, {1, 1, 2}, {1, 1, 7}, {1, 2, 1}, {1, 2, 8}, {1, 3, 4}, {1, 4, 3}, {1, 4, 6}, {1, 6, 4}, {1, 7, 1}, {1, 7, 8}, {1, 8, 2}, {1, 8, 7}, {2, 2, 7}, {2, 3, 6}, {2, 6, 3}, {2, 7, 2}, {3, 1, 3}, {3, 1, 6}, {3, 2, 4}, {3, 2, 5}, {3, 3, 1}, {3, 3, 8}, {3, 4, 2}, {3, 4, 7}, {3, 5, 2}, {3, 5, 7}, {3, 6, 1}, {3, 6, 8}, {3, 7, 4}, {3, 7, 5}, {3, 8, 3}, {3, 8, 6}, {1, 1, 4}, {1, 1, 5}, {1, 2, 3}, {1, 2, 6}, {1, 3, 2}, {1, 3, 7}, {1, 4, 1}, {1, 4, 8}, {1, 5, 1}, {1, 5, 8}, {1, 6, 2}, {1, 6, 7}, {1, 7, 3}, {1, 7, 6}, {1, 8, 4}, {1, 8, 5}, {2, 1, 3}, {2, 1, 6}, {2, 2, 4}, {2, 2, 5}, {2, 3, 1}, {2, 3, 8}, {2, 4, 2}, {2, 4, 7}, {2, 5, 2}, {2, 5, 7}, {2, 6, 1}, {2, 6, 8}, {2, 7, 4}, {2, 7, 5}, {2, 8, 3}, {2, 8, 6}, {3, 1, 8}, {3, 2, 7}, {3, 7, 2}, {3, 8, 1}}}, {1/2, 1/2, -1/2, -1/2, -1/4*I, 1/4, I/4, 1/4, I/2, -1/2*I, -1/2, 1/2, -1/4, I/4, -1/4, -1/4*I, I/4, (I/4)*Sqrt[3], I/4, 1/4, -1/4*I, -1/4, -1/4*I, -1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], -1/4, I/4, 1/4, -1/4*I, 1/4, Sqrt[3]/4, I/4, 1/4, -1/4*I, 1/4, -1/2*I, I/2, -1/2, 1/2, -1/4, -1/4*I, -1/4, I/4, 1/2, -1/2, 1/2, -1/2, I/4, -1/4, -1/4*I, (I/4)*Sqrt[3], -1/4*I, -1/4, I/4, 1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], 1/4, -1/4*I, -1/4, Sqrt[3]/4, 1/4, I/4, -1/4*I, (-1/4*I)*Sqrt[3], -1/4*I, 1/4, I/4, -1/4, I/4, -1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], -1/4, -1/4*I, 1/4, I/4, 1/4, Sqrt[3]/4, -1/4*I, -1/4, I/4, (-1/4*I)*Sqrt[3], I/4, -1/4, -1/4*I, 1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], 1/4, I/4, -1/4, Sqrt[3]/4, 1/4, -1/4*I, -1/2, -1/2, 1/2, 1/2}}]",
+            "tensor": null
+          }
+        },
         "couplings": {
           "A": {
             "diagonal": [],
@@ -193,32 +365,39 @@
           "B": {
             "charges": [],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "Singlet_Scalar_Extension::field_B",
             "mass_indices": [],
             "mass_kind": "light",
             "mass_label": null,
             "name": "B",
+            "propagating": true,
             "self_conjugate": true,
-            "type": "pychete::Vector(Singlet_Scalar_Extension::group_U1Y)"
+            "type": "pychete::Vector(Singlet_Scalar_Extension::group_U1Y)",
+            "zero_mode": false
           },
           "G": {
             "charges": [],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "Singlet_Scalar_Extension::field_G",
             "mass_indices": [],
             "mass_kind": "light",
             "mass_label": null,
             "name": "G",
+            "propagating": true,
             "self_conjugate": true,
-            "type": "pychete::Vector(Singlet_Scalar_Extension::group_SU3c)"
+            "type": "pychete::Vector(Singlet_Scalar_Extension::group_SU3c)",
+            "zero_mode": false
           },
           "H": {
             "charges": [
               "Singlet_Scalar_Extension::group_U1Y(1/2)"
             ],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [
               "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
             ],
@@ -227,26 +406,32 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "H",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Scalar"
+            "type": "pychete::Scalar",
+            "zero_mode": false
           },
           "W": {
             "charges": [],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "Singlet_Scalar_Extension::field_W",
             "mass_indices": [],
             "mass_kind": "light",
             "mass_label": null,
             "name": "W",
+            "propagating": true,
             "self_conjugate": true,
-            "type": "pychete::Vector(Singlet_Scalar_Extension::group_SU2L)"
+            "type": "pychete::Vector(Singlet_Scalar_Extension::group_SU2L)",
+            "zero_mode": false
           },
           "d": {
             "charges": [
               "Singlet_Scalar_Extension::group_U1Y(-1/3)"
             ],
             "chirality": "right",
+            "field_role": "physical",
             "indices": [
               "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
               "Singlet_Scalar_Extension::index_type_Flavor"
@@ -256,14 +441,17 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "d",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "e": {
             "charges": [
               "Singlet_Scalar_Extension::group_U1Y(-1)"
             ],
             "chirality": "right",
+            "field_role": "physical",
             "indices": [
               "Singlet_Scalar_Extension::index_type_Flavor"
             ],
@@ -272,14 +460,17 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "e",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "l": {
             "charges": [
               "Singlet_Scalar_Extension::group_U1Y(-1/2)"
             ],
             "chirality": "left",
+            "field_role": "physical",
             "indices": [
               "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
               "Singlet_Scalar_Extension::index_type_Flavor"
@@ -289,26 +480,32 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "l",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "phi": {
             "charges": [],
             "chirality": "none",
+            "field_role": "physical",
             "indices": [],
             "label": "Singlet_Scalar_Extension::field_phi",
             "mass_indices": [],
             "mass_kind": "heavy",
             "mass_label": "Singlet_Scalar_Extension::coupling_M",
             "name": "phi",
+            "propagating": true,
             "self_conjugate": true,
-            "type": "pychete::Scalar"
+            "type": "pychete::Scalar",
+            "zero_mode": false
           },
           "q": {
             "charges": [
               "Singlet_Scalar_Extension::group_U1Y(1/6)"
             ],
             "chirality": "left",
+            "field_role": "physical",
             "indices": [
               "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
               "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
@@ -319,14 +516,17 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "q",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           },
           "u": {
             "charges": [
               "Singlet_Scalar_Extension::group_U1Y(2/3)"
             ],
             "chirality": "right",
+            "field_role": "physical",
             "indices": [
               "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
               "Singlet_Scalar_Extension::index_type_Flavor"
@@ -336,26 +536,34 @@
             "mass_kind": "light",
             "mass_label": null,
             "name": "u",
+            "propagating": true,
             "self_conjugate": false,
-            "type": "pychete::Fermion"
+            "type": "pychete::Fermion",
+            "zero_mode": false
           }
         },
         "groups": {
           "SU2L": {
+            "abelian": false,
             "coupling": "gL",
             "field": "W",
+            "kind": "gauge",
             "name": "SU2L",
             "type": "pychete::SU(2)"
           },
           "SU3c": {
+            "abelian": false,
             "coupling": "gs",
             "field": "G",
+            "kind": "gauge",
             "name": "SU3c",
             "type": "pychete::SU(3)"
           },
           "U1Y": {
+            "abelian": true,
             "coupling": "gY",
             "field": "B",
+            "kind": "gauge",
             "name": "U1Y",
             "type": "pychete::U1"
           }
@@ -370,6 +578,44 @@
             "dimension": null,
             "name": "Lorentz",
             "symbol": "pychete::Lorentz"
+          }
+        },
+        "representations": {
+          "Singlet_Scalar_Extension::group_SU2L(pychete::adj)": {
+            "dimension": 3,
+            "dynkin": [],
+            "expr": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)",
+            "group": "SU2L",
+            "label": "pychete::adj",
+            "name": "adj",
+            "reality": "real"
+          },
+          "Singlet_Scalar_Extension::group_SU2L(pychete::fund)": {
+            "dimension": 2,
+            "dynkin": [],
+            "expr": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
+            "group": "SU2L",
+            "label": "pychete::fund",
+            "name": "fund",
+            "reality": "pseudoreal"
+          },
+          "Singlet_Scalar_Extension::group_SU3c(pychete::adj)": {
+            "dimension": 8,
+            "dynkin": [],
+            "expr": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)",
+            "group": "SU3c",
+            "label": "pychete::adj",
+            "name": "adj",
+            "reality": "real"
+          },
+          "Singlet_Scalar_Extension::group_SU3c(pychete::fund)": {
+            "dimension": 3,
+            "dynkin": [],
+            "expr": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+            "group": "SU3c",
+            "label": "pychete::fund",
+            "name": "fund",
+            "reality": "complex"
           }
         },
         "schema_version": 2,
@@ -392,8 +638,10 @@
           },
           {
             "data": {
+              "group_abelian": 0,
               "group_coupling": "gL",
               "group_field": "W",
+              "group_kind": "gauge",
               "group_type": {
                 "__pychete_expression__": "pychete::SU(2)"
               },
@@ -407,13 +655,17 @@
             "symbol": "Singlet_Scalar_Extension::group_SU2L",
             "tags": [
               "python::pychete",
-              "python::group"
+              "python::group",
+              "python::group_kind_gauge",
+              "python::non_abelian"
             ]
           },
           {
             "data": {
+              "group_abelian": 0,
               "group_coupling": "gs",
               "group_field": "G",
+              "group_kind": "gauge",
               "group_type": {
                 "__pychete_expression__": "pychete::SU(3)"
               },
@@ -427,13 +679,17 @@
             "symbol": "Singlet_Scalar_Extension::group_SU3c",
             "tags": [
               "python::pychete",
-              "python::group"
+              "python::group",
+              "python::group_kind_gauge",
+              "python::non_abelian"
             ]
           },
           {
             "data": {
+              "group_abelian": 1,
               "group_coupling": "gY",
               "group_field": "B",
+              "group_kind": "gauge",
               "group_type": {
                 "__pychete_expression__": "pychete::U1"
               },
@@ -447,7 +703,448 @@
             "symbol": "Singlet_Scalar_Extension::group_U1Y",
             "tags": [
               "python::pychete",
-              "python::group"
+              "python::group",
+              "python::group_kind_gauge",
+              "python::abelian"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:dSym",
+              "label": "dSym_SU2L",
+              "name": "dSym_SU2L",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "dSym_SU2L",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_dSym_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:dSym",
+              "label": "dSym_SU3c",
+              "name": "dSym_SU3c",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "dSym_SU3c",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_dSym_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU2L_adj",
+              "name": "del_SU2L_adj",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "del_SU2L_adj",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_del_SU2L_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU2L_fund",
+              "name": "del_SU2L_fund",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "del_SU2L_fund",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_del_SU2L_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU3c_adj",
+              "name": "del_SU3c_adj",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "del_SU3c_adj",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_del_SU3c_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(Singlet_Scalar_Extension::group_SU3c(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:del",
+              "label": "del_SU3c_fund",
+              "name": "del_SU3c_fund",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "del_SU3c_fund",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_del_SU3c_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                }
+              ],
+              "cg_source": "builtin:eps",
+              "label": "eps_SU2L",
+              "name": "eps_SU2L",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "eps_SU2L",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_eps_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_2"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                }
+              ],
+              "cg_source": "builtin:eps",
+              "label": "eps_SU3c",
+              "name": "eps_SU3c",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "eps_SU3c",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_eps_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:fStruct",
+              "label": "fStruct_SU2L",
+              "name": "fStruct_SU2L",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "fStruct_SU2L",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_fStruct_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:fStruct",
+              "label": "fStruct_SU3c",
+              "name": "fStruct_SU3c",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "fStruct_SU3c",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_fStruct_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU2L_adj",
+              "name": "gen_SU2L_adj",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "gen_SU2L_adj",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_gen_SU2L_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU2L_fund",
+              "name": "gen_SU2L_fund",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "gen_SU2L_fund",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_gen_SU2L_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU3c_adj",
+              "name": "gen_SU3c_adj",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "gen_SU3c_adj",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_gen_SU3c_adj",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(Singlet_Scalar_Extension::group_SU3c(pychete::fund))"
+                }
+              ],
+              "cg_source": "builtin:gen",
+              "label": "gen_SU3c_fund",
+              "name": "gen_SU3c_fund",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "gen_SU3c_fund",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_gen_SU3c_fund",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_3"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::adj)"
+                }
+              ],
+              "cg_source": "SparseArray[Automatic, {2, 2, 3, 3}, 0, {1, {{0, 6, 12}, {{1, 1, 3}, {1, 3, 1}, {2, 1, 2}, {2, 2, 1}, {2, 2, 3}, {2, 3, 2}, {1, 1, 2}, {1, 2, 1}, {1, 2, 3}, {1, 3, 2}, {2, 1, 3}, {2, 3, 1}}}, {1/2, -1/2, I/2, -1/2*I, -1/2, 1/2, -1/2*I, I/2, -1/2, 1/2, -1/2, 1/2}}]",
+              "label": "tFundf_SU2L",
+              "name": "tFundf_SU2L",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "tFundf_SU2L",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_tFundf_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_4"
+            ]
+          },
+          {
+            "data": {
+              "cg_representations": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Bar(Singlet_Scalar_Extension::group_SU3c(pychete::fund))"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::adj)"
+                }
+              ],
+              "cg_source": "SparseArray[Automatic, {3, 3, 8, 8}, 0, {1, {{0, 32, 64, 100}, {{1, 1, 8}, {1, 3, 6}, {1, 6, 3}, {1, 8, 1}, {2, 1, 2}, {2, 1, 7}, {2, 2, 1}, {2, 2, 8}, {2, 3, 4}, {2, 4, 3}, {2, 4, 6}, {2, 6, 4}, {2, 7, 1}, {2, 7, 8}, {2, 8, 2}, {2, 8, 7}, {3, 1, 4}, {3, 1, 5}, {3, 2, 3}, {3, 2, 6}, {3, 3, 2}, {3, 3, 7}, {3, 4, 1}, {3, 4, 8}, {3, 5, 1}, {3, 5, 8}, {3, 6, 2}, {3, 6, 7}, {3, 7, 3}, {3, 7, 6}, {3, 8, 4}, {3, 8, 5}, {1, 1, 2}, {1, 1, 7}, {1, 2, 1}, {1, 2, 8}, {1, 3, 4}, {1, 4, 3}, {1, 4, 6}, {1, 6, 4}, {1, 7, 1}, {1, 7, 8}, {1, 8, 2}, {1, 8, 7}, {2, 2, 7}, {2, 3, 6}, {2, 6, 3}, {2, 7, 2}, {3, 1, 3}, {3, 1, 6}, {3, 2, 4}, {3, 2, 5}, {3, 3, 1}, {3, 3, 8}, {3, 4, 2}, {3, 4, 7}, {3, 5, 2}, {3, 5, 7}, {3, 6, 1}, {3, 6, 8}, {3, 7, 4}, {3, 7, 5}, {3, 8, 3}, {3, 8, 6}, {1, 1, 4}, {1, 1, 5}, {1, 2, 3}, {1, 2, 6}, {1, 3, 2}, {1, 3, 7}, {1, 4, 1}, {1, 4, 8}, {1, 5, 1}, {1, 5, 8}, {1, 6, 2}, {1, 6, 7}, {1, 7, 3}, {1, 7, 6}, {1, 8, 4}, {1, 8, 5}, {2, 1, 3}, {2, 1, 6}, {2, 2, 4}, {2, 2, 5}, {2, 3, 1}, {2, 3, 8}, {2, 4, 2}, {2, 4, 7}, {2, 5, 2}, {2, 5, 7}, {2, 6, 1}, {2, 6, 8}, {2, 7, 4}, {2, 7, 5}, {2, 8, 3}, {2, 8, 6}, {3, 1, 8}, {3, 2, 7}, {3, 7, 2}, {3, 8, 1}}}, {1/2, 1/2, -1/2, -1/2, -1/4*I, 1/4, I/4, 1/4, I/2, -1/2*I, -1/2, 1/2, -1/4, I/4, -1/4, -1/4*I, I/4, (I/4)*Sqrt[3], I/4, 1/4, -1/4*I, -1/4, -1/4*I, -1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], -1/4, I/4, 1/4, -1/4*I, 1/4, Sqrt[3]/4, I/4, 1/4, -1/4*I, 1/4, -1/2*I, I/2, -1/2, 1/2, -1/4, -1/4*I, -1/4, I/4, 1/2, -1/2, 1/2, -1/2, I/4, -1/4, -1/4*I, (I/4)*Sqrt[3], -1/4*I, -1/4, I/4, 1/4, (-1/4*I)*Sqrt[3], -1/4*Sqrt[3], 1/4, -1/4*I, -1/4, Sqrt[3]/4, 1/4, I/4, -1/4*I, (-1/4*I)*Sqrt[3], -1/4*I, 1/4, I/4, -1/4, I/4, -1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], -1/4, -1/4*I, 1/4, I/4, 1/4, Sqrt[3]/4, -1/4*I, -1/4, I/4, (-1/4*I)*Sqrt[3], I/4, -1/4, -1/4*I, 1/4, (I/4)*Sqrt[3], -1/4*Sqrt[3], 1/4, I/4, -1/4, Sqrt[3]/4, 1/4, -1/4*I, -1/2, -1/2, 1/2, 1/2}}]",
+              "label": "tFundf_SU3c",
+              "name": "tFundf_SU3c",
+              "role": "cg_tensor",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "tFundf_SU3c",
+            "role": "cg_tensor",
+            "symbol": "Singlet_Scalar_Extension::cg_tensor_tFundf_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::cg_tensor",
+              "python::cg_tensor_rank_4"
             ]
           },
           {
@@ -770,6 +1467,7 @@
             "data": {
               "charges": [],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Vector(Singlet_Scalar_Extension::group_U1Y)"
               },
@@ -778,22 +1476,27 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "B",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 1,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "B",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_B",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
             "data": {
               "charges": [],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Vector(Singlet_Scalar_Extension::group_SU3c)"
               },
@@ -802,16 +1505,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "G",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 1,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "G",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_G",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -822,6 +1529,7 @@
                 }
               ],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Scalar"
               },
@@ -834,22 +1542,27 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "H",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "H",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_H",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
             "data": {
               "charges": [],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Vector(Singlet_Scalar_Extension::group_SU2L)"
               },
@@ -858,16 +1571,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "W",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 1,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "W",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_W",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -878,6 +1595,7 @@
                 }
               ],
               "chirality": "right",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -893,16 +1611,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "d",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "d",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_d",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -913,6 +1635,7 @@
                 }
               ],
               "chirality": "right",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -925,16 +1648,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "e",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "e",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_e",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -945,6 +1672,7 @@
                 }
               ],
               "chirality": "left",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -960,22 +1688,27 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "l",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "l",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_l",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
             "data": {
               "charges": [],
               "chirality": "none",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Scalar"
               },
@@ -987,16 +1720,20 @@
                 "__pychete_expression__": "Singlet_Scalar_Extension::coupling_M"
               },
               "name": "phi",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 1,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "phi",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_phi",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -1007,6 +1744,7 @@
                 }
               ],
               "chirality": "left",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -1025,16 +1763,20 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "q",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "q",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_q",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
@@ -1045,6 +1787,7 @@
                 }
               ],
               "chirality": "right",
+              "field_role": "physical",
               "field_type": {
                 "__pychete_expression__": "pychete::Fermion"
               },
@@ -1060,27 +1803,31 @@
               "mass_indices": [],
               "mass_kind": "light",
               "name": "u",
+              "propagating": 1,
               "role": "field",
               "self_conjugate": 0,
-              "theory": "Singlet_Scalar_Extension"
+              "theory": "Singlet_Scalar_Extension",
+              "zero_mode": 0
             },
             "name": "u",
             "role": "field",
             "symbol": "Singlet_Scalar_Extension::field_u",
             "tags": [
               "python::pychete",
-              "python::field"
+              "python::field",
+              "python::field_role_physical",
+              "python::propagating"
             ]
           },
           {
             "data": {
-              "label": "i",
+              "label": "eps",
               "role": "external",
               "theory": "Singlet_Scalar_Extension"
             },
-            "name": "i",
+            "name": "eps",
             "role": "external",
-            "symbol": "Singlet_Scalar_Extension::external_i",
+            "symbol": "Singlet_Scalar_Extension::external_eps",
             "tags": [
               "python::pychete",
               "python::external"

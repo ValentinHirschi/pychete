@@ -129,3 +129,11 @@ discoveries, dependency patches, blockers, and remaining work.
   `wolframscript`.
 - Full validation means "all tests that map to pychete's implementation model,"
   with one-loop SMEFT matching treated as the primary acceptance target.
+
+## Additional User Decisions
+
+- Keep the Mathematica conversion route as an optional committed convenience
+  for users who have Mathematica, preferably through a top-level `scripts/`
+  directory. This does not change the core rule: pychete runtime code and
+  pytest remain completely Matchete- and Mathematica-independent, and committed
+  pychete-owned fixtures are the normal validation/user artifacts.

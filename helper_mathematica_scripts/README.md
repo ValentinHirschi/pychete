@@ -4,6 +4,13 @@ These scripts are development-only tooling for generating pychete-owned
 validation fixtures from the read-only Matchete checkout. Runtime pychete code
 and pytest must not call these scripts or require Mathematica.
 
+Top-level wrappers are also available under `scripts/` for users who want the
+optional convenience workflow from a more discoverable location:
+`scripts/export_matchete_model_state.wls` and
+`scripts/convert_matchete_model_state.py`. Those wrappers delegate to the
+maintained helper implementation here and remain optional; pychete itself stays
+Mathematica- and Matchete-independent.
+
 The intended flow is:
 
 1. Run a helper script against `Mathematica_reference/Matchete`.

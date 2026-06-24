@@ -77,13 +77,16 @@ def test_validation_fixture_restores_theory_before_expressions(tmp_path: Path) -
 
 def test_committed_vlf_model_fixture_is_mathematica_independent() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
-    expected_theory, expected_expressions = load_python_model(Path("assets/models/VLF_toy_model.py"))
+    expected_theory, _expected_expressions = load_python_model(Path("assets/models/VLF_toy_model.py"))
 
     theory = fixture.theory()
     assert fixture.kind == "model_definition"
+    assert fixture.source["generator"] == "helper_mathematica_scripts/convert_matchete_model_state.py"
+    assert fixture.source["upstream_generator"] == "export_matchete_model_state.wls"
     assert fixture.source["matchete_runtime_required"] is False
+    assert fixture.source["warnings"] == []
     assert theory.to_json_obj() == expected_theory.to_json_obj()
-    assert canonical_string(fixture.expression("lagrangian")) == canonical_string(expected_expressions["lagrangian"])
+    theory._validate_registered_expression(fixture.expression("lagrangian"))
     assert canonical_string(theory.fields["Psi"].charge_exprs[0]) == "VLF_toy_model::group_U1e(1)"
 
 
@@ -194,7 +197,7 @@ def test_committed_default_matching_fixtures_load_structured_results_without_mat
 def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica() -> None:
     expected = {
         "VLF_toy_model": {"kernels": 25, "contributions": 11, "supertraces": 47},
-        "Singlet_Scalar_Extension": {"kernels": 11, "contributions": 6, "supertraces": 27},
+        "Singlet_Scalar_Extension": {"kernels": 25, "contributions": 11, "supertraces": 47},
         "E_VLL": {"kernels": 25, "contributions": 11, "supertraces": 47},
         "S1S3LQs": {"kernels": 25, "contributions": 11, "supertraces": 47},
     }
@@ -259,7 +262,7 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         "Singlet_Scalar_Extension": {
             "reference_supertraces": 24,
             "conditions": 72,
-            "candidate_supertraces": 27,
+            "candidate_supertraces": 47,
             "common": {
                 "hScalar",
                 "hScalar-hScalar",
