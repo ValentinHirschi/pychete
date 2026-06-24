@@ -11,7 +11,6 @@ from .matching import (
     FluctuationPropagator,
     FluctuationSector,
     FluctuationStatistics,
-    HeavyScalarSolution,
     OneLoopMatchingNotImplementedError,
     OneLoopSetup,
     PowerTypeSupertraceContribution,
@@ -38,6 +37,7 @@ from .theory import (
     RepresentationReality,
     Theory,
 )
+from .tree_matching import HeavyScalarSolution
 from .validation import NumericProbeResult, evaluator_probe_equal
 
 __all__ = [

@@ -2548,6 +2548,31 @@ discoveries, dependency patches, blockers, and remaining work.
   dependency manifest.
 - `git diff --check` passed after the refactor and loader-boundary
   documentation slice.
+- Completed the second code-organization refactor slice:
+  - extracted tree-level heavy-scalar matching into
+    `src/pychete/tree_matching.py`, including `HeavyScalarSolution`,
+    `solve_heavy_scalar_eoms(...)`, and `match_tree(...)`;
+  - updated `Theory.solve_heavy_scalar_eoms(...)`,
+    `Theory.match(loop_order=0)`, and `pychete.api` to use the new focused
+    module as the canonical owner;
+  - kept compatibility imports from `pychete.matching` so existing callers that
+    import `HeavyScalarSolution`, `solve_heavy_scalar_eoms`, or `match_tree`
+    from the older module continue to work;
+  - reduced `matching.py` further by moving the tree-matching tail out of the
+    one-loop fluctuation/supertrace module.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_heavy_scalar_tree.py
+  tests/unit/definitions/test_pretty_printing.py
+  tests/unit/definitions/test_public_api.py -q'` passed after the tree
+  matching extraction: 20 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the tree matching extraction: no issues found in 28
+  source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the tree matching extraction: 179 passed,
+  1 skipped. The skip is the existing GammaLoop API import check because
+  GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the tree matching extraction.
 
 ## Remaining Work
 

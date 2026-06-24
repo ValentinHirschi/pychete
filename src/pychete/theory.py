@@ -17,10 +17,10 @@ if TYPE_CHECKING:
         FluctuationBasis,
         FluctuationBasisItem,
         FluctuationOperator,
-        HeavyScalarSolution,
         OneLoopSetup,
     )
     from .matching_results import MatchingResult
+    from .tree_matching import HeavyScalarSolution
 
 
 class FieldMassKind(StrEnum):
@@ -1812,7 +1812,7 @@ class Theory:
         not cached on the theory.
         """
 
-        from .matching import solve_heavy_scalar_eoms
+        from .tree_matching import solve_heavy_scalar_eoms
 
         return solve_heavy_scalar_eoms(self, lagrangian, eft_order=eft_order)
 
@@ -1868,7 +1868,8 @@ class Theory:
         implemented.
         """
 
-        from .matching import match_one_loop, match_tree
+        from .matching import match_one_loop
+        from .tree_matching import match_tree
 
         if loop_order == 0:
             return match_tree(self, lagrangian, eft_order=eft_order)
