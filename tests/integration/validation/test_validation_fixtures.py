@@ -117,10 +117,15 @@ def test_default_matching_target_manifest_lists_initial_models() -> None:
     manifest = json.loads(Path("assets/validation/matchete/default_matching_targets.json").read_text(encoding="utf-8"))
 
     assert manifest["schema_version"] == 1
+    models = manifest["models"]
     assert [model["name"] for model in manifest["models"]] == [
         "VLF_toy_model",
         "Singlet_Scalar_Extension",
         "E_VLL",
         "S1S3LQs",
     ]
-    assert all(model["status"] == "pending_fixture" for model in manifest["models"])
+    assert all(model["status"] == "pending_matching_fixture" for model in models)
+    for model in models:
+        assert Path(model["model_asset"]).is_file()
+        for parent_asset in model["parent_assets"]:
+            assert Path(parent_asset).is_file()

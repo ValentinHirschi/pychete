@@ -4,23 +4,37 @@
   "models": [
     {
       "name": "VLF_toy_model",
+      "model_asset": "assets/models/VLF_toy_model.m",
+      "parent_assets": [],
       "reference_result": "Validation/MatchingResults/previous/VLF_toy_model-EFT.m",
-      "status": "pending_fixture"
+      "status": "pending_matching_fixture"
     },
     {
       "name": "Singlet_Scalar_Extension",
+      "model_asset": "assets/models/Singlet_Scalar_Extension.m",
+      "parent_assets": [
+        "assets/models/SM.m"
+      ],
       "reference_result": "Validation/MatchingResults/previous/Singlet_Scalar_Extension-EFT.m",
-      "status": "pending_fixture"
+      "status": "pending_matching_fixture"
     },
     {
       "name": "E_VLL",
+      "model_asset": "assets/models/E_VLL.m",
+      "parent_assets": [
+        "assets/models/SM.m"
+      ],
       "reference_result": "Validation/MatchingResults/previous/E_VLL-EFT.m",
-      "status": "pending_fixture"
+      "status": "pending_matching_fixture"
     },
     {
       "name": "S1S3LQs",
+      "model_asset": "assets/models/S1S3LQs.m",
+      "parent_assets": [
+        "assets/models/SM.m"
+      ],
       "reference_result": "Validation/MatchingResults/previous/S1S3LQs-EFT.m",
-      "status": "pending_fixture"
+      "status": "pending_matching_fixture"
     }
   ]
 }

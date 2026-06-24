@@ -184,6 +184,17 @@ discoveries, dependency patches, blockers, and remaining work.
   - extended the supported Matchete model loader path to preserve
     `DefineCoupling` options instead of dropping them, including list-valued
     `DefineCoupling[{...}, ...]`.
+- Completed the seventh implementation slice:
+  - added pychete-owned model input assets for the remaining default one-loop
+    matching targets: `Singlet_Scalar_Extension.m`, `E_VLL.m`, and
+    `S1S3LQs.m`;
+  - added the pychete-owned `SM.m` parent model asset required by those three
+    default target files;
+  - updated the default matching target manifest so every target points to a
+    repository-owned `model_asset` and explicit `parent_assets` instead of
+    requiring tests to read from `Mathematica_reference/Matchete`;
+  - kept the status as `pending_matching_fixture` because the actual one-loop
+    matching-result fixtures are still not generated.
 
 ## Backend/API Discoveries
 
@@ -221,6 +232,11 @@ discoveries, dependency patches, blockers, and remaining work.
   include the current default keys before registering theory symbols, preserving
   the structural guarantee that expressions parse only after the symbol registry
   has the intended data.
+- The remaining default Matchete integration models all use `ParentModel["SM"]`.
+  pychete now owns copies of those child model files and the SM parent input,
+  but the loader still needs an explicit parent-model expansion path and CG
+  function handling before these inputs can become full committed model-state
+  fixtures.
 
 ## Test Status
 
@@ -280,12 +296,23 @@ discoveries, dependency patches, blockers, and remaining work.
   metadata slice: 69 passed, 1 skipped. The skip is the existing GammaLoop API
   import check because GammaLoop was not requested in the current dependency
   manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py` passed after the
+  default model asset slice: 6 passed.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the default
+  model asset slice: 69 passed, 1 skipped. The skip is the existing GammaLoop
+  API import check because GammaLoop was not requested in the current dependency
+  manifest.
 
 ## Remaining Work
 
 - Add committed validation fixture assets for the four default Matchete matching
-  integration models. A model-definition fixture now exists for `VLF_toy_model`;
+  integration models. Model input assets now exist for all four default targets
+  and the SM parent, and a model-definition fixture exists for `VLF_toy_model`;
   actual one-loop matching-result fixtures are still pending.
+- Add parent-model expansion and SM/CG parsing support to the model loader or
+  replace direct source parsing for these assets with generated pychete-owned
+  state fixtures.
 - Convert raw Matchete snapshots into pychete-owned fixture JSON that pytest can
   consume without Mathematica.
 - Add the first real matching-result fixture asset using the `MatchingResult`
