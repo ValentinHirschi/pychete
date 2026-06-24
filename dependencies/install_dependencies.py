@@ -35,7 +35,7 @@ DEFAULT_GAMMALOOP_REF = "db79edc84f6a1580decbcc4ede7ea0b1c79d9a08"
 
 MIN_RUST_VERSION = (1, 89, 0)
 REEXEC_SENTINEL = "PYCHETE_REEXECED_OUTSIDE_VENV"
-BOOTSTRAP_PACKAGES = ("pip", "maturin", "pytest", "mypy")
+BOOTSTRAP_PACKAGES = ("pip", "maturin", "pytest", "mypy", "numpy<2.5")
 
 MANAGED_PATHS = (
     VENV_DIR,

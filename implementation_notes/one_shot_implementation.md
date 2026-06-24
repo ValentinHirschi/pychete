@@ -141,6 +141,16 @@ discoveries, dependency patches, blockers, and remaining work.
   - kept `load_validation_fixture` out of the package-root public API while
     promoting `MatchingResult` as a public result object;
   - added Jupyter repr coverage for `MatchingResult`.
+- Completed the third implementation slice:
+  - added `pychete.validation.evaluator_probe_equal`, which compares two
+    expressions through `Expression.evaluator_multiple` rather than Python-side
+    substitution;
+  - added `NumericProbeResult` to carry equality, maximum absolute difference,
+    and per-sample differences;
+  - added NumPy to the managed dependency bootstrap because Symbolica evaluator
+    calls require the NumPy array API at runtime;
+  - pinned the managed NumPy dependency to `numpy<2.5` because NumPy 2.5 stubs
+    require Python 3.12 syntax while pychete's mypy target is Python 3.11.
 
 ## Backend/API Discoveries
 
@@ -156,6 +166,9 @@ discoveries, dependency patches, blockers, and remaining work.
   `Expression.matches`, `Expression.evaluator`, and `Expression.evaluator_multiple`.
   The numeric-probe validation layer should use these evaluator APIs rather than
   Python substitution/evaluation.
+- Directly tested `Expression.evaluator` and `Expression.evaluator_multiple` in
+  the managed venv. Both return NumPy arrays; without NumPy installed the
+  Symbolica evaluator path aborts before Python can raise a normal exception.
 
 ## Test Status
 
@@ -177,6 +190,13 @@ discoveries, dependency patches, blockers, and remaining work.
   `MatchingResult` slice: 60 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py` passed: 3 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the numeric-probe slice:
+  no issues found in 19 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the numeric-probe
+  slice: 63 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -186,4 +206,6 @@ discoveries, dependency patches, blockers, and remaining work.
   consume without Mathematica.
 - Add the first real matching-result fixture asset using the `MatchingResult`
   fixture schema.
+- Use `evaluator_probe_equal` in fixture comparison tests when canonical
+  equality is insufficient.
 - Extend the theory metadata and matching engine toward one-loop matching.
