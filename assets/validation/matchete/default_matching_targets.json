@@ -1,0 +1,26 @@
+{
+  "schema_version": 1,
+  "description": "Default Matchete one-loop matching integration targets for the pychete one-shot port.",
+  "models": [
+    {
+      "name": "VLF_toy_model",
+      "reference_result": "Validation/MatchingResults/previous/VLF_toy_model-EFT.m",
+      "status": "pending_fixture"
+    },
+    {
+      "name": "Singlet_Scalar_Extension",
+      "reference_result": "Validation/MatchingResults/previous/Singlet_Scalar_Extension-EFT.m",
+      "status": "pending_fixture"
+    },
+    {
+      "name": "E_VLL",
+      "reference_result": "Validation/MatchingResults/previous/E_VLL-EFT.m",
+      "status": "pending_fixture"
+    },
+    {
+      "name": "S1S3LQs",
+      "reference_result": "Validation/MatchingResults/previous/S1S3LQs-EFT.m",
+      "status": "pending_fixture"
+    }
+  ]
+}
