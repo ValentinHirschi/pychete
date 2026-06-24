@@ -11,3 +11,5 @@ dependencies/symbolica/
 dependencies/symbolica-community/
 dependencies/wheels/
 Mathematica_reference/Matchete/
+
+.DS_Store

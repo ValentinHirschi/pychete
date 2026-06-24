@@ -88,8 +88,9 @@ def test_pretty_json_checkpoint_contains_full_lagrangian_expression() -> None:
     assert payload["schema_version"] == 2
     assert payload["theory_name"] == "json_scalar"
     assert payload["lagrangian"] == canonical_string(lagrangian)
-    assert {"field", "index"} <= {entry["role"] for entry in payload["symbols"]}
-    assert any(entry["role"] == "index" and entry["name"] == "d" for entry in payload["symbols"])
+    assert "field" in {entry["role"] for entry in payload["symbols"]}
+    assert all(entry["role"] != "index" for entry in payload["symbols"])
+    assert "pychete::index_d" in payload["lagrangian"]
     assert canonical_string(expression_from_canonical(payload["lagrangian"])) == payload["lagrangian"]
 
 

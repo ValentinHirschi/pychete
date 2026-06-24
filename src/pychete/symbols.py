@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import re
 from enum import StrEnum
-from functools import cached_property
+from functools import cache, cached_property
 from typing import Any
 
 from symbolica import Expression, PrintMode, S
@@ -466,6 +466,19 @@ class SymbolStore:
         kwargs.setdefault("print", _print_user_symbol)
         return _sym(f"{namespace}::{safe_symbol_name(name)}", **kwargs)
 
+    @cache
+    def index_label(self, name: str) -> Expression:
+        label = safe_symbol_name(name)
+        return self.user(
+            self.namespace,
+            f"index_{label}",
+            tags=[SymbolRole.PROJECT.value, SymbolRole.INDEX.value],
+            data={
+                SymbolDataKey.ROLE.value: SymbolRole.INDEX.value,
+                SymbolDataKey.LABEL.value: label,
+            },
+        )
+
     def register_builtins(self) -> None:
         for name in self.builtin_registry_names:
             getattr(self, name)
@@ -770,7 +783,14 @@ def latex_string(expr: Expression) -> str:
     return display_string(expr, PrintMode.Latex)
 
 
+def _register_central_index_labels_in_text(text: str) -> None:
+    pattern = rf"{re.escape(s.namespace)}::index_([0-9A-Za-z_]+)"
+    for match in re.finditer(pattern, text):
+        s.index_label(match.group(1))
+
+
 def expression_from_canonical(text: str) -> Expression:
+    _register_central_index_labels_in_text(text)
     return Expression.parse(text)
 
 

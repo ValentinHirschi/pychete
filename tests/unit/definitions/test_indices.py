@@ -17,16 +17,38 @@ def test_open_and_dummy_indices_are_detected_by_full_index_expression() -> None:
     assert [info.expr for info in open_indices(expr)] == [b]
 
 
-def test_dummy_relabeling_is_deterministic_per_theory() -> None:
+def test_dummy_relabeling_is_deterministic_without_theory_owned_labels() -> None:
     theory = Theory("indices_relabel")
     flavor = theory.define_flavor_index("Flavor", 3)
     phi = theory.define_field("phi", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
     a = theory.index("a", flavor.symbol)
 
-    relabeled = relabel_dummy_indices(theory, phi(a) * phi(a))
+    relabeled = relabel_dummy_indices(phi(a) * phi(a))
+    canonical = canonical_string(relabeled)
 
-    assert "index_d0" in canonical_string(relabeled)
-    assert "index_a" not in canonical_string(relabeled)
+    assert "pychete::index_d0" in canonical
+    assert "indices_relabel::index_d0" not in canonical
+    assert "pychete::index_a" not in canonical
+
+
+def test_index_labels_are_central_across_theories() -> None:
+    first = Theory("first_indices")
+    second = Theory("second_indices")
+
+    assert canonical_string(first.lorentz_index("mu")[0]) == "pychete::index_mu"
+    assert canonical_string(first.lorentz_index("mu")[0]) == canonical_string(second.lorentz_index("mu")[0])
+
+
+def test_same_index_label_with_different_representations_does_not_collide() -> None:
+    theory = Theory("index_representation_identity")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    lorentz_i = theory.index("i", s.Lorentz)
+    flavor_i = theory.index("i", flavor.symbol)
+
+    assert canonical_string(lorentz_i[0]) == canonical_string(flavor_i[0])
+    assert canonical_string(lorentz_i) != canonical_string(flavor_i)
+    assert [info.expr for info in dummy_indices(lorentz_i**2 * flavor_i)] == [lorentz_i]
+    assert [info.expr for info in open_indices(lorentz_i**2 * flavor_i)] == [flavor_i]
 
 
 def test_index_counts_use_symbolica_patterns_for_normalized_powers() -> None:

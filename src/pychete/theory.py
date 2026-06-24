@@ -93,6 +93,26 @@ def _symbol_manifest_sort_key(entry: dict[str, Any]) -> tuple[int, str, str]:
     return (_SYMBOL_ROLE_ORDER.get(role, 100), role, str(entry.get("name", "")))
 
 
+def _central_index_label_name(symbol: Expression) -> str | None:
+    canonical = canonical_string(symbol)
+    prefix = f"{s.namespace}::index_"
+    if not canonical.startswith(prefix):
+        return None
+    local_name = symbol.get_name().split("::")[-1]
+    if not local_name.startswith("index_"):
+        return None
+    return local_name.removeprefix("index_")
+
+
+def _is_central_index_label(symbol: Expression) -> bool:
+    has_data = (
+        symbol_data(symbol, SymbolDataKey.ROLE) == SymbolRole.INDEX.value
+        and symbol_data(symbol, SymbolDataKey.LABEL) is not None
+        and symbol_data(symbol, SymbolDataKey.THEORY) is None
+    )
+    return has_data or _central_index_label_name(symbol) is not None
+
+
 def field_mass_kind_from_label(label: Expression) -> FieldMassKind:
     value = symbol_data(label, SymbolDataKey.MASS_KIND, FieldMassKind.MASSLESS.value)
     return FieldMassKind.from_user(str(value))
@@ -400,9 +420,9 @@ class Theory:
         for symbol in expr.get_all_symbols():
             canonical = canonical_string(symbol)
             if canonical.startswith(builtin_namespace):
-                if canonical not in builtin_symbols:
-                    raise ValueError(f"Unregistered pychete builtin symbol in expression: {canonical}")
-                continue
+                if canonical in builtin_symbols or _is_central_index_label(symbol):
+                    continue
+                raise ValueError(f"Unregistered pychete builtin symbol in expression: {canonical}")
             if not canonical.startswith(theory_namespace):
                 continue
             role = symbol_data(symbol, SymbolDataKey.ROLE)
@@ -442,7 +462,7 @@ class Theory:
         label: str | Expression,
         representation: BuiltinIndexType | str | Expression = BuiltinIndexType.LORENTZ,
     ) -> Expression:
-        label_expr = label if isinstance(label, Expression) else self.symbol(label, role=SymbolRole.INDEX)
+        label_expr = label if isinstance(label, Expression) else s.index_label(label)
         if isinstance(representation, Expression):
             rep_expr = representation
         else:

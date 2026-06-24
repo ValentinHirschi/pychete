@@ -8,7 +8,6 @@ from symbolica import Expression, Replacement
 
 from .expr import as_int, index_pattern, is_head, power_pattern
 from .symbols import SymbolRole, canonical_string, display_string, latex_string, s
-from .theory import Theory
 
 
 @dataclass(frozen=True)
@@ -69,9 +68,9 @@ def dummy_indices(expr: Expression) -> tuple[IndexInfo, ...]:
     return tuple(info for info in collect_indices(expr) if counts[info.expr] > 1)
 
 
-def relabel_dummy_indices(theory: Theory, expr: Expression, *, prefix: str = "d") -> Expression:
+def relabel_dummy_indices(expr: Expression, *, prefix: str = "d") -> Expression:
     replacements: list[tuple[Expression, Expression]] = []
     for i, info in enumerate(sorted(dummy_indices(expr), key=lambda item: (canonical_string(item.representation), canonical_string(item.expr)))):
-        new_label = theory.symbol(f"{prefix}{i}", role=SymbolRole.INDEX)
+        new_label = s.index_label(f"{prefix}{i}")
         replacements.append((info.expr, s.Index(new_label, info.representation)))
     return expr.replace_multiple([Replacement(old, new) for old, new in replacements])

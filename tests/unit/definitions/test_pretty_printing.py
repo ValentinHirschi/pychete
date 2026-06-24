@@ -219,7 +219,7 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
 
         from symbolica import PrintMode
 
-        from pychete import load_state
+        from pychete import canonical_string, collect_indices, load_state
 
         format_options = {
             "max_line_length": None,
@@ -236,8 +236,9 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
         assert theory is not None
         assert theory.lagrangian is not None
         assert theory.field_handle("phi").label.get_symbol_data("mass_label") == theory.coupling_handle("m").label
-        assert theory._symbols["index:d"].get_symbol_data("role") == "index"
-        assert theory._symbols["index:d"].get_symbol_data("label") == "d"
+        assert "index:d" not in theory._symbols
+        assert "pychete::index_d" in canonical_string(theory.lagrangian)
+        assert any(canonical_string(info.label) == "pychete::index_d" for info in collect_indices(theory.lagrangian))
         symbolica = theory.lagrangian.format(mode=PrintMode.Symbolica, **format_options)
         latex = theory.lagrangian.format(mode=PrintMode.Latex, **format_options)
         assert symbolica == "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d](phi)^2"
