@@ -210,6 +210,20 @@ discoveries, dependency patches, blockers, and remaining work.
     `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`;
   - updated the default matching target manifest to point at the committed
     model-definition fixtures for all default targets.
+- Completed the ninth implementation slice:
+  - extended the supported Mathematica expression normalizer for child target
+    Lagrangians with integer factorials, simple implicit products, Mathematica
+    list braces, and general `**` noncommutative chains;
+  - changed parent expansion so child model expression loading uses parent
+    metadata but does not attempt to parse or include the parent SM Lagrangian;
+  - parsed and committed child-Lagrangian expressions for
+    `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs` in their
+    model-definition fixtures;
+  - skipped local delayed helper definitions such as `tauSU2L[...] := ...`
+    during direct parsing for now, leaving their calls as registered external
+    heads until the CG adapter layer can lower them through spenso/idenso;
+  - added tests proving those child Lagrangians parse from the pychete-owned
+    model assets and restore from committed fixtures without Mathematica.
 
 ## Backend/API Discoveries
 
@@ -258,6 +272,11 @@ discoveries, dependency patches, blockers, and remaining work.
   implicit multiplication, noncommutative chains, and charge-conjugation
   expressions, or a Wolfram-generated pychete-owned fixture path for those
   expressions.
+- Child-Lagrangian parsing now works for the three SM-backed default targets
+  using parent metadata. The committed expressions intentionally do not include
+  the SM parent Lagrangian yet; S1/S3 local CG helper calls are preserved as
+  registered external Symbolica heads until they are routed through the planned
+  spenso/idenso CG adapter layer.
 
 ## Test Status
 
@@ -334,6 +353,16 @@ discoveries, dependency patches, blockers, and remaining work.
   parent-model metadata fixture slice: 72 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in the
   current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/models/test_model_loaders.py
+  tests/integration/validation/test_validation_fixtures.py` passed after the
+  child-Lagrangian fixture slice: 15 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the child-Lagrangian
+  fixture slice: no issues found in 19 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  child-Lagrangian fixture slice: 73 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
@@ -346,8 +375,8 @@ discoveries, dependency patches, blockers, and remaining work.
   fixtures.
 - Convert raw Matchete snapshots into pychete-owned fixture JSON that pytest can
   consume without Mathematica.
-- Add the first real matching-result fixture asset using the `MatchingResult`
-  fixture schema.
+- Add the first real one-loop matching-result fixture asset using the
+  `MatchingResult` fixture schema.
 - Use `evaluator_probe_equal` in fixture comparison tests when canonical
   equality is insufficient.
 - Extend field metadata further for background fields, Goldstones, ghosts,

@@ -1,20 +1,28 @@
 {
-  "expressions": [],
+  "expressions": [
+    "lagrangian"
+  ],
   "kind": "model_definition",
   "name": "Singlet_Scalar_Extension_model_definition",
   "schema_version": 1,
   "source": {
     "asset": "assets/models/Singlet_Scalar_Extension.m",
-    "contains_lagrangian": false,
+    "contains_lagrangian": true,
     "matchete_runtime_required": false,
     "model": "Singlet_Scalar_Extension",
     "parent_assets": [
       "assets/models/SM.m"
-    ]
+    ],
+    "parent_lagrangian_included": false
   },
   "state": {
     "active_theory": "Singlet_Scalar_Extension",
-    "expressions": {},
+    "expressions": {
+      "lagrangian": {
+        "expression": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List()))-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(Singlet_Scalar_Extension::external_i),pychete::List()))-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2-1/6*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^3*pychete::Coupling(Singlet_Scalar_Extension::coupling_muphi,pychete::List(),0)-1/24*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(Singlet_Scalar_Extension::coupling_lambdaphi,pychete::List(),0)+1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)))^2",
+        "theory": "Singlet_Scalar_Extension"
+      }
+    },
     "schema_version": 3,
     "theories": {
       "Singlet_Scalar_Extension": {
@@ -1062,6 +1070,20 @@
             "tags": [
               "python::pychete",
               "python::field"
+            ]
+          },
+          {
+            "data": {
+              "label": "i",
+              "role": "external",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "i",
+            "role": "external",
+            "symbol": "Singlet_Scalar_Extension::external_i",
+            "tags": [
+              "python::pychete",
+              "python::external"
             ]
           }
         ],

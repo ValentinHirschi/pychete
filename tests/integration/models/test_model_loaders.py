@@ -125,6 +125,15 @@ def test_default_parent_model_assets_load_metadata_without_reference_checkout() 
         assert theory.index_types["Flavor"].dimension == 3
 
 
+def test_default_parent_model_child_lagrangians_parse_with_parent_metadata() -> None:
+    for name in ("Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
+        theory, expressions = load_matchete_model(Path(f"assets/models/{name}.m"))
+        assert theory.name == name
+        assert set(expressions) == {"lagrangian"}
+        assert {"H", "q", "l"} <= set(theory.fields)
+        theory._validate_registered_expression(expressions["lagrangian"])
+
+
 def test_runtime_code_does_not_depend_on_matchete_reference_checkout() -> None:
     source_root = Path("src/pychete")
     offenders = []

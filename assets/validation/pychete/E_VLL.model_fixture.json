@@ -1,20 +1,28 @@
 {
-  "expressions": [],
+  "expressions": [
+    "lagrangian"
+  ],
   "kind": "model_definition",
   "name": "E_VLL_model_definition",
   "schema_version": 1,
   "source": {
     "asset": "assets/models/E_VLL.m",
-    "contains_lagrangian": false,
+    "contains_lagrangian": true,
     "matchete_runtime_required": false,
     "model": "E_VLL",
     "parent_assets": [
       "assets/models/SM.m"
-    ]
+    ],
+    "parent_lagrangian_included": false
   },
   "state": {
     "active_theory": "E_VLL",
-    "expressions": {},
+    "expressions": {
+      "lagrangian": {
+        "expression": "-pychete::Coupling(E_VLL::coupling_ME,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())),pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List()))-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(E_VLL::external_i),pychete::List())*pychete::Coupling(E_VLL::coupling_yE,pychete::List(E_VLL::external_p),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(E_VLL::external_i,E_VLL::external_p),pychete::List())),pychete::PR,pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List()))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())),pychete::Gamma(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)),pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz))))+pychete::Bar(-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(E_VLL::external_i),pychete::List())*pychete::Coupling(E_VLL::coupling_yE,pychete::List(E_VLL::external_p),0)*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(E_VLL::external_i,E_VLL::external_p),pychete::List())),pychete::PR,pychete::Field(E_VLL::field_EE,pychete::Fermion,pychete::List(),pychete::List())))",
+        "theory": "E_VLL"
+      }
+    },
     "schema_version": 3,
     "theories": {
       "E_VLL": {
@@ -979,6 +987,34 @@
             "tags": [
               "python::pychete",
               "python::field"
+            ]
+          },
+          {
+            "data": {
+              "label": "i",
+              "role": "external",
+              "theory": "E_VLL"
+            },
+            "name": "i",
+            "role": "external",
+            "symbol": "E_VLL::external_i",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "p",
+              "role": "external",
+              "theory": "E_VLL"
+            },
+            "name": "p",
+            "role": "external",
+            "symbol": "E_VLL::external_p",
+            "tags": [
+              "python::pychete",
+              "python::external"
             ]
           }
         ],

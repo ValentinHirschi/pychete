@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import re
+from math import factorial
 from pathlib import Path
 
 from symbolica import Expression
@@ -258,12 +259,111 @@ def _rewrite_prefix_apply(expr: str, head: str) -> str:
     return expr
 
 
+def _rewrite_integer_factorials(expr: str) -> str:
+    return re.sub(r"(?<![A-Za-z])(\d+)!", lambda match: str(factorial(int(match.group(1)))), expr)
+
+
+def _matching_left_bracket(expr: str, close_pos: int) -> int:
+    depth = 0
+    for i in range(close_pos, -1, -1):
+        if expr[i] == "]":
+            depth += 1
+        elif expr[i] == "[":
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ValueError(f"Unbalanced brackets in expression: {expr}")
+
+
+def _matching_right_bracket(expr: str, open_pos: int) -> int:
+    depth = 0
+    for i in range(open_pos, len(expr)):
+        if expr[i] == "[":
+            depth += 1
+        elif expr[i] == "]":
+            depth -= 1
+            if depth == 0:
+                return i
+    raise ValueError(f"Unbalanced brackets in expression: {expr}")
+
+
+def _identifier_start(expr: str, end_pos: int) -> int:
+    i = end_pos
+    while i > 0 and (expr[i - 1].isalnum() or expr[i - 1] == "_"):
+        i -= 1
+    return i
+
+
+def _identifier_end(expr: str, start_pos: int) -> int:
+    i = start_pos
+    while i < len(expr) and (expr[i].isalnum() or expr[i] == "_"):
+        i += 1
+    return i
+
+
+def _left_operand_span(expr: str, operator_pos: int) -> tuple[int, int]:
+    end = operator_pos
+    while end > 0 and expr[end - 1].isspace():
+        end -= 1
+    if end == 0:
+        raise ValueError(f"Missing left operand for ** in expression: {expr}")
+    if expr[end - 1] == "]":
+        open_pos = _matching_left_bracket(expr, end - 1)
+        return (_identifier_start(expr, open_pos), end)
+    return (_identifier_start(expr, end), end)
+
+
+def _right_operand_span(expr: str, operator_pos: int) -> tuple[int, int]:
+    start = operator_pos + 2
+    while start < len(expr) and expr[start].isspace():
+        start += 1
+    name_end = _identifier_end(expr, start)
+    if name_end == start:
+        raise ValueError(f"Missing right operand for ** in expression: {expr}")
+    if name_end < len(expr) and expr[name_end] == "[":
+        return (start, _matching_right_bracket(expr, name_end) + 1)
+    return (start, name_end)
+
+
+def _rewrite_ncm(expr: str) -> str:
+    while "**" in expr:
+        operator_pos = expr.find("**")
+        chain_start, left_end = _left_operand_span(expr, operator_pos)
+        operands = [expr[chain_start:left_end].strip()]
+        chain_end = left_end
+        next_operator = operator_pos
+        while next_operator != -1:
+            right_start, right_end = _right_operand_span(expr, next_operator)
+            operands.append(expr[right_start:right_end].strip())
+            chain_end = right_end
+            probe = chain_end
+            while probe < len(expr) and expr[probe].isspace():
+                probe += 1
+            next_operator = probe if expr.startswith("**", probe) else -1
+        expr = expr[:chain_start] + f"NCM[{', '.join(operands)}]" + expr[chain_end:]
+    return expr
+
+
+def _rewrite_lists(expr: str) -> str:
+    return expr.replace("{", "List[").replace("}", "]")
+
+
+def _rewrite_implicit_products(expr: str) -> str:
+    expr = re.sub(r"\]\s*(?=[A-Za-z])", "]*", expr)
+    expr = re.sub(r"(?<=[0-9])\s+(?=[A-Za-z])", "*", expr)
+    return expr
+
+
 def _normalize_expression(text: str) -> str:
     expr = _preprocess_names(text.strip())
     expr = re.sub(r"\s*//\s*RelabelIndices\s*$", "", expr)
     expr = _rewrite_prefix_apply(expr, "CConj")
     expr = _rewrite_prefix_apply(expr, "Bar")
+    expr = _rewrite_integer_factorials(expr)
+    expr = _rewrite_lists(expr)
     expr = _NCM_CHAIN_RE.sub(r"NCM[\1, \2, \3]", expr)
+    expr = _rewrite_ncm(expr)
+    expr = _rewrite_implicit_products(expr)
     return expr
 
 
@@ -361,6 +461,8 @@ def _eval_module(args_raw: list[str], theory: Theory) -> Expression:
     statements = _split_top_level(body, ";")
     result = Expression.num(0)
     for statement in statements:
+        if ":=" in statement:
+            continue
         if "=" in statement:
             name, value = statement.split("=", 1)
             env[_clean_name(name)] = _eval_expression(value, theory, env)
@@ -406,7 +508,7 @@ def _load_matchete_model_into(
                 parent_path,
                 theory,
                 expressions,
-                include_lagrangian=include_lagrangian,
+                include_lagrangian=False,
                 parameters=parameters,
                 visited=visited,
             )

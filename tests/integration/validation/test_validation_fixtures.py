@@ -147,4 +147,8 @@ def test_default_model_definition_fixtures_load_without_mathematica() -> None:
         assert fixture.source["matchete_runtime_required"] is False
         assert theory.name == model
         assert fields <= set(theory.fields)
+        assert "lagrangian" in fixture.expression_names
+        theory._validate_registered_expression(fixture.expression("lagrangian"))
+        if fixture.source.get("parent_assets"):
+            assert fixture.source["parent_lagrangian_included"] is False
         theory.symbol_manifest()

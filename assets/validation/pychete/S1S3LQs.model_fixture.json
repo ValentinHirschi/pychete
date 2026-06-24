@@ -1,20 +1,28 @@
 {
-  "expressions": [],
+  "expressions": [
+    "lagrangian"
+  ],
   "kind": "model_definition",
   "name": "S1S3LQs_model_definition",
   "schema_version": 1,
   "source": {
     "asset": "assets/models/S1S3LQs.m",
-    "contains_lagrangian": false,
+    "contains_lagrangian": true,
     "matchete_runtime_required": false,
     "model": "S1S3LQs",
     "parent_assets": [
       "assets/models/SM.m"
-    ]
+    ],
+    "parent_lagrangian_included": false
   },
   "state": {
     "active_theory": "S1S3LQs",
-    "expressions": {},
+    "expressions": {
+      "lagrangian": {
+        "expression": "-pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(),pychete::List())*pychete::Coupling(S1S3LQs::coupling_M1,pychete::List(),0)^2*pychete::Bar(pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(),pychete::List()))-pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(),pychete::List())*pychete::Coupling(S1S3LQs::coupling_M3,pychete::List(),0)^2*pychete::Bar(pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(),pychete::List()))-pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_i),pychete::List())*pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List())*pychete::Coupling(S1S3LQs::coupling_lambdaH1,pychete::List(),0)*pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_i),pychete::List()))*pychete::Bar(pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List()))-pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_i),pychete::List())*pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_J),pychete::List())*pychete::Coupling(S1S3LQs::coupling_lambdaH3,pychete::List(),0)*pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_i),pychete::List()))*pychete::Bar(pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_J),pychete::List()))-pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_j),pychete::List())*pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List())*pychete::Coupling(S1S3LQs::coupling_lambdaH13,pychete::List(),0)*pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_i),pychete::List()))*pychete::Bar(pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_J),pychete::List()))*S1S3LQs::external_tauSU2L(S1S3LQs::external_J,S1S3LQs::external_i,S1S3LQs::external_j)-1\ud835\udc56*pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_j),pychete::List())*pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_L),pychete::List())*pychete::Coupling(S1S3LQs::coupling_lambdaH3p,pychete::List(),0)*pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_i),pychete::List()))*pychete::Bar(pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_K),pychete::List()))*S1S3LQs::external_tauSU2L(S1S3LQs::external_J,S1S3LQs::external_i,S1S3LQs::external_j)*S1S3LQs::external_fSU2L(S1S3LQs::external_J,S1S3LQs::external_K,S1S3LQs::external_L)+pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List())*pychete::Coupling(S1S3LQs::coupling_y1L,pychete::List(S1S3LQs::external_p,S1S3LQs::external_r),0)*pychete::Bar(S1S3LQs::external_epsilonSU2L(S1S3LQs::external_i,S1S3LQs::external_j))*pychete::NCM(pychete::Bar(pychete::CConj(pychete::Field(S1S3LQs::field_q,pychete::Fermion,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_i,S1S3LQs::external_p),pychete::List()))),pychete::Field(S1S3LQs::field_l,pychete::Fermion,pychete::List(S1S3LQs::external_j,S1S3LQs::external_r),pychete::List()))+pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List())*pychete::Coupling(S1S3LQs::coupling_y1R,pychete::List(S1S3LQs::external_p,S1S3LQs::external_r),0)*pychete::NCM(pychete::Bar(pychete::CConj(pychete::Field(S1S3LQs::field_u,pychete::Fermion,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_p),pychete::List()))),pychete::Field(S1S3LQs::field_e,pychete::Fermion,pychete::List(S1S3LQs::external_r),pychete::List()))+pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_J),pychete::List())*pychete::Coupling(S1S3LQs::coupling_y3L,pychete::List(S1S3LQs::external_p,S1S3LQs::external_r),0)*pychete::Bar(S1S3LQs::external_epsilonSU2L(S1S3LQs::external_i,S1S3LQs::external_j))*pychete::NCM(pychete::Bar(pychete::CConj(pychete::Field(S1S3LQs::field_q,pychete::Fermion,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_i,S1S3LQs::external_p),pychete::List()))),pychete::Field(S1S3LQs::field_l,pychete::Fermion,pychete::List(S1S3LQs::external_k,S1S3LQs::external_r),pychete::List()))*S1S3LQs::external_tauSU2L(S1S3LQs::external_J,S1S3LQs::external_j,S1S3LQs::external_k)+pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)))*pychete::Bar(pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz))))+pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz)))*pychete::Bar(pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(0),pychete::Lorentz))))+pychete::Bar(pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List())*pychete::Coupling(S1S3LQs::coupling_y1L,pychete::List(S1S3LQs::external_p,S1S3LQs::external_r),0)*pychete::Bar(S1S3LQs::external_epsilonSU2L(S1S3LQs::external_i,S1S3LQs::external_j))*pychete::NCM(pychete::Bar(pychete::CConj(pychete::Field(S1S3LQs::field_q,pychete::Fermion,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_i,S1S3LQs::external_p),pychete::List()))),pychete::Field(S1S3LQs::field_l,pychete::Fermion,pychete::List(S1S3LQs::external_j,S1S3LQs::external_r),pychete::List()))+pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List())*pychete::Coupling(S1S3LQs::coupling_y1R,pychete::List(S1S3LQs::external_p,S1S3LQs::external_r),0)*pychete::NCM(pychete::Bar(pychete::CConj(pychete::Field(S1S3LQs::field_u,pychete::Fermion,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_p),pychete::List()))),pychete::Field(S1S3LQs::field_e,pychete::Fermion,pychete::List(S1S3LQs::external_r),pychete::List())))-pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_j),pychete::List())*pychete::Field(S1S3LQs::field_S1,pychete::Scalar,pychete::List(S1S3LQs::external_alpha),pychete::List())*pychete::Coupling(S1S3LQs::coupling_lambdaH13,pychete::List(),0)*pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(S1S3LQs::external_i),pychete::List()))*pychete::Bar(pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_J),pychete::List()))*S1S3LQs::external_tauSU2L(S1S3LQs::external_J,S1S3LQs::external_i,S1S3LQs::external_j))+pychete::Bar(pychete::Field(S1S3LQs::field_S3,pychete::Scalar,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_J),pychete::List())*pychete::Coupling(S1S3LQs::coupling_y3L,pychete::List(S1S3LQs::external_p,S1S3LQs::external_r),0)*pychete::Bar(S1S3LQs::external_epsilonSU2L(S1S3LQs::external_i,S1S3LQs::external_j))*pychete::NCM(pychete::Bar(pychete::CConj(pychete::Field(S1S3LQs::field_q,pychete::Fermion,pychete::List(S1S3LQs::external_alpha,S1S3LQs::external_i,S1S3LQs::external_p),pychete::List()))),pychete::Field(S1S3LQs::field_l,pychete::Fermion,pychete::List(S1S3LQs::external_k,S1S3LQs::external_r),pychete::List()))*S1S3LQs::external_tauSU2L(S1S3LQs::external_J,S1S3LQs::external_j,S1S3LQs::external_k))",
+        "theory": "S1S3LQs"
+      }
+    },
     "schema_version": 3,
     "theories": {
       "S1S3LQs": {
@@ -1309,6 +1317,174 @@
             "tags": [
               "python::pychete",
               "python::field"
+            ]
+          },
+          {
+            "data": {
+              "label": "J",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "J",
+            "role": "external",
+            "symbol": "S1S3LQs::external_J",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "K",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "K",
+            "role": "external",
+            "symbol": "S1S3LQs::external_K",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "L",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "L",
+            "role": "external",
+            "symbol": "S1S3LQs::external_L",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "alpha",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "alpha",
+            "role": "external",
+            "symbol": "S1S3LQs::external_alpha",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "epsilonSU2L",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "epsilonSU2L",
+            "role": "external",
+            "symbol": "S1S3LQs::external_epsilonSU2L",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "fSU2L",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "fSU2L",
+            "role": "external",
+            "symbol": "S1S3LQs::external_fSU2L",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "i",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "i",
+            "role": "external",
+            "symbol": "S1S3LQs::external_i",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "j",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "j",
+            "role": "external",
+            "symbol": "S1S3LQs::external_j",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "k",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "k",
+            "role": "external",
+            "symbol": "S1S3LQs::external_k",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "p",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "p",
+            "role": "external",
+            "symbol": "S1S3LQs::external_p",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "r",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "r",
+            "role": "external",
+            "symbol": "S1S3LQs::external_r",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "tauSU2L",
+              "role": "external",
+              "theory": "S1S3LQs"
+            },
+            "name": "tauSU2L",
+            "role": "external",
+            "symbol": "S1S3LQs::external_tauSU2L",
+            "tags": [
+              "python::pychete",
+              "python::external"
             ]
           }
         ],
