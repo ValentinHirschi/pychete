@@ -4,6 +4,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import FieldMassKind, FluctuationSector, FluctuationStatistics, Theory, canonical_string, s
+from pychete.backends import idenso as idenso_backend
 
 from tests.conftest import assert_expr_equal
 
@@ -304,3 +305,38 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
 
     with pytest.raises(ValueError, match="max_trace_order"):
         theory.one_loop_setup(lagrangian, max_trace_order=0)
+
+
+def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:
+    theory = Theory("one_loop_setup_idenso")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = heavy() ** 2 + light() ** 2 - y() * heavy() * light() ** 2 / 2
+    calls: list[tuple[Expression, bool, bool, bool, bool, bool]] = []
+
+    def fake_simplify_index_algebra(
+        expr: Expression,
+        *,
+        expand: bool = True,
+        gamma: bool = True,
+        color: bool = True,
+        metrics: bool = True,
+        dots: bool = False,
+    ) -> Expression:
+        calls.append((expr, expand, gamma, color, metrics, dots))
+        return (expr + 1).expand()
+
+    monkeypatch.setattr(idenso_backend, "simplify_index_algebra", fake_simplify_index_algebra)
+
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=1)
+    simplified = setup.simplify_index_algebra(expand=False, dots=True)
+
+    assert simplified is not setup
+    assert simplified.fluctuation_operator is setup.fluctuation_operator
+    assert simplified.supertrace_plan is setup.supertrace_plan
+    assert tuple(trace.name for trace in simplified.block_traces) == tuple(trace.name for trace in setup.block_traces)
+    assert len(calls) == setup.supertrace_kernel_count
+    assert calls[0][1:] == (False, True, True, True, True)
+    for original, simplified_trace in zip(setup.block_traces, simplified.block_traces, strict=True):
+        assert_expr_equal(simplified_trace.expression, original.expression + 1)

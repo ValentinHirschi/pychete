@@ -421,6 +421,19 @@ discoveries, dependency patches, blockers, and remaining work.
   - added tests for one-loop setup construction, generated kernel names and
     expressions, expression-map export, invalid trace-order validation, public
     API docstrings, and Jupyter repr coverage.
+- Completed the twenty-third implementation slice:
+  - added `SupertraceBlockTrace.simplify_index_algebra(...)`, delegating kernel
+    simplification to the native idenso adapter instead of adding local
+    gamma/colour/metric/index algebra in Python;
+  - added `OneLoopSetup.simplify_index_algebra(...)`, which returns an updated
+    immutable setup with all generated block kernels simplified through idenso;
+  - kept the fluctuation operator and supertrace plan shared across the
+    simplified setup because only generated kernel expressions are transformed
+    in this stage;
+  - added tests that monkeypatch the idenso adapter boundary to prove
+    generated kernels are routed through `pychete.backends.idenso` with the
+    requested simplification options;
+  - extended public API docstring coverage for the new simplification methods.
 
 ## Backend/API Discoveries
 
@@ -556,6 +569,12 @@ discoveries, dependency patches, blockers, and remaining work.
   existing Symbolica-backed Hessian extraction, heavy/light block plan, and
   closed block-kernel generation into one structured object while leaving
   `Theory.match(..., loop_order=1)` reserved for the final end-to-end engine.
+- Generated supertrace block kernels can now be sent through idenso with
+  `SupertraceBlockTrace.simplify_index_algebra(...)` or
+  `OneLoopSetup.simplify_index_algebra(...)`. This establishes the first
+  explicit native backend simplification hook inside the one-loop setup path;
+  later stages should add spenso tensor-network and vakint integral hooks in
+  the same explicit adapter-driven style.
 
 ## Test Status
 
@@ -779,6 +798,16 @@ discoveries, dependency patches, blockers, and remaining work.
   one-loop-setup slice: 107 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the idenso-kernel-simplification slice: 21 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  idenso-kernel-simplification slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  idenso-kernel-simplification slice: 108 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 

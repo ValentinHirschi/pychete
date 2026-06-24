@@ -90,6 +90,7 @@ def test_public_api_methods_have_docstrings() -> None:
         ],
         pychete.OneLoopSetup: [
             "max_trace_order",
+            "simplify_index_algebra",
             "supertrace_expression_map",
             "supertrace_kernel_count",
             "to_expression_map",
@@ -125,6 +126,7 @@ def test_public_api_methods_have_docstrings() -> None:
         pychete.SupertraceBlockTrace: [
             "block_sectors",
             "order",
+            "simplify_index_algebra",
             "to_expression_map",
         ],
     }

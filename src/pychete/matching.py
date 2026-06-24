@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from html import escape
 from itertools import product
@@ -229,6 +229,31 @@ class SupertraceBlockTrace:
 
         return {f"{prefix}[{self.name}]": self.expression}
 
+    def simplify_index_algebra(
+        self,
+        *,
+        expand: bool = True,
+        gamma: bool = True,
+        color: bool = True,
+        metrics: bool = True,
+        dots: bool = False,
+    ) -> SupertraceBlockTrace:
+        """Return this trace kernel after native idenso index simplification."""
+
+        from .backends import idenso
+
+        return replace(
+            self,
+            expression=idenso.simplify_index_algebra(
+                self.expression,
+                expand=expand,
+                gamma=gamma,
+                color=color,
+                metrics=metrics,
+                dots=dots,
+            ),
+        )
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{SupertraceBlockTrace}}\left({escape(self.name)},\ {self.order}\right)$"
 
@@ -356,6 +381,31 @@ class OneLoopSetup:
         for trace in self.block_traces:
             entries.update(trace.to_expression_map(prefix=prefix))
         return entries
+
+    def simplify_index_algebra(
+        self,
+        *,
+        expand: bool = True,
+        gamma: bool = True,
+        color: bool = True,
+        metrics: bool = True,
+        dots: bool = False,
+    ) -> OneLoopSetup:
+        """Return a setup with generated kernels simplified through idenso."""
+
+        return replace(
+            self,
+            block_traces=tuple(
+                trace.simplify_index_algebra(
+                    expand=expand,
+                    gamma=gamma,
+                    color=color,
+                    metrics=metrics,
+                    dots=dots,
+                )
+                for trace in self.block_traces
+            ),
+        )
 
     def to_expression_map(self, *, prefix: str = "one_loop_setup") -> dict[str, Expression]:
         """Return deterministic expressions produced by this setup stage."""
