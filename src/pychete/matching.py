@@ -17,6 +17,7 @@ from .expr import (
     field_with_derivatives,
     is_bar_field,
     is_zero,
+    list_expr,
     list_items,
 )
 from .functional import apply_cd, derive_eom
@@ -156,8 +157,15 @@ class FluctuationPropagator:
 
         return self.mode.is_light
 
+    def denominator(self, *, loop_momentum_squared: Expression | None = None) -> Expression:
+        """Return a neutral Symbolica propagator-denominator expression."""
+
+        momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+        mass_squared = Expression.num(0) if self.mass_squared is None else self.mass_squared
+        return s.PropagatorDenominator(momentum_squared, mass_squared)
+
     def to_expression_map(self, *, prefix: str = "fluctuation_propagator") -> dict[str, Expression]:
-        """Return mass expressions attached to this propagator."""
+        """Return mass and denominator expressions attached to this propagator."""
 
         entries: dict[str, Expression] = {}
         key = canonical_string(self.field)
@@ -165,6 +173,7 @@ class FluctuationPropagator:
             entries[f"{prefix}[{key},mass]"] = self.mass
         if self.mass_squared is not None:
             entries[f"{prefix}[{key},mass_squared]"] = self.mass_squared
+        entries[f"{prefix}[{key},denominator]"] = self.denominator()
         return entries
 
     def _repr_latex_(self) -> str:
@@ -331,6 +340,37 @@ class SupertraceBlockTrace:
         """Return the ordered sector path represented by this trace kernel."""
 
         return tuple((block.row_sector, block.column_sector) for block in self.blocks)
+
+    def propagator_denominator_chain(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+    ) -> tuple[tuple[Expression, ...], ...]:
+        """Return denominator slots aligned with the row modes of each block."""
+
+        return tuple(
+            tuple(
+                _fluctuation_propagator(mode).denominator(loop_momentum_squared=loop_momentum_squared)
+                for mode in block.rows
+                if include_light or mode.is_heavy
+            )
+            for block in self.blocks
+        )
+
+    def propagator_expression(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+    ) -> Expression:
+        """Return this trace kernel decorated with propagator denominator slots."""
+
+        chain = self.propagator_denominator_chain(
+            loop_momentum_squared=loop_momentum_squared,
+            include_light=include_light,
+        )
+        return s.SupertraceKernel(self.expression, list_expr(*(list_expr(*slot) for slot in chain)))
 
     def to_expression_map(self, *, prefix: str = "supertrace_block_trace") -> dict[str, Expression]:
         """Return this trace kernel as a deterministic named expression."""
@@ -540,6 +580,23 @@ class OneLoopSetup:
             entries.update(trace.to_expression_map(prefix=prefix))
         return entries
 
+    def supertrace_propagator_expression_map(
+        self,
+        *,
+        prefix: str = "supertrace_propagator_kernel",
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+    ) -> dict[str, Expression]:
+        """Return generated trace kernels decorated with propagator denominators."""
+
+        return {
+            f"{prefix}[{trace.name}]": trace.propagator_expression(
+                loop_momentum_squared=loop_momentum_squared,
+                include_light=include_light,
+            )
+            for trace in self.block_traces
+        }
+
     @property
     def propagator_count(self) -> int:
         """Number of heavy propagators planned by default."""
@@ -650,6 +707,7 @@ class OneLoopSetup:
             **self.fluctuation_operator.to_expression_map(prefix=f"{prefix}.fluctuation_operator"),
             **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
+            **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
         }
         return entries
 

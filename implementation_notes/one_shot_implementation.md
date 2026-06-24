@@ -625,6 +625,20 @@ discoveries, dependency patches, blockers, and remaining work.
   planning layer: future slices must use these mass and mass-squared
   expressions to build real loop-momentum denominators and EFT propagator
   expansions.
+- Rescanned the Symbolica Python stubs for `Expression.series`,
+  `Expression.coefficient`, `Expression.collect`, `Expression.derivative`,
+  `Expression.match`, `Expression.matches`, `Expression.replace_multiple`, and
+  `Transformer.series` before extending the propagator stage. The current slice
+  adds central Symbolica heads `LoopMomentumSquared`,
+  `PropagatorDenominator`, and `SupertraceKernel`; it deliberately does not
+  choose a Minkowski/Euclidean sign convention yet.
+- `FluctuationPropagator.denominator(...)` now builds neutral Symbolica
+  denominator expressions, and `SupertraceBlockTrace` can expose
+  `propagator_denominator_chain(...)` plus `propagator_expression(...)`.
+  `OneLoopSetup.supertrace_propagator_expression_map(...)` provides all
+  generated trace kernels decorated with denominator slots, so the next vakint
+  lowering slice has explicit Symbolica input rather than implicit Python-side
+  bookkeeping.
 
 ## Test Status
 
@@ -889,6 +903,17 @@ discoveries, dependency patches, blockers, and remaining work.
   propagator-planning slice: 111 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py`
+  passed after the supertrace-denominator-chain slice: 32 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  supertrace-denominator-chain slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  supertrace-denominator-chain slice: 112 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 
@@ -901,8 +926,9 @@ discoveries, dependency patches, blockers, and remaining work.
   including spin/statistics signs, real/complex counting, ghosts, Goldstones,
   background fields, and non-propagating fields.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
-  supertrace terms, including loop-momentum denominator construction,
-  propagator insertion ordering, EFT-order truncation, tensor reductions, and
+  supertrace terms beyond the new neutral denominator-slot expressions,
+  including physical loop-momentum sign conventions, propagator insertion
+  ordering for multi-mode blocks, EFT-order truncation, tensor reductions, and
   integral calls through the native backends.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state

@@ -341,7 +341,7 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert light_mass is not None
     lagrangian = -heavy_mass**2 * heavy() ** 2 / 2 - light_mass**2 * light() ** 2 / 2 - y() * heavy() * light() ** 2 / 2
 
-    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=1)
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
     heavy_plan = setup.propagator_plan()
     full_plan = setup.propagator_plan(include_light=True)
 
@@ -362,15 +362,36 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert light_propagator.mass_squared is not None
     assert heavy_mode.mass is not None
     assert light_mode.mass_squared is not None
+    heavy_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)
+    light_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2)
     assert heavy_propagator.field == heavy()
     assert_expr_equal(heavy_propagator.mass, heavy_mass)
     assert_expr_equal(heavy_propagator.mass_squared, heavy_mass**2)
+    assert_expr_equal(heavy_propagator.denominator(), heavy_denominator)
     assert_expr_equal(light_propagator.mass, light_mass)
     assert_expr_equal(light_propagator.mass_squared, light_mass**2)
+    assert_expr_equal(light_propagator.denominator(), light_denominator)
     assert_expr_equal(heavy_mode.mass, heavy_mass)
     assert_expr_equal(light_mode.mass_squared, light_mass**2)
+    trace = next(trace for trace in setup.block_traces if trace.name == "heavy-light-heavy")
+    chain = trace.propagator_denominator_chain()
+    assert len(chain) == 2
+    assert len(chain[0]) == 1
+    assert len(chain[1]) == 1
+    assert_expr_equal(chain[0][0], heavy_denominator)
+    assert_expr_equal(chain[1][0], light_denominator)
+    assert_expr_equal(
+        trace.propagator_expression(),
+        s.SupertraceKernel(trace.expression, s.List(s.List(heavy_denominator), s.List(light_denominator))),
+    )
+    decorated = setup.supertrace_propagator_expression_map()
+    assert_expr_equal(
+        decorated["supertrace_propagator_kernel[heavy-light-heavy]"],
+        trace.propagator_expression(),
+    )
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
+    assert any(key.startswith("one_loop_setup.supertrace_propagator_kernel[") for key in setup.to_expression_map())
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -84,6 +84,18 @@ def test_heavy_scalar_lagrangian_prints_cleanly_in_all_symbolica_modes() -> None
     )
 
 
+def test_supertrace_denominator_heads_print_cleanly_in_all_symbolica_modes() -> None:
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(2))
+    kernel = s.SupertraceKernel(Expression.num(3), s.List(s.List(denominator)))
+
+    assert _format_lagrangian(denominator, PrintMode.Symbolica) == "prop_den(q2, 2)"
+    assert _format_lagrangian(denominator, PrintMode.Latex) == r"\mathcal{D}\left(q^2, 2\right)"
+    assert _format_lagrangian(denominator, PrintMode.Mathematica) == "PropagatorDenominator[q2, 2]"
+    assert _format_lagrangian(denominator, PrintMode.Sympy) == "prop_den(q2, 2)"
+    assert _format_lagrangian(denominator, PrintMode.Typst) == "prop_den(q^2, 2)"
+    assert _format_lagrangian(kernel, PrintMode.Symbolica) == "supertrace_kernel(3, {{prop_den(q2, 2)}})"
+
+
 def test_capitalized_greek_field_names_use_short_internal_labels() -> None:
     theory = Theory("greek_case")
     capital_phi = theory.define_field("Phi", s.Scalar, self_conjugate=True, mass=0)

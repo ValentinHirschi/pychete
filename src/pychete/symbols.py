@@ -252,6 +252,24 @@ def _print_eom(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str
     return _call("EOM", args, mode)
 
 
+def _print_propagator_denominator(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex and len(args) == 2:
+        return rf"\mathcal{{D}}\left({args[0]}, {args[1]}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"PropagatorDenominator[{_join(args, mode)}]"
+    return _call("prop_den", args, mode)
+
+
+def _print_supertrace_kernel(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex:
+        return rf"\mathrm{{STrKernel}}\left({_join(args, mode)}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"SupertraceKernel[{_join(args, mode)}]"
+    return _call("supertrace_kernel", args, mode)
+
+
 def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | None:
     if _is_canonical_print(kwargs):
         return None
@@ -281,6 +299,8 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "CG": lambda: _call("CG", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "EOM": lambda: _print_eom(expr, mode, kwargs),
         "HeavyFieldOrder": lambda: _call("HFO", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "PropagatorDenominator": lambda: _print_propagator_denominator(expr, mode, kwargs),
+        "SupertraceKernel": lambda: _print_supertrace_kernel(expr, mode, kwargs),
         "Vector": lambda: _call("Vector", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "SU": lambda: _call("SU", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "U1": lambda: _call("U1", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -307,6 +327,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "eft_order_parameter": "eps_EFT",
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
+        "loop_momentum_squared": "q2",
     },
     "Sympy": {
         "Scalar": "Scalar",
@@ -324,6 +345,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "eft_order_parameter": "eps_EFT",
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
+        "loop_momentum_squared": "q2",
     },
     "Mathematica": {
         "Scalar": "Scalar",
@@ -341,6 +363,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "eft_order_parameter": "epsEFT",
         "cd_variation_parameter": "etaCD",
         "functional_variation_parameter": "etaFD",
+        "loop_momentum_squared": "q2",
     },
     "Latex": {
         "Scalar": r"\mathrm{Scalar}",
@@ -358,6 +381,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "eft_order_parameter": r"\epsilon_{\mathrm{EFT}}",
         "cd_variation_parameter": r"\eta_{\mathrm{CD}}",
         "functional_variation_parameter": r"\eta_{\mathrm{FD}}",
+        "loop_momentum_squared": r"q^2",
     },
     "Typst": {
         "Scalar": "Scalar",
@@ -375,6 +399,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "eft_order_parameter": "epsilon_EFT",
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
+        "loop_momentum_squared": "q^2",
     },
 }
 
@@ -448,6 +473,9 @@ class SymbolStore:
         "EOM",
         "HeavyFieldOrder",
         "FreeLag",
+        "LoopMomentumSquared",
+        "PropagatorDenominator",
+        "SupertraceKernel",
         "SymmetricIndices",
         "AntisymmetricIndices",
         "SymmetricPermutation",
@@ -582,6 +610,18 @@ class SymbolStore:
     @cached_property
     def FreeLag(self) -> Expression:
         return self.head("FreeLag")
+
+    @cached_property
+    def LoopMomentumSquared(self) -> Expression:
+        return self.head("loop_momentum_squared")
+
+    @cached_property
+    def PropagatorDenominator(self) -> Expression:
+        return self.head("PropagatorDenominator")
+
+    @cached_property
+    def SupertraceKernel(self) -> Expression:
+        return self.head("SupertraceKernel")
 
     @cached_property
     def SymmetricIndices(self) -> Expression:
