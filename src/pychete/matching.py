@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from html import escape
+from typing import Iterable
 
 from symbolica import Expression, Replacement
 
@@ -13,8 +14,61 @@ from .expr import (
     list_items,
 )
 from .functional import apply_cd, derive_eom
-from .symbols import display_string, latex_string, s
+from .symbols import canonical_string, display_string, latex_string, s
 from .theory import FieldDefinition, FieldVariation, Theory
+
+
+@dataclass(frozen=True)
+class MatchingExpressionComparison:
+    """Canonical comparison result for one named matching expression."""
+
+    name: str
+    equal: bool
+    candidate: Expression | None = None
+    reference: Expression | None = None
+
+    def _repr_latex_(self) -> str:
+        status = r"\checkmark" if self.equal else r"\times"
+        return rf"$\mathrm{{{escape(self.name)}}}: {status}$"
+
+    def _repr_html_(self) -> str:
+        status = "equal" if self.equal else "different"
+        return f"<code>{escape(self.name)}: {status}</code>"
+
+
+@dataclass(frozen=True)
+class MatchingResultComparison:
+    """Canonical comparison of two structured matching results."""
+
+    candidate: MatchingResult
+    reference: MatchingResult
+    expressions: tuple[MatchingExpressionComparison, ...]
+
+    @property
+    def equal(self) -> bool:
+        """Whether every compared expression is present and canonically equal."""
+
+        return all(item.equal for item in self.expressions)
+
+    @property
+    def failed_names(self) -> tuple[str, ...]:
+        """Names of expressions that are missing or canonically different."""
+
+        return tuple(item.name for item in self.expressions if not item.equal)
+
+    def assert_equal(self) -> None:
+        """Raise ``AssertionError`` if any expression differs."""
+
+        if not self.equal:
+            raise AssertionError(f"Matching results differ for: {', '.join(self.failed_names)}")
+
+    def _repr_latex_(self) -> str:
+        status = r"\checkmark" if self.equal else r"\times"
+        return rf"$\mathrm{{MatchingResultComparison}}\left({status},\ {len(self.expressions)}\right)$"
+
+    def _repr_html_(self) -> str:
+        status = "equal" if self.equal else f"different: {', '.join(escape(name) for name in self.failed_names)}"
+        return f"<code>MatchingResultComparison({status})</code>"
 
 
 @dataclass(frozen=True)
@@ -68,6 +122,34 @@ class MatchingResult:
         for name in self.expression_names():
             self.theory._validate_registered_expression(self.expression(name))
 
+    def compare_to(self, reference: MatchingResult, *, names: Iterable[str] | None = None) -> MatchingResultComparison:
+        """Compare this result to a reference result by canonical expressions."""
+
+        if self.theory.name != reference.theory.name:
+            raise ValueError(f"Cannot compare matching results from {self.theory.name!r} and {reference.theory.name!r}")
+        if names is None:
+            comparison_names = tuple(dict.fromkeys((*self.expression_names(), *reference.expression_names())))
+        else:
+            comparison_names = tuple(names)
+        comparisons: list[MatchingExpressionComparison] = []
+        for name in comparison_names:
+            candidate_expr = _optional_expression(self, name)
+            reference_expr = _optional_expression(reference, name)
+            equal = (
+                candidate_expr is not None
+                and reference_expr is not None
+                and _canonical_expr(candidate_expr) == _canonical_expr(reference_expr)
+            )
+            comparisons.append(
+                MatchingExpressionComparison(
+                    name=name,
+                    equal=equal,
+                    candidate=candidate_expr,
+                    reference=reference_expr,
+                )
+            )
+        return MatchingResultComparison(candidate=self, reference=reference, expressions=tuple(comparisons))
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{MatchingResult}}\left({self.theory.name},\ {len(self.supertraces)}\ \mathrm{{supertraces}}\right)$"
 
@@ -77,6 +159,21 @@ class MatchingResult:
             f"supertraces={len(self.supertraces)} "
             f"matching_conditions={len(self.matching_conditions)})</code>"
         )
+
+
+class OneLoopMatchingNotImplementedError(NotImplementedError):
+    """Raised while the one-loop matching engine is still under construction."""
+
+
+def _optional_expression(result: MatchingResult, name: str) -> Expression | None:
+    try:
+        return result.expression(name)
+    except KeyError:
+        return None
+
+
+def _canonical_expr(expr: Expression) -> str:
+    return canonical_string(expr.expand())
 
 
 @dataclass(frozen=True)
@@ -206,3 +303,21 @@ def match_tree(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) ->
     replaced = _replace_heavy_fields(lagrangian, solutions)
     truncated = series_eft(replaced.expand(), theory, eft_order=eft_order, heavy_field_dimension=False)
     return truncated.expand()
+
+
+def match_one_loop(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> MatchingResult:
+    """Run pychete's one-loop matching pipeline.
+
+    The public API entry point exists so callers cannot accidentally receive a
+    tree-level result for a one-loop request. The engine body is intentionally
+    not stubbed with fake physics: it must be filled by the Symbolica/idenso/
+    spenso/vakint pipeline and validated against the committed Matchete
+    fixtures.
+    """
+
+    theory._validate_registered_expression(lagrangian)
+    raise OneLoopMatchingNotImplementedError(
+        "One-loop matching is not implemented yet. The committed default "
+        "Matchete matching fixtures are available as acceptance targets under "
+        "assets/validation/pychete/*.matching_fixture.json."
+    )

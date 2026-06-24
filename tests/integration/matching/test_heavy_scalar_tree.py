@@ -1,8 +1,9 @@
 from __future__ import annotations
 
+import pytest
 from symbolica import Expression
 
-from pychete import FieldMassKind, Theory, canonical_string, s
+from pychete import FieldMassKind, OneLoopMatchingNotImplementedError, Theory, canonical_string, s
 
 from tests.conftest import assert_expr_equal
 
@@ -49,6 +50,24 @@ def test_heavy_scalar_tree_match_through_dimension_six() -> None:
     )
 
     assert_expr_equal(matched, expected)
+
+
+def test_tree_match_loop_order_zero_preserves_existing_result() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+
+    assert_expr_equal(
+        theory.match(lagrangian, eft_order=6, loop_order=0),
+        theory.match(lagrangian, eft_order=6),
+    )
+
+
+def test_one_loop_match_request_fails_loudly_until_engine_lands() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+
+    with pytest.raises(OneLoopMatchingNotImplementedError, match="One-loop matching is not implemented"):
+        theory.match(lagrangian, eft_order=6, loop_order=1)
 
 
 def test_one_theory_can_match_two_lagrangians_without_cross_talk() -> None:

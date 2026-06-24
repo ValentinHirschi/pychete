@@ -1,8 +1,10 @@
 from __future__ import annotations
 
 import json
+from dataclasses import replace
 from pathlib import Path
 
+from symbolica import Expression
 import pytest
 
 from pychete.loaders import load_python_model
@@ -176,4 +178,21 @@ def test_committed_default_matching_fixtures_load_structured_results_without_mat
         assert result.metadata["eft_order"] == 6
         assert len(result.supertraces) == counts["supertraces"]
         assert len(result.matching_conditions) == counts["conditions"]
+        result.compare_to(result).assert_equal()
         result.validate()
+
+
+def test_matching_result_comparison_reports_canonical_differences() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.matching_fixture.json"))
+    reference = fixture.matching_result("matchete_previous")
+    candidate = replace(
+        reference,
+        on_shell_eft_lagrangian=reference.on_shell_eft_lagrangian + Expression.num(1),
+    )
+
+    comparison = candidate.compare_to(reference, names=("on_shell_eft_lagrangian",))
+
+    assert comparison.equal is False
+    assert comparison.failed_names == ("on_shell_eft_lagrangian",)
+    with pytest.raises(AssertionError, match="on_shell_eft_lagrangian"):
+        comparison.assert_equal()

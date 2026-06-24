@@ -275,6 +275,21 @@ discoveries, dependency patches, blockers, and remaining work.
   - added validation coverage that loads all four default matching fixtures
     without Mathematica and validates their structured `MatchingResult`
     expressions.
+- Completed the thirteenth implementation slice:
+  - added canonical `MatchingResult.compare_to(...)` support, returning a
+    `MatchingResultComparison` with per-expression
+    `MatchingExpressionComparison` entries;
+  - comparison uses Symbolica-backed expansion plus canonical serialization so
+    committed Matchete fixtures can serve as direct acceptance targets for
+    future pychete one-loop matching output;
+  - exported the comparison result types and
+    `OneLoopMatchingNotImplementedError` through the public API;
+  - added an explicit `loop_order` argument to `Theory.match(...)`, preserving
+    the existing tree-level behavior for `loop_order=0` and failing loudly for
+    `loop_order=1` until the real one-loop engine is implemented;
+  - added tests that tree matching remains unchanged, one-loop requests cannot
+    silently return tree-level results, and fixture comparisons report
+    canonical mismatches.
 
 ## Backend/API Discoveries
 
@@ -351,6 +366,11 @@ discoveries, dependency patches, blockers, and remaining work.
   72 matching conditions. The fixture key convention is intentionally canonical
   and machine-oriented; a later public presentation layer can display those
   left-hand sides using `display_string(...)` or `latex_string(...)`.
+- `Theory.match(..., loop_order=1)` now has an explicit public contract but
+  intentionally raises `OneLoopMatchingNotImplementedError`. This is preferable
+  to returning a fake `MatchingResult`: the next matching-engine slices must
+  fill the pipeline stages and satisfy `MatchingResult.compare_to(...)` against
+  the committed default fixtures.
 
 ## Test Status
 
@@ -465,6 +485,17 @@ discoveries, dependency patches, blockers, and remaining work.
   matching-fixture conversion slice: 86 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_heavy_scalar_tree.py
+  tests/integration/validation/test_validation_fixtures.py
+  tests/unit/definitions/test_public_api.py` passed after the matching API
+  comparison slice: 20 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the matching API
+  comparison slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the matching API
+  comparison slice: 89 passed, 1 skipped. The skip is the existing GammaLoop
+  API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 

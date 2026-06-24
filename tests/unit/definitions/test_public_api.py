@@ -79,6 +79,10 @@ def test_public_api_methods_have_docstrings() -> None:
             "expression",
             "expression_names",
             "validate",
+            "compare_to",
+        ],
+        pychete.MatchingResultComparison: [
+            "assert_equal",
         ],
     }
     missing = [

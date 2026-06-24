@@ -13,7 +13,7 @@ from .expr import is_head, list_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
-    from .matching import HeavyScalarSolution
+    from .matching import HeavyScalarSolution, MatchingResult
 
 
 class FieldMassKind(StrEnum):
@@ -974,16 +974,22 @@ class Theory:
 
         return solve_heavy_scalar_eoms(self, lagrangian, eft_order=eft_order)
 
-    def match(self, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
-        """Integrate out heavy scalar fields at tree level.
+    def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int = 0) -> Expression | MatchingResult:
+        """Match a Lagrangian through the requested loop order.
 
-        The result is a matched light-field Lagrangian truncated through
-        ``eft_order``.
+        ``loop_order=0`` preserves pychete's existing tree-level heavy-scalar
+        matching behavior and returns an expression. ``loop_order=1`` is the
+        reserved public entry point for the one-loop matching engine and raises
+        ``OneLoopMatchingNotImplementedError`` until that engine is complete.
         """
 
-        from .matching import match_tree
+        from .matching import match_one_loop, match_tree
 
-        return match_tree(self, lagrangian, eft_order=eft_order)
+        if loop_order == 0:
+            return match_tree(self, lagrangian, eft_order=eft_order)
+        if loop_order == 1:
+            return match_one_loop(self, lagrangian, eft_order=eft_order)
+        raise ValueError("loop_order must be 0 or 1")
 
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{Theory}}\left({self.name}\right)$"
