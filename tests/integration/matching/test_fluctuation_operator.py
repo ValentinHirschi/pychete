@@ -1237,6 +1237,27 @@ def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch:
         assert_expr_equal(simplified_trace.expression, original.expression + 1)
 
 
+def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> None:
+    theory = Theory("one_loop_setup_vlf_projectors")
+    heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("psi", s.Fermion, mass=0)
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y")
+    interaction = -y() * scalar() * s.NCM(s.Bar(light()), s.PR, heavy())
+    lagrangian = theory.free_lag(heavy, light, scalar) + interaction + s.Bar(interaction)
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=2)
+
+    result = setup.interaction_power_type_matching_result()
+    numerator = result.expression("interaction_power_type_supertrace[hFermion-lFermion,eft_numerator]")
+
+    assert "pychete::PR^2" not in canonical_string(numerator)
+    assert "pychete::PL^2" not in canonical_string(numerator)
+    assert_expr_equal(
+        numerator,
+        (s.PR * scalar() ** 2 * y() ** 2 + s.PL * scalar() ** 2 * s.Bar(y()) ** 2) / 2,
+    )
+
+
 def test_one_loop_setup_routes_generated_kernels_through_vakint_engine() -> None:
     theory = Theory("one_loop_setup_vakint")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

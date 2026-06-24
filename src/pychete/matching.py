@@ -696,7 +696,9 @@ class PowerTypeSupertraceContribution:
     def numerator_expression(self) -> Expression:
         """Return the prefactor-weighted trace numerator."""
 
-        return (self.prefactor * self.trace.expression).expand()
+        from .backends import idenso
+
+        return idenso.simplify_pychete_dirac_projectors((self.prefactor * self.trace.expression).expand())
 
     @property
     def eft_numerator_expression(self) -> Expression:

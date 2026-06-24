@@ -540,6 +540,13 @@ discoveries, dependency patches, blockers, and remaining work.
   variation-time multilinear lowering before Symbolica coefficient extraction;
   this is backend-boundary glue for pychete's own head, not a replacement for
   Symbolica algebra.
+- Rescanned the idenso and spenso Python stubs and local Rust source around
+  `idenso.simplify_gamma`, `TensorLibrary.hep_lib`,
+  `TensorName.projp`, and `TensorName.projm`. idenso already knows the chiral
+  projector identities, but it expects native spenso projector tensors with
+  bispinor endpoints. pychete therefore needs a lowering/decoding adapter for
+  its compact `s.PR`/`s.PL` public symbols instead of Python-side projector
+  simplification rules.
 - Matchete previous matching-result files store the stages pychete needs:
   `"UV Lagrangian"`, `"Off-shell EFT Lagrangian"`,
   `"On-shell EFT Lagrangian"`, `"SuperTraces"`, and
@@ -1102,6 +1109,28 @@ discoveries, dependency patches, blockers, and remaining work.
     artifacts, though canonical equality against Matchete remains unchanged at
     0/5 shared supertraces because Dirac-chain normalization, phase/sign
     conventions, and vakint evaluation are still future slices.
+- Completed the fiftieth implementation slice:
+  - added `pychete.backends.idenso.simplify_pychete_dirac_projectors(...)` as
+    a narrow backend-boundary bridge for pychete's compact `P_R`/`P_L` symbols;
+  - the bridge lowers projector-only words to native spenso
+    `spenso::projp`/`spenso::projm` tensors from `TensorLibrary.hep_lib()`,
+    delegates the algebra to native `idenso.simplify_gamma(...)`, and decodes
+    only simple scalar/projector outputs back to pychete symbols;
+  - mixed products such as `P_R P_L` and `P_L P_R` are also resolved by the
+    native idenso bridge rather than by handwritten Python zero rules;
+  - `simplify_index_algebra(...)` now runs this projector bridge before and
+    after the native idenso pipeline, and
+    `PowerTypeSupertraceContribution.numerator_expression` applies it before
+    EFT numerator truncation and vakint lowering;
+  - added unit and integration coverage proving that powers such as `P_R^3`
+    and `P_L^2` collapse to single projectors, mixed products collapse to
+    zero, and a VLF-like one-loop numerator no longer exposes
+    `pychete::PR^2`/`pychete::PL^2` before vakint lowering;
+  - the live VLF `hFermion-lFermion` preview numerator now uses linear
+    `P_R`/`P_L` factors instead of projector powers, but canonical equality
+    against Matchete remains unchanged at 0/5 shared supertraces because
+    conjugation/orientation, full open Dirac-chain lowering, and final vakint
+    evaluation are still unresolved.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1265,6 +1294,27 @@ discoveries, dependency patches, blockers, and remaining work.
 
 ## Test Status
 
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/backends/test_idenso_backend.py::test_idenso_pipeline_simplifies_pychete_projectors_through_native_bridge
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_simplifies_projector_words_before_vakint_lowering
+  -q` passed after the projector bridge slice: 2 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the projector bridge
+  slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  -q` passed after the projector bridge slice: 1 passed.
+- `dependencies/.venv/bin/python -m pytest tests/unit/backends
+  tests/integration/matching tests/integration/validation -q` passed after
+  the projector bridge slice: 90 passed.
+- `dependencies/.venv/bin/python -m pytest tests -q` passed after the
+  projector bridge slice: 163 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
+- `git diff --check` passed after the projector bridge slice.
+- The default-target canonical frontier remains unchanged after the projector
+  bridge slice: VLF has 0/5 equal shared supertraces, Singlet has 0/6,
+  E_VLL has 3/6, and S1S3LQs has 3/9. The VLF
+  `hFermion-lFermion` numerator no longer contains `P_R^2`/`P_L^2`.
 - `dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py`
   passed: 3 passed.
 - `dependencies/.venv/bin/python -m mypy` passed: no issues found in 18 source
@@ -2262,12 +2312,13 @@ discoveries, dependency patches, blockers, and remaining work.
   blocks, tensor reductions, scheme-specific renormalization beyond the current
   minimal-subtraction preview, and validation against known native backend
   topologies.
-- Normalize Dirac and noncommutative chain fragments after the new
-  formal-derivative cleanup. Current VLF previews no longer contain
-  `der(...)`, but they still expose products such as `P_R^2` and unevaluated
-  `NCM` fragments that must be routed through idenso/spenso-compatible Dirac
-  algebra before they can canonically agree with Matchete's saved
-  `DiracProduct[...]` expressions.
+- Extend the new projector bridge into full pychete Dirac-chain lowering.
+  Current VLF previews no longer contain `der(...)` artifacts or bare
+  `P_R^2`/`P_L^2` powers in the covered numerator path, but they still need
+  proper open-chain orientation, conjugation normalization, gamma/projector
+  lowering from `NCM`/Dirac-product fragments into idenso chain expressions,
+  and final vakint evaluation before they can canonically agree with
+  Matchete's saved `DiracProduct[...]` expressions.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.

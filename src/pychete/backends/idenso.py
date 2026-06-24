@@ -1,8 +1,15 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+
 from symbolica import Expression
+from symbolica.core import AtomType
 
 from .common import import_backend
+from ..expr import as_int, is_head
+from ..symbols import s
+
+_MAX_NATIVE_PROJECTOR_POWER = 16
 
 
 def native_module():
@@ -77,6 +84,33 @@ def simplify_gamma(expr: Expression) -> Expression:
     return native_module().simplify_gamma(expr)
 
 
+def simplify_pychete_dirac_projectors(expr: Expression) -> Expression:
+    """Simplify pychete projector-only Dirac words through native idenso.
+
+    pychete's public expressions use compact ``s.PR`` and ``s.PL`` symbols,
+    while idenso's gamma simplifier expects explicit spenso projector tensors
+    with bispinor endpoints. This adapter lowers projector-only words to native
+    spenso tensors, delegates simplification to ``idenso.simplify_gamma``, and
+    decodes the simple scalar/projector result back to pychete symbols.
+    """
+
+    replacements: tuple[tuple[Expression, Expression], ...] = (
+        (s.PR * s.PR, _native_projector_word((s.PR, s.PR))),
+        (s.PL * s.PL, _native_projector_word((s.PL, s.PL))),
+        (s.PR * s.PL, _native_projector_word((s.PR, s.PL))),
+        (s.PL * s.PR, _native_projector_word((s.PL, s.PR))),
+    )
+    out = expr
+    for projector, power_replacement in (
+        (s.PR, _projector_power_replacement(s.PR)),
+        (s.PL, _projector_power_replacement(s.PL)),
+    ):
+        out = out.replace(projector ** s.PowExponentWildcard, power_replacement)
+    for pattern, replacement in replacements:
+        out = out.replace(pattern, replacement, repeat=True)
+    return out.expand()
+
+
 def simplify_metrics(expr: Expression) -> Expression:
     """Delegate metric algebra simplification to idenso."""
 
@@ -112,7 +146,7 @@ def simplify_index_algebra(
 ) -> Expression:
     """Run a native idenso simplification pipeline for index algebra."""
 
-    result = expr
+    result = simplify_pychete_dirac_projectors(expr)
     if expand:
         result = expand_mink_bis(result)
         result = expand_color(result)
@@ -125,7 +159,60 @@ def simplify_index_algebra(
         result = simplify_metrics(result)
     if dots:
         result = to_dots(result)
-    return result
+    return simplify_pychete_dirac_projectors(result)
+
+
+def _projector_power_replacement(
+    projector: Expression,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_power(match: dict[Expression, Expression]) -> Expression:
+        exponent = as_int(match[s.PowExponentWildcard])
+        if exponent is None or exponent < 1 or exponent > _MAX_NATIVE_PROJECTOR_POWER:
+            return projector ** match[s.PowExponentWildcard]
+        return _native_projector_word((projector,) * exponent)
+
+    return replace_power
+
+
+def _native_projector_word(projectors: tuple[Expression, ...]) -> Expression:
+    if not projectors:
+        return Expression.num(1)
+    native_expr = Expression.num(1)
+    for index, projector in enumerate(projectors, start=1):
+        native_expr *= _native_projector_tensor(projector)(index, index + 1)
+    return _decode_simple_native_projector_result(native_module().simplify_gamma(native_expr))
+
+
+def _native_projector_tensor(projector: Expression) -> Callable[..., Expression]:
+    from symbolica import S
+    from symbolica.community.spenso import TensorLibrary
+
+    if bool(projector == s.PR):
+        return TensorLibrary.hep_lib()[S("spenso::projp")]
+    if bool(projector == s.PL):
+        return TensorLibrary.hep_lib()[S("spenso::projm")]
+    raise ValueError(f"Unsupported pychete Dirac projector {projector}")
+
+
+def _decode_simple_native_projector_result(expr: Expression) -> Expression:
+    if bool(expr == Expression.num(0)):
+        return Expression.num(0)
+    if _is_native_single_projector_chain(expr, "spenso::projp"):
+        return s.PR
+    if _is_native_single_projector_chain(expr, "spenso::projm"):
+        return s.PL
+    return expr
+
+
+def _is_native_single_projector_chain(expr: Expression, projector_name: str) -> bool:
+    if (
+        expr.get_type() is not AtomType.Fn
+        or expr.get_name() != "spenso::chain"
+        or len(expr) != 3
+    ):
+        return False
+    factor = expr[2]
+    return is_head(factor, Expression.symbol(projector_name)) and len(factor) == 2
 
 
 __all__ = [
@@ -143,6 +230,7 @@ __all__ = [
     "simplify_gamma",
     "simplify_index_algebra",
     "simplify_metrics",
+    "simplify_pychete_dirac_projectors",
     "to_dots",
     "wrap_dummies",
     "wrap_indices",
