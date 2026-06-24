@@ -167,6 +167,23 @@ discoveries, dependency patches, blockers, and remaining work.
   - fixed `Theory.from_json_obj` so the group registry is restored alongside
     group symbols, which is required for `Theory.group_charge(...)` after
     loading fixtures or checkpoints.
+- Completed the sixth implementation slice:
+  - added Matchete-style coupling metadata to `CouplingDefinition` and
+    Symbolica symbol data: indexed coupling representations, EFT order,
+    boolean or permutation-valued self-conjugation, symmetry expressions,
+    diagonal-coupling flags, thermal power counting, and unitary flags;
+  - added central Symbolica heads for `SymmetricIndices`,
+    `AntisymmetricIndices`, `SymmetricPermutation`,
+    `AntisymmetricPermutation`, and `SymmetryOverride` through the
+    `SymbolStore`;
+  - taught `Theory.from_json_obj` to restore the new coupling metadata through
+    the existing symbol-manifest-first checkpoint path;
+  - added a coupling symbol-manifest normalization path so older committed
+    fixtures that predate the new coupling keys load into the current
+    structural symbol-data shape before expressions are parsed;
+  - extended the supported Matchete model loader path to preserve
+    `DefineCoupling` options instead of dropping them, including list-valued
+    `DefineCoupling[{...}, ...]`.
 
 ## Backend/API Discoveries
 
@@ -191,6 +208,19 @@ discoveries, dependency patches, blockers, and remaining work.
 - The first committed fixture asset surfaced that restoring group symbols is not
   enough: the Python `Theory.groups` registry must also be restored before later
   code can build charges or inspect gauge-field metadata.
+- Rescanned the Symbolica Python stub sections for symbol `data`, tags,
+  `Expression.get_symbol_data`, and `Expression.get_tags`. Coupling metadata
+  now stays on Symbolica symbols through the same structural data path as field
+  mass/charge metadata.
+- Matchete `DefineCoupling` stores `Indices`, `EFTOrder`, `SelfConjugate`,
+  `Symmetries`, `DiagonalCoupling`, `ThermalPowerCounting`, and `Unitary`.
+  It also requires unitary couplings to be square matrix couplings with
+  `EFTOrder -> 0`; pychete now enforces the matching structural checks.
+- Symbolica refuses to redefine an already-created symbol with different custom
+  data. The fixture loader therefore normalizes older coupling manifest data to
+  include the current default keys before registering theory symbols, preserving
+  the structural guarantee that expressions parse only after the symbol registry
+  has the intended data.
 
 ## Test Status
 
@@ -240,6 +270,16 @@ discoveries, dependency patches, blockers, and remaining work.
   fixture slice: 65 passed, 1 skipped. The skip is the existing GammaLoop API
   import check because GammaLoop was not requested in the current dependency
   manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py` passed after the coupling
+  metadata slice: 16 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the coupling metadata
+  slice: no issues found in 19 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the coupling
+  metadata slice: 69 passed, 1 skipped. The skip is the existing GammaLoop API
+  import check because GammaLoop was not requested in the current dependency
+  manifest.
 
 ## Remaining Work
 
@@ -254,4 +294,6 @@ discoveries, dependency patches, blockers, and remaining work.
   equality is insufficient.
 - Extend field metadata further for background fields, Goldstones, ghosts,
   representation reality, and SMEFT basis data.
-- Extend the theory metadata and matching engine toward one-loop matching.
+- Extend theory metadata further for background fields, Goldstones, ghosts,
+  representation reality, global groups, CG tensors, and SMEFT basis data.
+- Extend the matching engine toward one-loop matching.

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pychete import FieldMassKind, Theory, canonical_string, s
+from pychete import FieldMassKind, SymbolDataKey, Theory, canonical_string, s
 from pychete.loaders import load_matchete_model, load_python_model
 
 
@@ -60,6 +60,37 @@ def test_vlf_mathematica_and_python_assets_canonicalize_to_same_json() -> None:
         name: canonical_string(expression)
         for name, expression in python_expressions.items()
     }
+
+
+def test_matchete_loader_preserves_supported_coupling_options(tmp_path: Path) -> None:
+    model = tmp_path / "couplings.m"
+    model.write_text(
+        "\n".join(
+            [
+                "DefineCoupling[Y, Indices->{Flavor, Flavor}, EFTOrder->1, SelfConjugate->{2, 1},",
+                "    Symmetries->{SymmetricPermutation[2, 1]}, DiagonalCoupling->{False, True}, ThermalPowerCounting->2];",
+                "DefineCoupling[U, Indices->{Flavor, Flavor}, Unitary->True];",
+                "DefineCoupling[{c1, c2}, SelfConjugate->True];",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    theory, expressions = load_matchete_model(model, theory_name="loader_couplings")
+
+    flavor = theory.index_types["Flavor"].symbol
+    y = theory.coupling_handle("Y")
+    assert expressions == {}
+    assert y.definition.index_exprs == (flavor, flavor)
+    assert y.definition.eft_order == 1
+    assert y.definition.self_conjugate_spec == (2, 1)
+    assert y.definition.diagonal_flags == (False, True)
+    assert y.definition.thermal_power_counting == 2
+    assert [canonical_string(expr) for expr in y.definition.symmetry_exprs] == [canonical_string(s.SymmetricPermutation(2, 1))]
+    assert y.label.get_symbol_data(SymbolDataKey.SYMMETRIES.value) == [s.SymmetricPermutation(2, 1)]
+    assert theory.coupling_handle("U").definition.is_unitary is True
+    assert theory.coupling_handle("c1").definition.self_conjugate_spec is True
+    assert theory.coupling_handle("c2").definition.self_conjugate_spec is True
 
 
 def test_runtime_code_does_not_depend_on_matchete_reference_checkout() -> None:

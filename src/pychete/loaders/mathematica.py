@@ -8,7 +8,7 @@ from symbolica.core import AtomType, ParseMode
 
 from ..expr import args, product_expr, sum_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
-from ..theory import FieldChirality, Theory
+from ..theory import CouplingSelfConjugate, FieldChirality, Theory
 
 
 _COMMENT_RE = re.compile(r"\(\*.*?\*\)", re.DOTALL)
@@ -86,6 +86,33 @@ def _parse_bool(raw: str) -> bool:
     raise NotImplementedError(f"Unsupported boolean option value: {raw}")
 
 
+def _parse_int(raw: str) -> int:
+    return int(_preprocess_names(raw).strip())
+
+
+def _parse_int_list(raw: str) -> tuple[int, ...]:
+    value = _preprocess_names(raw).strip()
+    if value.startswith("{") and value.endswith("}"):
+        return tuple(_parse_int(part) for part in _split_top_level(value[1:-1], ",") if part.strip())
+    return (_parse_int(value),)
+
+
+def _parse_coupling_self_conjugate(raw: str) -> CouplingSelfConjugate:
+    value = _preprocess_names(raw).strip()
+    if value.startswith("{") and value.endswith("}"):
+        return _parse_int_list(value)
+    return _parse_bool(value)
+
+
+def _parse_diagonal_coupling(raw: str) -> bool | tuple[bool, ...] | None:
+    value = _preprocess_names(raw).strip()
+    if value == "Default":
+        return None
+    if value.startswith("{") and value.endswith("}"):
+        return tuple(_parse_bool(part) for part in _split_top_level(value[1:-1], ",") if part.strip())
+    return _parse_bool(value)
+
+
 def _parse_mass(raw: str) -> int | tuple[str, str]:
     value = _preprocess_names(raw).strip()
     if value == "0":
@@ -161,6 +188,10 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             return s.fund
         if name == "adj":
             return s.adj
+        if name == "Flavor":
+            return theory.define_flavor_index().symbol
+        if name in theory.index_types:
+            return theory.index_types[name].symbol
         if name in theory.fields:
             return theory.field_handle(name)()
         if name in theory.couplings:
@@ -184,12 +215,22 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
         if name == "FreeLag":
             names = [_clean_name(_plain_name(child)) for child in args(expr)]
             return theory.free_lag(*names)
+        symmetry_heads = {
+            "SymmetricIndices": s.SymmetricIndices,
+            "AntisymmetricIndices": s.AntisymmetricIndices,
+            "SymmetricPermutation": s.SymmetricPermutation,
+            "AntisymmetricPermutation": s.AntisymmetricPermutation,
+            "SymmetryOverride": s.SymmetryOverride,
+        }
+        if name in symmetry_heads:
+            return symmetry_heads[name](*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.groups:
             return theory.symbol(name, role=SymbolRole.GROUP)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.fields:
             return theory.field_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.couplings:
             return theory.coupling_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
+        return theory.symbol(name, role=SymbolRole.EXTERNAL)(*(_convert_expression(child, theory, env) for child in args(expr)))
     raise NotImplementedError(f"Unsupported parsed expression: {expr.format_plain()}")
 
 
@@ -257,9 +298,22 @@ def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> 
                 mass=_parse_mass(opts["Mass"]) if "Mass" in opts else None,
             )
         elif head == "DefineCoupling":
-            if len(raw_args) != 1:
+            if not raw_args:
                 raise NotImplementedError(f"Unsupported DefineCoupling: {statement}")
-            theory.define_coupling(_clean_name(raw_args[0]))
+            opts = _options(raw_args[1:])
+            labels_raw = _preprocess_names(raw_args[0].strip())
+            labels = _split_top_level(labels_raw[1:-1], ",") if labels_raw.startswith("{") and labels_raw.endswith("}") else [labels_raw]
+            for label in labels:
+                theory.define_coupling(
+                    _clean_name(label),
+                    indices=_eval_expression_list(opts["Indices"], theory) if "Indices" in opts else (),
+                    eft_order=_parse_int(opts["EFTOrder"]) if "EFTOrder" in opts else 0,
+                    self_conjugate=_parse_coupling_self_conjugate(opts["SelfConjugate"]) if "SelfConjugate" in opts else False,
+                    symmetries=_eval_expression_list(opts["Symmetries"], theory) if "Symmetries" in opts else (),
+                    diagonal=_parse_diagonal_coupling(opts["DiagonalCoupling"]) if "DiagonalCoupling" in opts else None,
+                    thermal_power_counting=_parse_int(opts["ThermalPowerCounting"]) if "ThermalPowerCounting" in opts else 1,
+                    unitary=_parse_bool(opts["Unitary"]) if "Unitary" in opts else False,
+                )
         elif head == "Module":
             lagrangian = _eval_module(raw_args, theory)
             theory._validate_registered_expression(lagrangian)

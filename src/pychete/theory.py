@@ -87,6 +87,7 @@ class BuiltinIndexType(StrEnum):
 
 MassKindInput: TypeAlias = FieldMassKind | str
 MassSpec: TypeAlias = tuple[MassKindInput, str] | tuple[MassKindInput, str, Iterable[Expression]]
+CouplingSelfConjugate: TypeAlias = bool | tuple[int, ...]
 JsonValue: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
 
 _EXPRESSION_DATA_KEY = "__pychete_expression__"
@@ -144,6 +145,18 @@ def _symbol_data_payload(label: Expression) -> dict[str, JsonValue]:
 def _symbol_manifest_sort_key(entry: dict[str, Any]) -> tuple[int, str, str]:
     role = str(entry.get("role", ""))
     return (_SYMBOL_ROLE_ORDER.get(role, 100), role, str(entry.get("name", "")))
+
+
+def _normalized_restored_symbol_data(role: str, data: dict[str, Any]) -> dict[str, Any]:
+    normalized = dict(data)
+    if role == SymbolRole.COUPLING.value:
+        indices = normalized.get(SymbolDataKey.INDICES.value, [])
+        index_count = len(indices) if isinstance(indices, list) else 0
+        normalized.setdefault(SymbolDataKey.SYMMETRIES.value, [])
+        normalized.setdefault(SymbolDataKey.DIAGONAL_COUPLING.value, [False for _ in range(index_count)])
+        normalized.setdefault(SymbolDataKey.THERMAL_POWER_COUNTING.value, 1)
+        normalized.setdefault(SymbolDataKey.UNITARY.value, 0)
+    return normalized
 
 
 def field_mass_kind_from_label(label: Expression) -> FieldMassKind:
@@ -209,12 +222,50 @@ def coupling_eft_order_from_label(label: Expression) -> int:
     return int(symbol_data(label, SymbolDataKey.EFT_ORDER, 0))
 
 
-def coupling_self_conjugate_from_label(label: Expression) -> bool:
-    return bool(symbol_data(label, SymbolDataKey.SELF_CONJUGATE, 0))
+def _normalize_coupling_self_conjugate(value: CouplingSelfConjugate | Iterable[int]) -> CouplingSelfConjugate:
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, tuple):
+        if not all(isinstance(item, int) for item in value):
+            raise ValueError("coupling self_conjugate permutation entries must be integers")
+        return value
+    return tuple(int(item) for item in value)
+
+
+def coupling_self_conjugate_from_label(label: Expression) -> CouplingSelfConjugate:
+    value = symbol_data(label, SymbolDataKey.SELF_CONJUGATE, 0)
+    if isinstance(value, bool):
+        return value
+    if isinstance(value, int):
+        return bool(value)
+    if isinstance(value, list):
+        return tuple(int(item) for item in value)
+    raise ValueError(f"Coupling self-conjugation is not stored as bool or permutation on {canonical_string(label)}")
 
 
 def coupling_indices_from_label(label: Expression) -> tuple[Expression, ...]:
     return _expression_list_from_symbol_data(label, SymbolDataKey.INDICES)
+
+
+def coupling_symmetries_from_label(label: Expression) -> tuple[Expression, ...]:
+    return _expression_list_from_symbol_data(label, SymbolDataKey.SYMMETRIES)
+
+
+def coupling_diagonal_flags_from_label(label: Expression) -> tuple[bool, ...]:
+    value = symbol_data(label, SymbolDataKey.DIAGONAL_COUPLING, [])
+    if not isinstance(value, list):
+        raise ValueError(f"diagonal coupling flags are not stored as a list on {canonical_string(label)}")
+    if not all(isinstance(item, (bool, int)) for item in value):
+        raise ValueError(f"diagonal coupling flags contain non-boolean entries on {canonical_string(label)}")
+    return tuple(bool(item) for item in value)
+
+
+def coupling_thermal_power_counting_from_label(label: Expression) -> int:
+    return int(symbol_data(label, SymbolDataKey.THERMAL_POWER_COUNTING, 1))
+
+
+def coupling_unitary_from_label(label: Expression) -> bool:
+    return bool(symbol_data(label, SymbolDataKey.UNITARY, 0))
 
 
 def _coupling_name_for_label(theory: Theory, label_text: str) -> str:
@@ -225,6 +276,15 @@ def _coupling_name_for_label(theory: Theory, label_text: str) -> str:
     name = label.get_name().split("::")[-1]
     prefix = f"{SymbolRole.COUPLING.value}_"
     return name.removeprefix(prefix)
+
+
+def _normalize_diagonal_coupling(diagonal: bool | Iterable[bool] | None, index_count: int) -> tuple[bool, ...]:
+    if diagonal is None:
+        return tuple(False for _ in range(index_count))
+    flags = (diagonal,) if isinstance(diagonal, bool) else tuple(bool(item) for item in diagonal)
+    if len(flags) != index_count:
+        raise ValueError("diagonal coupling flags must have the same length as coupling indices")
+    return tuple(bool(flag) for flag in flags)
 
 
 @dataclass(frozen=True)
@@ -258,7 +318,11 @@ class CouplingDefinition:
     label: Expression
     indices: tuple[Expression, ...] = ()
     eft_order: int = 0
-    self_conjugate: bool = False
+    self_conjugate: CouplingSelfConjugate = False
+    symmetries: tuple[Expression, ...] = ()
+    diagonal: tuple[bool, ...] = ()
+    thermal_power_counting: int = 1
+    unitary: bool = False
 
     def expr(self, *indices: Expression) -> Expression:
         """Build a Symbolica coupling expression with optional indices."""
@@ -266,6 +330,36 @@ class CouplingDefinition:
         if not indices:
             indices = ()
         return s.Coupling(self.label, list_expr(*indices), coupling_eft_order_from_label(self.label))
+
+    @property
+    def index_exprs(self) -> tuple[Expression, ...]:
+        """Index representations stored on the coupling label."""
+
+        return coupling_indices_from_label(self.label)
+
+    @property
+    def self_conjugate_spec(self) -> CouplingSelfConjugate:
+        """Whether the coupling is self-conjugate or its conjugation permutation."""
+
+        return coupling_self_conjugate_from_label(self.label)
+
+    @property
+    def symmetry_exprs(self) -> tuple[Expression, ...]:
+        """Symmetry metadata stored on the coupling label."""
+
+        return coupling_symmetries_from_label(self.label)
+
+    @property
+    def diagonal_flags(self) -> tuple[bool, ...]:
+        """Flags marking indices that are restricted to diagonal values."""
+
+        return coupling_diagonal_flags_from_label(self.label)
+
+    @property
+    def is_unitary(self) -> bool:
+        """Whether this coupling is a unitary matrix in flavor space."""
+
+        return coupling_unitary_from_label(self.label)
 
     def _repr_latex_(self) -> str:
         return f"${latex_string(self.expr())}$"
@@ -280,6 +374,10 @@ class CouplingDefinition:
             "indices": [canonical_string(i) for i in coupling_indices_from_label(self.label)],
             "eft_order": coupling_eft_order_from_label(self.label),
             "self_conjugate": coupling_self_conjugate_from_label(self.label),
+            "symmetries": [canonical_string(i) for i in coupling_symmetries_from_label(self.label)],
+            "diagonal": list(coupling_diagonal_flags_from_label(self.label)),
+            "thermal_power_counting": coupling_thermal_power_counting_from_label(self.label),
+            "unitary": coupling_unitary_from_label(self.label),
         }
 
 
@@ -491,7 +589,7 @@ class Theory:
             raw_data = entry.get("data", {})
             if not isinstance(raw_data, dict):
                 raise ValueError(f"Symbol manifest entry for {role}:{name} has non-object data")
-            data = _decode_symbol_data_value(raw_data)
+            data = _normalized_restored_symbol_data(role, _decode_symbol_data_value(raw_data))
             symbol = self.symbol(name, role=role, data=data)
             expected = entry.get("symbol")
             if expected is not None and canonical_string(symbol) != expected:
@@ -606,7 +704,11 @@ class Theory:
         *,
         indices: Iterable[Expression] = (),
         eft_order: int = 0,
-        self_conjugate: bool = False,
+        self_conjugate: CouplingSelfConjugate | Iterable[int] = False,
+        symmetries: Iterable[Expression] = (),
+        diagonal: bool | Iterable[bool] | None = None,
+        thermal_power_counting: int = 1,
+        unitary: bool = False,
     ) -> CouplingHandle:
         """Register or return a coupling.
 
@@ -619,12 +721,40 @@ class Theory:
         eft_order:
             EFT order assigned to the coupling for truncation.
         self_conjugate:
-            Whether the coupling is treated as self-conjugate.
+            Whether the coupling is treated as self-conjugate, or a
+            one-based index permutation describing conjugation.
+        symmetries:
+            Coupling index symmetries, usually built with
+            ``s.SymmetricIndices``, ``s.AntisymmetricIndices``,
+            ``s.SymmetricPermutation``, or ``s.AntisymmetricPermutation``.
+        diagonal:
+            Per-index flags for diagonal flavor restrictions.
+        thermal_power_counting:
+            Thermal power-counting metadata mirrored from Matchete models.
+        unitary:
+            Whether this coupling is a unitary matrix in flavor space.
         """
 
         if name in self.couplings:
             return CouplingHandle(self, self.couplings[name])
         indices_tuple = tuple(indices)
+        if eft_order < 0:
+            raise ValueError("coupling EFT order must be non-negative")
+        if any(bool(index == s.Lorentz) for index in indices_tuple):
+            raise ValueError("Lorentz cannot be a coupling index representation")
+        self_conjugate_spec = _normalize_coupling_self_conjugate(self_conjugate)
+        if isinstance(self_conjugate_spec, tuple):
+            if len(self_conjugate_spec) != len(indices_tuple):
+                raise ValueError("coupling self-conjugation permutation must have the same length as coupling indices")
+            if sorted(self_conjugate_spec) != list(range(1, len(indices_tuple) + 1)):
+                raise ValueError("coupling self-conjugation permutation must be one-based and complete")
+        diagonal_tuple = _normalize_diagonal_coupling(diagonal, len(indices_tuple))
+        symmetries_tuple = tuple(symmetries)
+        if unitary:
+            if len(indices_tuple) != 2 or not bool(indices_tuple[0] == indices_tuple[1]):
+                raise ValueError("only matrix couplings with two identical index representations can be unitary")
+            if eft_order != 0:
+                raise ValueError("unitary couplings must have EFT order 0")
         label = self.symbol(
             name,
             role=SymbolRole.COUPLING,
@@ -632,7 +762,11 @@ class Theory:
                 SymbolDataKey.NAME.value: name,
                 SymbolDataKey.INDICES.value: list(indices_tuple),
                 SymbolDataKey.EFT_ORDER.value: eft_order,
-                SymbolDataKey.SELF_CONJUGATE.value: int(self_conjugate),
+                SymbolDataKey.SELF_CONJUGATE.value: list(self_conjugate_spec) if isinstance(self_conjugate_spec, tuple) else int(self_conjugate_spec),
+                SymbolDataKey.SYMMETRIES.value: list(symmetries_tuple),
+                SymbolDataKey.DIAGONAL_COUPLING.value: list(diagonal_tuple),
+                SymbolDataKey.THERMAL_POWER_COUNTING.value: thermal_power_counting,
+                SymbolDataKey.UNITARY.value: int(unitary),
             },
         )
         definition = CouplingDefinition(
@@ -640,7 +774,11 @@ class Theory:
             label=label,
             indices=indices_tuple,
             eft_order=eft_order,
-            self_conjugate=self_conjugate,
+            self_conjugate=self_conjugate_spec,
+            symmetries=symmetries_tuple,
+            diagonal=diagonal_tuple,
+            thermal_power_counting=thermal_power_counting,
+            unitary=unitary,
         )
         self.couplings[name] = definition
         return CouplingHandle(self, definition)
@@ -897,11 +1035,20 @@ class Theory:
             for name, data in obj.get("groups", {}).items()
         }
         for name, data in obj.get("couplings", {}).items():
+            self_conjugate_data = data.get("self_conjugate", False)
+            if isinstance(self_conjugate_data, list):
+                self_conjugate: CouplingSelfConjugate = tuple(int(item) for item in self_conjugate_data)
+            else:
+                self_conjugate = bool(self_conjugate_data)
             theory.define_coupling(
                 name,
                 indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
                 eft_order=int(data.get("eft_order", 0)),
-                self_conjugate=bool(data.get("self_conjugate", False)),
+                self_conjugate=self_conjugate,
+                symmetries=[theory._parse_registered_expression(x) for x in data.get("symmetries", [])],
+                diagonal=[bool(flag) for flag in data.get("diagonal", [])] if "diagonal" in data else None,
+                thermal_power_counting=int(data.get("thermal_power_counting", 1)),
+                unitary=bool(data.get("unitary", False)),
             )
         for name, data in obj.get("fields", {}).items():
             mass_label = data.get("mass_label")

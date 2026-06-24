@@ -404,6 +404,10 @@ class SymbolDataKey(StrEnum):
     INDICES = "indices"
     EFT_ORDER = "eft_order"
     SELF_CONJUGATE = "self_conjugate"
+    SYMMETRIES = "symmetries"
+    DIAGONAL_COUPLING = "diagonal_coupling"
+    THERMAL_POWER_COUNTING = "thermal_power_counting"
+    UNITARY = "unitary"
     MASS_KIND = "mass_kind"
     MASS_LABEL = "mass_label"
     MASS_INDICES = "mass_indices"
@@ -442,6 +446,11 @@ class SymbolStore:
         "EOM",
         "HeavyFieldOrder",
         "FreeLag",
+        "SymmetricIndices",
+        "AntisymmetricIndices",
+        "SymmetricPermutation",
+        "AntisymmetricPermutation",
+        "SymmetryOverride",
         "Scalar",
         "Fermion",
         "Vector",
@@ -567,6 +576,26 @@ class SymbolStore:
     @cached_property
     def FreeLag(self) -> Expression:
         return self.head("FreeLag")
+
+    @cached_property
+    def SymmetricIndices(self) -> Expression:
+        return self.head("SymmetricIndices")
+
+    @cached_property
+    def AntisymmetricIndices(self) -> Expression:
+        return self.head("AntisymmetricIndices")
+
+    @cached_property
+    def SymmetricPermutation(self) -> Expression:
+        return self.head("SymmetricPermutation")
+
+    @cached_property
+    def AntisymmetricPermutation(self) -> Expression:
+        return self.head("AntisymmetricPermutation")
+
+    @cached_property
+    def SymmetryOverride(self) -> Expression:
+        return self.head("SymmetryOverride")
 
     @cached_property
     def Scalar(self) -> Expression:

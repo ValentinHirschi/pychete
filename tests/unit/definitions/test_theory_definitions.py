@@ -75,6 +75,84 @@ def test_field_symbol_data_stores_charges_and_chirality() -> None:
     assert canonical_string(restored.group_charge("U1Y", S("qY"))) == canonical_string(charge)
 
 
+def test_coupling_symbol_data_stores_matchete_metadata() -> None:
+    theory = Theory("coupling_metadata")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    symmetry = s.SymmetricPermutation(2, 1)
+    y = theory.define_coupling(
+        "Y",
+        indices=[flavor.symbol, flavor.symbol],
+        eft_order=1,
+        self_conjugate=(2, 1),
+        symmetries=[symmetry],
+        diagonal=[False, True],
+        thermal_power_counting=2,
+    )
+
+    label = y.label
+    assert label.get_symbol_data(SymbolDataKey.INDICES.value) == [flavor.symbol, flavor.symbol]
+    assert label.get_symbol_data(SymbolDataKey.SELF_CONJUGATE.value) == [2, 1]
+    assert label.get_symbol_data(SymbolDataKey.SYMMETRIES.value) == [symmetry]
+    assert label.get_symbol_data(SymbolDataKey.DIAGONAL_COUPLING.value) == [False, True]
+    assert label.get_symbol_data(SymbolDataKey.THERMAL_POWER_COUNTING.value) == 2
+    assert label.get_symbol_data(SymbolDataKey.UNITARY.value) == 0
+    assert y.definition.index_exprs == (flavor.symbol, flavor.symbol)
+    assert y.definition.self_conjugate_spec == (2, 1)
+    assert y.definition.symmetry_exprs == (symmetry,)
+    assert y.definition.diagonal_flags == (False, True)
+    assert y.definition.is_unitary is False
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    restored_y = restored.coupling_handle("Y")
+    assert restored_y.definition.self_conjugate_spec == (2, 1)
+    assert [canonical_string(expr) for expr in restored_y.definition.symmetry_exprs] == [canonical_string(symmetry)]
+    assert restored_y.definition.diagonal_flags == (False, True)
+    assert restored_y.definition.thermal_power_counting == 2
+    assert restored_y.label.get_symbol_data(SymbolDataKey.SYMMETRIES.value) == [s.SymmetricPermutation(2, 1)]
+
+
+def test_unitary_couplings_require_zero_order_square_index_space() -> None:
+    theory = Theory("unitary_couplings")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    other = theory.define_flavor_index("OtherFlavor", 2)
+
+    u = theory.define_coupling("U", indices=[flavor.symbol, flavor.symbol], unitary=True)
+    assert u.definition.is_unitary is True
+
+    try:
+        theory.define_coupling("bad_order", indices=[flavor.symbol, flavor.symbol], eft_order=1, unitary=True)
+    except ValueError as exc:
+        assert "EFT order 0" in str(exc)
+    else:
+        raise AssertionError("unitary coupling with non-zero EFT order was accepted")
+
+    try:
+        theory.define_coupling("bad_shape", indices=[flavor.symbol, other.symbol], unitary=True)
+    except ValueError as exc:
+        assert "matrix couplings" in str(exc)
+    else:
+        raise AssertionError("unitary coupling with non-square index metadata was accepted")
+
+
+def test_diagonal_and_self_conjugation_metadata_must_match_index_count() -> None:
+    theory = Theory("coupling_validation")
+    flavor = theory.define_flavor_index("Flavor", 3)
+
+    try:
+        theory.define_coupling("D", indices=[flavor.symbol, flavor.symbol], diagonal=True)
+    except ValueError as exc:
+        assert "diagonal coupling" in str(exc)
+    else:
+        raise AssertionError("diagonal coupling flag with wrong arity was accepted")
+
+    try:
+        theory.define_coupling("C", indices=[flavor.symbol, flavor.symbol], self_conjugate=(1,))
+    except ValueError as exc:
+        assert "self-conjugation permutation" in str(exc)
+    else:
+        raise AssertionError("self-conjugation permutation with wrong arity was accepted")
+
+
 def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:
     theory = Theory("enum_defs")
     heavy = theory.define_field("H", s.Scalar, mass=(FieldMassKind.HEAVY, "M"))
