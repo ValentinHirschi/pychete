@@ -968,6 +968,66 @@ class OneLoopSetup:
             epsilon=epsilon,
         )
 
+    def power_type_minimal_subtraction_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+    ) -> MatchingResult:
+        """Return the current finite-part result after pole subtraction.
+
+        This is a minimal-subtraction-style preview over the evaluated vakint
+        aggregate. It removes the negative-power epsilon pole part and uses the
+        epsilon^0 coefficient as the EFT Lagrangian, while preserving both the
+        raw pole and counterterm in ``supertraces`` for inspection.
+        """
+
+        from .backends import vakint
+
+        numerator_sum = self.power_type_eft_lagrangian(heavy_field_dimension=heavy_field_dimension)
+        evaluated = self.power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            stage=VakintIntegralStage.EVALUATED,
+            engine=vakint_engine,
+        )
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        counterterm = (-pole).expand()
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            fluctuation_operators=self.fluctuation_operator.to_expression_map(),
+            supertraces={
+                **self.power_type_expression_map(prefix="power_type_supertrace"),
+                "power_type_eft_lagrangian": numerator_sum,
+                "power_type_vakint_integral_sum": evaluated,
+                "power_type_vakint_integral_sum[evaluated]": evaluated,
+                "power_type_vakint_pole_part": pole,
+                "power_type_vakint_ms_counterterm": counterterm,
+                "power_type_vakint_finite_part": finite,
+            },
+            metadata={
+                "stage": "power_type_minimal_subtraction_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "power_type_contribution_count": self.power_type_contribution_count,
+                "on_shell_reduced": False,
+                "vakint_stage": VakintIntegralStage.EVALUATED.value,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "max_pole_order": max_pole_order,
+            },
+        )
+
     def vakint_integral_expression_map(
         self,
         *,

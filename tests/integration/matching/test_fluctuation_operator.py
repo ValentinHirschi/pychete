@@ -646,6 +646,23 @@ def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficie
     assert_expr_equal(result.expression("power_type_vakint_pole_part"), S("double") / eps**2 + S("single") / eps)
     assert_expr_equal(result.expression("power_type_vakint_finite_part"), S("finite"))
 
+    subtraction_engine = FakePoleVakintEngine(evaluated_series)
+    subtracted = setup.power_type_minimal_subtraction_result(
+        vakint_engine=subtraction_engine,
+        max_pole_order=2,
+    )
+    assert subtraction_engine.calls == [("evaluate", expected_raw)]
+    assert subtracted.metadata["stage"] == "power_type_minimal_subtraction_result"
+    assert subtracted.metadata["complete"] is False
+    assert subtracted.metadata["subtraction_scheme"] == "minimal_subtraction_preview"
+    assert subtracted.metadata["poles_subtracted"] is True
+    assert subtracted.metadata["max_pole_order"] == 2
+    assert_expr_equal(subtracted.off_shell_eft_lagrangian, S("finite"))
+    assert_expr_equal(subtracted.on_shell_eft_lagrangian, S("finite"))
+    assert_expr_equal(subtracted.expression("power_type_vakint_pole_part"), S("double") / eps**2 + S("single") / eps)
+    assert_expr_equal(subtracted.expression("power_type_vakint_ms_counterterm"), -S("double") / eps**2 - S("single") / eps)
+    assert_expr_equal(subtracted.expression("power_type_vakint_finite_part"), S("finite"))
+
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:
     theory = Theory("one_loop_setup_idenso")

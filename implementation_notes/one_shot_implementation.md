@@ -740,6 +740,22 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests for symbolic Laurent coefficient extraction, custom
     epsilon symbols, invalid pole-order validation, and one-loop setup/result
     pole extraction from a fake evaluated vakint Laurent series.
+- Completed the thirty-third implementation slice:
+  - added `OneLoopSetup.power_type_minimal_subtraction_result(...)`, an
+    explicitly incomplete finite-part result over the evaluated vakint
+    aggregate;
+  - the method evaluates the aggregate once, extracts the negative-power pole
+    part and epsilon^0 finite part through the native Symbolica-backed vakint
+    helpers, and records a minimal-subtraction-preview counterterm as
+    `supertraces["power_type_vakint_ms_counterterm"]`;
+  - the returned `MatchingResult` uses the finite part as both off-shell and
+    not-yet-reduced on-shell EFT Lagrangians, while metadata records
+    `stage="power_type_minimal_subtraction_result"`,
+    `subtraction_scheme="minimal_subtraction_preview"`,
+    `poles_subtracted=True`, and `complete=False`;
+  - added focused tests proving the evaluated vakint aggregate is not evaluated
+    more than once for this result path and that the pole, counterterm, finite
+    part, and metadata are all exposed for future Matchete fixture comparisons.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1557,6 +1573,17 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the vakint epsilon-pole extraction slice:
   149 passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients
+  tests/unit/definitions/test_public_api.py -q'` passed after the power-type
+  minimal-subtraction result slice: 5 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the power-type minimal-subtraction result slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the power-type minimal-subtraction result
+  slice: 149 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1576,8 +1603,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend the current `SupertracePlan`/`PropagatorPlan` power-type vakint result
   into a physically normalized one-loop matching result, including phase
   conventions, loop-momentum sign conventions, propagator insertion ordering
-  for multi-mode blocks, tensor reductions, renormalized pole subtraction, and
-  validation against known native backend topologies.
+  for multi-mode blocks, tensor reductions, scheme-specific renormalization
+  beyond the current minimal-subtraction preview, and validation against known
+  native backend topologies.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
