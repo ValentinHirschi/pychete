@@ -5,7 +5,7 @@ from enum import StrEnum
 from html import escape
 from typing import Iterable, Iterator, Sequence, TypeAlias
 
-from symbolica import Expression, Replacement
+from symbolica import Expression, Matrix, Replacement
 
 from .eft import series_eft
 from .expr import (
@@ -202,6 +202,40 @@ class FluctuationOperatorBlock:
 
 
 @dataclass(frozen=True)
+class SupertraceBlockTrace:
+    """Weighted matrix-product trace over fluctuation-operator blocks."""
+
+    theory: Theory
+    name: str
+    blocks: tuple[FluctuationOperatorBlock, ...]
+    modes: tuple[FluctuationMode, ...]
+    expression: Expression
+
+    @property
+    def order(self) -> int:
+        """Number of block factors in this trace kernel."""
+
+        return len(self.blocks)
+
+    @property
+    def block_sectors(self) -> tuple[tuple[FluctuationSector, FluctuationSector], ...]:
+        """Return the ordered sector path represented by this trace kernel."""
+
+        return tuple((block.row_sector, block.column_sector) for block in self.blocks)
+
+    def to_expression_map(self, *, prefix: str = "supertrace_block_trace") -> dict[str, Expression]:
+        """Return this trace kernel as a deterministic named expression."""
+
+        return {f"{prefix}[{self.name}]": self.expression}
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{SupertraceBlockTrace}}\left({escape(self.name)},\ {self.order}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>SupertraceBlockTrace({escape(self.name)} order={self.order})</code>"
+
+
+@dataclass(frozen=True)
 class SupertracePlan:
     """Structured block data prepared for future supertrace generation."""
 
@@ -234,6 +268,23 @@ class SupertracePlan:
         """Return the four heavy/light blocks in deterministic order."""
 
         return (self.heavy_heavy, self.heavy_light, self.light_heavy, self.light_light)
+
+    def block_trace(self, name: str, *blocks: FluctuationOperatorBlock) -> SupertraceBlockTrace:
+        """Build a weighted closed-block trace kernel with Symbolica matrices."""
+
+        if not blocks:
+            raise ValueError("at least one fluctuation block is required")
+        normalized_blocks = tuple(blocks)
+        if any(block.theory.name != self.theory.name for block in normalized_blocks):
+            raise ValueError(f"Supertrace blocks must belong to theory {self.theory.name!r}")
+        _validate_closed_block_chain(normalized_blocks)
+        return SupertraceBlockTrace(
+            theory=self.theory,
+            name=name,
+            blocks=normalized_blocks,
+            modes=normalized_blocks[0].rows,
+            expression=_supertrace_block_product(normalized_blocks),
+        )
 
     def to_expression_map(self, *, prefix: str = "supertrace_input") -> dict[str, Expression]:
         """Return deterministic named expressions for all planned blocks."""
@@ -669,6 +720,35 @@ def _sector_indices(modes: tuple[FluctuationMode, ...], sector: FluctuationSecto
     if sector is FluctuationSector.HEAVY:
         return tuple(index for index, mode in enumerate(modes) if mode.is_heavy)
     return tuple(index for index, mode in enumerate(modes) if mode.is_light)
+
+
+def _validate_closed_block_chain(blocks: tuple[FluctuationOperatorBlock, ...]) -> None:
+    for left, right in zip(blocks, blocks[1:], strict=False):
+        if _mode_keys(left.columns) != _mode_keys(right.rows):
+            raise ValueError("adjacent fluctuation blocks must have matching column and row modes")
+    if _mode_keys(blocks[0].rows) != _mode_keys(blocks[-1].columns):
+        raise ValueError("fluctuation block trace must form a closed mode chain")
+
+
+def _mode_keys(modes: tuple[FluctuationMode, ...]) -> tuple[str, ...]:
+    return tuple(canonical_string(mode.field) for mode in modes)
+
+
+def _supertrace_block_product(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:
+    trace_modes = blocks[0].rows
+    if not trace_modes or any(not block.rows or not block.columns for block in blocks):
+        return Expression.num(0)
+    product = _block_matrix(blocks[0])
+    for block in blocks[1:]:
+        product = product @ _block_matrix(block)
+    out = Expression.num(0)
+    for index, mode in enumerate(trace_modes):
+        out = out + Expression.num(mode.supertrace_sign) * product[index, index].to_expression()
+    return out.expand()
+
+
+def _block_matrix(block: FluctuationOperatorBlock) -> Matrix:
+    return Matrix.from_nested(block.matrix)
 
 
 def _fluctuation_variable(index: int) -> Expression:

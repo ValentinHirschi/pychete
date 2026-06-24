@@ -208,3 +208,41 @@ def test_fluctuation_operator_builds_supertrace_plan_from_sector_blocks() -> Non
     assert plan.heavy_supertrace_sign == -1
     assert len(plan.blocks()) == 4
     assert plan.to_expression_map()
+
+
+def test_supertrace_plan_builds_weighted_block_trace_with_symbolica_matrix_product() -> None:
+    theory = Theory("supertrace_block_trace")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = heavy() ** 2 - y() * heavy() * light() ** 2 / 2
+
+    plan = theory.fluctuation_operator(lagrangian).supertrace_plan()
+    heavy_heavy = plan.block_trace("heavy_heavy", plan.heavy_heavy)
+    heavy_light_mixing = plan.block_trace("heavy_light_light_heavy", plan.heavy_light, plan.light_heavy)
+
+    assert heavy_heavy.order == 1
+    assert heavy_heavy.block_sectors == ((FluctuationSector.HEAVY, FluctuationSector.HEAVY),)
+    assert_expr_equal(heavy_heavy.expression, plan.heavy_heavy.entry(heavy, heavy))
+    assert heavy_light_mixing.order == 2
+    assert heavy_light_mixing.block_sectors == (
+        (FluctuationSector.HEAVY, FluctuationSector.LIGHT),
+        (FluctuationSector.LIGHT, FluctuationSector.HEAVY),
+    )
+    assert_expr_equal(heavy_light_mixing.expression, y() ** 2 * light() ** 2)
+    assert heavy_light_mixing.to_expression_map()
+
+
+def test_supertrace_plan_rejects_non_closed_block_trace() -> None:
+    theory = Theory("supertrace_bad_block_trace")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    lagrangian = heavy() * light()
+
+    plan = theory.fluctuation_operator(lagrangian).supertrace_plan()
+
+    with pytest.raises(ValueError, match="closed mode chain"):
+        plan.block_trace("open", plan.heavy_light)
+
+    with pytest.raises(ValueError, match="matching column and row modes"):
+        plan.block_trace("mismatched", plan.heavy_heavy, plan.light_heavy)

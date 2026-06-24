@@ -376,6 +376,23 @@ discoveries, dependency patches, blockers, and remaining work.
     repr hooks;
   - added tests for plan construction from sector blocks, expression-map export,
     public API docstrings, and Jupyter repr coverage.
+- Completed the twentieth implementation slice:
+  - added public `SupertraceBlockTrace` as a structured trace-kernel object for
+    ordered products of fluctuation-operator blocks;
+  - added `SupertracePlan.block_trace(...)`, which validates closed block
+    chains, rejects mismatched adjacent sector blocks, and computes the weighted
+    boson/fermion supertrace over the diagonal;
+  - used Symbolica's native `Matrix.from_nested(...)` and `Matrix.__matmul__`
+    for the matrix product, leaving only the unavoidable finite diagonal
+    supertrace sum in Python because the stub exposes no matrix trace method;
+  - kept this milestone at the block-kernel stage only: it does not claim to
+    perform propagator expansion, loop-momentum reduction, tensor reduction, or
+    vakint integration yet;
+  - exported `SupertraceBlockTrace` through the public API and added
+    Jupyter-friendly repr hooks;
+  - added tests for heavy-heavy and heavy-light/light-heavy block traces,
+    ordered sector-path metadata, expression-map export, invalid open or
+    mismatched block chains, public API docstrings, and Jupyter repr coverage.
 
 ## Backend/API Discoveries
 
@@ -488,6 +505,18 @@ discoveries, dependency patches, blockers, and remaining work.
   pipeline object. The next one-loop matching stages should consume this object
   to construct real Symbolica/idenso/spenso/vakint supertrace contributions
   rather than rebuilding block selection logic elsewhere.
+- Rescanned the Symbolica Matrix stub before adding block-kernel traces.
+  `Matrix.from_nested(...)`, `Matrix.__mul__`, and `Matrix.__matmul__` are
+  available and return matrix entries as `RationalPolynomial`, which can be
+  converted back with `to_expression()`. No matrix trace method is exposed in
+  the current Python stub, so pychete currently performs only the finite
+  diagonal sum after native matrix multiplication.
+- `SupertraceBlockTrace` is now the first concrete consumer of
+  `SupertracePlan`: closed sector paths such as heavy-heavy and
+  heavy-light/light-heavy can be turned into Symbolica expressions that later
+  supertrace generation can decorate with propagators, statistics factors,
+  momentum expansions, idenso/spenso tensor simplification, and vakint integral
+  evaluation.
 
 ## Test Status
 
@@ -679,6 +708,17 @@ discoveries, dependency patches, blockers, and remaining work.
   supertrace-plan slice: 103 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the supertrace-block-trace slice: 19 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  supertrace-block-trace slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  supertrace-block-trace slice: 105 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
@@ -691,7 +731,7 @@ discoveries, dependency patches, blockers, and remaining work.
   including spin/statistics signs, real/complex counting, ghosts, Goldstones,
   background fields, and non-propagating fields.
 - Consume `SupertracePlan` to build real one-loop supertrace terms, including
-  block products, trace ordering, statistics factors, tensor reductions, and
+  propagator insertion ordering, EFT-order truncation, tensor reductions, and
   integral calls through the native backends.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
