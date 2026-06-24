@@ -1187,8 +1187,8 @@ discoveries, dependency patches, blockers, and remaining work.
     than an untagged external symbol;
   - kept backend-computed representation dimensions and Frobenius-Schur
     indicators as explicit metadata for now. Loader-defined representations
-    preserve Dynkin coefficients and default to `RepresentationReality.UNKNOWN`
-    until a native group-theory backend path is wired in.
+    preserve Dynkin coefficients and use `RepresentationReality.UNKNOWN`
+    when no native or conservative pychete inference path is available.
 - `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
   tests/unit/definitions/test_theory_definitions.py
   tests/integration/models/test_model_loaders.py
@@ -1199,6 +1199,36 @@ discoveries, dependency patches, blockers, and remaining work.
   files.
 - `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
   tests'` passed after the representation metadata slice: 124 passed, 1
+  skipped. The skip is the existing GammaLoop API import check because
+  GammaLoop was not requested in the current dependency manifest.
+- Added a follow-up representation-metadata inference slice after checking the
+  spenso/idenso Python stubs for native group-theory support:
+  - spenso exposes tensor-network `Representation` objects once dimension and
+    self-duality are known, but the current Python stub does not expose
+    Dynkin-to-dimension or Frobenius-Schur-indicator computation;
+  - idenso exposes gamma/colour/metric/index simplification functions, but not
+    representation-dimension or representation-reality inference;
+  - pychete now conservatively auto-registers built-in `fund` and `adj`
+    representations when non-Abelian gauge/global groups are registered;
+  - for `SU(N)` built-ins, pychete records fundamental dimension `N`, adjoint
+    dimension `N^2 - 1`, real adjoint reality, complex `SU(N>2)`
+    fundamentals, and pseudoreal `SU(2)` fundamentals;
+  - for explicit `SU(2)` Dynkin labels such as Matchete's scalar quadruplet
+    `DefineRepresentation[SU2L[quad], SU2L, {3}]`, pychete records dimension
+    `n + 1` and real/pseudoreal parity from the Dynkin coefficient;
+  - explicit user-provided dimension/reality metadata continues to override
+    inference, and unsupported representations remain
+    `RepresentationReality.UNKNOWN`.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py
+  tests/unit/definitions/test_public_api.py'` passed after the
+  representation-inference slice: 30 passed.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m mypy'`
+  passed after the representation-inference slice: no issues found in 24 source
+  files.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests'` passed after the representation-inference slice: 124 passed, 1
   skipped. The skip is the existing GammaLoop API import check because
   GammaLoop was not requested in the current dependency manifest.
 

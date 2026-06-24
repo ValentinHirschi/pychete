@@ -111,10 +111,19 @@ def test_gauge_and_global_groups_store_kind_and_abelian_symbol_data() -> None:
     assert "non_abelian" in _local_tags(su2f)
     assert u1x.get_symbol_data(SymbolDataKey.GROUP_ABELIAN.value) == 1
     assert canonical_string(theory.group_charge("U1X", S("x"))) == "group_metadata::group_U1X(python::x)"
+    su2f_fund = canonical_string(su2f(s.fund))
+    su2f_adj = canonical_string(su2f(s.adj))
+    assert theory.representations[su2f_fund].dimension_value == 2
+    assert theory.representations[su2f_fund].reality_kind is RepresentationReality.PSEUDOREAL
+    assert theory.representations[su2f_adj].dimension_value == 3
+    assert theory.representations[su2f_adj].reality_kind is RepresentationReality.REAL
+    assert canonical_string(theory.define_representation("SU2F", "fund")) == su2f_fund
 
     restored = Theory.from_json_obj(json.loads(theory.to_json()))
     restored_su2f = restored.symbol("SU2F", role=SymbolRole.GROUP)
     assert restored.groups == theory.groups
+    assert restored.representations[su2f_fund].dimension_value == 2
+    assert restored.representations[su2f_adj].reality_kind is RepresentationReality.REAL
     assert restored_su2f.get_symbol_data(SymbolDataKey.GROUP_KIND.value) == GroupKind.GLOBAL.value
     assert "group_kind_global" in _local_tags(restored_su2f)
 

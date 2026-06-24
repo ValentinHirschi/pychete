@@ -173,10 +173,13 @@ def test_matchete_loader_preserves_custom_representations(tmp_path: Path) -> Non
     assert canonical_string(theory.fields["Theta"].indices[0]) == rep_key
     assert rep_key in theory.representations
     assert theory.representations[rep_key].group == "SU2L"
-    assert theory.representations[rep_key].reality_kind is RepresentationReality.UNKNOWN
+    assert theory.representations[rep_key].dimension_value == 4
+    assert theory.representations[rep_key].reality_kind is RepresentationReality.PSEUDOREAL
     label = theory.representation_labels["quad"]
     assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_GROUP.value) == "SU2L"
     assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_DYNKIN.value) == [Expression.num(3)]
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_DIMENSION.value) == 4
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_REALITY.value) == RepresentationReality.PSEUDOREAL.value
     assert "representation_group_SU2L" in _local_tags(label)
 
 
@@ -193,6 +196,12 @@ def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:
     assert canonical_string(theory.fields["H"].charge_exprs[0]) == "SM::group_U1Y(1/2)"
     assert theory.couplings["mu2"].eft_order == 2
     assert theory.couplings["Yu"].index_exprs == (theory.index_types["Flavor"].symbol, theory.index_types["Flavor"].symbol)
+    assert theory.representations["SM::group_SU3c(pychete::fund)"].dimension_value == 3
+    assert theory.representations["SM::group_SU3c(pychete::fund)"].reality_kind is RepresentationReality.COMPLEX
+    assert theory.representations["SM::group_SU3c(pychete::adj)"].dimension_value == 8
+    assert theory.representations["SM::group_SU3c(pychete::adj)"].reality_kind is RepresentationReality.REAL
+    assert theory.representations["SM::group_SU2L(pychete::fund)"].dimension_value == 2
+    assert theory.representations["SM::group_SU2L(pychete::fund)"].reality_kind is RepresentationReality.PSEUDOREAL
 
 
 def test_default_parent_model_assets_load_metadata_without_reference_checkout() -> None:

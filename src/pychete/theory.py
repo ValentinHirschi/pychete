@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Iterable, TypeAlias
 
 from symbolica import Expression, S
 
-from .expr import is_head, list_expr
+from .expr import as_int, is_head, list_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
@@ -488,6 +488,55 @@ def _normalize_dynkin(dynkin: DynkinInput) -> tuple[Expression, ...]:
     return tuple(item if isinstance(item, Expression) else Expression.num(int(item)) for item in dynkin)
 
 
+def _group_type_from_entry(entry: dict[str, Any]) -> Expression:
+    return expression_from_canonical(str(entry["type"]))
+
+
+def _su_size(group_type: Expression) -> int | None:
+    if not is_head(group_type, s.SU) or len(group_type) != 1:
+        return None
+    return as_int(group_type[0])
+
+
+def _dynkin_ints(dynkin: tuple[Expression, ...]) -> tuple[int, ...] | None:
+    values = tuple(as_int(item) for item in dynkin)
+    if any(value is None for value in values):
+        return None
+    return tuple(int(value) for value in values if value is not None)
+
+
+def _infer_representation_metadata(
+    group_type: Expression,
+    label: Expression | None,
+    dynkin: tuple[Expression, ...],
+) -> tuple[int | None, RepresentationReality]:
+    n = _su_size(group_type)
+    if n is None:
+        return None, RepresentationReality.UNKNOWN
+    if label is not None and bool(label == s.fund):
+        return n, RepresentationReality.PSEUDOREAL if n == 2 else RepresentationReality.COMPLEX
+    if label is not None and bool(label == s.adj):
+        return n * n - 1, RepresentationReality.REAL
+
+    dynkin_values = _dynkin_ints(dynkin)
+    if dynkin_values is None:
+        return None, RepresentationReality.UNKNOWN
+    if n == 2 and len(dynkin_values) == 1:
+        highest_weight = dynkin_values[0]
+        return highest_weight + 1, RepresentationReality.REAL if highest_weight % 2 == 0 else RepresentationReality.PSEUDOREAL
+
+    rank = n - 1
+    if len(dynkin_values) != rank:
+        return None, RepresentationReality.UNKNOWN
+    if dynkin_values == (1, *([0] * (rank - 1))):
+        return n, RepresentationReality.COMPLEX
+    if dynkin_values == (*([0] * (rank - 1)), 1):
+        return n, RepresentationReality.COMPLEX
+    if rank > 1 and dynkin_values == (1, *([0] * (rank - 2)), 1):
+        return n * n - 1, RepresentationReality.REAL
+    return None, RepresentationReality.UNKNOWN
+
+
 def _normalize_diagonal_coupling(diagonal: bool | Iterable[bool] | None, index_count: int) -> tuple[bool, ...]:
     if diagonal is None:
         return tuple(False for _ in range(index_count))
@@ -549,28 +598,25 @@ class RepresentationDefinition:
     def dynkin_exprs(self) -> tuple[Expression, ...]:
         """Dynkin coefficients stored on this representation label when available."""
 
-        try:
+        if symbol_data(self.label, SymbolDataKey.REPRESENTATION_DYNKIN) is not None:
             return representation_dynkin_from_label(self.label)
-        except (KeyError, ValueError):
-            return self.dynkin
+        return self.dynkin
 
     @property
     def dimension_value(self) -> int | None:
         """Dimension stored on this representation label when available."""
 
-        try:
+        if symbol_data(self.label, SymbolDataKey.REPRESENTATION_DIMENSION) is not None:
             return representation_dimension_from_label(self.label)
-        except (KeyError, ValueError):
-            return self.dimension
+        return self.dimension
 
     @property
     def reality_kind(self) -> RepresentationReality:
         """Reality class stored on this representation label when available."""
 
-        try:
+        if symbol_data(self.label, SymbolDataKey.REPRESENTATION_REALITY) is not None:
             return representation_reality_from_label(self.label)
-        except (KeyError, ValueError):
-            return self.reality
+        return self.reality
 
     def _repr_latex_(self) -> str:
         return f"${latex_string(self.expr)}$"
@@ -1313,6 +1359,9 @@ class Theory:
             coupling=coupling_handle.name,
             field=vector.name,
         )
+        if not abelian:
+            self.define_representation(name, "fund")
+            self.define_representation(name, "adj")
 
     def define_global_group(self, name: str, group_type: Expression) -> Expression:
         """Register a global symmetry group and return its group symbol."""
@@ -1336,6 +1385,9 @@ class Theory:
             group_type=group_type,
             group_kind=GroupKind.GLOBAL,
         )
+        if not abelian:
+            self.define_representation(name, "fund")
+            self.define_representation(name, "adj")
         return group_symbol
 
     def define_representation(
@@ -1362,6 +1414,7 @@ class Theory:
         if dimension is not None and dimension <= 0:
             raise ValueError("representation dimension must be positive when provided")
         reality_kind = RepresentationReality.from_user(reality)
+        label_expr: Expression | None
         if isinstance(label, str):
             label_name = safe_symbol_name(label)
             if label_name == "fund":
@@ -1369,22 +1422,36 @@ class Theory:
             elif label_name == "adj":
                 label_expr = s.adj
             else:
-                label_expr = self.symbol(
-                    label_name,
-                    role=SymbolRole.REPRESENTATION,
-                    data={
-                        SymbolDataKey.NAME.value: label_name,
-                        SymbolDataKey.REPRESENTATION_GROUP.value: group,
-                        SymbolDataKey.REPRESENTATION_DYNKIN.value: list(dynkin_tuple),
-                        SymbolDataKey.REPRESENTATION_DIMENSION.value: dimension if dimension is not None else -1,
-                        SymbolDataKey.REPRESENTATION_REALITY.value: reality_kind.value,
-                    },
-                    tags=_representation_symbol_tags(group, reality_kind),
-                )
-                self.representation_labels[label_name] = label_expr
+                label_expr = None
         else:
             label_expr = label
             label_name = _representation_name_for_label(label_expr)
+
+        inferred_dimension, inferred_reality = _infer_representation_metadata(
+            _group_type_from_entry(self.groups[group]),
+            label_expr,
+            dynkin_tuple,
+        )
+        if dimension is None:
+            dimension = inferred_dimension
+        if reality_kind is RepresentationReality.UNKNOWN and inferred_reality is not RepresentationReality.UNKNOWN:
+            reality_kind = inferred_reality
+
+        if label_expr is None:
+            label_expr = self.symbol(
+                label_name,
+                role=SymbolRole.REPRESENTATION,
+                data={
+                    SymbolDataKey.NAME.value: label_name,
+                    SymbolDataKey.REPRESENTATION_GROUP.value: group,
+                    SymbolDataKey.REPRESENTATION_DYNKIN.value: list(dynkin_tuple),
+                    SymbolDataKey.REPRESENTATION_DIMENSION.value: dimension if dimension is not None else -1,
+                    SymbolDataKey.REPRESENTATION_REALITY.value: reality_kind.value,
+                },
+                tags=_representation_symbol_tags(group, reality_kind),
+            )
+            self.representation_labels[label_name] = label_expr
+        else:
             role = symbol_data(label_expr, SymbolDataKey.ROLE)
             if role == SymbolRole.REPRESENTATION.value:
                 self.representation_labels[label_name] = label_expr
