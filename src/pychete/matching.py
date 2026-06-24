@@ -2690,18 +2690,15 @@ def fluctuation_operator(
     if not basis:
         raise ValueError("at least one fluctuation field is required")
     _validate_unique_fluctuation_basis(basis)
-    variables = tuple(_fluctuation_variable(index) for index, _ in enumerate(basis))
-    encoded = _encode_fluctuation_basis(lagrangian, basis, variables)
     matrix = tuple(
         tuple(
-            _decode_fluctuation_basis(
-                encoded.derivative(row_variable).derivative(column_variable),
-                basis,
-                variables,
+            partial_functional_derivative(
+                partial_functional_derivative(lagrangian, row),
+                column,
             ).expand()
-            for column_variable in variables
+            for column in basis
         )
-        for row_variable in variables
+        for row in basis
     )
     differential_matrix = tuple(
         tuple(
@@ -3269,45 +3266,6 @@ def _expression_matrix_multiply(left: ExpressionMatrix, right: ExpressionMatrix)
 
 def _block_matrix(block: FluctuationOperatorBlock) -> Matrix:
     return Matrix.from_nested(block.matrix)
-
-
-def _fluctuation_variable(index: int) -> Expression:
-    return s.user(
-        "pychete_internal",
-        f"fluctuation_{index}",
-        tags=[SymbolRole.PROJECT.value, "fluctuation_variable"],
-        data={"role": "fluctuation_variable", "index": index},
-    )
-
-
-def _encode_fluctuation_basis(
-    lagrangian: Expression,
-    basis: tuple[Expression, ...],
-    variables: tuple[Expression, ...],
-) -> Expression:
-    barred_replacements: list[Replacement] = []
-    unbarred_replacements: list[Replacement] = []
-    for field, variable in zip(basis, variables, strict=True):
-        replacement = Replacement(field, variable)
-        if is_bar_field(field):
-            barred_replacements.append(replacement)
-        else:
-            unbarred_replacements.append(replacement)
-    bar_protector = Replacement(
-        bar_field_pattern(),
-        bar_field_pattern(),
-        s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value),
-    )
-    return lagrangian.replace_multiple([*barred_replacements, bar_protector, *unbarred_replacements])
-
-
-def _decode_fluctuation_basis(
-    expr: Expression,
-    basis: tuple[Expression, ...],
-    variables: tuple[Expression, ...],
-) -> Expression:
-    replacements = [Replacement(variable, field) for field, variable in zip(basis, variables, strict=True)]
-    return expr.replace_multiple(replacements)
 
 
 @dataclass(frozen=True)

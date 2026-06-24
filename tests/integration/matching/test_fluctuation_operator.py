@@ -195,6 +195,40 @@ def test_fluctuation_operator_can_include_barred_field_basis_entries() -> None:
     assert operator.to_expression_map()
 
 
+def test_fluctuation_operator_linearizes_noncommutative_fermion_chains_without_formal_derivatives() -> None:
+    theory = Theory("fluctuation_ncm_fermions")
+    heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("psi", s.Fermion, mass=0)
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y")
+    mass = theory.mass_expr(heavy.definition)
+    assert mass is not None
+    mu = theory.dummy_index(0)
+    interaction = -y() * scalar() * s.NCM(s.Bar(light()), s.PR, heavy())
+    lagrangian = theory.free_lag(heavy, light, scalar) + interaction + s.Bar(interaction)
+    basis = (s.Bar(heavy()), heavy(), s.Bar(light()), light(), scalar())
+
+    operator = theory.fluctuation_operator(lagrangian, basis)
+
+    for row in basis:
+        for column in basis:
+            for entry in (
+                operator.entry(row, column),
+                operator.differential_entry(row, column),
+                operator.momentum_entry(row, column),
+                operator.interaction_entry(row, column),
+            ):
+                assert "der(" not in canonical_string(entry)
+    assert_expr_equal(operator.entry(heavy, s.Bar(light())), -y() * scalar() * s.PR)
+    assert_expr_equal(operator.entry(s.Bar(heavy()), light), -s.Bar(y()) * scalar() * s.PL)
+    assert_expr_equal(operator.entry(heavy, scalar), -y() * s.NCM(s.Bar(light()), s.PR))
+    assert_expr_equal(operator.entry(scalar, s.Bar(heavy())), -s.Bar(y()) * s.NCM(s.PL, light()))
+    assert_expr_equal(
+        operator.differential_entry(heavy, s.Bar(heavy())),
+        -mass - Expression.I * s.Gamma(mu) * s.DifferentialOperator(s.List(mu)),
+    )
+
+
 def test_fluctuation_operator_rejects_duplicate_basis_entries() -> None:
     theory = Theory("fluctuation_duplicate_basis")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True)

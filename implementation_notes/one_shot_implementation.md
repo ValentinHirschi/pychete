@@ -531,6 +531,15 @@ discoveries, dependency patches, blockers, and remaining work.
   HEP tensor libraries plus scalar tensor networks, and vakint method factories
   import cheaply while full `Vakint(...)` engine construction should remain a
   cached or caller-provided operation because it processes known topologies.
+- Rescanned and directly probed Symbolica's function-attribute and transformer
+  APIs for noncommutative-chain differentiation. `S(..., is_linear=True)` and
+  `Transformer.linearize(...)` expand sums in function arguments, but native
+  `Expression.derivative(...)` and `Expression.series(...)` still return
+  formal `der(...)` heads for derivatives with respect to arbitrary function
+  arguments. Therefore pychete's custom `NCM` head needs a narrow
+  variation-time multilinear lowering before Symbolica coefficient extraction;
+  this is backend-boundary glue for pychete's own head, not a replacement for
+  Symbolica algebra.
 - Matchete previous matching-result files store the stages pychete needs:
   `"UV Lagrangian"`, `"Off-shell EFT Lagrangian"`,
   `"On-shell EFT Lagrangian"`, `"SuperTraces"`, and
@@ -561,13 +570,15 @@ discoveries, dependency patches, blockers, and remaining work.
   `evaluator_probe_equal(...)`, which uses `Expression.evaluator_multiple`.
   The first regression test uses `sin(x)^2 + cos(x)^2` versus `1`, confirming
   the evaluator path can prove equality when canonical expansion does not.
-- The first fluctuation-operator extraction layer now uses Symbolica native
-  primitives only for symbolic work: `Expression.replace_multiple` for
-  simultaneous field-to-variable encoding, `Expression.derivative` for Hessian
-  entries, and `Expression.replace_multiple` again for decoding. The current
-  scope is algebraic Hessian extraction over an explicit basis; assembling full
-  differential operators from derivative-valued fields remains a later
-  one-loop matching stage.
+- The first fluctuation-operator extraction layer initially used Symbolica
+  `Expression.derivative` after field-to-variable encoding. That path was
+  superseded for pychete heads such as `NCM`: algebraic Hessian entries now use
+  `partial_functional_derivative(...)`, which normalizes pychete `Bar`, lowers
+  multilinear `NCM` variations into ordered fragments, and still delegates
+  coefficient extraction to Symbolica `series(...)` and `coefficient(...)`.
+  Direct raw derivatives of opaque pychete heads are not suitable for
+  noncommutative fermion chains because Symbolica correctly represents them as
+  formal function derivatives.
 - Automatic fluctuation-basis discovery now uses Symbolica pattern matching
   over `Field(...)` and `Bar(Field(...))` atoms with `req_tag("field")` on the
   field label wildcard. This keeps unregistered field-like test atoms out of
@@ -1061,6 +1072,36 @@ discoveries, dependency patches, blockers, and remaining work.
   - this turns future matching-engine work into a measurable acceptance target:
     later slices should move names from the canonical-different set into the
     canonical-equal set while reducing missing-reference counts.
+- Completed the forty-ninth implementation slice:
+  - removed formal Symbolica `der(...)` artifacts from noncommutative fermion
+    variation paths by routing the algebraic fluctuation matrix through
+    `partial_functional_derivative(...)` instead of differentiating opaque
+    pychete heads directly;
+  - added a derivative-safe pychete `Bar` normalizer for variation extraction
+    so conjugated Yukawa terms such as `Bar[-y phi NCM[bar(psi), PR, Psi]]`
+    expose `bar(y)`, self-conjugate scalar fields, reversed
+    noncommutative chains, and the expected `PR <-> PL` conjugation before
+    coefficient extraction;
+  - added NCM multilinearization for both functional-variation and
+    covariant-derivative variation parameters: Symbolica still performs the
+    coefficient extraction through `series(...)` and `coefficient(...)`, while
+    pychete only lowers the custom `NCM` head into first-order ordered chain
+    fragments because native Symbolica derivatives of arbitrary function
+    arguments intentionally produce formal `der(...)` heads;
+  - removed the old temporary-variable Hessian helpers
+    `_fluctuation_variable`, `_encode_fluctuation_basis`, and
+    `_decode_fluctuation_basis`, which were the source of the opaque-function
+    derivative artifacts;
+  - added regression coverage for a VLF-like fermion/scalar Yukawa interaction
+    proving that algebraic, differential, momentum-lowered, and interaction
+    fluctuation entries contain no formal `der(...)` artifacts and that the
+    direct/conjugated `P_R`/`P_L` coefficients are extracted as ordered
+    noncommutative fragments;
+  - checked the live `VLF_toy_model` one-loop preview after the change:
+    all 47 candidate named supertraces are now free of formal `der(...)`
+    artifacts, though canonical equality against Matchete remains unchanged at
+    0/5 shared supertraces because Dirac-chain normalization, phase/sign
+    conventions, and vakint evaluation are still future slices.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -2166,6 +2207,36 @@ discoveries, dependency patches, blockers, and remaining work.
   check because GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the canonical shared-supertrace gap-report
   slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_linearizes_noncommutative_fermion_chains_without_formal_derivatives
+  -q'` passed after the NCM/Bar variation-linearization slice: 1 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the NCM/Bar
+  variation-linearization slice: 41 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the NCM/Bar variation-linearization slice: no issues
+  found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  tests/integration/validation/test_validation_fixtures.py::test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica
+  -q'` passed after the NCM/Bar variation-linearization slice: 2 passed.
+- A direct managed-venv probe of
+  `assets/validation/pychete/VLF_toy_model.model_fixture.json` confirmed that
+  the order-three one-loop preview still has 47 candidate named supertraces and
+  now has zero candidate supertraces whose canonical string contains
+  `der(...)`.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching tests/integration/validation -q'`
+  passed after tightening the direct `Bar(Field)` protection semantics: 58
+  passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the NCM/Bar
+  variation-linearization slice: 161 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `git diff --check` passed after the NCM/Bar variation-linearization slice.
 
 ## Remaining Work
 
@@ -2191,6 +2262,12 @@ discoveries, dependency patches, blockers, and remaining work.
   blocks, tensor reductions, scheme-specific renormalization beyond the current
   minimal-subtraction preview, and validation against known native backend
   topologies.
+- Normalize Dirac and noncommutative chain fragments after the new
+  formal-derivative cleanup. Current VLF previews no longer contain
+  `der(...)`, but they still expose products such as `P_R^2` and unevaluated
+  `NCM` fragments that must be routed through idenso/spenso-compatible Dirac
+  algebra before they can canonically agree with Matchete's saved
+  `DiracProduct[...]` expressions.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
