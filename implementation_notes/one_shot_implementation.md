@@ -669,6 +669,17 @@ discoveries, dependency patches, blockers, and remaining work.
   numerators. This is the first structured bridge from setup kernels toward
   final `MatchingResult.supertraces`, while `Theory.match(loop_order=1)` still
   correctly refuses to return an incomplete matching result.
+- Added aggregate power-type inspection outputs on `OneLoopSetup`.
+  `power_type_eft_lagrangian(...)` now sums the cyclically unique
+  EFT-truncated power-type numerators into a single off-shell contribution, and
+  `power_type_vakint_integral_sum(...)` sums the corresponding vakint topology
+  expressions. The aggregation is intentionally thin Python orchestration over
+  Symbolica expressions: the symbolic EFT truncation remains in
+  `series_eft(...)`, the integral shape is built through the vakint adapter,
+  and the final algebraic cleanup is delegated to Symbolica `Expression.expand`.
+  This gives the future `MatchingResult.off_shell_eft_lagrangian` and
+  `MatchingResult.supertraces` stages a concrete intermediate value without
+  making `Theory.match(loop_order=1)` return a partial result.
 
 ## Test Status
 
@@ -966,6 +977,16 @@ discoveries, dependency patches, blockers, and remaining work.
   power-type-contribution slice: 113 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the power-type-aggregation slice: 24 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  power-type-aggregation slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  power-type-aggregation slice: 113 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 

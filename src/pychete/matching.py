@@ -19,6 +19,7 @@ from .expr import (
     is_zero,
     list_expr,
     list_items,
+    sum_expr,
 )
 from .functional import apply_cd, derive_eom
 from .symbols import SymbolRole, canonical_string, display_string, latex_string, s
@@ -740,6 +741,27 @@ class OneLoopSetup:
             entries.update(contribution.to_expression_map(prefix=prefix))
         return entries
 
+    def power_type_eft_lagrangian(self, *, heavy_field_dimension: bool = False) -> Expression:
+        """Return the summed EFT-truncated power-type off-shell Lagrangian contribution."""
+
+        return sum_expr(
+            contribution.eft_numerator_expression
+            for contribution in self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
+        ).expand()
+
+    def power_type_vakint_integral_sum(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+    ) -> Expression:
+        """Return the summed power-type contribution lowered to vakint topology form."""
+
+        return sum_expr(
+            contribution.vakint_integral_expression(include_light=include_light)
+            for contribution in self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
+        ).expand()
+
     def vakint_integral_expression_map(
         self,
         *,
@@ -924,6 +946,8 @@ class OneLoopSetup:
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
             **self.vakint_integral_expression_map(prefix=f"{prefix}.vakint_integral"),
             **self.power_type_expression_map(prefix=f"{prefix}.power_type_supertrace"),
+            f"{prefix}[power_type_eft_lagrangian]": self.power_type_eft_lagrangian(),
+            f"{prefix}[power_type_vakint_integral_sum]": self.power_type_vakint_integral_sum(),
         }
         return entries
 

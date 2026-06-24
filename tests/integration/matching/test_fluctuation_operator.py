@@ -341,7 +341,15 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
         power_map["power_type_supertrace[heavy-light-heavy,eft_numerator]"],
         -y() ** 2 * light() ** 2 / 2,
     )
+    assert_expr_equal(
+        setup.power_type_eft_lagrangian(),
+        -Expression.num(3) - y() ** 2 * light() ** 2 / 2,
+    )
     assert setup.to_expression_map()
+    assert_expr_equal(
+        setup.to_expression_map()["one_loop_setup[power_type_eft_lagrangian]"],
+        setup.power_type_eft_lagrangian(),
+    )
 
     with pytest.raises(ValueError, match="max_trace_order"):
         theory.one_loop_setup(lagrangian, max_trace_order=0)
@@ -441,11 +449,21 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         contribution.vakint_integral_expression(),
         vakint_backend.one_loop_vacuum_integral(-trace.expression / 2, (heavy_mass**2, light_mass**2)),
     )
+    expected_power_type_vakint_sum = (
+        vakint_backend.one_loop_vacuum_integral(heavy_mass**2 / 2, (heavy_mass**2,))
+        + vakint_backend.one_loop_vacuum_integral(-(heavy_mass**2) ** 2 / 2, (heavy_mass**2, heavy_mass**2))
+        + vakint_backend.one_loop_vacuum_integral(
+            -y() ** 2 * light() ** 2 / 2,
+            (heavy_mass**2, light_mass**2),
+        )
+    ).expand()
+    assert_expr_equal(setup.power_type_vakint_integral_sum(), expected_power_type_vakint_sum)
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.supertrace_propagator_kernel[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.vakint_integral[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.power_type_supertrace[") for key in setup.to_expression_map())
+    assert any(key == "one_loop_setup[power_type_vakint_integral_sum]" for key in setup.to_expression_map())
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:
