@@ -727,3 +727,43 @@ def test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso(monke
     assert type(calls[0][1]).__name__ == "TensorLibrary"
     assert evaluated.name == trace.name
     assert_expr_equal(evaluated.expression, S("tensor")(calls[0][0]))
+
+
+def test_supertrace_block_trace_can_use_native_hep_spenso_builtins(monkeypatch: pytest.MonkeyPatch) -> None:
+    theory = Theory("supertrace_spenso_hep")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+    trace = SupertraceBlockTrace(
+        theory=theory,
+        name="hep_cg_kernel",
+        blocks=(),
+        modes=(),
+        expression=generator(S("A"), S("i"), S("j")),
+    )
+    calls: list[tuple[Expression, object | None]] = []
+
+    def fake_evaluate_tensor_network(
+        expr: Expression,
+        *,
+        library: object | None = None,
+        function_library: object | None = None,
+        n_steps: int | None = None,
+        mode: object | None = None,
+    ) -> FakeTensorNetwork:
+        calls.append((expr, library))
+        return FakeTensorNetwork(expr)
+
+    def fake_tensor_network_result_scalar(network: FakeTensorNetwork) -> Expression:
+        return S("tensor")(network.expr)
+
+    monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
+    monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
+
+    evaluated = trace.evaluate_tensor_network(native_hep_cg_builtins=True)
+
+    assert len(calls) == 1
+    assert canonical_string(calls[0][0]).startswith("spenso::t(")
+    assert "pychete::CG" not in canonical_string(calls[0][0])
+    assert type(calls[0][1]).__name__ == "TensorLibrary"
+    assert evaluated.name == trace.name
+    assert_expr_equal(evaluated.expression, S("tensor")(calls[0][0]))

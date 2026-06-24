@@ -683,6 +683,25 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests for SU(2) epsilon components, fundamental delta
     components, selective built-in registration, and one-loop trace evaluation
     through a built-in spenso CG tensor library.
+- Completed the thirtieth implementation slice:
+  - added `pychete.backends.spenso.native_hep_representation_to_spenso(...)`,
+    lowering compatible SU(3) `fund`/`Bar[fund]`/`adj` pychete
+    representations to spenso's native HEP `Representation.cof(3)`,
+    `dind(cof(3))`, and `Representation.coad(8)` objects;
+  - added `pychete.backends.spenso.native_hep_cg_tensor_structure_to_spenso(...)`,
+    lowering compatible built-in SU(3) `gen[group[fund]]` and
+    `fStruct[group]` CG tensors to spenso's native `TensorName.t()` and
+    `TensorName.f()` structures;
+  - extended expression lowering and tensor-network evaluation with
+    `native_hep_cg_builtins=True`, defaulting to spenso's atom-valued HEP
+    tensor library when no library is supplied;
+  - deliberately left non-SU(3) groups, adjoint generators, and `dSym` on the
+    existing pychete/formal path until native support or explicit component
+    data is supplied;
+  - added focused backend and one-loop trace tests proving SU(3) generator
+    atoms lower to `spenso::t(...)`, structure constants lower to
+    `spenso::f(...)`, and the one-loop tensor-network route receives a native
+    HEP tensor library.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -826,6 +845,13 @@ discoveries, dependency patches, blockers, and remaining work.
   and structure-constant tensors are not constructed locally in Python in this
   slice; they still need idenso/spenso-native support or explicit component
   input.
+- Rescanned spenso's HEP tensor APIs and exercised `TensorName.t()`,
+  `TensorName.f()`, `Representation.cof(3)`, `Representation.coad(8)`, and
+  `TensorLibrary.hep_lib_atom()` in the managed venv. The native HEP library
+  exposes `spenso::t` with rank `8 x 3 x 3bar` and `spenso::f` with adjoint
+  rank `8 x 8 x 8`; `TensorName.f()` may canonicalize index order with an
+  antisymmetric sign. pychete now maps only compatible SU(3) built-ins to
+  those native names.
 
 ## Test Status
 
@@ -1454,6 +1480,18 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the built-in delta/epsilon CG component
   slice: 141 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/backends/test_spenso_backend.py
+  tests/integration/matching/test_fluctuation_operator.py::test_supertrace_block_trace_can_use_native_hep_spenso_builtins
+  tests/integration/matching/test_fluctuation_operator.py::test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso
+  -q'` passed after the native SU(3) HEP CG lowering slice: 21 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the native SU(3) HEP CG lowering slice: no issues
+  found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the native SU(3) HEP CG lowering slice:
+  146 passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1467,9 +1505,9 @@ discoveries, dependency patches, blockers, and remaining work.
   real/complex counting, and later model-specific SMEFT basis classifications.
 - Extend the new spenso metadata bridge from native `Representation`,
   `TensorStructure`, `TensorIndices`, and expression-wide CG replacement into
-  real component data for generators and structure tensors, contractions,
-  simplifications, and invariant-tensor construction, using idenso where
-  gamma/colour/index algebra is the right backend.
+  remaining generator/structure support outside native SU(3) HEP tensors,
+  contractions, simplifications, and invariant-tensor construction, using
+  idenso where gamma/colour/index algebra is the right backend.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
   preliminary vakint one-loop topology lowering, including physical loop

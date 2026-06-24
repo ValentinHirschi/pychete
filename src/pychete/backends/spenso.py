@@ -58,6 +58,22 @@ def representation_to_spenso(theory: Theory, representation: Expression) -> Any:
     return native
 
 
+def native_hep_representation_to_spenso(theory: Theory, representation: Expression) -> Any | None:
+    """Lower compatible SU(3) pychete representations to spenso HEP representations."""
+
+    definition = theory.representation_definition(representation)
+    group_entry = theory.groups.get(definition.group)
+    if group_entry is None or group_entry.get("type") != canonical_string(s.SU(Expression.num(3))):
+        return None
+    spenso = native_module()
+    if definition.name == "fund" and definition.dimension_value == 3:
+        native = spenso.Representation.cof(3)
+        return native.dual() if theory.is_conjugate_representation(representation) else native
+    if definition.name == "adj" and definition.dimension_value == 8:
+        return spenso.Representation.coad(8)
+    return None
+
+
 def _cg_tensor_definition(theory: Theory, cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle) -> CGTensorDefinition:
     if isinstance(cg_tensor, str):
         return theory.cg_tensors[cg_tensor]
@@ -84,12 +100,43 @@ def cg_tensor_structure_to_spenso(
     return native_module().TensorStructure(*representations, name=tensor_name)
 
 
-def indexed_cg_tensor_to_spenso(theory: Theory, expr: Expression) -> Any:
+def native_hep_cg_tensor_structure_to_spenso(
+    theory: Theory,
+    cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle,
+) -> Any | None:
+    """Lower compatible built-in SU(3) CG tensors to spenso HEP structures."""
+
+    definition = _cg_tensor_definition(theory, cg_tensor)
+    representations = tuple(
+        native_hep_representation_to_spenso(theory, representation)
+        for representation in definition.representation_exprs
+    )
+    if any(representation is None for representation in representations):
+        return None
+    spenso = native_module()
+    if definition.source_text == "builtin:gen" and len(representations) == 3:
+        base_definition = tuple(theory.representation_definition(representation) for representation in definition.representation_exprs)
+        if (
+            base_definition[0].name == "adj"
+            and base_definition[1].name == "fund"
+            and theory.is_conjugate_representation(definition.representation_exprs[2])
+            and base_definition[2].name == "fund"
+        ):
+            return spenso.TensorName.t()(*representations)
+    if definition.source_text == "builtin:fStruct" and len(representations) == 3:
+        if all(theory.representation_definition(representation).name == "adj" for representation in definition.representation_exprs):
+            return spenso.TensorName.f()(*representations)
+    return None
+
+
+def indexed_cg_tensor_to_spenso(theory: Theory, expr: Expression, *, native_hep_builtins: bool = False) -> Any:
     """Lower a pychete ``CG(label, indices)`` expression to native spenso indices."""
 
     if not is_head(expr, s.CG) or len(expr) != 2:
         raise ValueError(f"Expected a pychete CG(label, indices) expression, got {display_string(expr)}")
-    structure = cg_tensor_structure_to_spenso(theory, expr[0])
+    structure = native_hep_cg_tensor_structure_to_spenso(theory, expr[0]) if native_hep_builtins else None
+    if structure is None:
+        structure = cg_tensor_structure_to_spenso(theory, expr[0])
     return structure.index(*(args(expr[1])))
 
 
@@ -250,14 +297,19 @@ def cg_tensor_library_to_spenso(
     return tensor_library
 
 
-def lower_cg_tensors_to_spenso(theory: Theory, expr: Expression) -> Expression:
+def lower_cg_tensors_to_spenso(
+    theory: Theory,
+    expr: Expression,
+    *,
+    native_hep_builtins: bool = False,
+) -> Expression:
     """Replace registered pychete CG atoms by native spenso tensor expressions."""
 
     pattern = cg_tensor_pattern()
 
     def lower(match: dict[Expression, Expression]) -> Expression:
         atom = pattern.replace_wildcards(match)
-        return indexed_cg_tensor_to_spenso(theory, atom).to_expression()
+        return indexed_cg_tensor_to_spenso(theory, atom, native_hep_builtins=native_hep_builtins).to_expression()
 
     return expr.replace_multiple(
         [
@@ -356,6 +408,7 @@ def evaluate_pychete_tensor_network(
     library: Any | None = None,
     cg_components_by_name: Mapping[str, Sequence[TensorComponent]] | None = None,
     builtin_cg_components: bool = False,
+    native_hep_cg_builtins: bool = False,
     symbolic_cg_components: bool = False,
     function_library: Any | None = None,
     n_steps: int | None = None,
@@ -363,6 +416,8 @@ def evaluate_pychete_tensor_network(
 ) -> Any:
     """Lower pychete CG tensors and execute a native spenso tensor network."""
 
+    if native_hep_cg_builtins and library is None:
+        library = hep_tensor_library(atom=True)
     if cg_components_by_name is not None or builtin_cg_components or symbolic_cg_components:
         library = cg_tensor_library_to_spenso(
             theory,
@@ -372,7 +427,7 @@ def evaluate_pychete_tensor_network(
             symbolic_components=symbolic_cg_components,
         )
     return evaluate_tensor_network(
-        lower_cg_tensors_to_spenso(theory, expr),
+        lower_cg_tensors_to_spenso(theory, expr, native_hep_builtins=native_hep_cg_builtins),
         library=library,
         function_library=function_library,
         n_steps=n_steps,
@@ -393,6 +448,8 @@ __all__ = [
     "indexed_cg_tensor_to_spenso",
     "lower_cg_tensors_to_spenso",
     "native_module",
+    "native_hep_cg_tensor_structure_to_spenso",
+    "native_hep_representation_to_spenso",
     "register_cg_tensor_in_spenso_library",
     "representation_to_spenso",
     "TensorComponent",

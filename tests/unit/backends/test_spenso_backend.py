@@ -53,6 +53,24 @@ def test_spenso_backend_lowers_registered_representations() -> None:
     )
 
 
+def test_spenso_backend_lowers_compatible_su3_representations_to_native_hep_reps() -> None:
+    theory = Theory("spenso_bridge_hep_reps")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    su3_fund = theory.define_representation("SU3c", "fund")
+    su3_adj = theory.define_representation("SU3c", "adj")
+    su2_fund = theory.define_representation("SU2F", "fund")
+
+    native_fund = spenso.native_hep_representation_to_spenso(theory, su3_fund)
+    native_conjugate = spenso.native_hep_representation_to_spenso(theory, s.Bar(su3_fund))
+    native_adj = spenso.native_hep_representation_to_spenso(theory, su3_adj)
+
+    assert canonical_string(native_fund.to_expression()) == "spenso::cof(3)"
+    assert canonical_string(native_conjugate.to_expression()) == "spenso::dind(spenso::cof(3))"
+    assert canonical_string(native_adj.to_expression()) == "spenso::coad(8)"
+    assert spenso.native_hep_representation_to_spenso(theory, su2_fund) is None
+
+
 def test_spenso_backend_lowers_registered_cg_tensors() -> None:
     theory = Theory("spenso_bridge_cg")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
@@ -74,6 +92,37 @@ def test_spenso_backend_lowers_registered_cg_tensors() -> None:
     )
 
 
+def test_spenso_backend_lowers_compatible_su3_cg_tensors_to_native_hep_tensors() -> None:
+    theory = Theory("spenso_bridge_hep_cg")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+    fstruct = theory.cg_tensor_handle("fStruct_SU3c")
+
+    gen_structure = spenso.native_hep_cg_tensor_structure_to_spenso(theory, generator)
+    f_structure = spenso.native_hep_cg_tensor_structure_to_spenso(theory, fstruct)
+    gen_indexed = spenso.indexed_cg_tensor_to_spenso(
+        theory,
+        generator(S("A"), S("i"), S("j")),
+        native_hep_builtins=True,
+    )
+    f_indexed = spenso.indexed_cg_tensor_to_spenso(
+        theory,
+        fstruct(S("A"), S("B"), S("C")),
+        native_hep_builtins=True,
+    )
+
+    assert canonical_string(gen_structure.get_name().to_expression()) == "spenso::t"
+    assert canonical_string(f_structure.get_name().to_expression()) == "spenso::f"
+    assert canonical_string(gen_indexed.to_expression()) == (
+        "spenso::t(spenso::coad(8,python::A),spenso::cof(3,python::i),spenso::dind(spenso::cof(3,python::j)))"
+    )
+    f_text = canonical_string(f_indexed.to_expression())
+    assert "spenso::f(" in f_text
+    assert all(label in f_text for label in ("python::A", "python::B", "python::C"))
+    assert spenso.native_hep_cg_tensor_structure_to_spenso(theory, "gen_SU2F_fund") is None
+
+
 def test_spenso_backend_lowers_cg_atoms_with_symbolica_replacement() -> None:
     theory = Theory("spenso_bridge_lower")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
@@ -86,6 +135,22 @@ def test_spenso_backend_lowers_cg_atoms_with_symbolica_replacement() -> None:
     assert "spenso_python::pychete_spenso_bridge_lower_cg_gen_SU3c_fund" in lowered_text
     assert "pychete::CG(python::plain,pychete::List(python::u))" in lowered_text
     assert "spenso::dind(spenso::pychete_spenso_bridge_lower_SU3c_fund_d3_complex(3,python::j))" in lowered_text
+
+
+def test_spenso_backend_lowers_cg_atoms_with_native_hep_builtins() -> None:
+    theory = Theory("spenso_bridge_hep_lower")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+
+    lowered = spenso.lower_cg_tensors_to_spenso(
+        theory,
+        S("x") + generator(S("A"), S("i"), S("j")),
+        native_hep_builtins=True,
+    )
+    lowered_text = canonical_string(lowered)
+
+    assert "spenso::t(spenso::coad(8,python::A),spenso::cof(3,python::i),spenso::dind(spenso::cof(3,python::j)))" in lowered_text
+    assert "pychete::CG" not in lowered_text
 
 
 def test_spenso_backend_evaluates_pychete_tensor_network_after_cg_lowering(monkeypatch) -> None:
@@ -110,6 +175,33 @@ def test_spenso_backend_evaluates_pychete_tensor_network_after_cg_lowering(monke
     assert isinstance(network, FakeNetwork)
     assert calls == [network.lowered]
     assert canonical_string(calls[0]).startswith("spenso_python::pychete_spenso_bridge_eval_cg_gen_SU3c_fund(")
+
+
+def test_spenso_backend_evaluates_pychete_tensor_network_with_native_hep_builtins(monkeypatch) -> None:
+    theory = Theory("spenso_bridge_eval_hep")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+    calls: list[tuple[Expression, object | None]] = []
+
+    class FakeNetwork:
+        def __init__(self, lowered: Expression) -> None:
+            self.lowered = lowered
+
+    def fake_evaluate_tensor_network(lowered: Expression, **kwargs) -> FakeNetwork:
+        calls.append((lowered, kwargs["library"]))
+        return FakeNetwork(lowered)
+
+    monkeypatch.setattr(spenso, "evaluate_tensor_network", fake_evaluate_tensor_network)
+
+    network = spenso.evaluate_pychete_tensor_network(
+        theory,
+        generator(S("A"), S("i"), S("j")),
+        native_hep_cg_builtins=True,
+    )
+
+    assert isinstance(network, FakeNetwork)
+    assert canonical_string(calls[0][0]).startswith("spenso::t(")
+    assert type(calls[0][1]).__name__ == "TensorLibrary"
 
 
 def test_spenso_backend_registers_cg_tensor_components_in_native_library() -> None:

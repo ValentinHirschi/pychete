@@ -156,7 +156,11 @@ supported built-in tensors, pass `builtin_components=True`; currently this is
 only valid for finite `del[...]` identity tensors and `eps[...]` Levi-Civita
 tensors. Do not invent component arrays for generators or structure constants;
 use spenso/idenso native support or add a documented backend patch/adapter when
-those components are needed.
+those components are needed. For compatible SU(3) colour tensors, pass
+`native_hep_cg_builtins=True` so pychete lowers `gen[SU3[fund]]` and
+`fStruct[SU3]` to spenso's native HEP `TensorName.t()` and `TensorName.f()`
+objects with `Representation.cof(3)` / `Representation.coad(8)` and spenso's
+HEP tensor library.
 Built-in Matchete CG labels such as `gen[group[rep]]`, `eps[group]`,
 `fStruct[group]`, `dSym[group]`, and `del[group[rep]]` must resolve to the
 auto-registered theory-owned CG tensor labels, not to generic external
