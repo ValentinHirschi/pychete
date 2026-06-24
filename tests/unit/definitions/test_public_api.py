@@ -52,6 +52,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "coupling_handle",
             "define_gauge_group",
             "define_global_group",
+            "define_representation",
             "group_charge",
             "mass_expr",
             "free_lag",

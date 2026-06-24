@@ -4,7 +4,7 @@ from pathlib import Path
 
 from symbolica import Expression
 
-from pychete import FieldChirality, FieldMassKind, FieldRole, GroupKind, SymbolDataKey, SymbolRole, Theory, canonical_string, s
+from pychete import FieldChirality, FieldMassKind, FieldRole, GroupKind, RepresentationReality, SymbolDataKey, SymbolRole, Theory, canonical_string, s
 from pychete.loaders import load_matchete_model, load_python_model
 
 
@@ -151,6 +151,33 @@ def test_matchete_loader_preserves_global_groups(tmp_path: Path) -> None:
     assert canonical_string(theory.fields["x"].indices[0]) == "loader_global_groups::group_SU2F(pychete::fund)"
     assert canonical_string(theory.fields["x"].charge_exprs[0]) == "loader_global_groups::group_U1X(1)"
     assert "group_kind_global" in _local_tags(theory.symbol("SU2F", role=SymbolRole.GROUP))
+
+
+def test_matchete_loader_preserves_custom_representations(tmp_path: Path) -> None:
+    model = tmp_path / "representations.m"
+    model.write_text(
+        "\n".join(
+            [
+                "DefineGaugeGroup[SU2L, SU@2, gL, W];",
+                "DefineRepresentation[SU2L[quad], SU2L, {3}];",
+                "DefineField[Theta, Scalar, Indices->{SU2L[quad]}, SelfConjugate->True, Mass->0];",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    theory, expressions = load_matchete_model(model, theory_name="loader_representations")
+
+    rep_key = "loader_representations::group_SU2L(loader_representations::representation_quad)"
+    assert expressions == {}
+    assert canonical_string(theory.fields["Theta"].indices[0]) == rep_key
+    assert rep_key in theory.representations
+    assert theory.representations[rep_key].group == "SU2L"
+    assert theory.representations[rep_key].reality_kind is RepresentationReality.UNKNOWN
+    label = theory.representation_labels["quad"]
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_GROUP.value) == "SU2L"
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_DYNKIN.value) == [Expression.num(3)]
+    assert "representation_group_SU2L" in _local_tags(label)
 
 
 def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:

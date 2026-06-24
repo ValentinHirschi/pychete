@@ -10,6 +10,7 @@ from pychete import (
     FieldMassKind,
     FieldRole,
     GroupKind,
+    RepresentationReality,
     SymbolDataKey,
     SymbolRole,
     Theory,
@@ -116,6 +117,39 @@ def test_gauge_and_global_groups_store_kind_and_abelian_symbol_data() -> None:
     assert restored.groups == theory.groups
     assert restored_su2f.get_symbol_data(SymbolDataKey.GROUP_KIND.value) == GroupKind.GLOBAL.value
     assert "group_kind_global" in _local_tags(restored_su2f)
+
+
+def test_representations_store_symbolica_metadata_and_survive_json_restore() -> None:
+    theory = Theory("representation_metadata")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    quad = theory.define_representation(
+        "SU2F",
+        "quad",
+        dynkin=[Expression.num(3)],
+        dimension=4,
+        reality=RepresentationReality.PSEUDOREAL,
+    )
+    field = theory.define_field("Theta", s.Scalar, indices=[quad], self_conjugate=True, mass=0)
+
+    label = theory.representation_labels["quad"]
+    assert canonical_string(quad) == "representation_metadata::group_SU2F(representation_metadata::representation_quad)"
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_GROUP.value) == "SU2F"
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_DYNKIN.value) == [Expression.num(3)]
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_DIMENSION.value) == 4
+    assert label.get_symbol_data(SymbolDataKey.REPRESENTATION_REALITY.value) == RepresentationReality.PSEUDOREAL.value
+    assert "representation_group_SU2F" in _local_tags(label)
+    assert "representation_reality_pseudoreal" in _local_tags(label)
+    assert field.definition.indices == (quad,)
+    assert theory.representations[canonical_string(quad)].reality_kind is RepresentationReality.PSEUDOREAL
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    restored_quad = restored.representations[canonical_string(quad)].expr
+    restored_label = restored.representation_labels["quad"]
+
+    assert canonical_string(restored_quad) == canonical_string(quad)
+    assert restored_label.get_symbol_data(SymbolDataKey.REPRESENTATION_REALITY.value) == RepresentationReality.PSEUDOREAL.value
+    assert restored.field_handle("Theta").definition.indices == (restored_quad,)
+    assert "representation_reality_pseudoreal" in _local_tags(restored_label)
 
 
 def test_field_symbol_data_stores_field_roles_and_propagation_flags() -> None:

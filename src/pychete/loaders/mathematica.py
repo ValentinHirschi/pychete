@@ -271,6 +271,17 @@ def _group_type(raw: str) -> Expression:
     raise NotImplementedError(f"Unsupported gauge group type: {raw}")
 
 
+def _parse_representation_name(raw: str) -> tuple[str, str]:
+    normalized = _preprocess_names(raw).strip()
+    call_match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_]*)\[(.+)\]", normalized, re.DOTALL)
+    if call_match:
+        return _clean_name(call_match.group(1)), _clean_name(call_match.group(2))
+    apply_match = re.fullmatch(r"([A-Za-z][A-Za-z0-9_]*)\s*@\s*(.+)", normalized, re.DOTALL)
+    if apply_match:
+        return _clean_name(apply_match.group(1)), _clean_name(apply_match.group(2))
+    raise NotImplementedError(f"Unsupported representation name: {raw}")
+
+
 def _rewrite_prefix_apply(expr: str, head: str) -> str:
     prefix = f"{head}@"
     while prefix in expr:
@@ -492,6 +503,8 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             return theory.define_flavor_index().symbol
         if name in theory.index_types:
             return theory.index_types[name].symbol
+        if name in theory.representation_labels:
+            return theory.representation_labels[name]
         if name in theory.fields:
             return theory.field_handle(name)()
         if name in theory.couplings:
@@ -688,6 +701,18 @@ def _load_matchete_model_into(
             theory.define_global_group(
                 _clean_name(raw_args[0]),
                 _group_type(raw_args[1]),
+            )
+        elif head == "DefineRepresentation":
+            if len(raw_args) < 3:
+                raise NotImplementedError(f"Unsupported DefineRepresentation: {statement}")
+            parsed_group, label = _parse_representation_name(raw_args[0])
+            declared_group = _clean_name(raw_args[1])
+            if parsed_group != declared_group:
+                raise NotImplementedError(f"Representation group mismatch in {statement}")
+            theory.define_representation(
+                declared_group,
+                label,
+                dynkin=_eval_expression_list(raw_args[2], theory),
             )
         elif head == "DefineField":
             if len(raw_args) < 2:

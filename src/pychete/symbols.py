@@ -414,6 +414,7 @@ class SymbolRole(StrEnum):
     INDEX = "index"
     INDEX_TYPE = "index_type"
     GROUP = "group"
+    REPRESENTATION = "representation"
     EXTERNAL = "external"
 
 
@@ -446,6 +447,10 @@ class SymbolDataKey(StrEnum):
     GROUP_ABELIAN = "group_abelian"
     GROUP_COUPLING = "group_coupling"
     GROUP_FIELD = "group_field"
+    REPRESENTATION_GROUP = "representation_group"
+    REPRESENTATION_DYNKIN = "representation_dynkin"
+    REPRESENTATION_DIMENSION = "representation_dimension"
+    REPRESENTATION_REALITY = "representation_reality"
 
 
 class SymbolStore:

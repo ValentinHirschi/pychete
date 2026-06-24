@@ -1166,6 +1166,41 @@ discoveries, dependency patches, blockers, and remaining work.
   tests'` passed after the global-group metadata slice: 122 passed, 1 skipped.
   The skip is the existing GammaLoop API import check because GammaLoop was not
   requested in the current dependency manifest.
+- Added the representation metadata slice needed by Matchete models using
+  `DefineRepresentation[Group[label], Group, Dynkin]`:
+  - introduced public `RepresentationReality` and `RepresentationDefinition`
+    objects, exported through `pychete.api` and the package root;
+  - added `Theory.define_representation(...)` for gauge/global group
+    representations, preserving central built-ins `fund` and `adj` while
+    turning model-specific labels such as `quad` into theory-owned Symbolica
+    symbols;
+  - stored representation metadata directly on model-specific Symbolica labels
+    through `representation_group`, `representation_dynkin`,
+    `representation_dimension`, and `representation_reality` symbol data, plus
+    `representation_group_*` and `representation_reality_*` tags;
+  - serialized the representation registry in theory checkpoints and restored
+    it after the symbol manifest and group registry, before field/coupling
+    metadata that may reference representation expressions;
+  - taught the Matchete loader to parse `DefineRepresentation[...]`, including
+    `G[rep]` and `G@rep` representation names, so field/coupling index
+    expressions such as `SU2L[quad]` use the registered Symbolica label rather
+    than an untagged external symbol;
+  - kept backend-computed representation dimensions and Frobenius-Schur
+    indicators as explicit metadata for now. Loader-defined representations
+    preserve Dynkin coefficients and default to `RepresentationReality.UNKNOWN`
+    until a native group-theory backend path is wired in.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py
+  tests/unit/definitions/test_public_api.py'` passed after the representation
+  metadata slice: 30 passed.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m mypy'`
+  passed after the representation metadata slice: no issues found in 24 source
+  files.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests'` passed after the representation metadata slice: 124 passed, 1
+  skipped. The skip is the existing GammaLoop API import check because
+  GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1175,8 +1210,8 @@ discoveries, dependency patches, blockers, and remaining work.
   basis entries to full differential fluctuation operators, including
   derivative-valued fields and integration-by-parts conventions.
 - Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
-  including real/complex counting, representation reality, and later
-  model-specific SMEFT basis classifications.
+  including backend-computed representation dimensions/reality,
+  real/complex counting, and later model-specific SMEFT basis classifications.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
   preliminary vakint one-loop topology lowering, including physical loop

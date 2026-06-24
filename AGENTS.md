@@ -124,6 +124,13 @@ over these symbols must use native Symbolica restrictions such as
 couplings, or indices in Python when a tag-restricted Symbolica pattern can
 select the relevant expressions directly.
 
+Group representation labels must be registered through
+`Theory.define_representation(...)`. Model-specific labels such as Matchete's
+`SU2L[quad]` must be theory-owned Symbolica symbols with `representation`
+role tags and `representation_group`, `representation_dynkin`,
+`representation_dimension`, and `representation_reality` symbol data, never
+plain external symbols.
+
 Every reusable pychete built-in symbol must be created through the central
 `SymbolStore` so it receives pychete's custom Symbolica print callback. Human
 printing should look good in `PrintMode.Symbolica`, `PrintMode.Latex`,

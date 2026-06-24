@@ -148,6 +148,64 @@ class GroupKind(StrEnum):
             raise ValueError(f"unsupported group kind {value!r}") from exc
 
 
+class RepresentationReality(StrEnum):
+    """Reality class for a registered group representation.
+
+    Matchete stores this through the Frobenius-Schur indicator: real ``+1``,
+    complex ``0``, and pseudoreal ``-1``. ``UNKNOWN`` is used while pychete
+    only has explicit Dynkin metadata and no backend-computed indicator yet.
+    """
+
+    UNKNOWN = "unknown"
+    REAL = "real"
+    COMPLEX = "complex"
+    PSEUDOREAL = "pseudoreal"
+
+    @classmethod
+    def from_user(cls, value: RepresentationReality | str | int | None) -> RepresentationReality:
+        """Normalize a user-provided representation-reality value."""
+
+        if value is None:
+            return cls.UNKNOWN
+        if isinstance(value, cls):
+            return value
+        if isinstance(value, int):
+            by_indicator = {1: cls.REAL, 0: cls.COMPLEX, -1: cls.PSEUDOREAL}
+            try:
+                return by_indicator[value]
+            except KeyError as exc:
+                raise ValueError(f"unsupported representation Frobenius-Schur indicator {value!r}") from exc
+        normalized = str(value).replace("_", "").replace("-", "").lower()
+        aliases = {
+            "unknown": cls.UNKNOWN,
+            "none": cls.UNKNOWN,
+            "real": cls.REAL,
+            "complex": cls.COMPLEX,
+            "pseudoreal": cls.PSEUDOREAL,
+            "pseudo": cls.PSEUDOREAL,
+            "quaternionic": cls.PSEUDOREAL,
+            "1": cls.REAL,
+            "0": cls.COMPLEX,
+            "-1": cls.PSEUDOREAL,
+        }
+        try:
+            return aliases[normalized]
+        except KeyError as exc:
+            raise ValueError(f"unsupported representation reality {value!r}") from exc
+
+    @property
+    def indicator(self) -> int | None:
+        """Return Matchete's Frobenius-Schur indicator when known."""
+
+        if self is RepresentationReality.REAL:
+            return 1
+        if self is RepresentationReality.COMPLEX:
+            return 0
+        if self is RepresentationReality.PSEUDOREAL:
+            return -1
+        return None
+
+
 class BuiltinIndexType(StrEnum):
     """Built-in index representations understood by pychete."""
 
@@ -158,17 +216,20 @@ class BuiltinIndexType(StrEnum):
 MassKindInput: TypeAlias = FieldMassKind | str
 MassSpec: TypeAlias = tuple[MassKindInput, str] | tuple[MassKindInput, str, Iterable[Expression]]
 CouplingSelfConjugate: TypeAlias = bool | tuple[int, ...]
+RepresentationLabelInput: TypeAlias = str | Expression
+DynkinInput: TypeAlias = Iterable[Expression | int]
 JsonValue: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
 
 _EXPRESSION_DATA_KEY = "__pychete_expression__"
 _SYMBOL_ROLE_ORDER = {
     SymbolRole.INDEX_TYPE.value: 0,
     SymbolRole.GROUP.value: 1,
-    SymbolRole.INDEX.value: 2,
-    SymbolRole.COUPLING.value: 3,
-    SymbolRole.FIELD.value: 4,
-    SymbolRole.EXTERNAL.value: 5,
-    SymbolRole.LABEL.value: 6,
+    SymbolRole.REPRESENTATION.value: 2,
+    SymbolRole.INDEX.value: 3,
+    SymbolRole.COUPLING.value: 4,
+    SymbolRole.FIELD.value: 5,
+    SymbolRole.EXTERNAL.value: 6,
+    SymbolRole.LABEL.value: 7,
 }
 
 
@@ -246,6 +307,10 @@ def _normalized_restored_symbol_data(role: str, data: dict[str, Any]) -> dict[st
         )
         if isinstance(group_type, Expression):
             normalized.setdefault(SymbolDataKey.GROUP_ABELIAN.value, int(bool(group_type == s.U1)))
+    elif role == SymbolRole.REPRESENTATION.value:
+        normalized.setdefault(SymbolDataKey.REPRESENTATION_DYNKIN.value, [])
+        normalized.setdefault(SymbolDataKey.REPRESENTATION_DIMENSION.value, -1)
+        normalized.setdefault(SymbolDataKey.REPRESENTATION_REALITY.value, RepresentationReality.UNKNOWN.value)
     return normalized
 
 
@@ -373,6 +438,31 @@ def coupling_unitary_from_label(label: Expression) -> bool:
     return bool(symbol_data(label, SymbolDataKey.UNITARY, 0))
 
 
+def representation_group_from_label(label: Expression) -> str | None:
+    value = symbol_data(label, SymbolDataKey.REPRESENTATION_GROUP)
+    return str(value) if value is not None else None
+
+
+def representation_dynkin_from_label(label: Expression) -> tuple[Expression, ...]:
+    value = symbol_data(label, SymbolDataKey.REPRESENTATION_DYNKIN, [])
+    if not isinstance(value, list):
+        raise ValueError(f"representation dynkin metadata is not stored as a list on {canonical_string(label)}")
+    if not all(isinstance(item, Expression) for item in value):
+        raise ValueError(f"representation dynkin metadata contains non-expression entries on {canonical_string(label)}")
+    return tuple(value)
+
+
+def representation_dimension_from_label(label: Expression) -> int | None:
+    value = symbol_data(label, SymbolDataKey.REPRESENTATION_DIMENSION, -1)
+    dimension = int(value)
+    return dimension if dimension >= 0 else None
+
+
+def representation_reality_from_label(label: Expression) -> RepresentationReality:
+    value = symbol_data(label, SymbolDataKey.REPRESENTATION_REALITY, RepresentationReality.UNKNOWN.value)
+    return RepresentationReality.from_user(str(value))
+
+
 def _coupling_name_for_label(theory: Theory, label_text: str) -> str:
     for definition in theory.couplings.values():
         if canonical_string(definition.label) == label_text:
@@ -381,6 +471,21 @@ def _coupling_name_for_label(theory: Theory, label_text: str) -> str:
     name = label.get_name().split("::")[-1]
     prefix = f"{SymbolRole.COUPLING.value}_"
     return name.removeprefix(prefix)
+
+
+def _representation_name_for_label(label: Expression) -> str:
+    value = symbol_data(label, SymbolDataKey.LABEL)
+    if isinstance(value, str):
+        return value
+    if bool(label == s.fund):
+        return "fund"
+    if bool(label == s.adj):
+        return "adj"
+    return label.get_name().split("::")[-1].removeprefix(f"{SymbolRole.REPRESENTATION.value}_")
+
+
+def _normalize_dynkin(dynkin: DynkinInput) -> tuple[Expression, ...]:
+    return tuple(item if isinstance(item, Expression) else Expression.num(int(item)) for item in dynkin)
 
 
 def _normalize_diagonal_coupling(diagonal: bool | Iterable[bool] | None, index_count: int) -> tuple[bool, ...]:
@@ -403,6 +508,10 @@ def _group_symbol_tags(group_kind: GroupKind, abelian: bool) -> tuple[str, ...]:
     return (f"group_kind_{group_kind.value}", "abelian" if abelian else "non_abelian")
 
 
+def _representation_symbol_tags(group: str, reality: RepresentationReality) -> tuple[str, ...]:
+    return (f"representation_group_{safe_symbol_name(group)}", f"representation_reality_{reality.value}")
+
+
 def _group_entry(
     *,
     name: str,
@@ -422,6 +531,68 @@ def _group_entry(
     if field is not None:
         entry["field"] = field
     return entry
+
+
+@dataclass(frozen=True)
+class RepresentationDefinition:
+    """Registered metadata for a group representation label."""
+
+    name: str
+    group: str
+    label: Expression
+    expr: Expression
+    dynkin: tuple[Expression, ...] = ()
+    dimension: int | None = None
+    reality: RepresentationReality = RepresentationReality.UNKNOWN
+
+    @property
+    def dynkin_exprs(self) -> tuple[Expression, ...]:
+        """Dynkin coefficients stored on this representation label when available."""
+
+        try:
+            return representation_dynkin_from_label(self.label)
+        except (KeyError, ValueError):
+            return self.dynkin
+
+    @property
+    def dimension_value(self) -> int | None:
+        """Dimension stored on this representation label when available."""
+
+        try:
+            return representation_dimension_from_label(self.label)
+        except (KeyError, ValueError):
+            return self.dimension
+
+    @property
+    def reality_kind(self) -> RepresentationReality:
+        """Reality class stored on this representation label when available."""
+
+        try:
+            return representation_reality_from_label(self.label)
+        except (KeyError, ValueError):
+            return self.reality
+
+    def _repr_latex_(self) -> str:
+        return f"${latex_string(self.expr)}$"
+
+    def _repr_html_(self) -> str:
+        dynkin = ""
+        if self.dynkin_exprs:
+            dynkin = " dynkin=(" + ", ".join(escape(display_string(item)) for item in self.dynkin_exprs) + ")"
+        dimension = "" if self.dimension_value is None else f" dimension={escape(str(self.dimension_value))}"
+        reality = "" if self.reality_kind is RepresentationReality.UNKNOWN else f" reality={escape(self.reality_kind.value)}"
+        return f"<code>Representation({escape(display_string(self.expr))}{dynkin}{dimension}{reality})</code>"
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "group": self.group,
+            "label": canonical_string(self.label),
+            "expr": canonical_string(self.expr),
+            "dynkin": [canonical_string(item) for item in self.dynkin_exprs],
+            "dimension": self.dimension_value,
+            "reality": self.reality_kind.value,
+        }
 
 
 @dataclass(frozen=True)
@@ -721,6 +892,8 @@ class Theory:
         self.fields: dict[str, FieldDefinition] = {}
         self.couplings: dict[str, CouplingDefinition] = {}
         self.groups: dict[str, dict[str, Any]] = {}
+        self.representation_labels: dict[str, Expression] = {}
+        self.representations: dict[str, RepresentationDefinition] = {}
         self.define_index_type(BuiltinIndexType.LORENTZ)
 
     def symbol(
@@ -797,7 +970,13 @@ class Theory:
                         bool(data.get(SymbolDataKey.GROUP_ABELIAN.value, 0)),
                     )
                 )
+            elif role == SymbolRole.REPRESENTATION.value:
+                group = str(data.get(SymbolDataKey.REPRESENTATION_GROUP.value, "unknown"))
+                reality = RepresentationReality.from_user(data.get(SymbolDataKey.REPRESENTATION_REALITY.value, RepresentationReality.UNKNOWN.value))
+                tags.extend(_representation_symbol_tags(group, reality))
             symbol = self.symbol(name, role=role, data=data, tags=tags)
+            if role == SymbolRole.REPRESENTATION.value:
+                self.representation_labels[name] = symbol
             expected = entry.get("symbol")
             if expected is not None and canonical_string(symbol) != expected:
                 raise ValueError(f"Symbol manifest restored {role}:{name} as {canonical_string(symbol)}, expected {expected}")
@@ -1159,6 +1338,75 @@ class Theory:
         )
         return group_symbol
 
+    def define_representation(
+        self,
+        group: str,
+        label: RepresentationLabelInput,
+        *,
+        dynkin: DynkinInput = (),
+        dimension: int | None = None,
+        reality: RepresentationReality | str | int | None = RepresentationReality.UNKNOWN,
+    ) -> Expression:
+        """Register a representation of a gauge or global group.
+
+        ``label`` may be one of the built-in representation labels
+        ``"fund"``/``s.fund`` or ``"adj"``/``s.adj``, or a model-specific
+        label such as ``"quad"`` from Matchete's ``DefineRepresentation``.
+        Model-specific labels become theory-owned Symbolica symbols carrying
+        representation tags and data.
+        """
+
+        if group not in self.groups:
+            raise KeyError(f"Unknown group {group!r}")
+        dynkin_tuple = _normalize_dynkin(dynkin)
+        if dimension is not None and dimension <= 0:
+            raise ValueError("representation dimension must be positive when provided")
+        reality_kind = RepresentationReality.from_user(reality)
+        if isinstance(label, str):
+            label_name = safe_symbol_name(label)
+            if label_name == "fund":
+                label_expr = s.fund
+            elif label_name == "adj":
+                label_expr = s.adj
+            else:
+                label_expr = self.symbol(
+                    label_name,
+                    role=SymbolRole.REPRESENTATION,
+                    data={
+                        SymbolDataKey.NAME.value: label_name,
+                        SymbolDataKey.REPRESENTATION_GROUP.value: group,
+                        SymbolDataKey.REPRESENTATION_DYNKIN.value: list(dynkin_tuple),
+                        SymbolDataKey.REPRESENTATION_DIMENSION.value: dimension if dimension is not None else -1,
+                        SymbolDataKey.REPRESENTATION_REALITY.value: reality_kind.value,
+                    },
+                    tags=_representation_symbol_tags(group, reality_kind),
+                )
+                self.representation_labels[label_name] = label_expr
+        else:
+            label_expr = label
+            label_name = _representation_name_for_label(label_expr)
+            role = symbol_data(label_expr, SymbolDataKey.ROLE)
+            if role == SymbolRole.REPRESENTATION.value:
+                self.representation_labels[label_name] = label_expr
+
+        group_symbol = self.symbol(group, role=SymbolRole.GROUP)
+        rep_expr = group_symbol(label_expr)
+        key = canonical_string(rep_expr)
+        if key in self.representations:
+            return self.representations[key].expr
+
+        definition = RepresentationDefinition(
+            name=label_name,
+            group=group,
+            label=label_expr,
+            expr=rep_expr,
+            dynkin=dynkin_tuple,
+            dimension=dimension,
+            reality=reality_kind,
+        )
+        self.representations[key] = definition
+        return rep_expr
+
     def group_charge(self, group: str, charge: Expression | int | float) -> Expression:
         """Build a U(1)-charge expression for a registered gauge or global group."""
 
@@ -1320,6 +1568,7 @@ class Theory:
             "symbols": self.symbol_manifest(),
             "index_types": {name: value.to_json() for name, value in sorted(self.index_types.items())},
             "groups": self.groups,
+            "representations": {name: value.to_json() for name, value in sorted(self.representations.items())},
             "fields": {name: value.to_json() for name, value in sorted(self.fields.items())},
             "couplings": {name: value.to_json() for name, value in sorted(self.couplings.items())},
         }
@@ -1355,6 +1604,15 @@ class Theory:
                 group_kind=group_kind,
                 coupling=str(data["coupling"]) if "coupling" in data else None,
                 field=str(data["field"]) if "field" in data else None,
+            )
+        theory.representations = {}
+        for _, data in obj.get("representations", {}).items():
+            theory.define_representation(
+                str(data["group"]),
+                theory._parse_registered_expression(str(data["label"])),
+                dynkin=[theory._parse_registered_expression(x) for x in data.get("dynkin", [])],
+                dimension=data.get("dimension"),
+                reality=data.get("reality", RepresentationReality.UNKNOWN.value),
             )
         for name, data in obj.get("couplings", {}).items():
             self_conjugate_data = data.get("self_conjugate", False)
