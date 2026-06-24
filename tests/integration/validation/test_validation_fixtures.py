@@ -7,6 +7,7 @@ from pathlib import Path
 from symbolica import Expression, S
 import pytest
 
+from pychete import OneLoopIntegralBackend
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState
@@ -242,6 +243,26 @@ def test_validation_fixture_preview_can_stage_named_supertraces_with_vakint_engi
         canonical_named_preview.off_shell_eft_lagrangian.format_plain()
         == raw_preview.off_shell_eft_lagrangian.format_plain()
     )
+
+
+def test_validation_fixture_preview_can_use_internal_integral_backend_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL,
+        internal_tensor_reduce=False,
+        internal_combine_terms=True,
+    )
+
+    assert preview.metadata["stage"] == "interaction_power_type_internal_integral_result"
+    assert preview.metadata["integral_backend"] == "pychete_internal"
+    assert preview.metadata["tensor_reduce"] is False
+    assert preview.metadata["combine_terms"] is True
+    assert preview.metadata["fixture"] == fixture.name
+    assert "interaction_power_type_internal_integral_sum" in preview.expression_names()
+    assert "interaction_power_type_internal_integral_pole_part" in preview.expression_names()
+    preview.validate()
 
 
 def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -> None:

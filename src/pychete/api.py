@@ -23,7 +23,12 @@ from .matching import (
     SupertraceBlockTrace,
     SupertracePlan,
 )
-from .matching_options import OneLoopNormalization, VakintIntegralStage, one_loop_normalization_factor
+from .matching_options import (
+    OneLoopIntegralBackend,
+    OneLoopNormalization,
+    VakintIntegralStage,
+    one_loop_normalization_factor,
+)
 from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
@@ -69,6 +74,7 @@ __all__ = [
     "MatchingResultComparison",
     "NumericProbeResult",
     "OneLoopMatchingNotImplementedError",
+    "OneLoopIntegralBackend",
     "OneLoopNormalization",
     "OneLoopSetup",
     "PowerTypeSupertraceContribution",

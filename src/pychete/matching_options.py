@@ -8,6 +8,22 @@ from symbolica import Expression
 from .symbols import s
 
 
+class OneLoopIntegralBackend(StrEnum):
+    """Integral backend used for one-loop matching preview results."""
+
+    VAKINT = "vakint"
+    INTERNAL = "internal"
+
+    @classmethod
+    def from_user(cls, value: OneLoopIntegralBackend | str) -> OneLoopIntegralBackend:
+        """Normalize a user-provided one-loop integral backend selector."""
+
+        try:
+            return cls(value)
+        except ValueError as exc:
+            raise ValueError("one-loop integral backend must be 'vakint' or 'internal'") from exc
+
+
 class VakintIntegralStage(StrEnum):
     """Native vakint processing stage for lowered one-loop integral expressions."""
 
@@ -76,6 +92,7 @@ def one_loop_normalization_label(normalization: OneLoopNormalizationInput) -> st
 
 
 __all__ = [
+    "OneLoopIntegralBackend",
     "OneLoopNormalization",
     "OneLoopNormalizationInput",
     "VakintIntegralStage",

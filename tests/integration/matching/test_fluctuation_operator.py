@@ -1002,6 +1002,30 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         named_reduced_result.expression("hScalar-lScalar"),
         S("reduced")(expected_interaction_vakint),
     )
+    internal_result = setup.interaction_power_type_internal_matching_result(
+        tensor_reduce=False,
+        combine_terms=True,
+    )
+    expected_internal = vacuum_integrals_backend.evaluate_one_loop_vakint_expression(
+        expected_interaction_vakint,
+        combine_terms=True,
+    )
+    assert internal_result.metadata["stage"] == "interaction_power_type_internal_integral_result"
+    assert internal_result.metadata["integral_backend"] == "pychete_internal"
+    assert internal_result.metadata["tensor_reduce"] is False
+    assert internal_result.metadata["combine_terms"] is True
+    assert_expr_equal(internal_result.off_shell_eft_lagrangian, expected_internal)
+    assert_expr_equal(internal_result.expression("hScalar-lScalar"), expected_internal)
+    assert_expr_equal(internal_result.expression("interaction_power_type_vakint_integral_sum"), expected_interaction_vakint)
+    assert_expr_equal(internal_result.expression("interaction_power_type_internal_integral_sum"), expected_internal)
+    assert_expr_equal(
+        internal_result.expression("interaction_power_type_internal_integral_pole_part"),
+        vakint_backend.pole_part(expected_internal),
+    )
+    assert_expr_equal(
+        internal_result.expression("interaction_power_type_internal_integral_finite_part"),
+        vakint_backend.finite_part(expected_internal),
+    )
     matchete_hbar_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
     assert_expr_equal(one_loop_normalization_factor(None), Expression.num(1))
     assert_expr_equal(matchete_hbar_factor, Expression.I * s.HBar)

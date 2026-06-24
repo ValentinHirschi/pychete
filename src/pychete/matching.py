@@ -1505,6 +1505,98 @@ class OneLoopSetup:
             },
         )
 
+    def interaction_power_type_internal_matching_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the interaction-power result evaluated by pychete's internal integral backend."""
+
+        from .backends import vakint
+
+        contributions = self.interaction_power_type_contributions(
+            heavy_field_dimension=heavy_field_dimension,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
+        raw_vakint_sum = self.interaction_power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        evaluated = self.interaction_power_type_internal_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=evaluated,
+            on_shell_eft_lagrangian=evaluated,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces={
+                **_named_internal_supertraces(
+                    contributions,
+                    include_light=include_light,
+                    tensor_reduce=tensor_reduce,
+                    tensor_reduce_engine=tensor_reduce_engine,
+                    epsilon=epsilon,
+                    mu_r_squared=mu_r_squared,
+                    combine_terms=combine_terms,
+                ),
+                **self.interaction_power_type_expression_map(
+                    prefix="interaction_power_type_supertrace",
+                    heavy_field_dimension=heavy_field_dimension,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                ),
+                "interaction_power_type_eft_lagrangian": numerator_sum,
+                "interaction_power_type_vakint_integral_sum": raw_vakint_sum,
+                "interaction_power_type_internal_integral_sum": evaluated,
+                "interaction_power_type_internal_integral_pole_part": pole,
+                "interaction_power_type_internal_integral_finite_part": finite,
+            },
+            metadata={
+                "stage": "interaction_power_type_internal_integral_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "power_type_contribution_count": self.power_type_contribution_count,
+                "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "on_shell_reduced": False,
+                "integral_backend": "pychete_internal",
+                "tensor_reduce": tensor_reduce,
+                "combine_terms": combine_terms,
+                "uses_interaction_operator": True,
+                "max_pole_order": max_pole_order,
+            },
+        )
+
     def interaction_power_type_normalized_matching_result(
         self,
         *,
@@ -2877,6 +2969,32 @@ def _named_vakint_supertraces(
         )
         for contribution in contributions
     }
+
+
+def _named_internal_supertraces(
+    contributions: Iterable[PowerTypeSupertraceContribution],
+    *,
+    include_light: bool = True,
+    tensor_reduce: bool = True,
+    tensor_reduce_engine: Any | None = None,
+    epsilon: Expression | None = None,
+    mu_r_squared: Expression | None = None,
+    combine_terms: bool = False,
+) -> dict[str, Expression]:
+    from .backends import vakint, vacuum_integrals
+
+    out: dict[str, Expression] = {}
+    for contribution in contributions:
+        raw = contribution.vakint_integral_expression(include_light=include_light)
+        if tensor_reduce:
+            raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+        out[contribution.name] = vacuum_integrals.evaluate_one_loop_vakint_expression(
+            raw,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+    return out
 
 
 def _vakint_expression_at_stage(

@@ -9,7 +9,7 @@ from typing import Any
 
 from symbolica import Expression
 
-from .matching_options import VakintIntegralStage
+from .matching_options import OneLoopIntegralBackend, VakintIntegralStage
 from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
@@ -204,6 +204,9 @@ class ValidationFixture:
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
+        integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
+        internal_tensor_reduce: bool = True,
+        internal_combine_terms: bool = False,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
@@ -217,16 +220,26 @@ class ValidationFixture:
             max_trace_order=max_trace_order,
             include_light_only=include_light_only,
         )
-        result = setup.interaction_power_type_matching_result(
-            heavy_field_dimension=heavy_field_dimension,
-            include_light=include_light,
-            vakint_stage=vakint_stage,
-            vakint_short_form=vakint_short_form,
-            vakint_engine=vakint_engine,
-            named_supertrace_stage=named_supertrace_stage,
-            named_supertrace_short_form=named_supertrace_short_form,
-            named_supertrace_engine=named_supertrace_engine,
-        )
+        selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
+        if selected_backend is OneLoopIntegralBackend.INTERNAL:
+            result = setup.interaction_power_type_internal_matching_result(
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
+                tensor_reduce=internal_tensor_reduce,
+                tensor_reduce_engine=vakint_engine,
+                combine_terms=internal_combine_terms,
+            )
+        else:
+            result = setup.interaction_power_type_matching_result(
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
+                vakint_stage=vakint_stage,
+                vakint_short_form=vakint_short_form,
+                vakint_engine=vakint_engine,
+                named_supertrace_stage=named_supertrace_stage,
+                named_supertrace_short_form=named_supertrace_short_form,
+                named_supertrace_engine=named_supertrace_engine,
+            )
         return MatchingResult(
             theory=result.theory,
             uv_lagrangian=result.uv_lagrangian,
@@ -257,6 +270,9 @@ class ValidationFixture:
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
+        integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
+        internal_tensor_reduce: bool = True,
+        internal_combine_terms: bool = False,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
@@ -273,6 +289,9 @@ class ValidationFixture:
             vakint_stage=vakint_stage,
             vakint_short_form=vakint_short_form,
             vakint_engine=vakint_engine,
+            integral_backend=integral_backend,
+            internal_tensor_reduce=internal_tensor_reduce,
+            internal_combine_terms=internal_combine_terms,
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,

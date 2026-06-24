@@ -2766,6 +2766,39 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 194 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Promoted pychete's internal analytic vacuum-integral evaluator into the
+  structured one-loop result surface:
+  - added public `OneLoopIntegralBackend` selectors for fixture previews, with
+    `vakint` preserving the existing raw/native-vakint path and `internal`
+    selecting pychete's internal analytic scalar integral backend;
+  - added `OneLoopSetup.interaction_power_type_internal_matching_result(...)`,
+    returning a `MatchingResult` whose off-shell/on-shell EFT Lagrangians are
+    the internally evaluated interaction-power aggregate rather than raw
+    `vakint::topo(...)` placeholders;
+  - named supertraces in this result are evaluated through the same internal
+    backend after optional topology-independent native vakint tensor
+    reduction, so individual Matchete-style supertrace keys can now carry
+    evaluated scalar integrals;
+  - the result records the raw vakint topology aggregate, the internal
+    evaluated aggregate, and Symbolica-backed pole/finite parts, while
+    retaining `complete=False` until on-shell reduction and matching-condition
+    extraction are implemented;
+  - `ValidationFixture.one_loop_preview(...)` and gap reports can now opt into
+    the internal backend without Mathematica or Matchete runtime dependencies.
+- Verification for the internal analytic result-backend slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_internal_integral_backend_without_mathematica
+    tests/unit/definitions/test_public_api.py -q'` passed: 6 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 195 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
