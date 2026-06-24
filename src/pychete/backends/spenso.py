@@ -3,11 +3,11 @@ from __future__ import annotations
 from functools import lru_cache
 from typing import Any
 
-from symbolica import Expression
+from symbolica import Expression, Replacement
 
 from .common import import_backend
-from ..expr import args, is_head
-from ..symbols import canonical_string, display_string, s, safe_symbol_name
+from ..expr import args, cg_tensor_pattern, is_head
+from ..symbols import SymbolRole, canonical_string, display_string, s, safe_symbol_name
 from ..theory import CGTensorDefinition, CGTensorHandle, RepresentationReality, Theory
 
 
@@ -89,6 +89,26 @@ def indexed_cg_tensor_to_spenso(theory: Theory, expr: Expression) -> Any:
     return structure.index(*(args(expr[1])))
 
 
+def lower_cg_tensors_to_spenso(theory: Theory, expr: Expression) -> Expression:
+    """Replace registered pychete CG atoms by native spenso tensor expressions."""
+
+    pattern = cg_tensor_pattern()
+
+    def lower(match: dict[Expression, Expression]) -> Expression:
+        atom = pattern.replace_wildcards(match)
+        return indexed_cg_tensor_to_spenso(theory, atom).to_expression()
+
+    return expr.replace_multiple(
+        [
+            Replacement(
+                pattern,
+                lower,
+                s.CGTensorLabelWildcard.req_tag(SymbolRole.CG_TENSOR.value),
+            )
+        ]
+    )
+
+
 def empty_tensor_library() -> Any:
     """Create an empty native spenso tensor library."""
 
@@ -168,13 +188,35 @@ def evaluate_tensor_network(
     )
 
 
+def evaluate_pychete_tensor_network(
+    theory: Theory,
+    expr: Expression,
+    *,
+    library: Any | None = None,
+    function_library: Any | None = None,
+    n_steps: int | None = None,
+    mode: Any | None = None,
+) -> Any:
+    """Lower pychete CG tensors and execute a native spenso tensor network."""
+
+    return evaluate_tensor_network(
+        lower_cg_tensors_to_spenso(theory, expr),
+        library=library,
+        function_library=function_library,
+        n_steps=n_steps,
+        mode=mode,
+    )
+
+
 __all__ = [
     "cg_tensor_structure_to_spenso",
     "empty_tensor_library",
+    "evaluate_pychete_tensor_network",
     "evaluate_tensor_network",
     "execute_tensor_network",
     "hep_tensor_library",
     "indexed_cg_tensor_to_spenso",
+    "lower_cg_tensors_to_spenso",
     "native_module",
     "representation_to_spenso",
     "tensor_network",

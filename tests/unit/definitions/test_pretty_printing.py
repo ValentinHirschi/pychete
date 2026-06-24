@@ -169,6 +169,8 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.CouplingLabelWildcard,
         s.CouplingIndicesWildcard,
         s.CouplingOrderWildcard,
+        s.CGTensorLabelWildcard,
+        s.CGTensorIndicesWildcard,
         s.FieldStrengthLabelWildcard,
         s.FieldStrengthLorentzWildcard,
         s.FieldStrengthIndicesWildcard,

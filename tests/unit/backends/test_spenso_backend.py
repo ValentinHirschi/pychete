@@ -74,6 +74,44 @@ def test_spenso_backend_lowers_registered_cg_tensors() -> None:
     )
 
 
+def test_spenso_backend_lowers_cg_atoms_with_symbolica_replacement() -> None:
+    theory = Theory("spenso_bridge_lower")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+
+    expr = S("x") + 2 * generator(S("A"), S("i"), S("j")) + s.CG(S("plain"), s.List(S("u")))
+    lowered = spenso.lower_cg_tensors_to_spenso(theory, expr)
+    lowered_text = canonical_string(lowered)
+
+    assert "spenso_python::pychete_spenso_bridge_lower_cg_gen_SU3c_fund" in lowered_text
+    assert "pychete::CG(python::plain,pychete::List(python::u))" in lowered_text
+    assert "spenso::dind(spenso::pychete_spenso_bridge_lower_SU3c_fund_d3_complex(3,python::j))" in lowered_text
+
+
+def test_spenso_backend_evaluates_pychete_tensor_network_after_cg_lowering(monkeypatch) -> None:
+    theory = Theory("spenso_bridge_eval")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+    expr = generator(S("A"), S("i"), S("j"))
+    calls: list[Expression] = []
+
+    class FakeNetwork:
+        def __init__(self, lowered: Expression) -> None:
+            self.lowered = lowered
+
+    def fake_evaluate_tensor_network(lowered: Expression, **_kwargs) -> FakeNetwork:
+        calls.append(lowered)
+        return FakeNetwork(lowered)
+
+    monkeypatch.setattr(spenso, "evaluate_tensor_network", fake_evaluate_tensor_network)
+
+    network = spenso.evaluate_pychete_tensor_network(theory, expr)
+
+    assert isinstance(network, FakeNetwork)
+    assert calls == [network.lowered]
+    assert canonical_string(calls[0]).startswith("spenso_python::pychete_spenso_bridge_eval_cg_gen_SU3c_fund(")
+
+
 def test_spenso_backend_rejects_dimensionless_representations() -> None:
     theory = Theory("spenso_bridge_unknown")
     theory.define_global_group("GX", s.U1)

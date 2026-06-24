@@ -18,7 +18,7 @@ from pychete import (
     collect_indices,
     s,
 )
-from pychete.expr import coupling_pattern, field_pattern, matching_subexpressions
+from pychete.expr import cg_tensor_pattern, coupling_pattern, field_pattern, matching_subexpressions
 
 
 def _local_tags(label: Expression) -> set[str]:
@@ -384,16 +384,22 @@ def test_symbol_collectors_require_role_tags_on_user_labels_except_indices() -> 
     theory = Theory("tagged_collectors")
     phi = theory.define_field("phi", s.Scalar, mass=0)
     lam = theory.define_coupling("lambda")
+    theory.define_gauge_group("SU2F", s.SU(Expression.num(2)), "gF", "VF")
+    eps = theory.cg_tensor_handle("eps_SU2F")
     mu = theory.lorentz_index("mu")
 
     untagged_field = s.Field(S("plain_field_label"), s.Scalar, s.List(), s.List())
     untagged_coupling = s.Coupling(S("plain_coupling_label"), s.List(), 0)
+    untagged_cg = s.CG(S("plain_cg_label"), s.List(mu))
     untagged_index = s.Index(S("plain_index_label"), s.Lorentz)
 
-    expr = phi() + lam() + mu + untagged_field + untagged_coupling + untagged_index
+    expr = phi() + lam() + eps(mu, mu) + mu + untagged_field + untagged_coupling + untagged_cg + untagged_index
 
     assert matching_subexpressions(expr, field_pattern(), s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)) == (phi(),)
     assert matching_subexpressions(expr, coupling_pattern(), s.CouplingLabelWildcard.req_tag(SymbolRole.COUPLING.value)) == (lam(),)
+    assert matching_subexpressions(expr, cg_tensor_pattern(), s.CGTensorLabelWildcard.req_tag(SymbolRole.CG_TENSOR.value)) == (
+        eps(mu, mu),
+    )
     assert {canonical_string(info.expr) for info in collect_indices(expr)} == {
         canonical_string(mu),
         canonical_string(untagged_index),

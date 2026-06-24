@@ -632,6 +632,23 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests for complex, conjugate, pseudoreal, and dimensionless
     representation lowering plus built-in Matchete generator CG tensor
     lowering.
+- Completed the twenty-seventh implementation slice:
+  - added central `CGTensorLabelWildcard` and `CGTensorIndicesWildcard`
+    Symbolica pattern symbols to the `SymbolStore`;
+  - added `cg_tensor_pattern(...)` so registered pychete CG atoms can be found
+    through Symbolica matching with `cg_tensor` tag restrictions;
+  - added `pychete.backends.spenso.lower_cg_tensors_to_spenso(...)`, which uses
+    Symbolica `Replacement` over the whole expression to replace only
+    registered `CG(label, indices)` atoms by native spenso tensor expressions;
+  - added `pychete.backends.spenso.evaluate_pychete_tensor_network(...)`, which
+    applies that lowering before delegating tensor-network execution to the
+    existing native spenso adapter;
+  - routed `SupertraceBlockTrace.evaluate_tensor_network(...)` through the
+    pychete-aware spenso helper, so one-loop setup kernels now get registered
+    CG tensors lowered before network execution;
+  - added focused backend and matching tests proving registered CG atoms lower,
+    untagged `CG`-like atoms are ignored, and supertrace kernels reach spenso
+    without pychete `CG` heads.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -758,6 +775,11 @@ discoveries, dependency patches, blockers, and remaining work.
   constructing the same name with incompatible duality can abort the Python
   process from Rust, so pychete now uses stable dimension/reality-qualified
   backend names plus an adapter-side cache when lowering representations.
+- Rescanned Symbolica's `Expression.replace`, `Expression.replace_multiple`,
+  and `Replacement` stubs before adding expression-wide CG lowering. Callable
+  replacements receive wildcard bindings and are suitable for lowering matched
+  atoms to backend-native expressions, while Symbolica owns the traversal over
+  the larger expression.
 
 ## Test Status
 
@@ -1348,6 +1370,20 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the spenso metadata bridge slice: 131
   passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/backends/test_spenso_backend.py
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_pretty_printing.py::test_all_builtin_pychete_symbols_have_pretty_print_callbacks
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_routes_generated_kernels_through_spenso
+  tests/integration/matching/test_fluctuation_operator.py::test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso
+  -q'` passed after the CG-to-spenso expression lowering slice: 28 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the CG-to-spenso expression lowering slice: no issues
+  found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the CG-to-spenso expression lowering
+  slice: 134 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1360,10 +1396,10 @@ discoveries, dependency patches, blockers, and remaining work.
   including backend-computed representation dimensions/reality,
   real/complex counting, and later model-specific SMEFT basis classifications.
 - Extend the new spenso metadata bridge from native `Representation`,
-  `TensorStructure`, and `TensorIndices` lowering into full tensor-library
-  registration, contractions, simplifications, and invariant-tensor
-  construction, using idenso where gamma/colour/index algebra is the right
-  backend.
+  `TensorStructure`, `TensorIndices`, and expression-wide CG replacement into
+  full tensor-library registration, contractions, simplifications, and
+  invariant-tensor construction, using idenso where gamma/colour/index algebra
+  is the right backend.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
   preliminary vakint one-loop topology lowering, including physical loop

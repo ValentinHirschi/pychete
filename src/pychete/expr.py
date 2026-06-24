@@ -102,6 +102,13 @@ def coupling_pattern(label: Expr | None = None) -> Expr:
     )
 
 
+def cg_tensor_pattern(label: Expr | None = None) -> Expr:
+    return s.CG(
+        s.CGTensorLabelWildcard if label is None else label,
+        s.CGTensorIndicesWildcard,
+    )
+
+
 def field_strength_pattern(label: Expr | None = None) -> Expr:
     return s.FieldStrength(
         s.FieldStrengthLabelWildcard if label is None else label,

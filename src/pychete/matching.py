@@ -497,7 +497,8 @@ class SupertraceBlockTrace:
 
         from .backends import spenso
 
-        network = spenso.evaluate_tensor_network(
+        network = spenso.evaluate_pychete_tensor_network(
+            self.theory,
             self.expression,
             library=library,
             function_library=function_library,

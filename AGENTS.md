@@ -141,7 +141,11 @@ spenso/idenso backend adapters. Use
 `pychete.backends.spenso.representation_to_spenso(...)`,
 `pychete.backends.spenso.cg_tensor_structure_to_spenso(...)`, and
 `pychete.backends.spenso.indexed_cg_tensor_to_spenso(...)` as the standard
-metadata bridge from pychete theory definitions to native spenso objects.
+metadata bridge from pychete theory definitions to native spenso objects. Use
+`pychete.backends.spenso.lower_cg_tensors_to_spenso(...)` and
+`pychete.backends.spenso.evaluate_pychete_tensor_network(...)` when lowering
+whole expressions; these functions use Symbolica's replacement engine with
+`cg_tensor` tag restrictions and then delegate tensor-network work to spenso.
 Built-in Matchete CG labels such as `gen[group[rep]]`, `eps[group]`,
 `fStruct[group]`, `dSym[group]`, and `del[group[rep]]` must resolve to the
 auto-registered theory-owned CG tensor labels, not to generic external

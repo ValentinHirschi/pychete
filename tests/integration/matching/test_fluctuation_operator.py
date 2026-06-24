@@ -9,6 +9,7 @@ from pychete import (
     FluctuationSector,
     FluctuationStatistics,
     MatchingResult,
+    SupertraceBlockTrace,
     Theory,
     VakintIntegralStage,
     canonical_string,
@@ -686,3 +687,42 @@ def test_one_loop_setup_routes_generated_kernels_through_spenso(monkeypatch: pyt
     assert evaluated.supertrace_plan is setup.supertrace_plan
     assert evaluated.block_traces[0].name == setup.block_traces[0].name
     assert_expr_equal(evaluated.block_traces[0].expression, S("tensor")(setup.block_traces[0].expression))
+
+
+def test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso(monkeypatch: pytest.MonkeyPatch) -> None:
+    theory = Theory("supertrace_spenso_cg")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    generator = theory.cg_tensor_handle("gen_SU3c_fund")
+    trace = SupertraceBlockTrace(
+        theory=theory,
+        name="cg_kernel",
+        blocks=(),
+        modes=(),
+        expression=generator(S("A"), S("i"), S("j")),
+    )
+    calls: list[Expression] = []
+
+    def fake_evaluate_tensor_network(
+        expr: Expression,
+        *,
+        library: object | None = None,
+        function_library: object | None = None,
+        n_steps: int | None = None,
+        mode: object | None = None,
+    ) -> FakeTensorNetwork:
+        calls.append(expr)
+        return FakeTensorNetwork(expr)
+
+    def fake_tensor_network_result_scalar(network: FakeTensorNetwork) -> Expression:
+        return S("tensor")(network.expr)
+
+    monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
+    monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
+
+    evaluated = trace.evaluate_tensor_network()
+
+    assert len(calls) == 1
+    assert canonical_string(calls[0]).startswith("spenso_python::pychete_supertrace_spenso_cg_cg_gen_SU3c_fund(")
+    assert "pychete::CG" not in canonical_string(calls[0])
+    assert evaluated.name == trace.name
+    assert_expr_equal(evaluated.expression, S("tensor")(calls[0]))

@@ -520,6 +520,8 @@ class SymbolStore:
         "CouplingLabelWildcard",
         "CouplingIndicesWildcard",
         "CouplingOrderWildcard",
+        "CGTensorLabelWildcard",
+        "CGTensorIndicesWildcard",
         "FieldStrengthLabelWildcard",
         "FieldStrengthLorentzWildcard",
         "FieldStrengthIndicesWildcard",
@@ -756,6 +758,14 @@ class SymbolStore:
     @cached_property
     def CouplingOrderWildcard(self) -> Expression:
         return self.head("coupling_order_")
+
+    @cached_property
+    def CGTensorLabelWildcard(self) -> Expression:
+        return self.head("cg_tensor_label_")
+
+    @cached_property
+    def CGTensorIndicesWildcard(self) -> Expression:
+        return self.head("cg_tensor_indices_")
 
     @cached_property
     def FieldStrengthLabelWildcard(self) -> Expression:
