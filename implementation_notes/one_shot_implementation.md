@@ -958,6 +958,33 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests covering the new interaction-power epsilon
     coefficient, pole part, finite part, evaluated matching-result exposure,
     minimal-subtraction result metadata, and public API docstring coverage.
+- Completed the forty-fourth implementation slice:
+  - rescanned Matchete `Package/SuperTrace.m` and `Package/LoopIntegration.m`
+    for the power-type prefactor convention: `PowerTypeSTr` applies
+    `-I hbar/2` for bosonic propagator classes and the opposite sign for
+    fermionic/ghost classes, while `hbar` is documented as the loop-order
+    marker understood as the final `1/(16 pi^2)` factor;
+  - rescanned the Symbolica Python stubs and used the native `Expression.I`
+    and `Expression.PI` constants for the normalization factors instead of
+    parsing or string-building constants;
+  - added central `s.HBar` Symbolica symbol support, with custom print output
+    as `hbar`, `\hbar`, and Mathematica-style `\[HBar]` across pychete's
+    output modes;
+  - added public `OneLoopNormalization` and
+    `one_loop_normalization_factor(...)`, covering the current unnormalized
+    preview factor, Matchete's explicit `I*hbar` supertrace factor relative to
+    pychete's local `-1/2` contribution convention, and the final
+    `I/(16*pi^2)` loop-factor replacement;
+  - added
+    `OneLoopSetup.interaction_power_type_normalized_matching_result(...)`,
+    which preserves the raw interaction-power vakint aggregate for inspection
+    while returning off-shell/on-shell EFT Lagrangians scaled by the selected
+    loop factor and recording normalized pole/finite pieces when the selected
+    vakint stage is evaluated;
+  - exported the new normalization enum/helper through `pychete.api` and the
+    package root, and added focused coverage for public docstrings, hbar pretty
+    printing, raw-vs-normalized result storage, and evaluated normalized
+    pole/finite extraction.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1003,6 +1030,15 @@ discoveries, dependency patches, blockers, and remaining work.
   grading sign in the Symbolica matrix supertrace, so the new contribution
   layer uses a convention-local `-1/2` prefactor and keeps the missing loop
   normalization/phase explicit as remaining work.
+- Rescanned Matchete's `LoopIntegration.m` convention for `hbar`. Matchete
+  documents `hbar` as the loop-order marker understood as the final
+  `1/(16 pi^2)` factor, while the scalar-integral prefactors carry their own
+  factors of `I`. pychete now exposes both explicit Symbolica normalization
+  choices: `OneLoopNormalization.MATCHETE_HBAR` gives `I*s.HBar`, and
+  `OneLoopNormalization.MATCHETE_LOOP_FACTOR` gives
+  `I/(16*Expression.PI**2)`. Future fixture comparisons must still validate
+  the backend integral phase against vakint output before promoting either
+  normalized preview to a complete matching result.
 - Added `PowerTypeSupertraceContribution` and `OneLoopSetup.power_type_*`
   helpers. These expose cyclically unique power-type traces, prefactor-weighted
   numerators, EFT-truncated numerators through the existing Symbolica-backed
@@ -1949,6 +1985,28 @@ discoveries, dependency patches, blockers, and remaining work.
   the current dependency manifest.
 - `git diff --check` passed after the interaction-power
   pole/minimal-subtraction slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_loop_hbar_symbol_prints_cleanly_in_all_symbolica_modes
+  tests/unit/definitions/test_pretty_printing.py::test_all_builtin_pychete_symbols_have_pretty_print_callbacks
+  -q'` passed after the interaction-power normalization slice: 8 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the interaction-power normalization slice: no issues
+  found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the interaction-power
+  normalization slice: 39 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/definitions -q'` passed after the interaction-power
+  normalization slice: 44 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the interaction-power normalization
+  slice: 157 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the interaction-power normalization slice.
 
 ## Remaining Work
 

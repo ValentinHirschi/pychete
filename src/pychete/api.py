@@ -15,12 +15,14 @@ from .matching import (
     MatchingResult,
     MatchingResultComparison,
     OneLoopMatchingNotImplementedError,
+    OneLoopNormalization,
     OneLoopSetup,
     PowerTypeSupertraceContribution,
     PropagatorPlan,
     SupertraceBlockTrace,
     SupertracePlan,
     VakintIntegralStage,
+    one_loop_normalization_factor,
 )
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
@@ -65,6 +67,7 @@ __all__ = [
     "MatchingResultComparison",
     "NumericProbeResult",
     "OneLoopMatchingNotImplementedError",
+    "OneLoopNormalization",
     "OneLoopSetup",
     "PowerTypeSupertraceContribution",
     "PropagatorPlan",
@@ -87,6 +90,7 @@ __all__ = [
     "latex_string",
     "open_indices",
     "operator_dimension",
+    "one_loop_normalization_factor",
     "relabel_dummy_indices",
     "s",
     "series_eft",

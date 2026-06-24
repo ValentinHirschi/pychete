@@ -338,6 +338,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
         "loop_momentum_squared": "q2",
+        "hbar": "hbar",
     },
     "Sympy": {
         "Scalar": "Scalar",
@@ -356,6 +357,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
         "loop_momentum_squared": "q2",
+        "hbar": "hbar",
     },
     "Mathematica": {
         "Scalar": "Scalar",
@@ -374,6 +376,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "etaCD",
         "functional_variation_parameter": "etaFD",
         "loop_momentum_squared": "q2",
+        "hbar": r"\[HBar]",
     },
     "Latex": {
         "Scalar": r"\mathrm{Scalar}",
@@ -392,6 +395,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": r"\eta_{\mathrm{CD}}",
         "functional_variation_parameter": r"\eta_{\mathrm{FD}}",
         "loop_momentum_squared": r"q^2",
+        "hbar": r"\hbar",
     },
     "Typst": {
         "Scalar": "Scalar",
@@ -410,6 +414,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
         "loop_momentum_squared": "q^2",
+        "hbar": "hbar",
     },
 }
 
@@ -540,6 +545,7 @@ class SymbolStore:
         "EFTExpansionParameter",
         "CDVariationParameter",
         "FunctionalVariationParameter",
+        "HBar",
     )
 
     def head(self, name: str, **kwargs: Any) -> Expression:
@@ -641,6 +647,10 @@ class SymbolStore:
     @cached_property
     def LoopMomentumSquared(self) -> Expression:
         return self.head("loop_momentum_squared")
+
+    @cached_property
+    def HBar(self) -> Expression:
+        return self.head("hbar")
 
     @cached_property
     def PropagatorDenominator(self) -> Expression:

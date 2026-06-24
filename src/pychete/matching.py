@@ -89,6 +89,53 @@ class VakintIntegralStage(StrEnum):
             raise ValueError("vakint integral stage must be 'raw', 'canonical', 'tensor_reduced', or 'evaluated'") from exc
 
 
+class OneLoopNormalization(StrEnum):
+    """Loop-normalization convention for one-loop matching preview results."""
+
+    PREVIEW = "preview"
+    MATCHETE_HBAR = "matchete_hbar"
+    MATCHETE_LOOP_FACTOR = "matchete_loop_factor"
+
+    @classmethod
+    def from_user(cls, value: OneLoopNormalization | str) -> OneLoopNormalization:
+        """Normalize a user-provided one-loop normalization selector."""
+
+        try:
+            return cls(value)
+        except ValueError as exc:
+            raise ValueError(
+                "one-loop normalization must be 'preview', 'matchete_hbar', or 'matchete_loop_factor'"
+            ) from exc
+
+
+OneLoopNormalizationInput: TypeAlias = OneLoopNormalization | str | Expression | None
+
+
+def one_loop_normalization_factor(
+    normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW,
+) -> Expression:
+    """Return the Symbolica factor for a one-loop normalization convention."""
+
+    if normalization is None:
+        selected = OneLoopNormalization.PREVIEW
+    elif isinstance(normalization, Expression):
+        return normalization
+    else:
+        selected = OneLoopNormalization.from_user(normalization)
+    if selected is OneLoopNormalization.PREVIEW:
+        return Expression.num(1)
+    if selected is OneLoopNormalization.MATCHETE_HBAR:
+        return Expression.I * s.HBar
+    return Expression.I / (16 * Expression.PI**2)
+
+
+def _one_loop_normalization_label(normalization: OneLoopNormalizationInput) -> str:
+    if isinstance(normalization, Expression):
+        return "custom"
+    selected = OneLoopNormalization.PREVIEW if normalization is None else OneLoopNormalization.from_user(normalization)
+    return selected.value
+
+
 @dataclass(frozen=True)
 class FluctuationMode:
     """Metadata for one field entry in a fluctuation basis."""
@@ -1336,6 +1383,67 @@ class OneLoopSetup:
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
                 "uses_interaction_operator": True,
+            },
+        )
+
+    def interaction_power_type_normalized_matching_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        normalization: OneLoopNormalizationInput = OneLoopNormalization.MATCHETE_HBAR,
+    ) -> MatchingResult:
+        """Return an interaction-power result with an explicit loop factor applied."""
+
+        unnormalized = self.interaction_power_type_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+        )
+        factor = one_loop_normalization_factor(normalization)
+        normalized_off_shell = (factor * unnormalized.off_shell_eft_lagrangian).expand()
+        normalized_on_shell = (factor * unnormalized.on_shell_eft_lagrangian).expand()
+        supertraces = dict(unnormalized.supertraces)
+        supertraces["interaction_power_type_loop_normalization_factor"] = factor
+        supertraces["interaction_power_type_vakint_integral_sum_unnormalized"] = unnormalized.expression(
+            "interaction_power_type_vakint_integral_sum"
+        )
+        supertraces["interaction_power_type_normalized_eft_lagrangian"] = normalized_off_shell
+        if "interaction_power_type_vakint_pole_part" in unnormalized.supertraces:
+            supertraces["interaction_power_type_normalized_vakint_pole_part"] = (
+                factor * unnormalized.expression("interaction_power_type_vakint_pole_part")
+            ).expand()
+        if "interaction_power_type_vakint_finite_part" in unnormalized.supertraces:
+            supertraces["interaction_power_type_normalized_vakint_finite_part"] = (
+                factor * unnormalized.expression("interaction_power_type_vakint_finite_part")
+            ).expand()
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=normalized_off_shell,
+            on_shell_eft_lagrangian=normalized_on_shell,
+            matching_conditions=unnormalized.matching_conditions,
+            fluctuation_operators=unnormalized.fluctuation_operators,
+            supertraces=supertraces,
+            metadata={
+                **unnormalized.metadata,
+                "stage": "interaction_power_type_normalized_vakint_result",
+                "loop_normalization": _one_loop_normalization_label(normalization),
+                "loop_normalization_applied": True,
+                "complete": False,
             },
         )
 

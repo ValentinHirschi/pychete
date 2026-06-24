@@ -110,6 +110,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "interaction_power_type_expression_map",
             "interaction_power_type_matching_result",
             "interaction_power_type_minimal_subtraction_result",
+            "interaction_power_type_normalized_matching_result",
             "interaction_power_type_traces",
             "interaction_power_type_vakint_epsilon_coefficient",
             "interaction_power_type_vakint_finite_part",

@@ -96,6 +96,14 @@ def test_supertrace_denominator_heads_print_cleanly_in_all_symbolica_modes() -> 
     assert _format_lagrangian(kernel, PrintMode.Symbolica) == "supertrace_kernel(3, {{prop_den(q2, 2)}})"
 
 
+def test_loop_hbar_symbol_prints_cleanly_in_all_symbolica_modes() -> None:
+    assert _format_lagrangian(s.HBar, PrintMode.Symbolica) == "hbar"
+    assert _format_lagrangian(s.HBar, PrintMode.Latex) == r"\hbar"
+    assert _format_lagrangian(s.HBar, PrintMode.Mathematica) == r"\[HBar]"
+    assert _format_lagrangian(s.HBar, PrintMode.Sympy) == "hbar"
+    assert _format_lagrangian(s.HBar, PrintMode.Typst) == "hbar"
+
+
 def test_capitalized_greek_field_names_use_short_internal_labels() -> None:
     theory = Theory("greek_case")
     capital_phi = theory.define_field("Phi", s.Scalar, self_conjugate=True, mass=0)
@@ -178,6 +186,7 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.EFTExpansionParameter,
         s.CDVariationParameter,
         s.FunctionalVariationParameter,
+        s.HBar,
     )
 
     for expr in builtins:

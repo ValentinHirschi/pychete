@@ -10,10 +10,12 @@ from pychete import (
     FluctuationSector,
     FluctuationStatistics,
     MatchingResult,
+    OneLoopNormalization,
     SupertraceBlockTrace,
     Theory,
     VakintIntegralStage,
     canonical_string,
+    one_loop_normalization_factor,
     s,
 )
 from pychete.backends import idenso as idenso_backend
@@ -905,6 +907,36 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         interaction_result.expression("interaction_power_type_eft_lagrangian"),
         -y() ** 2 * light() ** 2 / 2,
     )
+    matchete_hbar_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
+    assert_expr_equal(one_loop_normalization_factor(None), Expression.num(1))
+    assert_expr_equal(matchete_hbar_factor, Expression.I * s.HBar)
+    assert_expr_equal(
+        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_LOOP_FACTOR),
+        Expression.I / (16 * Expression.PI**2),
+    )
+    normalized_interaction_result = setup.interaction_power_type_normalized_matching_result(
+        normalization=OneLoopNormalization.MATCHETE_HBAR,
+    )
+    assert normalized_interaction_result.metadata["stage"] == "interaction_power_type_normalized_vakint_result"
+    assert normalized_interaction_result.metadata["loop_normalization"] == "matchete_hbar"
+    assert normalized_interaction_result.metadata["loop_normalization_applied"] is True
+    assert normalized_interaction_result.metadata["uses_interaction_operator"] is True
+    assert_expr_equal(
+        normalized_interaction_result.expression("interaction_power_type_loop_normalization_factor"),
+        matchete_hbar_factor,
+    )
+    assert_expr_equal(
+        normalized_interaction_result.expression("interaction_power_type_vakint_integral_sum_unnormalized"),
+        expected_interaction_vakint,
+    )
+    assert_expr_equal(
+        normalized_interaction_result.off_shell_eft_lagrangian,
+        matchete_hbar_factor * expected_interaction_vakint,
+    )
+    assert_expr_equal(
+        normalized_interaction_result.expression("interaction_power_type_normalized_eft_lagrangian"),
+        matchete_hbar_factor * expected_interaction_vakint,
+    )
     setup_map = setup.to_expression_map()
     assert_expr_equal(
         setup_map[f"one_loop_setup.fluctuation_operator_interaction[{canonical_string(light())},{canonical_string(light())}]"],
@@ -1043,6 +1075,24 @@ def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficie
         -S("double") / eps**2 - S("single") / eps,
     )
     assert_expr_equal(interaction_subtracted.expression("interaction_power_type_vakint_finite_part"), S("finite"))
+
+    normalized_result_engine = FakePoleVakintEngine(evaluated_series)
+    loop_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_LOOP_FACTOR)
+    normalized_evaluated = setup.interaction_power_type_normalized_matching_result(
+        vakint_stage=VakintIntegralStage.EVALUATED,
+        vakint_engine=normalized_result_engine,
+        max_pole_order=2,
+        normalization=OneLoopNormalization.MATCHETE_LOOP_FACTOR,
+    )
+    assert normalized_result_engine.calls == [("evaluate", expected_interaction_raw)]
+    assert normalized_evaluated.metadata["stage"] == "interaction_power_type_normalized_vakint_result"
+    assert normalized_evaluated.metadata["loop_normalization"] == "matchete_loop_factor"
+    assert_expr_equal(normalized_evaluated.off_shell_eft_lagrangian, loop_factor * evaluated_series)
+    assert_expr_equal(
+        normalized_evaluated.expression("interaction_power_type_normalized_vakint_pole_part"),
+        loop_factor * (S("double") / eps**2 + S("single") / eps),
+    )
+    assert_expr_equal(normalized_evaluated.expression("interaction_power_type_normalized_vakint_finite_part"), loop_factor * S("finite"))
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:
