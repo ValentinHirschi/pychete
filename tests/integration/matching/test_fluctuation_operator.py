@@ -5,6 +5,7 @@ from symbolica import Expression, S
 
 from pychete import (
     FieldMassKind,
+    FieldRole,
     FluctuationSector,
     FluctuationStatistics,
     MatchingResult,
@@ -175,6 +176,27 @@ def test_fluctuation_basis_modes_carry_statistics_and_mass_metadata() -> None:
         canonical_string(s.Bar(fermion())),
         canonical_string(fermion()),
     }
+
+
+def test_fluctuation_basis_skips_background_fields_and_grades_ghosts_as_fermionic() -> None:
+    theory = Theory("fluctuation_field_roles")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    background = theory.define_field("v", s.Scalar, field_role=FieldRole.BACKGROUND, self_conjugate=True, mass=0)
+    ghost = theory.define_field("c", s.Ghost, mass=(FieldMassKind.HEAVY, "Mc"))
+
+    lagrangian = heavy() ** 2 + background() ** 2 + s.Bar(ghost()) * ghost()
+    basis = theory.fluctuation_basis(lagrangian)
+
+    assert canonical_string(background()) not in {canonical_string(entry) for entry in basis.entries}
+    ghost_mode = basis.mode_for(ghost)
+    barred_ghost_mode = basis.mode_for(s.Bar(ghost()))
+    assert ghost_mode.field_role is FieldRole.GHOST
+    assert ghost_mode.statistics is FluctuationStatistics.FERMIONIC
+    assert barred_ghost_mode.statistics is FluctuationStatistics.FERMIONIC
+    assert ghost_mode.supertrace_sign == -1
+
+    with pytest.raises(ValueError, match="Non-propagating"):
+        theory.fluctuation_operator(lagrangian, fields=[background])
 
 
 def test_fluctuation_operator_extracts_heavy_light_sector_blocks() -> None:

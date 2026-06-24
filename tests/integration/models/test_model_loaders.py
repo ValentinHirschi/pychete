@@ -2,8 +2,14 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pychete import FieldChirality, FieldMassKind, SymbolDataKey, Theory, canonical_string, s
+from symbolica import Expression
+
+from pychete import FieldChirality, FieldMassKind, FieldRole, SymbolDataKey, Theory, canonical_string, s
 from pychete.loaders import load_matchete_model, load_python_model
+
+
+def _local_tags(label: Expression) -> set[str]:
+    return {str(tag).split("::")[-1] for tag in label.get_tags()}
 
 
 def test_python_model_loader_uses_build_function(tmp_path: Path) -> None:
@@ -91,6 +97,34 @@ def test_matchete_loader_preserves_supported_coupling_options(tmp_path: Path) ->
     assert theory.coupling_handle("U").definition.is_unitary is True
     assert theory.coupling_handle("c1").definition.self_conjugate_spec is True
     assert theory.coupling_handle("c2").definition.self_conjugate_spec is True
+
+
+def test_matchete_loader_preserves_field_role_options(tmp_path: Path) -> None:
+    model = tmp_path / "field_roles.m"
+    model.write_text(
+        "\n".join(
+            [
+                "DefineField[c, Ghost, Mass->{Heavy, Mc}];",
+                "DefineField[cb, AntiGhost, Mass->{Heavy, Mcb}];",
+                "DefineField[chi, Scalar, GoldstoneBoson->True, SelfConjugate->True, Mass->0];",
+                "DefineField[v, Scalar, BackgroundField->True, SelfConjugate->True, Mass->0];",
+                "DefineField[phi0, Scalar, ZeroMode->True, SelfConjugate->True, Mass->0];",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    theory, expressions = load_matchete_model(model, theory_name="loader_field_roles")
+
+    assert expressions == {}
+    assert theory.fields["c"].role is FieldRole.GHOST
+    assert theory.fields["cb"].role is FieldRole.ANTI_GHOST
+    assert theory.fields["chi"].role is FieldRole.GOLDSTONE
+    assert theory.fields["v"].role is FieldRole.BACKGROUND
+    assert theory.fields["v"].is_propagating is False
+    assert theory.fields["phi0"].is_zero_mode is True
+    assert "field_role_background" in _local_tags(theory.fields["v"].label)
+    assert "zero_mode" in _local_tags(theory.fields["phi0"].label)
 
 
 def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:

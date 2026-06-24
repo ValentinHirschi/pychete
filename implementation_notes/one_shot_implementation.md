@@ -1108,6 +1108,37 @@ discoveries, dependency patches, blockers, and remaining work.
   powered-vakint-denominator slice: 116 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- Added the field-role metadata slice needed for Matchete-style one-loop field
+  classification:
+  - introduced public `FieldRole` enum values `PHYSICAL`, `GHOST`,
+    `ANTI_GHOST`, `GOLDSTONE`, and `BACKGROUND`;
+  - added field-label Symbolica symbol data keys for `field_role`,
+    `propagating`, and `zero_mode`, plus field-role/propagation/zero-mode
+    Symbolica tags created directly on the theory-owned field symbols;
+  - made `Theory._restore_symbol_manifest(...)` normalize restored tag names
+    and augment older manifests with field-role tags from restored symbol data,
+    while still requiring all manifest-declared tags to be present;
+  - exposed role/progression metadata through `FieldDefinition.role`,
+    `is_ghost`, `is_goldstone`, `is_background`, `is_propagating`, and
+    `is_zero_mode`;
+  - taught the Matchete loader to preserve `Ghost`, `AntiGhost`,
+    `GoldstoneBoson`, `BackgroundField`, `ZeroMode`, and explicit
+    `Propagating`/`NonPropagating` field metadata;
+  - kept fluctuation-basis discovery Symbolica-pattern based, but now filters
+    non-propagating/background fields through field-label symbol data and
+    grades ghost/anti-ghost modes with the fermionic supertrace sign.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py
+  tests/integration/matching/test_fluctuation_operator.py'`
+  passed after the field-role metadata slice: 44 passed.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m mypy'`
+  passed after the field-role metadata slice: no issues found in 24 source
+  files.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests'` passed after the field-role metadata slice: 120 passed, 1 skipped.
+  The skip is the existing GammaLoop API import check because GammaLoop was not
+  requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1117,8 +1148,8 @@ discoveries, dependency patches, blockers, and remaining work.
   basis entries to full differential fluctuation operators, including
   derivative-valued fields and integration-by-parts conventions.
 - Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
-  including spin/statistics signs, real/complex counting, ghosts, Goldstones,
-  background fields, and non-propagating fields.
+  including real/complex counting, representation reality, and later
+  model-specific SMEFT basis classifications.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
   preliminary vakint one-loop topology lowering, including physical loop
@@ -1134,8 +1165,7 @@ discoveries, dependency patches, blockers, and remaining work.
   assets beyond the default matching targets.
 - Use `evaluator_probe_equal` in fixture comparison tests when canonical
   equality is insufficient.
-- Extend field metadata further for background fields, Goldstones, ghosts,
-  representation reality, and SMEFT basis data.
-- Extend theory metadata further for background fields, Goldstones, ghosts,
-  representation reality, global groups, CG tensors, and SMEFT basis data.
+- Extend field metadata further for representation reality and SMEFT basis data.
+- Extend theory metadata further for representation reality, global groups, CG
+  tensors, and SMEFT basis data.
 - Extend the matching engine toward one-loop matching.

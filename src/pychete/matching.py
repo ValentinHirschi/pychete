@@ -27,10 +27,13 @@ from .theory import (
     FieldDefinition,
     FieldHandle,
     FieldMassKind,
+    FieldRole,
     FieldVariation,
     Theory,
     field_mass_expr_from_label,
     field_mass_kind_from_label,
+    field_propagating_from_label,
+    field_role_from_label,
     field_self_conjugate_from_label,
     field_type_from_label,
 )
@@ -90,6 +93,7 @@ class FluctuationMode:
     field: Expression
     base_field: Expression
     field_type: Expression
+    field_role: FieldRole
     mass_kind: FieldMassKind
     statistics: FluctuationStatistics
     self_conjugate: bool
@@ -140,7 +144,7 @@ class FluctuationMode:
     def _repr_html_(self) -> str:
         return (
             f"<code>FluctuationMode({escape(display_string(self.field))} "
-            f"{self.mass_kind.value} {self.statistics.value})</code>"
+            f"{self.mass_kind.value} {self.field_role.value} {self.statistics.value})</code>"
         )
 
 
@@ -1443,6 +1447,8 @@ def _discover_fluctuation_basis(lagrangian: Expression) -> tuple[Expression, ...
 def _add_discovered_fluctuation(entries: dict[str, Expression], expr: Expression) -> None:
     field = bar_field_inner(expr) if is_bar_field(expr) else expr
     base = field_with_derivatives(field, ())
+    if not field_propagating_from_label(field_label(base)):
+        return
     if field_self_conjugate_from_label(field_label(base)):
         _add_basis_entry(entries, base)
         return
@@ -1457,14 +1463,18 @@ def _add_basis_entry(entries: dict[str, Expression], field: Expression) -> None:
 def _fluctuation_mode(theory: Theory, field: Expression) -> FluctuationMode:
     base = bar_field_inner(field) if is_bar_field(field) else field
     label = field_label(base)
+    if not field_propagating_from_label(label):
+        raise ValueError(f"Non-propagating field {canonical_string(field)!r} cannot be used as a fluctuation mode")
     field_type = field_type_from_label(label)
+    field_role = field_role_from_label(label)
     return FluctuationMode(
         theory=theory,
         field=field,
         base_field=base,
         field_type=field_type,
+        field_role=field_role,
         mass_kind=field_mass_kind_from_label(label),
-        statistics=_fluctuation_statistics(field_type),
+        statistics=_fluctuation_statistics(field_type, field_role),
         self_conjugate=field_self_conjugate_from_label(label),
         conjugated=is_bar_field(field),
     )
@@ -1491,8 +1501,11 @@ def _flatten_expression_slots(slots: Iterable[Iterable[Expression]]) -> tuple[Ex
     return tuple(item for slot in slots for item in slot)
 
 
-def _fluctuation_statistics(field_type: Expression) -> FluctuationStatistics:
-    return FluctuationStatistics.FERMIONIC if bool(field_type == s.Fermion) else FluctuationStatistics.BOSONIC
+def _fluctuation_statistics(field_type: Expression, field_role: FieldRole) -> FluctuationStatistics:
+    grassmann_roles = {FieldRole.GHOST, FieldRole.ANTI_GHOST}
+    if bool(field_type == s.Fermion) or field_role in grassmann_roles:
+        return FluctuationStatistics.FERMIONIC
+    return FluctuationStatistics.BOSONIC
 
 
 def _mode_index(modes: tuple[FluctuationMode, ...], field: Expression) -> int:

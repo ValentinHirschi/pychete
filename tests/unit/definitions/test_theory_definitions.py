@@ -2,10 +2,25 @@ from __future__ import annotations
 
 import json
 
-from symbolica import S
+from symbolica import Expression, S
 
-from pychete import BuiltinIndexType, FieldChirality, FieldMassKind, SymbolDataKey, SymbolRole, Theory, canonical_string, collect_indices, s
+from pychete import (
+    BuiltinIndexType,
+    FieldChirality,
+    FieldMassKind,
+    FieldRole,
+    SymbolDataKey,
+    SymbolRole,
+    Theory,
+    canonical_string,
+    collect_indices,
+    s,
+)
 from pychete.expr import coupling_pattern, field_pattern, matching_subexpressions
+
+
+def _local_tags(label: Expression) -> set[str]:
+    return {str(tag).split("::")[-1] for tag in label.get_tags()}
 
 
 def test_field_and_mass_coupling_definitions_follow_matchete_orders() -> None:
@@ -73,6 +88,66 @@ def test_field_symbol_data_stores_charges_and_chirality() -> None:
     assert [canonical_string(charge_expr) for charge_expr in restored_field.definition.charge_exprs] == [canonical_string(charge)]
     assert restored.groups == theory.groups
     assert canonical_string(restored.group_charge("U1Y", S("qY"))) == canonical_string(charge)
+
+
+def test_field_symbol_data_stores_field_roles_and_propagation_flags() -> None:
+    theory = Theory("field_roles")
+    ghost = theory.define_field("c", s.Ghost, mass=(FieldMassKind.HEAVY, "Mc"))
+    goldstone = theory.define_field("chi", s.Scalar, field_role=FieldRole.GOLDSTONE, self_conjugate=True, mass=0)
+    background = theory.define_field("v", s.Scalar, field_role=FieldRole.BACKGROUND, self_conjugate=True, mass=0)
+    zero_mode = theory.define_field("phi0", s.Scalar, zero_mode=True, self_conjugate=True, mass=0)
+
+    assert ghost.definition.role is FieldRole.GHOST
+    assert ghost.definition.is_ghost is True
+    assert ghost.label.get_symbol_data(SymbolDataKey.FIELD_ROLE.value) == FieldRole.GHOST.value
+    assert "field_role_ghost" in _local_tags(ghost.label)
+    assert "propagating" in _local_tags(ghost.label)
+
+    assert goldstone.definition.is_goldstone is True
+    assert goldstone.label.get_symbol_data(SymbolDataKey.FIELD_ROLE.value) == FieldRole.GOLDSTONE.value
+    assert "field_role_goldstone" in _local_tags(goldstone.label)
+
+    assert background.definition.is_background is True
+    assert background.definition.is_propagating is False
+    assert background.label.get_symbol_data(SymbolDataKey.PROPAGATING.value) == 0
+    assert "field_role_background" in _local_tags(background.label)
+    assert "non_propagating" in _local_tags(background.label)
+
+    assert zero_mode.definition.is_zero_mode is True
+    assert zero_mode.label.get_symbol_data(SymbolDataKey.ZERO_MODE.value) == 1
+    assert "zero_mode" in _local_tags(zero_mode.label)
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    assert restored.field_handle("c").definition.role is FieldRole.GHOST
+    assert restored.field_handle("chi").definition.role is FieldRole.GOLDSTONE
+    assert restored.field_handle("v").definition.is_propagating is False
+    assert "field_role_background" in _local_tags(restored.field_handle("v").label)
+    assert restored.field_handle("phi0").definition.is_zero_mode is True
+
+
+def test_field_role_validation_matches_matchete_constraints() -> None:
+    theory = Theory("field_role_validation")
+
+    try:
+        theory.define_field("bad_goldstone", s.Fermion, field_role=FieldRole.GOLDSTONE)
+    except ValueError as exc:
+        assert "Goldstone" in str(exc)
+    else:
+        raise AssertionError("non-scalar Goldstone field was accepted")
+
+    try:
+        theory.define_field("bad_ghost", s.Scalar, field_role=FieldRole.GHOST)
+    except ValueError as exc:
+        assert "ghost field roles" in str(exc)
+    else:
+        raise AssertionError("ghost role with non-ghost field type was accepted")
+
+    try:
+        theory.define_field("bad_background", s.Scalar, field_role=FieldRole.BACKGROUND, mass=(FieldMassKind.HEAVY, "M"))
+    except ValueError as exc:
+        assert "non-propagating" in str(exc)
+    else:
+        raise AssertionError("background field with mass metadata was accepted")
 
 
 def test_coupling_symbol_data_stores_matchete_metadata() -> None:

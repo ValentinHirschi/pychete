@@ -9,7 +9,7 @@ from symbolica.core import AtomType, ParseMode
 
 from ..expr import args, as_int, list_expr, product_expr, sum_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
-from ..theory import CouplingSelfConjugate, FieldChirality, Theory
+from ..theory import CouplingSelfConjugate, FieldChirality, FieldRole, Theory
 
 
 _COMMENT_RE = re.compile(r"\(\*.*?\*\)", re.DOTALL)
@@ -228,7 +228,34 @@ def _field_type(raw: str) -> Expression:
         return s.Scalar
     if name == "Fermion":
         return s.Fermion
+    if name == "Ghost":
+        return s.Ghost
+    if name == "AntiGhost":
+        return s.AntiGhost
     raise NotImplementedError(f"Unsupported field type: {raw}")
+
+
+def _field_role_from_options(type_expr: Expression, opts: dict[str, str]) -> FieldRole:
+    selected = FieldRole.from_type(type_expr)
+    if "GoldstoneBoson" in opts and _parse_bool(opts["GoldstoneBoson"]):
+        selected = FieldRole.GOLDSTONE
+    if "BackgroundField" in opts and _parse_bool(opts["BackgroundField"]):
+        if selected is not FieldRole.PHYSICAL:
+            raise NotImplementedError("BackgroundField cannot be combined with ghost or Goldstone field metadata")
+        selected = FieldRole.BACKGROUND
+    return selected
+
+
+def _field_propagating_from_options(role: FieldRole, opts: dict[str, str]) -> bool | None:
+    if "Propagating" in opts:
+        return _parse_bool(opts["Propagating"])
+    if "NonPropagating" in opts:
+        return not _parse_bool(opts["NonPropagating"])
+    if "BackgroundField" in opts and _parse_bool(opts["BackgroundField"]):
+        return False
+    if role is FieldRole.BACKGROUND:
+        return False
+    return None
 
 
 def _group_type(raw: str) -> Expression:
@@ -659,12 +686,17 @@ def _load_matchete_model_into(
             if len(raw_args) < 2:
                 raise NotImplementedError(f"Unsupported DefineField: {statement}")
             opts = _options(raw_args[2:])
+            type_expr = _field_type(raw_args[1])
+            field_role = _field_role_from_options(type_expr, opts)
             theory.define_field(
                 _clean_name(raw_args[0]),
-                _field_type(raw_args[1]),
+                type_expr,
                 indices=_eval_expression_list(opts["Indices"], theory) if "Indices" in opts else (),
                 charges=_eval_expression_list(opts["Charges"], theory) if "Charges" in opts else (),
                 chirality=_parse_chirality(opts["Chiral"]) if "Chiral" in opts else FieldChirality.NONE,
+                field_role=field_role,
+                propagating=_field_propagating_from_options(field_role, opts),
+                zero_mode=_parse_bool(opts["ZeroMode"]) if "ZeroMode" in opts else False,
                 self_conjugate=_parse_bool(opts["SelfConjugate"]) if "SelfConjugate" in opts else False,
                 mass=_parse_mass(opts["Mass"]) if "Mass" in opts else None,
             )

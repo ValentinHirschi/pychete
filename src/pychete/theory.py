@@ -85,6 +85,51 @@ class FieldChirality(StrEnum):
             raise ValueError(f"unsupported chirality {value!r}") from exc
 
 
+class FieldRole(StrEnum):
+    """Physics role metadata attached to a registered field."""
+
+    PHYSICAL = "physical"
+    GHOST = "ghost"
+    ANTI_GHOST = "anti_ghost"
+    GOLDSTONE = "goldstone"
+    BACKGROUND = "background"
+
+    @classmethod
+    def from_user(cls, value: FieldRole | str) -> FieldRole:
+        """Normalize a user-provided field-role value."""
+
+        if isinstance(value, cls):
+            return value
+        normalized = str(value).replace("_", "").replace("-", "").lower()
+        aliases = {
+            "physical": cls.PHYSICAL,
+            "field": cls.PHYSICAL,
+            "false": cls.PHYSICAL,
+            "none": cls.PHYSICAL,
+            "ghost": cls.GHOST,
+            "antighost": cls.ANTI_GHOST,
+            "ghostbar": cls.ANTI_GHOST,
+            "goldstone": cls.GOLDSTONE,
+            "goldstoneboson": cls.GOLDSTONE,
+            "background": cls.BACKGROUND,
+            "backgroundfield": cls.BACKGROUND,
+        }
+        try:
+            return aliases[normalized]
+        except KeyError as exc:
+            raise ValueError(f"unsupported field role {value!r}") from exc
+
+    @classmethod
+    def from_type(cls, type_expr: Expression) -> FieldRole:
+        """Infer a field role from a Matchete-style field type expression."""
+
+        if bool(type_expr == s.Ghost):
+            return cls.GHOST
+        if bool(type_expr == s.AntiGhost):
+            return cls.ANTI_GHOST
+        return cls.PHYSICAL
+
+
 class BuiltinIndexType(StrEnum):
     """Built-in index representations understood by pychete."""
 
@@ -107,6 +152,10 @@ _SYMBOL_ROLE_ORDER = {
     SymbolRole.EXTERNAL.value: 5,
     SymbolRole.LABEL.value: 6,
 }
+
+
+def _local_tag_name(tag: str) -> str:
+    return tag.split("::")[-1]
 
 
 def _index_type_name(name: BuiltinIndexType | str) -> str:
@@ -163,6 +212,12 @@ def _normalized_restored_symbol_data(role: str, data: dict[str, Any]) -> dict[st
         normalized.setdefault(SymbolDataKey.DIAGONAL_COUPLING.value, [False for _ in range(index_count)])
         normalized.setdefault(SymbolDataKey.THERMAL_POWER_COUNTING.value, 1)
         normalized.setdefault(SymbolDataKey.UNITARY.value, 0)
+    elif role == SymbolRole.FIELD.value:
+        type_expr = normalized.get(SymbolDataKey.FIELD_TYPE.value)
+        inferred_role = FieldRole.from_type(type_expr) if isinstance(type_expr, Expression) else FieldRole.PHYSICAL
+        normalized.setdefault(SymbolDataKey.FIELD_ROLE.value, inferred_role.value)
+        normalized.setdefault(SymbolDataKey.PROPAGATING.value, 1)
+        normalized.setdefault(SymbolDataKey.ZERO_MODE.value, 0)
     return normalized
 
 
@@ -176,6 +231,13 @@ def field_type_from_label(label: Expression) -> Expression:
     if not isinstance(value, Expression):
         raise ValueError(f"Field type is not stored on {canonical_string(label)}")
     return value
+
+
+def field_role_from_label(label: Expression) -> FieldRole:
+    value = symbol_data(label, SymbolDataKey.FIELD_ROLE)
+    if value is None:
+        return FieldRole.from_type(field_type_from_label(label))
+    return FieldRole.from_user(str(value))
 
 
 def field_self_conjugate_from_label(label: Expression) -> bool:
@@ -202,6 +264,14 @@ def field_charges_from_label(label: Expression) -> tuple[Expression, ...]:
 def field_chirality_from_label(label: Expression) -> FieldChirality:
     value = symbol_data(label, SymbolDataKey.CHIRALITY, FieldChirality.NONE.value)
     return FieldChirality.from_user(str(value))
+
+
+def field_propagating_from_label(label: Expression) -> bool:
+    return bool(symbol_data(label, SymbolDataKey.PROPAGATING, 1))
+
+
+def field_zero_mode_from_label(label: Expression) -> bool:
+    return bool(symbol_data(label, SymbolDataKey.ZERO_MODE, 0))
 
 
 def field_mass_indices_from_label(label: Expression) -> tuple[Expression, ...]:
@@ -292,6 +362,13 @@ def _normalize_diagonal_coupling(diagonal: bool | Iterable[bool] | None, index_c
     if len(flags) != index_count:
         raise ValueError("diagonal coupling flags must have the same length as coupling indices")
     return tuple(bool(flag) for flag in flags)
+
+
+def _field_symbol_tags(field_role: FieldRole, propagating: bool, zero_mode: bool) -> tuple[str, ...]:
+    tags = [f"field_role_{field_role.value}", "propagating" if propagating else "non_propagating"]
+    if zero_mode:
+        tags.append("zero_mode")
+    return tuple(tags)
 
 
 @dataclass(frozen=True)
@@ -398,6 +475,9 @@ class FieldDefinition:
     indices: tuple[Expression, ...] = ()
     charges: tuple[Expression, ...] = ()
     chirality: FieldChirality = FieldChirality.NONE
+    field_role: FieldRole = FieldRole.PHYSICAL
+    propagating: bool = True
+    zero_mode: bool = False
     self_conjugate: bool = False
     mass_kind: FieldMassKind = FieldMassKind.LIGHT
     mass_label: Expression | None = None
@@ -433,6 +513,42 @@ class FieldDefinition:
 
         return field_chirality_from_label(self.label)
 
+    @property
+    def role(self) -> FieldRole:
+        """Physics role stored on the field label."""
+
+        return field_role_from_label(self.label)
+
+    @property
+    def is_ghost(self) -> bool:
+        """Whether this field is a ghost or anti-ghost."""
+
+        return self.role in {FieldRole.GHOST, FieldRole.ANTI_GHOST}
+
+    @property
+    def is_goldstone(self) -> bool:
+        """Whether this field is marked as a Goldstone boson."""
+
+        return self.role is FieldRole.GOLDSTONE
+
+    @property
+    def is_background(self) -> bool:
+        """Whether this field is a non-propagating background field."""
+
+        return self.role is FieldRole.BACKGROUND
+
+    @property
+    def is_propagating(self) -> bool:
+        """Whether this field participates in fluctuation bases by default."""
+
+        return field_propagating_from_label(self.label)
+
+    @property
+    def is_zero_mode(self) -> bool:
+        """Whether this field is a Matsubara zero-mode metadata field."""
+
+        return field_zero_mode_from_label(self.label)
+
     def expr(self, *indices: Expression, derivatives: Iterable[Expression] = ()) -> Expression:
         """Build a Symbolica field expression."""
 
@@ -449,7 +565,9 @@ class FieldDefinition:
     def _repr_html_(self) -> str:
         mass = self.mass_expr()
         mass_part = "" if mass is None else f" mass={escape(display_string(mass))}"
-        return f"<code>{escape(display_string(self.expr()))}{mass_part}</code>"
+        role_part = "" if self.role is FieldRole.PHYSICAL else f" role={escape(self.role.value)}"
+        propagation_part = "" if self.is_propagating else " non_propagating"
+        return f"<code>{escape(display_string(self.expr()))}{mass_part}{role_part}{propagation_part}</code>"
 
     def to_json(self) -> dict[str, Any]:
         return {
@@ -459,6 +577,9 @@ class FieldDefinition:
             "indices": [canonical_string(i) for i in field_indices_from_label(self.label)],
             "charges": [canonical_string(i) for i in field_charges_from_label(self.label)],
             "chirality": field_chirality_from_label(self.label).value,
+            "field_role": field_role_from_label(self.label).value,
+            "propagating": field_propagating_from_label(self.label),
+            "zero_mode": field_zero_mode_from_label(self.label),
             "self_conjugate": self.is_self_conjugate,
             "mass_kind": field_mass_kind_from_label(self.label).value,
             "mass_label": canonical_string(mass_label) if (mass_label := field_mass_label_from_label(self.label)) is not None else None,
@@ -549,13 +670,21 @@ class Theory:
         self.groups: dict[str, dict[str, Any]] = {}
         self.define_index_type(BuiltinIndexType.LORENTZ)
 
-    def symbol(self, name: str, *, role: SymbolRole | str = SymbolRole.LABEL, data: dict[str, Any] | None = None) -> Expression:
+    def symbol(
+        self,
+        name: str,
+        *,
+        role: SymbolRole | str = SymbolRole.LABEL,
+        data: dict[str, Any] | None = None,
+        tags: Iterable[str] = (),
+    ) -> Expression:
         """Return a theory-owned Symbolica symbol with pychete metadata."""
 
         role_name = role.value if isinstance(role, SymbolRole) else role
         key = f"{role_name}:{name}"
         if key not in self._symbols:
             symbol_name = f"{safe_symbol_name(role_name)}_{safe_symbol_name(name)}"
+            symbol_tags = list(dict.fromkeys([SymbolRole.PROJECT.value, role_name, *(_local_tag_name(str(tag)) for tag in tags)]))
             symbol_data_payload: dict[str, Any] = {
                 SymbolDataKey.THEORY.value: self.name,
                 SymbolDataKey.ROLE.value: role_name,
@@ -566,7 +695,7 @@ class Theory:
             self._symbols[key] = s.user(
                 self.name,
                 symbol_name,
-                tags=[SymbolRole.PROJECT.value, role_name],
+                tags=symbol_tags,
                 data=symbol_data_payload,
             )
         return self._symbols[key]
@@ -597,14 +726,25 @@ class Theory:
             if not isinstance(raw_data, dict):
                 raise ValueError(f"Symbol manifest entry for {role}:{name} has non-object data")
             data = _normalized_restored_symbol_data(role, _decode_symbol_data_value(raw_data))
-            symbol = self.symbol(name, role=role, data=data)
+            raw_tags = entry.get("tags", [])
+            tags = [str(tag) for tag in raw_tags] if isinstance(raw_tags, list) else []
+            if role == SymbolRole.FIELD.value:
+                field_role = FieldRole.from_user(data.get(SymbolDataKey.FIELD_ROLE.value, FieldRole.PHYSICAL.value))
+                tags.extend(
+                    _field_symbol_tags(
+                        field_role,
+                        bool(data.get(SymbolDataKey.PROPAGATING.value, 1)),
+                        bool(data.get(SymbolDataKey.ZERO_MODE.value, 0)),
+                    )
+                )
+            symbol = self.symbol(name, role=role, data=data, tags=tags)
             expected = entry.get("symbol")
             if expected is not None and canonical_string(symbol) != expected:
                 raise ValueError(f"Symbol manifest restored {role}:{name} as {canonical_string(symbol)}, expected {expected}")
             expected_tags = set(str(tag) for tag in entry.get("tags", []))
             actual_tags = set(symbol.get_tags())
-            if expected_tags and actual_tags != expected_tags:
-                raise ValueError(f"Symbol manifest restored {role}:{name} with tags {sorted(actual_tags)}, expected {sorted(expected_tags)}")
+            if expected_tags and not expected_tags <= actual_tags:
+                raise ValueError(f"Symbol manifest restored {role}:{name} with tags {sorted(actual_tags)}, missing {sorted(expected_tags - actual_tags)}")
 
     def _parse_registered_expression(self, text: str) -> Expression:
         expr = expression_from_canonical(text)
@@ -798,6 +938,9 @@ class Theory:
         indices: Iterable[Expression] = (),
         charges: Iterable[Expression] = (),
         chirality: FieldChirality | str | bool | None = FieldChirality.NONE,
+        field_role: FieldRole | str | None = None,
+        propagating: bool | None = None,
+        zero_mode: bool = False,
         self_conjugate: bool = False,
         mass: int | MassSpec | None = None,
     ) -> FieldHandle:
@@ -816,6 +959,24 @@ class Theory:
         chirality_kind = FieldChirality.from_user(chirality)
         if chirality_kind is not FieldChirality.NONE and (not bool(type_expr == s.Fermion) or self_conjugate):
             raise ValueError("chirality can only be set for non-self-conjugate fermion fields")
+        inferred_role = FieldRole.from_type(type_expr)
+        role_kind = inferred_role if field_role is None else FieldRole.from_user(field_role)
+        if inferred_role in {FieldRole.GHOST, FieldRole.ANTI_GHOST} and role_kind is not inferred_role:
+            raise ValueError("ghost field types must use the matching ghost field role")
+        if role_kind in {FieldRole.GHOST, FieldRole.ANTI_GHOST} and role_kind is not inferred_role:
+            raise ValueError("ghost field roles must use s.Ghost or s.AntiGhost as the field type")
+        if role_kind is FieldRole.GOLDSTONE and not bool(type_expr == s.Scalar):
+            raise ValueError("Goldstone fields must be scalar fields")
+        if zero_mode and bool(type_expr == s.Fermion):
+            raise ValueError("fermion fields cannot be marked as zero modes")
+        if propagating is None:
+            propagating_flag = role_kind is not FieldRole.BACKGROUND
+        else:
+            propagating_flag = bool(propagating)
+            if role_kind is FieldRole.BACKGROUND and propagating_flag:
+                raise ValueError("background fields must be non-propagating")
+        if not propagating_flag and mass not in (None, 0):
+            raise ValueError("non-propagating fields cannot carry mass metadata")
 
         mass_kind = FieldMassKind.LIGHT
         mass_label: Expression | None = None
@@ -840,9 +1001,12 @@ class Theory:
         field_data: dict[str, Any] = {
             SymbolDataKey.NAME.value: name,
             SymbolDataKey.FIELD_TYPE.value: type_expr,
+            SymbolDataKey.FIELD_ROLE.value: role_kind.value,
             SymbolDataKey.INDICES.value: list(indices_tuple),
             SymbolDataKey.CHARGES.value: list(charges_tuple),
             SymbolDataKey.CHIRALITY.value: chirality_kind.value,
+            SymbolDataKey.PROPAGATING.value: int(propagating_flag),
+            SymbolDataKey.ZERO_MODE.value: int(zero_mode),
             SymbolDataKey.SELF_CONJUGATE.value: int(self_conjugate),
             SymbolDataKey.MASS_KIND.value: mass_kind.value,
             SymbolDataKey.MASS_INDICES.value: list(mass_indices),
@@ -851,11 +1015,19 @@ class Theory:
             field_data[SymbolDataKey.MASS_LABEL.value] = mass_label
         definition = FieldDefinition(
             name=name,
-            label=self.symbol(name, role=SymbolRole.FIELD, data=field_data),
+            label=self.symbol(
+                name,
+                role=SymbolRole.FIELD,
+                data=field_data,
+                tags=_field_symbol_tags(role_kind, propagating_flag, zero_mode),
+            ),
             type=type_expr,
             indices=indices_tuple,
             charges=charges_tuple,
             chirality=chirality_kind,
+            field_role=role_kind,
+            propagating=propagating_flag,
+            zero_mode=zero_mode,
             self_conjugate=self_conjugate,
             mass_kind=mass_kind,
             mass_label=mass_label,
@@ -921,6 +1093,8 @@ class Theory:
         for item in field_names_or_handles:
             handle = item if isinstance(item, FieldHandle) else self.field_handle(item)
             definition = handle.definition
+            if not definition.is_propagating:
+                raise ValueError(f"Free Lagrangians are not defined for non-propagating field {definition.name!r}")
             mu = self.dummy_index(0)
             field_expr = handle()
             type_expr = definition.type_expr
@@ -1106,6 +1280,7 @@ class Theory:
                 unitary=bool(data.get("unitary", False)),
             )
         for name, data in obj.get("fields", {}).items():
+            type_expr = theory._parse_registered_expression(data["type"])
             mass_label = data.get("mass_label")
             mass = None
             if mass_label is not None:
@@ -1115,10 +1290,13 @@ class Theory:
                 mass = (mass_kind, mass_name, mass_indices)
             theory.define_field(
                 name,
-                theory._parse_registered_expression(data["type"]),
+                type_expr,
                 indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
                 charges=[theory._parse_registered_expression(x) for x in data.get("charges", [])],
                 chirality=FieldChirality.from_user(data.get("chirality", FieldChirality.NONE.value)),
+                field_role=FieldRole.from_user(data.get("field_role", FieldRole.from_type(type_expr).value)),
+                propagating=bool(data.get("propagating", True)),
+                zero_mode=bool(data.get("zero_mode", False)),
                 self_conjugate=bool(data.get("self_conjugate", False)),
                 mass=mass,
             )
