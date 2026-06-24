@@ -1,15 +1,17 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from functools import cache
 
-from symbolica import Expression
+from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .common import import_backend
-from ..expr import as_int, is_head
+from ..expr import args, as_int, factors, is_head, product_expr, sum_expr
 from ..symbols import s
 
 _MAX_NATIVE_PROJECTOR_POWER = 16
+_MAX_NATIVE_DIRAC_WORD_ARITY = 8
 
 
 def native_module():
@@ -111,6 +113,15 @@ def simplify_pychete_dirac_projectors(expr: Expression) -> Expression:
     return out.expand()
 
 
+def simplify_pychete_dirac_algebra(expr: Expression) -> Expression:
+    """Simplify compact pychete Dirac words by delegating to native idenso."""
+
+    out = simplify_pychete_dirac_projectors(expr)
+    out = out.replace_multiple(_dirac_product_replacements())
+    out = out.replace_multiple(_ncm_dirac_word_replacements())
+    return simplify_pychete_dirac_projectors(out).expand()
+
+
 def simplify_metrics(expr: Expression) -> Expression:
     """Delegate metric algebra simplification to idenso."""
 
@@ -146,7 +157,7 @@ def simplify_index_algebra(
 ) -> Expression:
     """Run a native idenso simplification pipeline for index algebra."""
 
-    result = simplify_pychete_dirac_projectors(expr)
+    result = simplify_pychete_dirac_algebra(expr)
     if expand:
         result = expand_mink_bis(result)
         result = expand_color(result)
@@ -159,7 +170,7 @@ def simplify_index_algebra(
         result = simplify_metrics(result)
     if dots:
         result = to_dots(result)
-    return simplify_pychete_dirac_projectors(result)
+    return simplify_pychete_dirac_algebra(result)
 
 
 def _projector_power_replacement(
@@ -183,36 +194,186 @@ def _native_projector_word(projectors: tuple[Expression, ...]) -> Expression:
     return _decode_simple_native_projector_result(native_module().simplify_gamma(native_expr))
 
 
-def _native_projector_tensor(projector: Expression) -> Callable[..., Expression]:
+@cache
+def _dirac_product_replacements() -> tuple[Replacement, ...]:
+    return _dirac_word_replacements(s.DiracProduct, "product")
+
+
+@cache
+def _ncm_dirac_word_replacements() -> tuple[Replacement, ...]:
+    return _dirac_word_replacements(s.NCM, "ncm")
+
+
+def _dirac_word_replacements(head: Expression, kind: str) -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
+        wildcards = _dirac_word_wildcards(kind, arity)
+        pattern = head(*wildcards)
+        replacements.append(
+            Replacement(
+                pattern,
+                _dirac_word_replacement(pattern, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _dirac_word_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_word(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        factors_to_simplify = _flatten_pychete_dirac_factors(tuple(match[wildcard] for wildcard in wildcards))
+        if factors_to_simplify is None:
+            return matched
+        simplified = _native_dirac_word(factors_to_simplify)
+        return matched if simplified is None else simplified
+
+    return replace_word
+
+
+def _dirac_word_wildcards(kind: str, arity: int) -> tuple[Expression, ...]:
+    return tuple(s.head(f"dirac_{kind}_{arity}_{index}_") for index in range(arity))
+
+
+def _flatten_pychete_dirac_factors(operands: tuple[Expression, ...]) -> tuple[Expression, ...] | None:
+    flattened: list[Expression] = []
+    for operand in operands:
+        if is_head(operand, s.DiracProduct):
+            nested = _flatten_pychete_dirac_factors(args(operand))
+            if nested is None:
+                return None
+            flattened.extend(nested)
+            continue
+        if not _is_pychete_dirac_factor(operand):
+            return None
+        flattened.append(operand)
+    return tuple(flattened)
+
+
+def _is_pychete_dirac_factor(expr: Expression) -> bool:
+    return bool(expr == s.PR) or bool(expr == s.PL) or (is_head(expr, s.Gamma) and len(expr) == 1)
+
+
+def _native_dirac_word(pychete_factors: tuple[Expression, ...]) -> Expression | None:
+    if not pychete_factors:
+        return Expression.num(1)
+    native_expr = Expression.num(1)
+    for index, factor in enumerate(pychete_factors, start=1):
+        native_factor = _native_dirac_factor(factor, index, index + 1)
+        if native_factor is None:
+            return None
+        native_expr *= native_factor
+    return _decode_simple_native_dirac_result(native_module().simplify_gamma(native_expr))
+
+
+def _native_dirac_factor(factor: Expression, left: int, right: int) -> Expression | None:
+    if bool(factor == s.PR) or bool(factor == s.PL):
+        return _native_projector_tensor(factor)(left, right)
+    if is_head(factor, s.Gamma) and len(factor) == 1:
+        return _native_gamma_tensor()(left, right, factor[0])
+    return None
+
+
+@cache
+def _native_hep_tensor(name: str) -> Callable[..., Expression]:
     from symbolica import S
     from symbolica.community.spenso import TensorLibrary
 
+    return TensorLibrary.hep_lib()[S(name)]
+
+
+def _native_projector_tensor(projector: Expression) -> Callable[..., Expression]:
     if bool(projector == s.PR):
-        return TensorLibrary.hep_lib()[S("spenso::projp")]
+        return _native_hep_tensor("spenso::projp")
     if bool(projector == s.PL):
-        return TensorLibrary.hep_lib()[S("spenso::projm")]
+        return _native_hep_tensor("spenso::projm")
     raise ValueError(f"Unsupported pychete Dirac projector {projector}")
 
 
+def _native_gamma_tensor() -> Callable[..., Expression]:
+    return _native_hep_tensor("spenso::gamma")
+
+
 def _decode_simple_native_projector_result(expr: Expression) -> Expression:
+    decoded = _decode_simple_native_dirac_result(expr)
+    return expr if decoded is None else decoded
+
+
+def _decode_simple_native_dirac_result(expr: Expression) -> Expression | None:
     if bool(expr == Expression.num(0)):
         return Expression.num(0)
-    if _is_native_single_projector_chain(expr, "spenso::projp"):
-        return s.PR
-    if _is_native_single_projector_chain(expr, "spenso::projm"):
-        return s.PL
-    return expr
+    chain = _decode_native_dirac_chain(expr)
+    if chain is not None:
+        return chain
+    if _is_native_spinor_metric(expr):
+        return Expression.num(1)
+    kind = expr.get_type()
+    if kind is AtomType.Num:
+        return expr
+    if kind is AtomType.Add:
+        decoded_terms = tuple(_decode_simple_native_dirac_result(term) for term in args(expr))
+        if any(term is None for term in decoded_terms):
+            return None
+        return sum_expr(term for term in decoded_terms if term is not None)
+    if kind is AtomType.Mul:
+        decoded_factors = tuple(_decode_simple_native_dirac_result(factor) for factor in factors(expr))
+        if any(factor is None for factor in decoded_factors):
+            return None
+        return product_expr(factor for factor in decoded_factors if factor is not None)
+    return None
 
 
-def _is_native_single_projector_chain(expr: Expression, projector_name: str) -> bool:
+def _decode_native_dirac_chain(expr: Expression) -> Expression | None:
     if (
         expr.get_type() is not AtomType.Fn
         or expr.get_name() != "spenso::chain"
-        or len(expr) != 3
+        or len(expr) < 3
     ):
-        return False
-    factor = expr[2]
-    return is_head(factor, Expression.symbol(projector_name)) and len(factor) == 2
+        return None
+    decoded_factors = tuple(_decode_native_dirac_factor(factor) for factor in args(expr)[2:])
+    if any(factor is None for factor in decoded_factors):
+        return None
+    return _pychete_dirac_word(tuple(factor for factor in decoded_factors if factor is not None))
+
+
+def _decode_native_dirac_factor(expr: Expression) -> Expression | None:
+    if is_head(expr, Expression.symbol("spenso::projp")) and len(expr) == 2:
+        return s.PR
+    if is_head(expr, Expression.symbol("spenso::projm")) and len(expr) == 2:
+        return s.PL
+    if is_head(expr, Expression.symbol("spenso::gamma")) and len(expr) == 3:
+        return s.Gamma(_decode_native_lorentz_index(expr[2]))
+    return None
+
+
+def _decode_native_lorentz_index(expr: Expression) -> Expression:
+    if is_head(expr, Expression.symbol("spenso::mink")) and len(expr) == 2:
+        return expr[1]
+    return expr
+
+
+def _is_native_spinor_metric(expr: Expression) -> bool:
+    return (
+        is_head(expr, Expression.symbol("spenso::g"))
+        and len(expr) == 2
+        and _is_native_bis_index(expr[0])
+        and _is_native_bis_index(expr[1])
+    )
+
+
+def _is_native_bis_index(expr: Expression) -> bool:
+    return is_head(expr, Expression.symbol("spenso::bis")) and len(expr) == 2
+
+
+def _pychete_dirac_word(dirac_factors: tuple[Expression, ...]) -> Expression:
+    if not dirac_factors:
+        return Expression.num(1)
+    if len(dirac_factors) == 1:
+        return dirac_factors[0]
+    return s.DiracProduct(*dirac_factors)
 
 
 __all__ = [
@@ -230,6 +391,7 @@ __all__ = [
     "simplify_gamma",
     "simplify_index_algebra",
     "simplify_metrics",
+    "simplify_pychete_dirac_algebra",
     "simplify_pychete_dirac_projectors",
     "to_dots",
     "wrap_dummies",

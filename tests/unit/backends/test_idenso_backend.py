@@ -54,3 +54,47 @@ def test_idenso_pipeline_simplifies_pychete_projectors_through_native_bridge() -
     assert _same(idenso.simplify_pychete_dirac_projectors(s.PR**2), s.PR)
     assert _same(idenso.simplify_pychete_dirac_projectors(s.PL**2), s.PL)
     assert _same(idenso.simplify_pychete_dirac_projectors(s.PR * s.PL), Expression.num(0))
+
+
+def test_idenso_bridge_simplifies_pychete_dirac_products_through_native_gamma() -> None:
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+    nu = s.Index(s.dummy_index(1), s.Lorentz)
+
+    assert _same(idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.PR, s.PR)), s.PR)
+    assert _same(idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.PR, s.PL)), Expression.num(0))
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.PR, s.Gamma(mu), s.PR)),
+        Expression.num(0),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.PL, s.Gamma(mu), s.PL)),
+        Expression.num(0),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.PR, s.Gamma(mu), s.PL)),
+        s.DiracProduct(s.Gamma(mu), s.PL),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.PL, s.Gamma(mu), s.PR)),
+        s.DiracProduct(s.Gamma(mu), s.PR),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.Gamma(mu), s.Gamma(mu))),
+        Expression.num(4),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(s.DiracProduct(s.Gamma(mu), s.Gamma(nu), s.Gamma(mu))),
+        -2 * s.Gamma(nu),
+    )
+
+
+def test_idenso_bridge_simplifies_pychete_dirac_products_inside_ncm() -> None:
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+
+    assert _same(idenso.simplify_pychete_dirac_algebra(s.NCM(s.PR, s.Gamma(mu), s.PR)), Expression.num(0))
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(
+            s.NCM(S("left"), s.DiracProduct(s.PR, s.Gamma(mu), s.PL), S("right"))
+        ),
+        s.NCM(S("left"), s.DiracProduct(s.Gamma(mu), s.PL), S("right")),
+    )

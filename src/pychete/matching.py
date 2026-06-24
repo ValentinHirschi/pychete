@@ -698,7 +698,7 @@ class PowerTypeSupertraceContribution:
 
         from .backends import idenso
 
-        return idenso.simplify_pychete_dirac_projectors((self.prefactor * self.trace.expression).expand())
+        return idenso.simplify_pychete_dirac_algebra((self.prefactor * self.trace.expression).expand())
 
     @property
     def eft_numerator_expression(self) -> Expression:

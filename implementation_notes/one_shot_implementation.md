@@ -547,6 +547,15 @@ discoveries, dependency patches, blockers, and remaining work.
   bispinor endpoints. pychete therefore needs a lowering/decoding adapter for
   its compact `s.PR`/`s.PL` public symbols instead of Python-side projector
   simplification rules.
+- Probed native idenso/spenso open-chain gamma behavior through
+  `TensorLibrary.hep_lib()[S("spenso::gamma")]`, `projp`, and `projm`.
+  Native idenso simplifies the identities needed by pychete's compact
+  `DiracProduct` bridge, including same-chirality projector annihilation around
+  a gamma matrix, chirality flips through a gamma matrix, contracted
+  `gamma_mu gamma_mu`, and scalar-times-chain results such as
+  `gamma_mu gamma_nu gamma_mu`. Unsupported native outputs with Lorentz metric
+  factors are intentionally left undecoded until pychete has a full metric
+  lowering policy for those forms.
 - Matchete previous matching-result files store the stages pychete needs:
   `"UV Lagrangian"`, `"Off-shell EFT Lagrangian"`,
   `"On-shell EFT Lagrangian"`, `"SuperTraces"`, and
@@ -1131,6 +1140,33 @@ discoveries, dependency patches, blockers, and remaining work.
     against Matchete remains unchanged at 0/5 shared supertraces because
     conjugation/orientation, full open Dirac-chain lowering, and final vakint
     evaluation are still unresolved.
+- Completed the fifty-first implementation slice:
+  - extended the idenso bridge from projector-only products to compact pychete
+    `DiracProduct(...)` words and all-Dirac `NCM(...)` words containing
+    `P_R`, `P_L`, and one-index `Gamma(...)` factors;
+  - the new `simplify_pychete_dirac_algebra(...)` helper first applies the
+    projector bridge, then uses Symbolica replacement rules over fixed-arity
+    `DiracProduct` and pure-Dirac `NCM` patterns, lowers matched words to
+    native spenso `gamma`/`projp`/`projm` tensors, delegates to
+    `idenso.simplify_gamma(...)`, and decodes only supported native chain,
+    spinor-identity, scalar, sum, and product outputs back to pychete
+    expressions; the fixed replacement-rule tuples and native HEP tensor
+    lookups are cached so repeated simplification does not rebuild that
+    backend boundary metadata;
+  - verified native-backed identities including `P_R gamma_mu P_R -> 0`,
+    `P_L gamma_mu P_L -> 0`, `P_R gamma_mu P_L -> gamma_mu P_L`,
+    `gamma_mu gamma_mu -> 4`, and
+    `gamma_mu gamma_nu gamma_mu -> -2 gamma_nu`;
+  - replacement ordering now simplifies nested `DiracProduct(...)` factors
+    inside mixed noncommutative chains without rewriting the surrounding
+    non-Dirac operands;
+  - `simplify_index_algebra(...)` and
+    `PowerTypeSupertraceContribution.numerator_expression` now use the broader
+    pychete Dirac-algebra bridge rather than the projector-only helper;
+  - the default Matchete validation frontier remains unchanged, which means
+    the next equality-moving slice must handle full field-endpoint open-chain
+    orientation/conjugation and remaining vakint normalization rather than only
+    compact `DiracProduct` identities.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1315,6 +1351,20 @@ discoveries, dependency patches, blockers, and remaining work.
   bridge slice: VLF has 0/5 equal shared supertraces, Singlet has 0/6,
   E_VLL has 3/6, and S1S3LQs has 3/9. The VLF
   `hFermion-lFermion` numerator no longer contains `P_R^2`/`P_L^2`.
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/backends/test_idenso_backend.py -q` passed after the compact
+  DiracProduct bridge slice: 7 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the compact
+  DiracProduct bridge slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  -q` passed after the compact DiracProduct bridge slice: 1 passed. The
+  default-target canonical frontier remains unchanged by this slice.
+- `dependencies/.venv/bin/python -m pytest tests -q` passed after the compact
+  DiracProduct bridge slice: 165 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
+- `git diff --check` passed after the compact DiracProduct bridge slice.
 - `dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py`
   passed: 3 passed.
 - `dependencies/.venv/bin/python -m mypy` passed: no issues found in 18 source
@@ -2312,13 +2362,14 @@ discoveries, dependency patches, blockers, and remaining work.
   blocks, tensor reductions, scheme-specific renormalization beyond the current
   minimal-subtraction preview, and validation against known native backend
   topologies.
-- Extend the new projector bridge into full pychete Dirac-chain lowering.
-  Current VLF previews no longer contain `der(...)` artifacts or bare
-  `P_R^2`/`P_L^2` powers in the covered numerator path, but they still need
-  proper open-chain orientation, conjugation normalization, gamma/projector
-  lowering from `NCM`/Dirac-product fragments into idenso chain expressions,
-  and final vakint evaluation before they can canonically agree with
-  Matchete's saved `DiracProduct[...]` expressions.
+- Extend the new compact Dirac bridge into full pychete field-endpoint
+  open-chain lowering. Current VLF previews no longer contain `der(...)`
+  artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or
+  unsupported compact `DiracProduct` gamma/projector identities, but they still
+  need proper field-endpoint orientation, conjugation normalization,
+  `NCM(bar(field), DiracProduct(...), field)` lowering into idenso chain
+  expressions, and final vakint evaluation before they can canonically agree
+  with Matchete's saved `DiracProduct[...]` expressions.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
