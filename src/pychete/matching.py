@@ -4,7 +4,7 @@ from dataclasses import dataclass, field, replace
 from enum import StrEnum
 from html import escape
 from itertools import product
-from typing import Iterable, Iterator, Sequence, TypeAlias
+from typing import Any, Iterable, Iterator, Sequence, TypeAlias
 
 from symbolica import Expression, Matrix, Replacement
 
@@ -254,6 +254,35 @@ class SupertraceBlockTrace:
             ),
         )
 
+    def canonicalize_integrals(
+        self,
+        *,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+    ) -> SupertraceBlockTrace:
+        """Return this trace kernel after native vakint canonicalization."""
+
+        from .backends import vakint
+
+        return replace(
+            self,
+            expression=vakint.to_canonical(self.expression, short_form=short_form, engine=engine),
+        )
+
+    def tensor_reduce_integrals(self, *, engine: Any | None = None) -> SupertraceBlockTrace:
+        """Return this trace kernel after native vakint tensor reduction."""
+
+        from .backends import vakint
+
+        return replace(self, expression=vakint.tensor_reduce(self.expression, engine=engine))
+
+    def evaluate_integrals(self, *, engine: Any | None = None) -> SupertraceBlockTrace:
+        """Return this trace kernel after native vakint integral evaluation."""
+
+        from .backends import vakint
+
+        return replace(self, expression=vakint.evaluate(self.expression, engine=engine))
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{SupertraceBlockTrace}}\left({escape(self.name)},\ {self.order}\right)$"
 
@@ -403,6 +432,44 @@ class OneLoopSetup:
                     metrics=metrics,
                     dots=dots,
                 )
+                for trace in self.block_traces
+            ),
+        )
+
+    def canonicalize_integrals(
+        self,
+        *,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+    ) -> OneLoopSetup:
+        """Return a setup with generated kernels canonicalized by vakint."""
+
+        return replace(
+            self,
+            block_traces=tuple(
+                trace.canonicalize_integrals(short_form=short_form, engine=engine)
+                for trace in self.block_traces
+            ),
+        )
+
+    def tensor_reduce_integrals(self, *, engine: Any | None = None) -> OneLoopSetup:
+        """Return a setup with generated kernels tensor-reduced by vakint."""
+
+        return replace(
+            self,
+            block_traces=tuple(
+                trace.tensor_reduce_integrals(engine=engine)
+                for trace in self.block_traces
+            ),
+        )
+
+    def evaluate_integrals(self, *, engine: Any | None = None) -> OneLoopSetup:
+        """Return a setup with generated kernels evaluated by vakint."""
+
+        return replace(
+            self,
+            block_traces=tuple(
+                trace.evaluate_integrals(engine=engine)
                 for trace in self.block_traces
             ),
         )

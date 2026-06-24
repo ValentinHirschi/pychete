@@ -9,6 +9,23 @@ from pychete.backends import idenso as idenso_backend
 from tests.conftest import assert_expr_equal
 
 
+class FakeKernelVakintEngine:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, Expression, bool | None]] = []
+
+    def to_canonical(self, expr: Expression, short_form: bool | None = None) -> Expression:
+        self.calls.append(("to_canonical", expr, short_form))
+        return S("canonical")(expr)
+
+    def tensor_reduce(self, expr: Expression) -> Expression:
+        self.calls.append(("tensor_reduce", expr, None))
+        return S("reduced")(expr)
+
+    def evaluate(self, expr: Expression) -> Expression:
+        self.calls.append(("evaluate", expr, None))
+        return S("evaluated")(expr)
+
+
 def test_fluctuation_operator_uses_symbolica_hessian_for_scalar_basis() -> None:
     theory = Theory("fluctuation_scalar")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
@@ -340,3 +357,32 @@ def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch:
     assert calls[0][1:] == (False, True, True, True, True)
     for original, simplified_trace in zip(setup.block_traces, simplified.block_traces, strict=True):
         assert_expr_equal(simplified_trace.expression, original.expression + 1)
+
+
+def test_one_loop_setup_routes_generated_kernels_through_vakint_engine() -> None:
+    theory = Theory("one_loop_setup_vakint")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = heavy() ** 2 + light() ** 2 - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=1)
+
+    canonical_engine = FakeKernelVakintEngine()
+    canonicalized = setup.canonicalize_integrals(short_form=True, engine=canonical_engine)
+    assert [name for name, _expr, _short in canonical_engine.calls] == ["to_canonical"]
+    assert canonical_engine.calls[0][2] is True
+    assert_expr_equal(canonicalized.block_traces[0].expression, S("canonical")(setup.block_traces[0].expression))
+
+    reduction_engine = FakeKernelVakintEngine()
+    reduced = setup.tensor_reduce_integrals(engine=reduction_engine)
+    assert [name for name, _expr, _short in reduction_engine.calls] == ["tensor_reduce"]
+    assert_expr_equal(reduced.block_traces[0].expression, S("reduced")(setup.block_traces[0].expression))
+
+    evaluation_engine = FakeKernelVakintEngine()
+    evaluated = setup.evaluate_integrals(engine=evaluation_engine)
+    assert [name for name, _expr, _short in evaluation_engine.calls] == ["evaluate"]
+    assert_expr_equal(evaluated.block_traces[0].expression, S("evaluated")(setup.block_traces[0].expression))
+
+    assert canonicalized.fluctuation_operator is setup.fluctuation_operator
+    assert reduced.supertrace_plan is setup.supertrace_plan
+    assert evaluated.block_traces[0].name == setup.block_traces[0].name

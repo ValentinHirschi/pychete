@@ -89,10 +89,13 @@ def test_public_api_methods_have_docstrings() -> None:
             "assert_equal",
         ],
         pychete.OneLoopSetup: [
+            "canonicalize_integrals",
+            "evaluate_integrals",
             "max_trace_order",
             "simplify_index_algebra",
             "supertrace_expression_map",
             "supertrace_kernel_count",
+            "tensor_reduce_integrals",
             "to_expression_map",
         ],
         pychete.FluctuationOperator: [
@@ -125,8 +128,11 @@ def test_public_api_methods_have_docstrings() -> None:
         ],
         pychete.SupertraceBlockTrace: [
             "block_sectors",
+            "canonicalize_integrals",
+            "evaluate_integrals",
             "order",
             "simplify_index_algebra",
+            "tensor_reduce_integrals",
             "to_expression_map",
         ],
     }

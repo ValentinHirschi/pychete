@@ -434,6 +434,22 @@ discoveries, dependency patches, blockers, and remaining work.
     generated kernels are routed through `pychete.backends.idenso` with the
     requested simplification options;
   - extended public API docstring coverage for the new simplification methods.
+- Completed the twenty-fourth implementation slice:
+  - added `SupertraceBlockTrace.canonicalize_integrals(...)`,
+    `SupertraceBlockTrace.tensor_reduce_integrals(...)`, and
+    `SupertraceBlockTrace.evaluate_integrals(...)`, delegating generated kernel
+    transformations to the native vakint adapter;
+  - added matching `OneLoopSetup` methods that return updated immutable setup
+    objects with every generated kernel routed through vakint canonicalization,
+    tensor reduction, or evaluation;
+  - kept this as an explicit backend transformation stage only: the current
+    setup kernels still need true loop-integral construction before these
+    operations can produce final matching supertraces;
+  - added tests using a fake vakint engine to prove the setup path delegates to
+    `to_canonical`, `tensor_reduce`, and `evaluate` without constructing the
+    expensive default native engine in normal pytest;
+  - extended public API docstring coverage for the new vakint transformation
+    methods.
 
 ## Backend/API Discoveries
 
@@ -575,6 +591,11 @@ discoveries, dependency patches, blockers, and remaining work.
   explicit native backend simplification hook inside the one-loop setup path;
   later stages should add spenso tensor-network and vakint integral hooks in
   the same explicit adapter-driven style.
+- Generated supertrace block kernels can now also be routed through vakint with
+  canonicalization, tensor-reduction, and evaluation methods. These methods
+  deliberately only delegate current expressions to vakint; later matching
+  slices still need to construct the actual vacuum-integral expressions before
+  the vakint stage can yield physical loop contributions.
 
 ## Test Status
 
@@ -806,6 +827,16 @@ discoveries, dependency patches, blockers, and remaining work.
   idenso-kernel-simplification slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   idenso-kernel-simplification slice: 108 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the vakint-kernel-transformation slice: 22 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  vakint-kernel-transformation slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  vakint-kernel-transformation slice: 109 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
 
