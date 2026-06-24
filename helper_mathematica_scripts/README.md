@@ -19,6 +19,25 @@ lets Matchete load the model, extracts the already-parsed Matchete internals
 needed by pychete, and emits pychete-owned serialized state or Python fixture
 files that can be committed and loaded like native pychete inputs.
 
+`export_matchete_model_state.wls` is the initial loaded-model-state exporter
+for that route. It loads each model through Matchete's `LoadModel[...]`, reads
+the post-load Matchete metadata through public getters such as `GetFields[]`,
+`GetCouplings[]`, `GetGaugeGroups[]`, `GetGlobalGroups[]`,
+`GetFlavorIndices[]`, and `GetRepresentations[]`, and writes a neutral RawJSON
+contract. Convert that RawJSON into normal pychete model fixtures with
+`convert_matchete_model_state.py`.
+
+```sh
+wolframscript -file helper_mathematica_scripts/export_matchete_model_state.wls \
+  --out assets/validation/matchete/model_state \
+  --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs
+
+source "$HOME/.bashrc"
+PYTHONPATH=src dependencies/.venv/bin/python \
+  helper_mathematica_scripts/convert_matchete_model_state.py \
+  assets/validation/matchete/model_state/*.model_state.json
+```
+
 The first script is intentionally a raw snapshot exporter. The Python-side
 fixture converter will become stricter as the one-loop matching data model
 lands.

@@ -2600,15 +2600,47 @@ discoveries, dependency patches, blockers, and remaining work.
   passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the theory metadata extraction.
+- Implemented the initial loaded-Matchete-model export path for complicated
+  Mathematica models:
+  - added `helper_mathematica_scripts/export_matchete_model_state.wls`, a
+    development-only Wolfram script that calls Matchete `LoadModel[...]` and
+    exports post-load model metadata from Matchete getters/associations
+    (`GetFields[]`, `GetCouplings[]`, `GetGaugeGroups[]`,
+    `GetGlobalGroups[]`, `GetFlavorIndices[]`, `GetRepresentations[]`, and CG
+    metadata) into a neutral `matchete_loaded_model_state` RawJSON contract;
+  - added `helper_mathematica_scripts/convert_matchete_model_state.py`, which
+    converts that RawJSON contract into normal pychete `model_definition`
+    fixtures built through `Theory`, `PycheteState`, and the existing
+    Matchete-expression lowering helpers;
+  - documented the two-step export/convert workflow in
+    `helper_mathematica_scripts/README.md`;
+  - added a Mathematica-independent unit test with a synthetic loaded-model
+    state JSON that proves the converter emits a normal pychete fixture
+    loadable by `load_validation_fixture(...)`.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/loaders/test_matchete_model_state_converter.py -q'`
+  passed after adding the model-state exporter/converter: 2 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/loaders tests/integration/models/test_model_loaders.py
+  tests/integration/validation/test_validation_fixtures.py -q'` passed after
+  adding the model-state exporter/converter: 29 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after adding the model-state exporter/converter: no issues
+  found in 29 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after adding the model-state exporter/converter:
+  181 passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
 - Use the four committed default Matchete matching fixtures as acceptance
   targets for the pychete one-loop matching engine.
-- Extend the Wolfram helper path so complicated Matchete model files can be
-  loaded by Matchete itself and exported into pychete-owned serialized state or
-  Python fixture files instead of expanding the direct Python loader beyond its
-  documented subset.
+- Extend the new loaded-model-state exporter/converter beyond the current
+  initial contract, especially full internal coupling-symmetry association
+  mapping, complete CG tensor lowering, richer vector/zero-mode metadata, and
+  generated fixtures for complicated Matchete models that exceed the direct
+  Python loader's documented subset.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
   full propagator expansion beyond the new scalar operator-derived denominator,

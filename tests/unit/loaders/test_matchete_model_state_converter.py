@@ -1,0 +1,97 @@
+from __future__ import annotations
+
+import importlib.util
+import json
+from pathlib import Path
+from types import ModuleType
+
+from pychete.symbols import canonical_string
+from pychete.validation_fixtures import load_validation_fixture
+
+
+def _load_converter() -> ModuleType:
+    path = Path("helper_mathematica_scripts/convert_matchete_model_state.py")
+    spec = importlib.util.spec_from_file_location("convert_matchete_model_state", path)
+    assert spec is not None
+    assert spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: Path) -> None:
+    converter = _load_converter()
+    exported = {
+        "schema_version": 1,
+        "kind": "matchete_loaded_model_state",
+        "generator": "export_matchete_model_state.wls",
+        "model": "Synthetic_Model",
+        "lagrangian_input_form": "-1/2*Coupling[m, {}, 1]^2*Field[phi, Scalar, {}, {}]^2",
+        "flavor_indices": [{"name_input_form": "Flavor", "dimension_input_form": "3"}],
+        "gauge_groups": [
+            {
+                "name_input_form": "U1x",
+                "kind": "gauge",
+                "group_input_form": "U1",
+                "coupling_input_form": "g",
+                "field_input_form": "A",
+                "abelian": True,
+            }
+        ],
+        "global_groups": [],
+        "representations": [],
+        "cg_tensors": [],
+        "couplings": [
+            {
+                "name_input_form": "m",
+                "indices_input_form": [],
+                "eft_order": 1,
+                "self_conjugate_input_form": "True",
+                "symmetries_input_form": "{}",
+                "diagonal_coupling": [],
+                "thermal_power_counting": 1,
+                "unitary": False,
+            }
+        ],
+        "fields": [
+            {
+                "name_input_form": "phi",
+                "type_input_form": "Scalar",
+                "indices_input_form": [],
+                "charges_input_form": [],
+                "self_conjugate": True,
+                "chirality_input_form": "False",
+                "mass_input_form": "m",
+                "heavy": False,
+                "zero_mode": False,
+                "field_role": "physical",
+                "propagating": True,
+            }
+        ],
+    }
+
+    fixture_obj, warnings = converter.build_fixture_from_model_state(exported)
+    assert warnings == []
+    assert fixture_obj["source"]["matchete_runtime_required"] is False
+    assert fixture_obj["expressions"] == ["lagrangian"]
+
+    path = tmp_path / "Synthetic_Model.model_fixture.json"
+    path.write_text(json.dumps(fixture_obj), encoding="utf-8")
+    fixture = load_validation_fixture(path)
+    theory = fixture.theory()
+
+    assert sorted(theory.fields) == ["A", "phi"]
+    assert sorted(theory.couplings) == ["g", "m"]
+    assert theory.groups["U1x"]["field"] == "A"
+    assert canonical_string(fixture.expression("lagrangian")).count("field_phi") == 1
+
+
+def test_matchete_model_state_exporter_documents_loaded_state_contract() -> None:
+    text = Path("helper_mathematica_scripts/export_matchete_model_state.wls").read_text(encoding="utf-8")
+
+    assert '"matchete_loaded_model_state"' in text
+    assert "LoadModel[model]" in text
+    assert "GetFields[]" in text
+    assert "GetCouplings[]" in text
+    assert "GetGaugeGroups[]" in text
+    assert "GetRepresentations[]" in text
