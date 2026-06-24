@@ -341,6 +341,12 @@ class SupertraceBlockTrace:
 
         return tuple((block.row_sector, block.column_sector) for block in self.blocks)
 
+    @property
+    def cyclic_sector_key(self) -> tuple[str, ...]:
+        """Return a canonical cyclic key for this closed sector path."""
+
+        return _cyclic_sector_key(tuple(block.row_sector.value for block in self.blocks))
+
     def propagator_mass_squared_chain(self, *, include_light: bool = True) -> tuple[tuple[Expression, ...], ...]:
         """Return mass-squared slots aligned with the row modes of each block."""
 
@@ -484,6 +490,76 @@ class SupertraceBlockTrace:
 
 
 @dataclass(frozen=True)
+class PowerTypeSupertraceContribution:
+    """Power-type one-loop supertrace contribution before final reduction."""
+
+    theory: Theory
+    trace: SupertraceBlockTrace
+    eft_order: int
+    heavy_field_dimension: bool = False
+
+    @property
+    def name(self) -> str:
+        """Contribution name inherited from the underlying block trace."""
+
+        return self.trace.name
+
+    @property
+    def order(self) -> int:
+        """Power-trace order of this contribution."""
+
+        return self.trace.order
+
+    @property
+    def prefactor(self) -> Expression:
+        """Power-type logarithmic prefactor after the grading sign in ``trace``."""
+
+        return -Expression.num(1) / 2
+
+    @property
+    def numerator_expression(self) -> Expression:
+        """Return the prefactor-weighted trace numerator."""
+
+        return (self.prefactor * self.trace.expression).expand()
+
+    @property
+    def eft_numerator_expression(self) -> Expression:
+        """Return the prefactor-weighted numerator truncated by EFT order."""
+
+        return series_eft(
+            self.numerator_expression,
+            self.theory,
+            eft_order=self.eft_order,
+            heavy_field_dimension=self.heavy_field_dimension,
+        )
+
+    def vakint_integral_expression(self, *, include_light: bool = True) -> Expression:
+        """Return the EFT-truncated contribution lowered to vakint topology form."""
+
+        from .backends import vakint
+
+        return vakint.one_loop_vacuum_integral(
+            self.eft_numerator_expression,
+            _flatten_expression_slots(self.trace.propagator_mass_squared_chain(include_light=include_light)),
+        )
+
+    def to_expression_map(self, *, prefix: str = "power_type_supertrace") -> dict[str, Expression]:
+        """Return deterministic expressions for this power-type contribution."""
+
+        return {
+            f"{prefix}[{self.name},numerator]": self.numerator_expression,
+            f"{prefix}[{self.name},eft_numerator]": self.eft_numerator_expression,
+            f"{prefix}[{self.name},vakint_integral]": self.vakint_integral_expression(),
+        }
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{PowerTypeSupertraceContribution}}\left({escape(self.name)},\ {self.order}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>PowerTypeSupertraceContribution({escape(self.name)} order={self.order})</code>"
+
+
+@dataclass(frozen=True)
 class SupertracePlan:
     """Structured block data prepared for future supertrace generation."""
 
@@ -596,6 +672,12 @@ class OneLoopSetup:
 
         return len(self.block_traces)
 
+    @property
+    def power_type_contribution_count(self) -> int:
+        """Number of cyclically unique power-type supertrace contributions."""
+
+        return len(self.power_type_contributions())
+
     def supertrace_expression_map(self, *, prefix: str = "supertrace_kernel") -> dict[str, Expression]:
         """Return deterministic named expressions for generated trace kernels."""
 
@@ -620,6 +702,43 @@ class OneLoopSetup:
             )
             for trace in self.block_traces
         }
+
+    def power_type_traces(self) -> tuple[SupertraceBlockTrace, ...]:
+        """Return cyclically unique traces used for power-type contributions."""
+
+        traces: list[SupertraceBlockTrace] = []
+        seen: set[tuple[str, ...]] = set()
+        for trace in self.block_traces:
+            if trace.cyclic_sector_key in seen:
+                continue
+            seen.add(trace.cyclic_sector_key)
+            traces.append(trace)
+        return tuple(traces)
+
+    def power_type_contributions(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+    ) -> tuple[PowerTypeSupertraceContribution, ...]:
+        """Return EFT-truncated power-type contribution objects."""
+
+        return tuple(
+            PowerTypeSupertraceContribution(
+                theory=self.theory,
+                trace=trace,
+                eft_order=self.eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            )
+            for trace in self.power_type_traces()
+        )
+
+    def power_type_expression_map(self, *, prefix: str = "power_type_supertrace") -> dict[str, Expression]:
+        """Return deterministic expressions for power-type contributions."""
+
+        entries: dict[str, Expression] = {}
+        for contribution in self.power_type_contributions():
+            entries.update(contribution.to_expression_map(prefix=prefix))
+        return entries
 
     def vakint_integral_expression_map(
         self,
@@ -804,6 +923,7 @@ class OneLoopSetup:
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
             **self.vakint_integral_expression_map(prefix=f"{prefix}.vakint_integral"),
+            **self.power_type_expression_map(prefix=f"{prefix}.power_type_supertrace"),
         }
         return entries
 
@@ -1303,6 +1423,13 @@ def _mode_keys(modes: tuple[FluctuationMode, ...]) -> tuple[str, ...]:
 
 def _sector_path_name(path: tuple[FluctuationSector, ...]) -> str:
     return "-".join(sector.value for sector in path)
+
+
+def _cyclic_sector_key(sectors: tuple[str, ...]) -> tuple[str, ...]:
+    if not sectors:
+        return ()
+    rotations = tuple(sectors[index:] + sectors[:index] for index in range(len(sectors)))
+    return min(rotations)
 
 
 def _supertrace_block_product(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:

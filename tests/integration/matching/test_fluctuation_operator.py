@@ -292,6 +292,7 @@ def test_supertrace_plan_generates_closed_block_traces_by_order() -> None:
         "heavy-light-heavy",
         "light-heavy-light",
     }
+    assert order_two["heavy-light-heavy"].cyclic_sector_key == order_two["light-heavy-light"].cyclic_sector_key
     assert_expr_equal(order_two["heavy-heavy-heavy"].expression, Expression.num(4))
     assert_expr_equal(order_two["heavy-light-heavy"].expression, y() ** 2 * light() ** 2)
     assert_expr_equal(order_two["light-heavy-light"].expression, y() ** 2 * light() ** 2)
@@ -316,6 +317,7 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
     assert setup.eft_order == 6
     assert setup.max_trace_order == 2
     assert setup.supertrace_kernel_count == 4
+    assert setup.power_type_contribution_count == 3
     assert trace_names == (
         "heavy-heavy",
         "heavy-heavy-heavy",
@@ -325,6 +327,20 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
     assert setup.fluctuation_operator.basis == (heavy(), light())
     assert setup.supertrace_plan.heavy_mode_count == 1
     assert_expr_equal(trace_map["supertrace_kernel[heavy-light-heavy]"], y() ** 2 * light() ** 2)
+    assert tuple(trace.name for trace in setup.power_type_traces()) == (
+        "heavy-heavy",
+        "heavy-heavy-heavy",
+        "heavy-light-heavy",
+    )
+    power_map = setup.power_type_expression_map()
+    assert_expr_equal(
+        power_map["power_type_supertrace[heavy-light-heavy,numerator]"],
+        -y() ** 2 * light() ** 2 / 2,
+    )
+    assert_expr_equal(
+        power_map["power_type_supertrace[heavy-light-heavy,eft_numerator]"],
+        -y() ** 2 * light() ** 2 / 2,
+    )
     assert setup.to_expression_map()
 
     with pytest.raises(ValueError, match="max_trace_order"):
@@ -417,10 +433,19 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert len(evaluation_engine.calls) == setup.supertrace_kernel_count
     assert ("evaluate", vakint_integral, None) in evaluation_engine.calls
     assert_expr_equal(evaluated["vakint_integral[heavy-light-heavy]"], S("evaluated")(vakint_integral))
+    contribution = next(item for item in setup.power_type_contributions() if item.name == "heavy-light-heavy")
+    assert_expr_equal(contribution.prefactor, -Expression.num(1) / 2)
+    assert_expr_equal(contribution.numerator_expression, -trace.expression / 2)
+    assert_expr_equal(contribution.eft_numerator_expression, -trace.expression / 2)
+    assert_expr_equal(
+        contribution.vakint_integral_expression(),
+        vakint_backend.one_loop_vacuum_integral(-trace.expression / 2, (heavy_mass**2, light_mass**2)),
+    )
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.supertrace_propagator_kernel[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.vakint_integral[") for key in setup.to_expression_map())
+    assert any(key.startswith("one_loop_setup.power_type_supertrace[") for key in setup.to_expression_map())
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:

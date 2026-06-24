@@ -284,6 +284,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
     supertrace_block_trace = supertrace_plan.block_trace("all", fluctuation_block)
     one_loop_setup = theory.one_loop_setup(lagrangian)
     propagator_plan = one_loop_setup.propagator_plan(include_light=True)
+    power_type_contribution = one_loop_setup.power_type_contributions()[0]
     state = PycheteState()
     state.add_theory(theory)
     state.add_expression("lagrangian", theory, lagrangian)
@@ -306,6 +307,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
         one_loop_setup,
         propagator_plan,
         *propagator_plan.propagators,
+        power_type_contribution,
         matching_result,
     )
 

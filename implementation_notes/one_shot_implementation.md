@@ -655,6 +655,20 @@ discoveries, dependency patches, blockers, and remaining work.
   This is still a structural lowering stage: the expressions use the current
   denominator-slot ordering and need subsequent physics work for final
   propagator sign conventions, EFT expansion, and known-topology validation.
+- Rescanned Matchete's `SuperTrace.m` power-type trace construction. Matchete
+  deduplicates power traces under cyclic permutations and applies a common
+  `-I hbar/2` prefactor, with the boson/fermion grading carried separately by
+  the propagating type. pychete's current block trace already carries the
+  grading sign in the Symbolica matrix supertrace, so the new contribution
+  layer uses a convention-local `-1/2` prefactor and keeps the missing loop
+  normalization/phase explicit as remaining work.
+- Added `PowerTypeSupertraceContribution` and `OneLoopSetup.power_type_*`
+  helpers. These expose cyclically unique power-type traces, prefactor-weighted
+  numerators, EFT-truncated numerators through the existing Symbolica-backed
+  `series_eft(...)`, and vakint topology expressions built from the truncated
+  numerators. This is the first structured bridge from setup kernels toward
+  final `MatchingResult.supertraces`, while `Theory.match(loop_order=1)` still
+  correctly refuses to return an incomplete matching result.
 
 ## Test Status
 
@@ -941,6 +955,17 @@ discoveries, dependency patches, blockers, and remaining work.
   vakint-topology-lowering slice: 113 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the power-type-contribution slice: 25 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  power-type-contribution slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  power-type-contribution slice: 113 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 
@@ -954,10 +979,10 @@ discoveries, dependency patches, blockers, and remaining work.
   background fields, and non-propagating fields.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
-  preliminary vakint one-loop topology lowering, including physical
-  loop-momentum sign conventions, propagator insertion ordering for multi-mode
-  blocks, EFT-order truncation, tensor reductions, and integral calls through
-  known native backend topologies.
+  preliminary vakint one-loop topology lowering, including physical loop
+  normalization and phase conventions, physical loop-momentum sign conventions,
+  propagator insertion ordering for multi-mode blocks, tensor reductions, and
+  validation against known native backend topologies.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
