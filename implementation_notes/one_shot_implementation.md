@@ -1044,6 +1044,23 @@ discoveries, dependency patches, blockers, and remaining work.
     `vakint.to_canonical`, `vakint.tensor_reduce`, and `vakint.evaluate`
     adapter functions used elsewhere; no Python integral canonicalization or
     expression rewriting was added.
+- Completed the forty-eighth implementation slice:
+  - extended `MatchingFixtureGapReport` from name coverage into canonical
+    shared-supertrace coverage, adding
+    `canonical_equal_common_supertrace_names` and
+    `canonical_different_common_supertrace_names` plus JSON and notebook repr
+    count output;
+  - the report uses the existing `MatchingResult.compare_to(...)` path over
+    shared supertrace names, so canonical comparison remains Symbolica-backed
+    through the matching result comparison machinery rather than a separate
+    validation-only tree walker;
+  - recorded the current canonical-equality frontier for the four default
+    Matchete targets: `VLF_toy_model` has 0/5 equal shared supertraces,
+    `Singlet_Scalar_Extension` has 0/6, `E_VLL` has 3/6, and `S1S3LQs` has
+    3/9;
+  - this turns future matching-engine work into a measurable acceptance target:
+    later slices should move names from the canonical-different set into the
+    canonical-equal set while reducing missing-reference counts.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -2132,6 +2149,23 @@ discoveries, dependency patches, blockers, and remaining work.
   passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the staged named-supertrace slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  -q'` passed after the canonical shared-supertrace gap-report slice: 1
+  passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the canonical shared-supertrace gap-report slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/validation -q'` passed after the canonical
+  shared-supertrace gap-report slice: 17 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the canonical shared-supertrace gap-report
+  slice: 160 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the canonical shared-supertrace gap-report
+  slice.
 
 ## Remaining Work
 

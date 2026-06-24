@@ -254,6 +254,7 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
                 "hFermion-lScalar-lFermion",
                 "hFermion-lScalar-lScalar",
             },
+            "canonical_equal": set(),
         },
         "Singlet_Scalar_Extension": {
             "reference_supertraces": 24,
@@ -267,6 +268,7 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
                 "hScalar-lScalar",
                 "hScalar-lScalar-lScalar",
             },
+            "canonical_equal": set(),
         },
         "E_VLL": {
             "reference_supertraces": 50,
@@ -280,6 +282,11 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
                 "hFermion-lScalar-lFermion",
                 "hFermion-lScalar-lScalar",
             },
+            "canonical_equal": {
+                "hFermion-lFermion-lFermion",
+                "hFermion-lFermion-lScalar",
+                "hFermion-lScalar-lFermion",
+            },
         },
         "S1S3LQs": {
             "reference_supertraces": 27,
@@ -292,6 +299,11 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
                 "hScalar-hScalar-lFermion",
                 "hScalar-lFermion",
                 "hScalar-lFermion-lFermion",
+                "hScalar-lFermion-lScalar",
+                "hScalar-lScalar",
+                "hScalar-lScalar-lFermion",
+            },
+            "canonical_equal": {
                 "hScalar-lFermion-lScalar",
                 "hScalar-lScalar",
                 "hScalar-lScalar-lFermion",
@@ -317,6 +329,14 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         assert report.candidate_supertrace_count == expected_counts["candidate_supertraces"]
         assert report.reference_supertrace_count == expected_counts["reference_supertraces"]
         assert set(report.common_supertrace_names) == expected_counts["common"]
+        assert set(report.canonical_equal_common_supertrace_names) == expected_counts["canonical_equal"]
+        assert set(report.canonical_different_common_supertrace_names) == (
+            expected_counts["common"] - expected_counts["canonical_equal"]
+        )
+        assert report.canonical_equal_common_supertrace_count == len(expected_counts["canonical_equal"])
+        assert report.canonical_different_common_supertrace_count == (
+            len(expected_counts["common"]) - len(expected_counts["canonical_equal"])
+        )
         assert report.missing_reference_supertrace_count == (
             expected_counts["reference_supertraces"] - len(expected_counts["common"])
         )
@@ -334,6 +354,10 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         }
         assert report_obj["complete"] is False
         assert report_obj["common_supertrace_count"] == len(expected_counts["common"])
+        assert report_obj["canonical_equal_common_supertrace_count"] == len(expected_counts["canonical_equal"])
+        assert report_obj["canonical_different_common_supertrace_count"] == (
+            len(expected_counts["common"]) - len(expected_counts["canonical_equal"])
+        )
         assert report_obj["missing_reference_supertrace_count"] == (
             expected_counts["reference_supertraces"] - len(expected_counts["common"])
         )

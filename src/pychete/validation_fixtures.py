@@ -27,6 +27,8 @@ class MatchingFixtureGapReport:
     common_supertrace_names: tuple[str, ...]
     candidate_only_supertrace_names: tuple[str, ...]
     reference_only_supertrace_names: tuple[str, ...]
+    canonical_equal_common_supertrace_names: tuple[str, ...]
+    canonical_different_common_supertrace_names: tuple[str, ...]
     candidate_matching_condition_names: tuple[str, ...]
     reference_matching_condition_names: tuple[str, ...]
     common_matching_condition_names: tuple[str, ...]
@@ -64,6 +66,18 @@ class MatchingFixtureGapReport:
         return len(self.reference_only_supertrace_names)
 
     @property
+    def canonical_equal_common_supertrace_count(self) -> int:
+        """Number of shared supertrace names whose expressions are canonically equal."""
+
+        return len(self.canonical_equal_common_supertrace_names)
+
+    @property
+    def canonical_different_common_supertrace_count(self) -> int:
+        """Number of shared supertrace names whose expressions still differ."""
+
+        return len(self.canonical_different_common_supertrace_names)
+
+    @property
     def candidate_matching_condition_count(self) -> int:
         """Number of matching conditions exposed by the candidate."""
 
@@ -95,6 +109,8 @@ class MatchingFixtureGapReport:
             "common_supertrace_count": len(self.common_supertrace_names),
             "missing_reference_supertrace_count": self.missing_reference_supertrace_count,
             "candidate_only_supertrace_count": len(self.candidate_only_supertrace_names),
+            "canonical_equal_common_supertrace_count": self.canonical_equal_common_supertrace_count,
+            "canonical_different_common_supertrace_count": self.canonical_different_common_supertrace_count,
             "candidate_matching_condition_count": self.candidate_matching_condition_count,
             "reference_matching_condition_count": self.reference_matching_condition_count,
             "common_matching_condition_count": len(self.common_matching_condition_names),
@@ -103,6 +119,8 @@ class MatchingFixtureGapReport:
             "common_expression_names": list(self.common_expression_names),
             "candidate_only_supertrace_names": list(self.candidate_only_supertrace_names),
             "reference_only_supertrace_names": list(self.reference_only_supertrace_names),
+            "canonical_equal_common_supertrace_names": list(self.canonical_equal_common_supertrace_names),
+            "canonical_different_common_supertrace_names": list(self.canonical_different_common_supertrace_names),
             "candidate_only_matching_condition_names": list(self.candidate_only_matching_condition_names),
             "reference_only_matching_condition_names": list(self.reference_only_matching_condition_names),
         }
@@ -111,7 +129,8 @@ class MatchingFixtureGapReport:
         status = r"\checkmark" if self.complete else r"\times"
         return (
             rf"$\mathrm{{MatchingFixtureGapReport}}\left({status},\ "
-            rf"{self.candidate_supertrace_count}/{self.reference_supertrace_count}\ \mathrm{{STr}}\right)$"
+            rf"{self.candidate_supertrace_count}/{self.reference_supertrace_count}\ \mathrm{{STr}},\ "
+            rf"{self.canonical_equal_common_supertrace_count}\ \mathrm{{equal}}\right)$"
         )
 
     def _repr_html_(self) -> str:
@@ -120,6 +139,7 @@ class MatchingFixtureGapReport:
             f"<code>MatchingFixtureGapReport({escape(self.candidate_fixture)} vs "
             f"{escape(self.reference_name)}: {status}, "
             f"supertraces={self.candidate_supertrace_count}/{self.reference_supertrace_count}, "
+            f"canonical_equal_common_supertraces={self.canonical_equal_common_supertrace_count}, "
             f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count})</code>"
         )
 
@@ -325,6 +345,8 @@ def _gap_report(
 ) -> MatchingFixtureGapReport:
     candidate_supertraces = set(candidate.supertraces)
     reference_supertraces = set(reference.supertraces)
+    common_supertraces = candidate_supertraces & reference_supertraces
+    compared_supertraces = candidate.compare_to(reference, names=_sorted_names(common_supertraces))
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
     candidate_names = set(candidate.expression_names())
@@ -336,9 +358,15 @@ def _gap_report(
         reference_stage=_metadata_stage(reference),
         candidate_supertrace_names=_sorted_names(candidate_supertraces),
         reference_supertrace_names=_sorted_names(reference_supertraces),
-        common_supertrace_names=_sorted_names(candidate_supertraces & reference_supertraces),
+        common_supertrace_names=_sorted_names(common_supertraces),
         candidate_only_supertrace_names=_sorted_names(candidate_supertraces - reference_supertraces),
         reference_only_supertrace_names=_sorted_names(reference_supertraces - candidate_supertraces),
+        canonical_equal_common_supertrace_names=tuple(
+            item.name for item in compared_supertraces.expressions if item.canonical_equal
+        ),
+        canonical_different_common_supertrace_names=tuple(
+            item.name for item in compared_supertraces.expressions if not item.canonical_equal
+        ),
         candidate_matching_condition_names=_sorted_names(candidate_conditions),
         reference_matching_condition_names=_sorted_names(reference_conditions),
         common_matching_condition_names=_sorted_names(candidate_conditions & reference_conditions),
