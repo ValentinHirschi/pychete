@@ -14,6 +14,7 @@ from .matching import (
     MatchingResult,
     MatchingResultComparison,
     OneLoopMatchingNotImplementedError,
+    SupertracePlan,
 )
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
@@ -41,6 +42,7 @@ __all__ = [
     "OneLoopMatchingNotImplementedError",
     "PycheteState",
     "StateExpression",
+    "SupertracePlan",
     "SymbolDataKey",
     "SymbolRole",
     "Theory",

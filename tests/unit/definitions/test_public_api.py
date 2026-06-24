@@ -90,6 +90,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "block",
             "entry",
             "mode_for",
+            "supertrace_plan",
             "to_expression_map",
         ],
         pychete.FluctuationOperatorBlock: [
@@ -103,6 +104,13 @@ def test_public_api_methods_have_docstrings() -> None:
             "is_heavy",
             "is_light",
             "supertrace_sign",
+        ],
+        pychete.SupertracePlan: [
+            "blocks",
+            "heavy_mode_count",
+            "heavy_supertrace_sign",
+            "light_mode_count",
+            "to_expression_map",
         ],
     }
     missing = [

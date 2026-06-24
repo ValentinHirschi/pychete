@@ -182,3 +182,29 @@ def test_fluctuation_operator_rejects_unknown_sector_selector() -> None:
 
     with pytest.raises(ValueError, match="fluctuation sector"):
         operator.block("bad", "heavy")
+
+
+def test_fluctuation_operator_builds_supertrace_plan_from_sector_blocks() -> None:
+    theory = Theory("fluctuation_supertrace_plan")
+    heavy_scalar = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    heavy_fermion = theory.define_field("Psi", s.Fermion, self_conjugate=False, mass=(FieldMassKind.HEAVY, "MF"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = (
+        heavy_scalar() ** 2
+        + s.Bar(heavy_fermion()) * heavy_fermion()
+        - y() * heavy_scalar() * light() ** 2 / 2
+    )
+
+    operator = theory.fluctuation_operator(lagrangian)
+    plan = operator.supertrace_plan()
+
+    assert plan.heavy_heavy == operator.block("heavy", "heavy")
+    assert plan.heavy_light == operator.block("heavy", "light")
+    assert plan.light_heavy == operator.block("light", "heavy")
+    assert plan.light_light == operator.block("light", "light")
+    assert plan.heavy_mode_count == 3
+    assert plan.light_mode_count == 1
+    assert plan.heavy_supertrace_sign == -1
+    assert len(plan.blocks()) == 4
+    assert plan.to_expression_map()

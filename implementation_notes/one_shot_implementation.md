@@ -362,6 +362,20 @@ discoveries, dependency patches, blockers, and remaining work.
   - added tests for heavy-light and light-heavy block extraction, all-sector
     full-matrix blocks, invalid sector selectors, public API docstrings, and
     Jupyter repr hooks.
+- Completed the nineteenth implementation slice:
+  - added public `SupertracePlan` as the structured carrier for the four
+    sector blocks that feed later one-loop supertrace generation:
+    heavy-heavy, heavy-light, light-heavy, and light-light;
+  - added `FluctuationOperator.supertrace_plan(...)`, which prepares the
+    deterministic block data from existing fluctuation mode metadata without
+    pretending to evaluate traces, tensor reductions, or loop integrals yet;
+  - added heavy/light mode-count helpers and heavy-sector supertrace-sign
+    aggregation so later supertrace terms can consume structured statistics
+    metadata instead of rediscovering it;
+  - exported `SupertracePlan` through the public API and added Jupyter-friendly
+    repr hooks;
+  - added tests for plan construction from sector blocks, expression-map export,
+    public API docstrings, and Jupyter repr coverage.
 
 ## Backend/API Discoveries
 
@@ -470,6 +484,10 @@ discoveries, dependency patches, blockers, and remaining work.
   heavy/light sector blocks. This is the first structural split needed for
   later supertrace generation, where heavy-heavy, heavy-light, light-heavy, and
   light-light blocks have distinct roles.
+- `SupertracePlan` now makes those four heavy/light blocks explicit as a public
+  pipeline object. The next one-loop matching stages should consume this object
+  to construct real Symbolica/idenso/spenso/vakint supertrace contributions
+  rather than rebuilding block selection logic elsewhere.
 
 ## Test Status
 
@@ -650,6 +668,17 @@ discoveries, dependency patches, blockers, and remaining work.
   fluctuation-sector block slice: 102 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the supertrace-plan slice: 17 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the supertrace-plan
+  slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  supertrace-plan slice: 103 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
@@ -661,6 +690,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
   including spin/statistics signs, real/complex counting, ghosts, Goldstones,
   background fields, and non-propagating fields.
+- Consume `SupertracePlan` to build real one-loop supertrace terms, including
+  block products, trace ordering, statistics factors, tensor reductions, and
+  integral calls through the native backends.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.

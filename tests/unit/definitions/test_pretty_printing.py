@@ -268,6 +268,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
     fluctuation_mode = fluctuation_basis.mode_for(phi)
     fluctuation_operator = theory.fluctuation_operator(lagrangian, [phi])
     fluctuation_block = fluctuation_operator.block("all", "all")
+    supertrace_plan = fluctuation_operator.supertrace_plan()
     state = PycheteState()
     state.add_theory(theory)
     state.add_expression("lagrangian", theory, lagrangian)
@@ -285,6 +286,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
         fluctuation_mode,
         fluctuation_operator,
         fluctuation_block,
+        supertrace_plan,
         matching_result,
     )
 

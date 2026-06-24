@@ -202,6 +202,55 @@ class FluctuationOperatorBlock:
 
 
 @dataclass(frozen=True)
+class SupertracePlan:
+    """Structured block data prepared for future supertrace generation."""
+
+    theory: Theory
+    operator: FluctuationOperator
+    heavy_heavy: FluctuationOperatorBlock
+    heavy_light: FluctuationOperatorBlock
+    light_heavy: FluctuationOperatorBlock
+    light_light: FluctuationOperatorBlock
+
+    @property
+    def heavy_mode_count(self) -> int:
+        """Number of heavy fluctuation modes in the plan."""
+
+        return len(self.heavy_heavy.rows)
+
+    @property
+    def light_mode_count(self) -> int:
+        """Number of light fluctuation modes in the plan."""
+
+        return len(self.light_light.rows)
+
+    @property
+    def heavy_supertrace_sign(self) -> int:
+        """Sum of boson/fermion signs over heavy modes."""
+
+        return sum(mode.supertrace_sign for mode in self.heavy_heavy.rows)
+
+    def blocks(self) -> tuple[FluctuationOperatorBlock, ...]:
+        """Return the four heavy/light blocks in deterministic order."""
+
+        return (self.heavy_heavy, self.heavy_light, self.light_heavy, self.light_light)
+
+    def to_expression_map(self, *, prefix: str = "supertrace_input") -> dict[str, Expression]:
+        """Return deterministic named expressions for all planned blocks."""
+
+        entries: dict[str, Expression] = {}
+        for block in self.blocks():
+            entries.update(block.to_expression_map(prefix=prefix))
+        return entries
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{SupertracePlan}}\left(H={self.heavy_mode_count},\ L={self.light_mode_count}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>SupertracePlan(heavy={self.heavy_mode_count} light={self.light_mode_count})</code>"
+
+
+@dataclass(frozen=True)
 class FluctuationOperator:
     """Quadratic fluctuation operator extracted from a Lagrangian."""
 
@@ -262,6 +311,18 @@ class FluctuationOperator:
             rows=tuple(self.modes[index] for index in row_indices),
             columns=tuple(self.modes[index] for index in column_indices),
             matrix=tuple(tuple(self.matrix[row][column] for column in column_indices) for row in row_indices),
+        )
+
+    def supertrace_plan(self) -> SupertracePlan:
+        """Prepare heavy/light block data for future supertrace generation."""
+
+        return SupertracePlan(
+            theory=self.theory,
+            operator=self,
+            heavy_heavy=self.block(FluctuationSector.HEAVY, FluctuationSector.HEAVY),
+            heavy_light=self.block(FluctuationSector.HEAVY, FluctuationSector.LIGHT),
+            light_heavy=self.block(FluctuationSector.LIGHT, FluctuationSector.HEAVY),
+            light_light=self.block(FluctuationSector.LIGHT, FluctuationSector.LIGHT),
         )
 
     def _repr_latex_(self) -> str:
