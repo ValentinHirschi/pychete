@@ -1289,6 +1289,32 @@ discoveries, dependency patches, blockers, and remaining work.
   tests'` passed after the CG tensor metadata slice: 127 passed, 1 skipped.
   The skip is the existing GammaLoop API import check because GammaLoop was not
   requested in the current dependency manifest.
+- Added the built-in Matchete CG tensor label slice:
+  - non-Abelian group registration now auto-registers built-in CG tensors for
+    `gen[group[fund]]`, `gen[group[adj]]`, `fStruct[group]`, `dSym[group]`,
+    `del[group[fund]]`, `del[group[adj]]`, and `eps[group]` when the
+    fundamental dimension is known;
+  - the loader now recognizes built-in `CG[...]` first-argument labels and
+    lowers `CG[eps[SU2L], {...}]`, `CG[gen[SU2L[fund]], {...}]`, and
+    `CG[fStruct[SU2L], {...}]` to registered theory-owned CG labels instead of
+    external functions;
+  - standalone group symbols in parsed expressions now resolve to the
+    theory-owned group symbol, which is needed by CG labels such as
+    `eps[SU2L]`;
+  - this is still metadata/lowering only. Actual contractions and tensor
+    algebra remain delegated to the future spenso/idenso adapter.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py
+  tests/unit/definitions/test_public_api.py'` passed after the built-in CG
+  tensor label slice: 34 passed.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m mypy'`
+  passed after the built-in CG tensor label slice: no issues found in 24 source
+  files.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests'` passed after the built-in CG tensor label slice: 128 passed, 1
+  skipped. The skip is the existing GammaLoop API import check because
+  GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

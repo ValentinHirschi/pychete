@@ -138,6 +138,10 @@ central `CG(label, indices)` head, with `cg_representations`, optional
 `cg_tensor`, and `cg_source` symbol data. Do not leave them as plain external
 functions, and do not hand-roll contractions in Python; lower them through
 spenso/idenso backend adapters.
+Built-in Matchete CG labels such as `gen[group[rep]]`, `eps[group]`,
+`fStruct[group]`, `dSym[group]`, and `del[group[rep]]` must resolve to the
+auto-registered theory-owned CG tensor labels, not to generic external
+functions.
 
 Every reusable pychete built-in symbol must be created through the central
 `SymbolStore` so it receives pychete's custom Symbolica print callback. Human

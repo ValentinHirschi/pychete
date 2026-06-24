@@ -5,7 +5,7 @@ from pathlib import Path
 from symbolica import Expression
 
 from pychete import FieldChirality, FieldMassKind, FieldRole, GroupKind, RepresentationReality, SymbolDataKey, SymbolRole, Theory, canonical_string, s
-from pychete.loaders import load_matchete_model, load_python_model
+from pychete.loaders import load_matchete_model, load_python_model, parse_matchete_expression
 
 
 def _local_tags(label: Expression) -> set[str]:
@@ -216,6 +216,25 @@ def test_matchete_loader_preserves_defined_cg_tensors(tmp_path: Path) -> None:
         in canonical_string(expressions["lagrangian"])
     )
     assert "external_C4" not in canonical_string(expressions["lagrangian"])
+
+
+def test_matchete_loader_lowers_builtin_cg_labels_to_registered_tensors() -> None:
+    theory, expressions = load_matchete_model(Path("assets/models/SM.m"))
+    eps = parse_matchete_expression("CG[eps[SU2L],{i,j}]", theory)
+    gen = parse_matchete_expression("CG[gen[SU2L[fund]],{J,i,j}]", theory)
+    fstruct = parse_matchete_expression("CG[fStruct[SU2L],{I,J,K}]", theory)
+
+    assert "eps_SU2L" in theory.cg_tensors
+    assert "gen_SU2L_fund" in theory.cg_tensors
+    assert "fStruct_SU2L" in theory.cg_tensors
+    assert canonical_string(eps).startswith("pychete::CG(SM::cg_tensor_eps_SU2L,")
+    assert canonical_string(gen).startswith("pychete::CG(SM::cg_tensor_gen_SU2L_fund,")
+    assert canonical_string(fstruct).startswith("pychete::CG(SM::cg_tensor_fStruct_SU2L,")
+    lagrangian = canonical_string(expressions["lagrangian"])
+    assert "SM::cg_tensor_eps_SU2L" in lagrangian
+    assert "external_eps" not in lagrangian
+    assert theory.cg_tensors["eps_SU3c"].source_text == "builtin:eps"
+    assert len(theory.cg_tensors["eps_SU3c"].representation_exprs) == 3
 
 
 def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:

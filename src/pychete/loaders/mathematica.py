@@ -476,6 +476,37 @@ def _matchete_projector(expr: Expression, theory: Theory, env: dict[str, Express
     return s.Proj(value)
 
 
+def _matchete_group_name(expr: Expression, theory: Theory) -> str:
+    if expr.get_type() is AtomType.Var:
+        name = _plain_name(expr)
+        if name in theory.groups:
+            return name
+    raise NotImplementedError(f"Unsupported CG group label: {expr.format_plain()}")
+
+
+def _matchete_builtin_cg_label(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression | None:
+    if expr.get_type() is not AtomType.Fn:
+        return None
+    name = _plain_name(expr)
+    if name in {"eps", "fStruct", "dSym"} and len(expr) == 1:
+        group = _matchete_group_name(expr[0], theory)
+        return theory._builtin_cg_tensor_label(name, group)
+    if name in {"gen", "del"} and len(expr) == 1:
+        representation = _convert_expression(expr[0], theory, env)
+        definition = theory.representation_definition(representation)
+        return theory._builtin_cg_tensor_label(name, definition.group, representation)
+    return None
+
+
+def _matchete_cg(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+    if len(expr) != 2:
+        raise NotImplementedError(f"Unsupported CG expression: {expr.format_plain()}")
+    label = _matchete_builtin_cg_label(expr[0], theory, env)
+    if label is None:
+        label = _convert_expression(expr[0], theory, env)
+    return s.CG(label, list_expr(*_matchete_list_items(expr[1], theory, env)))
+
+
 def _plain_name(expr: Expression) -> str:
     kind = expr.get_type()
     if kind is not AtomType.Var and kind is not AtomType.Fn:
@@ -501,6 +532,8 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             return s.adj
         if name == "Flavor":
             return theory.define_flavor_index().symbol
+        if name in theory.groups:
+            return theory.symbol(name, role=SymbolRole.GROUP)
         if name in theory.index_types:
             return theory.index_types[name].symbol
         if name in theory.representation_labels:
@@ -568,7 +601,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
         if name == "Proj":
             return _matchete_projector(expr, theory, env)
         if name == "CG":
-            return s.CG(*(_convert_expression(child, theory, env) for child in args(expr)))
+            return _matchete_cg(expr, theory, env)
         if name == "log":
             if len(expr) != 1:
                 raise NotImplementedError(f"Unsupported Log expression: {expr.format_plain()}")

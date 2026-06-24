@@ -118,12 +118,17 @@ def test_gauge_and_global_groups_store_kind_and_abelian_symbol_data() -> None:
     assert theory.representations[su2f_adj].dimension_value == 3
     assert theory.representations[su2f_adj].reality_kind is RepresentationReality.REAL
     assert canonical_string(theory.define_representation("SU2F", "fund")) == su2f_fund
+    assert theory.cg_tensors["gen_SU2F_fund"].representation_exprs == (su2f(s.adj), su2f(s.fund), s.Bar(su2f(s.fund)))
+    assert theory.cg_tensors["fStruct_SU2F"].representation_exprs == (su2f(s.adj), su2f(s.adj), su2f(s.adj))
+    assert theory.cg_tensors["eps_SU2F"].representation_exprs == (su2f(s.fund), su2f(s.fund))
+    assert theory.cg_tensor_handle("gen_SU2F_fund").definition.source_text == "builtin:gen"
 
     restored = Theory.from_json_obj(json.loads(theory.to_json()))
     restored_su2f = restored.symbol("SU2F", role=SymbolRole.GROUP)
     assert restored.groups == theory.groups
     assert restored.representations[su2f_fund].dimension_value == 2
     assert restored.representations[su2f_adj].reality_kind is RepresentationReality.REAL
+    assert restored.cg_tensors["eps_SU2F"].representation_exprs == (su2f(s.fund), su2f(s.fund))
     assert restored_su2f.get_symbol_data(SymbolDataKey.GROUP_KIND.value) == GroupKind.GLOBAL.value
     assert "group_kind_global" in _local_tags(restored_su2f)
 

@@ -589,6 +589,13 @@ def _cg_tensor_symbol_tags(rank: int) -> tuple[str, ...]:
     return (f"cg_tensor_rank_{rank}",)
 
 
+def _builtin_cg_tensor_name(kind: str, group: str, representation_name: str | None = None) -> str:
+    parts = [kind, group]
+    if representation_name is not None:
+        parts.append(representation_name)
+    return safe_symbol_name("_".join(parts))
+
+
 def _group_entry(
     *,
     name: str,
@@ -1498,6 +1505,51 @@ class Theory:
         self.cg_tensors[name] = definition
         return CGTensorHandle(self, definition)
 
+    def _builtin_cg_tensor_label(self, kind: str, group: str, representation: Expression | None = None) -> Expression:
+        representation_name = None if representation is None else self.representation_definition(representation).name
+        return self.cg_tensor_handle(_builtin_cg_tensor_name(kind, group, representation_name)).label
+
+    def _define_builtin_cg_tensors_for_group(self, group: str) -> None:
+        fund = self.define_representation(group, "fund")
+        adj = self.define_representation(group, "adj")
+        self.define_cg_tensor(
+            _builtin_cg_tensor_name("gen", group, "fund"),
+            [adj, fund, s.Bar(fund)],
+            source="builtin:gen",
+        )
+        self.define_cg_tensor(
+            _builtin_cg_tensor_name("gen", group, "adj"),
+            [adj, adj, adj],
+            source="builtin:gen",
+        )
+        self.define_cg_tensor(
+            _builtin_cg_tensor_name("fStruct", group),
+            [adj, adj, adj],
+            source="builtin:fStruct",
+        )
+        self.define_cg_tensor(
+            _builtin_cg_tensor_name("dSym", group),
+            [adj, adj, adj],
+            source="builtin:dSym",
+        )
+        self.define_cg_tensor(
+            _builtin_cg_tensor_name("del", group, "fund"),
+            [fund, s.Bar(fund)],
+            source="builtin:del",
+        )
+        self.define_cg_tensor(
+            _builtin_cg_tensor_name("del", group, "adj"),
+            [adj, adj],
+            source="builtin:del",
+        )
+        fund_dimension = self.representation_dimension(fund)
+        if isinstance(fund_dimension, int) and fund_dimension > 1:
+            self.define_cg_tensor(
+                _builtin_cg_tensor_name("eps", group),
+                [fund for _ in range(fund_dimension)],
+                source="builtin:eps",
+            )
+
     def define_gauge_group(self, name: str, group_type: Expression, coupling: str, field: str) -> None:
         """Register a gauge group, its coupling, and its vector field."""
 
@@ -1527,8 +1579,7 @@ class Theory:
             field=vector.name,
         )
         if not abelian:
-            self.define_representation(name, "fund")
-            self.define_representation(name, "adj")
+            self._define_builtin_cg_tensors_for_group(name)
 
     def define_global_group(self, name: str, group_type: Expression) -> Expression:
         """Register a global symmetry group and return its group symbol."""
@@ -1553,8 +1604,7 @@ class Theory:
             group_kind=GroupKind.GLOBAL,
         )
         if not abelian:
-            self.define_representation(name, "fund")
-            self.define_representation(name, "adj")
+            self._define_builtin_cg_tensors_for_group(name)
         return group_symbol
 
     def define_representation(
