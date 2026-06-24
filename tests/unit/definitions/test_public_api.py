@@ -90,6 +90,14 @@ def test_public_api_methods_have_docstrings() -> None:
             "entry",
             "to_expression_map",
         ],
+        pychete.FluctuationBasis: [
+            "mode_for",
+        ],
+        pychete.FluctuationMode: [
+            "is_heavy",
+            "is_light",
+            "supertrace_sign",
+        ],
     }
     missing = [
         f"{cls.__name__}.{method_name}"

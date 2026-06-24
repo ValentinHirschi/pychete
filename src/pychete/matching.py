@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from dataclasses import dataclass, field
+from enum import StrEnum
 from html import escape
 from typing import Iterable, Iterator, Sequence, TypeAlias
 
@@ -27,10 +28,59 @@ from .theory import (
     Theory,
     field_mass_kind_from_label,
     field_self_conjugate_from_label,
+    field_type_from_label,
 )
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
+
+
+class FluctuationStatistics(StrEnum):
+    """Statistics class used for fluctuation supertrace bookkeeping."""
+
+    BOSONIC = "bosonic"
+    FERMIONIC = "fermionic"
+
+
+@dataclass(frozen=True)
+class FluctuationMode:
+    """Metadata for one field entry in a fluctuation basis."""
+
+    theory: Theory
+    field: Expression
+    base_field: Expression
+    field_type: Expression
+    mass_kind: FieldMassKind
+    statistics: FluctuationStatistics
+    self_conjugate: bool
+    conjugated: bool
+
+    @property
+    def is_heavy(self) -> bool:
+        """Whether this fluctuation mode belongs to the heavy sector."""
+
+        return self.mass_kind is FieldMassKind.HEAVY
+
+    @property
+    def is_light(self) -> bool:
+        """Whether this fluctuation mode belongs to the light sector."""
+
+        return self.mass_kind is FieldMassKind.LIGHT
+
+    @property
+    def supertrace_sign(self) -> int:
+        """Return the boson/fermion sign for supertrace contributions."""
+
+        return -1 if self.statistics is FluctuationStatistics.FERMIONIC else 1
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{FluctuationMode}}\left({latex_string(self.field)}\right)$"
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>FluctuationMode({escape(display_string(self.field))} "
+            f"{self.mass_kind.value} {self.statistics.value})</code>"
+        )
 
 
 @dataclass(frozen=True)
@@ -38,15 +88,53 @@ class FluctuationBasis:
     """Discovered fluctuation fields split into heavy and light sectors."""
 
     theory: Theory
-    entries: tuple[Expression, ...]
-    heavy: tuple[Expression, ...]
-    light: tuple[Expression, ...]
+    modes: tuple[FluctuationMode, ...]
+
+    @property
+    def entries(self) -> tuple[Expression, ...]:
+        """Return all basis field expressions in deterministic order."""
+
+        return tuple(mode.field for mode in self.modes)
+
+    @property
+    def heavy(self) -> tuple[Expression, ...]:
+        """Return heavy-sector field expressions in this basis."""
+
+        return tuple(mode.field for mode in self.modes if mode.is_heavy)
+
+    @property
+    def light(self) -> tuple[Expression, ...]:
+        """Return light-sector field expressions in this basis."""
+
+        return tuple(mode.field for mode in self.modes if mode.is_light)
+
+    @property
+    def heavy_modes(self) -> tuple[FluctuationMode, ...]:
+        """Return heavy-sector modes in this basis."""
+
+        return tuple(mode for mode in self.modes if mode.is_heavy)
+
+    @property
+    def light_modes(self) -> tuple[FluctuationMode, ...]:
+        """Return light-sector modes in this basis."""
+
+        return tuple(mode for mode in self.modes if mode.is_light)
 
     def __iter__(self) -> Iterator[Expression]:
         return iter(self.entries)
 
     def __len__(self) -> int:
         return len(self.entries)
+
+    def mode_for(self, field: FluctuationBasisItem) -> FluctuationMode:
+        """Return metadata for one field expression in this basis."""
+
+        requested = _fluctuation_basis_expression(self.theory, field)
+        key = canonical_string(requested)
+        for mode in self.modes:
+            if canonical_string(mode.field) == key:
+                return mode
+        raise KeyError(f"Fluctuation basis has no field {key!r}")
 
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{FluctuationBasis}}\left(H={len(self.heavy)},\ L={len(self.light)}\right)$"
@@ -328,9 +416,7 @@ def fluctuation_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasi
 
     theory._validate_registered_expression(lagrangian)
     fields = _discover_fluctuation_basis(lagrangian)
-    heavy = tuple(field for field in fields if _basis_mass_kind(field) is FieldMassKind.HEAVY)
-    light = tuple(field for field in fields if _basis_mass_kind(field) is FieldMassKind.LIGHT)
-    return FluctuationBasis(theory=theory, entries=fields, heavy=heavy, light=light)
+    return FluctuationBasis(theory=theory, modes=tuple(_fluctuation_mode(theory, field) for field in fields))
 
 
 def _optional_expression(result: MatchingResult, name: str) -> Expression | None:
@@ -397,8 +483,24 @@ def _add_basis_entry(entries: dict[str, Expression], field: Expression) -> None:
     entries.setdefault(canonical_string(field), field)
 
 
-def _basis_mass_kind(field: Expression) -> FieldMassKind:
-    return field_mass_kind_from_label(field_label(bar_field_inner(field) if is_bar_field(field) else field))
+def _fluctuation_mode(theory: Theory, field: Expression) -> FluctuationMode:
+    base = bar_field_inner(field) if is_bar_field(field) else field
+    label = field_label(base)
+    field_type = field_type_from_label(label)
+    return FluctuationMode(
+        theory=theory,
+        field=field,
+        base_field=base,
+        field_type=field_type,
+        mass_kind=field_mass_kind_from_label(label),
+        statistics=_fluctuation_statistics(field_type),
+        self_conjugate=field_self_conjugate_from_label(label),
+        conjugated=is_bar_field(field),
+    )
+
+
+def _fluctuation_statistics(field_type: Expression) -> FluctuationStatistics:
+    return FluctuationStatistics.FERMIONIC if bool(field_type == s.Fermion) else FluctuationStatistics.BOSONIC
 
 
 def _fluctuation_variable(index: int) -> Expression:

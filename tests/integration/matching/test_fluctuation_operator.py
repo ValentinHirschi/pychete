@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import FieldMassKind, Theory, canonical_string, s
+from pychete import FieldMassKind, FluctuationStatistics, Theory, canonical_string, s
 
 from tests.conftest import assert_expr_equal
 
@@ -112,3 +112,32 @@ def test_fluctuation_operator_rejects_basis_from_another_theory() -> None:
 
     with pytest.raises(ValueError, match="belongs to"):
         right.fluctuation_operator(right_phi() ** 2, basis)
+
+
+def test_fluctuation_basis_modes_carry_statistics_and_mass_metadata() -> None:
+    theory = Theory("fluctuation_mode_metadata")
+    scalar = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    fermion = theory.define_field("psi", s.Fermion, self_conjugate=False, mass=(FieldMassKind.LIGHT, "m"))
+    lagrangian = scalar() ** 2 + s.Bar(fermion()) * fermion()
+
+    basis = theory.fluctuation_basis(lagrangian)
+    scalar_mode = basis.mode_for(scalar)
+    fermion_mode = basis.mode_for(fermion)
+    barred_fermion_mode = basis.mode_for(s.Bar(fermion()))
+
+    assert scalar_mode.mass_kind is FieldMassKind.HEAVY
+    assert scalar_mode.statistics is FluctuationStatistics.BOSONIC
+    assert scalar_mode.supertrace_sign == 1
+    assert scalar_mode.self_conjugate is True
+    assert scalar_mode.conjugated is False
+    assert fermion_mode.mass_kind is FieldMassKind.LIGHT
+    assert fermion_mode.statistics is FluctuationStatistics.FERMIONIC
+    assert fermion_mode.supertrace_sign == -1
+    assert fermion_mode.conjugated is False
+    assert barred_fermion_mode.statistics is FluctuationStatistics.FERMIONIC
+    assert barred_fermion_mode.conjugated is True
+    assert basis.heavy_modes == (scalar_mode,)
+    assert {canonical_string(mode.field) for mode in basis.light_modes} == {
+        canonical_string(s.Bar(fermion())),
+        canonical_string(fermion()),
+    }

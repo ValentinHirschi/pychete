@@ -4,7 +4,9 @@ from .eft import operator_dimension, series_eft
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
     FluctuationBasis,
+    FluctuationMode,
     FluctuationOperator,
+    FluctuationStatistics,
     HeavyScalarSolution,
     MatchingExpressionComparison,
     MatchingResult,
@@ -24,7 +26,9 @@ __all__ = [
     "FieldMassKind",
     "FieldVariation",
     "FluctuationBasis",
+    "FluctuationMode",
     "FluctuationOperator",
+    "FluctuationStatistics",
     "HeavyScalarSolution",
     "MatchingExpressionComparison",
     "MatchingResult",

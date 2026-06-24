@@ -336,6 +336,19 @@ discoveries, dependency patches, blockers, and remaining work.
     entries, complex fields contribute barred and unbarred entries,
     unregistered/untagged field-like atoms are ignored, and automatic Hessian
     extraction uses the discovered basis.
+- Completed the seventeenth implementation slice:
+  - added public `FluctuationMode` records for each fluctuation-basis entry;
+  - added public `FluctuationStatistics` enum values for bosonic and fermionic
+    modes, avoiding stringly typed statistics metadata;
+  - made `FluctuationBasis` derive `entries`, `heavy`, `light`,
+    `heavy_modes`, and `light_modes` from structured modes rather than storing
+    only raw field expressions;
+  - added `FluctuationBasis.mode_for(...)` for deterministic metadata lookup;
+  - populated mode metadata from Symbolica field-label data, including field
+    type, mass kind, self-conjugacy, conjugation state, and boson/fermion
+    supertrace sign;
+  - added tests for scalar and fermion mode metadata, public API docstrings,
+    and Jupyter repr hooks.
 
 ## Backend/API Discoveries
 
@@ -435,6 +448,11 @@ discoveries, dependency patches, blockers, and remaining work.
   field label wildcard. This keeps unregistered field-like test atoms out of
   the basis and makes heavy/light classification depend on Symbolica symbol
   data instead of name conventions.
+- Fluctuation-basis entries now carry `FluctuationMode` metadata needed by
+  later supertrace construction. The first statistics split distinguishes
+  `s.Fermion` labels from all bosonic field types using Symbolica field-type
+  data; full spin/multiplicity coefficients are still intentionally deferred
+  until the degree-of-freedom metadata model is extended.
 
 ## Test Status
 
@@ -593,6 +611,17 @@ discoveries, dependency patches, blockers, and remaining work.
   fluctuation-basis slice: 98 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the fluctuation-mode metadata slice: 13 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the fluctuation-mode
+  metadata slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  fluctuation-mode metadata slice: 99 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 
