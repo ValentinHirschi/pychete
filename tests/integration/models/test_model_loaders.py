@@ -4,7 +4,7 @@ from pathlib import Path
 
 from symbolica import Expression
 
-from pychete import FieldChirality, FieldMassKind, FieldRole, SymbolDataKey, Theory, canonical_string, s
+from pychete import FieldChirality, FieldMassKind, FieldRole, GroupKind, SymbolDataKey, SymbolRole, Theory, canonical_string, s
 from pychete.loaders import load_matchete_model, load_python_model
 
 
@@ -125,6 +125,32 @@ def test_matchete_loader_preserves_field_role_options(tmp_path: Path) -> None:
     assert theory.fields["phi0"].is_zero_mode is True
     assert "field_role_background" in _local_tags(theory.fields["v"].label)
     assert "zero_mode" in _local_tags(theory.fields["phi0"].label)
+
+
+def test_matchete_loader_preserves_global_groups(tmp_path: Path) -> None:
+    model = tmp_path / "global_groups.m"
+    model.write_text(
+        "\n".join(
+            [
+                "DefineGlobalGroup[SU2F, SU@2];",
+                "DefineGlobalGroup[U1X, U1];",
+                "DefineField[x, Scalar, Indices->{SU2F[fund]}, Charges->{U1X[1]}, Mass->0];",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    theory, expressions = load_matchete_model(model, theory_name="loader_global_groups")
+
+    assert expressions == {}
+    assert theory.groups["SU2F"]["kind"] == GroupKind.GLOBAL.value
+    assert theory.groups["SU2F"]["abelian"] is False
+    assert theory.groups["U1X"]["kind"] == GroupKind.GLOBAL.value
+    assert theory.groups["U1X"]["abelian"] is True
+    assert "coupling" not in theory.groups["SU2F"]
+    assert canonical_string(theory.fields["x"].indices[0]) == "loader_global_groups::group_SU2F(pychete::fund)"
+    assert canonical_string(theory.fields["x"].charge_exprs[0]) == "loader_global_groups::group_U1X(1)"
+    assert "group_kind_global" in _local_tags(theory.symbol("SU2F", role=SymbolRole.GROUP))
 
 
 def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:

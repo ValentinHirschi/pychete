@@ -441,7 +441,9 @@ class SymbolDataKey(StrEnum):
     PROPAGATING = "propagating"
     ZERO_MODE = "zero_mode"
     DIMENSION = "dimension"
+    GROUP_KIND = "group_kind"
     GROUP_TYPE = "group_type"
+    GROUP_ABELIAN = "group_abelian"
     GROUP_COUPLING = "group_coupling"
     GROUP_FIELD = "group_field"
 

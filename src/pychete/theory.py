@@ -130,6 +130,24 @@ class FieldRole(StrEnum):
         return cls.PHYSICAL
 
 
+class GroupKind(StrEnum):
+    """Whether a registered symmetry group is gauged or global."""
+
+    GAUGE = "gauge"
+    GLOBAL = "global"
+
+    @classmethod
+    def from_user(cls, value: GroupKind | str) -> GroupKind:
+        """Normalize a user-provided group-kind value."""
+
+        if isinstance(value, cls):
+            return value
+        try:
+            return cls(str(value).lower())
+        except ValueError as exc:
+            raise ValueError(f"unsupported group kind {value!r}") from exc
+
+
 class BuiltinIndexType(StrEnum):
     """Built-in index representations understood by pychete."""
 
@@ -218,6 +236,16 @@ def _normalized_restored_symbol_data(role: str, data: dict[str, Any]) -> dict[st
         normalized.setdefault(SymbolDataKey.FIELD_ROLE.value, inferred_role.value)
         normalized.setdefault(SymbolDataKey.PROPAGATING.value, 1)
         normalized.setdefault(SymbolDataKey.ZERO_MODE.value, 0)
+    elif role == SymbolRole.GROUP.value:
+        group_type = normalized.get(SymbolDataKey.GROUP_TYPE.value)
+        normalized.setdefault(
+            SymbolDataKey.GROUP_KIND.value,
+            GroupKind.GAUGE.value
+            if SymbolDataKey.GROUP_COUPLING.value in normalized or SymbolDataKey.GROUP_FIELD.value in normalized
+            else GroupKind.GLOBAL.value,
+        )
+        if isinstance(group_type, Expression):
+            normalized.setdefault(SymbolDataKey.GROUP_ABELIAN.value, int(bool(group_type == s.U1)))
     return normalized
 
 
@@ -369,6 +397,31 @@ def _field_symbol_tags(field_role: FieldRole, propagating: bool, zero_mode: bool
     if zero_mode:
         tags.append("zero_mode")
     return tuple(tags)
+
+
+def _group_symbol_tags(group_kind: GroupKind, abelian: bool) -> tuple[str, ...]:
+    return (f"group_kind_{group_kind.value}", "abelian" if abelian else "non_abelian")
+
+
+def _group_entry(
+    *,
+    name: str,
+    group_type: Expression,
+    group_kind: GroupKind,
+    coupling: str | None = None,
+    field: str | None = None,
+) -> dict[str, Any]:
+    entry: dict[str, Any] = {
+        "name": name,
+        "kind": group_kind.value,
+        "type": canonical_string(group_type),
+        "abelian": bool(group_type == s.U1),
+    }
+    if coupling is not None:
+        entry["coupling"] = coupling
+    if field is not None:
+        entry["field"] = field
+    return entry
 
 
 @dataclass(frozen=True)
@@ -737,6 +790,13 @@ class Theory:
                         bool(data.get(SymbolDataKey.ZERO_MODE.value, 0)),
                     )
                 )
+            elif role == SymbolRole.GROUP.value:
+                tags.extend(
+                    _group_symbol_tags(
+                        GroupKind.from_user(data.get(SymbolDataKey.GROUP_KIND.value, GroupKind.GLOBAL.value)),
+                        bool(data.get(SymbolDataKey.GROUP_ABELIAN.value, 0)),
+                    )
+                )
             symbol = self.symbol(name, role=role, data=data, tags=tags)
             expected = entry.get("symbol")
             if expected is not None and canonical_string(symbol) != expected:
@@ -1049,27 +1109,58 @@ class Theory:
     def define_gauge_group(self, name: str, group_type: Expression, coupling: str, field: str) -> None:
         """Register a gauge group, its coupling, and its vector field."""
 
+        if name in self.groups:
+            raise ValueError(f"Group {name!r} is already registered")
         coupling_handle = self.define_coupling(coupling, eft_order=0, self_conjugate=True)
+        abelian = bool(group_type == s.U1)
         group_symbol = self.symbol(
             name,
             role=SymbolRole.GROUP,
             data={
                 SymbolDataKey.NAME.value: name,
+                SymbolDataKey.GROUP_KIND.value: GroupKind.GAUGE.value,
                 SymbolDataKey.GROUP_TYPE.value: group_type,
+                SymbolDataKey.GROUP_ABELIAN.value: int(abelian),
                 SymbolDataKey.GROUP_COUPLING.value: coupling,
                 SymbolDataKey.GROUP_FIELD.value: field,
             },
+            tags=_group_symbol_tags(GroupKind.GAUGE, abelian),
         )
         vector = self.define_field(field, s.Vector(group_symbol), self_conjugate=True, mass=0)
-        self.groups[name] = {
-            "name": name,
-            "type": canonical_string(group_type),
-            "coupling": coupling_handle.name,
-            "field": vector.name,
-        }
+        self.groups[name] = _group_entry(
+            name=name,
+            group_type=group_type,
+            group_kind=GroupKind.GAUGE,
+            coupling=coupling_handle.name,
+            field=vector.name,
+        )
+
+    def define_global_group(self, name: str, group_type: Expression) -> Expression:
+        """Register a global symmetry group and return its group symbol."""
+
+        if name in self.groups:
+            raise ValueError(f"Group {name!r} is already registered")
+        abelian = bool(group_type == s.U1)
+        group_symbol = self.symbol(
+            name,
+            role=SymbolRole.GROUP,
+            data={
+                SymbolDataKey.NAME.value: name,
+                SymbolDataKey.GROUP_KIND.value: GroupKind.GLOBAL.value,
+                SymbolDataKey.GROUP_TYPE.value: group_type,
+                SymbolDataKey.GROUP_ABELIAN.value: int(abelian),
+            },
+            tags=_group_symbol_tags(GroupKind.GLOBAL, abelian),
+        )
+        self.groups[name] = _group_entry(
+            name=name,
+            group_type=group_type,
+            group_kind=GroupKind.GLOBAL,
+        )
+        return group_symbol
 
     def group_charge(self, group: str, charge: Expression | int | float) -> Expression:
-        """Build a gauge-charge expression for a registered group."""
+        """Build a U(1)-charge expression for a registered gauge or global group."""
 
         if group not in self.groups:
             raise KeyError(f"Unknown group {group!r}")
@@ -1254,15 +1345,17 @@ class Theory:
         for name, data in obj.get("index_types", {}).items():
             if name != BuiltinIndexType.LORENTZ.value:
                 theory.define_index_type(name, data.get("dimension"))
-        theory.groups = {
-            str(name): {
-                "name": str(data["name"]),
-                "type": str(data["type"]),
-                "coupling": str(data["coupling"]),
-                "field": str(data["field"]),
-            }
-            for name, data in obj.get("groups", {}).items()
-        }
+        theory.groups = {}
+        for name, data in obj.get("groups", {}).items():
+            group_type = theory._parse_registered_expression(str(data["type"]))
+            group_kind = GroupKind.from_user(data.get("kind", GroupKind.GAUGE.value))
+            theory.groups[str(name)] = _group_entry(
+                name=str(data["name"]),
+                group_type=group_type,
+                group_kind=group_kind,
+                coupling=str(data["coupling"]) if "coupling" in data else None,
+                field=str(data["field"]) if "field" in data else None,
+            )
         for name, data in obj.get("couplings", {}).items():
             self_conjugate_data = data.get("self_conjugate", False)
             if isinstance(self_conjugate_data, list):

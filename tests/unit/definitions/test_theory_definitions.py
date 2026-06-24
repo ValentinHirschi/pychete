@@ -9,6 +9,7 @@ from pychete import (
     FieldChirality,
     FieldMassKind,
     FieldRole,
+    GroupKind,
     SymbolDataKey,
     SymbolRole,
     Theory,
@@ -88,6 +89,33 @@ def test_field_symbol_data_stores_charges_and_chirality() -> None:
     assert [canonical_string(charge_expr) for charge_expr in restored_field.definition.charge_exprs] == [canonical_string(charge)]
     assert restored.groups == theory.groups
     assert canonical_string(restored.group_charge("U1Y", S("qY"))) == canonical_string(charge)
+
+
+def test_gauge_and_global_groups_store_kind_and_abelian_symbol_data() -> None:
+    theory = Theory("group_metadata")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    su2f = theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    u1x = theory.define_global_group("U1X", s.U1)
+
+    assert theory.groups["U1Y"]["kind"] == GroupKind.GAUGE.value
+    assert theory.groups["U1Y"]["abelian"] is True
+    assert theory.groups["U1Y"]["coupling"] == "gY"
+    assert theory.groups["U1Y"]["field"] == "B"
+    assert theory.groups["SU2F"]["kind"] == GroupKind.GLOBAL.value
+    assert theory.groups["SU2F"]["abelian"] is False
+    assert "coupling" not in theory.groups["SU2F"]
+    assert su2f.get_symbol_data(SymbolDataKey.GROUP_KIND.value) == GroupKind.GLOBAL.value
+    assert su2f.get_symbol_data(SymbolDataKey.GROUP_ABELIAN.value) == 0
+    assert "group_kind_global" in _local_tags(su2f)
+    assert "non_abelian" in _local_tags(su2f)
+    assert u1x.get_symbol_data(SymbolDataKey.GROUP_ABELIAN.value) == 1
+    assert canonical_string(theory.group_charge("U1X", S("x"))) == "group_metadata::group_U1X(python::x)"
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    restored_su2f = restored.symbol("SU2F", role=SymbolRole.GROUP)
+    assert restored.groups == theory.groups
+    assert restored_su2f.get_symbol_data(SymbolDataKey.GROUP_KIND.value) == GroupKind.GLOBAL.value
+    assert "group_kind_global" in _local_tags(restored_su2f)
 
 
 def test_field_symbol_data_stores_field_roles_and_propagation_flags() -> None:

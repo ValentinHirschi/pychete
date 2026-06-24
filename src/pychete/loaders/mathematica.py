@@ -682,6 +682,13 @@ def _load_matchete_model_into(
                 _clean_name(raw_args[2]),
                 _clean_name(raw_args[3]),
             )
+        elif head == "DefineGlobalGroup":
+            if len(raw_args) < 2:
+                raise NotImplementedError(f"Unsupported DefineGlobalGroup: {statement}")
+            theory.define_global_group(
+                _clean_name(raw_args[0]),
+                _group_type(raw_args[1]),
+            )
         elif head == "DefineField":
             if len(raw_args) < 2:
                 raise NotImplementedError(f"Unsupported DefineField: {statement}")

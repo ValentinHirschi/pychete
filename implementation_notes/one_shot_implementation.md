@@ -1139,6 +1139,33 @@ discoveries, dependency patches, blockers, and remaining work.
   tests'` passed after the field-role metadata slice: 120 passed, 1 skipped.
   The skip is the existing GammaLoop API import check because GammaLoop was not
   requested in the current dependency manifest.
+- Added the global-group metadata slice required for Matchete model/theory
+  coverage:
+  - introduced public `GroupKind` enum values `GAUGE` and `GLOBAL`;
+  - added group-label Symbolica symbol data keys for `group_kind` and
+    `group_abelian`, plus `group_kind_*` and abelian/non-abelian tags on
+    theory-owned group symbols;
+  - extended gauge group metadata to record explicit kind and abelian status
+    while preserving coupling and vector-field information;
+  - added `Theory.define_global_group(...)` for global symmetry groups with no
+    gauge coupling or vector field;
+  - made JSON restore normalize older gauge-only group entries and reconstruct
+    group-kind tags from restored Symbolica symbol data;
+  - taught the Matchete loader to parse `DefineGlobalGroup[grName, lieGroup]`,
+    so global-group representations such as `SU2F[fund]` and global U(1)
+    charges can be stored in field metadata.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py
+  tests/unit/definitions/test_public_api.py'` passed after the global-group
+  metadata slice: 28 passed.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m mypy'`
+  passed after the global-group metadata slice: no issues found in 24 source
+  files.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests'` passed after the global-group metadata slice: 122 passed, 1 skipped.
+  The skip is the existing GammaLoop API import check because GammaLoop was not
+  requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1166,6 +1193,6 @@ discoveries, dependency patches, blockers, and remaining work.
 - Use `evaluator_probe_equal` in fixture comparison tests when canonical
   equality is insufficient.
 - Extend field metadata further for representation reality and SMEFT basis data.
-- Extend theory metadata further for representation reality, global groups, CG
-  tensors, and SMEFT basis data.
+- Extend theory metadata further for representation reality, CG tensors, and
+  SMEFT basis data.
 - Extend the matching engine toward one-loop matching.

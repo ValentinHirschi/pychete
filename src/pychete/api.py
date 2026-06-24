@@ -24,7 +24,7 @@ from .matching import (
 )
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
-from .theory import BuiltinIndexType, CouplingHandle, FieldChirality, FieldHandle, FieldMassKind, FieldRole, FieldVariation, Theory
+from .theory import BuiltinIndexType, CouplingHandle, FieldChirality, FieldHandle, FieldMassKind, FieldRole, FieldVariation, GroupKind, Theory
 from .validation import NumericProbeResult, evaluator_probe_equal
 
 __all__ = [
@@ -42,6 +42,7 @@ __all__ = [
     "FluctuationPropagator",
     "FluctuationSector",
     "FluctuationStatistics",
+    "GroupKind",
     "HeavyScalarSolution",
     "MatchingExpressionComparison",
     "MatchingResult",
