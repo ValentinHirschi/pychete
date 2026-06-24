@@ -7,7 +7,7 @@ from pathlib import Path
 from symbolica import Expression
 from symbolica.core import AtomType, ParseMode
 
-from ..expr import args, product_expr, sum_expr
+from ..expr import args, as_int, list_expr, product_expr, sum_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
 from ..theory import CouplingSelfConjugate, FieldChirality, Theory
 
@@ -54,13 +54,25 @@ def _parse_string(raw: str) -> str:
 def _split_top_level(text: str, separator: str) -> list[str]:
     parts: list[str] = []
     start = 0
-    square = curly = paren = 0
+    square = curly = paren = assoc = 0
     in_string = False
-    for i, char in enumerate(text):
+    i = 0
+    while i < len(text):
+        if not in_string and text.startswith("<|", i):
+            assoc += 1
+            i += 2
+            continue
+        if not in_string and text.startswith("|>", i):
+            assoc -= 1
+            i += 2
+            continue
+        char = text[i]
         if char == '"' and (i == 0 or text[i - 1] != "\\"):
             in_string = not in_string
+            i += 1
             continue
         if in_string:
+            i += 1
             continue
         if char == "[":
             square += 1
@@ -74,11 +86,12 @@ def _split_top_level(text: str, separator: str) -> list[str]:
             paren += 1
         elif char == ")":
             paren -= 1
-        elif char == separator and square == 0 and curly == 0 and paren == 0:
+        elif char == separator and square == 0 and curly == 0 and paren == 0 and assoc == 0:
             part = text[start:i].strip()
             if part:
                 parts.append(part)
             start = i + 1
+        i += 1
     tail = text[start:].strip()
     if tail:
         parts.append(tail)
@@ -357,6 +370,7 @@ def _rewrite_implicit_products(expr: str) -> str:
 def _normalize_expression(text: str) -> str:
     expr = _preprocess_names(text.strip())
     expr = re.sub(r"\s*//\s*RelabelIndices\s*$", "", expr)
+    expr = expr.replace(r"\[CenterDot]", "**")
     expr = _rewrite_prefix_apply(expr, "CConj")
     expr = _rewrite_prefix_apply(expr, "Bar")
     expr = _rewrite_integer_factorials(expr)
@@ -365,6 +379,63 @@ def _normalize_expression(text: str) -> str:
     expr = _rewrite_ncm(expr)
     expr = _rewrite_implicit_products(expr)
     return expr
+
+
+def _is_parsed_head(expr: Expression, name: str) -> bool:
+    return expr.get_type() is AtomType.Fn and _plain_name(expr) == name
+
+
+def _matchete_list_items(expr: Expression, theory: Theory, env: dict[str, Expression]) -> tuple[Expression, ...]:
+    if not _is_parsed_head(expr, "List"):
+        raise ValueError(f"Expected Mathematica List expression, got {expr.format_plain()}")
+    return tuple(_convert_expression(expr[i], theory, env) for i in range(len(expr)))
+
+
+def _matchete_field_type(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+    if expr.get_type() is AtomType.Var:
+        name = _plain_name(expr)
+        if name == "Scalar":
+            return s.Scalar
+        if name == "Fermion":
+            return s.Fermion
+        if name == "Ghost":
+            return s.Ghost
+        if name == "AntiGhost":
+            return s.AntiGhost
+    return _convert_expression(expr, theory, env)
+
+
+def _matchete_registered_label(expr: Expression, theory: Theory, registry: str) -> Expression:
+    if expr.get_type() is not AtomType.Var:
+        return _convert_expression(expr, theory, {})
+    name = _clean_name(_plain_name(expr))
+    if registry == "field" and name in theory.fields:
+        return theory.fields[name].label
+    if registry == "coupling" and name in theory.couplings:
+        return theory.couplings[name].label
+    return theory.symbol(name, role=SymbolRole.EXTERNAL)
+
+
+def _matchete_index_label(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+    if expr.get_type() is AtomType.Var:
+        name = _plain_name(expr)
+        dummy = re.fullmatch(r"d\$\$(\d+)", name)
+        if dummy:
+            return s.dummy_index(int(dummy.group(1)))
+        return theory.symbol(_clean_name(name), role=SymbolRole.INDEX)
+    return _convert_expression(expr, theory, env)
+
+
+def _matchete_projector(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+    if len(expr) != 1:
+        raise NotImplementedError(f"Unsupported Proj expression: {expr.format_plain()}")
+    value = _convert_expression(expr[0], theory, env)
+    value_int = as_int(value)
+    if value_int == 1:
+        return s.PR
+    if value_int == -1:
+        return s.PL
+    return s.Proj(value)
 
 
 def _plain_name(expr: Expression) -> str:
@@ -407,12 +478,59 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
         return _convert_expression(expr[0], theory, env) ** _convert_expression(expr[1], theory, env)
     if kind is AtomType.Fn:
         name = _plain_name(expr)
+        if name == "List":
+            return list_expr(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name == "Bar":
             return s.Bar(_convert_expression(expr[0], theory, env))
         if name == "CConj":
             return s.CConj(_convert_expression(expr[0], theory, env))
         if name == "NCM":
             return s.NCM(*(_convert_expression(child, theory, env) for child in args(expr)))
+        if name == "Field":
+            if len(expr) != 4:
+                raise NotImplementedError(f"Unsupported Field expression: {expr.format_plain()}")
+            return s.Field(
+                _matchete_registered_label(expr[0], theory, "field"),
+                _matchete_field_type(expr[1], theory, env),
+                list_expr(*_matchete_list_items(expr[2], theory, env)),
+                list_expr(*_matchete_list_items(expr[3], theory, env)),
+            )
+        if name == "Coupling":
+            if len(expr) != 3:
+                raise NotImplementedError(f"Unsupported Coupling expression: {expr.format_plain()}")
+            return s.Coupling(
+                _matchete_registered_label(expr[0], theory, "coupling"),
+                list_expr(*_matchete_list_items(expr[1], theory, env)),
+                _convert_expression(expr[2], theory, env),
+            )
+        if name == "Index":
+            if len(expr) != 2:
+                raise NotImplementedError(f"Unsupported Index expression: {expr.format_plain()}")
+            return s.Index(
+                _matchete_index_label(expr[0], theory, env),
+                _convert_expression(expr[1], theory, env),
+            )
+        if name == "FieldStrength":
+            if len(expr) != 4:
+                raise NotImplementedError(f"Unsupported FieldStrength expression: {expr.format_plain()}")
+            return s.FieldStrength(
+                _matchete_registered_label(expr[0], theory, "field"),
+                list_expr(*_matchete_list_items(expr[1], theory, env)),
+                list_expr(*_matchete_list_items(expr[2], theory, env)),
+                list_expr(*_matchete_list_items(expr[3], theory, env)),
+            )
+        if name == "DiracProduct":
+            return s.DiracProduct(*(_convert_expression(child, theory, env) for child in args(expr)))
+        if name == "GammaM":
+            return s.Gamma(*(_convert_expression(child, theory, env) for child in args(expr)))
+        if name == "Proj":
+            return _matchete_projector(expr, theory, env)
+        if name == "CG":
+            return s.CG(*(_convert_expression(child, theory, env) for child in args(expr)))
+        if name == "log":
+            if len(expr) != 1:
+                raise NotImplementedError(f"Unsupported Log expression: {expr.format_plain()}")
+            return _convert_expression(expr[0], theory, env).log()
         if name == "PlusHc":
             body = _convert_expression(expr[0], theory, env)
             return body + s.Bar(body)
@@ -442,6 +560,12 @@ def _eval_expression(text: str, theory: Theory, env: dict[str, Expression]) -> E
     normalized = _normalize_expression(text)
     parsed = Expression.parse(normalized, mode=ParseMode.Mathematica)
     return _convert_expression(parsed, theory, env).expand()
+
+
+def parse_matchete_expression(text: str, theory: Theory) -> Expression:
+    """Parse a Matchete/Wolfram expression string into pychete Symbolica heads."""
+
+    return _eval_expression(text, theory, {})
 
 
 def _eval_expression_list(text: str, theory: Theory) -> list[Expression]:

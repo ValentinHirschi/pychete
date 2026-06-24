@@ -124,10 +124,17 @@ def test_default_matching_target_manifest_lists_initial_models() -> None:
         "E_VLL",
         "S1S3LQs",
     ]
-    assert all(model["status"] == "pending_matching_fixture" for model in models)
+    assert {model["name"]: model["status"] for model in models} == {
+        "VLF_toy_model": "matching_fixture_committed",
+        "Singlet_Scalar_Extension": "pending_matching_fixture",
+        "E_VLL": "pending_matching_fixture",
+        "S1S3LQs": "pending_matching_fixture",
+    }
     for model in models:
         assert Path(model["model_asset"]).is_file()
         assert Path(model["model_fixture"]).is_file()
+        if matching_fixture := model.get("matching_fixture"):
+            assert Path(matching_fixture).is_file()
         for parent_asset in model["parent_assets"]:
             assert Path(parent_asset).is_file()
 
@@ -152,3 +159,19 @@ def test_default_model_definition_fixtures_load_without_mathematica() -> None:
         if fixture.source.get("parent_assets"):
             assert fixture.source["parent_lagrangian_included"] is False
         theory.symbol_manifest()
+
+
+def test_committed_vlf_matching_fixture_loads_structured_result_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+
+    assert fixture.kind == "matching_result"
+    assert fixture.source["matchete_runtime_required"] is False
+    assert fixture.source["matching_conditions_included"] is False
+    assert result.theory.name == "VLF_toy_model"
+    assert result.metadata["loop_order"] == 1
+    assert result.metadata["eft_order"] == 6
+    assert len(result.supertraces) == 13
+    assert result.matching_conditions == {}
+    assert "hFermion-lScalar" in result.supertraces
+    result.validate()

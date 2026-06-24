@@ -1,0 +1,516 @@
+{
+  "expressions": [
+    "matchete_off_shell_eft_lagrangian",
+    "matchete_on_shell_eft_lagrangian",
+    "matchete_supertrace_hFermion_lFermion",
+    "matchete_supertrace_hFermion_lFermion_hFermion_lFermion",
+    "matchete_supertrace_hFermion_lFermion_hFermion_lFermion_hFermion_lFermion",
+    "matchete_supertrace_hFermion_lFermion_lScalar",
+    "matchete_supertrace_hFermion_lFermion_lVector",
+    "matchete_supertrace_hFermion_lFermion_lVector_lFermion",
+    "matchete_supertrace_hFermion_lScalar",
+    "matchete_supertrace_hFermion_lScalar_hFermion_lFermion",
+    "matchete_supertrace_hFermion_lScalar_hFermion_lScalar",
+    "matchete_supertrace_hFermion_lScalar_lFermion",
+    "matchete_supertrace_hFermion_lScalar_lScalar",
+    "matchete_supertrace_hFermion_lVector",
+    "matchete_supertrace_hFermion_lVector_lFermion",
+    "matchete_uv_lagrangian"
+  ],
+  "kind": "matching_result",
+  "matching_results": {
+    "matchete_previous": {
+      "fluctuation_operators": {},
+      "matching_conditions": {},
+      "metadata": {
+        "eft_order": 6,
+        "loop_order": 1,
+        "source": "Matchete previous validation result"
+      },
+      "off_shell_eft_lagrangian": "matchete_off_shell_eft_lagrangian",
+      "on_shell_eft_lagrangian": "matchete_on_shell_eft_lagrangian",
+      "supertraces": {
+        "hFermion-lFermion": "matchete_supertrace_hFermion_lFermion",
+        "hFermion-lFermion-hFermion-lFermion": "matchete_supertrace_hFermion_lFermion_hFermion_lFermion",
+        "hFermion-lFermion-hFermion-lFermion-hFermion-lFermion": "matchete_supertrace_hFermion_lFermion_hFermion_lFermion_hFermion_lFermion",
+        "hFermion-lFermion-lScalar": "matchete_supertrace_hFermion_lFermion_lScalar",
+        "hFermion-lFermion-lVector": "matchete_supertrace_hFermion_lFermion_lVector",
+        "hFermion-lFermion-lVector-lFermion": "matchete_supertrace_hFermion_lFermion_lVector_lFermion",
+        "hFermion-lScalar": "matchete_supertrace_hFermion_lScalar",
+        "hFermion-lScalar-hFermion-lFermion": "matchete_supertrace_hFermion_lScalar_hFermion_lFermion",
+        "hFermion-lScalar-hFermion-lScalar": "matchete_supertrace_hFermion_lScalar_hFermion_lScalar",
+        "hFermion-lScalar-lFermion": "matchete_supertrace_hFermion_lScalar_lFermion",
+        "hFermion-lScalar-lScalar": "matchete_supertrace_hFermion_lScalar_lScalar",
+        "hFermion-lVector": "matchete_supertrace_hFermion_lVector",
+        "hFermion-lVector-lFermion": "matchete_supertrace_hFermion_lVector_lFermion"
+      },
+      "theory": "VLF_toy_model",
+      "uv_lagrangian": "matchete_uv_lagrangian"
+    }
+  },
+  "name": "VLF_toy_model_matchete_previous_matching",
+  "schema_version": 1,
+  "source": {
+    "generator": "helper_mathematica_scripts/convert_matchete_previous_results.py",
+    "matchete_model": "VLF_toy_model",
+    "matchete_runtime_required": false,
+    "matchete_version": "0.3.0",
+    "matching_conditions_exclusion": "Matchete stores None for VLF_toy_model matching conditions.",
+    "matching_conditions_included": false,
+    "model_fixture": "assets/validation/pychete/VLF_toy_model.model_fixture.json",
+    "reference_result": "Validation/MatchingResults/previous/VLF_toy_model-EFT.m"
+  },
+  "state": {
+    "active_theory": "VLF_toy_model",
+    "expressions": {
+      "matchete_off_shell_eft_lagrangian": {
+        "expression": "3\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))-1\ud835\udc56*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2+VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))-1/3*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)))*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/VLF_toy_model::external_epsilon+1\ud835\udc56*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/VLF_toy_model::external_epsilon-1\ud835\udc56*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+1\ud835\udc56*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2/VLF_toy_model::external_epsilon+VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/VLF_toy_model::external_epsilon-1/3*VLF_toy_model::external_hbar*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2/VLF_toy_model::external_epsilon+1\ud835\udc56/6*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1\ud835\udc56/6*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1/8*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::Gamma(pychete::Index(pychete::dummy_index(3),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(3),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/8*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(3),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(3),pychete::Lorentz)),pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+7/36*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz)))*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-2/15*VLF_toy_model::external_hbar*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz)))*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(3),pychete::Lorentz)),pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(3),pychete::Lorentz)))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+3\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-5\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+5\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+13/18*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^3*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^6*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^3*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^3/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))-1/4*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2/pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2+1\ud835\udc56/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1\ud835\udc56/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2+1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_on_shell_eft_lagrangian": {
+        "expression": "-2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))+VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))-VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2-1/3*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2-2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/VLF_toy_model::external_epsilon+VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/VLF_toy_model::external_epsilon-VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2/VLF_toy_model::external_epsilon-1/3*VLF_toy_model::external_hbar*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2/VLF_toy_model::external_epsilon+7/36*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+7/36*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))^2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-4/15*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^4*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-2/15*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^4*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PR),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))^2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-2/15*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^4*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))^2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^4*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))-13/18*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^6*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^3*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^3/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))-1/4*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2/pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2-1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2+1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lFermion": {
+        "expression": "-2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))+VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)))*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/VLF_toy_model::external_epsilon+VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/VLF_toy_model::external_epsilon-2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))+1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lFermion_hFermion_lFermion": {
+        "expression": "-VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2-VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^4*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2/VLF_toy_model::external_epsilon+13/18*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^3*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lFermion_hFermion_lFermion_hFermion_lFermion": {
+        "expression": "1/3*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^6*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^3*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^3/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lFermion_lScalar": {
+        "expression": "-1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lFermion_lVector": {
+        "expression": "3\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-3\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+3\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-3\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+3\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-3\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lFermion_lVector_lFermion": {
+        "expression": "1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+1\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lScalar": {
+        "expression": "3\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/VLF_toy_model::external_epsilon+1\ud835\udc56/6*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1\ud835\udc56/6*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1/8*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::Gamma(pychete::Index(pychete::dummy_index(3),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(3),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1/8*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(3),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(3),pychete::Lorentz)),pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+7/36*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(2),pychete::Lorentz)))*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lScalar_hFermion_lFermion": {
+        "expression": "-1\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lScalar_hFermion_lScalar": {
+        "expression": "0",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lScalar_lFermion": {
+        "expression": "-1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)^2*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))^2*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lScalar_lScalar": {
+        "expression": "1\ud835\udc56*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+1\ud835\udc56*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+3\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lVector": {
+        "expression": "-7\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+7\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-7\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+7\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-7\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+7\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_supertrace_hFermion_lVector_lFermion": {
+        "expression": "3\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-3\ud835\udc56/2*VLF_toy_model::external_hbar*log(VLF_toy_model::external_mubar2/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2+3\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)-3\ud835\udc56/2*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/(VLF_toy_model::external_epsilon*pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2)+3\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2-3\ud835\udc56/4*VLF_toy_model::external_hbar*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)),pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))/pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)^2",
+        "theory": "VLF_toy_model"
+      },
+      "matchete_uv_lagrangian": {
+        "expression": "-pychete::Coupling(VLF_toy_model::coupling_M,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List()))-pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0)*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::PR),pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List()))-pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Bar(pychete::Coupling(VLF_toy_model::coupling_y,pychete::List(),0))*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::PL),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List()))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))),pychete::Field(VLF_toy_model::field_Psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))+1\ud835\udc56*pychete::NCM(pychete::Bar(pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List())),pychete::DiracProduct(pychete::Gamma(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))),pychete::Field(VLF_toy_model::field_psi,pychete::Fermion,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz))))-1/4*pychete::FieldStrength(VLF_toy_model::field_A,pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz),pychete::Index(pychete::dummy_index(2),pychete::Lorentz)),pychete::List(),pychete::List())^2/pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2-1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Coupling(VLF_toy_model::coupling_m,pychete::List(),1)^2+1/2*pychete::Field(VLF_toy_model::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(pychete::dummy_index(1),pychete::Lorentz)))^2",
+        "theory": "VLF_toy_model"
+      }
+    },
+    "schema_version": 3,
+    "theories": {
+      "VLF_toy_model": {
+        "couplings": {
+          "M": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_M",
+            "name": "M",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "e": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_e",
+            "name": "e",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "m": {
+            "diagonal": [],
+            "eft_order": 1,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_m",
+            "name": "m",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "y": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "VLF_toy_model::coupling_y",
+            "name": "y",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          }
+        },
+        "fields": {
+          "A": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_A",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "A",
+            "self_conjugate": true,
+            "type": "pychete::Vector(VLF_toy_model::group_U1e)"
+          },
+          "Psi": {
+            "charges": [
+              "VLF_toy_model::group_U1e(1)"
+            ],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_Psi",
+            "mass_indices": [],
+            "mass_kind": "heavy",
+            "mass_label": "VLF_toy_model::coupling_M",
+            "name": "Psi",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "phi": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_phi",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": "VLF_toy_model::coupling_m",
+            "name": "phi",
+            "self_conjugate": true,
+            "type": "pychete::Scalar"
+          },
+          "psi": {
+            "charges": [
+              "VLF_toy_model::group_U1e(1)"
+            ],
+            "chirality": "none",
+            "indices": [],
+            "label": "VLF_toy_model::field_psi",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "psi",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          }
+        },
+        "groups": {
+          "U1e": {
+            "coupling": "e",
+            "field": "A",
+            "name": "U1e",
+            "type": "pychete::U1"
+          }
+        },
+        "index_types": {
+          "Lorentz": {
+            "dimension": null,
+            "name": "Lorentz",
+            "symbol": "pychete::Lorentz"
+          }
+        },
+        "schema_version": 2,
+        "symbols": [
+          {
+            "data": {
+              "group_coupling": "e",
+              "group_field": "A",
+              "group_type": {
+                "__pychete_expression__": "pychete::U1"
+              },
+              "label": "U1e",
+              "name": "U1e",
+              "role": "group",
+              "theory": "VLF_toy_model"
+            },
+            "name": "U1e",
+            "role": "group",
+            "symbol": "VLF_toy_model::group_U1e",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "M",
+              "name": "M",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "VLF_toy_model",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "M",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_M",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "e",
+              "name": "e",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "VLF_toy_model",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "e",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_e",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 1,
+              "indices": [],
+              "label": "m",
+              "name": "m",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "VLF_toy_model",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "m",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_m",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "y",
+              "name": "y",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "VLF_toy_model",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "y",
+            "role": "coupling",
+            "symbol": "VLF_toy_model::coupling_y",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(VLF_toy_model::group_U1e)"
+              },
+              "indices": [],
+              "label": "A",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "A",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "VLF_toy_model"
+            },
+            "name": "A",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_A",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "VLF_toy_model::group_U1e(1)"
+                }
+              ],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [],
+              "label": "Psi",
+              "mass_indices": [],
+              "mass_kind": "heavy",
+              "mass_label": {
+                "__pychete_expression__": "VLF_toy_model::coupling_M"
+              },
+              "name": "Psi",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "VLF_toy_model"
+            },
+            "name": "Psi",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_Psi",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Scalar"
+              },
+              "indices": [],
+              "label": "phi",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "mass_label": {
+                "__pychete_expression__": "VLF_toy_model::coupling_m"
+              },
+              "name": "phi",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "VLF_toy_model"
+            },
+            "name": "phi",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_phi",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "VLF_toy_model::group_U1e(1)"
+                }
+              ],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [],
+              "label": "psi",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "psi",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "VLF_toy_model"
+            },
+            "name": "psi",
+            "role": "field",
+            "symbol": "VLF_toy_model::field_psi",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "label": "epsilon",
+              "role": "external",
+              "theory": "VLF_toy_model"
+            },
+            "name": "epsilon",
+            "role": "external",
+            "symbol": "VLF_toy_model::external_epsilon",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "hbar",
+              "role": "external",
+              "theory": "VLF_toy_model"
+            },
+            "name": "hbar",
+            "role": "external",
+            "symbol": "VLF_toy_model::external_hbar",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          },
+          {
+            "data": {
+              "label": "mubar2",
+              "role": "external",
+              "theory": "VLF_toy_model"
+            },
+            "name": "mubar2",
+            "role": "external",
+            "symbol": "VLF_toy_model::external_mubar2",
+            "tags": [
+              "python::pychete",
+              "python::external"
+            ]
+          }
+        ],
+        "theory_name": "VLF_toy_model"
+      }
+    }
+  }
+}

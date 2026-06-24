@@ -6,9 +6,10 @@
       "name": "VLF_toy_model",
       "model_asset": "assets/models/VLF_toy_model.m",
       "model_fixture": "assets/validation/pychete/VLF_toy_model.model_fixture.json",
+      "matching_fixture": "assets/validation/pychete/VLF_toy_model.matching_fixture.json",
       "parent_assets": [],
       "reference_result": "Validation/MatchingResults/previous/VLF_toy_model-EFT.m",
-      "status": "pending_matching_fixture"
+      "status": "matching_fixture_committed"
     },
     {
       "name": "Singlet_Scalar_Extension",
