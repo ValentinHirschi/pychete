@@ -1026,6 +1026,36 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         internal_result.expression("interaction_power_type_internal_integral_finite_part"),
         vakint_backend.finite_part(expected_internal),
     )
+    internal_subtracted = setup.interaction_power_type_internal_minimal_subtraction_result(
+        tensor_reduce=False,
+        combine_terms=True,
+    )
+    expected_internal_pole = vakint_backend.pole_part(expected_internal)
+    expected_internal_finite = vakint_backend.finite_part(expected_internal)
+    assert internal_subtracted.metadata["stage"] == "interaction_power_type_internal_minimal_subtraction_result"
+    assert internal_subtracted.metadata["subtraction_scheme"] == "minimal_subtraction_preview"
+    assert internal_subtracted.metadata["poles_subtracted"] is True
+    assert internal_subtracted.metadata["integral_backend"] == "pychete_internal"
+    assert internal_subtracted.metadata["tensor_reduce"] is False
+    assert internal_subtracted.metadata["combine_terms"] is True
+    assert_expr_equal(internal_subtracted.off_shell_eft_lagrangian, expected_internal_finite)
+    assert_expr_equal(internal_subtracted.on_shell_eft_lagrangian, expected_internal_finite)
+    assert_expr_equal(
+        internal_subtracted.expression("interaction_power_type_internal_integral_sum"),
+        expected_internal,
+    )
+    assert_expr_equal(
+        internal_subtracted.expression("interaction_power_type_internal_integral_pole_part"),
+        expected_internal_pole,
+    )
+    assert_expr_equal(
+        internal_subtracted.expression("interaction_power_type_internal_integral_ms_counterterm"),
+        -expected_internal_pole,
+    )
+    assert_expr_equal(
+        internal_subtracted.expression("interaction_power_type_internal_integral_finite_part"),
+        expected_internal_finite,
+    )
     matchete_hbar_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
     assert_expr_equal(one_loop_normalization_factor(None), Expression.num(1))
     assert_expr_equal(matchete_hbar_factor, Expression.I * s.HBar)

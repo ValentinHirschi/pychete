@@ -1597,6 +1597,65 @@ class OneLoopSetup:
             },
         )
 
+    def interaction_power_type_internal_minimal_subtraction_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the internal-backend finite result after pole subtraction.
+
+        This is the minimal-subtraction-style counterpart of
+        ``interaction_power_type_internal_matching_result``. It keeps the
+        internally evaluated aggregate, pole part, finite part, and counterterm
+        in ``supertraces`` while using the epsilon^0 coefficient as the current
+        EFT Lagrangian preview.
+        """
+
+        unrenormalized = self.interaction_power_type_internal_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = unrenormalized.expression("interaction_power_type_internal_integral_pole_part")
+        finite = unrenormalized.expression("interaction_power_type_internal_integral_finite_part")
+        counterterm = (-pole).expand()
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            matching_conditions=unrenormalized.matching_conditions,
+            fluctuation_operators=unrenormalized.fluctuation_operators,
+            supertraces={
+                **unrenormalized.supertraces,
+                "interaction_power_type_internal_integral_ms_counterterm": counterterm,
+            },
+            metadata={
+                **unrenormalized.metadata,
+                "stage": "interaction_power_type_internal_minimal_subtraction_result",
+                "complete": False,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "on_shell_reduced": False,
+            },
+        )
+
     def interaction_power_type_normalized_matching_result(
         self,
         *,

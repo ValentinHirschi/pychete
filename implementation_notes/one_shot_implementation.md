@@ -2848,6 +2848,44 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 196 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Added an internal-backend minimal-subtraction result path for the public
+  interaction-power one-loop pipeline:
+  - added
+    `OneLoopSetup.interaction_power_type_internal_minimal_subtraction_result(...)`,
+    which reuses `interaction_power_type_internal_matching_result(...)` and
+    Symbolica-backed `vakint.pole_part(...)` / `vakint.finite_part(...)`
+    extraction rather than adding new symbolic traversal;
+  - the result keeps the internally evaluated aggregate, pole part, finite
+    part, and new
+    `interaction_power_type_internal_integral_ms_counterterm` diagnostic in
+    `MatchingResult.supertraces`;
+  - the current off-shell/on-shell EFT Lagrangians are the epsilon^0 finite
+    part, while metadata records
+    `stage == "interaction_power_type_internal_minimal_subtraction_result"`,
+    `subtraction_scheme == "minimal_subtraction_preview"`,
+    `poles_subtracted == True`, `integral_backend == "pychete_internal"`,
+    and the selected tensor-reduction / term-combination settings;
+  - added the method to the public API docstring coverage and extended the
+    interaction-power integration test to verify the finite result, pole part,
+    and counterterm against the existing internal analytic evaluator.
+- Verification for the internal minimal-subtraction slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+    tests/unit/definitions/test_public_api.py -q'` passed: 5 passed.
+- Final verification for the internal minimal-subtraction slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+    tests/unit/definitions/test_public_api.py -q'` passed: 5 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 196 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
