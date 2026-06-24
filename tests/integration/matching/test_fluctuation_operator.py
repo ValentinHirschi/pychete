@@ -936,6 +936,7 @@ def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficie
     lagrangian = -heavy_mass**2 * heavy() ** 2 / 2 - light_mass**2 * light() ** 2 / 2 - y() * heavy() * light() ** 2 / 2
     setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
     expected_raw = setup.power_type_vakint_integral_sum()
+    expected_interaction_raw = setup.interaction_power_type_vakint_integral_sum()
     eps = vakint_backend.epsilon_symbol()
     evaluated_series = S("double") / eps**2 + S("single") / eps + S("finite") + S("higher") * eps
 
@@ -983,6 +984,65 @@ def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficie
     assert_expr_equal(subtracted.expression("power_type_vakint_pole_part"), S("double") / eps**2 + S("single") / eps)
     assert_expr_equal(subtracted.expression("power_type_vakint_ms_counterterm"), -S("double") / eps**2 - S("single") / eps)
     assert_expr_equal(subtracted.expression("power_type_vakint_finite_part"), S("finite"))
+
+    interaction_coefficient_engine = FakePoleVakintEngine(evaluated_series)
+    interaction_pole_coefficient = setup.interaction_power_type_vakint_epsilon_coefficient(
+        -1,
+        engine=interaction_coefficient_engine,
+    )
+    assert interaction_coefficient_engine.calls == [("evaluate", expected_interaction_raw)]
+    assert_expr_equal(interaction_pole_coefficient, S("single"))
+
+    interaction_pole_engine = FakePoleVakintEngine(evaluated_series)
+    assert_expr_equal(
+        setup.interaction_power_type_vakint_pole_part(engine=interaction_pole_engine, max_pole_order=2),
+        S("double") / eps**2 + S("single") / eps,
+    )
+    assert interaction_pole_engine.calls == [("evaluate", expected_interaction_raw)]
+
+    interaction_finite_engine = FakePoleVakintEngine(evaluated_series)
+    assert_expr_equal(setup.interaction_power_type_vakint_finite_part(engine=interaction_finite_engine), S("finite"))
+    assert interaction_finite_engine.calls == [("evaluate", expected_interaction_raw)]
+
+    interaction_result_engine = FakePoleVakintEngine(evaluated_series)
+    interaction_result = setup.interaction_power_type_matching_result(
+        vakint_stage=VakintIntegralStage.EVALUATED,
+        vakint_engine=interaction_result_engine,
+        max_pole_order=2,
+    )
+    assert interaction_result_engine.calls == [("evaluate", expected_interaction_raw)]
+    assert interaction_result.metadata["vakint_stage"] == "evaluated"
+    assert interaction_result.metadata["uses_interaction_operator"] is True
+    assert_expr_equal(interaction_result.off_shell_eft_lagrangian, evaluated_series)
+    assert_expr_equal(
+        interaction_result.expression("interaction_power_type_vakint_pole_part"),
+        S("double") / eps**2 + S("single") / eps,
+    )
+    assert_expr_equal(interaction_result.expression("interaction_power_type_vakint_finite_part"), S("finite"))
+
+    interaction_subtraction_engine = FakePoleVakintEngine(evaluated_series)
+    interaction_subtracted = setup.interaction_power_type_minimal_subtraction_result(
+        vakint_engine=interaction_subtraction_engine,
+        max_pole_order=2,
+    )
+    assert interaction_subtraction_engine.calls == [("evaluate", expected_interaction_raw)]
+    assert interaction_subtracted.metadata["stage"] == "interaction_power_type_minimal_subtraction_result"
+    assert interaction_subtracted.metadata["complete"] is False
+    assert interaction_subtracted.metadata["subtraction_scheme"] == "minimal_subtraction_preview"
+    assert interaction_subtracted.metadata["poles_subtracted"] is True
+    assert interaction_subtracted.metadata["uses_interaction_operator"] is True
+    assert interaction_subtracted.metadata["max_pole_order"] == 2
+    assert_expr_equal(interaction_subtracted.off_shell_eft_lagrangian, S("finite"))
+    assert_expr_equal(interaction_subtracted.on_shell_eft_lagrangian, S("finite"))
+    assert_expr_equal(
+        interaction_subtracted.expression("interaction_power_type_vakint_pole_part"),
+        S("double") / eps**2 + S("single") / eps,
+    )
+    assert_expr_equal(
+        interaction_subtracted.expression("interaction_power_type_vakint_ms_counterterm"),
+        -S("double") / eps**2 - S("single") / eps,
+    )
+    assert_expr_equal(interaction_subtracted.expression("interaction_power_type_vakint_finite_part"), S("finite"))
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -1181,6 +1181,89 @@ class OneLoopSetup:
             return vakint.tensor_reduce(raw, engine=engine)
         return vakint.evaluate(raw, engine=engine)
 
+    def interaction_power_type_vakint_epsilon_coefficient(
+        self,
+        power: int,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+        epsilon: Expression | None = None,
+    ) -> Expression:
+        """Return one epsilon coefficient of the interaction-power vakint aggregate."""
+
+        from .backends import vakint
+
+        expr = self.interaction_power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            stage=stage,
+            short_form=short_form,
+            engine=engine,
+        )
+        return vakint.epsilon_coefficient(expr, power, epsilon=epsilon)
+
+    def interaction_power_type_vakint_pole_part(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+    ) -> Expression:
+        """Return the negative-power epsilon poles of the interaction-power aggregate."""
+
+        from .backends import vakint
+
+        expr = self.interaction_power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            stage=stage,
+            short_form=short_form,
+            engine=engine,
+        )
+        return vakint.pole_part(expr, max_pole_order=max_pole_order, epsilon=epsilon)
+
+    def interaction_power_type_vakint_finite_part(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+        epsilon: Expression | None = None,
+    ) -> Expression:
+        """Return the epsilon^0 coefficient of the interaction-power vakint aggregate."""
+
+        from .backends import vakint
+
+        expr = self.interaction_power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            stage=stage,
+            short_form=short_form,
+            engine=engine,
+        )
+        return vakint.finite_part(expr, epsilon=epsilon)
+
     def interaction_power_type_matching_result(
         self,
         *,
@@ -1191,6 +1274,8 @@ class OneLoopSetup:
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
     ) -> MatchingResult:
         """Return the current interaction-power one-loop preview result."""
 
@@ -1209,11 +1294,87 @@ class OneLoopSetup:
             short_form=vakint_short_form,
             engine=vakint_engine,
         )
+        supertraces = {
+            **self.interaction_power_type_expression_map(
+                prefix="interaction_power_type_supertrace",
+                heavy_field_dimension=heavy_field_dimension,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            ),
+            "interaction_power_type_eft_lagrangian": numerator_sum,
+            "interaction_power_type_vakint_integral_sum": vakint_sum,
+            f"interaction_power_type_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
+        }
+        if selected_vakint_stage is VakintIntegralStage.EVALUATED:
+            from .backends import vakint
+
+            supertraces["interaction_power_type_vakint_pole_part"] = vakint.pole_part(
+                vakint_sum,
+                max_pole_order=max_pole_order,
+                epsilon=epsilon,
+            )
+            supertraces["interaction_power_type_vakint_finite_part"] = vakint.finite_part(vakint_sum, epsilon=epsilon)
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
             off_shell_eft_lagrangian=vakint_sum,
             on_shell_eft_lagrangian=vakint_sum,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces=supertraces,
+            metadata={
+                "stage": "interaction_power_type_vakint_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "power_type_contribution_count": self.power_type_contribution_count,
+                "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "on_shell_reduced": False,
+                "vakint_stage": selected_vakint_stage.value,
+                "uses_interaction_operator": True,
+            },
+        )
+
+    def interaction_power_type_minimal_subtraction_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+    ) -> MatchingResult:
+        """Return the finite interaction-power result after pole subtraction."""
+
+        from .backends import vakint
+
+        numerator_sum = self.interaction_power_type_eft_lagrangian(
+            heavy_field_dimension=heavy_field_dimension,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        evaluated = self.interaction_power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            stage=VakintIntegralStage.EVALUATED,
+            engine=vakint_engine,
+        )
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        counterterm = (-pole).expand()
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
             fluctuation_operators={
                 **self.fluctuation_operator.to_expression_map(),
                 **self.fluctuation_operator.interaction_expression_map(),
@@ -1226,20 +1387,26 @@ class OneLoopSetup:
                     require_registered_mass=require_registered_mass,
                 ),
                 "interaction_power_type_eft_lagrangian": numerator_sum,
-                "interaction_power_type_vakint_integral_sum": vakint_sum,
-                f"interaction_power_type_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
+                "interaction_power_type_vakint_integral_sum": evaluated,
+                "interaction_power_type_vakint_integral_sum[evaluated]": evaluated,
+                "interaction_power_type_vakint_pole_part": pole,
+                "interaction_power_type_vakint_ms_counterterm": counterterm,
+                "interaction_power_type_vakint_finite_part": finite,
             },
             metadata={
-                "stage": "interaction_power_type_vakint_result",
+                "stage": "interaction_power_type_minimal_subtraction_result",
                 "complete": False,
                 "loop_order": 1,
                 "eft_order": self.eft_order,
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
-                "power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "power_type_contribution_count": self.power_type_contribution_count,
                 "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
                 "on_shell_reduced": False,
-                "vakint_stage": selected_vakint_stage.value,
+                "vakint_stage": VakintIntegralStage.EVALUATED.value,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "max_pole_order": max_pole_order,
                 "uses_interaction_operator": True,
             },
         )

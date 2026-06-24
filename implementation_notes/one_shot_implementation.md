@@ -931,6 +931,33 @@ discoveries, dependency patches, blockers, and remaining work.
     `metadata["stage"] == "interaction_power_type_vakint_result"` and the
     `interaction_power_type_vakint_integral_sum` expression namespace for both
     direct `Theory.match(..., loop_order=1)` and fixture-backed previews.
+- Completed the forty-third implementation slice:
+  - added interaction-power counterparts to the evaluated-vakint Laurent
+    helpers:
+    `OneLoopSetup.interaction_power_type_vakint_epsilon_coefficient(...)`,
+    `interaction_power_type_vakint_pole_part(...)`, and
+    `interaction_power_type_vakint_finite_part(...)`;
+  - extended `OneLoopSetup.interaction_power_type_matching_result(...)` so an
+    evaluated vakint result records
+    `interaction_power_type_vakint_pole_part` and
+    `interaction_power_type_vakint_finite_part` in the `MatchingResult`
+    supertrace map, matching the legacy power-type inspection surface, and
+    corrected its legacy `power_type_contribution_count` metadata to report
+    the legacy contribution count separately from
+    `interaction_power_type_contribution_count`;
+  - added
+    `OneLoopSetup.interaction_power_type_minimal_subtraction_result(...)`, an
+    explicitly incomplete finite-part result over the interaction-power vakint
+    aggregate that records the pole, minimal-subtraction-preview counterterm,
+    finite part, `uses_interaction_operator=True`, and
+    `subtraction_scheme="minimal_subtraction_preview"`;
+  - kept the symbolic extraction in the existing `pychete.backends.vakint`
+    helpers, which use Symbolica `Expression.coefficient_list(...)` over
+    vakint's epsilon regulator, so this slice adds orchestration around native
+    Symbolica/vakint-backed operations rather than Python Laurent parsing;
+  - added focused tests covering the new interaction-power epsilon
+    coefficient, pole part, finite part, evaluated matching-result exposure,
+    minimal-subtraction result metadata, and public API docstring coverage.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1904,6 +1931,24 @@ discoveries, dependency patches, blockers, and remaining work.
   manifest.
 - `git diff --check` passed after the public one-loop interaction-power routing
   slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients
+  tests/unit/definitions/test_public_api.py -q'` passed after the
+  interaction-power pole/minimal-subtraction slice: 6 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the
+  interaction-power pole/minimal-subtraction slice: 39 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the interaction-power pole/minimal-subtraction slice:
+  no issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the interaction-power
+  pole/minimal-subtraction slice: 156 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `git diff --check` passed after the interaction-power
+  pole/minimal-subtraction slice.
 
 ## Remaining Work
 
