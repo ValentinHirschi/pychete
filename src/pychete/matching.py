@@ -762,6 +762,42 @@ class OneLoopSetup:
             for contribution in self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
         ).expand()
 
+    def power_type_matching_preview(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+    ) -> MatchingResult:
+        """Return an explicitly incomplete matching-result preview for power-type terms."""
+
+        off_shell = self.power_type_eft_lagrangian(heavy_field_dimension=heavy_field_dimension)
+        supertraces = {
+            **self.power_type_expression_map(prefix="power_type_supertrace"),
+            "power_type_eft_lagrangian": off_shell,
+            "power_type_vakint_integral_sum": self.power_type_vakint_integral_sum(
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
+            ),
+        }
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=off_shell,
+            on_shell_eft_lagrangian=off_shell,
+            fluctuation_operators=self.fluctuation_operator.to_expression_map(),
+            supertraces=supertraces,
+            metadata={
+                "stage": "power_type_preview",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "power_type_contribution_count": self.power_type_contribution_count,
+                "on_shell_reduced": False,
+            },
+        )
+
     def vakint_integral_expression_map(
         self,
         *,

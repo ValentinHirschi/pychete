@@ -680,6 +680,16 @@ discoveries, dependency patches, blockers, and remaining work.
   This gives the future `MatchingResult.off_shell_eft_lagrangian` and
   `MatchingResult.supertraces` stages a concrete intermediate value without
   making `Theory.match(loop_order=1)` return a partial result.
+- Added `OneLoopSetup.power_type_matching_preview(...)`, which builds an
+  explicitly incomplete `MatchingResult` from the current one-loop setup
+  stages. The preview carries the UV Lagrangian, fluctuation-operator map,
+  individual power-type supertrace expressions, the aggregate off-shell
+  power-type contribution, the aggregate vakint topology sum, and metadata
+  marking `complete=False`, `stage="power_type_preview"`, and
+  `on_shell_reduced=False`. This starts wiring the existing setup outputs into
+  the final structured result surface while preserving the guard that
+  `Theory.match(loop_order=1)` must not return until the full one-loop engine
+  exists.
 
 ## Test Status
 
@@ -987,6 +997,16 @@ discoveries, dependency patches, blockers, and remaining work.
   power-type-aggregation slice: 113 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the power-type-preview-result slice: 24 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  power-type-preview-result slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  power-type-preview-result slice: 113 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
 
 ## Remaining Work
 

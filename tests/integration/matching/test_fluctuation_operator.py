@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import FieldMassKind, FluctuationSector, FluctuationStatistics, Theory, canonical_string, s
+from pychete import FieldMassKind, FluctuationSector, FluctuationStatistics, MatchingResult, Theory, canonical_string, s
 from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vakint as vakint_backend
@@ -350,6 +350,24 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
         setup.to_expression_map()["one_loop_setup[power_type_eft_lagrangian]"],
         setup.power_type_eft_lagrangian(),
     )
+    preview = setup.power_type_matching_preview()
+    assert isinstance(preview, MatchingResult)
+    assert preview.theory is theory
+    assert preview.metadata["stage"] == "power_type_preview"
+    assert preview.metadata["complete"] is False
+    assert preview.metadata["loop_order"] == 1
+    assert preview.metadata["eft_order"] == 6
+    assert preview.metadata["max_trace_order"] == 2
+    assert preview.metadata["power_type_contribution_count"] == 3
+    assert_expr_equal(preview.off_shell_eft_lagrangian, setup.power_type_eft_lagrangian())
+    assert_expr_equal(preview.on_shell_eft_lagrangian, setup.power_type_eft_lagrangian())
+    assert_expr_equal(preview.expression("power_type_eft_lagrangian"), setup.power_type_eft_lagrangian())
+    assert_expr_equal(
+        preview.expression("power_type_supertrace[heavy-light-heavy,eft_numerator]"),
+        -y() ** 2 * light() ** 2 / 2,
+    )
+    assert preview.fluctuation_operators == setup.fluctuation_operator.to_expression_map()
+    preview.validate()
 
     with pytest.raises(ValueError, match="max_trace_order"):
         theory.one_loop_setup(lagrangian, max_trace_order=0)
@@ -458,6 +476,10 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         )
     ).expand()
     assert_expr_equal(setup.power_type_vakint_integral_sum(), expected_power_type_vakint_sum)
+    assert_expr_equal(
+        setup.power_type_matching_preview().expression("power_type_vakint_integral_sum"),
+        expected_power_type_vakint_sum,
+    )
     assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
     assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.supertrace_propagator_kernel[") for key in setup.to_expression_map())
