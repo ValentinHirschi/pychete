@@ -916,7 +916,7 @@ class Theory:
 
         ``loop_order=0`` preserves pychete's existing tree-level heavy-scalar
         matching behavior and returns an expression. ``loop_order=1`` returns
-        the current native-backed one-loop ``MatchingResult`` and keeps
+        the current internal-analytic one-loop ``MatchingResult`` and keeps
         ``metadata["complete"]`` false until the full Matchete-level engine is
         implemented.
         """
