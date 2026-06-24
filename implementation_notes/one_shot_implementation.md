@@ -863,6 +863,29 @@ discoveries, dependency patches, blockers, and remaining work.
     operator-derived scalar propagator insertion chains, decorated kernels,
     vakint topology lowering, setup expression-map exposure, and public API
     docstring coverage.
+- Completed the fortieth implementation slice:
+  - added `FluctuationOperator.free_inverse_entry(...)`,
+    `interaction_entry(...)`, `interaction_expression_map(...)`,
+    `interaction_block(...)`, and `interaction_supertrace_plan(...)` so the
+    momentum-lowered fluctuation operator can be split into free inverse
+    propagation plus interaction insertions;
+  - added `OneLoopSetup.interaction_supertrace_plan(...)`,
+    `interaction_block_traces(...)`, and
+    `interaction_supertrace_expression_map(...)` to expose closed traces built
+    from interaction-only heavy/light blocks without changing the legacy
+    power-type preview path yet;
+  - free inverse subtraction is restricted to the valid real or barred/
+    unbarred complex kinetic column and reuses the existing operator-derived
+    propagator denominator lookup; the denominator is converted back to
+    `LoopMomentumSquared - mass^2`, so diagonal entries such as `q^2 - m^2 -
+    H*y` leave only the insertion `-H*y`;
+  - `OneLoopSetup.to_expression_map(...)` now includes
+    `fluctuation_operator_interaction` and `interaction_supertrace_kernel`
+    namespaces for inspecting this propagator-expansion input stage;
+  - added focused tests proving that free real scalar diagonal entries vanish
+    in the interaction operator, interaction-dependent diagonal entries remain,
+    heavy-light interaction traces keep the expected `y^2 phi^2` insertion, and
+    the public API docstring coverage includes the new methods.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1785,6 +1808,23 @@ discoveries, dependency patches, blockers, and remaining work.
   check because GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the operator-derived propagator insertion
   slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_operator_derived_propagator_insertions
+  tests/unit/definitions/test_public_api.py -q'` passed after the
+  interaction-only fluctuation-operator slice: 6 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the interaction-only
+  fluctuation-operator slice: 39 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the interaction-only fluctuation-operator slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the interaction-only fluctuation-operator
+  slice: 156 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the interaction-only fluctuation-operator
+  slice.
 
 ## Remaining Work
 
@@ -1792,9 +1832,9 @@ discoveries, dependency patches, blockers, and remaining work.
   targets for the pychete one-loop matching engine.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
-  full propagator expansion beyond the new scalar operator-derived insertion
-  chains, and integration-by-parts convention validation against Matchete
-  fixtures.
+  full propagator expansion beyond the new scalar operator-derived denominator
+  and interaction-insertion chains, and integration-by-parts convention
+  validation against Matchete fixtures.
 - Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
   and spin/Lorentz mode metadata into backend-evaluated vector Lorentz traces,
   real/complex coefficient placement in actual supertrace kernels, and later

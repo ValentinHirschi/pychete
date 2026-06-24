@@ -816,6 +816,54 @@ class OneLoopSetup:
             for trace in self.block_traces
         }
 
+    def interaction_supertrace_plan(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> SupertracePlan:
+        """Return a supertrace plan built from interaction-only operator blocks."""
+
+        return self.fluctuation_operator.interaction_supertrace_plan(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+
+    def interaction_block_traces(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+    ) -> tuple[SupertraceBlockTrace, ...]:
+        """Generate closed traces from interaction-only fluctuation blocks."""
+
+        plan = self.interaction_supertrace_plan(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        traces: list[SupertraceBlockTrace] = []
+        for order in range(1, self.max_trace_order + 1):
+            traces.extend(plan.closed_block_traces(order, include_light_only=include_light_only))
+        return tuple(traces)
+
+    def interaction_supertrace_expression_map(
+        self,
+        *,
+        prefix: str = "interaction_supertrace_kernel",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> dict[str, Expression]:
+        """Return deterministic traces built from interaction-only blocks."""
+
+        entries: dict[str, Expression] = {}
+        for trace in self.interaction_block_traces(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        ):
+            entries.update(trace.to_expression_map(prefix=prefix))
+        return entries
+
     def operator_propagator_denominator_chain(
         self,
         trace: SupertraceBlockTrace | str,
@@ -1439,11 +1487,15 @@ class OneLoopSetup:
             **self.fluctuation_operator.momentum_expression_map(
                 prefix=f"{prefix}.fluctuation_operator_momentum",
             ),
+            **self.fluctuation_operator.interaction_expression_map(
+                prefix=f"{prefix}.fluctuation_operator_interaction",
+            ),
             **self.fluctuation_operator.propagator_denominator_expression_map(
                 prefix=f"{prefix}.fluctuation_operator_denominator",
             ),
             **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
+            **self.interaction_supertrace_expression_map(prefix=f"{prefix}.interaction_supertrace_kernel"),
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
             **self.supertrace_operator_propagator_expression_map(
                 prefix=f"{prefix}.supertrace_operator_propagator_kernel",
@@ -1623,6 +1675,147 @@ class FluctuationOperator:
                 key = f"{prefix}[{canonical_string(row)},{canonical_string(column)}]"
                 entries[key] = denominator
         return entries
+
+    def free_inverse_entry(
+        self,
+        row: FluctuationBasisItem,
+        column: FluctuationBasisItem,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> Expression:
+        """Return the free inverse-propagator part of one momentum entry."""
+
+        row_expr = _fluctuation_basis_expression(self.theory, row)
+        column_expr = _fluctuation_basis_expression(self.theory, column)
+        row_mode = self.mode_for(row_expr)
+        if canonical_string(column_expr) not in _free_inverse_column_keys(row_mode):
+            return Expression.num(0)
+        denominator = self.propagator_denominator_for_mode(
+            row_expr,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        if denominator is None:
+            return Expression.num(0)
+        return _propagator_denominator_inverse_expression(denominator)
+
+    def interaction_entry(
+        self,
+        row: FluctuationBasisItem,
+        column: FluctuationBasisItem,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> Expression:
+        """Return one fluctuation-operator entry with free propagation removed."""
+
+        momentum_entry = self.momentum_entry(
+            row,
+            column,
+            loop_momentum_squared=loop_momentum_squared,
+        )
+        free_entry = self.free_inverse_entry(
+            row,
+            column,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        return (momentum_entry - free_entry).expand()
+
+    def interaction_expression_map(
+        self,
+        *,
+        prefix: str = "fluctuation_operator_interaction",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> dict[str, Expression]:
+        """Return deterministic interaction-only fluctuation-operator entries."""
+
+        entries: dict[str, Expression] = {}
+        for row in self.basis:
+            for column in self.basis:
+                key = f"{prefix}[{canonical_string(row)},{canonical_string(column)}]"
+                entries[key] = self.interaction_entry(
+                    row,
+                    column,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+        return entries
+
+    def interaction_block(
+        self,
+        row_sector: FluctuationSector | str,
+        column_sector: FluctuationSector | str,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> FluctuationOperatorBlock:
+        """Return a sector block built from interaction-only operator entries."""
+
+        if not self.modes:
+            raise ValueError("This fluctuation operator does not carry basis mode metadata")
+        row_selector = FluctuationSector.from_user(row_sector)
+        column_selector = FluctuationSector.from_user(column_sector)
+        row_indices = _sector_indices(self.modes, row_selector)
+        column_indices = _sector_indices(self.modes, column_selector)
+        return FluctuationOperatorBlock(
+            theory=self.theory,
+            row_sector=row_selector,
+            column_sector=column_selector,
+            rows=tuple(self.modes[index] for index in row_indices),
+            columns=tuple(self.modes[index] for index in column_indices),
+            matrix=tuple(
+                tuple(
+                    self.interaction_entry(
+                        self.modes[row].field,
+                        self.modes[column].field,
+                        loop_momentum_squared=loop_momentum_squared,
+                        require_registered_mass=require_registered_mass,
+                    )
+                    for column in column_indices
+                )
+                for row in row_indices
+            ),
+        )
+
+    def interaction_supertrace_plan(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> SupertracePlan:
+        """Prepare heavy/light blocks with free inverse propagation removed."""
+
+        return SupertracePlan(
+            theory=self.theory,
+            operator=self,
+            heavy_heavy=self.interaction_block(
+                FluctuationSector.HEAVY,
+                FluctuationSector.HEAVY,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            ),
+            heavy_light=self.interaction_block(
+                FluctuationSector.HEAVY,
+                FluctuationSector.LIGHT,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            ),
+            light_heavy=self.interaction_block(
+                FluctuationSector.LIGHT,
+                FluctuationSector.HEAVY,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            ),
+            light_light=self.interaction_block(
+                FluctuationSector.LIGHT,
+                FluctuationSector.LIGHT,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            ),
+        )
 
     def to_expression_map(self, *, prefix: str = "fluctuation_operator") -> dict[str, Expression]:
         """Return deterministic named entries suitable for ``MatchingResult``."""
@@ -2104,8 +2297,20 @@ def _propagator_denominator_mass_squared(denominator: Expression) -> Expression:
     return denominator[1]
 
 
+def _propagator_denominator_inverse_expression(denominator: Expression) -> Expression:
+    if not is_head(denominator, s.PropagatorDenominator):
+        raise ValueError(f"Expected PropagatorDenominator, got {canonical_string(denominator)}")
+    return (denominator[0] - denominator[1]).expand()
+
+
 def _conjugate_fluctuation_field(field: Expression) -> Expression:
     return bar_field_inner(field) if is_bar_field(field) else s.Bar(field)
+
+
+def _free_inverse_column_keys(mode: FluctuationMode) -> set[str]:
+    if mode.self_conjugate:
+        return {canonical_string(mode.field)}
+    return {canonical_string(_conjugate_fluctuation_field(mode.field))}
 
 
 def _coefficient_of_momentum_power(expr: Expression, momentum_squared: Expression, power: int) -> Expression | None:

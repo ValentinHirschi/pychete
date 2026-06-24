@@ -831,6 +831,52 @@ def test_one_loop_setup_builds_operator_derived_propagator_insertions() -> None:
     assert any(key.startswith("one_loop_setup.operator_vakint_integral[") for key in setup_map)
 
 
+def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
+    theory = Theory("one_loop_setup_interaction_operator")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    operator = setup.fluctuation_operator
+
+    assert_expr_equal(operator.free_inverse_entry(heavy, heavy), s.LoopMomentumSquared - heavy_mass**2)
+    assert_expr_equal(operator.free_inverse_entry(light, light), s.LoopMomentumSquared - light_mass**2)
+    assert_expr_equal(operator.free_inverse_entry(heavy, light), Expression.num(0))
+    assert_expr_equal(operator.interaction_entry(heavy, heavy), Expression.num(0))
+    assert_expr_equal(operator.interaction_entry(light, light), -y() * heavy())
+    assert_expr_equal(operator.interaction_entry(heavy, light), -y() * light())
+    assert_expr_equal(operator.interaction_entry(light, heavy), -y() * light())
+
+    interaction_map = operator.interaction_expression_map()
+    assert_expr_equal(
+        interaction_map[f"fluctuation_operator_interaction[{canonical_string(heavy())},{canonical_string(heavy())}]"],
+        Expression.num(0),
+    )
+    interaction_plan = setup.interaction_supertrace_plan()
+    assert_expr_equal(interaction_plan.heavy_heavy.entry(heavy, heavy), Expression.num(0))
+    assert_expr_equal(interaction_plan.light_light.entry(light, light), -y() * heavy())
+    interaction_traces = {trace.name: trace for trace in setup.interaction_block_traces()}
+    assert_expr_equal(interaction_traces["heavy-heavy"].expression, Expression.num(0))
+    assert_expr_equal(interaction_traces["heavy-heavy-heavy"].expression, Expression.num(0))
+    assert_expr_equal(interaction_traces["heavy-light-heavy"].expression, y() ** 2 * light() ** 2)
+    interaction_supertraces = setup.interaction_supertrace_expression_map()
+    assert_expr_equal(interaction_supertraces["interaction_supertrace_kernel[heavy-heavy]"], Expression.num(0))
+    setup_map = setup.to_expression_map()
+    assert_expr_equal(
+        setup_map[f"one_loop_setup.fluctuation_operator_interaction[{canonical_string(light())},{canonical_string(light())}]"],
+        -y() * heavy(),
+    )
+    assert_expr_equal(
+        setup_map["one_loop_setup.interaction_supertrace_kernel[heavy-light-heavy]"],
+        y() ** 2 * light() ** 2,
+    )
+
+
 def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients() -> None:
     theory = Theory("one_loop_setup_poles")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
