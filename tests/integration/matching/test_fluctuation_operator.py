@@ -246,3 +246,30 @@ def test_supertrace_plan_rejects_non_closed_block_trace() -> None:
 
     with pytest.raises(ValueError, match="matching column and row modes"):
         plan.block_trace("mismatched", plan.heavy_heavy, plan.light_heavy)
+
+
+def test_supertrace_plan_generates_closed_block_traces_by_order() -> None:
+    theory = Theory("supertrace_closed_paths")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = heavy() ** 2 + light() ** 2 - y() * heavy() * light() ** 2 / 2
+
+    plan = theory.fluctuation_operator(lagrangian).supertrace_plan()
+    order_one = plan.closed_block_traces(1)
+    order_one_with_light = plan.closed_block_traces(1, include_light_only=True)
+    order_two = {trace.name: trace for trace in plan.closed_block_traces(2)}
+
+    assert tuple(trace.name for trace in order_one) == ("heavy-heavy",)
+    assert tuple(trace.name for trace in order_one_with_light) == ("heavy-heavy", "light-light")
+    assert set(order_two) == {
+        "heavy-heavy-heavy",
+        "heavy-light-heavy",
+        "light-heavy-light",
+    }
+    assert_expr_equal(order_two["heavy-heavy-heavy"].expression, Expression.num(4))
+    assert_expr_equal(order_two["heavy-light-heavy"].expression, y() ** 2 * light() ** 2)
+    assert_expr_equal(order_two["light-heavy-light"].expression, y() ** 2 * light() ** 2)
+
+    with pytest.raises(ValueError, match="at least 1"):
+        plan.closed_block_traces(0)

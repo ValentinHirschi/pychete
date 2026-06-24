@@ -393,6 +393,17 @@ discoveries, dependency patches, blockers, and remaining work.
   - added tests for heavy-heavy and heavy-light/light-heavy block traces,
     ordered sector-path metadata, expression-map export, invalid open or
     mismatched block chains, public API docstrings, and Jupyter repr coverage.
+- Completed the twenty-first implementation slice:
+  - added `SupertracePlan.closed_block_traces(...)`, which deterministically
+    enumerates closed heavy/light sector paths at a requested block order and
+    turns each path into a `SupertraceBlockTrace`;
+  - kept the all-light closed path excluded by default, while allowing callers
+    to include it explicitly for diagnostics or EFT-side comparison work;
+  - used Python only for finite sector-path orchestration over the existing
+    heavy/light blocks; each generated kernel still delegates its symbolic
+    matrix product to the Symbolica Matrix path from the previous slice;
+  - added tests for order-one and order-two closed paths, the light-only toggle,
+    generated kernel expressions, order validation, and public API docstrings.
 
 ## Backend/API Discoveries
 
@@ -517,6 +528,12 @@ discoveries, dependency patches, blockers, and remaining work.
   supertrace generation can decorate with propagators, statistics factors,
   momentum expansions, idenso/spenso tensor simplification, and vakint integral
   evaluation.
+- `SupertracePlan.closed_block_traces(...)` now provides deterministic
+  structural supertrace-kernel generation by block order. This is still only
+  sector-path orchestration; the symbolic work for each generated trace remains
+  native Symbolica Matrix multiplication, and future slices still need to add
+  propagator insertion ordering, EFT truncation, tensor reduction, and vakint
+  integral evaluation.
 
 ## Test Status
 
@@ -717,6 +734,16 @@ discoveries, dependency patches, blockers, and remaining work.
   supertrace-block-trace slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   supertrace-block-trace slice: 105 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the closed-supertrace-path slice: 19 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  closed-supertrace-path slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  closed-supertrace-path slice: 106 passed, 1 skipped. The skip is the existing
   GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
 

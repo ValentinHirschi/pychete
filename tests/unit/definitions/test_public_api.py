@@ -108,6 +108,7 @@ def test_public_api_methods_have_docstrings() -> None:
         pychete.SupertracePlan: [
             "block_trace",
             "blocks",
+            "closed_block_traces",
             "heavy_mode_count",
             "heavy_supertrace_sign",
             "light_mode_count",

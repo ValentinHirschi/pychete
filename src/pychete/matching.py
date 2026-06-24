@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from enum import StrEnum
 from html import escape
+from itertools import product
 from typing import Iterable, Iterator, Sequence, TypeAlias
 
 from symbolica import Expression, Matrix, Replacement
@@ -285,6 +286,28 @@ class SupertracePlan:
             modes=normalized_blocks[0].rows,
             expression=_supertrace_block_product(normalized_blocks),
         )
+
+    def closed_block_traces(self, order: int, *, include_light_only: bool = False) -> tuple[SupertraceBlockTrace, ...]:
+        """Generate all closed heavy/light sector trace kernels of an order."""
+
+        if order < 1:
+            raise ValueError("closed block trace order must be at least 1")
+        traces: list[SupertraceBlockTrace] = []
+        sectors = (FluctuationSector.HEAVY, FluctuationSector.LIGHT)
+        block_by_sectors = {
+            (block.row_sector, block.column_sector): block
+            for block in self.blocks()
+        }
+        for path in product(sectors, repeat=order):
+            closed_path = (*path, path[0])
+            if not include_light_only and all(sector is FluctuationSector.LIGHT for sector in closed_path):
+                continue
+            blocks = tuple(
+                block_by_sectors[(closed_path[index], closed_path[index + 1])]
+                for index in range(order)
+            )
+            traces.append(self.block_trace(_sector_path_name(closed_path), *blocks))
+        return tuple(traces)
 
     def to_expression_map(self, *, prefix: str = "supertrace_input") -> dict[str, Expression]:
         """Return deterministic named expressions for all planned blocks."""
@@ -732,6 +755,10 @@ def _validate_closed_block_chain(blocks: tuple[FluctuationOperatorBlock, ...]) -
 
 def _mode_keys(modes: tuple[FluctuationMode, ...]) -> tuple[str, ...]:
     return tuple(canonical_string(mode.field) for mode in modes)
+
+
+def _sector_path_name(path: tuple[FluctuationSector, ...]) -> str:
+    return "-".join(sector.value for sector in path)
 
 
 def _supertrace_block_product(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:
