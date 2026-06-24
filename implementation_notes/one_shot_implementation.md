@@ -2679,6 +2679,28 @@ discoveries, dependency patches, blockers, and remaining work.
     for powers 1 through 5 and for bare mass-squared slots, plus setup-level
     tests proving optional tensor-reduction delegation before internal
     evaluation.
+- Extended the internal scalar one-loop vacuum-integral evaluator beyond
+  single-scale massive topologies:
+  - read Matchete `Package/LoopIntegration.m`, especially
+    `SingleScaleIntegral[...]`, `MultiScaleIntegral[...]`, and
+    `EvaluateLoopFunctionsInternal[...]`;
+  - added `evaluate_one_loop_vakint_expression(...)`, a generic internal
+    scalar evaluator for one-loop `vakint::topo(...)` factors after tensor
+    reduction;
+  - the evaluator treats zero-mass propagators as powers of `1/k^2`, returns
+    zero for scaleless all-massless topologies, combines repeated nonzero
+    masses, and follows Matchete's multiscale formula that reduces mixed-mass
+    topologies to derivatives of single-scale integrals with respect to
+    mass-squared variables;
+  - Symbolica performs the derivative and replacement work; Python is used only
+    for the finite topology bookkeeping over propagator powers;
+  - switched `OneLoopSetup.power_type_internal_integral_sum(...)` and
+    `interaction_power_type_internal_integral_sum(...)` to this generic
+    evaluator, so mixed heavy/light scalar topologies now have a pychete-owned
+    analytic path after optional native vakint tensor reduction;
+  - kept `evaluate_one_loop_single_scale_vakint_expression(...)` as the strict
+    single-scale massive helper and added tests for two-mass, massless/massive,
+    and all-massless scalar topology cases.
 
 ## Remaining Work
 
@@ -2710,9 +2732,11 @@ discoveries, dependency patches, blockers, and remaining work.
   minimal-subtraction preview, and validation against known native backend
   topologies.
 - Extend the pychete-owned analytic vacuum-integral backend beyond the new
-  single-scale massive finite-order evaluator into Matchete's one-loop
-  zero-mass and mixed-mass cases after tensor reduction. Native vakint remains
-  available for topology-independent tensor reduction and supported
+  scalar one-loop zero/mixed/single-scale evaluator into broader Matchete loop
+  function behavior: canonical LF-style simplification, higher numerator
+  structures after tensor reduction, near-degenerate expansion policies, and
+  validation against more Matchete `LoopIntegration.wl` cases. Native vakint
+  remains available for topology-independent tensor reduction and supported
   single-scale massive analytic evaluation cross-checks.
 - Extend the new compact Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`

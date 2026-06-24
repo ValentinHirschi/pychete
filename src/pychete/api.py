@@ -5,6 +5,7 @@ from .backends.vacuum_integrals import (
     evaluate_one_loop_single_scale_vakint_expression,
     evaluate_one_loop_single_scale_vacuum_integral,
     evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared,
+    evaluate_one_loop_vakint_expression,
 )
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
@@ -90,6 +91,7 @@ __all__ = [
     "evaluate_one_loop_single_scale_vakint_expression",
     "evaluate_one_loop_single_scale_vacuum_integral",
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
+    "evaluate_one_loop_vakint_expression",
     "load_state",
     "latex_string",
     "open_indices",

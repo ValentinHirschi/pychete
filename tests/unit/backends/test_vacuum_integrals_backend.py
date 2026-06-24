@@ -83,12 +83,56 @@ def test_internal_single_scale_vakint_expression_combines_equal_mass_powers() ->
     assert_expr_equal(vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(expression), expected)
 
 
+def test_internal_vakint_expression_evaluates_two_mass_scalar_topology() -> None:
+    m1 = S("M1")
+    m2 = S("M2")
+    numerator = S("num")
+    expression = vakint.one_loop_vacuum_integral(numerator, (m1**2, m2**2), powers=(1, 1))
+    eps = vacuum_integrals.epsilon_symbol()
+    mu = vacuum_integrals.mu_r_squared_symbol()
+    normalization = vacuum_integrals.imaginary_unit_symbol() * numerator / (16 * Expression.PI**2)
+    expected = (
+        normalization
+        * m1**2
+        * (Expression.num(1) / eps + 1 + mu.log() - 2 * m1.log())
+        / (m1**2 - m2**2)
+        + normalization
+        * m2**2
+        * (Expression.num(1) / eps + 1 + mu.log() - 2 * m2.log())
+        / (m2**2 - m1**2)
+    )
+
+    assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), expected)
+
+
+def test_internal_vakint_expression_evaluates_massless_massive_scalar_topology() -> None:
+    mass = S("M")
+    numerator = S("num")
+    expression = vakint.one_loop_vacuum_integral(numerator, (Expression.num(0), mass**2), powers=(1, 1))
+    eps = vacuum_integrals.epsilon_symbol()
+    mu = vacuum_integrals.mu_r_squared_symbol()
+    expected = (
+        vacuum_integrals.imaginary_unit_symbol()
+        * numerator
+        / (16 * Expression.PI**2)
+        * (Expression.num(1) / eps + 1 + mu.log() - 2 * mass.log())
+    )
+
+    assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), expected)
+
+
+def test_internal_vakint_expression_sets_scaleless_massless_topologies_to_zero() -> None:
+    expression = vakint.one_loop_vacuum_integral(S("num"), (Expression.num(0),), powers=(2,))
+
+    assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), Expression.num(0))
+
+
 @pytest.mark.parametrize(
     "expression, message",
     [
         (
             vakint.one_loop_vacuum_integral(S("num"), (Expression.num(0),), powers=(1,)),
-            "nonzero masses",
+            "massless propagators",
         ),
         (
             vakint.one_loop_vacuum_integral(S("num"), (S("M1") ** 2, S("M2") ** 2), powers=(1, 1)),

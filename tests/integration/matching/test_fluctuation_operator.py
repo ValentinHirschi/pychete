@@ -962,6 +962,10 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         (heavy_mass**2, light_mass**2),
     )
     assert_expr_equal(setup.interaction_power_type_vakint_integral_sum(), expected_interaction_vakint)
+    assert_expr_equal(
+        setup.interaction_power_type_internal_integral_sum(tensor_reduce=False),
+        vacuum_integrals_backend.evaluate_one_loop_vakint_expression(expected_interaction_vakint),
+    )
     canonical_engine = FakeKernelVakintEngine()
     with pytest.raises(ValueError, match="mixed-mass topologies"):
         setup.interaction_power_type_vakint_integral_sum(

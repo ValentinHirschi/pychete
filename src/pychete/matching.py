@@ -1250,7 +1250,7 @@ class OneLoopSetup:
             raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
         from .backends import vacuum_integrals
 
-        return vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(
+        return vacuum_integrals.evaluate_one_loop_vakint_expression(
             raw,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
@@ -1320,7 +1320,7 @@ class OneLoopSetup:
             raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
         from .backends import vacuum_integrals
 
-        return vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(
+        return vacuum_integrals.evaluate_one_loop_vakint_expression(
             raw,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
