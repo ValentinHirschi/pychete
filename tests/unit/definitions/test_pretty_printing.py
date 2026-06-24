@@ -8,7 +8,7 @@ import textwrap
 
 from symbolica import PrintMode
 
-from pychete import FieldMassKind, PycheteState, Theory, collect_indices, load_state, s
+from pychete import FieldMassKind, PycheteState, Theory, canonical_string, collect_indices, load_state, s
 from pychete.matching import HeavyScalarSolution
 
 
@@ -83,6 +83,29 @@ def test_heavy_scalar_lagrangian_prints_cleanly_in_all_symbolica_modes() -> None
     assert _format_lagrangian(theory, PrintMode.Typst) == (
         "-1/2*S*phi^2*g-1/2*S^2*M^2+1/2*D[d](S)^2+1/2*D[d](phi)^2"
     )
+
+
+def test_capitalized_greek_field_names_use_short_internal_labels() -> None:
+    theory = Theory("greek_case")
+    capital_phi = theory.define_field("Phi", s.Scalar, self_conjugate=True, mass=0)
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    capital_psi = theory.define_field("Psi", s.Fermion, mass=0)
+    psi = theory.define_field("psi", s.Fermion, mass=0)
+
+    assert {"Phi", "phi", "Psi", "psi"} <= set(theory.fields)
+    assert "Capital" not in canonical_string(capital_phi())
+    assert "Capital" not in canonical_string(capital_psi())
+
+    assert capital_phi().format(mode=PrintMode.Symbolica, **FORMAT_OPTIONS) == "Phi"
+    assert phi().format(mode=PrintMode.Symbolica, **FORMAT_OPTIONS) == "phi"
+    assert capital_psi().format(mode=PrintMode.Symbolica, **FORMAT_OPTIONS) == "Psi"
+    assert psi().format(mode=PrintMode.Symbolica, **FORMAT_OPTIONS) == "psi"
+
+    assert capital_phi().format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"\Phi"
+    assert phi().format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"\phi"
+    assert capital_phi().format(mode=PrintMode.Mathematica, **FORMAT_OPTIONS) == r"\[CapitalPhi]"
+    assert capital_psi().format(mode=PrintMode.Mathematica, **FORMAT_OPTIONS) == r"\[CapitalPsi]"
+    assert psi().format(mode=PrintMode.Mathematica, **FORMAT_OPTIONS) == r"\[Psi]"
 
 
 def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:

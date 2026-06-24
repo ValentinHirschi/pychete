@@ -88,7 +88,7 @@
 
 - Loaded `Models/VLF_toy_model.m` with local Matchete.
 - It defines Abelian gauge group `U1e`, coupling `e`, real massless vector `A`,
-  heavy charged Dirac fermion `CapitalPsi` with mass `M`, massless charged
+  heavy charged Dirac fermion `Psi` with mass `M`, massless charged
   Dirac fermion `psi`, real light scalar `phi` with mass `m`, and complex
   Yukawa coupling `y`.
 - The resulting Lagrangian contains scalar, vector, and Dirac free terms plus

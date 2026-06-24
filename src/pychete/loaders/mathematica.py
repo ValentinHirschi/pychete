@@ -28,7 +28,8 @@ def _strip_comments(text: str) -> str:
 
 def _preprocess_names(text: str) -> str:
     for source, replacement in {
-        r"\[CapitalPsi]": "CapitalPsi",
+        r"\[CapitalPhi]": "Phi",
+        r"\[CapitalPsi]": "Psi",
         r"\[Psi]": "psi",
         r"\[Phi]": "phi",
     }.items():

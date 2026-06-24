@@ -35,6 +35,7 @@ DEFAULT_GAMMALOOP_REF = "db79edc84f6a1580decbcc4ede7ea0b1c79d9a08"
 
 MIN_RUST_VERSION = (1, 89, 0)
 REEXEC_SENTINEL = "PYCHETE_REEXECED_OUTSIDE_VENV"
+BOOTSTRAP_PACKAGES = ("pip", "maturin", "pytest", "mypy")
 
 MANAGED_PATHS = (
     VENV_DIR,
@@ -174,7 +175,7 @@ def create_venv() -> None:
 def ensure_maturin() -> None:
     create_venv()
     env = venv_environment()
-    run([venv_python(), "-m", "pip", "install", "--upgrade", "pip", "maturin", "pytest", "mypy"], env=env)
+    run([venv_python(), "-m", "pip", "install", "--upgrade", *BOOTSTRAP_PACKAGES], env=env)
     run([venv_python(), "-m", "maturin", "--version"], env=env)
 
 
@@ -519,6 +520,25 @@ def installed_environment_is_ready(
     return completed.returncode == 0
 
 
+def bootstrap_tools_are_ready(*, verbose: bool = False) -> bool:
+    if not venv_python().exists():
+        return False
+
+    code = "\n".join(f"import {package}" for package in BOOTSTRAP_PACKAGES)
+    completed = run(
+        [venv_python(), "-c", code],
+        env=venv_environment(),
+        capture=True,
+        check=False,
+    )
+    if verbose:
+        if completed.stdout:
+            print(completed.stdout, end="")
+        if completed.stderr:
+            print(completed.stderr, end="", file=sys.stderr)
+    return completed.returncode == 0
+
+
 def build_maturin_wheel(
     project_dir: Path,
     output_dir: Path,
@@ -646,7 +666,11 @@ def main(argv: list[str] | None = None) -> int:
         and not args.reset
         and installed_environment_is_ready(include_gammaloop=include_gammaloop)
     ):
-        print("pychete dependencies are already installed; nothing to do.")
+        if not bootstrap_tools_are_ready():
+            print("pychete native dependencies are installed; refreshing Python development tools.")
+            ensure_maturin()
+
+        print("pychete dependencies are already installed; nothing else to do.")
         write_dependency_manifest(
             gammaloop_requested=include_gammaloop,
             symbolica_installed=True,

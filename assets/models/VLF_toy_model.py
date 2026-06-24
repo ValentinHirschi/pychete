@@ -6,11 +6,11 @@ from pychete import FieldMassKind, Theory, s
 def build() -> Theory:
     theory = Theory("VLF_toy_model")
     theory.define_gauge_group("U1e", s.U1, "e", "A")
-    capital_psi = theory.define_field("CapitalPsi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
+    heavy_psi = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
     psi = theory.define_field("psi", s.Fermion, mass=0)
     phi = theory.define_field("phi", s.Scalar, mass=(FieldMassKind.LIGHT, "m"), self_conjugate=True)
     y = theory.define_coupling("y")
 
-    lint = -y() * s.NCM(s.Bar(psi()), s.PR, capital_psi()) * phi()
-    theory.set_lagrangian(theory.free_lag("A", capital_psi, psi, phi) + lint + s.Bar(lint))
+    lint = -y() * s.NCM(s.Bar(psi()), s.PR, heavy_psi()) * phi()
+    theory.set_lagrangian(theory.free_lag("A", heavy_psi, psi, phi) + lint + s.Bar(lint))
     return theory

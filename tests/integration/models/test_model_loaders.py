@@ -36,9 +36,9 @@ def test_vlf_toy_model_asset_loads_without_runtime_reference_dependency() -> Non
     theory = load_matchete_model(path)
 
     assert theory.name == "VLF_toy_model"
-    assert {"A", "CapitalPsi", "psi", "phi"} <= set(theory.fields)
+    assert {"A", "Psi", "psi", "phi"} <= set(theory.fields)
     assert {"e", "M", "m", "y"} <= set(theory.couplings)
-    assert theory.fields["CapitalPsi"].heavy is True
+    assert theory.fields["Psi"].heavy is True
     assert theory.fields["phi"].mass_kind is FieldMassKind.LIGHT
     assert theory.lagrangian is not None
 

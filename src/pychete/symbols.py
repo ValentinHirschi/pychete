@@ -22,8 +22,8 @@ _LATEX_NAMES = {
     "nu": r"\nu",
     "rho": r"\rho",
     "sigma": r"\sigma",
-    "CapitalPhi": r"\Phi",
-    "CapitalPsi": r"\Psi",
+    "Phi": r"\Phi",
+    "Psi": r"\Psi",
 }
 
 _MATHEMATICA_NAMES = {
@@ -35,14 +35,11 @@ _MATHEMATICA_NAMES = {
     "nu": r"\[Nu]",
     "rho": r"\[Rho]",
     "sigma": r"\[Sigma]",
-    "CapitalPhi": r"\[CapitalPhi]",
-    "CapitalPsi": r"\[CapitalPsi]",
+    "Phi": r"\[CapitalPhi]",
+    "Psi": r"\[CapitalPsi]",
 }
 
-_DISPLAY_NAMES = {
-    "CapitalPhi": "Phi",
-    "CapitalPsi": "Psi",
-}
+_DISPLAY_NAMES: dict[str, str] = {}
 
 
 def _sym(name: str, **kwargs: Any) -> Expression:
@@ -712,7 +709,8 @@ s = SymbolStore()
 _GREEK_ESCAPES = {
     r"\[Phi]": "phi",
     r"\[Psi]": "psi",
-    r"\[CapitalPsi]": "CapitalPsi",
+    r"\[CapitalPhi]": "Phi",
+    r"\[CapitalPsi]": "Psi",
     r"\[Lambda]": "lambda",
     r"\[Kappa]": "kappa",
     r"\[Mu]": "mu",
