@@ -27,6 +27,7 @@ from .theory import (
     FieldMassKind,
     FieldVariation,
     Theory,
+    field_mass_expr_from_label,
     field_mass_kind_from_label,
     field_self_conjugate_from_label,
     field_type_from_label,
@@ -74,6 +75,12 @@ class FluctuationMode:
     conjugated: bool
 
     @property
+    def label(self) -> Expression:
+        """Symbolica field label carrying this mode's metadata."""
+
+        return field_label(self.base_field)
+
+    @property
     def is_heavy(self) -> bool:
         """Whether this fluctuation mode belongs to the heavy sector."""
 
@@ -91,6 +98,21 @@ class FluctuationMode:
 
         return -1 if self.statistics is FluctuationStatistics.FERMIONIC else 1
 
+    @property
+    def mass(self) -> Expression | None:
+        """Mass coupling reconstructed from Symbolica field-label data."""
+
+        return field_mass_expr_from_label(self.label)
+
+    @property
+    def mass_squared(self) -> Expression | None:
+        """Squared mass coupling for propagator denominators, if present."""
+
+        mass = self.mass
+        if mass is None:
+            return None
+        return mass**2
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{FluctuationMode}}\left({latex_string(self.field)}\right)$"
 
@@ -99,6 +121,92 @@ class FluctuationMode:
             f"<code>FluctuationMode({escape(display_string(self.field))} "
             f"{self.mass_kind.value} {self.statistics.value})</code>"
         )
+
+
+@dataclass(frozen=True)
+class FluctuationPropagator:
+    """Propagator metadata for one fluctuation mode.
+
+    This stage intentionally stores only the Symbolica expressions needed to
+    build propagator denominators later. The mass is recovered from symbol data
+    on the field label, so state loading and custom field symbols keep the same
+    metadata path as all other theory definitions.
+    """
+
+    theory: Theory
+    mode: FluctuationMode
+    mass: Expression | None
+    mass_squared: Expression | None
+
+    @property
+    def field(self) -> Expression:
+        """Return the fluctuation field expression this propagator belongs to."""
+
+        return self.mode.field
+
+    @property
+    def is_heavy(self) -> bool:
+        """Whether this propagator belongs to a heavy fluctuation."""
+
+        return self.mode.is_heavy
+
+    @property
+    def is_light(self) -> bool:
+        """Whether this propagator belongs to a light fluctuation."""
+
+        return self.mode.is_light
+
+    def to_expression_map(self, *, prefix: str = "fluctuation_propagator") -> dict[str, Expression]:
+        """Return mass expressions attached to this propagator."""
+
+        entries: dict[str, Expression] = {}
+        key = canonical_string(self.field)
+        if self.mass is not None:
+            entries[f"{prefix}[{key},mass]"] = self.mass
+        if self.mass_squared is not None:
+            entries[f"{prefix}[{key},mass_squared]"] = self.mass_squared
+        return entries
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{FluctuationPropagator}}\left({latex_string(self.field)}\right)$"
+
+    def _repr_html_(self) -> str:
+        mass = "" if self.mass is None else f" mass={escape(display_string(self.mass))}"
+        return f"<code>FluctuationPropagator({escape(display_string(self.field))}{mass})</code>"
+
+
+@dataclass(frozen=True)
+class PropagatorPlan:
+    """Structured propagator metadata prepared for one-loop expansion."""
+
+    theory: Theory
+    propagators: tuple[FluctuationPropagator, ...]
+
+    @property
+    def heavy(self) -> tuple[FluctuationPropagator, ...]:
+        """Return propagators for heavy fluctuation modes."""
+
+        return tuple(propagator for propagator in self.propagators if propagator.is_heavy)
+
+    @property
+    def light(self) -> tuple[FluctuationPropagator, ...]:
+        """Return propagators for light fluctuation modes."""
+
+        return tuple(propagator for propagator in self.propagators if propagator.is_light)
+
+    def to_expression_map(self, *, prefix: str = "propagator_plan") -> dict[str, Expression]:
+        """Return deterministic mass expressions for all planned propagators."""
+
+        entries: dict[str, Expression] = {}
+        for propagator in self.propagators:
+            entries.update(propagator.to_expression_map(prefix=prefix))
+        return entries
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{PropagatorPlan}}\left(H={len(self.heavy)},\ L={len(self.light)}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>PropagatorPlan(heavy={len(self.heavy)} light={len(self.light)})</code>"
 
 
 @dataclass(frozen=True)
@@ -432,6 +540,22 @@ class OneLoopSetup:
             entries.update(trace.to_expression_map(prefix=prefix))
         return entries
 
+    @property
+    def propagator_count(self) -> int:
+        """Number of heavy propagators planned by default."""
+
+        return len(self.propagator_plan().propagators)
+
+    def propagator_plan(self, *, include_light: bool = False) -> PropagatorPlan:
+        """Return propagator metadata for heavy modes, optionally including light modes."""
+
+        modes = self.fluctuation_operator.modes
+        selected_modes = modes if include_light else tuple(mode for mode in modes if mode.is_heavy)
+        return PropagatorPlan(
+            theory=self.theory,
+            propagators=tuple(_fluctuation_propagator(mode) for mode in selected_modes),
+        )
+
     def simplify_index_algebra(
         self,
         *,
@@ -524,6 +648,7 @@ class OneLoopSetup:
         entries = {
             f"{prefix}[uv_lagrangian]": self.uv_lagrangian,
             **self.fluctuation_operator.to_expression_map(prefix=f"{prefix}.fluctuation_operator"),
+            **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
         }
         return entries
@@ -966,6 +1091,19 @@ def _fluctuation_mode(theory: Theory, field: Expression) -> FluctuationMode:
         statistics=_fluctuation_statistics(field_type),
         self_conjugate=field_self_conjugate_from_label(label),
         conjugated=is_bar_field(field),
+    )
+
+
+def _fluctuation_propagator(mode: FluctuationMode) -> FluctuationPropagator:
+    mass = mode.mass
+    if mode.is_heavy and mass is None:
+        raise ValueError(f"Heavy fluctuation field {canonical_string(mode.field)!r} has no mass symbol data")
+    mass_squared = None if mass is None else mass**2
+    return FluctuationPropagator(
+        theory=mode.theory,
+        mode=mode,
+        mass=mass,
+        mass_squared=mass_squared,
     )
 
 

@@ -617,6 +617,14 @@ discoveries, dependency patches, blockers, and remaining work.
   through the existing adapter boundary, which is suitable for scalar
   supertrace kernels; future tensor-valued stages may need a sibling API that
   preserves tensor results instead of forcing scalar extraction.
+- `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
+  backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
+  light propagator metadata recover mass expressions through Symbolica
+  field-label data via `field_mass_expr_from_label(...)`, so no Python field
+  enumeration or name convention is used to find masses. This is still a
+  planning layer: future slices must use these mass and mass-squared
+  expressions to build real loop-momentum denominators and EFT propagator
+  expansions.
 
 ## Test Status
 
@@ -870,6 +878,17 @@ discoveries, dependency patches, blockers, and remaining work.
   spenso-kernel-evaluation slice: 110 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks`
+  passed after the propagator-planning slice: 25 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  propagator-planning slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  propagator-planning slice: 111 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
 
 ## Remaining Work
 
@@ -881,7 +900,8 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
   including spin/statistics signs, real/complex counting, ghosts, Goldstones,
   background fields, and non-propagating fields.
-- Consume `SupertracePlan` to build real one-loop supertrace terms, including
+- Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
+  supertrace terms, including loop-momentum denominator construction,
   propagator insertion ordering, EFT-order truncation, tensor reductions, and
   integral calls through the native backends.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace

@@ -330,6 +330,49 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
         theory.one_loop_setup(lagrangian, max_trace_order=0)
 
 
+def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> None:
+    theory = Theory("one_loop_setup_propagators")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = -heavy_mass**2 * heavy() ** 2 / 2 - light_mass**2 * light() ** 2 / 2 - y() * heavy() * light() ** 2 / 2
+
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=1)
+    heavy_plan = setup.propagator_plan()
+    full_plan = setup.propagator_plan(include_light=True)
+
+    assert setup.propagator_count == 1
+    assert len(heavy_plan.propagators) == 1
+    assert len(heavy_plan.heavy) == 1
+    assert len(heavy_plan.light) == 0
+    assert len(full_plan.propagators) == 2
+    assert len(full_plan.heavy) == 1
+    assert len(full_plan.light) == 1
+    heavy_propagator = heavy_plan.propagators[0]
+    light_propagator = full_plan.light[0]
+    heavy_mode = setup.fluctuation_operator.mode_for(heavy)
+    light_mode = setup.fluctuation_operator.mode_for(light)
+    assert heavy_propagator.mass is not None
+    assert heavy_propagator.mass_squared is not None
+    assert light_propagator.mass is not None
+    assert light_propagator.mass_squared is not None
+    assert heavy_mode.mass is not None
+    assert light_mode.mass_squared is not None
+    assert heavy_propagator.field == heavy()
+    assert_expr_equal(heavy_propagator.mass, heavy_mass)
+    assert_expr_equal(heavy_propagator.mass_squared, heavy_mass**2)
+    assert_expr_equal(light_propagator.mass, light_mass)
+    assert_expr_equal(light_propagator.mass_squared, light_mass**2)
+    assert_expr_equal(heavy_mode.mass, heavy_mass)
+    assert_expr_equal(light_mode.mass_squared, light_mass**2)
+    assert "propagator_plan" in next(iter(full_plan.to_expression_map()))
+    assert any(key.startswith("one_loop_setup.propagator[") for key in setup.to_expression_map())
+
+
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:
     theory = Theory("one_loop_setup_idenso")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

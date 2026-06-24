@@ -93,6 +93,8 @@ def test_public_api_methods_have_docstrings() -> None:
             "evaluate_integrals",
             "evaluate_tensor_networks",
             "max_trace_order",
+            "propagator_count",
+            "propagator_plan",
             "simplify_index_algebra",
             "supertrace_expression_map",
             "supertrace_kernel_count",
@@ -116,7 +118,21 @@ def test_public_api_methods_have_docstrings() -> None:
         pychete.FluctuationMode: [
             "is_heavy",
             "is_light",
+            "label",
+            "mass",
+            "mass_squared",
             "supertrace_sign",
+        ],
+        pychete.FluctuationPropagator: [
+            "field",
+            "is_heavy",
+            "is_light",
+            "to_expression_map",
+        ],
+        pychete.PropagatorPlan: [
+            "heavy",
+            "light",
+            "to_expression_map",
         ],
         pychete.SupertracePlan: [
             "block_trace",
