@@ -5,6 +5,7 @@
     {
       "name": "VLF_toy_model",
       "model_asset": "assets/models/VLF_toy_model.m",
+      "model_fixture": "assets/validation/pychete/VLF_toy_model.model_fixture.json",
       "parent_assets": [],
       "reference_result": "Validation/MatchingResults/previous/VLF_toy_model-EFT.m",
       "status": "pending_matching_fixture"
@@ -12,6 +13,7 @@
     {
       "name": "Singlet_Scalar_Extension",
       "model_asset": "assets/models/Singlet_Scalar_Extension.m",
+      "model_fixture": "assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json",
       "parent_assets": [
         "assets/models/SM.m"
       ],
@@ -21,6 +23,7 @@
     {
       "name": "E_VLL",
       "model_asset": "assets/models/E_VLL.m",
+      "model_fixture": "assets/validation/pychete/E_VLL.model_fixture.json",
       "parent_assets": [
         "assets/models/SM.m"
       ],
@@ -30,6 +33,7 @@
     {
       "name": "S1S3LQs",
       "model_asset": "assets/models/S1S3LQs.m",
+      "model_fixture": "assets/validation/pychete/S1S3LQs.model_fixture.json",
       "parent_assets": [
         "assets/models/SM.m"
       ],

@@ -195,6 +195,21 @@ discoveries, dependency patches, blockers, and remaining work.
     requiring tests to read from `Mathematica_reference/Matchete`;
   - kept the status as `pending_matching_fixture` because the actual one-loop
     matching-result fixtures are still not generated.
+- Completed the eighth implementation slice:
+  - added metadata-only loading for the supported Matchete model subset through
+    `load_matchete_model(..., include_lagrangian=False)`;
+  - added parent-model expansion for `ParentModel["SM"]`, loading parent
+    definitions into the child theory namespace before child-specific
+    definitions;
+  - added loader support for `ParameterDefault`, `DefineFlavorIndex`, optional
+    `DefineGaugeGroup` arguments, `SU@N` group heads, quoted Mathematica
+    strings in top-level splitters, broader Greek-name preprocessing, and
+    `Bar@` / `CConj@` prefix application in metadata expressions;
+  - added central `CConj` Symbolica head support;
+  - generated committed metadata-only model-definition fixtures for `SM`,
+    `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`;
+  - updated the default matching target manifest to point at the committed
+    model-definition fixtures for all default targets.
 
 ## Backend/API Discoveries
 
@@ -237,6 +252,12 @@ discoveries, dependency patches, blockers, and remaining work.
   but the loader still needs an explicit parent-model expansion path and CG
   function handling before these inputs can become full committed model-state
   fixtures.
+- Parent-model expansion now works for metadata-only loading of the default
+  targets. Full Lagrangian parsing for the SM-backed targets still requires the
+  broader Mathematica expression subset around local CG helper definitions,
+  implicit multiplication, noncommutative chains, and charge-conjugation
+  expressions, or a Wolfram-generated pychete-owned fixture path for those
+  expressions.
 
 ## Test Status
 
@@ -303,16 +324,26 @@ discoveries, dependency patches, blockers, and remaining work.
   model asset slice: 69 passed, 1 skipped. The skip is the existing GammaLoop
   API import check because GammaLoop was not requested in the current dependency
   manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/models/test_model_loaders.py
+  tests/integration/validation/test_validation_fixtures.py` passed after the
+  parent-model metadata fixture slice: 14 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the parent-model metadata
+  fixture slice: no issues found in 19 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  parent-model metadata fixture slice: 72 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in the
+  current dependency manifest.
 
 ## Remaining Work
 
 - Add committed validation fixture assets for the four default Matchete matching
-  integration models. Model input assets now exist for all four default targets
-  and the SM parent, and a model-definition fixture exists for `VLF_toy_model`;
-  actual one-loop matching-result fixtures are still pending.
-- Add parent-model expansion and SM/CG parsing support to the model loader or
-  replace direct source parsing for these assets with generated pychete-owned
-  state fixtures.
+  integration models. Model input assets and model-definition fixtures now exist
+  for all four default targets and the SM parent; actual one-loop
+  matching-result fixtures are still pending.
+- Add full SM/CG Lagrangian expression parsing to the model loader or replace
+  direct source parsing for those expressions with generated pychete-owned state
+  fixtures.
 - Convert raw Matchete snapshots into pychete-owned fixture JSON that pytest can
   consume without Mathematica.
 - Add the first real matching-result fixture asset using the `MatchingResult`

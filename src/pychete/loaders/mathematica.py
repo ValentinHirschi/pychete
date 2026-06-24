@@ -12,7 +12,6 @@ from ..theory import CouplingSelfConjugate, FieldChirality, Theory
 
 
 _COMMENT_RE = re.compile(r"\(\*.*?\*\)", re.DOTALL)
-_BAR_APPLY_RE = re.compile(r"Bar@([A-Za-z][A-Za-z0-9_]*\[\])")
 _NCM_CHAIN_RE = re.compile(
     r"(Bar\[[A-Za-z][A-Za-z0-9_]*\[\]\]|[A-Za-z][A-Za-z0-9_]*\[\])"
     r"\s*\*\*\s*"
@@ -30,18 +29,38 @@ def _preprocess_names(text: str) -> str:
     for source, replacement in {
         r"\[CapitalPhi]": "Phi",
         r"\[CapitalPsi]": "Psi",
+        r"\[Alpha]": "alpha",
+        r"\[Beta]": "beta",
+        r"\[Epsilon]": "epsilon",
+        r"\[Kappa]": "kappa",
+        r"\[Lambda]": "lambda",
+        r"\[Mu]": "mu",
         r"\[Psi]": "psi",
         r"\[Phi]": "phi",
+        r"\[Tau]": "tau",
     }.items():
         text = text.replace(source, replacement)
     return text
+
+
+def _parse_string(raw: str) -> str:
+    value = raw.strip()
+    if len(value) >= 2 and value[0] == '"' and value[-1] == '"':
+        return value[1:-1]
+    raise NotImplementedError(f"Unsupported string literal: {raw}")
 
 
 def _split_top_level(text: str, separator: str) -> list[str]:
     parts: list[str] = []
     start = 0
     square = curly = paren = 0
+    in_string = False
     for i, char in enumerate(text):
+        if char == '"' and (i == 0 or text[i - 1] != "\\"):
+            in_string = not in_string
+            continue
+        if in_string:
+            continue
         if char == "[":
             square += 1
         elif char == "]":
@@ -63,6 +82,56 @@ def _split_top_level(text: str, separator: str) -> list[str]:
     if tail:
         parts.append(tail)
     return parts
+
+
+def _split_statements(text: str) -> list[str]:
+    statements: list[str] = []
+    start = 0
+    square = curly = paren = 0
+    in_string = False
+    i = 0
+    while i < len(text):
+        char = text[i]
+        if char == '"' and (i == 0 or text[i - 1] != "\\"):
+            in_string = not in_string
+            i += 1
+            continue
+        if in_string:
+            i += 1
+            continue
+        if char == "[":
+            square += 1
+        elif char == "]":
+            square -= 1
+            if square == 0 and curly == 0 and paren == 0:
+                next_i = i + 1
+                while next_i < len(text) and text[next_i].isspace():
+                    next_i += 1
+                if next_i >= len(text) or text[next_i] not in ";,+-*/^)]}":
+                    statement = text[start : i + 1].strip()
+                    if statement:
+                        statements.append(statement)
+                    start = next_i
+                    i = next_i
+                    continue
+        elif char == "{":
+            curly += 1
+        elif char == "}":
+            curly -= 1
+        elif char == "(":
+            paren += 1
+        elif char == ")":
+            paren -= 1
+        elif char == ";" and square == 0 and curly == 0 and paren == 0:
+            statement = text[start:i].strip()
+            if statement:
+                statements.append(statement)
+            start = i + 1
+        i += 1
+    tail = text[start:].strip()
+    if tail:
+        statements.append(tail)
+    return statements
 
 
 def _parse_call(statement: str) -> tuple[str, list[str]]:
@@ -149,7 +218,11 @@ def _field_type(raw: str) -> Expression:
 
 
 def _group_type(raw: str) -> Expression:
-    name = _clean_name(raw)
+    normalized = _preprocess_names(raw).strip()
+    su_apply = re.fullmatch(r"SU\s*@\s*(\d+)", normalized)
+    if su_apply:
+        return s.SU(Expression.num(int(su_apply.group(1))))
+    name = _clean_name(normalized)
     if name == "U1":
         return s.U1
     if name.startswith("SU"):
@@ -157,10 +230,39 @@ def _group_type(raw: str) -> Expression:
     raise NotImplementedError(f"Unsupported gauge group type: {raw}")
 
 
+def _rewrite_prefix_apply(expr: str, head: str) -> str:
+    prefix = f"{head}@"
+    while prefix in expr:
+        start = expr.rfind(prefix)
+        arg_start = start + len(prefix)
+        while arg_start < len(expr) and expr[arg_start].isspace():
+            arg_start += 1
+        if arg_start >= len(expr):
+            break
+        name_match = re.match(r"[A-Za-z][A-Za-z0-9_]*", expr[arg_start:])
+        if not name_match:
+            break
+        arg_end = arg_start + name_match.end()
+        if arg_end < len(expr) and expr[arg_end] == "[":
+            depth = 0
+            for j in range(arg_end, len(expr)):
+                if expr[j] == "[":
+                    depth += 1
+                elif expr[j] == "]":
+                    depth -= 1
+                    if depth == 0:
+                        arg_end = j + 1
+                        break
+        replacement = f"{head}[{expr[arg_start:arg_end]}]"
+        expr = expr[:start] + replacement + expr[arg_end:]
+    return expr
+
+
 def _normalize_expression(text: str) -> str:
     expr = _preprocess_names(text.strip())
     expr = re.sub(r"\s*//\s*RelabelIndices\s*$", "", expr)
-    expr = _BAR_APPLY_RE.sub(r"Bar[\1]", expr)
+    expr = _rewrite_prefix_apply(expr, "CConj")
+    expr = _rewrite_prefix_apply(expr, "Bar")
     expr = _NCM_CHAIN_RE.sub(r"NCM[\1, \2, \3]", expr)
     return expr
 
@@ -207,6 +309,8 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
         name = _plain_name(expr)
         if name == "Bar":
             return s.Bar(_convert_expression(expr[0], theory, env))
+        if name == "CConj":
+            return s.CConj(_convert_expression(expr[0], theory, env))
         if name == "NCM":
             return s.NCM(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name == "PlusHc":
@@ -265,18 +369,59 @@ def _eval_module(args_raw: list[str], theory: Theory) -> Expression:
     return result
 
 
-def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> tuple[Theory, dict[str, Expression]]:
-    model_path = Path(path)
-    text = _preprocess_names(_strip_comments(model_path.read_text(encoding="utf-8")))
-    theory = Theory(theory_name or model_path.stem)
-    expressions: dict[str, Expression] = {}
+def _parse_dimension(raw: str, parameters: dict[str, int]) -> int | None:
+    value = _clean_name(raw)
+    if value in parameters:
+        return parameters[value]
+    try:
+        return int(value)
+    except ValueError:
+        return None
 
-    for statement in _split_top_level(text, ";"):
+
+def _load_matchete_model_into(
+    model_path: Path,
+    theory: Theory,
+    expressions: dict[str, Expression],
+    *,
+    include_lagrangian: bool,
+    parameters: dict[str, int],
+    visited: set[Path],
+) -> None:
+    resolved = model_path.resolve()
+    if resolved in visited:
+        return
+    visited.add(resolved)
+    text = _preprocess_names(_strip_comments(model_path.read_text(encoding="utf-8")))
+
+    for statement in _split_statements(text):
         if not statement:
             continue
         head, raw_args = _parse_call(statement)
-        if head == "DefineGaugeGroup":
-            if len(raw_args) != 4:
+        if head == "ParentModel":
+            if len(raw_args) != 1:
+                raise NotImplementedError(f"Unsupported ParentModel: {statement}")
+            parent_path = model_path.parent / f"{_parse_string(raw_args[0])}.m"
+            _load_matchete_model_into(
+                parent_path,
+                theory,
+                expressions,
+                include_lagrangian=include_lagrangian,
+                parameters=parameters,
+                visited=visited,
+            )
+        elif head == "ParameterDefault":
+            for raw_arg in raw_args:
+                if "->" not in raw_arg:
+                    raise NotImplementedError(f"Unsupported ParameterDefault: {statement}")
+                key, value = raw_arg.split("->", 1)
+                parameters[_clean_name(key)] = _parse_int(value)
+        elif head == "DefineFlavorIndex":
+            if len(raw_args) < 2:
+                raise NotImplementedError(f"Unsupported DefineFlavorIndex: {statement}")
+            theory.define_flavor_index(_clean_name(raw_args[0]), _parse_dimension(raw_args[1], parameters))
+        elif head == "DefineGaugeGroup":
+            if len(raw_args) < 4:
                 raise NotImplementedError(f"Unsupported DefineGaugeGroup: {statement}")
             theory.define_gauge_group(
                 _clean_name(raw_args[0]),
@@ -315,10 +460,40 @@ def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> 
                     unitary=_parse_bool(opts["Unitary"]) if "Unitary" in opts else False,
                 )
         elif head == "Module":
+            if not include_lagrangian:
+                continue
             lagrangian = _eval_module(raw_args, theory)
             theory._validate_registered_expression(lagrangian)
+            if "lagrangian" in expressions:
+                expressions["parent_lagrangian"] = expressions["lagrangian"]
+                lagrangian = expressions["lagrangian"] + lagrangian
             expressions["lagrangian"] = lagrangian
         else:
             raise NotImplementedError(f"Unsupported Matchete construct: {head}")
 
+
+def load_matchete_model(
+    path: str | Path,
+    *,
+    theory_name: str | None = None,
+    include_lagrangian: bool = True,
+) -> tuple[Theory, dict[str, Expression]]:
+    """Load the supported Matchete model subset into a pychete theory.
+
+    Set ``include_lagrangian=False`` to load only model metadata. This is used
+    for parent-model validation assets whose full Lagrangian syntax is broader
+    than the current direct Wolfram-subset parser.
+    """
+
+    model_path = Path(path)
+    theory = Theory(theory_name or model_path.stem)
+    expressions: dict[str, Expression] = {}
+    _load_matchete_model_into(
+        model_path,
+        theory,
+        expressions,
+        include_lagrangian=include_lagrangian,
+        parameters={},
+        visited=set(),
+    )
     return theory, expressions

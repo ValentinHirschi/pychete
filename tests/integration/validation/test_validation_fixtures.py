@@ -127,5 +127,24 @@ def test_default_matching_target_manifest_lists_initial_models() -> None:
     assert all(model["status"] == "pending_matching_fixture" for model in models)
     for model in models:
         assert Path(model["model_asset"]).is_file()
+        assert Path(model["model_fixture"]).is_file()
         for parent_asset in model["parent_assets"]:
             assert Path(parent_asset).is_file()
+
+
+def test_default_model_definition_fixtures_load_without_mathematica() -> None:
+    expected_fields = {
+        "VLF_toy_model": {"A", "Psi", "psi", "phi"},
+        "Singlet_Scalar_Extension": {"B", "G", "H", "W", "phi", "q", "u", "d", "l", "e"},
+        "E_VLL": {"B", "EE", "G", "H", "W", "q", "u", "d", "l", "e"},
+        "S1S3LQs": {"B", "G", "H", "S1", "S3", "W", "q", "u", "d", "l", "e"},
+    }
+
+    for model, fields in expected_fields.items():
+        fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
+        theory = fixture.theory()
+        assert fixture.kind == "model_definition"
+        assert fixture.source["matchete_runtime_required"] is False
+        assert theory.name == model
+        assert fields <= set(theory.fields)
+        theory.symbol_manifest()

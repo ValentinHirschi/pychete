@@ -269,6 +269,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "dummy_index": lambda: _print_dummy_index(expr, mode, kwargs),
         "FieldStrength": lambda: _print_field_strength(expr, mode, kwargs),
         "Bar": lambda: _print_bar(expr, mode, kwargs),
+        "CConj": lambda: _call("CConj", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "CD": lambda: _print_cd(expr, mode, kwargs),
         "Delta": lambda: _print_delta(expr, mode, kwargs),
         "Metric": lambda: _print_metric(expr, mode, kwargs),
@@ -434,6 +435,7 @@ class SymbolStore:
         "dummy_index",
         "FieldStrength",
         "Bar",
+        "CConj",
         "CD",
         "Delta",
         "Metric",
@@ -528,6 +530,10 @@ class SymbolStore:
     @cached_property
     def Bar(self) -> Expression:
         return self.head("Bar")
+
+    @cached_property
+    def CConj(self) -> Expression:
+        return self.head("CConj")
 
     @cached_property
     def CD(self) -> Expression:

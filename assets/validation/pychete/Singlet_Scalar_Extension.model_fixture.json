@@ -1,0 +1,1072 @@
+{
+  "expressions": [],
+  "kind": "model_definition",
+  "name": "Singlet_Scalar_Extension_model_definition",
+  "schema_version": 1,
+  "source": {
+    "asset": "assets/models/Singlet_Scalar_Extension.m",
+    "contains_lagrangian": false,
+    "matchete_runtime_required": false,
+    "model": "Singlet_Scalar_Extension",
+    "parent_assets": [
+      "assets/models/SM.m"
+    ]
+  },
+  "state": {
+    "active_theory": "Singlet_Scalar_Extension",
+    "expressions": {},
+    "schema_version": 3,
+    "theories": {
+      "Singlet_Scalar_Extension": {
+        "couplings": {
+          "A": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_A",
+            "name": "A",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "M": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_M",
+            "name": "M",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "Yd": {
+            "diagonal": [
+              false,
+              false
+            ],
+            "eft_order": 0,
+            "indices": [
+              "Singlet_Scalar_Extension::index_type_Flavor",
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::coupling_Yd",
+            "name": "Yd",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "Ye": {
+            "diagonal": [
+              false,
+              false
+            ],
+            "eft_order": 0,
+            "indices": [
+              "Singlet_Scalar_Extension::index_type_Flavor",
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::coupling_Ye",
+            "name": "Ye",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "Yu": {
+            "diagonal": [
+              false,
+              false
+            ],
+            "eft_order": 0,
+            "indices": [
+              "Singlet_Scalar_Extension::index_type_Flavor",
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::coupling_Yu",
+            "name": "Yu",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "gL": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_gL",
+            "name": "gL",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "gY": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_gY",
+            "name": "gY",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "gs": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_gs",
+            "name": "gs",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "kappa": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_kappa",
+            "name": "kappa",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "lambda": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_lambda",
+            "name": "lambda",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "lambdaphi": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_lambdaphi",
+            "name": "lambdaphi",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "mu2": {
+            "diagonal": [],
+            "eft_order": 2,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_mu2",
+            "name": "mu2",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "muphi": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::coupling_muphi",
+            "name": "muphi",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          }
+        },
+        "fields": {
+          "B": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::field_B",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "B",
+            "self_conjugate": true,
+            "type": "pychete::Vector(Singlet_Scalar_Extension::group_U1Y)"
+          },
+          "G": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::field_G",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "G",
+            "self_conjugate": true,
+            "type": "pychete::Vector(Singlet_Scalar_Extension::group_SU3c)"
+          },
+          "H": {
+            "charges": [
+              "Singlet_Scalar_Extension::group_U1Y(1/2)"
+            ],
+            "chirality": "none",
+            "indices": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+            ],
+            "label": "Singlet_Scalar_Extension::field_H",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "H",
+            "self_conjugate": false,
+            "type": "pychete::Scalar"
+          },
+          "W": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::field_W",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "W",
+            "self_conjugate": true,
+            "type": "pychete::Vector(Singlet_Scalar_Extension::group_SU2L)"
+          },
+          "d": {
+            "charges": [
+              "Singlet_Scalar_Extension::group_U1Y(-1/3)"
+            ],
+            "chirality": "right",
+            "indices": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::field_d",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "d",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "e": {
+            "charges": [
+              "Singlet_Scalar_Extension::group_U1Y(-1)"
+            ],
+            "chirality": "right",
+            "indices": [
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::field_e",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "e",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "l": {
+            "charges": [
+              "Singlet_Scalar_Extension::group_U1Y(-1/2)"
+            ],
+            "chirality": "left",
+            "indices": [
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::field_l",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "l",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "phi": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "Singlet_Scalar_Extension::field_phi",
+            "mass_indices": [],
+            "mass_kind": "heavy",
+            "mass_label": "Singlet_Scalar_Extension::coupling_M",
+            "name": "phi",
+            "self_conjugate": true,
+            "type": "pychete::Scalar"
+          },
+          "q": {
+            "charges": [
+              "Singlet_Scalar_Extension::group_U1Y(1/6)"
+            ],
+            "chirality": "left",
+            "indices": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "Singlet_Scalar_Extension::group_SU2L(pychete::fund)",
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::field_q",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "q",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "u": {
+            "charges": [
+              "Singlet_Scalar_Extension::group_U1Y(2/3)"
+            ],
+            "chirality": "right",
+            "indices": [
+              "Singlet_Scalar_Extension::group_SU3c(pychete::fund)",
+              "Singlet_Scalar_Extension::index_type_Flavor"
+            ],
+            "label": "Singlet_Scalar_Extension::field_u",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "u",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          }
+        },
+        "groups": {
+          "SU2L": {
+            "coupling": "gL",
+            "field": "W",
+            "name": "SU2L",
+            "type": "pychete::SU(2)"
+          },
+          "SU3c": {
+            "coupling": "gs",
+            "field": "G",
+            "name": "SU3c",
+            "type": "pychete::SU(3)"
+          },
+          "U1Y": {
+            "coupling": "gY",
+            "field": "B",
+            "name": "U1Y",
+            "type": "pychete::U1"
+          }
+        },
+        "index_types": {
+          "Flavor": {
+            "dimension": 3,
+            "name": "Flavor",
+            "symbol": "Singlet_Scalar_Extension::index_type_Flavor"
+          },
+          "Lorentz": {
+            "dimension": null,
+            "name": "Lorentz",
+            "symbol": "pychete::Lorentz"
+          }
+        },
+        "schema_version": 2,
+        "symbols": [
+          {
+            "data": {
+              "dimension": 3,
+              "label": "Flavor",
+              "name": "Flavor",
+              "role": "index_type",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "Flavor",
+            "role": "index_type",
+            "symbol": "Singlet_Scalar_Extension::index_type_Flavor",
+            "tags": [
+              "python::pychete",
+              "python::index_type"
+            ]
+          },
+          {
+            "data": {
+              "group_coupling": "gL",
+              "group_field": "W",
+              "group_type": {
+                "__pychete_expression__": "pychete::SU(2)"
+              },
+              "label": "SU2L",
+              "name": "SU2L",
+              "role": "group",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "SU2L",
+            "role": "group",
+            "symbol": "Singlet_Scalar_Extension::group_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "group_coupling": "gs",
+              "group_field": "G",
+              "group_type": {
+                "__pychete_expression__": "pychete::SU(3)"
+              },
+              "label": "SU3c",
+              "name": "SU3c",
+              "role": "group",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "SU3c",
+            "role": "group",
+            "symbol": "Singlet_Scalar_Extension::group_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "group_coupling": "gY",
+              "group_field": "B",
+              "group_type": {
+                "__pychete_expression__": "pychete::U1"
+              },
+              "label": "U1Y",
+              "name": "U1Y",
+              "role": "group",
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "U1Y",
+            "role": "group",
+            "symbol": "Singlet_Scalar_Extension::group_U1Y",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "A",
+              "name": "A",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "A",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_A",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "M",
+              "name": "M",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "M",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_M",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [
+                0,
+                0
+              ],
+              "eft_order": 0,
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "Yd",
+              "name": "Yd",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "Yd",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_Yd",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [
+                0,
+                0
+              ],
+              "eft_order": 0,
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "Ye",
+              "name": "Ye",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "Ye",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_Ye",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [
+                0,
+                0
+              ],
+              "eft_order": 0,
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "Yu",
+              "name": "Yu",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "Yu",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_Yu",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "gL",
+              "name": "gL",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "gL",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_gL",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "gY",
+              "name": "gY",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "gY",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_gY",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "gs",
+              "name": "gs",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "gs",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_gs",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "kappa",
+              "name": "kappa",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "kappa",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_kappa",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "lambda",
+              "name": "lambda",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "lambda",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_lambda",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "lambdaphi",
+              "name": "lambdaphi",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "lambdaphi",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_lambdaphi",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 2,
+              "indices": [],
+              "label": "mu2",
+              "name": "mu2",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "mu2",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_mu2",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "muphi",
+              "name": "muphi",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "Singlet_Scalar_Extension",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "muphi",
+            "role": "coupling",
+            "symbol": "Singlet_Scalar_Extension::coupling_muphi",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(Singlet_Scalar_Extension::group_U1Y)"
+              },
+              "indices": [],
+              "label": "B",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "B",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "B",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_B",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(Singlet_Scalar_Extension::group_SU3c)"
+              },
+              "indices": [],
+              "label": "G",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "G",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "G",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_G",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_U1Y(1/2)"
+                }
+              ],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Scalar"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                }
+              ],
+              "label": "H",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "H",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "H",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_H",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(Singlet_Scalar_Extension::group_SU2L)"
+              },
+              "indices": [],
+              "label": "W",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "W",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "W",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_W",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_U1Y(-1/3)"
+                }
+              ],
+              "chirality": "right",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "d",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "d",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "d",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_d",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_U1Y(-1)"
+                }
+              ],
+              "chirality": "right",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "e",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "e",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "e",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_e",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_U1Y(-1/2)"
+                }
+              ],
+              "chirality": "left",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "l",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "l",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "l",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_l",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Scalar"
+              },
+              "indices": [],
+              "label": "phi",
+              "mass_indices": [],
+              "mass_kind": "heavy",
+              "mass_label": {
+                "__pychete_expression__": "Singlet_Scalar_Extension::coupling_M"
+              },
+              "name": "phi",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "phi",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_phi",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_U1Y(1/6)"
+                }
+              ],
+              "chirality": "left",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "q",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "q",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "q",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_q",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_U1Y(2/3)"
+                }
+              ],
+              "chirality": "right",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "Singlet_Scalar_Extension::index_type_Flavor"
+                }
+              ],
+              "label": "u",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "u",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "Singlet_Scalar_Extension"
+            },
+            "name": "u",
+            "role": "field",
+            "symbol": "Singlet_Scalar_Extension::field_u",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          }
+        ],
+        "theory_name": "Singlet_Scalar_Extension"
+      }
+    }
+  }
+}

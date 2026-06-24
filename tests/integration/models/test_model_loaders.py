@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pathlib import Path
 
-from pychete import FieldMassKind, SymbolDataKey, Theory, canonical_string, s
+from pychete import FieldChirality, FieldMassKind, SymbolDataKey, Theory, canonical_string, s
 from pychete.loaders import load_matchete_model, load_python_model
 
 
@@ -91,6 +91,38 @@ def test_matchete_loader_preserves_supported_coupling_options(tmp_path: Path) ->
     assert theory.coupling_handle("U").definition.is_unitary is True
     assert theory.coupling_handle("c1").definition.self_conjugate_spec is True
     assert theory.coupling_handle("c2").definition.self_conjugate_spec is True
+
+
+def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:
+    theory, expressions = load_matchete_model(Path("assets/models/SM.m"), include_lagrangian=False)
+
+    assert expressions == {}
+    assert set(theory.groups) == {"SU3c", "SU2L", "U1Y"}
+    assert {"G", "W", "B", "q", "u", "d", "l", "e", "H"} <= set(theory.fields)
+    assert {"gs", "gL", "gY", "Yu", "Yd", "Ye", "mu2", "lambda"} <= set(theory.couplings)
+    assert theory.index_types["Flavor"].dimension == 3
+    assert theory.fields["q"].chirality_kind is FieldChirality.LEFT
+    assert theory.fields["u"].chirality_kind is FieldChirality.RIGHT
+    assert canonical_string(theory.fields["H"].charge_exprs[0]) == "SM::group_U1Y(1/2)"
+    assert theory.couplings["mu2"].eft_order == 2
+    assert theory.couplings["Yu"].index_exprs == (theory.index_types["Flavor"].symbol, theory.index_types["Flavor"].symbol)
+
+
+def test_default_parent_model_assets_load_metadata_without_reference_checkout() -> None:
+    expected = {
+        "Singlet_Scalar_Extension": ({"phi", "H", "q", "l"}, {"A", "M", "kappa", "muphi", "lambdaphi", "Yu"}),
+        "E_VLL": ({"EE", "H", "q", "l"}, {"ME", "yE", "Yu"}),
+        "S1S3LQs": ({"S1", "S3", "H", "q", "l"}, {"M1", "M3", "y1L", "y1R", "y3L", "lambdaH13"}),
+    }
+
+    for name, (fields, couplings) in expected.items():
+        theory, expressions = load_matchete_model(Path(f"assets/models/{name}.m"), include_lagrangian=False)
+        assert theory.name == name
+        assert expressions == {}
+        assert fields <= set(theory.fields)
+        assert couplings <= set(theory.couplings)
+        assert set(theory.groups) == {"SU3c", "SU2L", "U1Y"}
+        assert theory.index_types["Flavor"].dimension == 3
 
 
 def test_runtime_code_does_not_depend_on_matchete_reference_checkout() -> None:

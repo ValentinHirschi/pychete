@@ -1,0 +1,989 @@
+{
+  "expressions": [],
+  "kind": "model_definition",
+  "name": "E_VLL_model_definition",
+  "schema_version": 1,
+  "source": {
+    "asset": "assets/models/E_VLL.m",
+    "contains_lagrangian": false,
+    "matchete_runtime_required": false,
+    "model": "E_VLL",
+    "parent_assets": [
+      "assets/models/SM.m"
+    ]
+  },
+  "state": {
+    "active_theory": "E_VLL",
+    "expressions": {},
+    "schema_version": 3,
+    "theories": {
+      "E_VLL": {
+        "couplings": {
+          "ME": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "E_VLL::coupling_ME",
+            "name": "ME",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "Yd": {
+            "diagonal": [
+              false,
+              false
+            ],
+            "eft_order": 0,
+            "indices": [
+              "E_VLL::index_type_Flavor",
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::coupling_Yd",
+            "name": "Yd",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "Ye": {
+            "diagonal": [
+              false,
+              false
+            ],
+            "eft_order": 0,
+            "indices": [
+              "E_VLL::index_type_Flavor",
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::coupling_Ye",
+            "name": "Ye",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "Yu": {
+            "diagonal": [
+              false,
+              false
+            ],
+            "eft_order": 0,
+            "indices": [
+              "E_VLL::index_type_Flavor",
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::coupling_Yu",
+            "name": "Yu",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "gL": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "E_VLL::coupling_gL",
+            "name": "gL",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "gY": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "E_VLL::coupling_gY",
+            "name": "gY",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "gs": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "E_VLL::coupling_gs",
+            "name": "gs",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "lambda": {
+            "diagonal": [],
+            "eft_order": 0,
+            "indices": [],
+            "label": "E_VLL::coupling_lambda",
+            "name": "lambda",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "mu2": {
+            "diagonal": [],
+            "eft_order": 2,
+            "indices": [],
+            "label": "E_VLL::coupling_mu2",
+            "name": "mu2",
+            "self_conjugate": true,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          },
+          "yE": {
+            "diagonal": [
+              false
+            ],
+            "eft_order": 0,
+            "indices": [
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::coupling_yE",
+            "name": "yE",
+            "self_conjugate": false,
+            "symmetries": [],
+            "thermal_power_counting": 1,
+            "unitary": false
+          }
+        },
+        "fields": {
+          "B": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "E_VLL::field_B",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "B",
+            "self_conjugate": true,
+            "type": "pychete::Vector(E_VLL::group_U1Y)"
+          },
+          "EE": {
+            "charges": [
+              "E_VLL::group_U1Y(-1)"
+            ],
+            "chirality": "none",
+            "indices": [],
+            "label": "E_VLL::field_EE",
+            "mass_indices": [],
+            "mass_kind": "heavy",
+            "mass_label": "E_VLL::coupling_ME",
+            "name": "EE",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "G": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "E_VLL::field_G",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "G",
+            "self_conjugate": true,
+            "type": "pychete::Vector(E_VLL::group_SU3c)"
+          },
+          "H": {
+            "charges": [
+              "E_VLL::group_U1Y(1/2)"
+            ],
+            "chirality": "none",
+            "indices": [
+              "E_VLL::group_SU2L(pychete::fund)"
+            ],
+            "label": "E_VLL::field_H",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "H",
+            "self_conjugate": false,
+            "type": "pychete::Scalar"
+          },
+          "W": {
+            "charges": [],
+            "chirality": "none",
+            "indices": [],
+            "label": "E_VLL::field_W",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "W",
+            "self_conjugate": true,
+            "type": "pychete::Vector(E_VLL::group_SU2L)"
+          },
+          "d": {
+            "charges": [
+              "E_VLL::group_U1Y(-1/3)"
+            ],
+            "chirality": "right",
+            "indices": [
+              "E_VLL::group_SU3c(pychete::fund)",
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::field_d",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "d",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "e": {
+            "charges": [
+              "E_VLL::group_U1Y(-1)"
+            ],
+            "chirality": "right",
+            "indices": [
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::field_e",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "e",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "l": {
+            "charges": [
+              "E_VLL::group_U1Y(-1/2)"
+            ],
+            "chirality": "left",
+            "indices": [
+              "E_VLL::group_SU2L(pychete::fund)",
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::field_l",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "l",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "q": {
+            "charges": [
+              "E_VLL::group_U1Y(1/6)"
+            ],
+            "chirality": "left",
+            "indices": [
+              "E_VLL::group_SU3c(pychete::fund)",
+              "E_VLL::group_SU2L(pychete::fund)",
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::field_q",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "q",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          },
+          "u": {
+            "charges": [
+              "E_VLL::group_U1Y(2/3)"
+            ],
+            "chirality": "right",
+            "indices": [
+              "E_VLL::group_SU3c(pychete::fund)",
+              "E_VLL::index_type_Flavor"
+            ],
+            "label": "E_VLL::field_u",
+            "mass_indices": [],
+            "mass_kind": "light",
+            "mass_label": null,
+            "name": "u",
+            "self_conjugate": false,
+            "type": "pychete::Fermion"
+          }
+        },
+        "groups": {
+          "SU2L": {
+            "coupling": "gL",
+            "field": "W",
+            "name": "SU2L",
+            "type": "pychete::SU(2)"
+          },
+          "SU3c": {
+            "coupling": "gs",
+            "field": "G",
+            "name": "SU3c",
+            "type": "pychete::SU(3)"
+          },
+          "U1Y": {
+            "coupling": "gY",
+            "field": "B",
+            "name": "U1Y",
+            "type": "pychete::U1"
+          }
+        },
+        "index_types": {
+          "Flavor": {
+            "dimension": 3,
+            "name": "Flavor",
+            "symbol": "E_VLL::index_type_Flavor"
+          },
+          "Lorentz": {
+            "dimension": null,
+            "name": "Lorentz",
+            "symbol": "pychete::Lorentz"
+          }
+        },
+        "schema_version": 2,
+        "symbols": [
+          {
+            "data": {
+              "dimension": 3,
+              "label": "Flavor",
+              "name": "Flavor",
+              "role": "index_type",
+              "theory": "E_VLL"
+            },
+            "name": "Flavor",
+            "role": "index_type",
+            "symbol": "E_VLL::index_type_Flavor",
+            "tags": [
+              "python::pychete",
+              "python::index_type"
+            ]
+          },
+          {
+            "data": {
+              "group_coupling": "gL",
+              "group_field": "W",
+              "group_type": {
+                "__pychete_expression__": "pychete::SU(2)"
+              },
+              "label": "SU2L",
+              "name": "SU2L",
+              "role": "group",
+              "theory": "E_VLL"
+            },
+            "name": "SU2L",
+            "role": "group",
+            "symbol": "E_VLL::group_SU2L",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "group_coupling": "gs",
+              "group_field": "G",
+              "group_type": {
+                "__pychete_expression__": "pychete::SU(3)"
+              },
+              "label": "SU3c",
+              "name": "SU3c",
+              "role": "group",
+              "theory": "E_VLL"
+            },
+            "name": "SU3c",
+            "role": "group",
+            "symbol": "E_VLL::group_SU3c",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "group_coupling": "gY",
+              "group_field": "B",
+              "group_type": {
+                "__pychete_expression__": "pychete::U1"
+              },
+              "label": "U1Y",
+              "name": "U1Y",
+              "role": "group",
+              "theory": "E_VLL"
+            },
+            "name": "U1Y",
+            "role": "group",
+            "symbol": "E_VLL::group_U1Y",
+            "tags": [
+              "python::pychete",
+              "python::group"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "ME",
+              "name": "ME",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "ME",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_ME",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [
+                0,
+                0
+              ],
+              "eft_order": 0,
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "Yd",
+              "name": "Yd",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "Yd",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_Yd",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [
+                0,
+                0
+              ],
+              "eft_order": 0,
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "Ye",
+              "name": "Ye",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "Ye",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_Ye",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [
+                0,
+                0
+              ],
+              "eft_order": 0,
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "Yu",
+              "name": "Yu",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "Yu",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_Yu",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "gL",
+              "name": "gL",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "gL",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_gL",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "gY",
+              "name": "gY",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "gY",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_gY",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "gs",
+              "name": "gs",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "gs",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_gs",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 0,
+              "indices": [],
+              "label": "lambda",
+              "name": "lambda",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "lambda",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_lambda",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [],
+              "eft_order": 2,
+              "indices": [],
+              "label": "mu2",
+              "name": "mu2",
+              "role": "coupling",
+              "self_conjugate": 1,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "mu2",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_mu2",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "diagonal_coupling": [
+                0
+              ],
+              "eft_order": 0,
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "yE",
+              "name": "yE",
+              "role": "coupling",
+              "self_conjugate": 0,
+              "symmetries": [],
+              "theory": "E_VLL",
+              "thermal_power_counting": 1,
+              "unitary": 0
+            },
+            "name": "yE",
+            "role": "coupling",
+            "symbol": "E_VLL::coupling_yE",
+            "tags": [
+              "python::pychete",
+              "python::coupling"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(E_VLL::group_U1Y)"
+              },
+              "indices": [],
+              "label": "B",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "B",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "E_VLL"
+            },
+            "name": "B",
+            "role": "field",
+            "symbol": "E_VLL::field_B",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "E_VLL::group_U1Y(-1)"
+                }
+              ],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [],
+              "label": "EE",
+              "mass_indices": [],
+              "mass_kind": "heavy",
+              "mass_label": {
+                "__pychete_expression__": "E_VLL::coupling_ME"
+              },
+              "name": "EE",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "E_VLL"
+            },
+            "name": "EE",
+            "role": "field",
+            "symbol": "E_VLL::field_EE",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(E_VLL::group_SU3c)"
+              },
+              "indices": [],
+              "label": "G",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "G",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "E_VLL"
+            },
+            "name": "G",
+            "role": "field",
+            "symbol": "E_VLL::field_G",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "E_VLL::group_U1Y(1/2)"
+                }
+              ],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Scalar"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                }
+              ],
+              "label": "H",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "H",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "E_VLL"
+            },
+            "name": "H",
+            "role": "field",
+            "symbol": "E_VLL::field_H",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [],
+              "chirality": "none",
+              "field_type": {
+                "__pychete_expression__": "pychete::Vector(E_VLL::group_SU2L)"
+              },
+              "indices": [],
+              "label": "W",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "W",
+              "role": "field",
+              "self_conjugate": 1,
+              "theory": "E_VLL"
+            },
+            "name": "W",
+            "role": "field",
+            "symbol": "E_VLL::field_W",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "E_VLL::group_U1Y(-1/3)"
+                }
+              ],
+              "chirality": "right",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "d",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "d",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "E_VLL"
+            },
+            "name": "d",
+            "role": "field",
+            "symbol": "E_VLL::field_d",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "E_VLL::group_U1Y(-1)"
+                }
+              ],
+              "chirality": "right",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "e",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "e",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "E_VLL"
+            },
+            "name": "e",
+            "role": "field",
+            "symbol": "E_VLL::field_e",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "E_VLL::group_U1Y(-1/2)"
+                }
+              ],
+              "chirality": "left",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "l",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "l",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "E_VLL"
+            },
+            "name": "l",
+            "role": "field",
+            "symbol": "E_VLL::field_l",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "E_VLL::group_U1Y(1/6)"
+                }
+              ],
+              "chirality": "left",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::group_SU2L(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "q",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "q",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "E_VLL"
+            },
+            "name": "q",
+            "role": "field",
+            "symbol": "E_VLL::field_q",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          },
+          {
+            "data": {
+              "charges": [
+                {
+                  "__pychete_expression__": "E_VLL::group_U1Y(2/3)"
+                }
+              ],
+              "chirality": "right",
+              "field_type": {
+                "__pychete_expression__": "pychete::Fermion"
+              },
+              "indices": [
+                {
+                  "__pychete_expression__": "E_VLL::group_SU3c(pychete::fund)"
+                },
+                {
+                  "__pychete_expression__": "E_VLL::index_type_Flavor"
+                }
+              ],
+              "label": "u",
+              "mass_indices": [],
+              "mass_kind": "light",
+              "name": "u",
+              "role": "field",
+              "self_conjugate": 0,
+              "theory": "E_VLL"
+            },
+            "name": "u",
+            "role": "field",
+            "symbol": "E_VLL::field_u",
+            "tags": [
+              "python::pychete",
+              "python::field"
+            ]
+          }
+        ],
+        "theory_name": "E_VLL"
+      }
+    }
+  }
+}
