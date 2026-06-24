@@ -137,7 +137,11 @@ Clebsch-Gordan tensors must be registered through
 central `CG(label, indices)` head, with `cg_representations`, optional
 `cg_tensor`, and `cg_source` symbol data. Do not leave them as plain external
 functions, and do not hand-roll contractions in Python; lower them through
-spenso/idenso backend adapters.
+spenso/idenso backend adapters. Use
+`pychete.backends.spenso.representation_to_spenso(...)`,
+`pychete.backends.spenso.cg_tensor_structure_to_spenso(...)`, and
+`pychete.backends.spenso.indexed_cg_tensor_to_spenso(...)` as the standard
+metadata bridge from pychete theory definitions to native spenso objects.
 Built-in Matchete CG labels such as `gen[group[rep]]`, `eps[group]`,
 `fStruct[group]`, `dSym[group]`, and `del[group[rep]]` must resolve to the
 auto-registered theory-owned CG tensor labels, not to generic external

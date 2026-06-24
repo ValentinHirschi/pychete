@@ -617,6 +617,21 @@ discoveries, dependency patches, blockers, and remaining work.
   through the existing adapter boundary, which is suitable for scalar
   supertrace kernels; future tensor-valued stages may need a sibling API that
   preserves tensor results instead of forcing scalar extraction.
+- Completed the twenty-sixth implementation slice:
+  - added `pychete.backends.spenso.representation_to_spenso(...)`, lowering
+    registered pychete representation metadata to native spenso
+    `Representation` objects with cached stable backend names;
+  - added `pychete.backends.spenso.cg_tensor_structure_to_spenso(...)`,
+    lowering registered `CGTensorDefinition` metadata into native spenso
+    `TensorStructure` objects instead of leaving CG tensors as external heads;
+  - added `pychete.backends.spenso.indexed_cg_tensor_to_spenso(...)`, lowering
+    concrete pychete `CG(label, indices)` expressions to native spenso
+    `TensorIndices`;
+  - documented these adapter functions in `AGENTS.md` as the standard bridge
+    from pychete theory metadata to native spenso objects;
+  - added focused tests for complex, conjugate, pseudoreal, and dimensionless
+    representation lowering plus built-in Matchete generator CG tensor
+    lowering.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -737,6 +752,12 @@ discoveries, dependency patches, blockers, and remaining work.
   `vakint::prop(..., mass_squared, 2)` rather than two duplicate propagator
   factors. This makes current power-type lowering closer to vakint's native
   topology representation for repeated single-scale denominators.
+- Rescanned the spenso Python stubs for `Representation`, `TensorName`,
+  `TensorStructure`, and `TensorIndices`, and exercised the constructors in the
+  managed venv. Native spenso representations are globally registered by name;
+  constructing the same name with incompatible duality can abort the Python
+  process from Rust, so pychete now uses stable dimension/reality-qualified
+  backend names plus an adapter-side cache when lowering representations.
 
 ## Test Status
 
@@ -1315,6 +1336,18 @@ discoveries, dependency patches, blockers, and remaining work.
   tests'` passed after the built-in CG tensor label slice: 128 passed, 1
   skipped. The skip is the existing GammaLoop API import check because
   GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/backends/test_spenso_backend.py
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py -q'` passed after the spenso
+  metadata bridge slice: 36 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the spenso metadata bridge slice: no issues found in
+  24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the spenso metadata bridge slice: 131
+  passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1326,9 +1359,11 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
   including backend-computed representation dimensions/reality,
   real/complex counting, and later model-specific SMEFT basis classifications.
-- Add the spenso/idenso backend adapter that lowers registered `CG` tensor
-  atoms to tensor-library/network objects and implements contractions,
-  simplifications, and invariant-tensor construction.
+- Extend the new spenso metadata bridge from native `Representation`,
+  `TensorStructure`, and `TensorIndices` lowering into full tensor-library
+  registration, contractions, simplifications, and invariant-tensor
+  construction, using idenso where gamma/colour/index algebra is the right
+  backend.
 - Consume `SupertracePlan` and `PropagatorPlan` to build real one-loop
   supertrace terms beyond the new neutral denominator-slot expressions and
   preliminary vakint one-loop topology lowering, including physical loop

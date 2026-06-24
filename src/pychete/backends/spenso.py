@@ -1,16 +1,92 @@
 from __future__ import annotations
 
+from functools import lru_cache
 from typing import Any
 
 from symbolica import Expression
 
 from .common import import_backend
+from ..expr import args, is_head
+from ..symbols import canonical_string, display_string, s, safe_symbol_name
+from ..theory import CGTensorDefinition, CGTensorHandle, RepresentationReality, Theory
 
 
 def native_module():
     """Return the native spenso Python module."""
 
     return import_backend("symbolica.community.spenso")
+
+
+def _backend_name(*parts: str) -> str:
+    return safe_symbol_name("_".join(parts))
+
+
+@lru_cache(maxsize=None)
+def _native_representation(name: str, dimension: int, is_self_dual: bool) -> Any:
+    return native_module().Representation(name, dimension, is_self_dual=is_self_dual)
+
+
+def representation_to_spenso(theory: Theory, representation: Expression) -> Any:
+    """Lower a registered pychete representation to a native spenso representation.
+
+    The conversion is metadata-only: pychete uses the registered theory
+    representation dimension and reality data, then delegates index-space
+    construction to spenso's Rust-backed ``Representation`` object.
+    """
+
+    definition = theory.representation_definition(representation)
+    dimension = definition.dimension_value
+    if dimension is None:
+        raise ValueError(f"Cannot lower representation {display_string(definition.expr)} without dimension metadata")
+    reality = definition.reality_kind
+    is_self_dual = reality in {RepresentationReality.REAL, RepresentationReality.PSEUDOREAL}
+    name = _backend_name(
+        "pychete",
+        theory.name,
+        definition.group,
+        definition.name,
+        f"d{dimension}",
+        reality.value,
+    )
+    native = _native_representation(name, dimension, is_self_dual)
+    if theory.is_conjugate_representation(representation):
+        return native.dual()
+    return native
+
+
+def _cg_tensor_definition(theory: Theory, cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle) -> CGTensorDefinition:
+    if isinstance(cg_tensor, str):
+        return theory.cg_tensors[cg_tensor]
+    if isinstance(cg_tensor, CGTensorHandle):
+        return cg_tensor.definition
+    if isinstance(cg_tensor, CGTensorDefinition):
+        return cg_tensor
+    label_key = canonical_string(cg_tensor)
+    for definition in theory.cg_tensors.values():
+        if canonical_string(definition.label) == label_key:
+            return definition
+    raise KeyError(f"Unknown CG tensor label {label_key!r}")
+
+
+def cg_tensor_structure_to_spenso(
+    theory: Theory,
+    cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle,
+) -> Any:
+    """Lower registered CG tensor metadata to a native spenso tensor structure."""
+
+    definition = _cg_tensor_definition(theory, cg_tensor)
+    tensor_name = native_module().TensorName(_backend_name("pychete", theory.name, "cg", definition.name))
+    representations = tuple(representation_to_spenso(theory, representation) for representation in definition.representation_exprs)
+    return native_module().TensorStructure(*representations, name=tensor_name)
+
+
+def indexed_cg_tensor_to_spenso(theory: Theory, expr: Expression) -> Any:
+    """Lower a pychete ``CG(label, indices)`` expression to native spenso indices."""
+
+    if not is_head(expr, s.CG) or len(expr) != 2:
+        raise ValueError(f"Expected a pychete CG(label, indices) expression, got {display_string(expr)}")
+    structure = cg_tensor_structure_to_spenso(theory, expr[0])
+    return structure.index(*(args(expr[1])))
 
 
 def empty_tensor_library() -> Any:
@@ -93,11 +169,14 @@ def evaluate_tensor_network(
 
 
 __all__ = [
+    "cg_tensor_structure_to_spenso",
     "empty_tensor_library",
     "evaluate_tensor_network",
     "execute_tensor_network",
     "hep_tensor_library",
+    "indexed_cg_tensor_to_spenso",
     "native_module",
+    "representation_to_spenso",
     "tensor_network",
     "tensor_network_result_scalar",
     "tensor_network_result_tensor",
