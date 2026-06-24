@@ -450,6 +450,21 @@ discoveries, dependency patches, blockers, and remaining work.
     expensive default native engine in normal pytest;
   - extended public API docstring coverage for the new vakint transformation
     methods.
+- Completed the twenty-fifth implementation slice:
+  - added `SupertraceBlockTrace.evaluate_tensor_network(...)`, delegating
+    generated kernel tensor/CG contraction to the native spenso adapter;
+  - added `OneLoopSetup.evaluate_tensor_networks(...)`, which returns an
+    updated immutable setup with every generated kernel evaluated through
+    spenso and converted back through the adapter's scalar-result boundary;
+  - kept this as an explicit backend transformation stage only: tensor-network
+    evaluation is now wired into the setup path, but full one-loop matching
+    still needs real propagator/integral construction before these kernels are
+    physical supertrace contributions;
+  - added tests that monkeypatch the spenso adapter boundary to prove generated
+    kernels are routed through `pychete.backends.spenso` with caller-provided
+    library, function-library, step, and mode options;
+  - extended public API docstring coverage for the new spenso transformation
+    methods.
 
 ## Backend/API Discoveries
 
@@ -596,6 +611,12 @@ discoveries, dependency patches, blockers, and remaining work.
   deliberately only delegate current expressions to vakint; later matching
   slices still need to construct the actual vacuum-integral expressions before
   the vakint stage can yield physical loop contributions.
+- Generated supertrace block kernels can now be routed through spenso tensor
+  networks with `evaluate_tensor_network(...)` and
+  `evaluate_tensor_networks(...)`. The current method extracts scalar results
+  through the existing adapter boundary, which is suitable for scalar
+  supertrace kernels; future tensor-valued stages may need a sibling API that
+  preserves tensor results instead of forcing scalar extraction.
 
 ## Test Status
 
@@ -837,6 +858,16 @@ discoveries, dependency patches, blockers, and remaining work.
   vakint-kernel-transformation slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   vakint-kernel-transformation slice: 109 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py`
+  passed after the spenso-kernel-evaluation slice: 23 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  spenso-kernel-evaluation slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  spenso-kernel-evaluation slice: 110 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
 

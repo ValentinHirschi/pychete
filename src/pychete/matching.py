@@ -283,6 +283,27 @@ class SupertraceBlockTrace:
 
         return replace(self, expression=vakint.evaluate(self.expression, engine=engine))
 
+    def evaluate_tensor_network(
+        self,
+        *,
+        library: Any | None = None,
+        function_library: Any | None = None,
+        n_steps: int | None = None,
+        mode: Any | None = None,
+    ) -> SupertraceBlockTrace:
+        """Return this trace kernel after native spenso tensor evaluation."""
+
+        from .backends import spenso
+
+        network = spenso.evaluate_tensor_network(
+            self.expression,
+            library=library,
+            function_library=function_library,
+            n_steps=n_steps,
+            mode=mode,
+        )
+        return replace(self, expression=spenso.tensor_network_result_scalar(network))
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{SupertraceBlockTrace}}\left({escape(self.name)},\ {self.order}\right)$"
 
@@ -470,6 +491,29 @@ class OneLoopSetup:
             self,
             block_traces=tuple(
                 trace.evaluate_integrals(engine=engine)
+                for trace in self.block_traces
+            ),
+        )
+
+    def evaluate_tensor_networks(
+        self,
+        *,
+        library: Any | None = None,
+        function_library: Any | None = None,
+        n_steps: int | None = None,
+        mode: Any | None = None,
+    ) -> OneLoopSetup:
+        """Return a setup with generated kernels evaluated through spenso."""
+
+        return replace(
+            self,
+            block_traces=tuple(
+                trace.evaluate_tensor_network(
+                    library=library,
+                    function_library=function_library,
+                    n_steps=n_steps,
+                    mode=mode,
+                )
                 for trace in self.block_traces
             ),
         )

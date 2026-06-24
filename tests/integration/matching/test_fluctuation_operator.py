@@ -5,6 +5,7 @@ from symbolica import Expression, S
 
 from pychete import FieldMassKind, FluctuationSector, FluctuationStatistics, Theory, canonical_string, s
 from pychete.backends import idenso as idenso_backend
+from pychete.backends import spenso as spenso_backend
 
 from tests.conftest import assert_expr_equal
 
@@ -24,6 +25,11 @@ class FakeKernelVakintEngine:
     def evaluate(self, expr: Expression) -> Expression:
         self.calls.append(("evaluate", expr, None))
         return S("evaluated")(expr)
+
+
+class FakeTensorNetwork:
+    def __init__(self, expr: Expression) -> None:
+        self.expr = expr
 
 
 def test_fluctuation_operator_uses_symbolica_hessian_for_scalar_basis() -> None:
@@ -386,3 +392,44 @@ def test_one_loop_setup_routes_generated_kernels_through_vakint_engine() -> None
     assert canonicalized.fluctuation_operator is setup.fluctuation_operator
     assert reduced.supertrace_plan is setup.supertrace_plan
     assert evaluated.block_traces[0].name == setup.block_traces[0].name
+
+
+def test_one_loop_setup_routes_generated_kernels_through_spenso(monkeypatch: pytest.MonkeyPatch) -> None:
+    theory = Theory("one_loop_setup_spenso")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = heavy() ** 2 + light() ** 2 - y() * heavy() * light() ** 2 / 2
+    calls: list[tuple[Expression, object, object, int | None, object]] = []
+
+    def fake_evaluate_tensor_network(
+        expr: Expression,
+        *,
+        library: object | None = None,
+        function_library: object | None = None,
+        n_steps: int | None = None,
+        mode: object | None = None,
+    ) -> FakeTensorNetwork:
+        calls.append((expr, library, function_library, n_steps, mode))
+        return FakeTensorNetwork(expr)
+
+    def fake_tensor_network_result_scalar(network: FakeTensorNetwork) -> Expression:
+        return S("tensor")(network.expr)
+
+    monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
+    monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
+
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=1)
+    evaluated = setup.evaluate_tensor_networks(
+        library="library",
+        function_library="functions",
+        n_steps=7,
+        mode="mode",
+    )
+
+    assert len(calls) == setup.supertrace_kernel_count
+    assert calls[0][1:] == ("library", "functions", 7, "mode")
+    assert evaluated.fluctuation_operator is setup.fluctuation_operator
+    assert evaluated.supertrace_plan is setup.supertrace_plan
+    assert evaluated.block_traces[0].name == setup.block_traces[0].name
+    assert_expr_equal(evaluated.block_traces[0].expression, S("tensor")(setup.block_traces[0].expression))

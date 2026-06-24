@@ -91,6 +91,7 @@ def test_public_api_methods_have_docstrings() -> None:
         pychete.OneLoopSetup: [
             "canonicalize_integrals",
             "evaluate_integrals",
+            "evaluate_tensor_networks",
             "max_trace_order",
             "simplify_index_algebra",
             "supertrace_expression_map",
@@ -130,6 +131,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "block_sectors",
             "canonicalize_integrals",
             "evaluate_integrals",
+            "evaluate_tensor_network",
             "order",
             "simplify_index_algebra",
             "tensor_reduce_integrals",
