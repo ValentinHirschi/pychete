@@ -466,6 +466,17 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
         setup.vakint_integral_expression_map()["vakint_integral[heavy-light-heavy]"],
         vakint_integral,
     )
+    repeated_heavy_trace = next(trace for trace in setup.block_traces if trace.name == "heavy-heavy-heavy")
+    repeated_heavy_integral = vakint_backend.one_loop_vacuum_integral(
+        repeated_heavy_trace.expression,
+        (heavy_mass**2,),
+        powers=(2,),
+    )
+    assert_expr_equal(repeated_heavy_trace.vakint_integral_expression(), repeated_heavy_integral)
+    assert_expr_equal(
+        setup.vakint_integral_expression_map()["vakint_integral[heavy-heavy-heavy]"],
+        repeated_heavy_integral,
+    )
     canonical_engine = FakeKernelVakintEngine()
     canonicalized = setup.canonicalize_vakint_integral_expression_map(short_form=True, engine=canonical_engine)
     assert len(canonical_engine.calls) == setup.supertrace_kernel_count

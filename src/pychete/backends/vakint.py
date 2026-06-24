@@ -58,15 +58,16 @@ def one_loop_vacuum_topology(
     *,
     powers: Sequence[int] | None = None,
 ) -> Expression:
-    """Build a one-loop vacuum topology with one propagator per mass."""
+    """Build a one-loop vacuum topology with powered distinct-mass propagators."""
 
     if powers is not None and len(powers) != len(mass_squareds):
         raise ValueError("powers must match the number of mass-squared entries")
     prop_powers = tuple(1 for _ in mass_squareds) if powers is None else tuple(powers)
+    mass_powers = _combine_equal_mass_powers(mass_squareds, prop_powers)
     return topology(
         tuple(
             propagator(index, mass_squared, power=power)
-            for index, (mass_squared, power) in enumerate(zip(mass_squareds, prop_powers, strict=True), start=1)
+            for index, (mass_squared, power) in enumerate(mass_powers, start=1)
         )
     )
 
@@ -80,6 +81,21 @@ def one_loop_vacuum_integral(
     """Build a vakint one-loop vacuum integral from a numerator and masses."""
 
     return numerator * one_loop_vacuum_topology(mass_squareds, powers=powers)
+
+
+def _combine_equal_mass_powers(
+    mass_squareds: Sequence[Expression],
+    powers: Sequence[int],
+) -> tuple[tuple[Expression, int], ...]:
+    combined: list[tuple[Expression, int]] = []
+    for mass_squared, power in zip(mass_squareds, powers, strict=True):
+        for index, (existing_mass_squared, existing_power) in enumerate(combined):
+            if bool(mass_squared == existing_mass_squared):
+                combined[index] = (existing_mass_squared, existing_power + power)
+                break
+        else:
+            combined.append((mass_squared, power))
+    return tuple(combined)
 
 
 def new_alphaloop_method() -> Any:

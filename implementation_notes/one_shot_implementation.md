@@ -730,6 +730,13 @@ discoveries, dependency patches, blockers, and remaining work.
   `power_type_matching_preview(...)` through this helper at
   `max_trace_order=3`, covering eleven generated kernels and six cyclically
   unique power-type contributions per model.
+- Rescanned vakint's one-loop examples and parser tests for propagator power
+  conventions. `pychete.backends.vakint.one_loop_vacuum_topology(...)` now
+  combines repeated equal mass-squared denominator slots into a single vakint
+  propagator with summed power, e.g. two identical one-loop denominators become
+  `vakint::prop(..., mass_squared, 2)` rather than two duplicate propagator
+  factors. This makes current power-type lowering closer to vakint's native
+  topology representation for repeated single-scale denominators.
 
 ## Test Status
 
@@ -1089,6 +1096,16 @@ discoveries, dependency patches, blockers, and remaining work.
   fixture-one-loop-preview-helper slice: no issues found in 24 source files.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the
   fixture-one-loop-preview-helper slice: 115 passed, 1 skipped. The skip is the
+  existing GammaLoop API import check because GammaLoop was not requested in
+  the current dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/unit/backends/test_vakint_backend.py
+  tests/integration/matching/test_fluctuation_operator.py`
+  passed after the powered-vakint-denominator slice: 26 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the
+  powered-vakint-denominator slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  powered-vakint-denominator slice: 116 passed, 1 skipped. The skip is the
   existing GammaLoop API import check because GammaLoop was not requested in
   the current dependency manifest.
 
