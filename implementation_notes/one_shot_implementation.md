@@ -985,6 +985,27 @@ discoveries, dependency patches, blockers, and remaining work.
     package root, and added focused coverage for public docstrings, hbar pretty
     printing, raw-vs-normalized result storage, and evaluated normalized
     pole/finite extraction.
+- Completed the forty-fifth implementation slice:
+  - added `MatchingFixtureGapReport` and
+    `ValidationFixture.one_loop_preview_gap_report(...)` so committed
+    pychete-owned Matchete fixtures can now be used as explicit acceptance
+    targets even while the current interaction-power result is still
+    incomplete;
+  - the report compares the current one-loop preview result's exposed
+    supertrace and matching-condition names to a reference `MatchingResult`,
+    records candidate/reference counts, common names, candidate-only names,
+    and missing Matchete reference names, and provides JSON plus Jupyter
+    `_repr_html_`/`_repr_latex_` output;
+  - added a Mathematica-independent integration test over the four default
+    Matchete matching targets (`VLF_toy_model`,
+    `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`) proving the current
+    candidate exposes the three top-level expression stages by common name but
+    still lacks all Matchete-named supertrace keys and all nonzero matching
+    conditions;
+  - this is deliberately a gap-reporting milestone, not an acceptance pass:
+    the report makes the remaining validation surface measurable so later
+    slices can turn missing-reference counts into canonical or evaluator-backed
+    equality checks as the matching engine catches up.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -2007,6 +2028,25 @@ discoveries, dependency patches, blockers, and remaining work.
   slice: 157 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the interaction-power normalization slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  tests/integration/validation/test_validation_fixtures.py::test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica
+  -q'` passed after the default-target gap-report slice: 2 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the default-target gap-report slice: no issues found
+  in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/validation -q'` passed after the
+  default-target gap-report slice: 16 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/models -q'` passed after the default-target
+  gap-report slice: 13 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the default-target gap-report slice: 158
+  passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the default-target gap-report slice.
 
 ## Remaining Work
 

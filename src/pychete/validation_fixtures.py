@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass, field
+from html import escape
 from pathlib import Path
 from typing import Any
 
@@ -10,6 +12,116 @@ from symbolica import Expression
 from .matching import MatchingResult, VakintIntegralStage
 from .state import PycheteState
 from .theory import Theory
+
+
+@dataclass(frozen=True)
+class MatchingFixtureGapReport:
+    """Coverage report comparing a current pychete candidate to a fixture result."""
+
+    candidate_fixture: str
+    reference_name: str
+    candidate_stage: str | None
+    reference_stage: str | None
+    candidate_supertrace_names: tuple[str, ...]
+    reference_supertrace_names: tuple[str, ...]
+    common_supertrace_names: tuple[str, ...]
+    candidate_only_supertrace_names: tuple[str, ...]
+    reference_only_supertrace_names: tuple[str, ...]
+    candidate_matching_condition_names: tuple[str, ...]
+    reference_matching_condition_names: tuple[str, ...]
+    common_matching_condition_names: tuple[str, ...]
+    candidate_only_matching_condition_names: tuple[str, ...]
+    reference_only_matching_condition_names: tuple[str, ...]
+    common_expression_names: tuple[str, ...]
+
+    @property
+    def complete(self) -> bool:
+        """Whether candidate and reference expose the same validation surface."""
+
+        return (
+            not self.candidate_only_supertrace_names
+            and not self.reference_only_supertrace_names
+            and not self.candidate_only_matching_condition_names
+            and not self.reference_only_matching_condition_names
+        )
+
+    @property
+    def candidate_supertrace_count(self) -> int:
+        """Number of supertrace expressions exposed by the candidate."""
+
+        return len(self.candidate_supertrace_names)
+
+    @property
+    def reference_supertrace_count(self) -> int:
+        """Number of supertrace expressions exposed by the reference fixture."""
+
+        return len(self.reference_supertrace_names)
+
+    @property
+    def missing_reference_supertrace_count(self) -> int:
+        """Number of reference supertraces not yet generated under matching names."""
+
+        return len(self.reference_only_supertrace_names)
+
+    @property
+    def candidate_matching_condition_count(self) -> int:
+        """Number of matching conditions exposed by the candidate."""
+
+        return len(self.candidate_matching_condition_names)
+
+    @property
+    def reference_matching_condition_count(self) -> int:
+        """Number of matching conditions exposed by the reference fixture."""
+
+        return len(self.reference_matching_condition_names)
+
+    @property
+    def missing_reference_matching_condition_count(self) -> int:
+        """Number of reference matching conditions not yet generated."""
+
+        return len(self.reference_only_matching_condition_names)
+
+    def to_json_obj(self) -> dict[str, Any]:
+        """Return a JSON-serializable representation of this report."""
+
+        return {
+            "candidate_fixture": self.candidate_fixture,
+            "reference_name": self.reference_name,
+            "candidate_stage": self.candidate_stage,
+            "reference_stage": self.reference_stage,
+            "complete": self.complete,
+            "candidate_supertrace_count": self.candidate_supertrace_count,
+            "reference_supertrace_count": self.reference_supertrace_count,
+            "common_supertrace_count": len(self.common_supertrace_names),
+            "missing_reference_supertrace_count": self.missing_reference_supertrace_count,
+            "candidate_only_supertrace_count": len(self.candidate_only_supertrace_names),
+            "candidate_matching_condition_count": self.candidate_matching_condition_count,
+            "reference_matching_condition_count": self.reference_matching_condition_count,
+            "common_matching_condition_count": len(self.common_matching_condition_names),
+            "missing_reference_matching_condition_count": self.missing_reference_matching_condition_count,
+            "candidate_only_matching_condition_count": len(self.candidate_only_matching_condition_names),
+            "common_expression_names": list(self.common_expression_names),
+            "candidate_only_supertrace_names": list(self.candidate_only_supertrace_names),
+            "reference_only_supertrace_names": list(self.reference_only_supertrace_names),
+            "candidate_only_matching_condition_names": list(self.candidate_only_matching_condition_names),
+            "reference_only_matching_condition_names": list(self.reference_only_matching_condition_names),
+        }
+
+    def _repr_latex_(self) -> str:
+        status = r"\checkmark" if self.complete else r"\times"
+        return (
+            rf"$\mathrm{{MatchingFixtureGapReport}}\left({status},\ "
+            rf"{self.candidate_supertrace_count}/{self.reference_supertrace_count}\ \mathrm{{STr}}\right)$"
+        )
+
+    def _repr_html_(self) -> str:
+        status = "complete" if self.complete else "incomplete"
+        return (
+            f"<code>MatchingFixtureGapReport({escape(self.candidate_fixture)} vs "
+            f"{escape(self.reference_name)}: {status}, "
+            f"supertraces={self.candidate_supertrace_count}/{self.reference_supertrace_count}, "
+            f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count})</code>"
+        )
 
 
 @dataclass(frozen=True)
@@ -104,6 +216,36 @@ class ValidationFixture:
             },
         )
 
+    def one_loop_preview_gap_report(
+        self,
+        reference: MatchingResult,
+        *,
+        reference_name: str = "reference",
+        lagrangian: str = "lagrangian",
+        eft_order: int = 6,
+        max_trace_order: int = 2,
+        include_light_only: bool = False,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+    ) -> MatchingFixtureGapReport:
+        """Report current one-loop preview coverage against a reference result."""
+
+        candidate = self.one_loop_preview(
+            lagrangian=lagrangian,
+            eft_order=eft_order,
+            max_trace_order=max_trace_order,
+            include_light_only=include_light_only,
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
+        )
+        return _gap_report(self.name, reference_name, candidate, reference)
+
     @classmethod
     def from_json_obj(cls, obj: dict[str, Any]) -> ValidationFixture:
         """Restore a validation fixture from a JSON object."""
@@ -152,6 +294,46 @@ def load_validation_fixture(path: str | Path) -> ValidationFixture:
     """Load a Mathematica-independent pychete validation fixture."""
 
     return ValidationFixture.read_json(path)
+
+
+def _sorted_names(names: Iterable[str]) -> tuple[str, ...]:
+    return tuple(sorted(names))
+
+
+def _metadata_stage(result: MatchingResult) -> str | None:
+    stage = result.metadata.get("stage")
+    return str(stage) if stage is not None else None
+
+
+def _gap_report(
+    candidate_fixture: str,
+    reference_name: str,
+    candidate: MatchingResult,
+    reference: MatchingResult,
+) -> MatchingFixtureGapReport:
+    candidate_supertraces = set(candidate.supertraces)
+    reference_supertraces = set(reference.supertraces)
+    candidate_conditions = set(candidate.matching_conditions)
+    reference_conditions = set(reference.matching_conditions)
+    candidate_names = set(candidate.expression_names())
+    reference_names = set(reference.expression_names())
+    return MatchingFixtureGapReport(
+        candidate_fixture=candidate_fixture,
+        reference_name=reference_name,
+        candidate_stage=_metadata_stage(candidate),
+        reference_stage=_metadata_stage(reference),
+        candidate_supertrace_names=_sorted_names(candidate_supertraces),
+        reference_supertrace_names=_sorted_names(reference_supertraces),
+        common_supertrace_names=_sorted_names(candidate_supertraces & reference_supertraces),
+        candidate_only_supertrace_names=_sorted_names(candidate_supertraces - reference_supertraces),
+        reference_only_supertrace_names=_sorted_names(reference_supertraces - candidate_supertraces),
+        candidate_matching_condition_names=_sorted_names(candidate_conditions),
+        reference_matching_condition_names=_sorted_names(reference_conditions),
+        common_matching_condition_names=_sorted_names(candidate_conditions & reference_conditions),
+        candidate_only_matching_condition_names=_sorted_names(candidate_conditions - reference_conditions),
+        reference_only_matching_condition_names=_sorted_names(reference_conditions - candidate_conditions),
+        common_expression_names=_sorted_names(candidate_names & reference_names),
+    )
 
 
 def _metadata(value: Any) -> dict[str, str | int | float | bool | None]:
