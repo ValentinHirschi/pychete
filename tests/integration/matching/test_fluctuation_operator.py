@@ -174,11 +174,17 @@ def test_fluctuation_basis_modes_carry_statistics_and_mass_metadata() -> None:
     assert scalar_mode.mass_kind is FieldMassKind.HEAVY
     assert scalar_mode.statistics is FluctuationStatistics.BOSONIC
     assert scalar_mode.supertrace_sign == 1
+    assert scalar_mode.index_representations == ()
+    assert scalar_mode.index_dimensions == ()
+    assert scalar_mode.internal_dimension == 1
+    assert scalar_mode.supertrace_weight == 1
     assert scalar_mode.self_conjugate is True
     assert scalar_mode.conjugated is False
     assert fermion_mode.mass_kind is FieldMassKind.LIGHT
     assert fermion_mode.statistics is FluctuationStatistics.FERMIONIC
     assert fermion_mode.supertrace_sign == -1
+    assert fermion_mode.internal_dimension == 1
+    assert fermion_mode.supertrace_weight == -1
     assert fermion_mode.conjugated is False
     assert barred_fermion_mode.statistics is FluctuationStatistics.FERMIONIC
     assert barred_fermion_mode.conjugated is True
@@ -187,6 +193,40 @@ def test_fluctuation_basis_modes_carry_statistics_and_mass_metadata() -> None:
         canonical_string(s.Bar(fermion())),
         canonical_string(fermion()),
     }
+
+
+def test_fluctuation_modes_carry_internal_representation_dimensions() -> None:
+    theory = Theory("fluctuation_mode_dimensions")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    theory.define_global_group("SU2L", s.SU(Expression.num(2)))
+    su3_fund = theory.define_representation("SU3c", "fund")
+    su2_fund = theory.define_representation("SU2L", "fund")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    quark = theory.define_field(
+        "Q",
+        s.Fermion,
+        indices=[su3_fund, su2_fund, flavor.symbol],
+        mass=(FieldMassKind.LIGHT, "mQ"),
+    )
+    unknown = theory.define_index_type("Unknown")
+    hidden = theory.define_field("X", s.Scalar, indices=[unknown.symbol], self_conjugate=True, mass=0)
+    lagrangian = s.Bar(quark()) * quark() + hidden() ** 2
+
+    basis = theory.fluctuation_basis(lagrangian)
+    quark_mode = basis.mode_for(quark)
+    barred_quark_mode = basis.mode_for(s.Bar(quark()))
+    hidden_mode = basis.mode_for(hidden)
+
+    assert quark_mode.index_representations == (su3_fund, su2_fund, flavor.symbol)
+    assert quark_mode.index_dimensions == (3, 2, 3)
+    assert quark_mode.internal_dimension == 18
+    assert quark_mode.supertrace_weight == -18
+    assert barred_quark_mode.index_dimensions == quark_mode.index_dimensions
+    assert barred_quark_mode.internal_dimension == 18
+    assert barred_quark_mode.supertrace_weight == -18
+    assert hidden_mode.index_dimensions == (None,)
+    assert hidden_mode.internal_dimension is None
+    assert hidden_mode.supertrace_weight is None
 
 
 def test_fluctuation_basis_skips_background_fields_and_grades_ghosts_as_fermionic() -> None:

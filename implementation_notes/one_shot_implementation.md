@@ -756,6 +756,19 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests proving the evaluated vakint aggregate is not evaluated
     more than once for this result path and that the pole, counterterm, finite
     part, and metadata are all exposed for future Matchete fixture comparisons.
+- Completed the thirty-fourth implementation slice:
+  - extended `FluctuationMode` with derived degree-of-freedom metadata:
+    `index_representations`, `index_dimensions`, `internal_dimension`, and
+    `supertrace_weight`;
+  - dimensions are recovered from existing Symbolica symbol data on registered
+    group representations and index-type symbols, so the mode metadata uses the
+    same restored theory registry as the rest of pychete;
+  - unknown index dimensions remain `None` and therefore produce
+    `internal_dimension is None` and `supertrace_weight is None`, avoiding
+    silent physics weights when backend metadata is missing;
+  - added focused tests covering SU(3) x SU(2) x flavor dimensions for barred
+    and unbarred fermion modes, unknown index dimensions, scalar unit
+    multiplicity, signed supertrace weights, and public API docstring coverage.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1584,6 +1597,18 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the power-type minimal-subtraction result
   slice: 149 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_basis_modes_carry_statistics_and_mass_metadata
+  tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_modes_carry_internal_representation_dimensions
+  tests/unit/definitions/test_public_api.py -q'` passed after the fluctuation
+  mode degree metadata slice: 6 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the fluctuation mode degree metadata slice: no issues
+  found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the fluctuation mode degree metadata slice:
+  150 passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1592,9 +1617,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend `FluctuationOperator` extraction from algebraic Hessians over explicit
   basis entries to full differential fluctuation operators, including
   derivative-valued fields and integration-by-parts conventions.
-- Extend `FluctuationBasis` toward full one-loop degree-of-freedom metadata,
-  including backend-computed representation dimensions/reality,
-  real/complex counting, and later model-specific SMEFT basis classifications.
+- Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
+  representation dimensions into spin/Lorentz multiplicities, real/complex
+  counting conventions, and later model-specific SMEFT basis classifications.
 - Extend the new spenso metadata bridge from native `Representation`,
   `TensorStructure`, `TensorIndices`, and expression-wide CG replacement into
   remaining generator/structure support outside native SU(3) HEP tensors,

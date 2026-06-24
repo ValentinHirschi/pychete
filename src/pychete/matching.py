@@ -22,7 +22,7 @@ from .expr import (
     sum_expr,
 )
 from .functional import apply_cd, derive_eom
-from .symbols import SymbolRole, canonical_string, display_string, latex_string, s
+from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
 from .theory import (
     FieldDefinition,
     FieldHandle,
@@ -32,6 +32,7 @@ from .theory import (
     Theory,
     field_mass_expr_from_label,
     field_mass_kind_from_label,
+    field_indices_from_label,
     field_propagating_from_label,
     field_role_from_label,
     field_self_conjugate_from_label,
@@ -124,6 +125,41 @@ class FluctuationMode:
         return -1 if self.statistics is FluctuationStatistics.FERMIONIC else 1
 
     @property
+    def index_representations(self) -> tuple[Expression, ...]:
+        """Index representations carried by this fluctuation mode."""
+
+        return field_indices_from_label(self.label)
+
+    @property
+    def index_dimensions(self) -> tuple[int | None, ...]:
+        """Dimensions of this mode's index representations when known."""
+
+        return tuple(
+            _mode_index_representation_dimension(self.theory, representation)
+            for representation in self.index_representations
+        )
+
+    @property
+    def internal_dimension(self) -> int | None:
+        """Product of known internal index dimensions, or ``None`` if unknown."""
+
+        dimension = 1
+        for index_dimension in self.index_dimensions:
+            if index_dimension is None:
+                return None
+            dimension *= index_dimension
+        return dimension
+
+    @property
+    def supertrace_weight(self) -> int | None:
+        """Signed internal multiplicity for this mode when fully known."""
+
+        internal_dimension = self.internal_dimension
+        if internal_dimension is None:
+            return None
+        return self.supertrace_sign * internal_dimension
+
+    @property
     def mass(self) -> Expression | None:
         """Mass coupling reconstructed from Symbolica field-label data."""
 
@@ -142,9 +178,11 @@ class FluctuationMode:
         return rf"$\mathrm{{FluctuationMode}}\left({latex_string(self.field)}\right)$"
 
     def _repr_html_(self) -> str:
+        dimension = self.internal_dimension
+        dimension_part = "" if dimension is None else f" dim={dimension}"
         return (
             f"<code>FluctuationMode({escape(display_string(self.field))} "
-            f"{self.mass_kind.value} {self.field_role.value} {self.statistics.value})</code>"
+            f"{self.mass_kind.value} {self.field_role.value} {self.statistics.value}{dimension_part})</code>"
         )
 
 
@@ -1698,6 +1736,17 @@ def _fluctuation_statistics(field_type: Expression, field_role: FieldRole) -> Fl
     if bool(field_type == s.Fermion) or field_role in grassmann_roles:
         return FluctuationStatistics.FERMIONIC
     return FluctuationStatistics.BOSONIC
+
+
+def _mode_index_representation_dimension(theory: Theory, representation: Expression) -> int | None:
+    try:
+        return theory.representation_dimension(representation)
+    except KeyError:
+        dimension = symbol_data(representation, SymbolDataKey.DIMENSION)
+        if dimension is None:
+            return None
+        dimension_value = int(dimension)
+        return dimension_value if dimension_value >= 0 else None
 
 
 def _mode_index(modes: tuple[FluctuationMode, ...], field: Expression) -> int:

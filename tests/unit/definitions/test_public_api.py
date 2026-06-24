@@ -142,12 +142,16 @@ def test_public_api_methods_have_docstrings() -> None:
             "mode_for",
         ],
         pychete.FluctuationMode: [
+            "index_dimensions",
+            "index_representations",
+            "internal_dimension",
             "is_heavy",
             "is_light",
             "label",
             "mass",
             "mass_squared",
             "supertrace_sign",
+            "supertrace_weight",
         ],
         pychete.FluctuationPropagator: [
             "denominator",
