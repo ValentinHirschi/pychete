@@ -4,6 +4,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import (
+    FieldChirality,
     FieldMassKind,
     FieldRole,
     FluctuationSector,
@@ -177,14 +178,23 @@ def test_fluctuation_basis_modes_carry_statistics_and_mass_metadata() -> None:
     assert scalar_mode.index_representations == ()
     assert scalar_mode.index_dimensions == ()
     assert scalar_mode.internal_dimension == 1
+    assert scalar_mode.spin_lorentz_dimension == 1
+    assert scalar_mode.conjugate_mode_count == 1
+    assert scalar_mode.known_component_count == 1
     assert scalar_mode.supertrace_weight == 1
+    assert_expr_equal(scalar_mode.chiral_supertrace_factor, Expression.num(1))
     assert scalar_mode.self_conjugate is True
     assert scalar_mode.conjugated is False
     assert fermion_mode.mass_kind is FieldMassKind.LIGHT
     assert fermion_mode.statistics is FluctuationStatistics.FERMIONIC
     assert fermion_mode.supertrace_sign == -1
+    assert fermion_mode.chirality is FieldChirality.NONE
+    assert fermion_mode.spin_lorentz_dimension == 4
+    assert fermion_mode.conjugate_mode_count == 2
+    assert fermion_mode.known_component_count == 4
     assert fermion_mode.internal_dimension == 1
     assert fermion_mode.supertrace_weight == -1
+    assert_expr_equal(fermion_mode.chiral_supertrace_factor, Expression.num(1))
     assert fermion_mode.conjugated is False
     assert barred_fermion_mode.statistics is FluctuationStatistics.FERMIONIC
     assert barred_fermion_mode.conjugated is True
@@ -227,6 +237,53 @@ def test_fluctuation_modes_carry_internal_representation_dimensions() -> None:
     assert hidden_mode.index_dimensions == (None,)
     assert hidden_mode.internal_dimension is None
     assert hidden_mode.supertrace_weight is None
+
+
+def test_fluctuation_modes_expose_spin_lorentz_and_reality_conventions() -> None:
+    theory = Theory("fluctuation_mode_spin_lorentz")
+    theory.define_gauge_group("U1X", s.U1, "gX", "X")
+    vector = theory.field_handle("X")
+    left = theory.define_field(
+        "L",
+        s.Fermion,
+        chirality=FieldChirality.LEFT,
+        mass=(FieldMassKind.LIGHT, "mL"),
+    )
+    dirac = theory.define_field("D", s.Fermion, mass=(FieldMassKind.LIGHT, "mD"))
+    complex_scalar = theory.define_field("Phi", s.Scalar, self_conjugate=False, mass=0)
+    ghost = theory.define_field("c", s.Ghost, mass=(FieldMassKind.LIGHT, "mc"))
+    lagrangian = (
+        vector() ** 2
+        + s.Bar(left()) * left()
+        + s.Bar(dirac()) * dirac()
+        + s.Bar(complex_scalar()) * complex_scalar()
+        + s.Bar(ghost()) * ghost()
+    )
+
+    basis = theory.fluctuation_basis(lagrangian)
+    vector_mode = basis.mode_for(vector)
+    left_mode = basis.mode_for(left)
+    dirac_mode = basis.mode_for(dirac)
+    scalar_mode = basis.mode_for(complex_scalar)
+    barred_scalar_mode = basis.mode_for(s.Bar(complex_scalar()))
+    ghost_mode = basis.mode_for(ghost)
+
+    assert vector_mode.spin_lorentz_dimension is None
+    assert vector_mode.known_component_count is None
+    assert vector_mode.conjugate_mode_count == 1
+    assert left_mode.chirality is FieldChirality.LEFT
+    assert left_mode.spin_lorentz_dimension == 2
+    assert left_mode.known_component_count == 2
+    assert_expr_equal(left_mode.chiral_supertrace_factor, Expression.num(1) / 2)
+    assert dirac_mode.chirality is FieldChirality.NONE
+    assert dirac_mode.spin_lorentz_dimension == 4
+    assert dirac_mode.known_component_count == 4
+    assert_expr_equal(dirac_mode.chiral_supertrace_factor, Expression.num(1))
+    assert scalar_mode.conjugate_mode_count == 2
+    assert barred_scalar_mode.conjugate_mode_count == 2
+    assert scalar_mode.spin_lorentz_dimension == 1
+    assert ghost_mode.spin_lorentz_dimension == 1
+    assert ghost_mode.statistics is FluctuationStatistics.FERMIONIC
 
 
 def test_fluctuation_basis_skips_background_fields_and_grades_ghosts_as_fermionic() -> None:

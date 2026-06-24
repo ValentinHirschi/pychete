@@ -498,6 +498,12 @@ discoveries, dependency patches, blockers, and remaining work.
   `Symmetries`, `DiagonalCoupling`, `ThermalPowerCounting`, and `Unitary`.
   It also requires unitary couplings to be square matrix couplings with
   `EFTOrder -> 0`; pychete now enforces the matching structural checks.
+- Matchete `SuperTrace.m` uses a first grading convention in which scalar and
+  vector propagator types carry sign `+1`, while fermion, ghost, and anti-ghost
+  propagator types carry sign `-1`; it also introduces an explicit `1/2`
+  compensation factor for `LeftHanded` and `RightHanded` chiral fermion fields
+  in the log-type supertrace setup. pychete now exposes the corresponding mode
+  metadata without prematurely multiplying it into the current matrix trace.
 - Symbolica refuses to redefine an already-created symbol with different custom
   data. The fixture loader therefore normalizes older coupling manifest data to
   include the current default keys before registering theory symbols, preserving
@@ -769,6 +775,18 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests covering SU(3) x SU(2) x flavor dimensions for barred
     and unbarred fermion modes, unknown index dimensions, scalar unit
     multiplicity, signed supertrace weights, and public API docstring coverage.
+- Completed the thirty-fifth implementation slice:
+  - extended `FluctuationMode` with spin/Lorentz and reality-convention
+    metadata: `chirality`, `conjugate_mode_count`,
+    `spin_lorentz_dimension`, `chiral_supertrace_factor`, and
+    `known_component_count`;
+  - the metadata is derived from existing Symbolica field-label data and the
+    Matchete `SuperTrace.m` convention for chiral fermion half-factors, keeping
+    vectors' Lorentz multiplicity as `None` until idenso/spenso-backed metric
+    contraction supplies the dimension-dependent trace;
+  - added focused tests for Dirac and chiral fermions, gauge vectors, ghosts,
+    complex scalar barred/unbarred basis entries, chiral half-factors, known
+    spinor component counts, and public API docstring coverage.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1609,6 +1627,18 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the fluctuation mode degree metadata slice:
   150 passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_basis_modes_carry_statistics_and_mass_metadata
+  tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_modes_expose_spin_lorentz_and_reality_conventions
+  tests/unit/definitions/test_public_api.py -q'` passed after the fluctuation
+  mode spin/Lorentz metadata slice: 6 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the fluctuation mode spin/Lorentz metadata slice: no
+  issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the fluctuation mode spin/Lorentz metadata
+  slice: 151 passed, 1 skipped. The skip is the existing GammaLoop API import
+  check because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1618,8 +1648,9 @@ discoveries, dependency patches, blockers, and remaining work.
   basis entries to full differential fluctuation operators, including
   derivative-valued fields and integration-by-parts conventions.
 - Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
-  representation dimensions into spin/Lorentz multiplicities, real/complex
-  counting conventions, and later model-specific SMEFT basis classifications.
+  and spin/Lorentz mode metadata into backend-evaluated vector Lorentz traces,
+  real/complex coefficient placement in actual supertrace kernels, and later
+  model-specific SMEFT basis classifications.
 - Extend the new spenso metadata bridge from native `Representation`,
   `TensorStructure`, `TensorIndices`, and expression-wide CG replacement into
   remaining generator/structure support outside native SU(3) HEP tensors,
