@@ -19,22 +19,28 @@ from .theory import FieldDefinition, FieldVariation, Theory
 
 @dataclass(frozen=True)
 class HeavyScalarSolution:
+    """Order-by-order solution for a heavy scalar equation of motion."""
+
     field: FieldDefinition
     orders: dict[int, Expression]
     conjugate_orders: dict[int, Expression] | None = None
 
     @property
     def inclusive(self) -> Expression:
-        out = s.zero
+        """Sum all stored EFT orders for the heavy field."""
+
+        out = Expression.num(0)
         for _, expr in sorted(self.orders.items()):
             out = out + expr
         return out.expand()
 
     @property
     def inclusive_conjugate(self) -> Expression:
+        """Sum all stored EFT orders for the conjugate heavy field."""
+
         if self.conjugate_orders is None:
             return self.inclusive
-        out = s.zero
+        out = Expression.num(0)
         for _, expr in sorted(self.conjugate_orders.items()):
             out = out + expr
         return out.expand()
@@ -48,7 +54,7 @@ class HeavyScalarSolution:
 
 def _zero_field_label(expr: Expression, label: Expression, *, conjugate: bool = False) -> Expression:
     pattern = bar_field_pattern(label) if conjugate else field_pattern(label)
-    return expr.replace(pattern, s.zero).expand()
+    return expr.replace(pattern, Expression.num(0)).expand()
 
 
 def _mass_squared(field: FieldDefinition) -> Expression:
@@ -71,10 +77,10 @@ def _solve_orders_from_source(theory: Theory, source: Expression, mass2: Express
         if order == 1:
             value = (source / mass2).expand()
         elif order % 2 == 0:
-            value = s.zero
+            value = Expression.num(0)
         else:
             if previous_nonzero is None:
-                value = s.zero
+                value = Expression.num(0)
             else:
                 value = (-_box(theory, previous_nonzero, order) / mass2).expand()
 

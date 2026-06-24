@@ -107,6 +107,12 @@ Public API discoverability lives in `src/pychete/api.py`. Keep implementation
 functions in their domain modules, but every function/class/enum intended for
 users must be re-exported through `pychete.api` and package-root `pychete`.
 Do not make users infer the public surface by browsing implementation files.
+Every exported public object, and every user-facing method on exported classes,
+must have a useful docstring at its implementation definition. These docstrings
+are part of the interactive API: they should show up in `help(...)`, notebooks,
+and editor hover tooltips such as VS Code/Pylance. When adding or promoting a
+public API, update the public API docstring tests rather than leaving the
+documentation requirement implicit.
 
 Take full advantage of Symbolica symbol tags, attributes, and symbol data.
 User-defined pychete symbols must be created through `Theory.symbol`, which
@@ -124,6 +130,10 @@ printing should look good in `PrintMode.Symbolica`, `PrintMode.Latex`,
 `PrintMode.Mathematica`, `PrintMode.Sympy`, and `PrintMode.Typst`; JSON and
 checkpoint serialization must use `canonical_string(...)`, which disables
 pretty callbacks through `custom_print_mode`.
+Do not add convenience numeric constants such as `s.half` or
+`s.twenty_fourth` to `SymbolStore`. Use ordinary Symbolica arithmetic like
+`expr / 2`, `expr / 24`, `Expression.num(0)`, or `Expression.num(1)` for
+numbers; the central symbol store is for pychete symbols and expression heads.
 
 At minimum, check these exact Symbolica APIs before implementing anything
 similar in Python:

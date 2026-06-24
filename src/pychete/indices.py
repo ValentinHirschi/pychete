@@ -12,6 +12,8 @@ from .symbols import canonical_string, display_string, latex_string, s
 
 @dataclass(frozen=True)
 class IndexInfo:
+    """Information extracted from a pychete ``Index`` expression."""
+
     expr: Expression
     label: Expression
     representation: Expression
@@ -24,12 +26,16 @@ class IndexInfo:
 
 
 def index_info(expr: Expression) -> IndexInfo:
+    """Return the label and representation of an ``Index`` expression."""
+
     if not is_head(expr, s.Index):
         raise ValueError(f"Expected Index expression, got {canonical_string(expr)}")
     return IndexInfo(expr=expr, label=expr[0], representation=expr[1])
 
 
 def collect_indices(expr: Expression) -> tuple[IndexInfo, ...]:
+    """Collect unique index expressions appearing in ``expr``."""
+
     return tuple(index_info(sub) for sub in _matched_index_atoms(expr, unique=True))
 
 
@@ -56,16 +62,28 @@ def _index_counts(expr: Expression) -> Counter[Expression]:
 
 
 def open_indices(expr: Expression) -> tuple[IndexInfo, ...]:
+    """Return indices that occur exactly once in ``expr``."""
+
     counts = _index_counts(expr)
     return tuple(info for info in collect_indices(expr) if counts[info.expr] == 1)
 
 
 def dummy_indices(expr: Expression) -> tuple[IndexInfo, ...]:
+    """Return indices that occur more than once in ``expr``."""
+
     counts = _index_counts(expr)
     return tuple(info for info in collect_indices(expr) if counts[info.expr] > 1)
 
 
 def relabel_dummy_indices(expr: Expression, *, prefix: str = "d") -> Expression:
+    """Alpha-rename repeated indices deterministically.
+
+    With the default ``prefix="d"``, labels are generated as
+    ``s.dummy_index(0)``, ``s.dummy_index(1)``, and so on. Other prefixes build
+    plain Symbolica symbols such as ``S("i0")`` and let Symbolica report
+    invalid names.
+    """
+
     replacements: list[tuple[Expression, Expression]] = []
     for i, info in enumerate(sorted(dummy_indices(expr), key=lambda item: (canonical_string(item.representation), canonical_string(item.expr)))):
         new_label = s.dummy_index(i) if prefix == "d" else S(f"{prefix}{i}")

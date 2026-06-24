@@ -14,10 +14,14 @@ from .theory import Theory
 
 @dataclass(frozen=True)
 class StateExpression:
+    """Named expression stored with the theory that validates it."""
+
     theory_name: str
     expression: Expression
 
     def to_json(self) -> dict[str, str]:
+        """Return a JSON-serializable representation of this expression."""
+
         return {
             "theory": self.theory_name,
             "expression": canonical_string(self.expression),
@@ -26,18 +30,33 @@ class StateExpression:
 
 @dataclass
 class PycheteState:
+    """Checkpoint container for theories and named expressions.
+
+    Theories hold metadata only. Lagrangians and other expressions are stored
+    separately under names and point back to the theory that validates their
+    symbols.
+    """
+
     theories: dict[str, Theory] = field(default_factory=dict)
     expressions: dict[str, StateExpression] = field(default_factory=dict)
     active_theory: str | None = None
     schema_version: int = 3
 
     def add_theory(self, theory: Theory, *, active: bool = True) -> Theory:
+        """Add a theory to the state and optionally make it active."""
+
         self.theories[theory.name] = theory
         if active or self.active_theory is None:
             self.active_theory = theory.name
         return theory
 
     def add_expression(self, name: str, theory: Theory | str, expression: Expression) -> Expression:
+        """Store a named expression associated with a theory.
+
+        The expression is validated against the associated theory before it is
+        accepted.
+        """
+
         theory_name = theory.name if isinstance(theory, Theory) else theory
         if theory_name not in self.theories:
             raise ValueError(f"Cannot store expression {name!r}: unknown theory {theory_name!r}")
@@ -46,9 +65,13 @@ class PycheteState:
         return expression
 
     def get_expression(self, name: str) -> Expression:
+        """Return a named expression from the state."""
+
         return self.expressions[name].expression
 
     def to_json_obj(self) -> dict[str, Any]:
+        """Return a JSON-serializable state checkpoint."""
+
         return {
             "schema_version": self.schema_version,
             "active_theory": self.active_theory,
@@ -63,12 +86,18 @@ class PycheteState:
         }
 
     def to_json(self, *, indent: int = 2) -> str:
+        """Serialize the state checkpoint to a JSON string."""
+
         return json.dumps(self.to_json_obj(), indent=indent, sort_keys=True) + "\n"
 
     def write_json(self, path: str | Path) -> None:
+        """Write the state checkpoint JSON to ``path``."""
+
         Path(path).write_text(self.to_json(), encoding="utf-8")
 
     def save_state(self, path: str | Path) -> None:
+        """Alias for ``write_json``."""
+
         self.write_json(path)
 
     def _repr_latex_(self) -> str:
@@ -81,12 +110,16 @@ class PycheteState:
 
     @property
     def active(self) -> Theory | None:
+        """The active theory, if one is selected."""
+
         if self.active_theory is None:
             return None
         return self.theories[self.active_theory]
 
     @classmethod
     def from_json_obj(cls, obj: dict[str, Any]) -> PycheteState:
+        """Restore a state checkpoint from a JSON object."""
+
         state = cls(schema_version=int(obj.get("schema_version", 1)))
         state.theories = {
             name: Theory.from_json_obj(theory_obj)
@@ -106,12 +139,18 @@ class PycheteState:
 
     @classmethod
     def from_json(cls, text: str) -> PycheteState:
+        """Restore a state checkpoint from a JSON string."""
+
         return cls.from_json_obj(json.loads(text))
 
     @classmethod
     def read_json(cls, path: str | Path) -> PycheteState:
+        """Read a state checkpoint from a JSON file."""
+
         return cls.from_json(Path(path).read_text(encoding="utf-8"))
 
 
 def load_state(path: str | Path) -> PycheteState:
+    """Load a pychete state checkpoint from ``path``."""
+
     return PycheteState.read_json(path)

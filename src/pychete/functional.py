@@ -56,7 +56,7 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
     def cd_variation(match: dict[Expression, Expression]) -> Expression:
         matched = cd_pat.replace_wildcards(match)
         body_derivative = _single_cd(index, match[s.CDBodyWildcard])
-        derivative = s.zero if is_zero(body_derivative) else s.CD(match[s.CDIndexWildcard], body_derivative)
+        derivative = Expression.num(0) if is_zero(body_derivative) else s.CD(match[s.CDIndexWildcard], body_derivative)
         return matched + s.CDVariationParameter * derivative
 
     field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
@@ -119,7 +119,7 @@ def derive_eom(
         derivative_sets = _field_derivative_sets(lagrangian, definition.label, barred=False)
     derivative_sets.add(())
 
-    residual = s.zero
+    residual = Expression.num(0)
     base = definition.expr()
     for derivatives in sorted(derivative_sets, key=lambda d: (len(d), tuple(canonical_string(x) for x in d))):
         target = field_with_derivatives(base, derivatives)

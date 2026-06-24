@@ -65,6 +65,16 @@ def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:
     assert canonical_string(theory.index("mu")).endswith("pychete::Lorentz)")
 
 
+def test_numeric_coefficients_use_symbolica_arithmetic_not_symbol_store() -> None:
+    x = S("x")
+
+    assert canonical_string(x / 24) == "1/24*python::x"
+    assert canonical_string(x / 2) == "1/2*python::x"
+    assert not hasattr(s, "half")
+    assert not hasattr(s, "sixth")
+    assert not hasattr(s, "twenty_fourth")
+
+
 def test_symbol_collectors_require_role_tags_on_user_labels_except_indices() -> None:
     theory = Theory("tagged_collectors")
     phi = theory.define_field("phi", s.Scalar, mass=0)

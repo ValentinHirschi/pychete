@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from symbolica import S
+from symbolica import Expression, S
 
 from pychete import FieldMassKind, Theory, s
 from pychete.functional import apply_cd, partial_functional_derivative
@@ -14,11 +14,11 @@ def test_phi4_scalar_eom_matches_matchete_reference_shape() -> None:
     lam = theory.define_coupling("lambda", self_conjugate=True)
     mu = theory.dummy_index(0)
 
-    lagrangian = theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
+    lagrangian = theory.free_lag(phi) - lam() * phi() ** 4 / 24
     expected = (
         -phi() * theory.coupling_handle("m")() ** 2
         - phi(derivatives=[mu, mu])
-        - s.sixth * lam() * phi() ** 3
+        - lam() * phi() ** 3 / 6
     )
 
     assert_expr_equal(theory.derive_eom(lagrangian, phi), expected)
@@ -44,8 +44,9 @@ def test_apply_cd_uses_symbolica_derivative_for_fractional_powers() -> None:
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     mu = theory.lorentz_index("mu")
 
-    expr = phi() ** s.half
-    expected = s.half * phi() ** s.minus_half * phi(derivatives=[mu])
+    half = Expression.num(1) / 2
+    expr = phi() ** half
+    expected = phi() ** (-half) * phi(derivatives=[mu]) / 2
 
     assert_expr_equal(apply_cd([mu], expr), expected)
 
@@ -71,7 +72,7 @@ def test_apply_cd_ignores_couplings_as_non_field_atoms() -> None:
     lam = theory.define_coupling("lambda", self_conjugate=True)
     mu = theory.lorentz_index("mu")
 
-    assert_expr_equal(apply_cd([mu], lam()), s.zero)
+    assert_expr_equal(apply_cd([mu], lam()), Expression.num(0))
 
 
 def test_functional_derivative_uses_field_tag_restricted_matches() -> None:

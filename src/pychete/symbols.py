@@ -53,10 +53,6 @@ def _sym(name: str, **kwargs: Any) -> Expression:
         return S(name, **retry_kwargs)
 
 
-def _parse(text: str) -> Expression:
-    return Expression.parse(text)
-
-
 def _custom_print_mode(kwargs: dict[str, Any]) -> str | None:
     custom = kwargs.get("custom_print_mode")
     return custom.get(_CUSTOM_PRINT_MODE_KEY) if isinstance(custom, dict) else None
@@ -383,6 +379,8 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
 
 
 class SymbolRole(StrEnum):
+    """Role tags attached to pychete-managed Symbolica symbols."""
+
     PROJECT = "pychete"
     LABEL = "label"
     FIELD = "field"
@@ -394,6 +392,8 @@ class SymbolRole(StrEnum):
 
 
 class SymbolDataKey(StrEnum):
+    """Symbolica symbol-data keys used by pychete."""
+
     THEORY = "theory"
     ROLE = "role"
     LABEL = "label"
@@ -412,7 +412,12 @@ class SymbolDataKey(StrEnum):
 
 
 class SymbolStore:
-    """Central store for every reusable Symbolica symbol used by pychete."""
+    """Central store for reusable pychete Symbolica symbols.
+
+    The package-level instance ``s`` provides expression heads such as
+    ``s.Field`` and atoms such as ``s.Scalar``. Construct reusable pychete
+    atoms through this store so they receive the custom pretty-printer.
+    """
 
     namespace = "pychete"
     builtin_registry_names = (
@@ -484,34 +489,6 @@ class SymbolStore:
     def builtin_symbols_by_canonical_name(self) -> dict[str, Expression]:
         self.register_builtins()
         return {canonical_string(getattr(self, name)): getattr(self, name) for name in self.builtin_registry_names}
-
-    @cached_property
-    def zero(self) -> Expression:
-        return _parse("0")
-
-    @cached_property
-    def one(self) -> Expression:
-        return _parse("1")
-
-    @cached_property
-    def half(self) -> Expression:
-        return _parse("1/2")
-
-    @cached_property
-    def minus_half(self) -> Expression:
-        return _parse("-1/2")
-
-    @cached_property
-    def sixth(self) -> Expression:
-        return _parse("1/6")
-
-    @cached_property
-    def twenty_fourth(self) -> Expression:
-        return _parse("1/24")
-
-    @cached_property
-    def I(self) -> Expression:
-        return Expression.I
 
     @cached_property
     def List(self) -> Expression:
@@ -747,7 +724,11 @@ def safe_symbol_name(name: str) -> str:
 
 
 def canonical_string(expr: Expression) -> str:
-    """Parse-stable string representation for JSON checkpoints and fixtures."""
+    """Return the parse-stable canonical representation of ``expr``.
+
+    Canonical strings include namespaces and disable pychete's pretty printer,
+    making them suitable for JSON checkpoints and exact test fixtures.
+    """
 
     return expr.format(
         max_terms=None,
@@ -768,6 +749,8 @@ def canonical_string(expr: Expression) -> str:
 
 
 def display_string(expr: Expression, mode: PrintMode = PrintMode.Symbolica) -> str:
+    """Return a human-readable formatted string for ``expr``."""
+
     return expr.format(
         max_terms=None,
         mode=mode,
@@ -782,6 +765,8 @@ def display_string(expr: Expression, mode: PrintMode = PrintMode.Symbolica) -> s
 
 
 def latex_string(expr: Expression) -> str:
+    """Return a human-readable LaTeX string for ``expr``."""
+
     return display_string(expr, PrintMode.Latex)
 
 

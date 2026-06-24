@@ -17,11 +17,15 @@ if TYPE_CHECKING:
 
 
 class FieldMassKind(StrEnum):
+    """Mass hierarchy used for EFT counting and heavy-field matching."""
+
     HEAVY = "heavy"
     LIGHT = "light"
 
     @classmethod
     def from_user(cls, value: FieldMassKind | str) -> FieldMassKind:
+        """Normalize a user-provided mass-kind value."""
+
         normalized = str(value).lower()
         try:
             return cls(normalized)
@@ -30,12 +34,16 @@ class FieldMassKind(StrEnum):
 
 
 class FieldVariation(StrEnum):
+    """Choice of field variable for Euler-Lagrange variation."""
+
     AUTO = "auto"
     FIELD = "field"
     BAR = "bar"
 
     @classmethod
     def from_user(cls, value: FieldVariation | str) -> FieldVariation:
+        """Normalize a user-provided variation mode."""
+
         try:
             return cls(value)
         except ValueError as exc:
@@ -43,6 +51,8 @@ class FieldVariation(StrEnum):
 
 
 class BuiltinIndexType(StrEnum):
+    """Built-in index representations understood by pychete."""
+
     LORENTZ = "Lorentz"
     FLAVOR = "Flavor"
 
@@ -182,6 +192,8 @@ def _coupling_name_for_label(theory: Theory, label_text: str) -> str:
 
 @dataclass(frozen=True)
 class IndexType:
+    """Metadata for an index representation within a theory."""
+
     name: str
     symbol: Expression
     dimension: int | None = None
@@ -203,6 +215,8 @@ class IndexType:
 
 @dataclass(frozen=True)
 class CouplingDefinition:
+    """Registered metadata for a coupling symbol."""
+
     name: str
     label: Expression
     indices: tuple[Expression, ...] = ()
@@ -210,6 +224,8 @@ class CouplingDefinition:
     self_conjugate: bool = False
 
     def expr(self, *indices: Expression) -> Expression:
+        """Build a Symbolica coupling expression with optional indices."""
+
         if not indices:
             indices = ()
         return s.Coupling(self.label, list_expr(*indices), coupling_eft_order_from_label(self.label))
@@ -232,6 +248,8 @@ class CouplingDefinition:
 
 @dataclass(frozen=True)
 class FieldDefinition:
+    """Registered metadata for a field symbol."""
+
     name: str
     label: Expression
     type: Expression
@@ -243,20 +261,30 @@ class FieldDefinition:
 
     @property
     def heavy(self) -> bool:
+        """Whether this field is treated as heavy in EFT counting."""
+
         return field_mass_kind_from_label(self.label) is FieldMassKind.HEAVY
 
     @property
     def type_expr(self) -> Expression:
+        """Symbolica expression encoding the field type."""
+
         return field_type_from_label(self.label)
 
     @property
     def is_self_conjugate(self) -> bool:
+        """Whether the field equals its conjugate."""
+
         return field_self_conjugate_from_label(self.label)
 
     def expr(self, *indices: Expression, derivatives: Iterable[Expression] = ()) -> Expression:
+        """Build a Symbolica field expression."""
+
         return s.Field(self.label, self.type_expr, list_expr(*indices), list_expr(*tuple(derivatives)))
 
     def mass_expr(self) -> Expression | None:
+        """Return the mass coupling expression, if one was registered."""
+
         return field_mass_expr_from_label(self.label)
 
     def _repr_latex_(self) -> str:
@@ -281,19 +309,27 @@ class FieldDefinition:
 
 
 class FieldHandle:
+    """Callable handle for constructing expressions of a registered field."""
+
     def __init__(self, theory: Theory, definition: FieldDefinition) -> None:
         self.theory = theory
         self.definition = definition
 
     @property
     def label(self) -> Expression:
+        """Symbolica label used internally for this field."""
+
         return self.definition.label
 
     @property
     def name(self) -> str:
+        """User-facing field name."""
+
         return self.definition.name
 
     def __call__(self, *indices: Expression, derivatives: Iterable[Expression] = ()) -> Expression:
+        """Build this field with optional indices and derivatives."""
+
         return self.definition.expr(*indices, derivatives=derivatives)
 
     def _repr_latex_(self) -> str:
@@ -304,19 +340,27 @@ class FieldHandle:
 
 
 class CouplingHandle:
+    """Callable handle for constructing expressions of a registered coupling."""
+
     def __init__(self, theory: Theory, definition: CouplingDefinition) -> None:
         self.theory = theory
         self.definition = definition
 
     @property
     def label(self) -> Expression:
+        """Symbolica label used internally for this coupling."""
+
         return self.definition.label
 
     @property
     def name(self) -> str:
+        """User-facing coupling name."""
+
         return self.definition.name
 
     def __call__(self, *indices: Expression) -> Expression:
+        """Build this coupling with optional indices."""
+
         return self.definition.expr(*indices)
 
     def _repr_latex_(self) -> str:
@@ -327,7 +371,13 @@ class CouplingHandle:
 
 
 class Theory:
-    """Metadata context for pychete definitions and expression validation."""
+    """Metadata context for fields, couplings, groups, and index types.
+
+    A theory owns the symbols needed to interpret Symbolica expressions, but it
+    does not own a Lagrangian. Pass Lagrangian expressions explicitly to methods
+    such as :meth:`derive_eom`, :meth:`solve_heavy_scalar_eoms`, and
+    :meth:`match`.
+    """
 
     schema_version = 2
 
@@ -342,6 +392,8 @@ class Theory:
         self.define_index_type(BuiltinIndexType.LORENTZ)
 
     def symbol(self, name: str, *, role: SymbolRole | str = SymbolRole.LABEL, data: dict[str, Any] | None = None) -> Expression:
+        """Return a theory-owned Symbolica symbol with pychete metadata."""
+
         role_name = role.value if isinstance(role, SymbolRole) else role
         key = f"{role_name}:{name}"
         if key not in self._symbols:
@@ -362,6 +414,8 @@ class Theory:
         return self._symbols[key]
 
     def symbol_manifest(self) -> list[dict[str, Any]]:
+        """Return JSON-serializable metadata for theory-owned symbols."""
+
         entries: list[dict[str, Any]] = []
         for key, expr in self._symbols.items():
             role_name, name = key.split(":", 1)
@@ -425,6 +479,13 @@ class Theory:
                 raise ValueError(f"Pychete expression references symbol outside the restored registry: {canonical}")
 
     def define_index_type(self, name: BuiltinIndexType | str, dimension: int | None = None) -> IndexType:
+        """Register or return an index representation.
+
+        ``Lorentz`` is always available as a built-in representation. Other
+        names create theory-owned index-type symbols and may carry an optional
+        dimension.
+        """
+
         name_key = _index_type_name(name)
         if name_key in self.index_types:
             return self.index_types[name_key]
@@ -445,6 +506,8 @@ class Theory:
         return index_type
 
     def define_flavor_index(self, name: BuiltinIndexType | str = BuiltinIndexType.FLAVOR, dimension: int | None = None) -> IndexType:
+        """Register or return a flavor index representation."""
+
         return self.define_index_type(name, dimension)
 
     def index(
@@ -452,6 +515,13 @@ class Theory:
         label: str | Expression,
         representation: BuiltinIndexType | str | Expression = BuiltinIndexType.LORENTZ,
     ) -> Expression:
+        """Build an ``Index(label, representation)`` expression.
+
+        String labels are converted to plain Symbolica symbols. Explicit
+        Symbolica expressions may be passed for advanced labels such as
+        ``s.dummy_index(0)``.
+        """
+
         label_expr = label if isinstance(label, Expression) else S(safe_symbol_name(label))
         if isinstance(representation, Expression):
             rep_expr = representation
@@ -460,6 +530,8 @@ class Theory:
         return s.Index(label_expr, rep_expr)
 
     def lorentz_index(self, label: str) -> Expression:
+        """Build a Lorentz index with the given label."""
+
         return self.index(label, s.Lorentz)
 
     def dummy_index(
@@ -467,6 +539,8 @@ class Theory:
         number: int,
         representation: BuiltinIndexType | str | Expression = BuiltinIndexType.LORENTZ,
     ) -> Expression:
+        """Build a default dummy index for deterministic generated sums."""
+
         if isinstance(representation, Expression):
             rep_expr = representation
         else:
@@ -481,6 +555,20 @@ class Theory:
         eft_order: int = 0,
         self_conjugate: bool = False,
     ) -> CouplingHandle:
+        """Register or return a coupling.
+
+        Parameters
+        ----------
+        name:
+            User-facing coupling name.
+        indices:
+            Optional index representations carried by the coupling.
+        eft_order:
+            EFT order assigned to the coupling for truncation.
+        self_conjugate:
+            Whether the coupling is treated as self-conjugate.
+        """
+
         if name in self.couplings:
             return CouplingHandle(self, self.couplings[name])
         indices_tuple = tuple(indices)
@@ -513,6 +601,13 @@ class Theory:
         self_conjugate: bool = False,
         mass: int | MassSpec | None = None,
     ) -> FieldHandle:
+        """Register or return a field.
+
+        ``type_expr`` is usually one of ``s.Scalar``, ``s.Fermion``, or a
+        vector type such as ``s.Vector(group_symbol)``. The ``mass`` argument
+        may be ``0``/``None`` or ``(FieldMassKind, coupling_name[, indices])``.
+        """
+
         if name in self.fields:
             return FieldHandle(self, self.fields[name])
 
@@ -559,12 +654,18 @@ class Theory:
         return FieldHandle(self, definition)
 
     def field_handle(self, name: str) -> FieldHandle:
+        """Return the callable handle for a registered field."""
+
         return FieldHandle(self, self.fields[name])
 
     def coupling_handle(self, name: str) -> CouplingHandle:
+        """Return the callable handle for a registered coupling."""
+
         return CouplingHandle(self, self.couplings[name])
 
     def define_gauge_group(self, name: str, group_type: Expression, coupling: str, field: str) -> None:
+        """Register a gauge group, its coupling, and its vector field."""
+
         coupling_handle = self.define_coupling(coupling, eft_order=0, self_conjugate=True)
         group_symbol = self.symbol(
             name,
@@ -585,10 +686,19 @@ class Theory:
         }
 
     def mass_expr(self, field_def: FieldDefinition) -> Expression | None:
+        """Return the mass expression associated with a field definition."""
+
         return field_def.mass_expr()
 
     def free_lag(self, *field_names_or_handles: str | FieldHandle) -> Expression:
-        out = s.zero
+        """Build the free Lagrangian for registered fields.
+
+        Each argument may be either a field name or a ``FieldHandle``. The
+        returned Symbolica expression is independent of the theory object and
+        can be stored or transformed separately.
+        """
+
+        out = Expression.num(0)
         for item in field_names_or_handles:
             handle = item if isinstance(item, FieldHandle) else self.field_handle(item)
             definition = handle.definition
@@ -599,9 +709,9 @@ class Theory:
             if bool(type_expr == s.Scalar):
                 mass = self.mass_expr(definition)
                 if is_self_conjugate:
-                    kinetic = s.half * handle(derivatives=[mu]) ** 2
+                    kinetic = handle(derivatives=[mu]) ** 2 / 2
                     if mass is not None:
-                        kinetic = kinetic - s.half * mass**2 * field_expr**2
+                        kinetic = kinetic - mass**2 * field_expr**2 / 2
                 else:
                     kinetic = s.Bar(handle(derivatives=[mu])) * handle(derivatives=[mu])
                     if mass is not None:
@@ -610,10 +720,10 @@ class Theory:
             elif is_head(type_expr, s.Vector):
                 nu = self.dummy_index(1)
                 strength = s.FieldStrength(definition.label, list_expr(mu, nu), list_expr(), list_expr())
-                out = out - s.twenty_fourth * 6 * strength**2
+                out = out - strength**2 / 4
             elif bool(type_expr == s.Fermion):
                 mass = self.mass_expr(definition)
-                dirac = s.I * s.NCM(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))
+                dirac = Expression.I * s.NCM(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))
                 if mass is not None:
                     dirac = dirac - mass * s.NCM(s.Bar(field_expr), field_expr)
                 out = out + dirac
@@ -629,16 +739,36 @@ class Theory:
         eft_order: int = 6,
         variation: FieldVariation | str = FieldVariation.AUTO,
     ) -> Expression:
+        """Derive the Euler-Lagrange equation for a field.
+
+        ``lagrangian`` must be a Symbolica expression using symbols registered
+        on this theory. ``variation`` controls whether the field, its conjugate,
+        or the automatic default is varied.
+        """
+
         from .functional import derive_eom
 
         return derive_eom(self, lagrangian, field, eft_order=eft_order, variation=variation)
 
     def solve_heavy_scalar_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyScalarSolution]:
+        """Solve heavy scalar equations of motion order by order.
+
+        Returns a mapping from heavy field names to ``HeavyScalarSolution``
+        objects. Solutions are recomputed for the supplied Lagrangian and are
+        not cached on the theory.
+        """
+
         from .matching import solve_heavy_scalar_eoms
 
         return solve_heavy_scalar_eoms(self, lagrangian, eft_order=eft_order)
 
     def match(self, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
+        """Integrate out heavy scalar fields at tree level.
+
+        The result is a matched light-field Lagrangian truncated through
+        ``eft_order``.
+        """
+
         from .matching import match_tree
 
         return match_tree(self, lagrangian, eft_order=eft_order)
@@ -650,6 +780,8 @@ class Theory:
         return f"<div><strong>Theory {escape(self.name)}</strong></div>"
 
     def to_json_obj(self) -> dict[str, Any]:
+        """Return a JSON-serializable checkpoint for theory metadata."""
+
         return {
             "schema_version": self.schema_version,
             "theory_name": self.name,
@@ -661,13 +793,19 @@ class Theory:
         }
 
     def to_json(self, *, indent: int = 2) -> str:
+        """Serialize theory metadata to a JSON string."""
+
         return json.dumps(self.to_json_obj(), indent=indent, sort_keys=True) + "\n"
 
     def write_json(self, path: str | Path) -> None:
+        """Write theory metadata JSON to ``path``."""
+
         Path(path).write_text(self.to_json(), encoding="utf-8")
 
     @classmethod
     def from_json_obj(cls, obj: dict[str, Any]) -> Theory:
+        """Restore theory metadata from a JSON object."""
+
         s.register_builtins()
         theory = cls(obj["theory_name"])
         if "symbols" in obj:

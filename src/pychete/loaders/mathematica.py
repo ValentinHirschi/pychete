@@ -195,7 +195,7 @@ def _eval_module(args_raw: list[str], theory: Theory) -> Expression:
     env: dict[str, Expression] = {}
     body = args_raw[1]
     statements = _split_top_level(body, ";")
-    result = s.zero
+    result = Expression.num(0)
     for statement in statements:
         if "=" in statement:
             name, value = statement.split("=", 1)

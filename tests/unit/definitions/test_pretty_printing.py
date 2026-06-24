@@ -27,7 +27,7 @@ def _phi4_theory() -> tuple[Theory, Expression]:
     theory = Theory("phi4_pretty")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     lam = theory.define_coupling("lambda")
-    lagrangian = theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
+    lagrangian = theory.free_lag(phi) - lam() * phi() ** 4 / 24
     return theory, lagrangian
 
 
@@ -36,7 +36,7 @@ def _heavy_scalar_theory() -> tuple[Theory, Expression]:
     heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     g = theory.define_coupling("g")
-    lagrangian = theory.free_lag(heavy, phi) - s.half * g() * heavy() * phi() ** 2
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
     return theory, lagrangian
 
 
@@ -205,7 +205,7 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
         theory = Theory("cold_pretty")
         phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
         lam = theory.define_coupling("lambda")
-        lagrangian = theory.free_lag(phi) - s.twenty_fourth * lam() * phi() ** 4
+        lagrangian = theory.free_lag(phi) - lam() * phi() ** 4 / 24
         state = PycheteState()
         state.add_theory(theory)
         state.add_expression("lagrangian", theory, lagrangian)

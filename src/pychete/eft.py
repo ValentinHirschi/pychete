@@ -41,7 +41,7 @@ def _coupling_scaled_order(expr: Expression) -> int:
 
 def _marker_power(scaled_dimension: int) -> Expression:
     if scaled_dimension == 0:
-        return s.one
+        return Expression.num(1)
     if scaled_dimension == 1:
         return s.EFTExpansionParameter
     return s.EFTExpansionParameter**scaled_dimension
@@ -121,7 +121,7 @@ def _eft_weighted_expression(
 
 
 def _marker_key_scaled_dimension(key: Expression) -> int | None:
-    if bool(key == s.one):
+    if bool(key == Expression.num(1)):
         return 0
     if bool(key == s.EFTExpansionParameter):
         return 1
@@ -145,6 +145,8 @@ def _scaled_operator_dimension(expr: Expression, theory: Theory | None, *, heavy
 
 
 def operator_dimension(expr: Expression, theory: Theory | None = None, *, heavy_field_dimension: bool = True) -> float:
+    """Return the minimum EFT operator dimension appearing in ``expr``."""
+
     return _unscale_dimension(_scaled_operator_dimension(expr, theory, heavy_field_dimension=heavy_field_dimension))
 
 
@@ -155,6 +157,12 @@ def series_eft(
     eft_order: int | tuple[int, ...],
     heavy_field_dimension: bool = True,
 ) -> Expression:
+    """Truncate or select terms by EFT order.
+
+    Passing an integer keeps terms below that order. Passing a one-item tuple,
+    such as ``(6,)``, selects exactly that EFT order.
+    """
+
     if isinstance(eft_order, tuple):
         if len(eft_order) != 1:
             raise ValueError("exact EFT order must be passed as a one-item tuple")
@@ -167,11 +175,11 @@ def series_eft(
     weighted = _eft_weighted_expression(expr, theory, heavy_field_dimension=heavy_field_dimension).expand()
 
     if exact:
-        out = s.zero
+        out = Expression.num(0)
         for key, coefficient in weighted.coefficient_list(s.EFTExpansionParameter):
             if _marker_key_scaled_dimension(key) == scaled_order:
                 out = out + coefficient
         return out.expand()
 
     truncated = weighted.series(s.EFTExpansionParameter, 0, scaled_order).to_expression()
-    return truncated.replace(s.EFTExpansionParameter, s.one).expand()
+    return truncated.replace(s.EFTExpansionParameter, Expression.num(1)).expand()

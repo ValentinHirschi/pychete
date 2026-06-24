@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import pytest
+from symbolica import Expression
 
 from pychete import Theory, canonical_string, dummy_indices, open_indices, relabel_dummy_indices, s
 from pychete.indices import _index_counts
@@ -122,6 +123,6 @@ def test_index_counts_keep_non_integer_power_base_once() -> None:
     phi = theory.define_field("phi", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
     a = theory.index("a", flavor.symbol)
 
-    counts = _index_counts(phi(a) ** s.half)
+    counts = _index_counts(phi(a) ** (Expression.num(1) / 2))
 
     assert counts[a] == 1

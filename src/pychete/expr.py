@@ -56,14 +56,14 @@ def pow_parts(expr: Expr) -> tuple[Expr, Expr] | None:
 
 
 def sum_expr(items: Iterable[Expr]) -> Expr:
-    out = s.zero
+    out = Expression.num(0)
     for item in items:
         out = out + item
     return out
 
 
 def product_expr(items: Iterable[Expr]) -> Expr:
-    out = s.one
+    out = Expression.num(1)
     for item in items:
         out = out * item
     return out
@@ -123,7 +123,7 @@ def matching_subexpressions(expr: Expr, pattern: Expr, cond: MatchCondition = No
 
 
 def is_zero(expr: Expr) -> bool:
-    return bool(expr.expand() == s.zero)
+    return bool(expr.expand() == Expression.num(0))
 
 
 def field_label(expr: Expr) -> Expr:
