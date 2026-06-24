@@ -219,6 +219,11 @@ def test_default_parent_model_assets_load_metadata_without_reference_checkout() 
         assert couplings <= set(theory.couplings)
         assert set(theory.groups) == {"SU3c", "SU2L", "U1Y"}
         assert theory.index_types["Flavor"].dimension == 3
+        if name == "S1S3LQs":
+            s1_color = theory.fields["S1"].indices[0]
+            assert theory.is_conjugate_representation(s1_color) is True
+            assert theory.representation_dimension(s1_color) == 3
+            assert theory.representation_reality(s1_color) is RepresentationReality.COMPLEX
 
 
 def test_default_parent_model_child_lagrangians_parse_with_parent_metadata() -> None:

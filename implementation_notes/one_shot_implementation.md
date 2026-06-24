@@ -1231,6 +1231,30 @@ discoveries, dependency patches, blockers, and remaining work.
   tests'` passed after the representation-inference slice: 124 passed, 1
   skipped. The skip is the existing GammaLoop API import check because
   GammaLoop was not requested in the current dependency manifest.
+- Added the conjugate-representation lookup slice needed by models such as
+  `S1S3LQs`, where fields carry `Bar@SU3c[fund]` index representations:
+  - added `Theory.representation_definition(...)`,
+    `Theory.representation_dimension(...)`,
+    `Theory.representation_reality(...)`, and
+    `Theory.is_conjugate_representation(...)`;
+  - direct registered representation expressions resolve normally, and
+    syntactic `Bar(rep)` wrappers resolve through the underlying registered
+    representation metadata without adding duplicate registry entries;
+  - the `S1S3LQs` loader test now verifies that the leptoquark colour index is
+    recognized as a conjugate `SU3c[fund]` representation with dimension `3`
+    and complex reality.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/models/test_model_loaders.py
+  tests/unit/definitions/test_public_api.py'` passed after the
+  conjugate-representation lookup slice: 31 passed.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m mypy'`
+  passed after the conjugate-representation lookup slice: no issues found in
+  24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && dependencies/.venv/bin/python -m pytest
+  tests'` passed after the conjugate-representation lookup slice: 125 passed,
+  1 skipped. The skip is the existing GammaLoop API import check because
+  GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

@@ -1474,6 +1474,44 @@ class Theory:
         self.representations[key] = definition
         return rep_expr
 
+    def representation_definition(self, representation: Expression) -> RepresentationDefinition:
+        """Return metadata for a registered representation expression.
+
+        A syntactic ``Bar(rep)`` wrapper resolves to the same underlying
+        definition, allowing model fields with conjugate representation indices
+        such as ``Bar@SU3c[fund]`` to reuse the registered metadata.
+        """
+
+        key = canonical_string(representation)
+        if key in self.representations:
+            return self.representations[key]
+        if is_head(representation, s.Bar) and len(representation) == 1:
+            inner_key = canonical_string(representation[0])
+            if inner_key in self.representations:
+                return self.representations[inner_key]
+        raise KeyError(f"Unknown representation {key!r}")
+
+    def representation_dimension(self, representation: Expression) -> int | None:
+        """Return the dimension metadata for a registered representation."""
+
+        return self.representation_definition(representation).dimension_value
+
+    def representation_reality(self, representation: Expression) -> RepresentationReality:
+        """Return the reality metadata for a registered representation."""
+
+        return self.representation_definition(representation).reality_kind
+
+    def is_conjugate_representation(self, representation: Expression) -> bool:
+        """Return whether ``representation`` is a syntactic ``Bar(rep)`` wrapper."""
+
+        if not is_head(representation, s.Bar) or len(representation) != 1:
+            return False
+        try:
+            self.representation_definition(representation[0])
+        except KeyError:
+            return False
+        return True
+
     def group_charge(self, group: str, charge: Expression | int | float) -> Expression:
         """Build a U(1)-charge expression for a registered gauge or global group."""
 

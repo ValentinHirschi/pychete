@@ -161,6 +161,27 @@ def test_representations_store_symbolica_metadata_and_survive_json_restore() -> 
     assert "representation_reality_pseudoreal" in _local_tags(restored_label)
 
 
+def test_conjugate_representation_lookup_uses_underlying_registered_metadata() -> None:
+    theory = Theory("conjugate_representations")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    su3c = theory.symbol("SU3c", role=SymbolRole.GROUP)
+    fund = su3c(s.fund)
+    barred_fund = s.Bar(fund)
+
+    assert theory.representation_definition(barred_fund) is theory.representations[canonical_string(fund)]
+    assert theory.representation_dimension(barred_fund) == 3
+    assert theory.representation_reality(barred_fund) is RepresentationReality.COMPLEX
+    assert theory.is_conjugate_representation(barred_fund) is True
+    assert theory.is_conjugate_representation(fund) is False
+
+    try:
+        theory.representation_definition(s.Bar(S("unregistered_rep")))
+    except KeyError as exc:
+        assert "Unknown representation" in str(exc)
+    else:
+        raise AssertionError("unregistered conjugate representation metadata lookup was accepted")
+
+
 def test_field_symbol_data_stores_field_roles_and_propagation_flags() -> None:
     theory = Theory("field_roles")
     ghost = theory.define_field("c", s.Ghost, mass=(FieldMassKind.HEAVY, "Mc"))
