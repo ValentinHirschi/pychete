@@ -183,7 +183,14 @@ def test_committed_default_matching_fixtures_load_structured_results_without_mat
 
 
 def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica() -> None:
-    for model in ("VLF_toy_model", "Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
+    expected = {
+        "VLF_toy_model": {"kernels": 25, "contributions": 11, "supertraces": 47},
+        "Singlet_Scalar_Extension": {"kernels": 11, "contributions": 6, "supertraces": 27},
+        "E_VLL": {"kernels": 25, "contributions": 11, "supertraces": 47},
+        "S1S3LQs": {"kernels": 25, "contributions": 11, "supertraces": 47},
+    }
+
+    for model, counts in expected.items():
         fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
         preview = fixture.one_loop_preview(max_trace_order=3)
 
@@ -193,22 +200,73 @@ def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathe
         assert preview.metadata["fixture"] == fixture.name
         assert preview.metadata["fixture_kind"] == "model_definition"
         assert preview.metadata["lagrangian_expression"] == "lagrangian"
-        assert preview.metadata["supertrace_kernel_count"] == 11
-        assert preview.metadata["power_type_contribution_count"] == 6
-        assert preview.metadata["interaction_power_type_contribution_count"] == 6
-        assert len(preview.supertraces) == 21
+        assert preview.metadata["supertrace_kernel_count"] == counts["kernels"]
+        assert preview.metadata["power_type_contribution_count"] == counts["contributions"]
+        assert preview.metadata["interaction_power_type_contribution_count"] == counts["contributions"]
+        assert preview.metadata["named_supertrace_stage"] == "raw"
+        assert len(preview.supertraces) == counts["supertraces"]
         preview.validate()
 
 
 def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -> None:
-    expected_reference_counts = {
-        "VLF_toy_model": {"supertraces": 13, "conditions": 0},
-        "Singlet_Scalar_Extension": {"supertraces": 24, "conditions": 72},
-        "E_VLL": {"supertraces": 50, "conditions": 72},
-        "S1S3LQs": {"supertraces": 27, "conditions": 72},
+    expected = {
+        "VLF_toy_model": {
+            "reference_supertraces": 13,
+            "conditions": 0,
+            "candidate_supertraces": 47,
+            "common": {
+                "hFermion-lFermion",
+                "hFermion-lFermion-lScalar",
+                "hFermion-lScalar",
+                "hFermion-lScalar-lFermion",
+                "hFermion-lScalar-lScalar",
+            },
+        },
+        "Singlet_Scalar_Extension": {
+            "reference_supertraces": 24,
+            "conditions": 72,
+            "candidate_supertraces": 27,
+            "common": {
+                "hScalar",
+                "hScalar-hScalar",
+                "hScalar-hScalar-hScalar",
+                "hScalar-hScalar-lScalar",
+                "hScalar-lScalar",
+                "hScalar-lScalar-lScalar",
+            },
+        },
+        "E_VLL": {
+            "reference_supertraces": 50,
+            "conditions": 72,
+            "candidate_supertraces": 47,
+            "common": {
+                "hFermion-lFermion",
+                "hFermion-lFermion-lFermion",
+                "hFermion-lFermion-lScalar",
+                "hFermion-lScalar",
+                "hFermion-lScalar-lFermion",
+                "hFermion-lScalar-lScalar",
+            },
+        },
+        "S1S3LQs": {
+            "reference_supertraces": 27,
+            "conditions": 72,
+            "candidate_supertraces": 47,
+            "common": {
+                "hScalar",
+                "hScalar-hScalar",
+                "hScalar-hScalar-hScalar",
+                "hScalar-hScalar-lFermion",
+                "hScalar-lFermion",
+                "hScalar-lFermion-lFermion",
+                "hScalar-lFermion-lScalar",
+                "hScalar-lScalar",
+                "hScalar-lScalar-lFermion",
+            },
+        },
     }
 
-    for model, expected_counts in expected_reference_counts.items():
+    for model, expected_counts in expected.items():
         model_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
         reference_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.matching_fixture.json"))
         reference = reference_fixture.matching_result("matchete_previous")
@@ -223,22 +281,29 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         assert report.complete is False
         assert report.candidate_stage == "interaction_power_type_vakint_result"
         assert report.reference_stage is None
-        assert report.candidate_supertrace_count == 21
-        assert report.reference_supertrace_count == expected_counts["supertraces"]
-        assert len(report.common_supertrace_names) == 0
-        assert report.missing_reference_supertrace_count == expected_counts["supertraces"]
-        assert len(report.candidate_only_supertrace_names) == 21
+        assert report.candidate_supertrace_count == expected_counts["candidate_supertraces"]
+        assert report.reference_supertrace_count == expected_counts["reference_supertraces"]
+        assert set(report.common_supertrace_names) == expected_counts["common"]
+        assert report.missing_reference_supertrace_count == (
+            expected_counts["reference_supertraces"] - len(expected_counts["common"])
+        )
+        assert len(report.candidate_only_supertrace_names) == (
+            expected_counts["candidate_supertraces"] - len(expected_counts["common"])
+        )
         assert report.candidate_matching_condition_count == 0
         assert report.reference_matching_condition_count == expected_counts["conditions"]
         assert len(report.common_matching_condition_names) == 0
         assert report.missing_reference_matching_condition_count == expected_counts["conditions"]
-        assert set(report.common_expression_names) == {
+        assert set(report.common_expression_names) == expected_counts["common"] | {
             "uv_lagrangian",
             "off_shell_eft_lagrangian",
             "on_shell_eft_lagrangian",
         }
         assert report_obj["complete"] is False
-        assert report_obj["missing_reference_supertrace_count"] == expected_counts["supertraces"]
+        assert report_obj["common_supertrace_count"] == len(expected_counts["common"])
+        assert report_obj["missing_reference_supertrace_count"] == (
+            expected_counts["reference_supertraces"] - len(expected_counts["common"])
+        )
         assert report_obj["missing_reference_matching_condition_count"] == expected_counts["conditions"]
 
 

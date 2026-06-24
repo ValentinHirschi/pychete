@@ -276,9 +276,9 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
 
 
 def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
-    theory, lagrangian = _phi4_theory()
-    phi = theory.field_handle("phi")
-    lam = theory.coupling_handle("lambda")
+    theory, lagrangian = _heavy_scalar_theory()
+    phi = theory.field_handle("S")
+    lam = theory.coupling_handle("g")
     index_info = collect_indices(theory.lorentz_index("mu"))[0]
     solution = HeavyScalarSolution(field=phi.definition, orders={1: phi()})
     matching_result = MatchingResult(

@@ -532,6 +532,8 @@ def test_supertrace_plan_generates_closed_block_traces_by_order() -> None:
     order_one = plan.closed_block_traces(1)
     order_one_with_light = plan.closed_block_traces(1, include_light_only=True)
     order_two = {trace.name: trace for trace in plan.closed_block_traces(2)}
+    category_order_one = plan.closed_category_traces(1)
+    category_order_two = {trace.name: trace for trace in plan.closed_category_traces(2)}
 
     assert tuple(trace.name for trace in order_one) == ("heavy-heavy",)
     assert tuple(trace.name for trace in order_one_with_light) == ("heavy-heavy", "light-light")
@@ -544,9 +546,60 @@ def test_supertrace_plan_generates_closed_block_traces_by_order() -> None:
     assert_expr_equal(order_two["heavy-heavy-heavy"].expression, Expression.num(4))
     assert_expr_equal(order_two["heavy-light-heavy"].expression, y() ** 2 * light() ** 2)
     assert_expr_equal(order_two["light-heavy-light"].expression, y() ** 2 * light() ** 2)
+    assert tuple(trace.name for trace in category_order_one) == ("hScalar",)
+    assert set(category_order_two) == {"hScalar-hScalar", "hScalar-lScalar", "lScalar-hScalar"}
+    assert category_order_two["hScalar-lScalar"].cyclic_sector_key == (
+        "hScalar",
+        "lScalar",
+    )
+    assert category_order_two["lScalar-hScalar"].cyclic_sector_key == (
+        "hScalar",
+        "lScalar",
+    )
+    assert_expr_equal(category_order_two["hScalar-lScalar"].expression, y() ** 2 * light() ** 2)
 
     with pytest.raises(ValueError, match="at least 1"):
         plan.closed_block_traces(0)
+
+
+def test_supertrace_plan_splits_matching_traces_by_mode_category() -> None:
+    theory = Theory("supertrace_category_paths")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light_scalar = theory.define_field("phi", s.Scalar, self_conjugate=True)
+    light_fermion = theory.define_field("psi", s.Fermion, self_conjugate=False, mass=0)
+    y = theory.define_coupling("y", self_conjugate=True)
+    z = theory.define_coupling("z", self_conjugate=True)
+    lagrangian = (
+        heavy() ** 2
+        + light_scalar() ** 2
+        + s.Bar(light_fermion()) * light_fermion()
+        - y() * heavy() * light_scalar() ** 2 / 2
+        - z() * heavy() * s.Bar(light_fermion()) * light_fermion()
+    )
+
+    plan = theory.fluctuation_operator(lagrangian).supertrace_plan()
+    category_traces = {trace.name: trace for trace in plan.closed_category_traces(2)}
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=2)
+
+    assert plan.supertrace_category_labels == ("hScalar", "lScalar", "lFermion")
+    assert set(category_traces) == {
+        "hScalar-hScalar",
+        "hScalar-lScalar",
+        "hScalar-lFermion",
+        "lScalar-hScalar",
+        "lFermion-hScalar",
+    }
+    assert tuple(trace.name for trace in setup.power_type_traces()) == (
+        "hScalar",
+        "hScalar-hScalar",
+        "hScalar-lScalar",
+        "hScalar-lFermion",
+    )
+    assert_expr_equal(category_traces["hScalar-lScalar"].expression, y() ** 2 * light_scalar() ** 2)
+    assert_expr_equal(
+        category_traces["hScalar-lFermion"].expression,
+        z() ** 2 * s.Bar(light_fermion()) ** 2 + z() ** 2 * light_fermion() ** 2,
+    )
 
 
 def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> None:
@@ -567,26 +620,26 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
     assert setup.supertrace_kernel_count == 4
     assert setup.power_type_contribution_count == 3
     assert trace_names == (
-        "heavy-heavy",
-        "heavy-heavy-heavy",
-        "heavy-light-heavy",
-        "light-heavy-light",
+        "hScalar",
+        "hScalar-hScalar",
+        "hScalar-lScalar",
+        "lScalar-hScalar",
     )
     assert setup.fluctuation_operator.basis == (heavy(), light())
     assert setup.supertrace_plan.heavy_mode_count == 1
-    assert_expr_equal(trace_map["supertrace_kernel[heavy-light-heavy]"], y() ** 2 * light() ** 2)
+    assert_expr_equal(trace_map["supertrace_kernel[hScalar-lScalar]"], y() ** 2 * light() ** 2)
     assert tuple(trace.name for trace in setup.power_type_traces()) == (
-        "heavy-heavy",
-        "heavy-heavy-heavy",
-        "heavy-light-heavy",
+        "hScalar",
+        "hScalar-hScalar",
+        "hScalar-lScalar",
     )
     power_map = setup.power_type_expression_map()
     assert_expr_equal(
-        power_map["power_type_supertrace[heavy-light-heavy,numerator]"],
+        power_map["power_type_supertrace[hScalar-lScalar,numerator]"],
         -y() ** 2 * light() ** 2 / 2,
     )
     assert_expr_equal(
-        power_map["power_type_supertrace[heavy-light-heavy,eft_numerator]"],
+        power_map["power_type_supertrace[hScalar-lScalar,eft_numerator]"],
         -y() ** 2 * light() ** 2 / 2,
     )
     assert_expr_equal(
@@ -613,7 +666,7 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
     assert_expr_equal(preview.on_shell_eft_lagrangian, setup.power_type_vakint_integral_sum())
     assert_expr_equal(preview.expression("power_type_eft_lagrangian"), setup.power_type_eft_lagrangian())
     assert_expr_equal(
-        preview.expression("power_type_supertrace[heavy-light-heavy,eft_numerator]"),
+        preview.expression("power_type_supertrace[hScalar-lScalar,eft_numerator]"),
         -y() ** 2 * light() ** 2 / 2,
     )
     assert preview.fluctuation_operators == setup.fluctuation_operator.to_expression_map()
@@ -666,7 +719,7 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert_expr_equal(light_propagator.denominator(), light_denominator)
     assert_expr_equal(heavy_mode.mass, heavy_mass)
     assert_expr_equal(light_mode.mass_squared, light_mass**2)
-    trace = next(trace for trace in setup.block_traces if trace.name == "heavy-light-heavy")
+    trace = next(trace for trace in setup.block_traces if trace.name == "hScalar-lScalar")
     mass_chain = trace.propagator_mass_squared_chain()
     chain = trace.propagator_denominator_chain()
     assert len(mass_chain) == 2
@@ -685,16 +738,16 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     )
     decorated = setup.supertrace_propagator_expression_map()
     assert_expr_equal(
-        decorated["supertrace_propagator_kernel[heavy-light-heavy]"],
+        decorated["supertrace_propagator_kernel[hScalar-lScalar]"],
         trace.propagator_expression(),
     )
     vakint_integral = vakint_backend.one_loop_vacuum_integral(trace.expression, (heavy_mass**2, light_mass**2))
     assert_expr_equal(trace.vakint_integral_expression(), vakint_integral)
     assert_expr_equal(
-        setup.vakint_integral_expression_map()["vakint_integral[heavy-light-heavy]"],
+        setup.vakint_integral_expression_map()["vakint_integral[hScalar-lScalar]"],
         vakint_integral,
     )
-    repeated_heavy_trace = next(trace for trace in setup.block_traces if trace.name == "heavy-heavy-heavy")
+    repeated_heavy_trace = next(trace for trace in setup.block_traces if trace.name == "hScalar-hScalar")
     repeated_heavy_integral = vakint_backend.one_loop_vacuum_integral(
         repeated_heavy_trace.expression,
         (heavy_mass**2,),
@@ -702,25 +755,25 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     )
     assert_expr_equal(repeated_heavy_trace.vakint_integral_expression(), repeated_heavy_integral)
     assert_expr_equal(
-        setup.vakint_integral_expression_map()["vakint_integral[heavy-heavy-heavy]"],
+        setup.vakint_integral_expression_map()["vakint_integral[hScalar-hScalar]"],
         repeated_heavy_integral,
     )
     canonical_engine = FakeKernelVakintEngine()
     canonicalized = setup.canonicalize_vakint_integral_expression_map(short_form=True, engine=canonical_engine)
     assert len(canonical_engine.calls) == setup.supertrace_kernel_count
     assert ("to_canonical", vakint_integral, True) in canonical_engine.calls
-    assert_expr_equal(canonicalized["vakint_integral[heavy-light-heavy]"], S("canonical")(vakint_integral))
+    assert_expr_equal(canonicalized["vakint_integral[hScalar-lScalar]"], S("canonical")(vakint_integral))
     reduction_engine = FakeKernelVakintEngine()
     reduced = setup.tensor_reduce_vakint_integral_expression_map(engine=reduction_engine)
     assert len(reduction_engine.calls) == setup.supertrace_kernel_count
     assert ("tensor_reduce", vakint_integral, None) in reduction_engine.calls
-    assert_expr_equal(reduced["vakint_integral[heavy-light-heavy]"], S("reduced")(vakint_integral))
+    assert_expr_equal(reduced["vakint_integral[hScalar-lScalar]"], S("reduced")(vakint_integral))
     evaluation_engine = FakeKernelVakintEngine()
     evaluated = setup.evaluate_vakint_integral_expression_map(engine=evaluation_engine)
     assert len(evaluation_engine.calls) == setup.supertrace_kernel_count
     assert ("evaluate", vakint_integral, None) in evaluation_engine.calls
-    assert_expr_equal(evaluated["vakint_integral[heavy-light-heavy]"], S("evaluated")(vakint_integral))
-    contribution = next(item for item in setup.power_type_contributions() if item.name == "heavy-light-heavy")
+    assert_expr_equal(evaluated["vakint_integral[hScalar-lScalar]"], S("evaluated")(vakint_integral))
+    contribution = next(item for item in setup.power_type_contributions() if item.name == "hScalar-lScalar")
     assert_expr_equal(contribution.prefactor, -Expression.num(1) / 2)
     assert_expr_equal(contribution.numerator_expression, -trace.expression / 2)
     assert_expr_equal(contribution.eft_numerator_expression, -trace.expression / 2)
@@ -809,7 +862,7 @@ def test_one_loop_setup_builds_operator_derived_propagator_insertions() -> None:
     assert light_mass is not None
     lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
     setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
-    trace = next(trace for trace in setup.block_traces if trace.name == "heavy-light-heavy")
+    trace = next(trace for trace in setup.block_traces if trace.name == "hScalar-lScalar")
     heavy_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)
     light_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2)
     expected_chain = ((heavy_denominator,), (light_denominator,))
@@ -818,16 +871,16 @@ def test_one_loop_setup_builds_operator_derived_propagator_insertions() -> None:
     expected_vakint = vakint_backend.one_loop_vacuum_integral(trace.expression, (heavy_mass**2, light_mass**2))
 
     assert setup.operator_propagator_denominator_chain(trace) == expected_chain
-    assert setup.operator_propagator_mass_squared_chain("heavy-light-heavy") == expected_mass_chain
+    assert setup.operator_propagator_mass_squared_chain("hScalar-lScalar") == expected_mass_chain
     assert_expr_equal(setup.operator_propagator_expression(trace), expected_kernel)
-    assert_expr_equal(setup.operator_vakint_integral_expression("heavy-light-heavy"), expected_vakint)
+    assert_expr_equal(setup.operator_vakint_integral_expression("hScalar-lScalar"), expected_vakint)
     operator_decorated = setup.supertrace_operator_propagator_expression_map(skip_unrecognized=False)
     operator_integrals = setup.operator_vakint_integral_expression_map(skip_unrecognized=False)
     assert_expr_equal(
-        operator_decorated["supertrace_operator_propagator_kernel[heavy-light-heavy]"],
+        operator_decorated["supertrace_operator_propagator_kernel[hScalar-lScalar]"],
         expected_kernel,
     )
-    assert_expr_equal(operator_integrals["operator_vakint_integral[heavy-light-heavy]"], expected_vakint)
+    assert_expr_equal(operator_integrals["operator_vakint_integral[hScalar-lScalar]"], expected_vakint)
     setup_map = setup.to_expression_map()
     assert any(key.startswith("one_loop_setup.supertrace_operator_propagator_kernel[") for key in setup_map)
     assert any(key.startswith("one_loop_setup.operator_vakint_integral[") for key in setup_map)
@@ -863,24 +916,24 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     assert_expr_equal(interaction_plan.heavy_heavy.entry(heavy, heavy), Expression.num(0))
     assert_expr_equal(interaction_plan.light_light.entry(light, light), -y() * heavy())
     interaction_traces = {trace.name: trace for trace in setup.interaction_block_traces()}
-    assert_expr_equal(interaction_traces["heavy-heavy"].expression, Expression.num(0))
-    assert_expr_equal(interaction_traces["heavy-heavy-heavy"].expression, Expression.num(0))
-    assert_expr_equal(interaction_traces["heavy-light-heavy"].expression, y() ** 2 * light() ** 2)
+    assert_expr_equal(interaction_traces["hScalar"].expression, Expression.num(0))
+    assert_expr_equal(interaction_traces["hScalar-hScalar"].expression, Expression.num(0))
+    assert_expr_equal(interaction_traces["hScalar-lScalar"].expression, y() ** 2 * light() ** 2)
     interaction_supertraces = setup.interaction_supertrace_expression_map()
-    assert_expr_equal(interaction_supertraces["interaction_supertrace_kernel[heavy-heavy]"], Expression.num(0))
+    assert_expr_equal(interaction_supertraces["interaction_supertrace_kernel[hScalar]"], Expression.num(0))
     assert setup.interaction_power_type_contribution_count == 3
     assert tuple(trace.name for trace in setup.interaction_power_type_traces()) == (
-        "heavy-heavy",
-        "heavy-heavy-heavy",
-        "heavy-light-heavy",
+        "hScalar",
+        "hScalar-hScalar",
+        "hScalar-lScalar",
     )
     interaction_power_map = setup.interaction_power_type_expression_map()
     assert_expr_equal(
-        interaction_power_map["interaction_power_type_supertrace[heavy-heavy,eft_numerator]"],
+        interaction_power_map["interaction_power_type_supertrace[hScalar,eft_numerator]"],
         Expression.num(0),
     )
     assert_expr_equal(
-        interaction_power_map["interaction_power_type_supertrace[heavy-light-heavy,eft_numerator]"],
+        interaction_power_map["interaction_power_type_supertrace[hScalar-lScalar,eft_numerator]"],
         -y() ** 2 * light() ** 2 / 2,
     )
     assert_expr_equal(setup.interaction_power_type_eft_lagrangian(), -y() ** 2 * light() ** 2 / 2)
@@ -943,11 +996,11 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         -y() * heavy(),
     )
     assert_expr_equal(
-        setup_map["one_loop_setup.interaction_supertrace_kernel[heavy-light-heavy]"],
+        setup_map["one_loop_setup.interaction_supertrace_kernel[hScalar-lScalar]"],
         y() ** 2 * light() ** 2,
     )
     assert_expr_equal(
-        setup_map["one_loop_setup.interaction_power_type_supertrace[heavy-light-heavy,eft_numerator]"],
+        setup_map["one_loop_setup.interaction_power_type_supertrace[hScalar-lScalar,eft_numerator]"],
         -y() ** 2 * light() ** 2 / 2,
     )
     assert_expr_equal(

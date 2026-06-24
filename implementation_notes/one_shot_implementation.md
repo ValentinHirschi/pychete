@@ -1006,6 +1006,27 @@ discoveries, dependency patches, blockers, and remaining work.
     the report makes the remaining validation surface measurable so later
     slices can turn missing-reference counts into canonical or evaluator-backed
     equality checks as the matching engine catches up.
+- Completed the forty-sixth implementation slice:
+  - added Matchete-style supertrace category names derived from existing
+    Symbolica-backed field metadata, so traces now use labels such as
+    `hScalar`, `hScalar-lScalar`, `hFermion-lFermion`, and
+    `hScalar-lFermion` instead of only heavy/light sector paths;
+  - kept the old `SupertracePlan.closed_block_traces(...)` sector diagnostic
+    path intact, and added `SupertracePlan.closed_category_traces(...)` plus
+    category-restricted blocks for the matching pipeline;
+  - routed `one_loop_setup(...)` and interaction-power trace generation through
+    the category trace path, including interaction-only plans, so free
+    propagation subtraction is preserved while light scalar, fermion, and
+    vector paths are no longer collapsed into a single `light` block;
+  - exposed raw per-contribution vakint topology expressions directly in
+    `MatchingResult.supertraces` under their Matchete-style path names, while
+    preserving the existing diagnostic
+    `interaction_power_type_supertrace[...]` and aggregate vakint entries;
+  - updated the four default fixture gap reports: the current candidate now has
+    real shared supertrace keys with the Matchete fixtures
+    (`VLF_toy_model`: 5, `Singlet_Scalar_Extension`: 6, `E_VLL`: 6,
+    `S1S3LQs`: 9), but this remains a naming/surface-coverage milestone, not
+    an equality pass over Matchete's final supertrace expressions.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -2047,6 +2068,34 @@ discoveries, dependency patches, blockers, and remaining work.
   passed, 1 skipped. The skip is the existing GammaLoop API import check
   because GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the default-target gap-report slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py -q'`
+  passed after the Matchete-style supertrace-category naming slice: 33 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica
+  tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+  -q'` passed after the category naming slice: 2 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the category naming slice: no issues found in 24
+  source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching tests/integration/validation -q'`
+  passed after the category naming slice: 56 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/definitions/test_public_api.py -q'` passed after the
+  category naming slice: 4 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/unit/definitions/test_pretty_printing.py::test_pychete_objects_expose_jupyter_repr_hooks
+  -q'` passed after switching the repr-hook one-loop fixture to a heavy scalar
+  setup: 1 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the category naming slice: 159 passed, 1
+  skipped. The skip is the existing GammaLoop API import check because
+  GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the Matchete-style supertrace-category naming
+  slice.
 
 ## Remaining Work
 

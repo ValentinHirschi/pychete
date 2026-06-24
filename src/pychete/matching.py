@@ -263,6 +263,12 @@ class FluctuationMode:
             return None
         return mass**2
 
+    @property
+    def supertrace_category(self) -> str:
+        """Matchete-style heavy/light and spin category used for trace names."""
+
+        return _mode_supertrace_category(self)
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{FluctuationMode}}\left({latex_string(self.field)}\right)$"
 
@@ -439,6 +445,8 @@ class FluctuationOperatorBlock:
     rows: tuple[FluctuationMode, ...]
     columns: tuple[FluctuationMode, ...]
     matrix: tuple[tuple[Expression, ...], ...]
+    row_category: str | None = None
+    column_category: str | None = None
 
     def entry(self, row: FluctuationBasisItem, column: FluctuationBasisItem) -> Expression:
         """Return one block entry identified by row and column fields."""
@@ -451,10 +459,12 @@ class FluctuationOperatorBlock:
         """Return deterministic named expressions for this block."""
 
         entries: dict[str, Expression] = {}
+        row_label = self.row_category or self.row_sector.value
+        column_label = self.column_category or self.column_sector.value
         for row in self.rows:
             for column in self.columns:
                 key = (
-                    f"{prefix}[{self.row_sector.value},{self.column_sector.value},"
+                    f"{prefix}[{row_label},{column_label},"
                     f"{canonical_string(row.field)},{canonical_string(column.field)}]"
                 )
                 entries[key] = self.entry(row.field, column.field)
@@ -479,6 +489,7 @@ class SupertraceBlockTrace:
     blocks: tuple[FluctuationOperatorBlock, ...]
     modes: tuple[FluctuationMode, ...]
     expression: Expression
+    cyclic_key: tuple[str, ...] | None = None
 
     @property
     def order(self) -> int:
@@ -496,7 +507,12 @@ class SupertraceBlockTrace:
     def cyclic_sector_key(self) -> tuple[str, ...]:
         """Return a canonical cyclic key for this closed sector path."""
 
-        return _cyclic_sector_key(tuple(block.row_sector.value for block in self.blocks))
+        labels = (
+            self.cyclic_key
+            if self.cyclic_key is not None
+            else tuple(block.row_sector.value for block in self.blocks)
+        )
+        return _cyclic_sector_key(labels)
 
     def propagator_mass_squared_chain(self, *, include_light: bool = True) -> tuple[tuple[Expression, ...], ...]:
         """Return mass-squared slots aligned with the row modes of each block."""
@@ -748,12 +764,23 @@ class SupertracePlan:
 
         return sum(mode.supertrace_sign for mode in self.heavy_heavy.rows)
 
+    @property
+    def supertrace_category_labels(self) -> tuple[str, ...]:
+        """Heavy/light spin categories present in this plan."""
+
+        return _supertrace_category_labels(self.operator.modes)
+
     def blocks(self) -> tuple[FluctuationOperatorBlock, ...]:
         """Return the four heavy/light blocks in deterministic order."""
 
         return (self.heavy_heavy, self.heavy_light, self.light_heavy, self.light_light)
 
-    def block_trace(self, name: str, *blocks: FluctuationOperatorBlock) -> SupertraceBlockTrace:
+    def block_trace(
+        self,
+        name: str,
+        *blocks: FluctuationOperatorBlock,
+        cyclic_key: tuple[str, ...] | None = None,
+    ) -> SupertraceBlockTrace:
         """Build a weighted closed-block trace kernel with Symbolica matrices."""
 
         if not blocks:
@@ -768,7 +795,43 @@ class SupertracePlan:
             blocks=normalized_blocks,
             modes=normalized_blocks[0].rows,
             expression=_supertrace_block_product(normalized_blocks),
+            cyclic_key=cyclic_key,
         )
+
+    def category_block(self, row_category: str, column_category: str) -> FluctuationOperatorBlock:
+        """Return a block restricted to Matchete-style supertrace categories."""
+
+        row_sector = _supertrace_category_sector(row_category)
+        column_sector = _supertrace_category_sector(column_category)
+        source_block = self._sector_block(row_sector, column_sector)
+        row_indices = _category_indices(source_block.rows, row_category)
+        column_indices = _category_indices(source_block.columns, column_category)
+        return FluctuationOperatorBlock(
+            theory=self.theory,
+            row_sector=row_sector,
+            column_sector=column_sector,
+            rows=tuple(source_block.rows[index] for index in row_indices),
+            columns=tuple(source_block.columns[index] for index in column_indices),
+            matrix=tuple(
+                tuple(
+                    source_block.matrix[row][column]
+                    for column in column_indices
+                )
+                for row in row_indices
+            ),
+            row_category=row_category,
+            column_category=column_category,
+        )
+
+    def _sector_block(
+        self,
+        row_sector: FluctuationSector,
+        column_sector: FluctuationSector,
+    ) -> FluctuationOperatorBlock:
+        for block in self.blocks():
+            if block.row_sector is row_sector and block.column_sector is column_sector:
+                return block
+        raise KeyError(f"Supertrace plan has no {row_sector.value}-{column_sector.value} block")
 
     def closed_block_traces(self, order: int, *, include_light_only: bool = False) -> tuple[SupertraceBlockTrace, ...]:
         """Generate all closed heavy/light sector trace kernels of an order."""
@@ -790,6 +853,25 @@ class SupertracePlan:
                 for index in range(order)
             )
             traces.append(self.block_trace(_sector_path_name(closed_path), *blocks))
+        return tuple(traces)
+
+    def closed_category_traces(self, order: int, *, include_light_only: bool = False) -> tuple[SupertraceBlockTrace, ...]:
+        """Generate closed trace kernels split by heavy/light spin categories."""
+
+        if order < 1:
+            raise ValueError("closed category trace order must be at least 1")
+        traces: list[SupertraceBlockTrace] = []
+        labels = self.supertrace_category_labels
+        for path in product(labels, repeat=order):
+            light_only = all(_supertrace_category_sector(label) is FluctuationSector.LIGHT for label in path)
+            if not include_light_only and light_only:
+                continue
+            closed_path = (*path, path[0])
+            blocks = tuple(
+                self.category_block(closed_path[index], closed_path[index + 1])
+                for index in range(order)
+            )
+            traces.append(self.block_trace("-".join(path), *blocks, cyclic_key=path))
         return tuple(traces)
 
     def to_expression_map(self, *, prefix: str = "supertrace_input") -> dict[str, Expression]:
@@ -897,7 +979,7 @@ class OneLoopSetup:
         )
         traces: list[SupertraceBlockTrace] = []
         for order in range(1, self.max_trace_order + 1):
-            traces.extend(plan.closed_block_traces(order, include_light_only=include_light_only))
+            traces.extend(plan.closed_category_traces(order, include_light_only=include_light_only))
         return tuple(traces)
 
     def interaction_supertrace_expression_map(
@@ -1326,11 +1408,12 @@ class OneLoopSetup:
     ) -> MatchingResult:
         """Return the current interaction-power one-loop preview result."""
 
-        numerator_sum = self.interaction_power_type_eft_lagrangian(
+        contributions = self.interaction_power_type_contributions(
             heavy_field_dimension=heavy_field_dimension,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
         )
+        numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
         selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
         vakint_sum = self.interaction_power_type_vakint_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
@@ -1342,6 +1425,7 @@ class OneLoopSetup:
             engine=vakint_engine,
         )
         supertraces = {
+            **_named_raw_vakint_supertraces(contributions, include_light=include_light),
             **self.interaction_power_type_expression_map(
                 prefix="interaction_power_type_supertrace",
                 heavy_field_dimension=heavy_field_dimension,
@@ -1382,6 +1466,7 @@ class OneLoopSetup:
                 "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
+                "named_supertrace_stage": VakintIntegralStage.RAW.value,
                 "uses_interaction_operator": True,
             },
         )
@@ -1462,11 +1547,12 @@ class OneLoopSetup:
 
         from .backends import vakint
 
-        numerator_sum = self.interaction_power_type_eft_lagrangian(
+        contributions = self.interaction_power_type_contributions(
             heavy_field_dimension=heavy_field_dimension,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
         )
+        numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
         evaluated = self.interaction_power_type_vakint_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
@@ -1488,6 +1574,7 @@ class OneLoopSetup:
                 **self.fluctuation_operator.interaction_expression_map(),
             },
             supertraces={
+                **_named_raw_vakint_supertraces(contributions, include_light=include_light),
                 **self.interaction_power_type_expression_map(
                     prefix="interaction_power_type_supertrace",
                     heavy_field_dimension=heavy_field_dimension,
@@ -1512,6 +1599,7 @@ class OneLoopSetup:
                 "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": VakintIntegralStage.EVALUATED.value,
+                "named_supertrace_stage": VakintIntegralStage.RAW.value,
                 "subtraction_scheme": "minimal_subtraction_preview",
                 "poles_subtracted": True,
                 "max_pole_order": max_pole_order,
@@ -1609,7 +1697,8 @@ class OneLoopSetup:
         pipeline, on-shell reduction, and SMEFT-condition extraction land.
         """
 
-        numerator_sum = self.power_type_eft_lagrangian(heavy_field_dimension=heavy_field_dimension)
+        contributions = self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
+        numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
         selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
         vakint_sum = self.power_type_vakint_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
@@ -1619,6 +1708,7 @@ class OneLoopSetup:
             engine=vakint_engine,
         )
         supertraces = {
+            **_named_raw_vakint_supertraces(contributions, include_light=include_light),
             **self.power_type_expression_map(prefix="power_type_supertrace"),
             "power_type_eft_lagrangian": numerator_sum,
             "power_type_vakint_integral_sum": vakint_sum,
@@ -1650,6 +1740,7 @@ class OneLoopSetup:
                 "power_type_contribution_count": self.power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
+                "named_supertrace_stage": VakintIntegralStage.RAW.value,
             },
         )
 
@@ -1699,7 +1790,8 @@ class OneLoopSetup:
 
         from .backends import vakint
 
-        numerator_sum = self.power_type_eft_lagrangian(heavy_field_dimension=heavy_field_dimension)
+        contributions = self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
+        numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
         evaluated = self.power_type_vakint_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
@@ -1716,6 +1808,7 @@ class OneLoopSetup:
             on_shell_eft_lagrangian=finite,
             fluctuation_operators=self.fluctuation_operator.to_expression_map(),
             supertraces={
+                **_named_raw_vakint_supertraces(contributions, include_light=include_light),
                 **self.power_type_expression_map(prefix="power_type_supertrace"),
                 "power_type_eft_lagrangian": numerator_sum,
                 "power_type_vakint_integral_sum": evaluated,
@@ -1734,6 +1827,7 @@ class OneLoopSetup:
                 "power_type_contribution_count": self.power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": VakintIntegralStage.EVALUATED.value,
+                "named_supertrace_stage": VakintIntegralStage.RAW.value,
                 "subtraction_scheme": "minimal_subtraction_preview",
                 "poles_subtracted": True,
                 "max_pole_order": max_pole_order,
@@ -2599,7 +2693,7 @@ def one_loop_setup(
     block_traces = tuple(
         trace
         for order in range(1, max_trace_order + 1)
-        for trace in plan.closed_block_traces(order, include_light_only=include_light_only)
+        for trace in plan.closed_category_traces(order, include_light_only=include_light_only)
     )
     return OneLoopSetup(
         theory=theory,
@@ -2892,6 +2986,17 @@ def _flatten_expression_slots(slots: Iterable[Iterable[Expression]]) -> tuple[Ex
     return tuple(item for slot in slots for item in slot)
 
 
+def _named_raw_vakint_supertraces(
+    contributions: Iterable[PowerTypeSupertraceContribution],
+    *,
+    include_light: bool = True,
+) -> dict[str, Expression]:
+    return {
+        contribution.name: contribution.vakint_integral_expression(include_light=include_light)
+        for contribution in contributions
+    }
+
+
 def _fluctuation_statistics(field_type: Expression, field_role: FieldRole) -> FluctuationStatistics:
     grassmann_roles = {FieldRole.GHOST, FieldRole.ANTI_GHOST}
     if bool(field_type == s.Fermion) or field_role in grassmann_roles:
@@ -2932,6 +3037,65 @@ def _mode_index(modes: tuple[FluctuationMode, ...], field: Expression) -> int:
         if canonical_string(mode.field) == key:
             return index
     raise KeyError(f"Fluctuation basis has no field {key!r}")
+
+
+def _supertrace_category_labels(modes: tuple[FluctuationMode, ...]) -> tuple[str, ...]:
+    labels: dict[str, None] = {}
+    for mode in sorted(modes, key=_mode_supertrace_category_sort_key):
+        labels.setdefault(mode.supertrace_category, None)
+    return tuple(labels)
+
+
+def _mode_supertrace_category_sort_key(mode: FluctuationMode) -> tuple[int, int, str]:
+    sector_order = 0 if mode.is_heavy else 1
+    return (sector_order, _mode_supertrace_type_order(mode), canonical_string(mode.field))
+
+
+def _mode_supertrace_type_order(mode: FluctuationMode) -> int:
+    type_name = _mode_supertrace_type_name(mode)
+    order = {
+        "Scalar": 0,
+        "Fermion": 1,
+        "Vector": 2,
+        "Ghost": 3,
+        "AntiGhost": 4,
+    }
+    return order.get(type_name, 99)
+
+
+def _mode_supertrace_category(mode: FluctuationMode) -> str:
+    prefix = "h" if mode.is_heavy else "l"
+    return f"{prefix}{_mode_supertrace_type_name(mode)}"
+
+
+def _mode_supertrace_type_name(mode: FluctuationMode) -> str:
+    field_type = mode.field_type
+    if bool(field_type == s.Scalar):
+        return "Scalar"
+    if bool(field_type == s.Fermion):
+        return "Fermion"
+    if bool(field_type == s.Ghost):
+        return "Ghost"
+    if bool(field_type == s.AntiGhost):
+        return "AntiGhost"
+    if bool(field_type == s.Vector) or is_head(field_type, s.Vector):
+        return "Vector"
+    return "Unknown"
+
+
+def _supertrace_category_sector(label: str) -> FluctuationSector:
+    if label.startswith("h"):
+        return FluctuationSector.HEAVY
+    if label.startswith("l"):
+        return FluctuationSector.LIGHT
+    raise ValueError(f"Unknown supertrace category label {label!r}")
+
+
+def _category_indices(modes: tuple[FluctuationMode, ...], label: str) -> tuple[int, ...]:
+    indices = tuple(index for index, mode in enumerate(modes) if mode.supertrace_category == label)
+    if not indices:
+        raise ValueError(f"Fluctuation basis has no {label!r} modes")
+    return indices
 
 
 def _cyclically_unique_traces(traces: Iterable[SupertraceBlockTrace]) -> tuple[SupertraceBlockTrace, ...]:
