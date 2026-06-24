@@ -22,7 +22,7 @@ from .expr import (
     list_items,
     sum_expr,
 )
-from .functional import apply_cd, derive_eom
+from .functional import apply_cd, derive_eom, partial_functional_derivative
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
 from .theory import (
     FieldChirality,
@@ -1323,6 +1323,7 @@ class FluctuationOperator:
     basis: tuple[Expression, ...]
     matrix: tuple[tuple[Expression, ...], ...]
     modes: tuple[FluctuationMode, ...] = ()
+    differential_matrix: tuple[tuple[Expression, ...], ...] = ()
 
     def entry(self, row: FluctuationBasisItem, column: FluctuationBasisItem) -> Expression:
         """Return one matrix entry identified by its row and column fields."""
@@ -1330,6 +1331,15 @@ class FluctuationOperator:
         row_index = self._basis_index(_fluctuation_basis_expression(self.theory, row))
         column_index = self._basis_index(_fluctuation_basis_expression(self.theory, column))
         return self.matrix[row_index][column_index]
+
+    def differential_entry(self, row: FluctuationBasisItem, column: FluctuationBasisItem) -> Expression:
+        """Return one Euler-Lagrange differential-operator matrix entry."""
+
+        if not self.differential_matrix:
+            return self.entry(row, column)
+        row_index = self._basis_index(_fluctuation_basis_expression(self.theory, row))
+        column_index = self._basis_index(_fluctuation_basis_expression(self.theory, column))
+        return self.differential_matrix[row_index][column_index]
 
     def to_expression_map(self, *, prefix: str = "fluctuation_operator") -> dict[str, Expression]:
         """Return deterministic named entries suitable for ``MatchingResult``."""
@@ -1339,6 +1349,9 @@ class FluctuationOperator:
             for column in self.basis:
                 key = f"{prefix}[{canonical_string(row)},{canonical_string(column)}]"
                 entries[key] = self.entry(row, column)
+                if self.differential_matrix:
+                    differential_key = f"{prefix}_differential[{canonical_string(row)},{canonical_string(column)}]"
+                    entries[differential_key] = self.differential_entry(row, column)
         return entries
 
     def _basis_index(self, field: Expression) -> int:
@@ -1597,12 +1610,10 @@ def fluctuation_operator(
 ) -> FluctuationOperator:
     """Extract the Symbolica Hessian over a fluctuation basis.
 
-    The current implementation computes the algebraic Hessian with respect to
-    exact field expressions in ``fields``. If ``fields`` is omitted, pychete
-    discovers a basis from tagged field atoms in ``lagrangian``. Derivative-
-    valued field expressions may be supplied explicitly as independent basis
-    entries; full differential operator assembly is a later one-loop matching
-    stage.
+    The algebraic matrix is the exact-field Hessian used by current supertrace
+    previews. The differential matrix is assembled from Euler-Lagrange
+    functional derivatives and keeps derivative slots as
+    ``DifferentialOperator`` expressions for later backend lowering.
     """
 
     theory._validate_registered_expression(lagrangian)
@@ -1624,7 +1635,20 @@ def fluctuation_operator(
         )
         for row_variable in variables
     )
-    return FluctuationOperator(theory=theory, basis=basis, matrix=matrix, modes=basis_info.modes)
+    differential_matrix = tuple(
+        tuple(
+            _fluctuation_differential_entry(theory, lagrangian, row, column)
+            for column in basis
+        )
+        for row in basis
+    )
+    return FluctuationOperator(
+        theory=theory,
+        basis=basis,
+        matrix=matrix,
+        modes=basis_info.modes,
+        differential_matrix=differential_matrix,
+    )
 
 
 def fluctuation_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasis:
@@ -1699,6 +1723,65 @@ def _normalize_fluctuation_basis(
         return fields
     basis = tuple(_fluctuation_basis_expression(theory, field) for field in fields)
     return FluctuationBasis(theory=theory, modes=tuple(_fluctuation_mode(theory, field) for field in basis))
+
+
+def _fluctuation_differential_entry(
+    theory: Theory,
+    lagrangian: Expression,
+    row: Expression,
+    column: Expression,
+) -> Expression:
+    row_base = bar_field_inner(row) if is_bar_field(row) else row
+    row_definition = _field_definition_from_label(theory, field_label(row_base))
+    row_variation = FieldVariation.BAR if is_bar_field(row) else FieldVariation.FIELD
+    eom = derive_eom(theory, lagrangian, row_definition, variation=row_variation)
+
+    column_base = bar_field_inner(column) if is_bar_field(column) else column
+    column_barred = is_bar_field(column)
+    derivative_sets = _field_derivative_sets_in_expression(
+        eom,
+        field_label(column_base),
+        barred=column_barred,
+    )
+    derivative_sets.add(())
+
+    terms: list[Expression] = []
+    for derivatives in sorted(derivative_sets, key=_derivative_set_sort_key):
+        target = field_with_derivatives(column_base, derivatives)
+        if column_barred:
+            target = s.Bar(target)
+        coefficient = partial_functional_derivative(eom, target)
+        if not is_zero(coefficient):
+            terms.append(_differential_operator_term(coefficient, derivatives))
+    return sum_expr(terms).expand()
+
+
+def _field_derivative_sets_in_expression(
+    expr: Expression,
+    label: Expression,
+    *,
+    barred: bool,
+) -> set[tuple[Expression, ...]]:
+    pattern = bar_field_pattern(label) if barred else field_pattern(label)
+    return {list_items(match[s.FieldDerivativesWildcard]) for match in expr.match(pattern)}
+
+
+def _derivative_set_sort_key(derivatives: tuple[Expression, ...]) -> tuple[int, tuple[str, ...]]:
+    return (len(derivatives), tuple(canonical_string(index) for index in derivatives))
+
+
+def _differential_operator_term(coefficient: Expression, derivatives: tuple[Expression, ...]) -> Expression:
+    if not derivatives:
+        return coefficient
+    return coefficient * s.DifferentialOperator(list_expr(*derivatives))
+
+
+def _field_definition_from_label(theory: Theory, label: Expression) -> FieldDefinition:
+    key = canonical_string(label)
+    for definition in theory.fields.values():
+        if canonical_string(definition.label) == key:
+            return definition
+    raise KeyError(f"Theory {theory.name!r} has no field label {key!r}")
 
 
 def _validate_unique_fluctuation_basis(basis: tuple[Expression, ...]) -> None:

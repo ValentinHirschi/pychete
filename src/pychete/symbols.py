@@ -270,6 +270,15 @@ def _print_supertrace_kernel(expr: Expression, mode: PrintMode, kwargs: dict[str
     return _call("supertrace_kernel", args, mode)
 
 
+def _print_differential_operator(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex:
+        return rf"\mathcal{{D}}\left({_join(args, mode)}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"DifferentialOperator[{_join(args, mode)}]"
+    return _call("Dop", args, mode)
+
+
 def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | None:
     if _is_canonical_print(kwargs):
         return None
@@ -301,6 +310,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "HeavyFieldOrder": lambda: _call("HFO", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "PropagatorDenominator": lambda: _print_propagator_denominator(expr, mode, kwargs),
         "SupertraceKernel": lambda: _print_supertrace_kernel(expr, mode, kwargs),
+        "DifferentialOperator": lambda: _print_differential_operator(expr, mode, kwargs),
         "Vector": lambda: _call("Vector", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "SU": lambda: _call("SU", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "U1": lambda: _call("U1", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -490,6 +500,7 @@ class SymbolStore:
         "LoopMomentumSquared",
         "PropagatorDenominator",
         "SupertraceKernel",
+        "DifferentialOperator",
         "SymmetricIndices",
         "AntisymmetricIndices",
         "SymmetricPermutation",
@@ -638,6 +649,10 @@ class SymbolStore:
     @cached_property
     def SupertraceKernel(self) -> Expression:
         return self.head("SupertraceKernel")
+
+    @cached_property
+    def DifferentialOperator(self) -> Expression:
+        return self.head("DifferentialOperator")
 
     @cached_property
     def SymmetricIndices(self) -> Expression:

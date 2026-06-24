@@ -787,6 +787,22 @@ discoveries, dependency patches, blockers, and remaining work.
   - added focused tests for Dirac and chiral fermions, gauge vectors, ghosts,
     complex scalar barred/unbarred basis entries, chiral half-factors, known
     spinor component counts, and public API docstring coverage.
+- Completed the thirty-sixth implementation slice:
+  - added a central `DifferentialOperator` Symbolica head and pretty-printer
+    for derivative slots in fluctuation-operator entries;
+  - extended `FluctuationOperator` with an optional Euler-Lagrange
+    `differential_matrix`, a public `differential_entry(...)` accessor, and
+    deterministic `fluctuation_operator_differential[...]` expression-map
+    entries;
+  - the differential matrix is assembled from existing Symbolica-backed
+    `derive_eom(...)`, `partial_functional_derivative(...)`, pattern matches,
+    `Expression.series(...)`, `Expression.coefficient(...)`, and
+    `Expression.replace_multiple(...)`; the legacy algebraic Hessian matrix is
+    kept unchanged for current supertrace previews;
+  - added focused tests showing that scalar and barred complex-scalar free
+    Lagrangians expose the kinetic operator as
+    `-DifferentialOperator({d0, d0}) - m^2` while their algebraic Hessian entry
+    remains the mass term.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -1639,14 +1655,31 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the fluctuation mode spin/Lorentz metadata
   slice: 151 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_exposes_euler_lagrange_differential_entries
+  tests/integration/matching/test_fluctuation_operator.py::test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
+  tests/unit/definitions/test_public_api.py -q'` passed after the fluctuation
+  differential-operator matrix slice: 6 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching -q'` passed after the fluctuation
+  differential-operator matrix slice: 36 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the fluctuation differential-operator matrix slice:
+  no issues found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the fluctuation differential-operator
+  matrix slice: 153 passed, 1 skipped. The skip is the existing GammaLoop API
+  import check because GammaLoop was not requested in the current dependency
+  manifest.
 
 ## Remaining Work
 
 - Use the four committed default Matchete matching fixtures as acceptance
   targets for the pychete one-loop matching engine.
-- Extend `FluctuationOperator` extraction from algebraic Hessians over explicit
-  basis entries to full differential fluctuation operators, including
-  derivative-valued fields and integration-by-parts conventions.
+- Lower the new `FluctuationOperator.differential_entry(...)` bridge from
+  explicit `DifferentialOperator` slots into backend-ready propagator and
+  momentum-space kernels, including vector/gauge Lorentz structures and
+  integration-by-parts convention validation against Matchete fixtures.
 - Extend `FluctuationBasis` degree-of-freedom metadata beyond the new internal
   and spin/Lorentz mode metadata into backend-evaluated vector Lorentz traces,
   real/complex coefficient placement in actual supertrace kernels, and later

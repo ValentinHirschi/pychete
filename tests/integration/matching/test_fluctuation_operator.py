@@ -72,6 +72,46 @@ def test_fluctuation_operator_uses_symbolica_hessian_for_scalar_basis() -> None:
     assert_expr_equal(operator.entry(phi, phi), -g() * heavy())
 
 
+def test_fluctuation_operator_exposes_euler_lagrange_differential_entries() -> None:
+    theory = Theory("fluctuation_differential_scalar")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    mass = theory.mass_expr(heavy.definition)
+    assert mass is not None
+    mu = theory.dummy_index(0)
+    lagrangian = theory.free_lag(heavy)
+
+    operator = theory.fluctuation_operator(lagrangian)
+
+    assert_expr_equal(operator.entry(heavy, heavy), -mass**2)
+    assert_expr_equal(
+        operator.differential_entry(heavy, heavy),
+        -mass**2 - s.DifferentialOperator(s.List(mu, mu)),
+    )
+    expression_map = operator.to_expression_map()
+    assert_expr_equal(
+        expression_map[f"fluctuation_operator_differential[{canonical_string(heavy())},{canonical_string(heavy())}]"],
+        operator.differential_entry(heavy, heavy),
+    )
+
+
+def test_fluctuation_operator_differential_entries_handle_barred_complex_scalars() -> None:
+    theory = Theory("fluctuation_differential_complex")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=False, mass=(FieldMassKind.LIGHT, "m"))
+    mass = theory.mass_expr(phi.definition)
+    assert mass is not None
+    mu = theory.dummy_index(0)
+    lagrangian = theory.free_lag(phi)
+    barred_phi = s.Bar(phi())
+
+    operator = theory.fluctuation_operator(lagrangian, [barred_phi, phi])
+    expected = -mass**2 - s.DifferentialOperator(s.List(mu, mu))
+
+    assert_expr_equal(operator.entry(barred_phi, phi), -mass**2)
+    assert_expr_equal(operator.entry(phi, barred_phi), -mass**2)
+    assert_expr_equal(operator.differential_entry(barred_phi, phi), expected)
+    assert_expr_equal(operator.differential_entry(phi, barred_phi), expected)
+
+
 def test_fluctuation_operator_protects_unselected_barred_fields() -> None:
     theory = Theory("fluctuation_bar_protection")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=False, mass=(FieldMassKind.LIGHT, "m"))

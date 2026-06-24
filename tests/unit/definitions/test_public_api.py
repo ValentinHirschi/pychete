@@ -129,6 +129,7 @@ def test_public_api_methods_have_docstrings() -> None:
         ],
         pychete.FluctuationOperator: [
             "block",
+            "differential_entry",
             "entry",
             "mode_for",
             "supertrace_plan",
