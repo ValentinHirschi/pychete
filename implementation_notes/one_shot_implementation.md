@@ -290,6 +290,20 @@ discoveries, dependency patches, blockers, and remaining work.
   - added tests that tree matching remains unchanged, one-loop requests cannot
     silently return tree-level results, and fixture comparisons report
     canonical mismatches.
+- Completed the fourteenth implementation slice:
+  - extended `MatchingResult.compare_to(...)` with optional Symbolica
+    evaluator-backed numeric probes for expressions that fail canonical
+    comparison;
+  - kept canonical Symbolica comparison as the default and primary validation
+    path, with numeric probes only running when callers provide both probe
+    parameters and deterministic sample points;
+  - attached numeric-probe evidence to each `MatchingExpressionComparison` so
+    notebooks and tests can distinguish canonical equality from evaluator-backed
+    equality;
+  - exported `NumericProbeResult` and `evaluator_probe_equal` through the
+    package-root public API now that comparison objects expose probe evidence;
+  - added tests covering a trigonometric identity that is evaluator-equal but
+    not canonically equal under the current Symbolica expansion policy.
 
 ## Backend/API Discoveries
 
@@ -371,6 +385,12 @@ discoveries, dependency patches, blockers, and remaining work.
   to returning a fake `MatchingResult`: the next matching-engine slices must
   fill the pipeline stages and satisfy `MatchingResult.compare_to(...)` against
   the committed default fixtures.
+- `MatchingResult.compare_to(...)` now directly supports the approved fallback
+  policy for hard-to-canonicalize expressions: canonical strings are compared
+  first, and only canonical mismatches are optionally sent through
+  `evaluator_probe_equal(...)`, which uses `Expression.evaluator_multiple`.
+  The first regression test uses `sin(x)^2 + cos(x)^2` versus `1`, confirming
+  the evaluator path can prove equality when canonical expansion does not.
 
 ## Test Status
 
@@ -495,6 +515,17 @@ discoveries, dependency patches, blockers, and remaining work.
 - `dependencies/.venv/bin/python -m pytest tests` passed after the matching API
   comparison slice: 89 passed, 1 skipped. The skip is the existing GammaLoop
   API import check because GammaLoop was not requested in the current
+  dependency manifest.
+- `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py
+  tests/unit/definitions/test_public_api.py
+  tests/integration/validation/test_validation_fixtures.py` passed after the
+  comparison-probe slice: 18 passed.
+- `dependencies/.venv/bin/python -m mypy` passed after the comparison-probe
+  slice: no issues found in 24 source files.
+- `dependencies/.venv/bin/python -m pytest tests` passed after the
+  comparison-probe slice: 91 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
   dependency manifest.
 
 ## Remaining Work

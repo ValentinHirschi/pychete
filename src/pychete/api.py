@@ -12,6 +12,7 @@ from .matching import (
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import BuiltinIndexType, CouplingHandle, FieldChirality, FieldHandle, FieldMassKind, FieldVariation, Theory
+from .validation import NumericProbeResult, evaluator_probe_equal
 
 __all__ = [
     "BuiltinIndexType",
@@ -24,6 +25,7 @@ __all__ = [
     "MatchingExpressionComparison",
     "MatchingResult",
     "MatchingResultComparison",
+    "NumericProbeResult",
     "OneLoopMatchingNotImplementedError",
     "PycheteState",
     "StateExpression",
@@ -34,6 +36,7 @@ __all__ = [
     "collect_indices",
     "display_string",
     "dummy_indices",
+    "evaluator_probe_equal",
     "load_state",
     "latex_string",
     "open_indices",

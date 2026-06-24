@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass, field
 from html import escape
-from typing import Iterable
+from typing import Iterable, Sequence
 
 from symbolica import Expression, Replacement
 
@@ -16,23 +16,33 @@ from .expr import (
 from .functional import apply_cd, derive_eom
 from .symbols import canonical_string, display_string, latex_string, s
 from .theory import FieldDefinition, FieldVariation, Theory
+from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 
 @dataclass(frozen=True)
 class MatchingExpressionComparison:
-    """Canonical comparison result for one named matching expression."""
+    """Comparison result for one named matching expression."""
 
     name: str
     equal: bool
     candidate: Expression | None = None
     reference: Expression | None = None
+    canonical_equal: bool = False
+    numeric_probe: NumericProbeResult | None = None
 
     def _repr_latex_(self) -> str:
         status = r"\checkmark" if self.equal else r"\times"
         return rf"$\mathrm{{{escape(self.name)}}}: {status}$"
 
     def _repr_html_(self) -> str:
-        status = "equal" if self.equal else "different"
+        if self.canonical_equal:
+            status = "canonically equal"
+        elif self.numeric_probe is not None and self.numeric_probe.equal:
+            status = "numeric-probe equal"
+        elif self.numeric_probe is not None:
+            status = f"different, max_abs_difference={self.numeric_probe.max_abs_difference:g}"
+        else:
+            status = "different"
         return f"<code>{escape(self.name)}: {status}</code>"
 
 
@@ -122,11 +132,28 @@ class MatchingResult:
         for name in self.expression_names():
             self.theory._validate_registered_expression(self.expression(name))
 
-    def compare_to(self, reference: MatchingResult, *, names: Iterable[str] | None = None) -> MatchingResultComparison:
-        """Compare this result to a reference result by canonical expressions."""
+    def compare_to(
+        self,
+        reference: MatchingResult,
+        *,
+        names: Iterable[str] | None = None,
+        probe_parameters: Sequence[Expression] | None = None,
+        probe_samples: Sequence[Sequence[NumericValue]] | None = None,
+        absolute_tolerance: float = 1e-9,
+        relative_tolerance: float = 1e-9,
+    ) -> MatchingResultComparison:
+        """Compare this result to a reference result.
+
+        Canonical Symbolica equality is the primary comparison. If
+        ``probe_parameters`` and ``probe_samples`` are provided, expressions
+        that are not canonically equal are additionally tested with
+        Symbolica's evaluator-backed numeric probes.
+        """
 
         if self.theory.name != reference.theory.name:
             raise ValueError(f"Cannot compare matching results from {self.theory.name!r} and {reference.theory.name!r}")
+        if (probe_parameters is None) != (probe_samples is None):
+            raise ValueError("probe_parameters and probe_samples must be provided together")
         if names is None:
             comparison_names = tuple(dict.fromkeys((*self.expression_names(), *reference.expression_names())))
         else:
@@ -135,17 +162,37 @@ class MatchingResult:
         for name in comparison_names:
             candidate_expr = _optional_expression(self, name)
             reference_expr = _optional_expression(reference, name)
-            equal = (
+            canonical_equal = (
                 candidate_expr is not None
                 and reference_expr is not None
                 and _canonical_expr(candidate_expr) == _canonical_expr(reference_expr)
             )
+            numeric_probe: NumericProbeResult | None = None
+            equal = canonical_equal
+            if (
+                not canonical_equal
+                and candidate_expr is not None
+                and reference_expr is not None
+                and probe_parameters is not None
+                and probe_samples is not None
+            ):
+                numeric_probe = evaluator_probe_equal(
+                    candidate_expr,
+                    reference_expr,
+                    probe_parameters,
+                    probe_samples,
+                    absolute_tolerance=absolute_tolerance,
+                    relative_tolerance=relative_tolerance,
+                )
+                equal = numeric_probe.equal
             comparisons.append(
                 MatchingExpressionComparison(
                     name=name,
                     equal=equal,
                     candidate=candidate_expr,
                     reference=reference_expr,
+                    canonical_equal=canonical_equal,
+                    numeric_probe=numeric_probe,
                 )
             )
         return MatchingResultComparison(candidate=self, reference=reference, expressions=tuple(comparisons))
