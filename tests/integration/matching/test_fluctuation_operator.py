@@ -44,6 +44,16 @@ class FakeTensorNetwork:
         self.expr = expr
 
 
+class FakePoleVakintEngine:
+    def __init__(self, evaluated: Expression) -> None:
+        self.evaluated = evaluated
+        self.calls: list[tuple[str, Expression]] = []
+
+    def evaluate(self, expr: Expression) -> Expression:
+        self.calls.append(("evaluate", expr))
+        return self.evaluated
+
+
 def test_fluctuation_operator_uses_symbolica_hessian_for_scalar_basis() -> None:
     theory = Theory("fluctuation_scalar")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
@@ -591,6 +601,50 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     assert any(key.startswith("one_loop_setup.vakint_integral[") for key in setup.to_expression_map())
     assert any(key.startswith("one_loop_setup.power_type_supertrace[") for key in setup.to_expression_map())
     assert any(key == "one_loop_setup[power_type_vakint_integral_sum]" for key in setup.to_expression_map())
+
+
+def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients() -> None:
+    theory = Theory("one_loop_setup_poles")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = -heavy_mass**2 * heavy() ** 2 / 2 - light_mass**2 * light() ** 2 / 2 - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    expected_raw = setup.power_type_vakint_integral_sum()
+    eps = vakint_backend.epsilon_symbol()
+    evaluated_series = S("double") / eps**2 + S("single") / eps + S("finite") + S("higher") * eps
+
+    coefficient_engine = FakePoleVakintEngine(evaluated_series)
+    pole_coefficient = setup.power_type_vakint_epsilon_coefficient(-1, engine=coefficient_engine)
+    assert coefficient_engine.calls == [("evaluate", expected_raw)]
+    assert_expr_equal(pole_coefficient, S("single"))
+
+    pole_engine = FakePoleVakintEngine(evaluated_series)
+    assert_expr_equal(
+        setup.power_type_vakint_pole_part(engine=pole_engine, max_pole_order=2),
+        S("double") / eps**2 + S("single") / eps,
+    )
+    assert pole_engine.calls == [("evaluate", expected_raw)]
+
+    finite_engine = FakePoleVakintEngine(evaluated_series)
+    assert_expr_equal(setup.power_type_vakint_finite_part(engine=finite_engine), S("finite"))
+    assert finite_engine.calls == [("evaluate", expected_raw)]
+
+    result_engine = FakePoleVakintEngine(evaluated_series)
+    result = setup.power_type_matching_result(
+        vakint_stage=VakintIntegralStage.EVALUATED,
+        vakint_engine=result_engine,
+        max_pole_order=2,
+    )
+    assert result_engine.calls == [("evaluate", expected_raw)]
+    assert result.metadata["vakint_stage"] == "evaluated"
+    assert_expr_equal(result.off_shell_eft_lagrangian, evaluated_series)
+    assert_expr_equal(result.expression("power_type_vakint_pole_part"), S("double") / eps**2 + S("single") / eps)
+    assert_expr_equal(result.expression("power_type_vakint_finite_part"), S("finite"))
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:

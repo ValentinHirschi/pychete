@@ -3,6 +3,7 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+import pytest
 from symbolica import S
 
 from pychete.backends import vakint
@@ -117,3 +118,32 @@ def test_vakint_adapters_delegate_numerical_operations_to_engine() -> None:
         "numerical_result_to_expression",
         "numerical_evaluation",
     ]
+
+
+def test_vakint_laurent_helpers_use_symbolica_coefficients() -> None:
+    eps = vakint.epsilon_symbol()
+    a = S("a")
+    b = S("b")
+    c = S("c")
+    d = S("d")
+    expr = a / eps**2 + b / eps + c + d * eps
+
+    assert canonical_string(vakint.epsilon_coefficient(expr, -2)) == canonical_string(a)
+    assert canonical_string(vakint.epsilon_coefficient(expr, -1)) == canonical_string(b)
+    assert canonical_string(vakint.epsilon_coefficient(expr, 0)) == canonical_string(c)
+    assert canonical_string(vakint.epsilon_coefficient(expr, 1)) == canonical_string(d)
+    assert canonical_string(vakint.epsilon_coefficient(expr, 2)) == "0"
+    assert canonical_string(vakint.pole_part(expr, max_pole_order=2)) == canonical_string(a / eps**2 + b / eps)
+    assert canonical_string(vakint.finite_part(expr)) == canonical_string(c)
+
+    with pytest.raises(ValueError, match="max_pole_order"):
+        vakint.pole_part(expr, max_pole_order=0)
+
+
+def test_vakint_laurent_helpers_accept_custom_epsilon_symbol() -> None:
+    eps = S("custom_eps")
+    expr = S("pole") / eps + S("finite")
+
+    assert canonical_string(vakint.epsilon_coefficient(expr, -1, epsilon=eps)) == canonical_string(S("pole"))
+    assert canonical_string(vakint.finite_part(expr, epsilon=eps)) == canonical_string(S("finite"))
+    assert canonical_string(vakint.pole_part(expr, epsilon=eps)) == canonical_string(S("pole") / eps)

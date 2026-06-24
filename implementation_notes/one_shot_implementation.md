@@ -724,6 +724,22 @@ discoveries, dependency patches, blockers, and remaining work.
   - added tests proving the public one-loop match entry point returns a
     structured result, the result EFT Lagrangian is the vakint aggregate, and
     the older preview helper retains the numerator aggregate for inspection.
+- Completed the thirty-second implementation slice:
+  - added native Symbolica-backed vakint Laurent helpers:
+    `pychete.backends.vakint.epsilon_symbol(...)`,
+    `epsilon_coefficient(...)`, `pole_part(...)`, and `finite_part(...)`;
+  - these helpers use Symbolica `Expression.coefficient_list(...)` over
+    vakint's epsilon regulator and do not parse Laurent expressions in Python;
+  - added `OneLoopSetup.power_type_vakint_epsilon_coefficient(...)`,
+    `power_type_vakint_pole_part(...)`, and
+    `power_type_vakint_finite_part(...)`, defaulting to the evaluated vakint
+    stage where an epsilon Laurent series is expected;
+  - extended evaluated `power_type_matching_result(...)` objects with
+    `supertraces["power_type_vakint_pole_part"]` and
+    `supertraces["power_type_vakint_finite_part"]`;
+  - added focused tests for symbolic Laurent coefficient extraction, custom
+    epsilon symbols, invalid pole-order validation, and one-loop setup/result
+    pole extraction from a fake evaluated vakint Laurent series.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -867,6 +883,14 @@ discoveries, dependency patches, blockers, and remaining work.
   rank `8 x 8 x 8`; `TensorName.f()` may canonicalize index order with an
   antisymmetric sign. pychete now maps only compatible SU(3) built-ins to
   those native names.
+- Rescanned vakint's Python stubs and Rust implementation around epsilon
+  handling. Native vakint stores/returns Laurent data in the configured
+  epsilon regulator and `VakintNumericalResult.to_list()` exposes
+  `(epsilon exponent, complex coefficient)` pairs. Symbolica
+  `Expression.coefficient_list(epsilon)` also directly returns symbolic
+  Laurent powers, including negative powers such as `epsilon^-1`, so pychete's
+  symbolic pole helpers now use that native coefficient extraction instead of
+  a parser or tree walker.
 
 ## Test Status
 
@@ -1521,6 +1545,18 @@ discoveries, dependency patches, blockers, and remaining work.
   -m pytest tests -q'` passed after the one-loop power-type result entry-point
   slice: 146 passed, 1 skipped. The skip is the existing GammaLoop API import
   check because GammaLoop was not requested in the current dependency manifest.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/backends/test_vakint_backend.py
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients
+  tests/unit/definitions/test_public_api.py -q'` passed after the vakint
+  epsilon-pole extraction slice: 12 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the vakint epsilon-pole extraction slice: no issues
+  found in 24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the vakint epsilon-pole extraction slice:
+  149 passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -1540,8 +1576,8 @@ discoveries, dependency patches, blockers, and remaining work.
 - Extend the current `SupertracePlan`/`PropagatorPlan` power-type vakint result
   into a physically normalized one-loop matching result, including phase
   conventions, loop-momentum sign conventions, propagator insertion ordering
-  for multi-mode blocks, tensor reductions, pole extraction, and validation
-  against known native backend topologies.
+  for multi-mode blocks, tensor reductions, renormalized pole subtraction, and
+  validation against known native backend topologies.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.

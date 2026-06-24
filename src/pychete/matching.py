@@ -807,6 +807,77 @@ class OneLoopSetup:
             return vakint.tensor_reduce(raw, engine=engine)
         return vakint.evaluate(raw, engine=engine)
 
+    def power_type_vakint_epsilon_coefficient(
+        self,
+        power: int,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+        epsilon: Expression | None = None,
+    ) -> Expression:
+        """Return one epsilon coefficient of the aggregate vakint expression."""
+
+        from .backends import vakint
+
+        expr = self.power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            stage=stage,
+            short_form=short_form,
+            engine=engine,
+        )
+        return vakint.epsilon_coefficient(expr, power, epsilon=epsilon)
+
+    def power_type_vakint_pole_part(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+    ) -> Expression:
+        """Return the negative-power epsilon poles of the aggregate vakint expression."""
+
+        from .backends import vakint
+
+        expr = self.power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            stage=stage,
+            short_form=short_form,
+            engine=engine,
+        )
+        return vakint.pole_part(expr, max_pole_order=max_pole_order, epsilon=epsilon)
+
+    def power_type_vakint_finite_part(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+        epsilon: Expression | None = None,
+    ) -> Expression:
+        """Return the epsilon^0 coefficient of the aggregate vakint expression."""
+
+        from .backends import vakint
+
+        expr = self.power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            stage=stage,
+            short_form=short_form,
+            engine=engine,
+        )
+        return vakint.finite_part(expr, epsilon=epsilon)
+
     def power_type_matching_result(
         self,
         *,
@@ -815,6 +886,8 @@ class OneLoopSetup:
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
     ) -> MatchingResult:
         """Return the current incomplete one-loop result for power-type terms.
 
@@ -839,6 +912,15 @@ class OneLoopSetup:
             "power_type_vakint_integral_sum": vakint_sum,
             f"power_type_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
         }
+        if selected_vakint_stage is VakintIntegralStage.EVALUATED:
+            from .backends import vakint
+
+            supertraces["power_type_vakint_pole_part"] = vakint.pole_part(
+                vakint_sum,
+                max_pole_order=max_pole_order,
+                epsilon=epsilon,
+            )
+            supertraces["power_type_vakint_finite_part"] = vakint.finite_part(vakint_sum, epsilon=epsilon)
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -867,6 +949,8 @@ class OneLoopSetup:
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
     ) -> MatchingResult:
         """Return the current incomplete power-type matching result.
 
@@ -880,6 +964,8 @@ class OneLoopSetup:
             vakint_stage=vakint_stage,
             vakint_short_form=vakint_short_form,
             vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
         )
 
     def vakint_integral_expression_map(

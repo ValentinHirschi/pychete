@@ -5,7 +5,7 @@ from typing import Any, Mapping, Sequence
 
 from symbolica import Expression, S
 
-from ..expr import product_expr
+from ..expr import product_expr, sum_expr
 from .common import import_backend
 
 
@@ -19,6 +19,12 @@ def symbol(name: str) -> Expression:
     """Return a Symbolica symbol in vakint's namespace."""
 
     return S(f"vakint::{name}")
+
+
+def epsilon_symbol() -> Expression:
+    """Return vakint's default dimensional-regularization epsilon symbol."""
+
+    return symbol("ε")
 
 
 def loop_momentum(loop_id: int = 1) -> Expression:
@@ -211,12 +217,49 @@ def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> E
     return _engine(engine).evaluate(integral_expression)
 
 
+def epsilon_coefficient(expr: Expression, power: int, *, epsilon: Expression | None = None) -> Expression:
+    """Return the coefficient of one epsilon Laurent power using Symbolica."""
+
+    regulator = epsilon_symbol() if epsilon is None else epsilon
+    target = Expression.num(1) if power == 0 else regulator**power
+    for epsilon_power, coefficient in expr.coefficient_list(regulator):
+        if bool(epsilon_power == target):
+            return coefficient.expand()
+    return Expression.num(0)
+
+
+def pole_part(
+    expr: Expression,
+    *,
+    max_pole_order: int = 1,
+    epsilon: Expression | None = None,
+) -> Expression:
+    """Return the negative-power epsilon pole part of a Laurent expression."""
+
+    if max_pole_order < 1:
+        raise ValueError("max_pole_order must be at least 1")
+    regulator = epsilon_symbol() if epsilon is None else epsilon
+    return sum_expr(
+        epsilon_coefficient(expr, power, epsilon=regulator) * regulator**power
+        for power in range(-max_pole_order, 0)
+    ).expand()
+
+
+def finite_part(expr: Expression, *, epsilon: Expression | None = None) -> Expression:
+    """Return the epsilon^0 coefficient of a Laurent expression."""
+
+    return epsilon_coefficient(expr, 0, epsilon=epsilon)
+
+
 __all__ = [
     "create_engine",
     "default_engine",
     "edge",
+    "epsilon_coefficient",
+    "epsilon_symbol",
     "evaluate",
     "evaluate_integral",
+    "finite_part",
     "loop_momentum",
     "native_module",
     "new_alphaloop_method",
@@ -229,6 +272,7 @@ __all__ = [
     "numerical_result_to_expression",
     "one_loop_vacuum_integral",
     "one_loop_vacuum_topology",
+    "pole_part",
     "propagator",
     "symbol",
     "tensor_reduce",
