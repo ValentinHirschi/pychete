@@ -1027,6 +1027,23 @@ discoveries, dependency patches, blockers, and remaining work.
     (`VLF_toy_model`: 5, `Singlet_Scalar_Extension`: 6, `E_VLL`: 6,
     `S1S3LQs`: 9), but this remains a naming/surface-coverage milestone, not
     an equality pass over Matchete's final supertrace expressions.
+- Completed the forty-seventh implementation slice:
+  - added an explicit `named_supertrace_stage` option to the power-type and
+    interaction-power matching-result builders so direct Matchete-style
+    supertrace entries can be kept raw or individually sent through native
+    vakint canonicalization, tensor reduction, or evaluation;
+  - kept aggregate `vakint_stage` separate from the direct-name
+    `named_supertrace_stage`, allowing validation code to canonicalize shared
+    per-path entries without changing the aggregate off-shell/on-shell preview
+    expression;
+  - threaded the same option through `ValidationFixture.one_loop_preview(...)`
+    and `one_loop_preview_gap_report(...)`, preserving the
+    Mathematica-independent fixture workflow while making staged per-name
+    comparisons possible;
+  - the implementation delegates staged per-name entries to the same native
+    `vakint.to_canonical`, `vakint.tensor_reduce`, and `vakint.evaluate`
+    adapter functions used elsewhere; no Python integral canonicalization or
+    expression rewriting was added.
 - `OneLoopSetup` now exposes `propagator_plan(...)` and `propagator_count`,
   backed by `FluctuationPropagator` and `PropagatorPlan`. Heavy and optional
   light propagator metadata recover mass expressions through Symbolica
@@ -2096,6 +2113,25 @@ discoveries, dependency patches, blockers, and remaining work.
   GammaLoop was not requested in the current dependency manifest.
 - `git diff --check` passed after the Matchete-style supertrace-category naming
   slice.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+  -q'` passed after the staged named-supertrace slice: 1 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_stage_named_supertraces_with_vakint_engine
+  -q'` passed after the staged named-supertrace slice: 1 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the staged named-supertrace slice: no issues found in
+  24 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/integration/matching tests/integration/validation -q'`
+  passed after the staged named-supertrace slice: 57 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the staged named-supertrace slice: 160
+  passed, 1 skipped. The skip is the existing GammaLoop API import check
+  because GammaLoop was not requested in the current dependency manifest.
+- `git diff --check` passed after the staged named-supertrace slice.
 
 ## Remaining Work
 

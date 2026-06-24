@@ -183,6 +183,9 @@ class ValidationFixture:
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
 
@@ -199,6 +202,9 @@ class ValidationFixture:
             vakint_stage=vakint_stage,
             vakint_short_form=vakint_short_form,
             vakint_engine=vakint_engine,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
         )
         return MatchingResult(
             theory=result.theory,
@@ -230,6 +236,9 @@ class ValidationFixture:
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingFixtureGapReport:
         """Report current one-loop preview coverage against a reference result."""
 
@@ -243,6 +252,9 @@ class ValidationFixture:
             vakint_stage=vakint_stage,
             vakint_short_form=vakint_short_form,
             vakint_engine=vakint_engine,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
         )
         return _gap_report(self.name, reference_name, candidate, reference)
 

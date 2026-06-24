@@ -1405,6 +1405,9 @@ class OneLoopSetup:
         vakint_engine: Any | None = None,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingResult:
         """Return the current interaction-power one-loop preview result."""
 
@@ -1424,8 +1427,15 @@ class OneLoopSetup:
             short_form=vakint_short_form,
             engine=vakint_engine,
         )
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         supertraces = {
-            **_named_raw_vakint_supertraces(contributions, include_light=include_light),
+            **_named_vakint_supertraces(
+                contributions,
+                include_light=include_light,
+                stage=selected_named_stage,
+                short_form=named_supertrace_short_form,
+                engine=named_supertrace_engine,
+            ),
             **self.interaction_power_type_expression_map(
                 prefix="interaction_power_type_supertrace",
                 heavy_field_dimension=heavy_field_dimension,
@@ -1466,7 +1476,7 @@ class OneLoopSetup:
                 "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
-                "named_supertrace_stage": VakintIntegralStage.RAW.value,
+                "named_supertrace_stage": selected_named_stage.value,
                 "uses_interaction_operator": True,
             },
         )
@@ -1484,6 +1494,9 @@ class OneLoopSetup:
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
         normalization: OneLoopNormalizationInput = OneLoopNormalization.MATCHETE_HBAR,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingResult:
         """Return an interaction-power result with an explicit loop factor applied."""
 
@@ -1497,6 +1510,9 @@ class OneLoopSetup:
             vakint_engine=vakint_engine,
             max_pole_order=max_pole_order,
             epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
         )
         factor = one_loop_normalization_factor(normalization)
         normalized_off_shell = (factor * unnormalized.off_shell_eft_lagrangian).expand()
@@ -1542,6 +1558,9 @@ class OneLoopSetup:
         vakint_engine: Any | None = None,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingResult:
         """Return the finite interaction-power result after pole subtraction."""
 
@@ -1561,6 +1580,7 @@ class OneLoopSetup:
             stage=VakintIntegralStage.EVALUATED,
             engine=vakint_engine,
         )
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
         counterterm = (-pole).expand()
@@ -1574,7 +1594,13 @@ class OneLoopSetup:
                 **self.fluctuation_operator.interaction_expression_map(),
             },
             supertraces={
-                **_named_raw_vakint_supertraces(contributions, include_light=include_light),
+                **_named_vakint_supertraces(
+                    contributions,
+                    include_light=include_light,
+                    stage=selected_named_stage,
+                    short_form=named_supertrace_short_form,
+                    engine=named_supertrace_engine,
+                ),
                 **self.interaction_power_type_expression_map(
                     prefix="interaction_power_type_supertrace",
                     heavy_field_dimension=heavy_field_dimension,
@@ -1599,7 +1625,7 @@ class OneLoopSetup:
                 "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": VakintIntegralStage.EVALUATED.value,
-                "named_supertrace_stage": VakintIntegralStage.RAW.value,
+                "named_supertrace_stage": selected_named_stage.value,
                 "subtraction_scheme": "minimal_subtraction_preview",
                 "poles_subtracted": True,
                 "max_pole_order": max_pole_order,
@@ -1688,6 +1714,9 @@ class OneLoopSetup:
         vakint_engine: Any | None = None,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingResult:
         """Return the current incomplete one-loop result for power-type terms.
 
@@ -1707,8 +1736,15 @@ class OneLoopSetup:
             short_form=vakint_short_form,
             engine=vakint_engine,
         )
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         supertraces = {
-            **_named_raw_vakint_supertraces(contributions, include_light=include_light),
+            **_named_vakint_supertraces(
+                contributions,
+                include_light=include_light,
+                stage=selected_named_stage,
+                short_form=named_supertrace_short_form,
+                engine=named_supertrace_engine,
+            ),
             **self.power_type_expression_map(prefix="power_type_supertrace"),
             "power_type_eft_lagrangian": numerator_sum,
             "power_type_vakint_integral_sum": vakint_sum,
@@ -1740,7 +1776,7 @@ class OneLoopSetup:
                 "power_type_contribution_count": self.power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
-                "named_supertrace_stage": VakintIntegralStage.RAW.value,
+                "named_supertrace_stage": selected_named_stage.value,
             },
         )
 
@@ -1754,6 +1790,9 @@ class OneLoopSetup:
         vakint_engine: Any | None = None,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingResult:
         """Return the current incomplete power-type matching result.
 
@@ -1769,6 +1808,9 @@ class OneLoopSetup:
             vakint_engine=vakint_engine,
             max_pole_order=max_pole_order,
             epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
         )
 
     def power_type_minimal_subtraction_result(
@@ -1779,6 +1821,9 @@ class OneLoopSetup:
         vakint_engine: Any | None = None,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
     ) -> MatchingResult:
         """Return the current finite-part result after pole subtraction.
 
@@ -1798,6 +1843,7 @@ class OneLoopSetup:
             stage=VakintIntegralStage.EVALUATED,
             engine=vakint_engine,
         )
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
         counterterm = (-pole).expand()
@@ -1808,7 +1854,13 @@ class OneLoopSetup:
             on_shell_eft_lagrangian=finite,
             fluctuation_operators=self.fluctuation_operator.to_expression_map(),
             supertraces={
-                **_named_raw_vakint_supertraces(contributions, include_light=include_light),
+                **_named_vakint_supertraces(
+                    contributions,
+                    include_light=include_light,
+                    stage=selected_named_stage,
+                    short_form=named_supertrace_short_form,
+                    engine=named_supertrace_engine,
+                ),
                 **self.power_type_expression_map(prefix="power_type_supertrace"),
                 "power_type_eft_lagrangian": numerator_sum,
                 "power_type_vakint_integral_sum": evaluated,
@@ -1827,7 +1879,7 @@ class OneLoopSetup:
                 "power_type_contribution_count": self.power_type_contribution_count,
                 "on_shell_reduced": False,
                 "vakint_stage": VakintIntegralStage.EVALUATED.value,
-                "named_supertrace_stage": VakintIntegralStage.RAW.value,
+                "named_supertrace_stage": selected_named_stage.value,
                 "subtraction_scheme": "minimal_subtraction_preview",
                 "poles_subtracted": True,
                 "max_pole_order": max_pole_order,
@@ -2986,15 +3038,42 @@ def _flatten_expression_slots(slots: Iterable[Iterable[Expression]]) -> tuple[Ex
     return tuple(item for slot in slots for item in slot)
 
 
-def _named_raw_vakint_supertraces(
+def _named_vakint_supertraces(
     contributions: Iterable[PowerTypeSupertraceContribution],
     *,
     include_light: bool = True,
+    stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+    short_form: bool | None = None,
+    engine: Any | None = None,
 ) -> dict[str, Expression]:
+    selected = VakintIntegralStage.from_user(stage)
     return {
-        contribution.name: contribution.vakint_integral_expression(include_light=include_light)
+        contribution.name: _vakint_expression_at_stage(
+            contribution.vakint_integral_expression(include_light=include_light),
+            stage=selected,
+            short_form=short_form,
+            engine=engine,
+        )
         for contribution in contributions
     }
+
+
+def _vakint_expression_at_stage(
+    expr: Expression,
+    *,
+    stage: VakintIntegralStage,
+    short_form: bool | None = None,
+    engine: Any | None = None,
+) -> Expression:
+    if stage is VakintIntegralStage.RAW:
+        return expr
+    from .backends import vakint
+
+    if stage is VakintIntegralStage.CANONICAL:
+        return vakint.to_canonical(expr, short_form=short_form, engine=engine)
+    if stage is VakintIntegralStage.TENSOR_REDUCED:
+        return vakint.tensor_reduce(expr, engine=engine)
+    return vakint.evaluate(expr, engine=engine)
 
 
 def _fluctuation_statistics(field_type: Expression, field_role: FieldRole) -> FluctuationStatistics:

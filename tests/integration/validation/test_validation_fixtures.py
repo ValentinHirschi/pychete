@@ -4,14 +4,23 @@ import json
 from dataclasses import replace
 from pathlib import Path
 
-from symbolica import Expression
+from symbolica import Expression, S
 import pytest
 
 from pychete.loaders import load_python_model
-from pychete.matching import MatchingResult
+from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState
 from pychete.symbols import canonical_string
 from pychete.validation_fixtures import load_validation_fixture
+
+
+class FakeNamedVakintEngine:
+    def __init__(self) -> None:
+        self.calls: list[tuple[str, Expression, bool | None]] = []
+
+    def to_canonical(self, expr: Expression, short_form: bool | None = None) -> Expression:
+        self.calls.append(("to_canonical", expr, short_form))
+        return S("fixture_canonical")(expr)
 
 
 def _fixture_obj_from_model(path: Path) -> dict[str, object]:
@@ -206,6 +215,30 @@ def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathe
         assert preview.metadata["named_supertrace_stage"] == "raw"
         assert len(preview.supertraces) == counts["supertraces"]
         preview.validate()
+
+
+def test_validation_fixture_preview_can_stage_named_supertraces_with_vakint_engine() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    raw_preview = fixture.one_loop_preview(max_trace_order=1)
+    engine = FakeNamedVakintEngine()
+
+    canonical_named_preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        named_supertrace_stage=VakintIntegralStage.CANONICAL,
+        named_supertrace_short_form=True,
+        named_supertrace_engine=engine,
+    )
+
+    assert canonical_named_preview.metadata["vakint_stage"] == "raw"
+    assert canonical_named_preview.metadata["named_supertrace_stage"] == "canonical"
+    assert engine.calls == [("to_canonical", raw_preview.expression("hScalar"), True)]
+    assert canonical_named_preview.expression("hScalar").format_plain() == (
+        S("fixture_canonical")(raw_preview.expression("hScalar")).format_plain()
+    )
+    assert (
+        canonical_named_preview.off_shell_eft_lagrangian.format_plain()
+        == raw_preview.off_shell_eft_lagrangian.format_plain()
+    )
 
 
 def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -> None:

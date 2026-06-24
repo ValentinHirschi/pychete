@@ -955,10 +955,30 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     assert interaction_result.metadata["uses_interaction_operator"] is True
     assert interaction_result.metadata["power_type_contribution_count"] == 3
     assert interaction_result.metadata["interaction_power_type_contribution_count"] == 3
+    assert interaction_result.metadata["named_supertrace_stage"] == "raw"
     assert_expr_equal(interaction_result.off_shell_eft_lagrangian, expected_interaction_vakint)
     assert_expr_equal(
         interaction_result.expression("interaction_power_type_eft_lagrangian"),
         -y() ** 2 * light() ** 2 / 2,
+    )
+    assert_expr_equal(interaction_result.expression("hScalar-lScalar"), expected_interaction_vakint)
+    named_engine = FakeKernelVakintEngine()
+    named_canonical_result = setup.interaction_power_type_matching_result(
+        named_supertrace_stage=VakintIntegralStage.CANONICAL,
+        named_supertrace_short_form=True,
+        named_supertrace_engine=named_engine,
+    )
+    expected_named_calls = [
+        ("to_canonical", contribution.vakint_integral_expression(), True)
+        for contribution in setup.interaction_power_type_contributions()
+    ]
+    assert named_engine.calls == expected_named_calls
+    assert named_canonical_result.metadata["vakint_stage"] == "raw"
+    assert named_canonical_result.metadata["named_supertrace_stage"] == "canonical"
+    assert_expr_equal(named_canonical_result.off_shell_eft_lagrangian, expected_interaction_vakint)
+    assert_expr_equal(
+        named_canonical_result.expression("hScalar-lScalar"),
+        S("canonical")(expected_interaction_vakint),
     )
     matchete_hbar_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
     assert_expr_equal(one_loop_normalization_factor(None), Expression.num(1))
