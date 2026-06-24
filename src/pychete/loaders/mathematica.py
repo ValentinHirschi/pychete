@@ -1,3 +1,20 @@
+"""Supported-subset Matchete/Wolfram input helpers.
+
+This module is intentionally not a general Wolfram Language parser. It handles
+the declarative subset pychete currently needs for simple Matchete-style model
+assets and saved validation-result snippets: model declarations such as
+``ParentModel``, ``ParameterDefault``, ``DefineFlavorIndex``,
+``DefineGaugeGroup``, ``DefineGlobalGroup``, ``DefineRepresentation``,
+``DefineCG``, ``DefineField``, and ``DefineCoupling``, plus the limited
+expression syntax accepted by ``parse_matchete_expression``.
+
+Complex Mathematica models should be loaded by Wolfram/Matchete itself in a
+development-only helper script, then exported as pychete-owned serialized state
+or Python fixture files. Runtime pychete code and normal pytest runs should
+consume those committed fixtures instead of growing this Python parser toward
+full Wolfram syntax support.
+"""
+
 from __future__ import annotations
 
 import re
@@ -640,7 +657,7 @@ def _eval_expression(text: str, theory: Theory, env: dict[str, Expression]) -> E
 
 
 def parse_matchete_expression(text: str, theory: Theory) -> Expression:
-    """Parse a Matchete/Wolfram expression string into pychete Symbolica heads."""
+    """Parse the supported saved-result expression subset into pychete heads."""
 
     return _eval_expression(text, theory, {})
 
@@ -814,6 +831,12 @@ def load_matchete_model(
     include_lagrangian: bool = True,
 ) -> tuple[Theory, dict[str, Expression]]:
     """Load the supported Matchete model subset into a pychete theory.
+
+    This loader is for declarative model fixtures whose syntax stays within the
+    explicitly supported subset documented at module scope. More complicated
+    Mathematica models should be loaded by Matchete in Wolfram Language and
+    exported into pychete-owned fixtures before normal tests or users consume
+    them.
 
     Set ``include_lagrangian=False`` to load only model metadata. This is used
     for parent-model validation assets whose full Lagrangian syntax is broader

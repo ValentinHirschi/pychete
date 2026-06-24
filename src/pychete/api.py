@@ -12,19 +12,15 @@ from .matching import (
     FluctuationSector,
     FluctuationStatistics,
     HeavyScalarSolution,
-    MatchingExpressionComparison,
-    MatchingResult,
-    MatchingResultComparison,
     OneLoopMatchingNotImplementedError,
-    OneLoopNormalization,
     OneLoopSetup,
     PowerTypeSupertraceContribution,
     PropagatorPlan,
     SupertraceBlockTrace,
     SupertracePlan,
-    VakintIntegralStage,
-    one_loop_normalization_factor,
 )
+from .matching_options import OneLoopNormalization, VakintIntegralStage, one_loop_normalization_factor
+from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import (

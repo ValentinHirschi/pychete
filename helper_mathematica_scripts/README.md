@@ -11,6 +11,14 @@ The intended flow is:
 3. Commit the pychete fixture JSON under `assets/validation/`.
 4. Test only against committed pychete fixtures.
 
+Use this route for complicated Mathematica models. The direct Python loader in
+`src/pychete/loaders/mathematica.py` intentionally supports only a small
+declarative Matchete/Wolfram subset; it should not be expanded into a general
+Wolfram Language parser. For richer model files, write a Wolfram helper that
+lets Matchete load the model, extracts the already-parsed Matchete internals
+needed by pychete, and emits pychete-owned serialized state or Python fixture
+files that can be committed and loaded like native pychete inputs.
+
 The first script is intentionally a raw snapshot exporter. The Python-side
 fixture converter will become stricter as the one-loop matching data model
 lands.

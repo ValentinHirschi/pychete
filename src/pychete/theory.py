@@ -18,9 +18,9 @@ if TYPE_CHECKING:
         FluctuationBasisItem,
         FluctuationOperator,
         HeavyScalarSolution,
-        MatchingResult,
         OneLoopSetup,
     )
+    from .matching_results import MatchingResult
 
 
 class FieldMassKind(StrEnum):

@@ -52,14 +52,21 @@ discoveries, dependency patches, blockers, and remaining work.
   export model definitions, validation expected outputs, supertraces, matching
   conditions, and selected unit-test fixtures into pychete-owned serialized
   assets.
+- Treat the direct Python Mathematica loader as a documented supported-subset
+  loader for simple declarative model assets and saved-result snippets only.
+  For complicated Mathematica models, use Wolfram/Matchete helper scripts to
+  load the model, extract Matchete's parsed internal data, and emit equivalent
+  pychete serialized state or Python fixture files that can be committed and
+  used by tests and users.
 - Add committed fixture assets for Matchete-independent pytest validation;
   never require `wolframscript` in normal tests.
 - Extend pychete metadata with gauge groups, representations, CG tensors,
   charges, chiral fermions, ghosts, Goldstones, background fields, coupling
   symmetries, diagonal/unitary metadata, and SMEFT basis metadata using
   Symbolica symbol tags/data.
-- Replace the current tiny Mathematica loader as a validation path with fixture
-  loading; keep any direct Mathematica-input support explicitly secondary.
+- Replace the current tiny Mathematica loader as the path for complex
+  validation models with fixture loading; keep direct Mathematica-input support
+  explicitly secondary and limited to its documented subset.
 
 ## Matching Engine
 

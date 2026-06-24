@@ -390,6 +390,24 @@ Useful read-only reference locations inside the checkout:
 - Current validation tests are in `Validation/Tests/`.
 - Example model implementations are in `Models/`.
 
+## Mathematica Loader Boundary
+
+`src/pychete/loaders/mathematica.py` is an explicitly limited
+Matchete/Wolfram-subset loader. It is acceptable for simple declarative model
+fixtures and saved-result expression snippets, including supported heads such
+as `ParentModel`, `ParameterDefault`, `DefineFlavorIndex`,
+`DefineGaugeGroup`, `DefineGlobalGroup`, `DefineRepresentation`, `DefineCG`,
+`DefineField`, and `DefineCoupling`.
+
+Do not grow this Python loader into a general Wolfram Language parser. For
+complicated Mathematica models, add or update development-only Wolfram scripts
+under `helper_mathematica_scripts/` that load Matchete itself, read Matchete's
+already-parsed internal data, and emit pychete-owned serialized state or
+Python fixture files. Those emitted files may be committed under `assets/` and
+used by tests and users. Normal pytest must continue to consume only committed
+pychete fixtures and must not require `wolframscript`, Mathematica, or a
+runnable Matchete checkout.
+
 ## Symbolica Expression Policy
 
 Symbolica expressions are pychete's canonical physics representation. Encode

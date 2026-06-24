@@ -9,7 +9,8 @@ from typing import Any
 
 from symbolica import Expression
 
-from .matching import MatchingResult, VakintIntegralStage
+from .matching_options import VakintIntegralStage
+from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
 

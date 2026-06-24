@@ -52,14 +52,21 @@ discoveries, dependency patches, blockers, and remaining work.
   export model definitions, validation expected outputs, supertraces, matching
   conditions, and selected unit-test fixtures into pychete-owned serialized
   assets.
+- Treat the direct Python Mathematica loader as a documented supported-subset
+  loader for simple declarative model assets and saved-result snippets only.
+  For complicated Mathematica models, use Wolfram/Matchete helper scripts to
+  load the model, extract Matchete's parsed internal data, and emit equivalent
+  pychete serialized state or Python fixture files that can be committed and
+  used by tests and users.
 - Add committed fixture assets for Matchete-independent pytest validation;
   never require `wolframscript` in normal tests.
 - Extend pychete metadata with gauge groups, representations, CG tensors,
   charges, chiral fermions, ghosts, Goldstones, background fields, coupling
   symmetries, diagonal/unitary metadata, and SMEFT basis metadata using
   Symbolica symbol tags/data.
-- Replace the current tiny Mathematica loader as a validation path with fixture
-  loading; keep any direct Mathematica-input support explicitly secondary.
+- Replace the current tiny Mathematica loader as the path for complex
+  validation models with fixture loading; keep direct Mathematica-input support
+  explicitly secondary and limited to its documented subset.
 
 ## Matching Engine
 
@@ -2494,11 +2501,62 @@ discoveries, dependency patches, blockers, and remaining work.
   -m mypy'` passed after the internal single-scale comparison slice: no issues
   found in 25 source files.
 - `git diff --check` passed after the internal single-scale comparison slice.
+- Completed the first code-organization refactor slice:
+  - extracted structured matching result/comparison types from
+    `src/pychete/matching.py` into `src/pychete/matching_results.py`;
+  - extracted one-loop option enums and normalization helpers into
+    `src/pychete/matching_options.py`;
+  - kept compatibility imports through `pychete.matching` while updating
+    internal imports and public API ownership to use the new focused modules;
+  - reduced `matching.py` from roughly 3,400 lines to roughly 3,150 lines
+    without changing the public API surface.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/definitions/test_public_api.py
+  tests/integration/validation/test_numeric_probes.py
+  tests/integration/validation/test_validation_fixtures.py -q'` passed after
+  extracting matching results: 21 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/definitions/test_public_api.py
+  tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+  -q'` passed after extracting matching options: 5 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the first refactor slice: no issues found in 27
+  source files.
+- Added explicit loader-boundary guidance after the Mathematica-model parsing
+  design update:
+  - `src/pychete/loaders/mathematica.py` now documents the direct loader as a
+    supported subset for simple declarative Matchete/Wolfram assets and saved
+    validation-result snippets only;
+  - `AGENTS.md`, `helper_mathematica_scripts/README.md`, and the copied
+    one-shot plan now require complicated Mathematica models to be loaded by
+    development-only Wolfram/Matchete helper scripts that emit pychete-owned
+    serialized state or Python fixtures;
+  - normal pytest remains Mathematica-independent and consumes only committed
+    pychete fixtures.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests/unit/definitions/test_public_api.py
+  tests/integration/models/test_model_loaders.py
+  tests/integration/validation/test_validation_fixtures.py -q'` passed after
+  the refactor and loader-boundary documentation slice: 29 passed.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m mypy'` passed after the refactor and loader-boundary documentation slice:
+  no issues found in 27 source files.
+- `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python
+  -m pytest tests -q'` passed after the refactor and loader-boundary
+  documentation slice: 179 passed, 1 skipped. The skip is the existing
+  GammaLoop API import check because GammaLoop was not requested in the current
+  dependency manifest.
+- `git diff --check` passed after the refactor and loader-boundary
+  documentation slice.
 
 ## Remaining Work
 
 - Use the four committed default Matchete matching fixtures as acceptance
   targets for the pychete one-loop matching engine.
+- Extend the Wolfram helper path so complicated Matchete model files can be
+  loaded by Matchete itself and exported into pychete-owned serialized state or
+  Python fixture files instead of expanding the direct Python loader beyond its
+  documented subset.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
   full propagator expansion beyond the new scalar operator-derived denominator,
