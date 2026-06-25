@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from html import escape
 from pathlib import Path
@@ -532,6 +532,8 @@ class ValidationFixture:
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_drop_zero: bool = False,
         use_public_match_api: bool = False,
+        evaluate_loop_functions_for_comparison: bool = False,
+        comparison_combine_terms: bool = True,
     ) -> MatchingFixtureGapReport:
         """Report current one-loop preview coverage against a reference result."""
 
@@ -638,6 +640,10 @@ class ValidationFixture:
             probe_parameter_mode=probe_parameter_mode,
             probe_absolute_tolerance=probe_absolute_tolerance,
             probe_relative_tolerance=probe_relative_tolerance,
+            comparison_expression_transform=_comparison_expression_transform(
+                evaluate_loop_functions_for_comparison=evaluate_loop_functions_for_comparison,
+                comparison_combine_terms=comparison_combine_terms,
+            ),
         )
 
     @classmethod
@@ -749,14 +755,18 @@ def _probe_plan_for_names(
     sample_count: int,
     exclude_symbols: Sequence[Expression],
     parameter_mode: ProbeParameterMode,
+    expression_transform: Callable[[Expression], Expression] | None = None,
 ) -> NumericProbePlan:
     expressions: list[Expression] = []
     for name in names:
         for result in (candidate, reference):
             try:
-                expressions.append(result.expression(name))
+                expression = result.expression(name)
             except KeyError:
                 continue
+            if expression_transform is not None:
+                expression = expression_transform(expression)
+            expressions.append(expression)
     return build_numeric_probe_plan(
         expressions,
         exclude_symbols=exclude_symbols,
@@ -781,6 +791,7 @@ def _gap_report(
     probe_parameter_mode: ProbeParameterMode = "symbols",
     probe_absolute_tolerance: float = 1e-9,
     probe_relative_tolerance: float = 1e-9,
+    comparison_expression_transform: Callable[[Expression], Expression] | None = None,
 ) -> MatchingFixtureGapReport:
     if auto_probe_samples and (probe_parameters is not None or probe_samples is not None):
         raise ValueError("auto_probe_samples cannot be combined with explicit probe_parameters/probe_samples")
@@ -800,6 +811,7 @@ def _gap_report(
             sample_count=probe_sample_count,
             exclude_symbols=probe_exclude_symbols,
             parameter_mode=probe_parameter_mode,
+            expression_transform=comparison_expression_transform,
         )
         supertrace_probe_parameters = supertrace_plan.parameters
         supertrace_probe_samples = supertrace_plan.samples
@@ -820,6 +832,7 @@ def _gap_report(
         probe_names=probe_supertrace_names,
         absolute_tolerance=probe_absolute_tolerance,
         relative_tolerance=probe_relative_tolerance,
+        expression_transform=comparison_expression_transform,
     )
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
@@ -834,6 +847,7 @@ def _gap_report(
             sample_count=probe_sample_count,
             exclude_symbols=probe_exclude_symbols,
             parameter_mode=probe_parameter_mode,
+            expression_transform=comparison_expression_transform,
         )
         condition_probe_parameters = condition_plan.parameters
         condition_probe_samples = condition_plan.samples
@@ -851,6 +865,7 @@ def _gap_report(
         probe_names=probe_matching_condition_names,
         absolute_tolerance=probe_absolute_tolerance,
         relative_tolerance=probe_relative_tolerance,
+        expression_transform=comparison_expression_transform,
     )
     candidate_names = set(candidate.expression_names())
     reference_names = set(reference.expression_names())
@@ -903,6 +918,22 @@ def _gap_report(
         ),
         common_expression_names=_sorted_names(candidate_names & reference_names),
     )
+
+
+def _comparison_expression_transform(
+    *,
+    evaluate_loop_functions_for_comparison: bool,
+    comparison_combine_terms: bool,
+) -> Callable[[Expression], Expression] | None:
+    if not evaluate_loop_functions_for_comparison:
+        return None
+
+    from .backends import vacuum_integrals
+
+    def transform(expr: Expression) -> Expression:
+        return vacuum_integrals.evaluate_loop_functions(expr, combine_terms=comparison_combine_terms)
+
+    return transform
 
 
 def _metadata(value: Any) -> dict[str, str | int | float | bool | None]:

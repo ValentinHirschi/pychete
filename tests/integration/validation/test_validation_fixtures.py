@@ -14,6 +14,7 @@ from pychete import (
     one_loop_normalization_factor,
 )
 from pychete.backends import spenso as spenso_backend
+from pychete.backends import vacuum_integrals
 from pychete.backends import vakint as vakint_backend
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
@@ -697,6 +698,46 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
             expected_counts["reference_supertraces"] - len(expected_counts["common"])
         )
         assert report_obj["missing_reference_matching_condition_count"] == expected_counts["conditions"]
+
+
+def test_validation_fixture_gap_report_can_evaluate_loop_functions_for_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    mass = S("fixture_gap_report_loop_mass")
+    loop_function = vacuum_integrals.loop_function((mass,), (1, 0))
+    evaluated = vacuum_integrals.evaluate_loop_functions(loop_function)
+    candidate = MatchingResult(
+        theory=fixture.theory(),
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"loop": evaluated},
+    )
+    reference = MatchingResult(
+        theory=fixture.theory(),
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"loop": loop_function},
+    )
+
+    def fake_preview(self: object, **_kwargs: object) -> MatchingResult:
+        return candidate
+
+    monkeypatch.setattr(type(fixture), "one_loop_preview", fake_preview)
+
+    raw_report = fixture.one_loop_preview_gap_report(reference, reference_name="loop_reference")
+    transformed_report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="loop_reference",
+        evaluate_loop_functions_for_comparison=True,
+    )
+
+    assert raw_report.canonical_equal_common_supertrace_names == ()
+    assert raw_report.canonical_different_common_supertrace_names == ("loop",)
+    assert transformed_report.canonical_equal_common_supertrace_names == ("loop",)
+    assert transformed_report.canonical_different_common_supertrace_names == ()
 
 
 def test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage() -> None:

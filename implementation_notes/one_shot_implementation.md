@@ -3983,6 +3983,56 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 236 passed, 1
     skipped in 252.04s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added a comparison-normalization hook for Matchete-style loop-function
+  validation:
+  - `MatchingResult.compare_to(...)` now accepts an optional
+    `expression_transform` callback that is applied to both candidate and
+    reference expressions before canonical string comparison and before any
+    Symbolica evaluator-backed numeric probe fallback;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` now exposes
+    `evaluate_loop_functions_for_comparison=True`, which normalizes compared
+    expressions through pychete's existing native
+    `evaluate_loop_functions(...)` path, mirroring Matchete validation's habit
+    of applying `EvaluateLoopFunctions` to result differences;
+  - auto-generated numeric-probe plans now see the transformed comparison
+    expressions when this path is enabled, so probe parameters are derived
+    after loop-function placeholders have been lowered/evaluated;
+  - this does not change the default gap-report counts; it gives later
+    fixture comparisons an explicit opt-in path for comparing finite evaluated
+    loop-function expressions against committed reference fixtures that still
+    carry canonical `pychete::LoopFunction(...)` atoms;
+  - the implementation relies on Symbolica-backed `Expression.replace(...)`,
+    callable replacement rules, `Expression.coefficient_list(...)`, and
+    evaluator probes through the already implemented `evaluate_loop_functions`
+    and `evaluator_probe_equal` helpers rather than adding a Python-side
+    symbolic evaluator.
+- Verification for the loop-function comparison-normalization slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py::test_matching_result_comparison_can_transform_expressions_before_comparing
+    tests/integration/validation/test_numeric_probes.py::test_gap_report_can_compare_after_loop_function_evaluation
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_evaluate_loop_functions_for_comparison
+    -q'` passed: 3 passed in 0.10s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 15
+    passed in 0.08s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 23
+    passed in 247.00s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 239 passed, 1
+    skipped in 249.89s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

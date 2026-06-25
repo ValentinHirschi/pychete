@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Iterable, Mapping, Sequence
+from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from html import escape
 from typing import TYPE_CHECKING
@@ -189,6 +189,7 @@ class MatchingResult:
         reference: MatchingResult,
         *,
         names: Iterable[str] | None = None,
+        expression_transform: Callable[[Expression], Expression] | None = None,
         probe_parameters: Sequence[Expression] | None = None,
         probe_samples: Sequence[Sequence[NumericValue]] | None = None,
         probe_names: Iterable[str] | None = None,
@@ -198,10 +199,13 @@ class MatchingResult:
         """Compare this result to a reference result.
 
         Canonical Symbolica equality is the primary comparison. If
-        ``probe_parameters`` and ``probe_samples`` are provided, expressions
-        that are not canonically equal are additionally tested with
-        Symbolica's evaluator-backed numeric probes. ``probe_names`` can
-        restrict the probe fallback to a subset of compared names.
+        ``expression_transform`` is supplied, it is applied to both candidate
+        and reference expressions before canonical comparison and before any
+        numeric-probe fallback. If ``probe_parameters`` and ``probe_samples``
+        are provided, expressions that are not canonically equal are
+        additionally tested with Symbolica's evaluator-backed numeric probes.
+        ``probe_names`` can restrict the probe fallback to a subset of compared
+        names.
         """
 
         if self.theory.name != reference.theory.name:
@@ -219,24 +223,26 @@ class MatchingResult:
         for name in comparison_names:
             candidate_expr = _optional_expression(self, name)
             reference_expr = _optional_expression(reference, name)
+            compared_candidate = _transform_optional_expression(candidate_expr, expression_transform)
+            compared_reference = _transform_optional_expression(reference_expr, expression_transform)
             canonical_equal = (
-                candidate_expr is not None
-                and reference_expr is not None
-                and _canonical_expr(candidate_expr) == _canonical_expr(reference_expr)
+                compared_candidate is not None
+                and compared_reference is not None
+                and _canonical_expr(compared_candidate) == _canonical_expr(compared_reference)
             )
             numeric_probe: NumericProbeResult | None = None
             equal = canonical_equal
             if (
                 not canonical_equal
-                and candidate_expr is not None
-                and reference_expr is not None
+                and compared_candidate is not None
+                and compared_reference is not None
                 and probe_parameters is not None
                 and probe_samples is not None
                 and name in probed_names
             ):
                 numeric_probe = evaluator_probe_equal(
-                    candidate_expr,
-                    reference_expr,
+                    compared_candidate,
+                    compared_reference,
                     probe_parameters,
                     probe_samples,
                     absolute_tolerance=absolute_tolerance,
@@ -247,8 +253,8 @@ class MatchingResult:
                 MatchingExpressionComparison(
                     name=name,
                     equal=equal,
-                    candidate=candidate_expr,
-                    reference=reference_expr,
+                    candidate=compared_candidate,
+                    reference=compared_reference,
                     canonical_equal=canonical_equal,
                     numeric_probe=numeric_probe,
                 )
@@ -271,6 +277,15 @@ def _optional_expression(result: MatchingResult, name: str) -> Expression | None
         return result.expression(name)
     except KeyError:
         return None
+
+
+def _transform_optional_expression(
+    expr: Expression | None,
+    expression_transform: Callable[[Expression], Expression] | None,
+) -> Expression | None:
+    if expr is None or expression_transform is None:
+        return expr
+    return expression_transform(expr)
 
 
 def _matching_condition_targets(

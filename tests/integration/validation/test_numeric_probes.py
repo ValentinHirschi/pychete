@@ -12,6 +12,7 @@ from pychete import (
     deterministic_probe_samples,
     evaluator_probe_equal,
 )
+from pychete.backends import vacuum_integrals
 from pychete.validation_fixtures import _gap_report
 
 
@@ -114,6 +115,36 @@ def test_matching_result_comparison_can_use_evaluator_probe_fallback() -> None:
     assert expression.numeric_probe.equal is True
 
 
+def test_matching_result_comparison_can_transform_expressions_before_comparing() -> None:
+    mass = S("comparison_loop_mass")
+    theory = Theory("comparison_loop_transform")
+    loop_function = vacuum_integrals.loop_function((mass,), (1, 0))
+    evaluated = vacuum_integrals.evaluate_loop_functions(loop_function)
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=evaluated,
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=loop_function,
+    )
+
+    raw_comparison = candidate.compare_to(reference, names=("on_shell_eft_lagrangian",))
+    transformed_comparison = candidate.compare_to(
+        reference,
+        names=("on_shell_eft_lagrangian",),
+        expression_transform=vacuum_integrals.evaluate_loop_functions,
+    )
+
+    assert raw_comparison.equal is False
+    assert transformed_comparison.equal is True
+    assert transformed_comparison.expressions[0].canonical_equal is True
+
+
 def test_matching_result_comparison_can_restrict_evaluator_probe_names() -> None:
     x = S("comparison_probe_selected_x")
     theory = Theory("comparison_probe_selected")
@@ -154,6 +185,41 @@ def test_matching_result_comparison_can_restrict_evaluator_probe_names() -> None
     assert unselected.equal is False
     assert unselected.canonical_equal is False
     assert unselected.numeric_probe is None
+
+
+def test_gap_report_can_compare_after_loop_function_evaluation() -> None:
+    mass = S("gap_report_loop_mass")
+    theory = Theory("gap_report_loop_transform")
+    loop_function = vacuum_integrals.loop_function((mass,), (1, 0))
+    evaluated = vacuum_integrals.evaluate_loop_functions(loop_function)
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"loop": evaluated},
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"loop": loop_function},
+    )
+
+    raw_report = _gap_report("candidate", "reference", candidate, reference)
+    transformed_report = _gap_report(
+        "candidate",
+        "reference",
+        candidate,
+        reference,
+        comparison_expression_transform=vacuum_integrals.evaluate_loop_functions,
+    )
+
+    assert raw_report.canonical_equal_common_supertrace_names == ()
+    assert raw_report.canonical_different_common_supertrace_names == ("loop",)
+    assert transformed_report.canonical_equal_common_supertrace_names == ("loop",)
+    assert transformed_report.canonical_different_common_supertrace_names == ()
 
 
 def test_matching_result_comparison_requires_complete_probe_inputs() -> None:
