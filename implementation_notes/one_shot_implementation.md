@@ -3937,6 +3937,52 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 236 passed, 1
     skipped in 248.54s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Regenerated the four committed default matching fixtures after adding the
+  native pychete `LoopFunction` parser/evaluator path:
+  - reran `scripts/convert_matchete_previous_results.py` for
+    `VLF_toy_model`, `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`;
+  - kept the conversion path Mathematica-independent at pytest time: the
+    converter reads the committed Matchete previous-result files and lowers
+    supported result expressions through pychete's
+    `parse_matchete_expression(...)`;
+  - refreshed the embedded theory state in each matching fixture to the
+    current pychete schema, including the newer model metadata and CG tensor
+    serialization already present in model fixtures;
+  - replaced the legacy `external_LF(...)` escape hatch in the committed
+    `S1S3LQs` matching fixture with canonical `pychete::LoopFunction(...)`
+    expressions; the regenerated default matching fixtures now contain zero
+    raw `external_LF` occurrences, and `S1S3LQs` contains the expected
+    `pychete::LoopFunction` payload;
+  - strengthened the Mathematica-independent validation fixture test to load
+    every committed default matching result, assert no legacy `external_LF`
+    survives in either the raw fixture JSON or loaded canonical expressions,
+    and assert that the `S1S3LQs` fixture carries the canonical
+    `LoopFunction` head.
+- Final verification for the regenerated matching-fixture slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_committed_default_matching_fixtures_load_structured_results_without_mathematica
+    -q'` passed: 1 passed in 5.19s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_mathematica_result_parser.py -q'` passed: 2
+    passed in 0.03s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 22
+    passed in 247.51s;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 236 passed, 1
+    skipped in 252.04s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

@@ -203,12 +203,28 @@ def test_committed_default_matching_fixtures_load_structured_results_without_mat
     }
 
     for model, counts in expected.items():
-        fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.matching_fixture.json"))
+        fixture_path = Path(f"assets/validation/pychete/{model}.matching_fixture.json")
+        fixture_json = fixture_path.read_text(encoding="utf-8")
+        fixture = load_validation_fixture(fixture_path)
         result = fixture.matching_result("matchete_previous")
+        canonical_payload = "\n".join(
+            canonical_string(expression)
+            for expression in (
+                result.off_shell_eft_lagrangian,
+                result.on_shell_eft_lagrangian,
+                *result.matching_conditions.values(),
+                *result.supertraces.values(),
+            )
+        )
 
         assert fixture.kind == "matching_result"
         assert fixture.source["matchete_runtime_required"] is False
         assert fixture.source["matching_condition_count"] == counts["conditions"]
+        assert "external_LF" not in fixture_json
+        assert "external_LF" not in canonical_payload
+        if model == "S1S3LQs":
+            assert "pychete::LoopFunction" in fixture_json
+            assert "pychete::LoopFunction" in canonical_payload
         assert result.theory.name == model
         assert result.metadata["loop_order"] == 1
         assert result.metadata["eft_order"] == 6
