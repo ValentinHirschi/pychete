@@ -3061,6 +3061,30 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 200 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Added explicit pychete-side coverage for the remaining finite two-mass
+  `SimplifyMassFunction` cases in Matchete
+  `Validation/Tests/LoopIntegration.wl`:
+  - checked the two simple two-mass reductions,
+    `LF[{M1, M3}, {1, 1, 1}] + LF[{M1, M3}, {2, 1, 0}] -
+    LF[{M3, M1}, {2, 1, 0}] -> 2 LF[{M1, M3}, {2, 1, 0}]` and
+    `LF[{M1, M3}, {1, 1, 1}] - LF[{M1, M3}, {2, 1, 0}] +
+    LF[{M3, M1}, {2, 1, 0}] -> 2 LF[{M1, M3}, {1, 2, 0}]`,
+    by evaluating both sides through pychete's Symbolica-backed analytic
+    one-loop evaluator;
+  - checked Matchete's partial-reduction case against the explicit two-term
+    Matchete reference shape
+    `-2 LF[{Mq, Mu}, {4, 1, -1}] + 2 LF[{Mq, Mu}, {5, 1, -2}]`,
+    again comparing evaluated pychete expressions rather than depending on
+    Matchete's unevaluated `LF[...]` placeholder representation;
+  - no runtime Wolfram/Matchete dependency was added to pytest, and no new
+    handwritten simplifier was introduced because the existing implementation
+    already performs the required reduction with Symbolica's native
+    `Expression.derivative(...)` and `Expression.together()`.
+- Verification for the expanded Matchete loop-integration coverage slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py -q'` passed:
+    15 passed.
 
 ## Remaining Work
 
@@ -3093,13 +3117,14 @@ discoveries, dependency patches, blockers, and remaining work.
   for multi-mode blocks, tensor reductions, scheme-specific renormalization
   beyond the current minimal-subtraction preview, and validation against
   Matchete fixtures and known native backend topologies.
-- Extend the pychete-owned analytic vacuum-integral backend beyond the new
-  scalar one-loop zero/mixed/single-scale evaluator into broader Matchete loop
-  function behavior: canonical LF-style simplification, higher numerator
-  structures after tensor reduction, near-degenerate expansion policies, and
-  validation against more Matchete `LoopIntegration.wl` cases. Native vakint
-  remains available for topology-independent tensor reduction and supported
-  single-scale massive analytic evaluation cross-checks.
+- Extend the pychete-owned analytic vacuum-integral backend beyond the covered
+  scalar one-loop zero/mixed/single-scale and finite two-mass
+  `LoopIntegration.wl` cases into broader loop-function behavior: canonical
+  LF-style simplification when an unevaluated placeholder API is actually
+  needed, higher numerator structures after tensor reduction, and
+  near-degenerate expansion policies. Native vakint remains available for
+  topology-independent tensor reduction and supported single-scale massive
+  analytic evaluation cross-checks.
 - Extend the new compact Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
   artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or

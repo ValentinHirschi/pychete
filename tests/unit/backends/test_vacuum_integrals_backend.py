@@ -190,6 +190,53 @@ def test_internal_vakint_expression_combines_matchete_mass_function_full_reducti
     )
 
 
+def test_internal_vakint_expression_matches_matchete_mass_function_simple_sum_cases() -> None:
+    m1 = S("M1")
+    m3 = S("M3")
+    expression_1 = (
+        _loop_function_topology((m1, m3), (1, 1, 1))
+        + _loop_function_topology((m1, m3), (2, 1, 0))
+        - _loop_function_topology((m3, m1), (2, 1, 0))
+    )
+    expected_1 = 2 * _loop_function_topology((m1, m3), (2, 1, 0))
+    expression_2 = (
+        _loop_function_topology((m1, m3), (1, 1, 1))
+        - _loop_function_topology((m1, m3), (2, 1, 0))
+        + _loop_function_topology((m3, m1), (2, 1, 0))
+    )
+    expected_2 = 2 * _loop_function_topology((m1, m3), (1, 2, 0))
+
+    for expression, expected in ((expression_1, expected_1), (expression_2, expected_2)):
+        assert_expr_equal(
+            vacuum_integrals.evaluate_one_loop_vakint_expression(expression, combine_terms=True),
+            vacuum_integrals.evaluate_one_loop_vakint_expression(expected, combine_terms=True),
+        )
+
+
+def test_internal_vakint_expression_matches_matchete_mass_function_partial_reduction_case() -> None:
+    mq = S("Mq")
+    mu = S("Mu")
+    expression = (
+        -_loop_function_topology((mq, mu), (2, 2, 0))
+        - _loop_function_topology((mq, mu), (3, 1, 0))
+        + _loop_function_topology((mq, mu), (3, 2, -1))
+        + _loop_function_topology((mq, mu), (4, 1, -1))
+        + _loop_function_topology((mu, mq), (3, 1, 0))
+        + _loop_function_topology((mu, mq), (3, 2, -1))
+        - 3 * _loop_function_topology((mu, mq), (4, 1, -1))
+        + 2 * _loop_function_topology((mu, mq), (5, 1, -2))
+    )
+    expected = -2 * _loop_function_topology((mq, mu), (4, 1, -1)) + 2 * _loop_function_topology(
+        (mq, mu),
+        (5, 1, -2),
+    )
+
+    assert_expr_equal(
+        vacuum_integrals.evaluate_one_loop_vakint_expression(expression, combine_terms=True),
+        vacuum_integrals.evaluate_one_loop_vakint_expression(expected, combine_terms=True),
+    )
+
+
 @pytest.mark.parametrize(
     "expression, message",
     [
