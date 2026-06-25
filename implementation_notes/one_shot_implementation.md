@@ -1015,6 +1015,42 @@
   matching_result" -q` passed with 18 tests and 15 deselected; and
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed.
 
+## Current Cyclic CDE Open-Derivative Slice
+
+- Found a structural CDE bug in one-block closed supertraces. The generated
+  chain for a trace such as `hScalar` placed open derivatives after the only
+  interaction entry, e.g. `NCM(X, OpenCD(...))`. The non-cyclic open-CD action
+  treated this as stranded and returned zero, so all derivative-order CDE
+  entries for one-block traces were dropped.
+- Added `cyclic=True` support to
+  `pychete.cde.act_with_open_covariant_derivatives(...)`. In cyclic mode, the
+  right side of the selected `OpenCD` wraps around to the beginning of the
+  `NCM` chain, matching closed-supertrace semantics. The default remains
+  non-cyclic, preserving the existing standalone open-CD primitive.
+- Wired closed bosonic CDE traces to call
+  `act_with_open_covariant_derivatives(..., cyclic=True)`. This restores
+  derivative CDE terms for one-block traces and also lets open derivatives in
+  multi-block traces act on both the suffix and the cyclic prefix. Existing
+  non-CDE derivative behavior is unchanged.
+- Added a self-contained non-Abelian heavy-scalar/Higgs integration probe. A
+  one-block `hScalar` CDE expansion with open derivatives, commutator emission,
+  and commutator lowering now produces `FieldStrength(W)` terms with the
+  registered `gen_SU2L_fund` CG tensor instead of dropping the derivative
+  entries.
+- Diagnostic frontier note: enabling the selected Singlet `hScalar` CDE route
+  through order 2 now generates field-strength supertrace terms, but the
+  projected Singlet count is not improved yet (`41/72` accepted with the
+  CDE-only route versus the current `42/72` default). The next work is to
+  combine generated CDE contributions with the existing interaction-power
+  source where appropriate and add the needed basis/EOM reductions before
+  expecting the SMEFT Wilson frontier to move.
+- Validation for this slice so far:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_cde.py -q` passed with 10 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k "bosonic_cde" -q`
+  passed with 4 tests and 57 deselected.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -1046,10 +1082,11 @@
   all-commutative chains.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Extend the generated CDE commutator output into basis-reduction/projected
-  fixture probes so gauge Wilson structures such as `cHB`, `cHW`, `cHWB`, and
-  related fermionic Higgs-current coefficients can be validated against the
-  Matchete fixtures.
+- Combine the generated cyclic CDE derivative/field-strength source with the
+  existing interaction-power source where needed, then extend the resulting
+  commutator output into basis-reduction/projected fixture probes so gauge
+  Wilson structures such as `cHB`, `cHW`, `cHWB`, and related fermionic
+  Higgs-current coefficients can be validated against the Matchete fixtures.
 - Extend the initial target-local IBP scalar-bilinear projection into a broader
   on-shell/IBP basis-reduction strategy for derivative-slot Higgs operators so
   generated derivative distributions can project onto Warsaw basis targets

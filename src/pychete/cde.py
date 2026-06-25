@@ -109,6 +109,7 @@ def bosonic_covariant_propagator_expansion_terms(
 def act_with_open_covariant_derivatives(
     expr: Expression,
     *,
+    cyclic: bool = False,
     max_chain_arity: int = _MAX_OPEN_CD_CHAIN_ARITY,
     max_passes: int = 16,
 ) -> Expression:
@@ -117,7 +118,9 @@ def act_with_open_covariant_derivatives(
     This mirrors Matchete's ``ActWithOpenCDs`` semantics for the pychete
     representation: the rightmost ``OpenCD`` in an ``NCM`` chain acts on every
     factor to its right, using :func:`pychete.functional.apply_cd` for the
-    actual symbolic derivative. Bounded-arity Symbolica replacement rules find
+    actual symbolic derivative. When ``cyclic`` is enabled, the right side is
+    interpreted in the closed-supertrace sense and wraps around to the
+    beginning of the chain. Bounded-arity Symbolica replacement rules find
     chains natively; Python only orchestrates one matched chain at a time.
     """
 
@@ -128,7 +131,7 @@ def act_with_open_covariant_derivatives(
     if not bool(expr.matches(s.OpenCD(s.OpenCDIndicesWildcard))):
         return expr
 
-    replacements = _open_cd_chain_replacements(max_chain_arity)
+    replacements = _open_cd_chain_replacements(max_chain_arity, cyclic)
     out = expr
     for _ in range(max_passes):
         updated = out.replace_multiple(replacements).expand()
@@ -139,42 +142,59 @@ def act_with_open_covariant_derivatives(
 
 
 @cache
-def _open_cd_chain_replacements(max_chain_arity: int) -> tuple[Replacement, ...]:
+def _open_cd_chain_replacements(max_chain_arity: int, cyclic: bool) -> tuple[Replacement, ...]:
     replacements: list[Replacement] = []
     for arity in range(1, max_chain_arity + 1):
         wildcards = _chain_wildcards(arity)
         pattern = s.NCM(*wildcards)
-        replacements.append(Replacement(pattern, _open_cd_chain_replacement(pattern, wildcards), rhs_cache_size=0))
+        replacements.append(
+            Replacement(
+                pattern,
+                _open_cd_chain_replacement(pattern, wildcards, cyclic=cyclic),
+                rhs_cache_size=0,
+            )
+        )
     return tuple(replacements)
 
 
 def _open_cd_chain_replacement(
     pattern: Expression,
     wildcards: tuple[Expression, ...],
+    *,
+    cyclic: bool,
 ) -> Callable[[dict[Expression, Expression]], Expression]:
     def replace_chain(match: dict[Expression, Expression]) -> Expression:
         operands = tuple(match[wildcard] for wildcard in wildcards)
         if not any(_is_open_cd(operand) for operand in operands):
             return pattern.replace_wildcards(match)
-        return _act_rightmost_open_cd(operands)
+        return _act_rightmost_open_cd(operands, cyclic=cyclic)
 
     return replace_chain
 
 
-def _act_rightmost_open_cd(operands: tuple[Expression, ...]) -> Expression:
+def _act_rightmost_open_cd(operands: tuple[Expression, ...], *, cyclic: bool) -> Expression:
     open_position = max(index for index, operand in enumerate(operands) if _is_open_cd(operand))
     open_cd = operands[open_position]
-    suffix = operands[open_position + 1 :]
-    if not suffix:
+    remaining = (*operands[:open_position], *operands[open_position + 1 :])
+    action_positions = tuple(range(open_position + 1, len(operands)))
+    if cyclic:
+        action_positions = (*action_positions, *range(0, open_position))
+    if not action_positions:
         return Expression.num(0)
     indices = list_items(open_cd[0])
     terms: list[Expression] = []
-    for relative_position, factor in enumerate(suffix):
+    for operand_position in action_positions:
+        factor = operands[operand_position]
         derivative = apply_cd(indices, factor)
         if is_zero(derivative):
             continue
-        varied_suffix = (*suffix[:relative_position], derivative, *suffix[relative_position + 1 :])
-        terms.append(_chain_expr(*operands[:open_position], *varied_suffix))
+        remaining_position = operand_position if operand_position < open_position else operand_position - 1
+        varied_remaining = (
+            *remaining[:remaining_position],
+            derivative,
+            *remaining[remaining_position + 1 :],
+        )
+        terms.append(_chain_expr(*varied_remaining))
     return sum_expr(terms).expand()
 
 

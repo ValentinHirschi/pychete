@@ -681,7 +681,7 @@ class SupertraceBlockTrace:
                     powers.append(expansion.denominator_power)
                 numerator = (prefactor * loop_numerator * _ncm_chain(*operands)).expand()
                 if act_open_derivatives:
-                    numerator = act_with_open_covariant_derivatives(numerator)
+                    numerator = act_with_open_covariant_derivatives(numerator, cyclic=True)
                 numerator = _postprocess_bosonic_cde_numerator(
                     self.theory,
                     numerator,

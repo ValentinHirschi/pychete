@@ -1723,7 +1723,7 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
     assert_expr_equal(kernels["interaction_bosonic_cde_kernel[hScalar-lScalar,0]"], expected_kernel)
     assert_expr_equal(integrals["interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]"], expected_integral)
 
-    acted_numerator = -2 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
+    acted_numerator = -4 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
     expected_acted_integral = vakint_backend.one_loop_vacuum_integral(
         acted_numerator,
         (light_mass**2, heavy_mass**2),
@@ -1857,6 +1857,43 @@ def test_public_bosonic_cde_matching_projects_scalar_ncm_chains() -> None:
         result.matching_conditions["phi2"],
         result.off_shell_eft_lagrangian.collect_factors().coefficient(light() ** 2).expand(),
     )
+
+
+def test_single_block_bosonic_cde_acts_open_derivatives_cyclically() -> None:
+    theory = Theory("one_loop_setup_single_block_cyclic_cde")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    vector = theory.field_handle("W")
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        + theory.free_lag(vector)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=1)
+    b = theory.index("b")
+    c = theory.index("c")
+    expansion = {"hScalar": ((b, c),)}
+
+    raw_terms = setup.interaction_bosonic_cde_expansion_terms(expansion)
+    acted_terms = setup.interaction_bosonic_cde_expansion_terms(expansion, act_open_derivatives=True)
+    lowered_terms = setup.interaction_bosonic_cde_expansion_terms(
+        expansion,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=True,
+        emit_covariant_derivative_commutator_passes=2,
+        expand_covariant_derivative_commutators=True,
+    )
+
+    assert len(raw_terms) == len(acted_terms) == len(lowered_terms) == 2
+    assert any("OpenCD" in canonical_string(term.numerator) for term in raw_terms)
+    assert all("OpenCD" not in canonical_string(term.numerator) for term in acted_terms)
+    assert any("FieldStrength" in canonical_string(term.numerator) for term in lowered_terms)
+    assert any("cg_tensor_gen_SU2L_fund" in canonical_string(term.numerator) for term in lowered_terms)
 
 
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:

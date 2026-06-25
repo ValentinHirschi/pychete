@@ -46,6 +46,16 @@ def test_stranded_open_covariant_derivative_chain_vanishes() -> None:
     assert_expr_equal(act_with_open_covariant_derivatives(expr), Expression.num(0))
 
 
+def test_cyclic_open_covariant_derivative_wraps_in_closed_trace_chains() -> None:
+    theory = Theory("open_cd_cyclic")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.lorentz_index("mu")
+
+    expr = s.NCM(phi(), open_covariant_derivative(mu))
+
+    assert_expr_equal(act_with_open_covariant_derivatives(expr, cyclic=True), phi(derivatives=[mu]))
+
+
 def test_open_covariant_derivative_pass_is_guarded_when_operator_absent() -> None:
     theory = Theory("open_cd_absent")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
