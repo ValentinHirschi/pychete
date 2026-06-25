@@ -4,7 +4,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import FieldMassKind, Theory, hermitian_conjugate, s
-from pychete.functional import apply_cd, partial_functional_derivative
+from pychete.functional import apply_cd, expand_cd_operators, partial_functional_derivative
 from pychete.symbols import canonical_string
 from pychete.theory_metadata import EXTERNAL_LINEAR_FUNCTION_TAG
 
@@ -122,6 +122,54 @@ def test_apply_cd_treats_bar_and_nested_cd_as_pattern_atoms() -> None:
     )
 
     assert_expr_equal(apply_cd([mu], expr), expected)
+
+
+def test_apply_cd_differentiates_field_strength_atoms_with_symbolica_patterns() -> None:
+    theory = Theory("cd_field_strength")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    vector = theory.field_handle("B")
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    rho = theory.lorentz_index("rho")
+    sigma = theory.lorentz_index("sigma")
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(rho))
+    expected = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(rho, sigma))
+
+    assert_expr_equal(apply_cd([sigma], strength), expected)
+    assert_expr_equal(apply_cd([sigma], s.Bar(strength)), s.Bar(expected))
+
+
+def test_apply_cd_propagates_formal_commutator_derivatives() -> None:
+    theory = Theory("cd_formal_commutator")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    rho = theory.lorentz_index("rho")
+
+    commutator = s.CovariantDerivativeCommutator(mu, nu, phi())
+    expected = s.CovariantDerivativeCommutator(mu, nu, phi(derivatives=[rho]))
+
+    assert_expr_equal(apply_cd([rho], commutator), expected)
+
+
+def test_expand_cd_operators_differentiates_lowered_commutator_field_strength_insertions() -> None:
+    theory = Theory("cd_lowered_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field("phi", s.Scalar, charges=[theory.group_charge("U1Y", 1)], mass=0)
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    a = theory.lorentz_index("a")
+    b = theory.lorentz_index("b")
+    c = theory.lorentz_index("c")
+    strength = s.FieldStrength(vector.label, s.List(c, b), s.List(), s.List())
+    derived_strength = s.FieldStrength(vector.label, s.List(c, b), s.List(), s.List(a))
+    expr = s.CD(s.List(a), s.CovariantDerivativeCommutator(c, b, phi()))
+
+    lowered = theory.expand_covariant_derivative_commutators(expr)
+    expanded = expand_cd_operators(lowered)
+    expected = -Expression.I * coupling() * (derived_strength * phi() + strength * phi(derivatives=[a]))
+
+    assert_expr_equal(expanded, expected)
 
 
 def test_apply_cd_ignores_couplings_as_non_field_atoms() -> None:

@@ -9,12 +9,16 @@ from .expr import (
     args,
     bar_field_inner,
     bar_field_pattern,
+    bar_field_strength_pattern,
     cd_pattern,
+    covariant_derivative_commutator_pattern,
     factors,
     field_pattern,
     field_label,
     field_type,
     field_derivatives,
+    field_strength_pattern,
+    field_strength_with_derivatives,
     field_with_derivatives,
     is_bar_field,
     is_head,
@@ -97,6 +101,9 @@ def _single_cd(index: Expression, expr: Expression) -> Expression:
 def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
     field_pat = field_pattern()
     bar_pat = bar_field_pattern()
+    strength_pat = field_strength_pattern()
+    bar_strength_pat = bar_field_strength_pattern()
+    commutator_pat = covariant_derivative_commutator_pattern()
     cd_pat = cd_pattern()
 
     def field_variation(match: dict[Expression, Expression]) -> Expression:
@@ -121,6 +128,40 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
         )
         return matched + s.CDVariationParameter * derivative
 
+    def field_strength_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = strength_pat.replace_wildcards(match)
+        derivative = field_strength_with_derivatives(
+            matched,
+            (*list_items(match[s.FieldStrengthDerivativesWildcard]), index),
+        )
+        return matched + s.CDVariationParameter * derivative
+
+    def bar_field_strength_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = bar_strength_pat.replace_wildcards(match)
+        derivative = s.Bar(
+            s.FieldStrength(
+                match[s.FieldStrengthLabelWildcard],
+                match[s.FieldStrengthLorentzWildcard],
+                match[s.FieldStrengthIndicesWildcard],
+                s.List(*list_items(match[s.FieldStrengthDerivativesWildcard]), index),
+            )
+        )
+        return matched + s.CDVariationParameter * derivative
+
+    def commutator_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = commutator_pat.replace_wildcards(match)
+        body_derivative = _single_cd(index, match[s.CovariantCommutatorBodyWildcard])
+        derivative = (
+            Expression.num(0)
+            if is_zero(body_derivative)
+            else s.CovariantDerivativeCommutator(
+                match[s.CovariantCommutatorLeftWildcard],
+                match[s.CovariantCommutatorRightWildcard],
+                body_derivative,
+            )
+        )
+        return matched + s.CDVariationParameter * derivative
+
     def cd_variation(match: dict[Expression, Expression]) -> Expression:
         matched = cd_pat.replace_wildcards(match)
         body_derivative = _single_cd(index, match[s.CDBodyWildcard])
@@ -128,8 +169,12 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
         return matched + s.CDVariationParameter * derivative
 
     field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    field_strength_label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
     return (
         Replacement(cd_pat, cd_variation),
+        Replacement(commutator_pat, commutator_variation),
+        Replacement(bar_strength_pat, bar_field_strength_variation, field_strength_label_is_tagged),
+        Replacement(strength_pat, field_strength_variation, field_strength_label_is_tagged),
         Replacement(bar_pat, bar_variation, field_label_is_tagged),
         Replacement(field_pat, field_variation, field_label_is_tagged),
     )

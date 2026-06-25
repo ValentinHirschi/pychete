@@ -627,6 +627,46 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
   `git diff --check` passed.
 
+## Current CD FieldStrength Product-Rule Slice
+
+- Extended `functional.apply_cd(...)` so its Symbolica variation replacement
+  pass treats registered `FieldStrength(...)` and `Bar(FieldStrength(...))`
+  atoms as derivative-carrying pychete atoms, not as constants. Derivatives are
+  appended to the field-strength derivative slot using the central expression
+  helpers.
+- Extended the same native replacement pass to formal
+  `CovariantDerivativeCommutator(left, right, body)` markers. Prefix
+  derivatives now propagate into the commutator body through `apply_cd(...)`
+  and rewrap the derivative as a commutator, rather than leaving emitted
+  commutator payloads opaque.
+- This specifically fixes the source path
+  `CD(List(prefix), CovariantDerivativeCommutator(...))` emitted by bounded
+  commutator canonicalization: after formal commutators lower to
+  `FieldStrength * field`, `expand_cd_operators(...)` now applies the native
+  product rule to both the generated field strength and the field atom.
+- Performance note: the implementation still avoids a Python derivative tree
+  walker. Symbolica performs matching, replacement, series expansion, and
+  coefficient extraction; Python only supplies callback construction for the
+  matched pychete atoms.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_scalar_eom.py -k "cd" -q` passed with 8 tests and
+  9 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/integration/matching/test_fluctuation_operator.py -k "commutator or
+  covariant_derivative" -q` passed with 22 tests and 82 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
+  `git diff --check` passed.
+- A targeted Singlet Scalar Extension public-match probe with
+  `max_trace_order=1`, internal minimal subtraction, no tensor reduction,
+  combined terms, registered Wilson projection, commutator emission plus
+  expansion, and pychete colour simplification remains at the current
+  validation frontier: 72/72 projected targets, 42 accepted, 30 different;
+  39/64 Wilson targets accepted. The slice is therefore a correctness fix for
+  emitted/lowered commutator derivative semantics, not yet a projected
+  SMEFT-coverage improvement.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
