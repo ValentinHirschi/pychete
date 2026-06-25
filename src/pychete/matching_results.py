@@ -14,6 +14,7 @@ from .matching_options import (
     one_loop_normalization_factor,
     one_loop_normalization_label,
 )
+from .supertraces import is_named_supertrace
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
 from .theory_metadata import ExternalKind, external_basis_from_label, external_kind_from_label
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
@@ -291,6 +292,16 @@ class MatchingResult:
             name: (factor * expression).expand() for name, expression in self.matching_conditions.items()
         }
         supertraces = dict(self.supertraces)
+        normalized_named_supertraces = {
+            name: (factor * expression).expand()
+            for name, expression in self.supertraces.items()
+            if is_named_supertrace(name)
+        }
+        for name, expression in normalized_named_supertraces.items():
+            raw_alias = f"{name}[unnormalized]"
+            if raw_alias not in supertraces:
+                supertraces[raw_alias] = self.supertraces[name]
+            supertraces[name] = expression
         supertraces["interaction_power_type_loop_normalization_factor"] = factor
         supertraces["interaction_power_type_unnormalized_eft_lagrangian"] = self.off_shell_eft_lagrangian
         supertraces["interaction_power_type_normalized_eft_lagrangian"] = normalized_off_shell
@@ -322,6 +333,7 @@ class MatchingResult:
                 "unnormalized_stage": previous_stage if isinstance(previous_stage, str) else None,
                 "loop_normalization": normalization_label,
                 "loop_normalization_applied": True,
+                "named_supertrace_loop_normalization_count": len(normalized_named_supertraces),
                 "complete": False,
             },
         )

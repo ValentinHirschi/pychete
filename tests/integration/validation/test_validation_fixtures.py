@@ -381,6 +381,8 @@ def test_validation_fixture_preview_can_apply_vakint_normalization_without_mathe
         normalized.expression("interaction_power_type_vakint_integral_sum_unnormalized"),
         raw.expression("interaction_power_type_vakint_integral_sum"),
     )
+    assert_expr_equal(normalized.expression("hFermion[unnormalized]"), raw.expression("hFermion"))
+    assert_expr_equal(normalized.expression("hFermion"), factor * raw.expression("hFermion"))
     assert_expr_equal(normalized.on_shell_eft_lagrangian, factor * raw.on_shell_eft_lagrangian)
 
 
@@ -412,6 +414,8 @@ def test_validation_fixture_preview_can_apply_internal_normalization_without_mat
         normalized.expression("interaction_power_type_normalized_internal_integral_finite_part"),
         factor * raw.expression("interaction_power_type_internal_integral_finite_part"),
     )
+    assert_expr_equal(normalized.expression("hFermion[unnormalized]"), raw.expression("hFermion"))
+    assert_expr_equal(normalized.expression("hFermion"), factor * raw.expression("hFermion"))
     assert_expr_equal(normalized.on_shell_eft_lagrangian, factor * raw.on_shell_eft_lagrangian)
 
 

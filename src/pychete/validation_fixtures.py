@@ -19,6 +19,7 @@ from .matching_options import (
 )
 from .matching_results import MatchingResult
 from .state import PycheteState
+from .supertraces import supertrace_word_order
 from .theory import Theory
 from .validation import (
     NumericProbePlan,
@@ -31,18 +32,6 @@ TensorComponent = Expression | int | float | complex
 TraceOrderInput = int | Literal["reference"]
 ProbeNamePreset = Literal["common", "canonical_different", "wilson", "canonical_different_wilson"]
 ProbeNameSelection = Iterable[str] | ProbeNamePreset
-_SUPERTRACE_CATEGORY_WORDS = {
-    "hScalar",
-    "lScalar",
-    "hFermion",
-    "lFermion",
-    "hVector",
-    "lVector",
-    "hGhost",
-    "lGhost",
-    "hAntiGhost",
-    "lAntiGhost",
-}
 _PROBE_NAME_PRESETS = {"common", "canonical_different", "wilson", "canonical_different_wilson"}
 _WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
 
@@ -964,19 +953,19 @@ def _resolve_max_trace_order(max_trace_order: TraceOrderInput, reference: Matchi
 
 
 def _max_supertrace_order(names: Iterable[str]) -> int:
-    return max((_supertrace_word_order(name) for name in names), default=0)
+    return max((supertrace_word_order(name) for name in names), default=0)
 
 
 def _names_at_supertrace_order(names: Iterable[str], order: int) -> tuple[str, ...]:
-    return _sorted_names(name for name in names if _supertrace_word_order(name) == order)
+    return _sorted_names(name for name in names if supertrace_word_order(name) == order)
 
 
 def _supertrace_order_coverage(report: MatchingFixtureGapReport) -> tuple[SupertraceOrderCoverage, ...]:
     orders = sorted(
         {
-            _supertrace_word_order(name)
+            supertrace_word_order(name)
             for name in (*report.candidate_supertrace_names, *report.reference_supertrace_names)
-            if _supertrace_word_order(name) > 0
+            if supertrace_word_order(name) > 0
         }
     )
     return tuple(
@@ -999,13 +988,6 @@ def _supertrace_order_coverage(report: MatchingFixtureGapReport) -> tuple[Supert
         )
         for order in orders
     )
-
-
-def _supertrace_word_order(name: str) -> int:
-    parts = name.split("-")
-    if all(part in _SUPERTRACE_CATEGORY_WORDS for part in parts):
-        return len(parts)
-    return 0
 
 
 def _accepted_names(

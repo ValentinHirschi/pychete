@@ -4761,6 +4761,51 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 272 passed,
     1 skipped in 290.21s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Centralized Matchete-style supertrace name recognition:
+  - re-inspected the Symbolica Python stubs before touching symbolic
+    normalization logic and confirmed that `Expression.expand(...)` remains the
+    native operation used for factor-distributed convention scaling;
+  - added `src/pychete/supertraces.py` so validation coverage and matching
+    results use the same `supertrace_word_order(...)` /
+    `is_named_supertrace(...)` predicate instead of duplicating category-word
+    string lists;
+  - `MatchingResult.with_loop_normalization(...)` now normalizes primary named
+    Matchete-style supertrace entries such as `hScalar-lScalar` and
+    `hFermion` with the same loop-convention factor applied to the EFT
+    Lagrangian and matching conditions;
+  - unnormalized named entries are preserved under stable aliases such as
+    `hScalar-lScalar[unnormalized]`, while aggregate backend inspection stages
+    such as `interaction_power_type_vakint_integral_sum_unnormalized` remain
+    unchanged;
+  - retained the user requirement that top-level Mathematica conversion scripts
+    stay checked into `scripts/` as optional convenience tooling for users with
+    Mathematica/Matchete, while runtime pychete, normal pytest, and committed
+    validation fixtures remain fully Mathematica- and Matchete-independent.
+- Verification for named loop-normalization staging:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+    -q'` passed: 1 passed in 0.28s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_vakint_normalization_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_internal_normalization_without_mathematica
+    -q'` passed: 2 passed in 0.78s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 30
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_records_supertrace_word_orders
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_vakint_normalization_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_internal_normalization_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    -q'` passed: 4 passed in 39.09s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 272 passed,
+    1 skipped in 314.08s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

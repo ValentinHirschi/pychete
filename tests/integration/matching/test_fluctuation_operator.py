@@ -1080,6 +1080,14 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         expected_interaction_vakint,
     )
     assert_expr_equal(
+        normalized_interaction_result.expression("hScalar-lScalar[unnormalized]"),
+        expected_interaction_vakint,
+    )
+    assert_expr_equal(
+        normalized_interaction_result.expression("hScalar-lScalar"),
+        matchete_hbar_factor * expected_interaction_vakint,
+    )
+    assert_expr_equal(
         normalized_interaction_result.off_shell_eft_lagrangian,
         matchete_hbar_factor * expected_interaction_vakint,
     )
