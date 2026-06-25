@@ -214,6 +214,7 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.CDVariationParameter,
         s.FunctionalVariationParameter,
         s.HBar,
+        s.CovariantDerivativeProtectedCommutator(0),
     )
 
     for expr in builtins:

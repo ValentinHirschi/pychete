@@ -565,6 +565,7 @@ class SymbolStore:
         "DifferentialOperator",
         "LoopFunction",
         "CovariantDerivativeProtectedBar",
+        "CovariantDerivativeProtectedCommutator",
         "SymmetricIndices",
         "AntisymmetricIndices",
         "SymmetricPermutation",
@@ -752,6 +753,10 @@ class SymbolStore:
     @cached_property
     def CovariantDerivativeProtectedBar(self) -> Expression:
         return self.head("covariant_derivative_protected_bar")
+
+    @cached_property
+    def CovariantDerivativeProtectedCommutator(self) -> Expression:
+        return self.head("covariant_derivative_protected_commutator")
 
     @cached_property
     def SymmetricIndices(self) -> Expression:

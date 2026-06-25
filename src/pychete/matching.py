@@ -3738,7 +3738,10 @@ def match_one_loop(
     if options.expand_non_abelian_covariant_derivatives:
         matching_lagrangian = theory.expand_non_abelian_covariant_derivatives(matching_lagrangian)
     if options.emit_covariant_derivative_commutators:
-        matching_lagrangian = theory.emit_covariant_derivative_commutators(matching_lagrangian)
+        matching_lagrangian = theory.emit_covariant_derivative_commutators(
+            matching_lagrangian,
+            max_passes=options.emit_covariant_derivative_commutator_passes,
+        )
     if options.expand_covariant_derivative_commutators:
         matching_lagrangian = theory.expand_covariant_derivative_commutators(matching_lagrangian)
     setup = one_loop_setup(
@@ -3858,6 +3861,11 @@ def match_one_loop(
             "abelian_covariant_derivatives_expanded": options.expand_abelian_covariant_derivatives,
             "non_abelian_covariant_derivatives_expanded": options.expand_non_abelian_covariant_derivatives,
             "covariant_derivative_commutators_emitted": options.emit_covariant_derivative_commutators,
+            "covariant_derivative_commutator_emit_passes": (
+                options.emit_covariant_derivative_commutator_passes
+                if options.emit_covariant_derivative_commutators
+                else 0
+            ),
             "covariant_derivative_commutators_expanded": options.expand_covariant_derivative_commutators,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },

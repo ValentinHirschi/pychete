@@ -512,6 +512,51 @@ def test_emit_covariant_derivative_commutators_protects_barred_fields_and_prefix
     assert_expr_equal(emitted, expected)
 
 
+def test_emit_covariant_derivative_commutators_supports_bounded_repeated_passes() -> None:
+    theory = Theory("emit_commutator_repeated")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+
+    single_pass = theory.emit_covariant_derivative_commutators(phi(derivatives=[c, b, a]))
+    assert_expr_equal(
+        single_pass,
+        phi(derivatives=[b, c, a])
+        + s.CovariantDerivativeCommutator(c, b, phi(derivatives=[a])),
+    )
+
+    repeated = theory.emit_covariant_derivative_commutators(phi(derivatives=[c, b, a]), max_passes=3)
+    expected = (
+        phi(derivatives=[a, b, c])
+        + s.CovariantDerivativeCommutator(b, a, phi(derivatives=[c]))
+        + s.CD(s.List(b), s.CovariantDerivativeCommutator(c, a, phi()))
+        + s.CovariantDerivativeCommutator(c, b, phi(derivatives=[a]))
+    )
+    assert_expr_equal(repeated, expected)
+
+
+def test_emit_covariant_derivative_commutators_protects_existing_commutator_markers() -> None:
+    theory = Theory("emit_commutator_protects_markers")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    b = theory.index("b")
+    c = theory.index("c")
+    existing = s.CovariantDerivativeCommutator(c, b, phi(derivatives=[c, b]))
+    emitted = theory.emit_covariant_derivative_commutators(existing + phi(derivatives=[c, b]), max_passes=4)
+
+    assert_expr_equal(
+        emitted,
+        existing + phi(derivatives=[b, c]) + s.CovariantDerivativeCommutator(c, b, phi()),
+    )
+
+    try:
+        theory.emit_covariant_derivative_commutators(phi(), max_passes=-1)
+    except ValueError as exc:
+        assert "max_passes" in str(exc)
+    else:
+        raise AssertionError("negative max_passes was accepted")
+
+
 def test_covariant_derivative_commutator_builds_non_abelian_field_strength_insertions() -> None:
     theory = Theory("nonabelian_commutator")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")

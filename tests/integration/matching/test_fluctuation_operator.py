@@ -385,6 +385,7 @@ def test_one_loop_match_option_emits_and_expands_covariant_derivative_commutator
 
     assert isinstance(result, MatchingResult)
     assert result.metadata["covariant_derivative_commutators_emitted"] is True
+    assert result.metadata["covariant_derivative_commutator_emit_passes"] == 1
     assert result.metadata["covariant_derivative_commutators_expanded"] is True
     assert_expr_equal(
         captured["lagrangian"],

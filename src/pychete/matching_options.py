@@ -93,7 +93,9 @@ class OneLoopMatchOptions:
     ``CovariantDerivativeCommutator`` markers can be emitted from out-of-order
     derivative slots with ``emit_covariant_derivative_commutators`` and lowered
     to ``FieldStrength`` insertions with
-    ``expand_covariant_derivative_commutators``. Registered pychete CG
+    ``expand_covariant_derivative_commutators``. The bounded
+    ``emit_covariant_derivative_commutator_passes`` count controls how far the
+    adjacent-swap emitter canonicalizes derivative lists. Registered pychete CG
     generator and structure-constant tensors can be simplified through
     idenso's native SU(N) color algebra with
     ``simplify_pychete_color_algebra``.
@@ -139,6 +141,7 @@ class OneLoopMatchOptions:
     expand_abelian_covariant_derivatives: bool = False
     expand_non_abelian_covariant_derivatives: bool = False
     emit_covariant_derivative_commutators: bool = False
+    emit_covariant_derivative_commutator_passes: int = 1
     expand_covariant_derivative_commutators: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None

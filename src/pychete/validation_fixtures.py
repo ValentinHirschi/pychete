@@ -635,6 +635,7 @@ class ValidationFixture:
         expand_abelian_covariant_derivatives: bool = False,
         expand_non_abelian_covariant_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
         simplify_pychete_color_algebra: bool = False,
     ) -> MatchingResult:
@@ -660,7 +661,10 @@ class ValidationFixture:
         if expand_non_abelian_covariant_derivatives:
             lagrangian_expr = theory.expand_non_abelian_covariant_derivatives(lagrangian_expr)
         if emit_covariant_derivative_commutators:
-            lagrangian_expr = theory.emit_covariant_derivative_commutators(lagrangian_expr)
+            lagrangian_expr = theory.emit_covariant_derivative_commutators(
+                lagrangian_expr,
+                max_passes=emit_covariant_derivative_commutator_passes,
+            )
         if expand_covariant_derivative_commutators:
             lagrangian_expr = theory.expand_covariant_derivative_commutators(lagrangian_expr)
         setup = theory.one_loop_setup(
@@ -791,6 +795,11 @@ class ValidationFixture:
                 "abelian_covariant_derivatives_expanded": expand_abelian_covariant_derivatives,
                 "non_abelian_covariant_derivatives_expanded": expand_non_abelian_covariant_derivatives,
                 "covariant_derivative_commutators_emitted": emit_covariant_derivative_commutators,
+                "covariant_derivative_commutator_emit_passes": (
+                    emit_covariant_derivative_commutator_passes
+                    if emit_covariant_derivative_commutators
+                    else 0
+                ),
                 "covariant_derivative_commutators_expanded": expand_covariant_derivative_commutators,
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
             },
@@ -850,6 +859,7 @@ class ValidationFixture:
         expand_abelian_covariant_derivatives: bool = False,
         expand_non_abelian_covariant_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
@@ -926,6 +936,7 @@ class ValidationFixture:
                     expand_abelian_covariant_derivatives=expand_abelian_covariant_derivatives,
                     expand_non_abelian_covariant_derivatives=expand_non_abelian_covariant_derivatives,
                     emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                     expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
@@ -990,6 +1001,7 @@ class ValidationFixture:
                 expand_abelian_covariant_derivatives=expand_abelian_covariant_derivatives,
                 expand_non_abelian_covariant_derivatives=expand_non_abelian_covariant_derivatives,
                 emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )

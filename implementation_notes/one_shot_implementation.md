@@ -541,6 +541,39 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
   `git diff --check` passed.
 
+## Current Bounded Commutator-Emission Canonicalization Slice
+
+- Extended `Theory.emit_covariant_derivative_commutators(...)` with an
+  explicit `max_passes` bound. The default remains one adjacent commute, while
+  larger values can canonicalize longer derivative-slot lists through repeated
+  Symbolica replacement passes without introducing an unbounded expression-growth
+  loop.
+- Existing formal `CovariantDerivativeCommutator(...)` markers are protected
+  during each emitter pass with a dedicated central temporary head
+  `s.CovariantDerivativeProtectedCommutator(...)`. This prevents repeated
+  canonicalization from recursively rewriting fields inside already-emitted CDE
+  payloads; later lowering/product-rule stages stay explicit and opt-in.
+- Added `OneLoopMatchOptions.emit_covariant_derivative_commutator_passes` and
+  forwarded it through public `match_one_loop(...)` plus validation fixture
+  preview/gap-report helpers. Result metadata records
+  `covariant_derivative_commutator_emit_passes`, using `0` when emission is not
+  requested.
+- Added tests for one-pass versus repeated three-pass canonicalization of
+  derivative slots, protection of existing formal commutator markers, rejection
+  of negative pass counts, pretty-print registration for the protected marker,
+  and one-loop option metadata.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_pretty_printing.py
+  tests/unit/definitions/test_public_api.py -k "commutator or builtin_pychete
+  or public_api_methods" -q` passed with 11 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "covariant_derivative_commutators" -q` passed with 2 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
+  `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -570,12 +603,10 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Extend the commutator emitter beyond the first adjacent out-of-order
-  derivative-slot pass: support repeated canonicalization where it is
-  performance-safe, derivative-slot `FieldStrength(...)` atoms, and targeted
-  integration into the generated supertrace/CDE stages that produce the gauge
-  Wilson structures needed by `cHB`, `cHW`, `cHWB`, and related fermionic
-  Higgs-current coefficients.
+- Extend the commutator emitter to derivative-slot `FieldStrength(...)` atoms
+  and integrate the emitter/lowering pair into the generated supertrace/CDE
+  stages that produce the gauge Wilson structures needed by `cHB`, `cHW`,
+  `cHWB`, and related fermionic Higgs-current coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.

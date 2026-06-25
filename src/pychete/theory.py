@@ -1204,7 +1204,7 @@ class Theory:
 
         return expr.replace(pattern, commutator_replacement, rhs_cache_size=0).expand()
 
-    def emit_covariant_derivative_commutators(self, expr: Expression) -> Expression:
+    def emit_covariant_derivative_commutators(self, expr: Expression, *, max_passes: int = 1) -> Expression:
         """Emit formal commutators by commuting adjacent derivative slots.
 
         Registered ``Field`` and ``Bar[Field]`` atoms with adjacent covariant
@@ -1215,18 +1215,46 @@ class Theory:
         them to ``FieldStrength`` insertions. Prefix derivatives are kept as
         explicit ``CD(...)`` wrappers so existing Symbolica replacement passes
         can apply product rules later without forcing a global expansion here.
+        ``max_passes`` bounds repeated adjacent swaps; the default performs one
+        local commute, while larger values can canonicalize longer derivative
+        lists without enabling an unbounded expression-growth loop.
         """
 
         self._validate_registered_expression(expr)
+        if max_passes < 0:
+            raise ValueError("max_passes must be non-negative")
+        out = expr
+        for _ in range(max_passes):
+            updated = self._emit_covariant_derivative_commutator_pass(out)
+            if bool(updated == out):
+                return updated
+            out = updated
+        return out
+
+    def _emit_covariant_derivative_commutator_pass(self, expr: Expression) -> Expression:
         field_pat = field_pattern()
         bar_pat = bar_field_pattern()
         field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
-        if not bool(expr.matches(field_pat, field_label_is_tagged)):
-            return expr
+        commutator_pat = covariant_derivative_commutator_pattern()
+
+        protect_commutator_replacements: list[Replacement] = []
+        restore_commutator_replacements: list[Replacement] = []
+        for atom in matching_subexpressions(expr, commutator_pat):
+            key = s.CovariantDerivativeProtectedCommutator(Expression.num(len(restore_commutator_replacements)))
+            protect_commutator_replacements.append(Replacement(atom, key))
+            restore_commutator_replacements.append(Replacement(key, atom))
+
+        out = expr
+        if protect_commutator_replacements:
+            out = out.replace_multiple(protect_commutator_replacements)
+        if not bool(out.matches(field_pat, field_label_is_tagged)):
+            if restore_commutator_replacements:
+                return out.replace_multiple(restore_commutator_replacements)
+            return out
 
         protect_bar_replacements: list[Replacement] = []
         restore_bar_replacements: list[Replacement] = []
-        for atom in matching_subexpressions(expr, bar_pat, field_label_is_tagged):
+        for atom in matching_subexpressions(out, bar_pat, field_label_is_tagged):
             key = s.CovariantDerivativeProtectedBar(Expression.num(len(restore_bar_replacements)))
             protect_bar_replacements.append(Replacement(atom, key))
             restore_bar_replacements.append(
@@ -1237,12 +1265,13 @@ class Theory:
             atom = field_pat.replace_wildcards(match)
             return self._commuted_covariant_derivative_atom(atom, conjugate_field=False)
 
-        out = expr
         if protect_bar_replacements:
             out = out.replace_multiple(protect_bar_replacements)
         out = out.replace(field_pat, field_replacement, field_label_is_tagged, rhs_cache_size=0)
         if restore_bar_replacements:
             out = out.replace_multiple(restore_bar_replacements)
+        if restore_commutator_replacements:
+            out = out.replace_multiple(restore_commutator_replacements)
         return out
 
     def _commuted_covariant_derivative_atom(self, atom: Expression, *, conjugate_field: bool) -> Expression:
