@@ -94,6 +94,14 @@ def cd_pattern() -> Expr:
     return s.CD(s.CDIndexWildcard, s.CDBodyWildcard)
 
 
+def covariant_derivative_commutator_pattern() -> Expr:
+    return s.CovariantDerivativeCommutator(
+        s.CovariantCommutatorLeftWildcard,
+        s.CovariantCommutatorRightWildcard,
+        s.CovariantCommutatorBodyWildcard,
+    )
+
+
 def coupling_pattern(label: Expr | None = None) -> Expr:
     return s.Coupling(
         s.CouplingLabelWildcard if label is None else label,

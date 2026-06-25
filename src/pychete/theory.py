@@ -11,6 +11,7 @@ from symbolica import Expression, Replacement, S
 from .expr import (
     bar_field_inner,
     bar_field_pattern,
+    covariant_derivative_commutator_pattern,
     field_label,
     field_pattern,
     field_with_derivatives,
@@ -1117,6 +1118,23 @@ class Theory:
         base_field = bar_field_inner(field) if conjugate_field else field
         if not is_head(base_field, s.Field):
             raise ValueError(f"Expected a Field or Bar[Field] expression, got {canonical_string(field)}")
+        return self._covariant_derivative_commutator(
+            base_field,
+            left_index,
+            right_index,
+            conjugate_field=conjugate_field,
+            index_counter=count(),
+        )
+
+    def _covariant_derivative_commutator(
+        self,
+        base_field: Expression,
+        left_index: Expression,
+        right_index: Expression,
+        *,
+        conjugate_field: bool,
+        index_counter: Iterator[int],
+    ) -> Expression:
         definition = self._field_definition_for_label(field_label(base_field))
         insertion = (
             self._abelian_field_strength_insertions(
@@ -1131,12 +1149,50 @@ class Theory:
                 left_index,
                 right_index,
                 conjugate_field=conjugate_field,
+                index_counter=index_counter,
             )
         )
         if bool(insertion == Expression.num(0)):
             return insertion
         sign = Expression.I if conjugate_field else -Expression.I
         return (sign * insertion).expand()
+
+    def expand_covariant_derivative_commutators(self, expr: Expression) -> Expression:
+        """Expand formal covariant-derivative commutators in ``expr``.
+
+        The formal head
+        ``CovariantDerivativeCommutator(left, right, Field(...))`` is a compact
+        CDE marker for ``[D_left, D_right]``. This method rewrites such markers
+        with native Symbolica replacement rules and
+        :meth:`covariant_derivative_commutator`, producing registered
+        ``FieldStrength`` insertions. Non-field bodies are left as formal
+        commutators so later product-rule or basis-reduction stages can handle
+        them deliberately.
+        """
+
+        self._validate_registered_expression(expr)
+        pattern = covariant_derivative_commutator_pattern()
+        if not bool(expr.matches(pattern)):
+            return expr
+        index_counter = count()
+
+        def commutator_replacement(match: dict[Expression, Expression]) -> Expression:
+            left_index = match[s.CovariantCommutatorLeftWildcard]
+            right_index = match[s.CovariantCommutatorRightWildcard]
+            body = match[s.CovariantCommutatorBodyWildcard]
+            if is_head(body, s.Field) or is_bar_field(body):
+                conjugate_field = is_bar_field(body)
+                base_field = bar_field_inner(body) if conjugate_field else body
+                return self._covariant_derivative_commutator(
+                    base_field,
+                    left_index,
+                    right_index,
+                    conjugate_field=conjugate_field,
+                    index_counter=index_counter,
+                )
+            return s.CovariantDerivativeCommutator(left_index, right_index, body)
+
+        return expr.replace(pattern, commutator_replacement, rhs_cache_size=0).expand()
 
     def _field_definition_for_label(self, label: Expression) -> FieldDefinition:
         name = symbol_data(label, SymbolDataKey.NAME)
@@ -1203,9 +1259,9 @@ class Theory:
         right_index: Expression,
         *,
         conjugate_field: bool,
+        index_counter: Iterator[int],
     ) -> Expression:
         terms: list[Expression] = []
-        index_counter = count()
         field_indices = list(list_items(field[2]))
         for field_index, input_index in enumerate(field_indices):
             if not is_head(input_index, s.Index) or len(input_index) != 2:

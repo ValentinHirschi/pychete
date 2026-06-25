@@ -447,6 +447,35 @@ def test_covariant_derivative_commutator_builds_abelian_field_strength_insertion
     )
 
 
+def test_expand_covariant_derivative_commutators_uses_symbolica_replacements() -> None:
+    theory = Theory("expand_abelian_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", S("qY"))],
+        mass=0,
+    )
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    formal = s.CovariantDerivativeCommutator(mu, nu, phi())
+
+    assert_expr_equal(
+        theory.expand_covariant_derivative_commutators(formal),
+        theory.covariant_derivative_commutator(phi(), mu, nu),
+    )
+
+
+def test_expand_covariant_derivative_commutators_preserves_non_field_bodies() -> None:
+    theory = Theory("preserve_non_field_commutator")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    formal = s.CovariantDerivativeCommutator(mu, nu, s.Bar(phi()) * phi())
+
+    assert_expr_equal(theory.expand_covariant_derivative_commutators(formal), formal)
+
+
 def test_covariant_derivative_commutator_builds_non_abelian_field_strength_insertions() -> None:
     theory = Theory("nonabelian_commutator")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
@@ -486,6 +515,30 @@ def test_covariant_derivative_commutator_builds_non_abelian_field_strength_inser
         * generator(adjoint_index, output_index, input_dual)
         * s.Bar(higgs(output_index)),
     )
+
+
+def test_expand_covariant_derivative_commutators_uses_fresh_non_abelian_indices() -> None:
+    theory = Theory("fresh_nonabelian_commutator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], mass=0)
+
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    left_index = theory.index("i", fund)
+    right_index = theory.index("j", fund)
+    formal = (
+        s.CovariantDerivativeCommutator(mu, nu, higgs(left_index))
+        * s.CovariantDerivativeCommutator(mu, nu, higgs(right_index))
+    )
+    expanded = theory.expand_covariant_derivative_commutators(formal)
+    canonical = canonical_string(expanded)
+
+    assert "covariant_commutator_0_0" in canonical
+    assert "covariant_commutator_0_1" in canonical
+    assert "covariant_commutator_1_0" in canonical
+    assert "covariant_commutator_1_1" in canonical
 
 
 def test_expand_non_abelian_covariant_derivatives_uses_symbolica_replacements() -> None:

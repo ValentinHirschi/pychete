@@ -213,6 +213,17 @@ def _print_cd(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
     return _derivative(body, (index,), mode)
 
 
+def _print_covariant_derivative_commutator(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    left = _format_child(expr[0], mode, kwargs)
+    right = _format_child(expr[1], mode, kwargs)
+    body = _format_child(expr[2], mode, kwargs)
+    if mode is PrintMode.Latex:
+        return rf"\left[D_{{{left}}}, D_{{{right}}}\right]\left({body}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"CovariantDerivativeCommutator[{left}, {right}, {body}]"
+    return f"[D[{left}], D[{right}]]({body})"
+
+
 def _print_delta(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
     args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
     if mode is PrintMode.Latex and len(args) == 2:
@@ -319,6 +330,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "Bar": lambda: _print_bar(expr, mode, kwargs),
         "CConj": lambda: _call("CConj", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "CD": lambda: _print_cd(expr, mode, kwargs),
+        "CovariantDerivativeCommutator": lambda: _print_covariant_derivative_commutator(expr, mode, kwargs),
         "Delta": lambda: _print_delta(expr, mode, kwargs),
         "Metric": lambda: _print_metric(expr, mode, kwargs),
         "FlavorSum": lambda: _call("FlavorSum", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -532,6 +544,7 @@ class SymbolStore:
         "Bar",
         "CConj",
         "CD",
+        "CovariantDerivativeCommutator",
         "Delta",
         "Metric",
         "FlavorSum",
@@ -579,6 +592,9 @@ class SymbolStore:
         "PowExponentWildcard",
         "CDIndexWildcard",
         "CDBodyWildcard",
+        "CovariantCommutatorLeftWildcard",
+        "CovariantCommutatorRightWildcard",
+        "CovariantCommutatorBodyWildcard",
         "CouplingLabelWildcard",
         "CouplingIndicesWildcard",
         "CouplingOrderWildcard",
@@ -648,6 +664,10 @@ class SymbolStore:
     @cached_property
     def CD(self) -> Expression:
         return self.head("CD")
+
+    @cached_property
+    def CovariantDerivativeCommutator(self) -> Expression:
+        return self.head("CovariantDerivativeCommutator")
 
     @cached_property
     def Delta(self) -> Expression:
@@ -840,6 +860,18 @@ class SymbolStore:
     @cached_property
     def CDBodyWildcard(self) -> Expression:
         return self.head("cd_body_")
+
+    @cached_property
+    def CovariantCommutatorLeftWildcard(self) -> Expression:
+        return self.head("covariant_commutator_left_")
+
+    @cached_property
+    def CovariantCommutatorRightWildcard(self) -> Expression:
+        return self.head("covariant_commutator_right_")
+
+    @cached_property
+    def CovariantCommutatorBodyWildcard(self) -> Expression:
+        return self.head("covariant_commutator_body_")
 
     @cached_property
     def CouplingLabelWildcard(self) -> Expression:

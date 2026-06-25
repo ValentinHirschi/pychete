@@ -3737,6 +3737,8 @@ def match_one_loop(
         matching_lagrangian = theory.expand_abelian_covariant_derivatives(matching_lagrangian)
     if options.expand_non_abelian_covariant_derivatives:
         matching_lagrangian = theory.expand_non_abelian_covariant_derivatives(matching_lagrangian)
+    if options.expand_covariant_derivative_commutators:
+        matching_lagrangian = theory.expand_covariant_derivative_commutators(matching_lagrangian)
     setup = one_loop_setup(
         theory,
         matching_lagrangian,
@@ -3853,6 +3855,7 @@ def match_one_loop(
             "tensor_network_native_hep_cg_builtins": options.tensor_network_native_hep_cg_builtins,
             "abelian_covariant_derivatives_expanded": options.expand_abelian_covariant_derivatives,
             "non_abelian_covariant_derivatives_expanded": options.expand_non_abelian_covariant_derivatives,
+            "covariant_derivative_commutators_expanded": options.expand_covariant_derivative_commutators,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )

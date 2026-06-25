@@ -634,6 +634,7 @@ class ValidationFixture:
         tensor_network_mode: Any | None = None,
         expand_abelian_covariant_derivatives: bool = False,
         expand_non_abelian_covariant_derivatives: bool = False,
+        expand_covariant_derivative_commutators: bool = False,
         simplify_pychete_color_algebra: bool = False,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
@@ -657,6 +658,8 @@ class ValidationFixture:
             lagrangian_expr = theory.expand_abelian_covariant_derivatives(lagrangian_expr)
         if expand_non_abelian_covariant_derivatives:
             lagrangian_expr = theory.expand_non_abelian_covariant_derivatives(lagrangian_expr)
+        if expand_covariant_derivative_commutators:
+            lagrangian_expr = theory.expand_covariant_derivative_commutators(lagrangian_expr)
         setup = theory.one_loop_setup(
             lagrangian_expr,
             eft_order=eft_order,
@@ -784,6 +787,7 @@ class ValidationFixture:
                 "tensor_network_native_hep_cg_builtins": tensor_network_native_hep_cg_builtins,
                 "abelian_covariant_derivatives_expanded": expand_abelian_covariant_derivatives,
                 "non_abelian_covariant_derivatives_expanded": expand_non_abelian_covariant_derivatives,
+                "covariant_derivative_commutators_expanded": expand_covariant_derivative_commutators,
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
             },
         )
@@ -841,6 +845,7 @@ class ValidationFixture:
         tensor_network_mode: Any | None = None,
         expand_abelian_covariant_derivatives: bool = False,
         expand_non_abelian_covariant_derivatives: bool = False,
+        expand_covariant_derivative_commutators: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         project_reference_matching_conditions: bool = False,
@@ -915,6 +920,7 @@ class ValidationFixture:
                     tensor_network_mode=tensor_network_mode,
                     expand_abelian_covariant_derivatives=expand_abelian_covariant_derivatives,
                     expand_non_abelian_covariant_derivatives=expand_non_abelian_covariant_derivatives,
+                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                 ),
@@ -977,6 +983,7 @@ class ValidationFixture:
                 tensor_network_mode=tensor_network_mode,
                 expand_abelian_covariant_derivatives=expand_abelian_covariant_derivatives,
                 expand_non_abelian_covariant_derivatives=expand_non_abelian_covariant_derivatives,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         if project_reference_matching_conditions and not use_public_match_api:

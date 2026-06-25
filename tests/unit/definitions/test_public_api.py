@@ -71,6 +71,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "mass_expr",
             "non_abelian_gauge_generator_insertion",
             "covariant_derivative_commutator",
+            "expand_covariant_derivative_commutators",
             "expand_non_abelian_covariant_derivatives",
             "expand_abelian_covariant_derivatives",
             "free_lag",

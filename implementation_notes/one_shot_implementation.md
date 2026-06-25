@@ -465,6 +465,47 @@
   then simplify the resulting CG/field-strength tensors with the idenso/spenso
   adapters already in place.
 
+## Current Formal Covariant-Commutator Expansion Slice
+
+- Added the central Symbolica head `s.CovariantDerivativeCommutator(left,
+  right, body)` plus dedicated wildcard symbols and pretty-print callbacks.
+  This gives CDE code a compact formal marker for `[D_left, D_right]` without
+  relying on string parsing or ad hoc Python expression shapes.
+- Added `covariant_derivative_commutator_pattern()` and
+  `Theory.expand_covariant_derivative_commutators(...)`. The expansion is
+  guarded by native `Expression.matches(...)` and uses a Symbolica replacement
+  callback. Direct `Field(...)` and `Bar(Field(...))` bodies lower through the
+  existing field-strength primitive; non-field bodies are preserved as formal
+  commutators so future product-rule or basis-reduction stages can handle them
+  deliberately.
+- Factored the non-Abelian commutator implementation so direct public calls
+  remain deterministic while bulk formal expansion uses one shared generated
+  index counter. This prevents repeated non-Abelian commutator replacements
+  from reusing the same `covariant_commutator_*` dummy labels inside a larger
+  expression.
+- Added `OneLoopMatchOptions.expand_covariant_derivative_commutators` and
+  threaded it through `match_one_loop(...)`, `Theory.match(...)` via the
+  options object, and validation fixture preview/gap-report helpers. The pass
+  runs before fluctuation-operator setup when requested and records
+  `covariant_derivative_commutators_expanded` in result metadata. The default
+  remains `False`, matching the existing opt-in Abelian/non-Abelian derivative
+  expansion controls.
+- Performance note: the pass does no work when the formal head is absent, and
+  the one-loop smoke test monkeypatches setup to validate ordering without
+  paying for backend evaluation.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_pretty_printing.py
+  tests/unit/definitions/test_public_api.py -k "commutator or builtin_pychete
+  or public_api_methods" -q` passed with 7 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "expands_covariant or expands_abelian_covariant or
+  expands_non_abelian_covariant" -q` passed with 3 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
+  `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -494,10 +535,11 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Wire the new covariant-derivative commutator primitive into the CDE path so
-  anti-symmetrized derivative products can generate and reduce
-  field-strength/commutator structures needed by gauge Wilsons such as
-  `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current coefficients.
+- Add the actual CDE emitter that recognizes or constructs anti-symmetrized
+  derivative products and emits `CovariantDerivativeCommutator(...)` markers
+  before the new formal expansion pass lowers them to `FieldStrength(...)`
+  operators needed by gauge Wilsons such as `cHB`, `cHW`, `cHWB`, and related
+  fermionic Higgs-current coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.
