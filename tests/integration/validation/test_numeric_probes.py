@@ -313,6 +313,34 @@ def test_matching_result_can_project_from_unexpanded_source_expression() -> None
     assert_expr_equal(projected.matching_conditions["phi2"], x + 1)
 
 
+def test_matching_result_projects_alpha_equivalent_index_contractions() -> None:
+    theory = Theory("condition_projection_indices")
+    theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=(fund,))
+    named_index = theory.index("i", fund)
+    dummy_index = theory.dummy_index(1, fund)
+    target = higgs(named_index) * s.Bar(higgs(named_index))
+    source_operator = higgs(dummy_index) * s.Bar(higgs(dummy_index))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=5 * source_operator,
+    )
+
+    projected = result.with_projected_matching_conditions({"HbarH": target}, expand_source=False)
+    uncanonized = result.project_matching_conditions(
+        {"HbarH": target},
+        expand_source=False,
+        canonize_indices=False,
+    )
+
+    assert projected.metadata["matching_condition_projection_canonize_indices"] is True
+    assert_expr_equal(projected.matching_conditions["HbarH"], Expression.num(5))
+    assert_expr_equal(uncanonized["HbarH"], Expression.num(0))
+
+
 def test_matching_result_truncates_projected_coefficients_target_locally() -> None:
     x = S("condition_projection_local_eft_x")
     theory = Theory("condition_projection_local_eft")

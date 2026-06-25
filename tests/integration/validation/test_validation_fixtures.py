@@ -808,6 +808,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         simplify_pychete_color_algebra=True,
         substitute_heavy_scalar_solutions=True,
         matching_condition_projection_expand_source=False,
+        matching_condition_projection_canonize_indices=False,
         matching_condition_projection_truncate_eft=True,
     )
 
@@ -816,6 +817,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert options.simplify_pychete_color_algebra is True
     assert options.substitute_heavy_scalar_solutions is True
     assert captured["matching_condition_expand_source"] is False
+    assert captured["matching_condition_canonize_indices"] is False
     assert captured["matching_condition_truncate_eft"] is True
 
 

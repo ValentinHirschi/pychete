@@ -306,6 +306,44 @@
   the remaining physics-equivalence gaps. Continue with the broader
   covariant-derivative/group-algebra and on-shell/EOM feature families.
 
+## Current Projection Index-Canonicalization Slice
+
+- Added `canonize_indices` to `MatchingResult.project_matching_conditions(...)`
+  and `with_projected_matching_conditions(...)`, enabled by default. The pass
+  collects pychete `Index(...)` atoms from all requested projection targets
+  and the source expression using Symbolica pattern matching, then applies
+  native `Expression.canonize_tensors(...)` before native coefficient
+  extraction. This makes alpha-equivalent contracted-index relabelings
+  projectable without implementing a Python tensor matcher.
+- Threaded the option through public `match_one_loop(...)`,
+  `Theory.match(...)`, and validation fixture gap reports as
+  `matching_condition_canonize_indices` /
+  `matching_condition_projection_canonize_indices`. Metadata now records
+  `matching_condition_projection_canonize_indices`.
+- The source expression is canonicalized term-locally, because generated
+  one-loop sums can reuse the same dummy labels in different additive terms.
+  Terms whose dummy structure is currently invalid for native tensor
+  canonicalization are preserved rather than aborting projection. This keeps
+  projection robust while documenting the next source-side normalization gap.
+- Added regression coverage proving that a source term with a dummy SU(2)
+  Higgs contraction projects onto a target using a different named SU(2)
+  index only when index canonicalization is enabled.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -k "project" -q`
+  passed with 6 tests and 21 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "forwards_pychete_color" -q`
+  passed with 1 test and 33 deselected; `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
+  passed.
+- A targeted Singlet Scalar Extension public-match probe remains at
+  42/72 accepted matching conditions and 39/64 accepted Wilson targets; direct
+  projection still finds 0 nonzero candidate conditions. The important new
+  diagnostic is that relevant Higgs-sector source terms can contain
+  over-contracted dummy indices, e.g. one SU(2) dummy appearing four times in
+  a single product after heavy-scalar substitution. The next implementation
+  slice should normalize those generated operator products at their source,
+  preserving the physical pairings, before relying on tensor canonicalization.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -340,6 +378,12 @@
   avoidable expression growth. Candidate directions: apply heavy-field
   replacement before expansion where possible, project smaller target groups,
   and use Symbolica collection/coefficient primitives on less-expanded stages.
+- Normalize generated products from heavy-scalar substitution so repeated
+  contracted factors receive distinct dummy labels before projection. The
+  current projection canonicalizer can handle alpha-equivalent valid tensor
+  terms, but it deliberately preserves invalid terms where one dummy index
+  appears more than twice because splitting those occurrences requires
+  source-aware pairing.
 - Use the new `matching_condition_expand_source=False` and
   `matching_condition_truncate_eft=True` controls, together with
   `heavy_scalar_solution_expand=False`, in targeted order-3 Singlet probes

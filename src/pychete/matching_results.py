@@ -8,7 +8,15 @@ from typing import TYPE_CHECKING
 from symbolica import Expression, Replacement
 
 from .eft import series_eft
-from .expr import as_int, coupling_pattern, list_items
+from .expr import (
+    as_int,
+    coupling_pattern,
+    index_pattern,
+    list_items,
+    matching_subexpressions,
+    sum_expr,
+    terms,
+)
 from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
@@ -217,6 +225,7 @@ class MatchingResult:
         *,
         source: str = "on_shell_eft_lagrangian",
         expand_source: bool = True,
+        canonize_indices: bool = True,
         drop_zero: bool = False,
         include_coupling_identities: bool = False,
         eft_order: int | tuple[int, ...] | None = None,
@@ -242,18 +251,26 @@ class MatchingResult:
         intended for loop-correction expressions where unchanged renormalizable
         couplings should still project to themselves, while external Wilson
         coefficients absent from the candidate theory remain zero.
+        ``canonize_indices`` applies Symbolica's native tensor-index
+        canonicalizer to the projection source and target operators before
+        coefficient extraction. This makes alpha-equivalent contracted-index
+        relabelings projectable without a Python-side index matcher.
         """
 
         expr = self.expression(source)
         if expand_source:
             expr = expr.expand()
+        structured_targets = matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets))
+        projection_expressions = tuple(target.projection_expression for target in structured_targets)
+        if canonize_indices:
+            expr, projection_expressions = _canonize_matching_projection_indices(expr, projection_expressions)
         conditions: dict[str, Expression] = {}
-        for target in matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets)):
-            coefficient = expr.coefficient(target.projection_expression).expand()
+        for target, projection_expression in zip(structured_targets, projection_expressions, strict=True):
+            coefficient = expr.coefficient(projection_expression).expand()
             if eft_order is not None:
                 coefficient = _truncate_projected_coefficient(
                     coefficient,
-                    target.projection_expression,
+                    projection_expression,
                     self.theory,
                     eft_order=eft_order,
                     heavy_field_dimension=heavy_field_dimension,
@@ -273,6 +290,7 @@ class MatchingResult:
         *,
         source: str = "on_shell_eft_lagrangian",
         expand_source: bool = True,
+        canonize_indices: bool = True,
         drop_zero: bool = False,
         merge: bool = True,
         include_coupling_identities: bool = False,
@@ -285,6 +303,7 @@ class MatchingResult:
             targets,
             source=source,
             expand_source=expand_source,
+            canonize_indices=canonize_indices,
             drop_zero=drop_zero,
             include_coupling_identities=include_coupling_identities,
             eft_order=eft_order,
@@ -300,6 +319,7 @@ class MatchingResult:
                 "matching_condition_projection_source": source,
                 "matching_condition_projection_count": len(projected),
                 "matching_condition_projection_expand_source": expand_source,
+                "matching_condition_projection_canonize_indices": canonize_indices,
                 "matching_condition_projection_coupling_identities": include_coupling_identities,
                 "matching_condition_projection_eft_order": _metadata_eft_order(eft_order),
                 "matching_condition_projection_heavy_field_dimension": heavy_field_dimension,
@@ -668,6 +688,50 @@ def matching_condition_targets(
     """
 
     return tuple(_matching_condition_target(name, target) for name, target in _matching_condition_targets(targets))
+
+
+def _canonize_matching_projection_indices(
+    source: Expression,
+    projection_expressions: Sequence[Expression],
+) -> tuple[Expression, tuple[Expression, ...]]:
+    index_specs = _matching_projection_index_specs(source, projection_expressions)
+    if not index_specs:
+        return source, tuple(projection_expressions)
+    canon_source = _canonize_tensor_terms(source, index_specs)
+    canon_targets = tuple(_canonize_tensor_terms(target, index_specs) for target in projection_expressions)
+    return canon_source, canon_targets
+
+
+def _canonize_tensor_terms(
+    expr: Expression,
+    index_specs: Sequence[tuple[Expression, Expression]],
+) -> Expression:
+    canonized_terms: list[Expression] = []
+    for term in terms(expr):
+        try:
+            canonized_terms.append(term.canonize_tensors(index_specs)[0])
+        except ValueError:
+            # Some generated terms currently reuse the same dummy more than
+            # twice. Preserve them rather than aborting projection; a later
+            # matching slice should split those contractions at their source.
+            canonized_terms.append(term)
+    return sum_expr(canonized_terms)
+
+
+def _matching_projection_index_specs(
+    source: Expression,
+    projection_expressions: Sequence[Expression],
+) -> tuple[tuple[Expression, Expression], ...]:
+    seen: set[str] = set()
+    specs: list[tuple[Expression, Expression]] = []
+    for expr in (*projection_expressions, source):
+        for index in matching_subexpressions(expr, index_pattern()):
+            key = canonical_string(index)
+            if key in seen:
+                continue
+            seen.add(key)
+            specs.append((index, index[1]))
+    return tuple(specs)
 
 
 def _matching_condition_target(name: str, expression: Expression) -> MatchingConditionTarget:

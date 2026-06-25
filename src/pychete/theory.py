@@ -1532,6 +1532,7 @@ class Theory:
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         matching_condition_source: str = "on_shell_eft_lagrangian",
         matching_condition_expand_source: bool = True,
+        matching_condition_canonize_indices: bool = True,
         matching_condition_truncate_eft: bool = False,
         matching_condition_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = False,
@@ -1555,7 +1556,11 @@ class Theory:
         instead of requiring global result truncation before projection. Pass
         ``"registered_wilsons"`` to project all
         theory-registered Wilson coefficients that have stored operator
-        metadata. Set ``matching_condition_include_coupling_identities`` to
+        metadata. ``matching_condition_canonize_indices=True`` applies
+        Symbolica's native tensor-index canonicalization to the projection
+        source and targets before coefficient extraction so alpha-equivalent
+        contracted-index relabelings can project. Set
+        ``matching_condition_include_coupling_identities`` to
         include tree-level identity values for target couplings registered in
         this theory when projecting from a loop-correction expression.
         """
@@ -1578,6 +1583,7 @@ class Theory:
                 matching_condition_targets=matching_condition_targets,
                 matching_condition_source=matching_condition_source,
                 matching_condition_expand_source=matching_condition_expand_source,
+                matching_condition_canonize_indices=matching_condition_canonize_indices,
                 matching_condition_truncate_eft=matching_condition_truncate_eft,
                 matching_condition_drop_zero=matching_condition_drop_zero,
                 matching_condition_include_coupling_identities=(
