@@ -82,7 +82,7 @@
 - The Mathematica model loader now uses `FreeLagConvention.MATCHETE` for
   parsed `FreeLag[...]`. VLF Python and Mathematica assets intentionally share
   theory metadata but use distinct free-Lagrangian expression conventions.
-- Last pushed green milestone: `466997d Store Wilson operator metadata`.
+- Last pushed green milestone: `a18fb40 Add SMEFT Warsaw operator metadata registry`.
 - Last broader non-slow gate at that milestone:
   `263 passed, 1 skipped, 50 deselected`; the skip was the expected GammaLoop
   manifest skip for a local dependency build without GammaLoop requested.
@@ -96,8 +96,8 @@
   - non-Abelian covariant derivatives and generator/CG handling through
     idenso/spenso-backed paths;
   - broader tensor and Dirac/NCM simplification in generated supertraces;
-  - EFT truncation and Wilson-condition projection improvements for the
-    default SMEFT-oriented fixtures;
+  - EFT truncation and using the now-complete Wilson operator metadata in the
+    default SMEFT-oriented matching pipeline;
   - stronger canonical/numeric-probe acceptance for remaining Matchete
     matching-condition gaps.
 - Keep implementation notes manageable. When this live file grows large again,
@@ -227,3 +227,39 @@
     8 passed.
   - `python -m mypy`: success, no issues in 33 source files.
   - `git diff --check`: clean.
+
+## Current Slice: Complete Warsaw Operator Metadata Coverage
+
+- Expanded `pychete.smeft` from the initial 25-operator subset to the complete
+  64-name `SMEFTWilsonCoefficients[]` set used by Matchete's
+  `SMEFT_Warsaw.m` reference model.
+- Added a central `Sigma` Symbolica head to the reusable `SymbolStore` so
+  dipole and tensor four-fermion operators use pychete-native Dirac primitives
+  rather than ad hoc external symbols.
+- Added pychete-native builders for:
+  - the Weinberg-like `cllHH` operator;
+  - all electroweak/QCD dipoles: `ceW`, `ceB`, `cuG`, `cuW`, `cuB`, `cdG`,
+    `cdW`, `cdB`;
+  - `cHud`;
+  - vector-current four-fermion operators including singlet, triplet, and
+    colour-octet variants;
+  - scalar/tensor four-fermion operators `cledq`, `cquqd1`, `cquqd8`,
+    `clequ1`, and `clequ3`;
+  - baryon-number-violating operators `cduq`, `cqqu`, `cqqq`, and `cduu`.
+- The builders are expression-construction metadata only; matching-condition
+  projection continues to use native Symbolica coefficient extraction through
+  `MatchingConditionTarget.projection_expression`.
+- Regenerated the default matching fixtures through the converter, then
+  restored previously committed `state.expressions` payloads to avoid
+  unrelated round-trip text drift. Matching results and stored reference
+  expressions remain unchanged.
+- Fixture sanity counts after the scoped update:
+  - `E_VLL`: 64 Wilson coefficients, 64 with operator metadata.
+  - `S1S3LQs`: 64 Wilson coefficients, 64 with operator metadata.
+  - `Singlet_Scalar_Extension`: 64 Wilson coefficients, 64 with operator
+    metadata.
+  - `VLF_toy_model`: 0 Wilson coefficients.
+- Targeted validation for this slice:
+  - `pytest tests/unit/definitions/test_theory_definitions.py::test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata tests/unit/definitions/test_public_api.py tests/unit/loaders/test_matchete_previous_results_converter.py::test_previous_result_converter_predeclares_lhs_wilson_targets_only tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata -q`:
+    8 passed.
+  - `python -m mypy`: success, no issues in 33 source files.

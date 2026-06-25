@@ -186,3 +186,7 @@ discoveries, dependency patches, blockers, and remaining work.
   through `pychete.smeft` helpers so matching-condition projection can use the
   stored operator monomial; unsupported coefficients remain valid Wilson
   targets with missing operator metadata documented explicitly.
+- For the default SMEFT validation fixtures, `pychete.smeft` should cover the
+  full 64-name Warsaw coefficient set from Matchete's `SMEFT_Warsaw.m`; this
+  registry is the source of truth for Wilson-to-operator metadata used by
+  fixture conversion and later matching-condition projection.

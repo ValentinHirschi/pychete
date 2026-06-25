@@ -167,6 +167,7 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.NCM(s.Bar(phi()), s.Gamma(mu), phi()),
         s.DiracProduct(s.Bar(phi()), phi()),
         s.Gamma(mu),
+        s.Sigma(mu, nu),
         s.Proj(s.PR),
         s.CG(mu, nu),
         s.EOM(phi(), phi()),

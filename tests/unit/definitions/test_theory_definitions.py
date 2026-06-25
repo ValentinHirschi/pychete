@@ -620,29 +620,44 @@ def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> Non
     su3_fund = theory.define_representation("SU3c", "fund")
     su2_fund = theory.define_representation("SU2L", "fund")
     theory.define_field("H", s.Scalar, indices=[su2_fund], mass=0)
+    theory.define_field("q", s.Fermion, indices=[su3_fund, su2_fund, flavor.symbol], mass=0)
+    theory.define_field("u", s.Fermion, indices=[su3_fund, flavor.symbol], mass=0)
     theory.define_field("l", s.Fermion, indices=[su2_fund, flavor.symbol], mass=0)
+    theory.define_field("e", s.Fermion, indices=[flavor.symbol], mass=0)
     theory.define_field("d", s.Fermion, indices=[su3_fund, flavor.symbol], mass=0)
 
     p = theory.index("p", flavor.symbol)
     r = theory.index("r", flavor.symbol)
+    s_flavor = theory.index("s", flavor.symbol)
+    t = theory.index("t", flavor.symbol)
     c_h = define_smeft_wilson_coefficient(theory, "cH")
     c_hb = define_smeft_wilson_coefficient(theory, "cHB")
     c_hwb = define_smeft_wilson_coefficient(theory, "cHWB")
     c_hd = define_smeft_wilson_coefficient(theory, "cHd", indices=[p, r])
+    c_ew = define_smeft_wilson_coefficient(theory, "ceW", indices=[p, r])
+    c_ll = define_smeft_wilson_coefficient(theory, "cll", indices=[p, r, s_flavor, t])
+    c_duq = define_smeft_wilson_coefficient(theory, "cduq", indices=[p, r, s_flavor, t])
 
-    assert {"cH", "cHB", "cHWB", "cHd"} <= set(smeft_warsaw_operator_names())
-    for handle in (c_h, c_hb, c_hwb, c_hd):
+    assert len(smeft_warsaw_operator_names()) == 64
+    for name in smeft_warsaw_operator_names():
+        flavor_indices = ()
+        if name in {"cllHH", "ceH", "cuH", "cdH", "ceW", "ceB", "cuG", "cuW", "cuB", "cdG", "cdW", "cdB", "cHl1", "cHl3", "cHe", "cHq1", "cHq3", "cHu", "cHd", "cHud"}:
+            flavor_indices = (p, r)
+        elif name not in {"cG", "cGt", "cW", "cWt", "cHG", "cHGt", "cHW", "cHWt", "cHB", "cHBt", "cHWB", "cHWtB", "cH", "cHBox", "cHD"}:
+            flavor_indices = (p, r, s_flavor, t)
+        operator = smeft_warsaw_operator(theory, name, flavor_indices)
+        assert operator is not None, name
+        theory._validate_registered_expression(operator)
+
+    for handle in (c_h, c_hb, c_hwb, c_hd, c_ew, c_ll, c_duq):
         assert handle.definition.operator_expr is not None
         theory._validate_registered_expression(handle.definition.operator_expr)
     assert "field_H" in canonical_string(c_h.definition.operator_expr)
     assert "field_B" in canonical_string(c_hb.definition.operator_expr)
     assert "cg_tensor_gen_SU2L_fund" in canonical_string(c_hwb.definition.operator_expr)
     assert "field_d" in canonical_string(c_hd.definition.operator_expr)
+    assert "pychete::Sigma" in canonical_string(c_ew.definition.operator_expr)
     assert "pychete::NCM" in canonical_string(c_hd.definition.operator_expr)
-
-    unsupported = define_smeft_wilson_coefficient(theory, "ceW", indices=[p, r])
-    assert unsupported.definition.operator_expr is None
-    assert smeft_warsaw_operator(theory, "ceW", [p, r]) is None
 
 
 def test_external_metadata_must_be_registered_before_generic_use() -> None:

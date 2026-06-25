@@ -142,7 +142,8 @@ def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     assert len(theory.external_handle("cHd").definition.index_exprs) == 2
     assert theory.external_handle("cHd").definition.operator_expr is not None
     assert "field_d" in canonical_string(theory.external_handle("cHd").definition.operator_expr)
-    assert theory.external_handle("ceW").definition.operator_expr is None
+    assert theory.external_handle("ceW").definition.operator_expr is not None
+    assert "pychete::Sigma" in canonical_string(theory.external_handle("ceW").definition.operator_expr)
     assert theory.external_handle("Delta").definition.kind is ExternalKind.GENERIC
     assert "gL" not in theory.externals
     assert targets[chd_name].is_wilson_coefficient is True
