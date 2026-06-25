@@ -9,7 +9,14 @@ from typing import Any
 
 from symbolica import Expression
 
-from .matching_options import OneLoopIntegralBackend, OneLoopMatchOptions, VakintIntegralStage
+from .matching_options import (
+    OneLoopIntegralBackend,
+    OneLoopMatchOptions,
+    OneLoopNormalization,
+    OneLoopNormalizationInput,
+    VakintIntegralStage,
+    one_loop_normalization_label,
+)
 from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
@@ -360,6 +367,7 @@ class ValidationFixture:
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
         integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
+        normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW,
         internal_tensor_reduce: bool = True,
         internal_combine_terms: bool = False,
         internal_max_pole_order: int = 1,
@@ -406,6 +414,9 @@ class ValidationFixture:
                 mode=tensor_network_mode,
             )
         selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
+        normalization_label = one_loop_normalization_label(normalization)
+        if selected_backend is not OneLoopIntegralBackend.VAKINT and normalization_label != OneLoopNormalization.PREVIEW.value:
+            raise ValueError("one-loop normalization currently applies only to the vakint backend")
         if selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_power_type_internal_matching_result(
                 heavy_field_dimension=heavy_field_dimension,
@@ -422,6 +433,19 @@ class ValidationFixture:
                 tensor_reduce_engine=vakint_engine,
                 combine_terms=internal_combine_terms,
                 max_pole_order=internal_max_pole_order,
+            )
+        elif normalization_label != OneLoopNormalization.PREVIEW.value:
+            result = setup.interaction_power_type_normalized_matching_result(
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
+                vakint_stage=vakint_stage,
+                vakint_short_form=vakint_short_form,
+                vakint_engine=vakint_engine,
+                max_pole_order=internal_max_pole_order,
+                normalization=normalization,
+                named_supertrace_stage=named_supertrace_stage,
+                named_supertrace_short_form=named_supertrace_short_form,
+                named_supertrace_engine=named_supertrace_engine,
             )
         else:
             result = setup.interaction_power_type_matching_result(
@@ -468,6 +492,7 @@ class ValidationFixture:
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
         integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
+        normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW,
         internal_tensor_reduce: bool = True,
         internal_combine_terms: bool = False,
         internal_max_pole_order: int = 1,
@@ -522,6 +547,7 @@ class ValidationFixture:
                     named_supertrace_stage=named_supertrace_stage,
                     named_supertrace_short_form=named_supertrace_short_form,
                     named_supertrace_engine=named_supertrace_engine,
+                    normalization=normalization,
                     tensor_reduce=internal_tensor_reduce,
                     tensor_reduce_engine=vakint_engine,
                     combine_terms=internal_combine_terms,
@@ -564,6 +590,7 @@ class ValidationFixture:
                 vakint_short_form=vakint_short_form,
                 vakint_engine=vakint_engine,
                 integral_backend=integral_backend,
+                normalization=normalization,
                 internal_tensor_reduce=internal_tensor_reduce,
                 internal_combine_terms=internal_combine_terms,
                 internal_max_pole_order=internal_max_pole_order,

@@ -7,7 +7,12 @@ from pathlib import Path
 from symbolica import Expression, S
 import pytest
 
-from pychete import OneLoopIntegralBackend, OneLoopMatchOptions
+from pychete import (
+    OneLoopIntegralBackend,
+    OneLoopMatchOptions,
+    OneLoopNormalization,
+    one_loop_normalization_factor,
+)
 from pychete.backends import spenso as spenso_backend
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
@@ -303,6 +308,27 @@ def test_public_one_loop_match_can_evaluate_fixture_tensor_networks_with_stored_
     assert len(calls) == result.metadata["supertrace_kernel_count"]
     assert all(type(library).__name__ == "TensorLibrary" for _expr, library in calls)
     assert all("pychete::CG" not in canonical_string(expr) for expr, _library in calls)
+
+
+def test_validation_fixture_preview_can_apply_vakint_normalization_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    raw = fixture.one_loop_preview(max_trace_order=1)
+    normalized = fixture.one_loop_preview(
+        max_trace_order=1,
+        normalization=OneLoopNormalization.MATCHETE_HBAR,
+    )
+    factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
+
+    assert normalized.metadata["stage"] == "interaction_power_type_normalized_vakint_result"
+    assert normalized.metadata["loop_normalization"] == "matchete_hbar"
+    assert normalized.metadata["fixture"] == fixture.name
+    assert normalized.metadata["fixture_kind"] == fixture.kind
+    assert_expr_equal(normalized.expression("interaction_power_type_loop_normalization_factor"), factor)
+    assert_expr_equal(
+        normalized.expression("interaction_power_type_vakint_integral_sum_unnormalized"),
+        raw.expression("interaction_power_type_vakint_integral_sum"),
+    )
+    assert_expr_equal(normalized.on_shell_eft_lagrangian, factor * raw.on_shell_eft_lagrangian)
 
 
 def test_validation_fixture_preview_can_stage_named_supertraces_with_vakint_engine() -> None:

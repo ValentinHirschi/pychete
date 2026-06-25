@@ -8,8 +8,10 @@ from pychete import (
     MatchingResult,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
+    OneLoopNormalization,
     Theory,
     canonical_string,
+    one_loop_normalization_factor,
     s,
 )
 from pychete.backends import spenso as spenso_backend
@@ -201,6 +203,54 @@ def test_one_loop_match_options_route_public_match_through_spenso(monkeypatch: p
     assert result.metadata["tensor_networks_evaluated"] is True
     assert result.metadata["tensor_network_cg_component_source"] == "library"
     assert result.metadata["tensor_network_native_hep_cg_builtins"] is False
+
+
+def test_one_loop_match_options_apply_vakint_normalization() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    raw = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+        ),
+    )
+    normalized = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            normalization=OneLoopNormalization.MATCHETE_HBAR,
+        ),
+    )
+    factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
+
+    assert isinstance(raw, MatchingResult)
+    assert isinstance(normalized, MatchingResult)
+    assert normalized.metadata["stage"] == "interaction_power_type_normalized_vakint_result"
+    assert normalized.metadata["loop_normalization"] == "matchete_hbar"
+    assert normalized.metadata["loop_normalization_applied"] is True
+    assert_expr_equal(normalized.expression("interaction_power_type_loop_normalization_factor"), factor)
+    assert_expr_equal(
+        normalized.expression("interaction_power_type_vakint_integral_sum_unnormalized"),
+        raw.expression("interaction_power_type_vakint_integral_sum"),
+    )
+    assert_expr_equal(normalized.off_shell_eft_lagrangian, factor * raw.off_shell_eft_lagrangian)
+
+    with pytest.raises(ValueError, match="vakint backend"):
+        theory.match(
+            lagrangian,
+            eft_order=6,
+            loop_order=1,
+            one_loop_options=OneLoopMatchOptions(
+                integral_backend=OneLoopIntegralBackend.INTERNAL,
+                normalization=OneLoopNormalization.MATCHETE_HBAR,
+            ),
+        )
 
 
 def test_tree_match_rejects_matching_condition_targets() -> None:

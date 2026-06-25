@@ -3794,6 +3794,52 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 227 passed, 1
     skipped in 252.05s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Exposed existing interaction-power vakint loop normalization through the
+  public one-loop matching options:
+  - extended `OneLoopMatchOptions` with `normalization`, defaulting to
+    `OneLoopNormalization.PREVIEW` so previous public behavior is unchanged;
+  - `match_one_loop(...)` now delegates non-preview vakint normalization to
+    `OneLoopSetup.interaction_power_type_normalized_matching_result(...)`,
+    preserving the existing Symbolica-native `Expression.I`, `Expression.PI`,
+    and `Expression.expand()` path for scaled EFT Lagrangians and pole/finite
+    pieces;
+  - non-preview normalization is rejected for the pychete internal analytic
+    backends for now, because those backends already carry explicit analytic
+    vacuum-integral normalization and need a separate convention decision
+    before accepting additional loop factors;
+  - `ValidationFixture.one_loop_preview(...)` and
+    `one_loop_preview_gap_report(...)` now accept the same normalization option
+    and route it through either direct fixture preview or public
+    `Theory.match(...)` preview when requested;
+  - added Mathematica-independent tests proving public `Theory.match` can
+    return a normalized vakint result with the unnormalized aggregate retained,
+    and proving fixture previews can request Matchete-hbar normalization
+    without invoking Mathematica.
+- Final verification for the public one-loop normalization option slice:
+  - inspected the Symbolica Python stubs for native `Expression.expand`,
+    `Expression.collect`, `Expression.coefficient`, and `Expression.together`,
+    and confirmed this slice reuses the existing native normalization helper
+    rather than adding Python algebra;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py -q'` passed: 12
+    passed in 0.33s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_vakint_normalization_without_mathematica
+    -q'` passed: 1 passed in 0.29s;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 229 passed, 1
+    skipped in 247.22s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

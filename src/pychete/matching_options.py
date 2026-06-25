@@ -91,6 +91,7 @@ class OneLoopMatchOptions:
     named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW
     named_supertrace_short_form: bool | None = None
     named_supertrace_engine: Any | None = None
+    normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW
     tensor_reduce: bool = False
     tensor_reduce_engine: Any | None = None
     combine_terms: bool = True
