@@ -1533,6 +1533,7 @@ class Theory:
         matching_condition_source: str = "on_shell_eft_lagrangian",
         matching_condition_expand_source: bool = True,
         matching_condition_canonize_indices: bool = True,
+        matching_condition_normalize_derivative_operators: bool = True,
         matching_condition_truncate_eft: bool = False,
         matching_condition_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = False,
@@ -1560,6 +1561,10 @@ class Theory:
         Symbolica's native tensor-index canonicalization to the projection
         source and targets before coefficient extraction so alpha-equivalent
         contracted-index relabelings can project. Set
+        ``matching_condition_normalize_derivative_operators=True`` to expand
+        explicit ``CD(...)`` wrappers into pychete field-derivative slots before
+        projection, which aligns user-facing operator metadata with generated
+        one-loop sources. Set
         ``matching_condition_include_coupling_identities`` to
         include tree-level identity values for target couplings registered in
         this theory when projecting from a loop-correction expression.
@@ -1584,6 +1589,9 @@ class Theory:
                 matching_condition_source=matching_condition_source,
                 matching_condition_expand_source=matching_condition_expand_source,
                 matching_condition_canonize_indices=matching_condition_canonize_indices,
+                matching_condition_normalize_derivative_operators=(
+                    matching_condition_normalize_derivative_operators
+                ),
                 matching_condition_truncate_eft=matching_condition_truncate_eft,
                 matching_condition_drop_zero=matching_condition_drop_zero,
                 matching_condition_include_coupling_identities=(

@@ -847,6 +847,7 @@ class ValidationFixture:
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_expand_source: bool = True,
         matching_condition_projection_canonize_indices: bool = True,
+        matching_condition_projection_normalize_derivative_operators: bool = True,
         matching_condition_projection_truncate_eft: bool = False,
         matching_condition_projection_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = True,
@@ -864,6 +865,9 @@ class ValidationFixture:
         Matching-condition probes additionally accept ``"wilson"`` and
         ``"canonical_different_wilson"`` to focus evaluator probes on SMEFT
         Wilson-coefficient targets identified from Symbolica symbol metadata.
+        Derivative-operator normalization is enabled by default so explicit
+        ``CD(...)`` operators in fixture metadata project against generated
+        field-derivative-slot one-loop sources.
         """
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
@@ -918,6 +922,9 @@ class ValidationFixture:
                 matching_condition_source=matching_condition_projection_source,
                 matching_condition_expand_source=matching_condition_projection_expand_source,
                 matching_condition_canonize_indices=matching_condition_projection_canonize_indices,
+                matching_condition_normalize_derivative_operators=(
+                    matching_condition_projection_normalize_derivative_operators
+                ),
                 matching_condition_truncate_eft=matching_condition_projection_truncate_eft,
                 matching_condition_drop_zero=matching_condition_projection_drop_zero,
                 matching_condition_include_coupling_identities=(
@@ -978,6 +985,7 @@ class ValidationFixture:
                 source=matching_condition_projection_source,
                 expand_source=matching_condition_projection_expand_source,
                 canonize_indices=matching_condition_projection_canonize_indices,
+                normalize_derivative_operators=matching_condition_projection_normalize_derivative_operators,
                 eft_order=eft_order if matching_condition_projection_truncate_eft else None,
                 heavy_field_dimension=heavy_field_dimension,
                 drop_zero=matching_condition_projection_drop_zero,

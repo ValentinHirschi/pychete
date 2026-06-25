@@ -8,6 +8,7 @@ from typing import TYPE_CHECKING
 from symbolica import Expression, Replacement
 
 from .eft import series_eft
+from .functional import expand_cd_operators
 from .expr import (
     as_int,
     coupling_pattern,
@@ -226,6 +227,7 @@ class MatchingResult:
         source: str = "on_shell_eft_lagrangian",
         expand_source: bool = True,
         canonize_indices: bool = True,
+        normalize_derivative_operators: bool = True,
         drop_zero: bool = False,
         include_coupling_identities: bool = False,
         eft_order: int | tuple[int, ...] | None = None,
@@ -255,6 +257,12 @@ class MatchingResult:
         canonicalizer to the projection source and target operators before
         coefficient extraction. This makes alpha-equivalent contracted-index
         relabelings projectable without a Python-side index matcher.
+        ``normalize_derivative_operators`` expands explicit ``CD(...)``
+        wrappers in the source and target operators into pychete's canonical
+        field-derivative-slot representation before projection. The rewrite is
+        guarded by native Symbolica pattern matching and is primarily needed
+        when SMEFT operator metadata uses explicit derivative wrappers while a
+        generated one-loop source stores derivatives directly on fields.
         """
 
         expr = self.expression(source)
@@ -262,6 +270,9 @@ class MatchingResult:
             expr = expr.expand()
         structured_targets = matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets))
         projection_expressions = tuple(target.projection_expression for target in structured_targets)
+        if normalize_derivative_operators:
+            expr = expand_cd_operators(expr)
+            projection_expressions = tuple(expand_cd_operators(target) for target in projection_expressions)
         if canonize_indices:
             expr, projection_expressions = _canonize_matching_projection_indices(expr, projection_expressions)
         conditions: dict[str, Expression] = {}
@@ -291,6 +302,7 @@ class MatchingResult:
         source: str = "on_shell_eft_lagrangian",
         expand_source: bool = True,
         canonize_indices: bool = True,
+        normalize_derivative_operators: bool = True,
         drop_zero: bool = False,
         merge: bool = True,
         include_coupling_identities: bool = False,
@@ -304,6 +316,7 @@ class MatchingResult:
             source=source,
             expand_source=expand_source,
             canonize_indices=canonize_indices,
+            normalize_derivative_operators=normalize_derivative_operators,
             drop_zero=drop_zero,
             include_coupling_identities=include_coupling_identities,
             eft_order=eft_order,
@@ -320,6 +333,7 @@ class MatchingResult:
                 "matching_condition_projection_count": len(projected),
                 "matching_condition_projection_expand_source": expand_source,
                 "matching_condition_projection_canonize_indices": canonize_indices,
+                "matching_condition_projection_normalize_derivative_operators": normalize_derivative_operators,
                 "matching_condition_projection_coupling_identities": include_coupling_identities,
                 "matching_condition_projection_eft_order": _metadata_eft_order(eft_order),
                 "matching_condition_projection_heavy_field_dimension": heavy_field_dimension,

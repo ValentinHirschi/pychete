@@ -58,6 +58,36 @@ def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expressio
     return out
 
 
+def expand_cd_operators(expr: Expression) -> Expression:
+    """Expand explicit ``CD`` wrappers into pychete field-derivative slots.
+
+    Generated matching expressions store covariant/ordinary derivative action
+    directly on ``Field(..., derivatives)`` atoms. User-facing operators, SMEFT
+    metadata, and fixtures may instead contain explicit ``CD(index, body)``
+    wrappers. This helper normalizes the latter representation with Symbolica
+    replacement rules and :func:`apply_cd`, so product rules and nested
+    derivatives use the same native variation machinery as functional
+    derivatives.
+    """
+
+    cd_pat = cd_pattern()
+    if not bool(expr.matches(cd_pat)):
+        return expr
+
+    def cd_replacement(match: dict[Expression, Expression]) -> Expression:
+        index = match[s.CDIndexWildcard]
+        indices = list_items(index) if is_head(index, s.List) else (index,)
+        return apply_cd(indices, match[s.CDBodyWildcard])
+
+    out = expr
+    for _ in range(16):
+        updated = out.replace(cd_pat, cd_replacement).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
+
+
 def _single_cd(index: Expression, expr: Expression) -> Expression:
     varied = expr.replace_multiple(_cd_variation_replacements(index))
     varied = _linearize_variation_wrappers(varied, s.CDVariationParameter)

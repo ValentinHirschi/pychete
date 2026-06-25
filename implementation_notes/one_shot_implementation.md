@@ -384,6 +384,47 @@
   remain in operator-shape, derivative, group-algebra, and basis/on-shell
   reduction features.
 
+## Current Derivative-Operator Projection Slice
+
+- Added `functional.expand_cd_operators(...)`, an internal normalization helper
+  that expands explicit pychete `CD(...)` wrappers into the canonical
+  `Field(..., derivatives)` representation used by generated one-loop sources.
+  The implementation is guarded by native Symbolica `matches(...)` and uses
+  Symbolica replacement callbacks plus the existing `apply_cd(...)` variation
+  machinery, rather than a Python expression walker.
+- Threaded derivative-operator normalization through
+  `MatchingResult.project_matching_conditions(...)`,
+  `with_projected_matching_conditions(...)`, public `match_one_loop(...)`,
+  `Theory.match(...)`, and validation fixture gap reports. It is enabled by
+  default and can be disabled with
+  `matching_condition_normalize_derivative_operators=False` or
+  `matching_condition_projection_normalize_derivative_operators=False`.
+- Matching-result metadata now records
+  `matching_condition_projection_normalize_derivative_operators`.
+- Added focused projection tests proving that a generated derivative-slot
+  source projects against an explicit `CD(mu, ...)` target, and that additive
+  product-rule targets such as `CD(List(mu, mu), phi*Bar(phi))` project when
+  the source is kept factored with `expand_source=False`. This mirrors the
+  performance-oriented projection path already used for larger SMEFT probes.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -k "cd_targets or additive_cd or project" -q`
+  passed with 8 tests and 21 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "forwards_pychete_color" -q`
+  passed with 1 test and 33 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py tests/integration/validation/test_validation_fixtures.py -k "cd_targets or additive_cd or project or forwards_pychete_color" -q`
+  passed with 12 tests and 51 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/functional/test_scalar_eom.py -q`
+  passed with 14 tests. `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  and `git diff --check` also passed.
+- A scoped Singlet Scalar Extension public-match report with the current
+  performance-oriented validation options is unchanged by toggling derivative
+  normalization: both modes report 42/72 accepted matching conditions and
+  39/64 accepted Wilson targets. This confirms the next missing features are
+  not merely explicit-`CD` versus derivative-slot normalization; the source
+  still needs broader covariant-derivative/field-strength generation and
+  on-shell/IBP basis reduction before the gauge and Higgs-derivative Wilson
+  gaps can close.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -413,6 +454,12 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
+- Implement covariant-derivative expansion far enough to generate and reduce
+  field-strength/commutator structures needed by gauge Wilsons such as
+  `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current coefficients.
+- Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
+  operators so generated derivative distributions can project onto Warsaw
+  basis targets such as `cH`, `cHBox`, and `cHD`.
 - Optimize the opt-in heavy-scalar solution substitution/projection path so it
   can be safely enabled for larger order-3 SMEFT target sets without causing
   avoidable expression growth. Candidate directions: apply heavy-field

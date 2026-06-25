@@ -403,6 +403,51 @@ def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> 
         result.project_matching_conditions("all_wilsons")
 
 
+def test_matching_result_projection_normalizes_cd_targets_to_derivative_slots() -> None:
+    coefficient = S("condition_projection_cd_coefficient")
+    theory = Theory("condition_projection_cd_normalization")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    mu = theory.dummy_index(0)
+    source = coefficient * phi(derivatives=[mu]) * s.Bar(phi(derivatives=[mu]))
+    target = s.CD(mu, phi()) * s.CD(mu, s.Bar(phi()))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+
+    raw = result.project_matching_conditions({"kinetic": target}, normalize_derivative_operators=False)
+    normalized = result.with_projected_matching_conditions({"kinetic": target})
+
+    assert_expr_equal(raw["kinetic"], Expression.num(0))
+    assert_expr_equal(normalized.matching_conditions["kinetic"], coefficient)
+    assert normalized.metadata["matching_condition_projection_normalize_derivative_operators"] is True
+
+
+def test_matching_result_projection_normalizes_additive_cd_targets() -> None:
+    coefficient = S("condition_projection_cd_box_coefficient")
+    theory = Theory("condition_projection_cd_box")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    mu = theory.dummy_index(0)
+    source_operator = (
+        phi(derivatives=[mu, mu]) * s.Bar(phi())
+        + 2 * phi(derivatives=[mu]) * s.Bar(phi(derivatives=[mu]))
+        + phi() * s.Bar(phi(derivatives=[mu, mu]))
+    )
+    target = s.CD(s.List(mu, mu), phi() * s.Bar(phi()))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    projected = result.project_matching_conditions({"box": target}, expand_source=False)
+
+    assert_expr_equal(projected["box"], coefficient)
+
+
 def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() -> None:
     theory = Theory("result_on_shell_reduction")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
