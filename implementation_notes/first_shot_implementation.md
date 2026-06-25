@@ -60,7 +60,7 @@
   - rule rewriting to `Rule[...]`;
   - `NonCommutativeMultiply`/`**` normalization;
   - interpretation of supported definition calls and a constrained `Module`/assignment subset.
-- idenso exposes `simplify_gamma`, `simplify_color`, `simplify_metrics`, `wrap_indices`, `wrap_dummies`, and related conversion helpers. Future gamma, color, and metric algebra should be delegated through a pychete adapter rather than reimplemented.
+- idenso exposes `simplify_gamma`, `simplify_color`, `simplify_metrics`, `wrap_indices`, `wrap_dummies`, and related conversion helpers. Future gamma and metric algebra should be delegated through a pychete adapter rather than reimplemented. Lie-group algebra must remain group-agnostic in pychete even if backend APIs use colour-oriented names.
 - spenso provides representation, slot, tensor, and tensor-library APIs. The initial design should preserve an adapter path to these APIs without requiring spenso objects as pychete's canonical expression representation.
 - Namespaced Symbolica heads such as `pychete::field` and model symbols such as
   `model::phi` construct, iterate, match, and round-trip to Mathematica syntax
@@ -205,8 +205,8 @@
      fermionic matching in this slice.
 
 9. Group algebra boundary
-   - Add `group_algebra/idenso.py` as the only gamma/color/metric simplification
-     gateway and convert pychete expressions to idenso/spenso conventions there.
+   - Add `group_algebra/idenso.py` as the gamma/metric simplification gateway
+     and convert pychete expressions to idenso/spenso conventions there.
    - Keep Symbolica fallback rules in `group_algebra/fallbacks.py` only for
      unsupported operations; do not duplicate idenso algorithms.
 
@@ -313,3 +313,141 @@
 - EFT denominator Taylor expansion for additive denominators, full
   GroupMagic-style CG handling, and idenso expression conversion are not yet
   implemented.
+
+## 2026-06-25
+
+### VLF tree-level matching goal
+
+- Started the VLF-capable foundation goal: pychete should load the VLF toy
+  model, represent fermion/NCM/Abelian gauge structure natively in Symbolica,
+  derive and solve the heavy Dirac-field tree EOM, and reproduce Matchete's
+  raw off-shell dimension-six tree EFT with no remaining heavy fields.
+- Locked user decisions for this slice:
+  - Match the raw off-shell Matchete tree result through dimension six, before
+    IBP/Green simplification.
+  - Add `Theory.match(..., loop_order=0)` and reject nonzero loop orders.
+  - Implement open spin chains and the projector identities needed for heavy
+    spinor EOMs; defer charge conjugation and Majorana fermions.
+
+### Current implementation pass
+
+- Confirmed the worktree was clean before starting this pass.
+- Re-read the current package structure, scalar matcher, functional
+  derivative machinery, VLF loaders, and agent notes before making code edits.
+- Updating project notes and agent guidance first, then proceeding to the
+  Symbolica-native NCM, fermion, Abelian charge, and VLF matching layers.
+- Added the requested AGENTS.md planning-question rule: material planning,
+  physics-scope, API, validation, and architecture questions must wait for the
+  user's explicit answer.
+- Added Symbolica-native NCM support with central sequence wildcards, linear
+  `NCM`, scalar-aware normalization, scalar extraction, nested-chain
+  flattening, projector identities, chirality flips across gamma matrices,
+  active Hermitian conjugation through `bar_expr`, and open/closed spin-chain
+  classification.
+- Extended field metadata with gauge-charge expressions and updated the VLF
+  Mathematica/Python loaders so `Charges -> {U1e[1]}` is preserved in Symbolica
+  symbol data. The Python and Mathematica VLF assets still canonicalize to the
+  same theory JSON and Lagrangian.
+- Updated Abelian vector free-lagrangian normalization to include the gauge
+  coupling denominator, yielding the Matchete-style `-F^2/(4 e^2)` term.
+- Fixed the functional-derivative path to normalize NCM before extracting the
+  variation coefficient and added an ordered-chain NCM variation rule with
+  Grassmann signs, avoiding Symbolica `der(..., NCM, ...)` artifacts.
+- Added a first heavy-Dirac solver for diagonal vector-like fermions. For the
+  VLF toy model it derives the open-chain EOM, solves the leading source and
+  derivative correction, substitutes the solution, and canonizes the
+  first-derivative bilinear to Matchete's raw off-shell antisymmetric form.
+- Local probe result for the VLF Python asset now has no heavy `Psi` and gives
+  the expected tree interaction:
+  `I/2 phi^2 y Bar[y]/M^2 (Bar[psi] gamma P_L D psi -
+  Bar[D psi] gamma P_L psi)`, plus the light free Lagrangian.
+
+### VLF implementation verification
+
+- Added focused tests for:
+  - NCM scalar extraction, Hermitian conjugation, projector identities, and
+    open/closed spin-chain classification.
+  - Abelian charge metadata and U(1) vector free-lagrangian normalization.
+  - Heavy-fermion EOM derivation with open NCM chains.
+  - idenso gamma and explicit-dimension projector smoke coverage, with spenso
+    limited to interop construction of tensor expressions.
+  - Python and Mathematica VLF tree-level matching through dimension six.
+- Added a small spenso bridge under `pychete/group_algebra/` as an interop
+  probe, not as the Dirac-algebra engine. The local API probe confirmed
+  symbolic-`D` gamma contractions should be delegated to idenso, while
+  projector identities are reliable at explicit dimension and remain backed by
+  pychete's Symbolica projector fallback for symbolic-`D` chains.
+- Verification command:
+  `source "$HOME/.bashrc"; dependencies/.venv/bin/python -m pytest tests`
+  passed with 68 tests and 1 expected skip for the optional GammaLoop API.
+- Runtime scan found no `sympy`/`scipy` imports and no runtime pychete
+  dependency on `Mathematica_reference` or `Matchete/Package`.
+
+### Notebook examples
+
+- Started adding VLF examples to `examples/scalar_theory_playground.ipynb`.
+- The examples will demonstrate loading the Python and Mathematica VLF assets,
+  inspecting charge/NCM data, deriving the heavy-fermion EOM, solving the first
+  heavy-spinor orders, and matching against the raw off-shell dimension-six
+  tree result.
+- Added the notebook cells and validated them by executing every code cell in
+  order from the managed environment. Also reran the focused VLF/model tests:
+  `dependencies/.venv/bin/python -m pytest tests/integration/matching/test_vlf_tree.py tests/integration/models/test_model_loaders.py`.
+- Clarified the VLF field-list display: charges are stored as Symbolica
+  expressions, but the notebook had been converting them to canonical strings
+  before printing. Updated the example to display formatted charge expressions
+  such as `charges=[U1e(1)]` instead of a Python list of quoted strings.
+- Added a notebook-local imaginary-unit formatter so `as_symbolica` and
+  `as_latex` compact unit imaginary coefficients such as `-1𝑖` to `-𝑖` (and
+  LaTeX `-\mathrm{i}`), without changing the underlying Symbolica expression.
+
+### Dummy-index API clarification
+
+- Inspected the VLF theory returned by the Python loader after the user noticed
+  `vlf.dummy_index`.
+- Confirmed this is the public bound method `Theory.dummy_index(...)`, not a
+  stored field, loader artifact, or theory-owned dummy-index registry entry.
+  The loaded VLF theory has no dummy/index entries in `_symbols`,
+  `symbol_manifest()`, or JSON metadata. Dummy labels still appear inside
+  expressions as the central built-in `pychete::dummy_index(...)` head, which is
+  the intended non-registered representation.
+
+### Expression zero checks
+
+- Replaced string-based zero checks with Symbolica expression equality against
+  `Expression.num(0)` after expansion.
+- Updated both the VLF notebook assertion and the shared pytest
+  `assert_expr_equal` helper so formatting is used only as a failure message,
+  never as the semantic zero test.
+- Updated exact imaginary factors in tests to use `Expression.I` instead of
+  Python `1j`, and rationalized zero-test differences before comparing to
+  `Expression.num(0)`.
+- Revalidated by executing all notebook code cells and running
+  `source "$HOME/.bashrc"; dependencies/.venv/bin/python -m pytest tests`,
+  which passed with 68 tests and 1 expected skip.
+
+### Dirac-algebra engine clarification
+
+- Recorded the corrected interpretation of the Symbolica community modules:
+  idenso is the primary engine for Dirac, Lorentz, metric, and
+  dimensional-regularization algebra, including future `d = 4 - 2 epsilon`
+  work. spenso should be treated as the tensor-network/evaluation layer, or as
+  a bridge for constructing tensor expressions, rather than as the canonical
+  symbolic Dirac-algebra implementation.
+- Updated `AGENTS.md` with that distinction so future gamma/Lorentz work starts
+  from idenso and only uses spenso where tensor-network representation or
+  evaluation is genuinely needed.
+- Traced `spenso_bridge.py` dependencies. It was only exported through
+  `pychete.group_algebra` and used by the smoke test, not by matching, loaders,
+  or notebooks.
+- Replaced `spenso_bridge.py` plus the thin `idenso.py` wrapper with a single
+  `group_algebra/idenso_bridge.py`. The new bridge keeps `simplify_gamma` and
+  `simplify_metrics` as idenso calls, and exposes neutral tensor constructors
+  (`gamma_tensor`, `chiral_projector_tensor`, `spin_metric_tensor`) for
+  expressions meant to be consumed by idenso. spenso remains an internal
+  implementation detail for constructing those tensor expressions.
+- Removed `simplify_color` from the pychete-facing `group_algebra` surface.
+  Colour is not a special pychete group: future group algebra should be built
+  around general Lie-group data and identities, not a dedicated colour/SU(3)
+  path. idenso's colour-named routines can be revisited only as backend details
+  if they fit that general abstraction.

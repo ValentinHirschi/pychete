@@ -13,6 +13,7 @@ from .expr import (
     list_items,
 )
 from .functional import apply_cd, derive_eom
+from .spinor import bar_expr, canonicalize_fermion_derivative_bilinears, ncm_expr, normalize_ncm
 from .symbols import display_string, latex_string, s
 from .theory import FieldDefinition, FieldVariation, Theory
 
@@ -52,9 +53,42 @@ class HeavyScalarSolution:
         return f"<code>{escape(self.field.name)}: {escape(display_string(self.inclusive))}</code>"
 
 
+@dataclass(frozen=True)
+class HeavyFermionSolution:
+    """Order-by-order solution for a heavy Dirac-fermion equation of motion."""
+
+    field: FieldDefinition
+    orders: dict[int, Expression]
+    conjugate_orders: dict[int, Expression]
+
+    @property
+    def inclusive(self) -> Expression:
+        """Sum all stored EFT orders for the heavy fermion."""
+
+        out = Expression.num(0)
+        for _, expr in sorted(self.orders.items()):
+            out = out + expr
+        return normalize_ncm(out.expand())
+
+    @property
+    def inclusive_conjugate(self) -> Expression:
+        """Sum all stored EFT orders for the conjugate heavy fermion."""
+
+        out = Expression.num(0)
+        for _, expr in sorted(self.conjugate_orders.items()):
+            out = out + expr
+        return normalize_ncm(out.expand())
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{{self.field.name}}}: {latex_string(self.inclusive)}$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>{escape(self.field.name)}: {escape(display_string(self.inclusive))}</code>"
+
+
 def _zero_field_label(expr: Expression, label: Expression, *, conjugate: bool = False) -> Expression:
     pattern = bar_field_pattern(label) if conjugate else field_pattern(label)
-    return expr.replace(pattern, Expression.num(0)).expand()
+    return normalize_ncm(expr.replace(pattern, Expression.num(0)).expand())
 
 
 def _mass_squared(field: FieldDefinition) -> Expression:
@@ -62,6 +96,13 @@ def _mass_squared(field: FieldDefinition) -> Expression:
     if mass is None:
         raise ValueError(f"Heavy field {field.name} has no mass coupling")
     return mass**2
+
+
+def _mass(field: FieldDefinition) -> Expression:
+    mass = field.mass_expr()
+    if mass is None:
+        raise ValueError(f"Heavy field {field.name} has no mass coupling")
+    return mass
 
 
 def _box(theory: Theory, expr: Expression, order: int) -> Expression:
@@ -92,7 +133,7 @@ def _solve_orders_from_source(theory: Theory, source: Expression, mass2: Express
 
 def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyScalarSolution]:
     theory._validate_registered_expression(lagrangian)
-    lagrangian = lagrangian.expand()
+    lagrangian = normalize_ncm(lagrangian.expand())
     solutions: dict[str, HeavyScalarSolution] = {}
 
     for field in theory.fields.values():
@@ -123,24 +164,67 @@ def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order
     return solutions
 
 
-def _replace_heavy_fields(expr: Expression, solutions: dict[str, HeavyScalarSolution]) -> Expression:
+def _slash_d(theory: Theory, expr: Expression, order: int) -> Expression:
+    mu = theory.dummy_index(order)
+    return ncm_expr(s.Gamma(mu), apply_cd((mu,), expr))
+
+
+def _solve_fermion_orders(theory: Theory, source: Expression, mass: Expression, *, eft_order: int) -> dict[int, Expression]:
+    orders: dict[int, Expression] = {}
+    max_order = max(1, eft_order - 4)
+    for order in range(1, max_order + 1):
+        if order == 1:
+            value = (source / mass).expand()
+        else:
+            value = (Expression.I * _slash_d(theory, orders[order - 1], order) / mass).expand()
+        orders[order] = normalize_ncm(value)
+    return orders
+
+
+def solve_heavy_fermion_eoms(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyFermionSolution]:
+    """Solve diagonal heavy Dirac-fermion equations of motion order by order."""
+
+    theory._validate_registered_expression(lagrangian)
+    lagrangian = normalize_ncm(lagrangian.expand())
+    solutions: dict[str, HeavyFermionSolution] = {}
+
+    for field in theory.fields.values():
+        if not field.heavy or not bool(field.type_expr == s.Fermion):
+            continue
+
+        mass = _mass(field)
+        eom = derive_eom(theory, lagrangian, field, eft_order=eft_order, variation=FieldVariation.BAR)
+        source = _zero_field_label(eom, field.label)
+        orders = _solve_fermion_orders(theory, source, mass, eft_order=eft_order)
+        conjugate_orders = {order: bar_expr(expr) for order, expr in orders.items()}
+        solutions[field.name] = HeavyFermionSolution(field=field, orders=orders, conjugate_orders=conjugate_orders)
+
+    return solutions
+
+
+HeavyFieldSolution = HeavyScalarSolution | HeavyFermionSolution
+
+
+def _replace_heavy_fields(expr: Expression, solutions: dict[str, HeavyFieldSolution]) -> Expression:
     replacements: list[Replacement] = []
     for solution in solutions.values():
         label = solution.field.label
 
-        def bar_solution(match: dict[Expression, Expression], solution: HeavyScalarSolution = solution) -> Expression:
+        def bar_solution(match: dict[Expression, Expression], solution: HeavyFieldSolution = solution) -> Expression:
             return apply_cd(list_items(match[s.FieldDerivativesWildcard]), solution.inclusive_conjugate)
 
-        def field_solution(match: dict[Expression, Expression], solution: HeavyScalarSolution = solution) -> Expression:
+        def field_solution(match: dict[Expression, Expression], solution: HeavyFieldSolution = solution) -> Expression:
             return apply_cd(list_items(match[s.FieldDerivativesWildcard]), solution.inclusive)
 
         replacements.append(Replacement(bar_field_pattern(label), bar_solution))
         replacements.append(Replacement(field_pattern(label), field_solution))
-    return expr.replace_multiple(replacements).expand() if replacements else expr.expand()
+    return normalize_ncm(expr.replace_multiple(replacements).expand()) if replacements else normalize_ncm(expr.expand())
 
 
 def match_tree(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
-    solutions = solve_heavy_scalar_eoms(theory, lagrangian, eft_order=eft_order)
+    scalar_solutions = solve_heavy_scalar_eoms(theory, lagrangian, eft_order=eft_order)
+    fermion_solutions = solve_heavy_fermion_eoms(theory, lagrangian, eft_order=eft_order)
+    solutions: dict[str, HeavyFieldSolution] = {**scalar_solutions, **fermion_solutions}
     replaced = _replace_heavy_fields(lagrangian, solutions)
     truncated = series_eft(replaced.expand(), theory, eft_order=eft_order, heavy_field_dimension=False)
-    return truncated.expand()
+    return canonicalize_fermion_derivative_bilinears(normalize_ncm(truncated.expand()))

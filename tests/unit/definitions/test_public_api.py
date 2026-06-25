@@ -15,9 +15,11 @@ def test_package_root_reexports_declared_public_api() -> None:
 def test_lagrangian_manipulations_are_theory_methods_not_top_level_exports() -> None:
     assert "derive_eom" not in pychete.__all__
     assert "match_tree" not in pychete.__all__
+    assert "solve_heavy_fermion_eoms" not in pychete.__all__
     assert "solve_heavy_scalar_eoms" not in pychete.__all__
     assert not hasattr(pychete, "derive_eom")
     assert not hasattr(pychete, "match_tree")
+    assert not hasattr(pychete, "solve_heavy_fermion_eoms")
     assert not hasattr(pychete, "solve_heavy_scalar_eoms")
 
     assert callable(pychete.Theory.derive_eom)
@@ -48,10 +50,12 @@ def test_public_api_methods_have_docstrings() -> None:
             "field_handle",
             "coupling_handle",
             "define_gauge_group",
+            "gauge_charge",
             "mass_expr",
             "free_lag",
             "derive_eom",
             "solve_heavy_scalar_eoms",
+            "solve_heavy_fermion_eoms",
             "match",
             "to_json_obj",
             "to_json",

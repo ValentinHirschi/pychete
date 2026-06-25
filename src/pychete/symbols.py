@@ -408,6 +408,7 @@ class SymbolDataKey(StrEnum):
     MASS_KIND = "mass_kind"
     MASS_LABEL = "mass_label"
     MASS_INDICES = "mass_indices"
+    CHARGES = "charges"
     DIMENSION = "dimension"
     GROUP_TYPE = "group_type"
     GROUP_COUPLING = "group_coupling"
@@ -458,6 +459,14 @@ class SymbolStore:
         "adj",
         "PR",
         "PL",
+        "ConjBodyWildcard",
+        "NCMLeftWildcard",
+        "NCMRightWildcard",
+        "NCMInnerWildcard",
+        "NCMFactorWildcard",
+        "NCMSplitFactorWildcard",
+        "NCMSplitRestWildcard",
+        "NCMGammaIndexWildcard",
         "FieldLabelWildcard",
         "FieldTypeWildcard",
         "FieldIndicesWildcard",
@@ -483,6 +492,12 @@ class SymbolStore:
     def head(self, name: str, **kwargs: Any) -> Expression:
         kwargs.setdefault("print", _print_builtin)
         return _sym(f"{self.namespace}::{name}", **kwargs)
+
+    @cached_property
+    def SymbolicaConj(self) -> Expression:
+        """Symbolica's native conjugation head used by ``Expression.conj``."""
+
+        return _sym("symbolica::conj")
 
     def user(self, namespace: str, name: str, **kwargs: Any) -> Expression:
         kwargs.setdefault("print", _print_user_symbol)
@@ -518,7 +533,7 @@ class SymbolStore:
 
     @cached_property
     def Coupling(self) -> Expression:
-        return self.head("Coupling")
+        return self.head("Coupling", is_scalar=True)
 
     @cached_property
     def Index(self) -> Expression:
@@ -530,7 +545,7 @@ class SymbolStore:
 
     @cached_property
     def FieldStrength(self) -> Expression:
-        return self.head("FieldStrength")
+        return self.head("FieldStrength", is_scalar=True)
 
     @cached_property
     def Bar(self) -> Expression:
@@ -542,19 +557,19 @@ class SymbolStore:
 
     @cached_property
     def Delta(self) -> Expression:
-        return self.head("Delta")
+        return self.head("Delta", is_scalar=True)
 
     @cached_property
     def Metric(self) -> Expression:
-        return self.head("Metric")
+        return self.head("Metric", is_scalar=True)
 
     @cached_property
     def FlavorSum(self) -> Expression:
-        return self.head("FlavorSum")
+        return self.head("FlavorSum", is_scalar=True)
 
     @cached_property
     def NCM(self) -> Expression:
-        return self.head("NCM")
+        return self.head("NCM", is_linear=True)
 
     @cached_property
     def DiracProduct(self) -> Expression:
@@ -633,6 +648,38 @@ class SymbolStore:
         return self.head("PL")
 
     @cached_property
+    def ConjBodyWildcard(self) -> Expression:
+        return self.head("conj_body_")
+
+    @cached_property
+    def NCMLeftWildcard(self) -> Expression:
+        return self.head("ncm_left__")
+
+    @cached_property
+    def NCMRightWildcard(self) -> Expression:
+        return self.head("ncm_right__")
+
+    @cached_property
+    def NCMInnerWildcard(self) -> Expression:
+        return self.head("ncm_inner__")
+
+    @cached_property
+    def NCMFactorWildcard(self) -> Expression:
+        return self.head("ncm_factor_")
+
+    @cached_property
+    def NCMSplitFactorWildcard(self) -> Expression:
+        return self.head("ncm_split_factor_")
+
+    @cached_property
+    def NCMSplitRestWildcard(self) -> Expression:
+        return self.head("ncm_split_rest_")
+
+    @cached_property
+    def NCMGammaIndexWildcard(self) -> Expression:
+        return self.head("ncm_gamma_index_")
+
+    @cached_property
     def FieldLabelWildcard(self) -> Expression:
         return self.head("field_label_")
 
@@ -702,15 +749,15 @@ class SymbolStore:
 
     @cached_property
     def EFTExpansionParameter(self) -> Expression:
-        return self.head("eft_order_parameter")
+        return self.head("eft_order_parameter", is_scalar=True)
 
     @cached_property
     def CDVariationParameter(self) -> Expression:
-        return self.head("cd_variation_parameter")
+        return self.head("cd_variation_parameter", is_scalar=True)
 
     @cached_property
     def FunctionalVariationParameter(self) -> Expression:
-        return self.head("functional_variation_parameter")
+        return self.head("functional_variation_parameter", is_scalar=True)
 
 
 s = SymbolStore()

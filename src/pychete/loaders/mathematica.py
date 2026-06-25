@@ -7,6 +7,7 @@ from symbolica import Expression
 from symbolica.core import AtomType, ParseMode
 
 from ..expr import args, product_expr, sum_expr
+from ..spinor import bar_expr, ncm_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
 from ..theory import Theory
 
@@ -98,6 +99,25 @@ def _parse_mass(raw: str) -> int | tuple[str, str]:
     raise NotImplementedError(f"Unsupported Mass option: {raw}")
 
 
+def _parse_charges(raw: str, theory: Theory) -> tuple[Expression, ...]:
+    value = _preprocess_names(raw).strip()
+    if not (value.startswith("{") and value.endswith("}")):
+        raise NotImplementedError(f"Unsupported Charges option: {raw}")
+    charges: list[Expression] = []
+    for item in _split_top_level(value[1:-1], ","):
+        match = re.match(r"^([A-Za-z][A-Za-z0-9_]*)\[(.+)\]$", item.strip())
+        if not match:
+            raise NotImplementedError(f"Unsupported charge assignment: {item}")
+        group = _clean_name(match.group(1))
+        charge_text = match.group(2).strip()
+        try:
+            charge_value: int | Expression = int(charge_text)
+        except ValueError:
+            charge_value = Expression.parse(charge_text, mode=ParseMode.Mathematica)
+        charges.append(theory.gauge_charge(group, charge_value).expr)
+    return tuple(charges)
+
+
 def _options(raw_parts: list[str]) -> dict[str, str]:
     out: dict[str, str] = {}
     for part in raw_parts:
@@ -167,12 +187,12 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
     if kind is AtomType.Fn:
         name = _plain_name(expr)
         if name == "Bar":
-            return s.Bar(_convert_expression(expr[0], theory, env))
+            return bar_expr(_convert_expression(expr[0], theory, env))
         if name == "NCM":
-            return s.NCM(*(_convert_expression(child, theory, env) for child in args(expr)))
+            return ncm_expr(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name == "PlusHc":
             body = _convert_expression(expr[0], theory, env)
-            return body + s.Bar(body)
+            return body + bar_expr(body)
         if name == "FreeLag":
             names = [_clean_name(_plain_name(child)) for child in args(expr)]
             return theory.free_lag(*names)
@@ -231,6 +251,7 @@ def load_matchete_model(path: str | Path, *, theory_name: str | None = None) -> 
             theory.define_field(
                 _clean_name(raw_args[0]),
                 _field_type(raw_args[1]),
+                charges=_parse_charges(opts["Charges"], theory) if "Charges" in opts else (),
                 self_conjugate=_parse_bool(opts["SelfConjugate"]) if "SelfConjugate" in opts else False,
                 mass=_parse_mass(opts["Mass"]) if "Mass" in opts else None,
             )

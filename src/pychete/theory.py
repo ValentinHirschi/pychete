@@ -13,7 +13,7 @@ from .expr import derivative_indices_expr, internal_indices_expr, is_head, loren
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
-    from .matching import HeavyScalarSolution
+    from .matching import HeavyFermionSolution, HeavyScalarSolution
 
 
 class FieldMassKind(StrEnum):
@@ -151,6 +151,10 @@ def field_mass_indices_from_label(label: Expression) -> tuple[Expression, ...]:
     return _expression_list_from_symbol_data(label, SymbolDataKey.MASS_INDICES)
 
 
+def field_charges_from_label(label: Expression) -> tuple[Expression, ...]:
+    return _expression_list_from_symbol_data(label, SymbolDataKey.CHARGES)
+
+
 def field_mass_label_from_label(label: Expression) -> Expression | None:
     value = symbol_data(label, SymbolDataKey.MASS_LABEL)
     if value is None:
@@ -247,6 +251,22 @@ class CouplingDefinition:
 
 
 @dataclass(frozen=True)
+class GaugeCharge:
+    """Charge assignment of a field under a registered gauge group."""
+
+    group: str
+    value: Expression
+    expr: Expression
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "group": self.group,
+            "value": canonical_string(self.value),
+            "expr": canonical_string(self.expr),
+        }
+
+
+@dataclass(frozen=True)
 class FieldDefinition:
     """Registered metadata for a field symbol."""
 
@@ -258,6 +278,7 @@ class FieldDefinition:
     mass_kind: FieldMassKind = FieldMassKind.LIGHT
     mass_label: Expression | None = None
     mass_indices: tuple[Expression, ...] = ()
+    charges: tuple[Expression, ...] = ()
 
     @property
     def heavy(self) -> bool:
@@ -287,6 +308,12 @@ class FieldDefinition:
 
         return field_mass_expr_from_label(self.label)
 
+    @property
+    def charge_exprs(self) -> tuple[Expression, ...]:
+        """Gauge-charge expressions stored for this field."""
+
+        return field_charges_from_label(self.label)
+
     def _repr_latex_(self) -> str:
         return f"${latex_string(self.expr())}$"
 
@@ -305,6 +332,7 @@ class FieldDefinition:
             "mass_kind": field_mass_kind_from_label(self.label).value,
             "mass_label": canonical_string(mass_label) if (mass_label := field_mass_label_from_label(self.label)) is not None else None,
             "mass_indices": [canonical_string(i) for i in field_mass_indices_from_label(self.label)],
+            "charges": [canonical_string(charge) for charge in field_charges_from_label(self.label)],
         }
 
 
@@ -598,6 +626,7 @@ class Theory:
         type_expr: Expression,
         *,
         indices: Iterable[Expression] = (),
+        charges: Iterable[Expression] = (),
         self_conjugate: bool = False,
         mass: int | MassSpec | None = None,
     ) -> FieldHandle:
@@ -630,10 +659,12 @@ class Theory:
             mass_label = mass_handle.label
 
         indices_tuple = tuple(indices)
+        charges_tuple = tuple(charges)
         field_data: dict[str, Any] = {
             SymbolDataKey.NAME.value: name,
             SymbolDataKey.FIELD_TYPE.value: type_expr,
             SymbolDataKey.INDICES.value: list(indices_tuple),
+            SymbolDataKey.CHARGES.value: list(charges_tuple),
             SymbolDataKey.SELF_CONJUGATE.value: int(self_conjugate),
             SymbolDataKey.MASS_KIND.value: mass_kind.value,
             SymbolDataKey.MASS_INDICES.value: list(mass_indices),
@@ -649,6 +680,7 @@ class Theory:
             mass_kind=mass_kind,
             mass_label=mass_label,
             mass_indices=mass_indices,
+            charges=charges_tuple,
         )
         self.fields[name] = definition
         return FieldHandle(self, definition)
@@ -680,10 +712,20 @@ class Theory:
         vector = self.define_field(field, s.Vector(group_symbol), self_conjugate=True, mass=0)
         self.groups[name] = {
             "name": name,
+            "symbol": canonical_string(group_symbol),
             "type": canonical_string(group_type),
             "coupling": coupling_handle.name,
             "field": vector.name,
         }
+
+    def gauge_charge(self, group: str, value: int | Expression) -> GaugeCharge:
+        """Build a charge expression for a registered gauge group."""
+
+        if group not in self.groups:
+            raise KeyError(f"Unknown gauge group {group!r}")
+        group_symbol = self.symbol(group, role=SymbolRole.GROUP)
+        value_expr = value if isinstance(value, Expression) else Expression.num(value)
+        return GaugeCharge(group=group, value=value_expr, expr=group_symbol(value_expr))
 
     def mass_expr(self, field_def: FieldDefinition) -> Expression | None:
         """Return the mass expression associated with a field definition."""
@@ -699,6 +741,8 @@ class Theory:
         """
 
         out = Expression.num(0)
+        from .spinor import ncm_expr
+
         for item in field_names_or_handles:
             handle = item if isinstance(item, FieldHandle) else self.field_handle(item)
             definition = handle.definition
@@ -720,12 +764,18 @@ class Theory:
             elif is_head(type_expr, s.Vector):
                 nu = self.dummy_index(1)
                 strength = s.FieldStrength(definition.label, lorentz_indices_expr(mu, nu), internal_indices_expr(), derivative_indices_expr())
-                out = out - strength**2 / 4
+                group_symbol = type_expr[0]
+                coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+                if isinstance(coupling_name, str) and coupling_name in self.couplings:
+                    gauge_coupling = self.coupling_handle(coupling_name)()
+                    out = out - strength**2 / (4 * gauge_coupling**2)
+                else:
+                    out = out - strength**2 / 4
             elif bool(type_expr == s.Fermion):
                 mass = self.mass_expr(definition)
-                dirac = Expression.I * s.NCM(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))
+                dirac = Expression.I * ncm_expr(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))
                 if mass is not None:
-                    dirac = dirac - mass * s.NCM(s.Bar(field_expr), field_expr)
+                    dirac = dirac - mass * ncm_expr(s.Bar(field_expr), field_expr)
                 out = out + dirac
             else:
                 out = out + s.FreeLag(definition.label)
@@ -762,12 +812,27 @@ class Theory:
 
         return solve_heavy_scalar_eoms(self, lagrangian, eft_order=eft_order)
 
-    def match(self, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
-        """Integrate out heavy scalar fields at tree level.
+    def solve_heavy_fermion_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyFermionSolution]:
+        """Solve heavy Dirac-fermion equations of motion order by order.
+
+        The current implementation supports diagonal heavy Dirac fields with
+        Matchete-style free kinetic and mass terms.
+        """
+
+        from .matching import solve_heavy_fermion_eoms
+
+        return solve_heavy_fermion_eoms(self, lagrangian, eft_order=eft_order)
+
+    def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int = 0) -> Expression:
+        """Integrate out heavy fields at the requested loop order.
 
         The result is a matched light-field Lagrangian truncated through
-        ``eft_order``.
+        ``eft_order``. Only tree-level matching, ``loop_order=0``, is currently
+        implemented.
         """
+
+        if loop_order != 0:
+            raise NotImplementedError("pychete currently implements only tree-level matching with loop_order=0")
 
         from .matching import match_tree
 
@@ -820,6 +885,11 @@ class Theory:
                 eft_order=int(data.get("eft_order", 0)),
                 self_conjugate=bool(data.get("self_conjugate", False)),
             )
+        theory.groups = {
+            str(name): dict(data)
+            for name, data in obj.get("groups", {}).items()
+            if isinstance(data, dict)
+        }
         for name, data in obj.get("fields", {}).items():
             mass_label = data.get("mass_label")
             mass = None
@@ -832,6 +902,7 @@ class Theory:
                 name,
                 theory._parse_registered_expression(data["type"]),
                 indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
+                charges=[theory._parse_registered_expression(x) for x in data.get("charges", [])],
                 self_conjugate=bool(data.get("self_conjugate", False)),
                 mass=mass,
             )

@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from symbolica import Expression, Replacement
+from symbolica.core import AtomType
 
 from .expr import (
     bar_field_pattern,
@@ -12,6 +13,7 @@ from .expr import (
     list_items,
 )
 from .symbols import SymbolRole, canonical_string, s
+from .spinor import is_barred_fermion, is_fermion_field, ncm_expr, ncm_target_restriction, normalize_ncm
 from .theory import FieldDefinition, FieldHandle, FieldVariation, Theory
 
 
@@ -23,8 +25,8 @@ def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expressio
 
 
 def _single_cd(index: Expression, expr: Expression) -> Expression:
-    varied = expr.replace_multiple(_cd_variation_replacements(index))
-    return varied.series(s.CDVariationParameter, 0, 1).to_expression().coefficient(s.CDVariationParameter).expand()
+    varied = normalize_ncm(expr.replace_multiple(_cd_variation_replacements(index)))
+    return normalize_ncm(varied.series(s.CDVariationParameter, 0, 1).to_expression().coefficient(s.CDVariationParameter).expand())
 
 
 def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
@@ -69,19 +71,48 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
 
 
 def partial_functional_derivative(lagrangian: Expression, target_field: Expression) -> Expression:
+    ncm_pat = s.NCM(s.NCMInnerWildcard)
+
+    def is_fermionic_target(expr: Expression) -> bool:
+        return is_fermion_field(expr) or is_barred_fermion(expr)
+
+    def ncm_items(match: dict[Expression, Expression]) -> tuple[Expression, ...]:
+        matched = match[s.NCMInnerWildcard]
+        if matched.get_type() is AtomType.Fn and matched.get_name() == "symbolica::arg":
+            return tuple(matched[i] for i in range(len(matched)))
+        return (matched,)
+
+    def ncm_variation(match: dict[Expression, Expression]) -> Expression:
+        items = ncm_items(match)
+        derivative = Expression.num(0)
+        for index, item in enumerate(items):
+            if not bool(item == target_field):
+                continue
+            preceding_fermions = sum(
+                1
+                for previous in items[:index]
+                if is_fermion_field(previous) or is_barred_fermion(previous)
+            )
+            sign = -1 if preceding_fermions % 2 else 1
+            derivative = derivative + sign * ncm_expr(*(items[:index] + items[index + 1 :]))
+        return ncm_expr(*items) + s.FunctionalVariationParameter * derivative
+
     target_replacement = Replacement(target_field, target_field + s.FunctionalVariationParameter)
     bar_protector = Replacement(
         bar_field_pattern(),
         bar_field_pattern(),
         s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value),
     )
+    ncm_replacement = Replacement(ncm_pat, ncm_variation, ncm_target_restriction(target_field))
     replacements = (
-        [target_replacement, bar_protector]
+        [ncm_replacement, target_replacement, bar_protector]
         if bool(target_field.matches(bar_field_pattern(), partial=False))
+        else [ncm_replacement, bar_protector, target_replacement]
+        if is_fermionic_target(target_field)
         else [bar_protector, target_replacement]
     )
-    varied = lagrangian.replace_multiple(replacements)
-    return (
+    varied = normalize_ncm(lagrangian.replace_multiple(replacements))
+    return normalize_ncm(
         varied.series(s.FunctionalVariationParameter, 0, 1)
         .to_expression()
         .coefficient(s.FunctionalVariationParameter)
@@ -133,7 +164,7 @@ def derive_eom(
             contribution = apply_cd(tuple(reversed(derivatives)), partial)
             residual = residual + ((-1) ** len(derivatives)) * contribution
 
-    return residual.expand()
+    return normalize_ncm(residual.expand())
 
 
 def eom_expression(theory: Theory, lagrangian: Expression, field: FieldHandle | FieldDefinition | str, *, eft_order: int = 6) -> Expression:

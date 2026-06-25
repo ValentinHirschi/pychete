@@ -55,13 +55,34 @@ with Symbolica and the locally built community modules as much as possible.
 Use:
 
 - Symbolica for all symbolic and algebraic manipulations.
-- idenso for gamma-matrix and colour algebra.
+- idenso for gamma-matrix, metric, and index algebra.
 - spenso for tensor-network evaluations when needed.
 - vakint for integration and pole identification of massive vacuum integrals.
+
+For Dirac, Lorentz, metric, and related index simplification, treat idenso as the
+primary algebra engine, including dimensional-regularization work in
+`d = 4 - 2 epsilon`. Do not route symbolic Dirac algebra through spenso merely
+because spenso can construct gamma/projector tensor objects; use spenso for
+tensor-network representation/evaluation or as an interop layer only when that
+is the operation actually being performed.
+
+Gauge groups in pychete are general Lie groups. Do not introduce a special
+colour/`SU(3)` implementation lane, public API, or validation target unless the
+user explicitly asks for that special case. Vendor APIs such as idenso's
+`simplify_color` may be useful backend details later, but pychete-facing
+abstractions should be formulated in terms of general Lie-group data and
+identities.
 
 The installer builds the GammaLoop API against the local Symbolica checkout
 with Symbolica's `gmp` feature enabled. GMP is an accepted dependency for this
 project.
+
+## Planning Questions
+
+When a question materially affects the implementation plan, API shape, physics
+scope, validation target, or architecture, wait for the user's explicit answer.
+Do not auto-resolve such questions just because the user is away. It is better
+to block and get the decision right than to proceed quickly on an assumption.
 
 ## Native Symbolica First
 
@@ -256,7 +277,7 @@ similar in Python:
   `RandomNumberGenerator.next_float`, `RandomNumberGenerator.load`,
   `RandomNumberGenerator.save`.
 
-For idenso, check and use these exact APIs for gamma, colour, metric, and index
+For idenso, check and use these exact APIs for gamma, metric, and index
 algebra before writing Python fallbacks: `cook_function`, `cook_indices`,
 `dirac_adjoint`, `expand_bis`, `expand_color`, `expand_metrics`,
 `expand_mink`, `expand_mink_bis`, `list_dangling`, `simplify_color`,
@@ -376,6 +397,8 @@ Mathematica model files may be accepted as external input through a dedicated,
 explicitly limited parser/adapter. Runtime pychete code and tests must never
 import or read executable implementation code from the Matchete checkout.
 
-Gamma-matrix, colour, and metric algebra should use idenso's existing routines
-through a pychete adapter. Add Symbolica replacement-rule fallbacks under
-`pychete/group_algebra/` only for behavior not supplied by idenso.
+Gamma-matrix and metric algebra should use idenso's existing routines through a
+pychete adapter. General Lie-group algebra should remain group-agnostic in the
+pychete API; do not spend implementation effort on colour as a special case.
+Add Symbolica replacement-rule fallbacks under `pychete/group_algebra/` only for
+behavior not supplied by the selected backend.

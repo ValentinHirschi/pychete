@@ -45,3 +45,45 @@
 > continue
 
 > continue
+
+## 2026-06-25
+
+> Now it is time to extend the current foundation with more basic features so it can start operating on simple toy models and the like. You should store all my prompts for this part in `./implementation_notes/first_shot_user.md` and keep your progress data up to date at all times in `./implementation_notes/first_shot_implementation.md` as before.
+>
+> The goal today will be to be able to match the VLF toymodel at tree-level.
+> This will require support for fermions (cf. NCM.m in Matchete reference material) and Abelian gauge groups. I want you to *very carefully* examine the options in symbolica for implementing the non-commutative structure of the NCM. Most symbols are "commuting" in the sense that they don't live in spinor space, but fermions and gamma matrices are not. I want a NATIVE SYMBOLICA implementation of these features.
+> Investigate if we can use spenso to handle the d-dimensional Dirac algebra (cf. DiracAlgebra.m in Matchete reference material). Closely examine if we can get all required features from spenso and point out any potential conflicts so we can make informed decisions.
+> The tree-level matching framework should be generalized to handle fermions light and heavy (heavy to be integrated out).
+> Make sure that you look at the unit tests in Validation/Tests/ for the original Matchete implementation. Feel free to spin up some wolframscript loading the Matchete package if you need to study how things work in the reference implementation.
+>
+> Do a real solid deep dive in all of the above a come up with an exhaustive plan and ask question wherever ANYTHING is not FULLY CLEAR. Keep an eye out for anything that doesn't play well with the current architecture in pychete, so we can catch potential problems early.
+
+### VLF follow-ups
+
+> Give me those questions again, I was away
+
+> I'd like more details on the symbolica ncm implmentation.
+
+> Also be sure not to shortcut any questions because I'm not looking. I'd rather get this right than get this quick. That is, *wait for my answers* every time. Add this to AGENT.md
+
+> Ok then. Go ahead and implement
+
+> Oh that reminds me. Formulate a "goal statement" with the milestones for you to work towards as you implement the plan.
+
+> Add a few examples of the VLF model into the jupyter example notebook
+
+> When listing the fields of the toy-model (in the example), you have e.g.
+> Psi: type=Fermion            heavy=True  charges=['VLF_toy_model::group_U1e(1)']
+> Why is there a string around the group(charge) expression?
+
+> Something is going wrong with the printing (both as_latex and as_symbolica). A numerical factor `-i` get's printed as `-1 i`
+
+> Ok, now I'm observing that the the vlf theory object returned by the python loader has a .dummy_index field. I thought we got rid of this.
+
+> `assert difference.format_plain() == "0"` This cannot be the right way to do this. Clearly we should cast to string to check if an expression vanishes.
+
+> I was insisting on using spenso for the dirac algebra. Looks like I was conflating it with idenso. Perhaps this is more suitable for the d-dimensional (as in 4-2 epsilon) Dirac and Lorentz algebra.
+
+> And what about the spenso_bridge.py? Do we have any dependencies of this somewhere, and should that be changed to an idenso_bridge?
+
+> I want to emphasize that color is not a special group in pychete, we will treat general Lie groups, and so don't want to use time with one special case.

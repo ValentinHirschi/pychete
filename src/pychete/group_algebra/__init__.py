@@ -1,5 +1,19 @@
 from __future__ import annotations
 
-from .idenso import simplify_color, simplify_gamma, simplify_metrics
+from .idenso_bridge import (
+    chiral_projector_tensor,
+    gamma_tensor,
+    simplify_gamma,
+    simplify_metrics,
+    spin_metric_tensor,
+    tensor_representations,
+)
 
-__all__ = ["simplify_color", "simplify_gamma", "simplify_metrics"]
+__all__ = [
+    "chiral_projector_tensor",
+    "gamma_tensor",
+    "simplify_gamma",
+    "simplify_metrics",
+    "spin_metric_tensor",
+    "tensor_representations",
+]
