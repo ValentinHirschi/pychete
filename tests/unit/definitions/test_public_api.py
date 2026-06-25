@@ -53,6 +53,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "cg_tensor_handle",
             "external_handle",
             "define_external",
+            "define_wilson_coefficient",
             "define_cg_tensor",
             "define_gauge_group",
             "define_global_group",

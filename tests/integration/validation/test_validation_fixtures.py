@@ -8,6 +8,7 @@ from symbolica import Expression, S
 import pytest
 
 from pychete import (
+    ExternalKind,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
     OneLoopNormalization,
@@ -113,6 +114,20 @@ def test_committed_vlf_model_fixture_is_mathematica_independent() -> None:
     assert theory.to_json_obj() == expected_theory.to_json_obj()
     theory._validate_registered_expression(fixture.expression("lagrangian"))
     assert canonical_string(theory.fields["Psi"].charge_exprs[0]) == "VLF_toy_model::group_U1e(1)"
+
+
+def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    theory = fixture.theory()
+
+    assert theory.external_handle("cHB").definition.kind is ExternalKind.WILSON_COEFFICIENT
+    assert theory.external_handle("cHB").definition.basis_name == "SMEFT"
+    assert theory.external_handle("cHB").definition.index_exprs == ()
+    assert theory.external_handle("cHd").definition.kind is ExternalKind.WILSON_COEFFICIENT
+    assert theory.external_handle("cHd").definition.basis_name == "SMEFT"
+    assert len(theory.external_handle("cHd").definition.index_exprs) == 2
+    assert theory.external_handle("Delta").definition.kind is ExternalKind.GENERIC
+    assert "gL" not in theory.externals
 
 
 def test_validation_fixture_restores_structured_matching_result(tmp_path: Path) -> None:

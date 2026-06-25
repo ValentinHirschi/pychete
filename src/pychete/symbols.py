@@ -491,6 +491,8 @@ class SymbolDataKey(StrEnum):
     CG_REPRESENTATIONS = "cg_representations"
     CG_TENSOR = "cg_tensor"
     CG_SOURCE = "cg_source"
+    EXTERNAL_KIND = "external_kind"
+    BASIS = "basis"
 
 
 class SymbolStore:

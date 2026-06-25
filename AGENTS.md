@@ -137,6 +137,13 @@ helper symbols: it preserves `external` Symbolica tags, symbol data, JSON
 round-trips, and Jupyter-friendly metadata objects. Do not scatter direct
 `Theory.symbol(..., role=SymbolRole.EXTERNAL)` calls in parsers or converters
 unless you are maintaining the low-level registry primitive itself.
+Matching-condition Wilson coefficients must be registered through
+`Theory.define_wilson_coefficient(...)` before any expression containing that
+symbol is parsed. Symbolica symbol data is fixed at creation time, so converters
+must predeclare Wilson targets from the matching-condition left-hand side before
+calling `parse_matchete_expression(...)`. Store basis metadata such as `SMEFT`,
+target index expressions, and EFT order on the external label rather than in a
+separate Python-only side table.
 
 Group representation labels must be registered through
 `Theory.define_representation(...)`. Model-specific labels such as Matchete's

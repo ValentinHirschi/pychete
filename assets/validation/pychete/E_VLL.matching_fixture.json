@@ -1097,6 +1097,765 @@
             "unitary": false
           }
         },
+        "externals": {
+          "Delta": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "E_VLL::external_Delta",
+            "name": "Delta"
+          },
+          "cG": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cG",
+            "name": "cG"
+          },
+          "cGt": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cGt",
+            "name": "cGt"
+          },
+          "cH": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cH",
+            "name": "cH"
+          },
+          "cHB": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHB",
+            "name": "cHB"
+          },
+          "cHBox": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHBox",
+            "name": "cHBox"
+          },
+          "cHBt": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHBt",
+            "name": "cHBt"
+          },
+          "cHD": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHD",
+            "name": "cHD"
+          },
+          "cHG": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHG",
+            "name": "cHG"
+          },
+          "cHGt": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHGt",
+            "name": "cHGt"
+          },
+          "cHW": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHW",
+            "name": "cHW"
+          },
+          "cHWB": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHWB",
+            "name": "cHWB"
+          },
+          "cHWt": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHWt",
+            "name": "cHWt"
+          },
+          "cHWtB": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cHWtB",
+            "name": "cHWtB"
+          },
+          "cHd": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHd",
+            "name": "cHd"
+          },
+          "cHe": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHe",
+            "name": "cHe"
+          },
+          "cHl1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHl1",
+            "name": "cHl1"
+          },
+          "cHl3": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHl3",
+            "name": "cHl3"
+          },
+          "cHq1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHq1",
+            "name": "cHq1"
+          },
+          "cHq3": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHq3",
+            "name": "cHq3"
+          },
+          "cHu": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHu",
+            "name": "cHu"
+          },
+          "cHud": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cHud",
+            "name": "cHud"
+          },
+          "cW": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cW",
+            "name": "cW"
+          },
+          "cWt": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [],
+            "label": "E_VLL::external_cWt",
+            "name": "cWt"
+          },
+          "cdB": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cdB",
+            "name": "cdB"
+          },
+          "cdG": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cdG",
+            "name": "cdG"
+          },
+          "cdH": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cdH",
+            "name": "cdH"
+          },
+          "cdW": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cdW",
+            "name": "cdW"
+          },
+          "cdd": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cdd",
+            "name": "cdd"
+          },
+          "cduq": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cduq",
+            "name": "cduq"
+          },
+          "cduu": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cduu",
+            "name": "cduu"
+          },
+          "ceB": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_ceB",
+            "name": "ceB"
+          },
+          "ceH": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_ceH",
+            "name": "ceH"
+          },
+          "ceW": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_ceW",
+            "name": "ceW"
+          },
+          "ced": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_ced",
+            "name": "ced"
+          },
+          "cee": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cee",
+            "name": "cee"
+          },
+          "ceu": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_ceu",
+            "name": "ceu"
+          },
+          "cld": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cld",
+            "name": "cld"
+          },
+          "cle": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cle",
+            "name": "cle"
+          },
+          "cledq": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cledq",
+            "name": "cledq"
+          },
+          "clequ1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_clequ1",
+            "name": "clequ1"
+          },
+          "clequ3": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_clequ3",
+            "name": "clequ3"
+          },
+          "cll": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cll",
+            "name": "cll"
+          },
+          "cllHH": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cllHH",
+            "name": "cllHH"
+          },
+          "clq1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_clq1",
+            "name": "clq1"
+          },
+          "clq3": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_clq3",
+            "name": "clq3"
+          },
+          "clu": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_clu",
+            "name": "clu"
+          },
+          "cqd1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqd1",
+            "name": "cqd1"
+          },
+          "cqd8": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqd8",
+            "name": "cqd8"
+          },
+          "cqe": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqe",
+            "name": "cqe"
+          },
+          "cqq1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqq1",
+            "name": "cqq1"
+          },
+          "cqq3": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqq3",
+            "name": "cqq3"
+          },
+          "cqqq": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqqq",
+            "name": "cqqq"
+          },
+          "cqqu": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqqu",
+            "name": "cqqu"
+          },
+          "cqu1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqu1",
+            "name": "cqu1"
+          },
+          "cqu8": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cqu8",
+            "name": "cqu8"
+          },
+          "cquqd1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cquqd1",
+            "name": "cquqd1"
+          },
+          "cquqd8": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cquqd8",
+            "name": "cquqd8"
+          },
+          "cuB": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cuB",
+            "name": "cuB"
+          },
+          "cuG": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cuG",
+            "name": "cuG"
+          },
+          "cuH": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cuH",
+            "name": "cuH"
+          },
+          "cuW": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cuW",
+            "name": "cuW"
+          },
+          "cud1": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cud1",
+            "name": "cud1"
+          },
+          "cud8": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cud8",
+            "name": "cud8"
+          },
+          "cuu": {
+            "basis": "SMEFT",
+            "eft_order": 0,
+            "external_kind": "wilson_coefficient",
+            "indices": [
+              "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)",
+              "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+            ],
+            "label": "E_VLL::external_cuu",
+            "name": "cuu"
+          },
+          "eps": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "E_VLL::external_eps",
+            "name": "eps"
+          },
+          "epsilon": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "E_VLL::external_epsilon",
+            "name": "epsilon"
+          },
+          "hbar": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "E_VLL::external_hbar",
+            "name": "hbar"
+          },
+          "mubar2": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "E_VLL::external_mubar2",
+            "name": "mubar2"
+          }
+        },
         "fields": {
           "B": {
             "charges": [],
@@ -2607,7 +3366,12 @@
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "Delta",
+              "name": "Delta",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2616,12 +3380,18 @@
             "symbol": "E_VLL::external_Delta",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cG",
+              "name": "cG",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2630,12 +3400,19 @@
             "symbol": "E_VLL::external_cG",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cGt",
+              "name": "cGt",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2644,12 +3421,19 @@
             "symbol": "E_VLL::external_cGt",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cH",
+              "name": "cH",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2658,12 +3442,19 @@
             "symbol": "E_VLL::external_cH",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHB",
+              "name": "cHB",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2672,12 +3463,19 @@
             "symbol": "E_VLL::external_cHB",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHBox",
+              "name": "cHBox",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2686,12 +3484,19 @@
             "symbol": "E_VLL::external_cHBox",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHBt",
+              "name": "cHBt",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2700,12 +3505,19 @@
             "symbol": "E_VLL::external_cHBt",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHD",
+              "name": "cHD",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2714,12 +3526,19 @@
             "symbol": "E_VLL::external_cHD",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHG",
+              "name": "cHG",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2728,12 +3547,19 @@
             "symbol": "E_VLL::external_cHG",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHGt",
+              "name": "cHGt",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2742,12 +3568,19 @@
             "symbol": "E_VLL::external_cHGt",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHW",
+              "name": "cHW",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2756,12 +3589,19 @@
             "symbol": "E_VLL::external_cHW",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHWB",
+              "name": "cHWB",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2770,12 +3610,19 @@
             "symbol": "E_VLL::external_cHWB",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHWt",
+              "name": "cHWt",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2784,12 +3631,19 @@
             "symbol": "E_VLL::external_cHWt",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cHWtB",
+              "name": "cHWtB",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2798,12 +3652,26 @@
             "symbol": "E_VLL::external_cHWtB",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHd",
+              "name": "cHd",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2812,12 +3680,26 @@
             "symbol": "E_VLL::external_cHd",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHe",
+              "name": "cHe",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2826,12 +3708,26 @@
             "symbol": "E_VLL::external_cHe",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHl1",
+              "name": "cHl1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2840,12 +3736,26 @@
             "symbol": "E_VLL::external_cHl1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHl3",
+              "name": "cHl3",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2854,12 +3764,26 @@
             "symbol": "E_VLL::external_cHl3",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHq1",
+              "name": "cHq1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2868,12 +3792,26 @@
             "symbol": "E_VLL::external_cHq1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHq3",
+              "name": "cHq3",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2882,12 +3820,26 @@
             "symbol": "E_VLL::external_cHq3",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHu",
+              "name": "cHu",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2896,12 +3848,26 @@
             "symbol": "E_VLL::external_cHu",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cHud",
+              "name": "cHud",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2910,12 +3876,19 @@
             "symbol": "E_VLL::external_cHud",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cW",
+              "name": "cW",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2924,12 +3897,19 @@
             "symbol": "E_VLL::external_cW",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [],
               "label": "cWt",
+              "name": "cWt",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2938,12 +3918,26 @@
             "symbol": "E_VLL::external_cWt",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cdB",
+              "name": "cdB",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2952,12 +3946,26 @@
             "symbol": "E_VLL::external_cdB",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cdG",
+              "name": "cdG",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2966,12 +3974,26 @@
             "symbol": "E_VLL::external_cdG",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cdH",
+              "name": "cdH",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2980,12 +4002,26 @@
             "symbol": "E_VLL::external_cdH",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cdW",
+              "name": "cdW",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -2994,12 +4030,32 @@
             "symbol": "E_VLL::external_cdW",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cdd",
+              "name": "cdd",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3008,12 +4064,32 @@
             "symbol": "E_VLL::external_cdd",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cduq",
+              "name": "cduq",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3022,12 +4098,32 @@
             "symbol": "E_VLL::external_cduq",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cduu",
+              "name": "cduu",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3036,12 +4132,26 @@
             "symbol": "E_VLL::external_cduu",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "ceB",
+              "name": "ceB",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3050,12 +4160,26 @@
             "symbol": "E_VLL::external_ceB",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "ceH",
+              "name": "ceH",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3064,12 +4188,26 @@
             "symbol": "E_VLL::external_ceH",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "ceW",
+              "name": "ceW",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3078,12 +4216,32 @@
             "symbol": "E_VLL::external_ceW",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "ced",
+              "name": "ced",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3092,12 +4250,32 @@
             "symbol": "E_VLL::external_ced",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cee",
+              "name": "cee",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3106,12 +4284,32 @@
             "symbol": "E_VLL::external_cee",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "ceu",
+              "name": "ceu",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3120,12 +4318,32 @@
             "symbol": "E_VLL::external_ceu",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cld",
+              "name": "cld",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3134,12 +4352,32 @@
             "symbol": "E_VLL::external_cld",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cle",
+              "name": "cle",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3148,12 +4386,32 @@
             "symbol": "E_VLL::external_cle",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cledq",
+              "name": "cledq",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3162,12 +4420,32 @@
             "symbol": "E_VLL::external_cledq",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "clequ1",
+              "name": "clequ1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3176,12 +4454,32 @@
             "symbol": "E_VLL::external_clequ1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "clequ3",
+              "name": "clequ3",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3190,12 +4488,32 @@
             "symbol": "E_VLL::external_clequ3",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cll",
+              "name": "cll",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3204,12 +4522,26 @@
             "symbol": "E_VLL::external_cll",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cllHH",
+              "name": "cllHH",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3218,12 +4550,32 @@
             "symbol": "E_VLL::external_cllHH",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "clq1",
+              "name": "clq1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3232,12 +4584,32 @@
             "symbol": "E_VLL::external_clq1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "clq3",
+              "name": "clq3",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3246,12 +4618,32 @@
             "symbol": "E_VLL::external_clq3",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "clu",
+              "name": "clu",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3260,12 +4652,32 @@
             "symbol": "E_VLL::external_clu",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqd1",
+              "name": "cqd1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3274,12 +4686,32 @@
             "symbol": "E_VLL::external_cqd1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqd8",
+              "name": "cqd8",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3288,12 +4720,32 @@
             "symbol": "E_VLL::external_cqd8",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqe",
+              "name": "cqe",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3302,12 +4754,32 @@
             "symbol": "E_VLL::external_cqe",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqq1",
+              "name": "cqq1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3316,12 +4788,32 @@
             "symbol": "E_VLL::external_cqq1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqq3",
+              "name": "cqq3",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3330,12 +4822,32 @@
             "symbol": "E_VLL::external_cqq3",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqqq",
+              "name": "cqqq",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3344,12 +4856,32 @@
             "symbol": "E_VLL::external_cqqq",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqqu",
+              "name": "cqqu",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3358,12 +4890,32 @@
             "symbol": "E_VLL::external_cqqu",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqu1",
+              "name": "cqu1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3372,12 +4924,32 @@
             "symbol": "E_VLL::external_cqu1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cqu8",
+              "name": "cqu8",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3386,12 +4958,32 @@
             "symbol": "E_VLL::external_cqu8",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cquqd1",
+              "name": "cquqd1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3400,12 +4992,32 @@
             "symbol": "E_VLL::external_cquqd1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cquqd8",
+              "name": "cquqd8",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3414,12 +5026,26 @@
             "symbol": "E_VLL::external_cquqd8",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cuB",
+              "name": "cuB",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3428,12 +5054,26 @@
             "symbol": "E_VLL::external_cuB",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cuG",
+              "name": "cuG",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3442,12 +5082,26 @@
             "symbol": "E_VLL::external_cuG",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cuH",
+              "name": "cuH",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3456,12 +5110,26 @@
             "symbol": "E_VLL::external_cuH",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cuW",
+              "name": "cuW",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3470,12 +5138,32 @@
             "symbol": "E_VLL::external_cuW",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cud1",
+              "name": "cud1",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3484,12 +5172,32 @@
             "symbol": "E_VLL::external_cud1",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cud8",
+              "name": "cud8",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3498,12 +5206,32 @@
             "symbol": "E_VLL::external_cud8",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "SMEFT",
+              "eft_order": 0,
+              "external_kind": "wilson_coefficient",
+              "indices": [
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i3,E_VLL::index_type_Flavor)"
+                },
+                {
+                  "__pychete_expression__": "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
+                }
+              ],
               "label": "cuu",
+              "name": "cuu",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3512,12 +5240,19 @@
             "symbol": "E_VLL::external_cuu",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_wilson_coefficient",
+              "python::basis_SMEFT"
             ]
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "eps",
+              "name": "eps",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3526,12 +5261,18 @@
             "symbol": "E_VLL::external_eps",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "epsilon",
+              "name": "epsilon",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3540,12 +5281,18 @@
             "symbol": "E_VLL::external_epsilon",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "hbar",
+              "name": "hbar",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3554,12 +5301,18 @@
             "symbol": "E_VLL::external_hbar",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "mubar2",
+              "name": "mubar2",
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3568,7 +5321,8 @@
             "symbol": "E_VLL::external_mubar2",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           }
         ],

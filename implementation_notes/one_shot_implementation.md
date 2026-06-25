@@ -4418,6 +4418,65 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 259 passed, 1
     skipped in 261.79s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added first-class Wilson-coefficient metadata for matching-condition
+  targets:
+  - introduced public `ExternalKind`, with generic externals and
+    `wilson_coefficient` externals distinguished in Symbolica symbol data;
+  - extended `Theory.define_external(...)` to store external kind, target
+    index expressions, EFT order, and basis metadata on the Symbolica external
+    label, and added `Theory.define_wilson_coefficient(...)` as the structural
+    route for Wilson targets;
+  - external labels now receive explicit tags such as
+    `external_kind_wilson_coefficient` and `basis_SMEFT`, so future pattern
+    matching can select Wilson coefficients natively through Symbolica tags and
+    data rather than Python-side name heuristics;
+  - the previous-result converter now predeclares unknown left-hand-side
+    `Coupling[...]` matching-condition targets as SMEFT Wilson coefficients
+    before parsing those expressions, respecting Symbolica's immutable
+    symbol-data creation semantics;
+  - regenerated the four committed default matching fixtures through
+    `scripts/convert_matchete_previous_results.py`, adding serialized
+    `externals` metadata for SMEFT Wilson coefficients such as `cHB`, `cHd`,
+    and the other default matching-condition targets while leaving helper
+    symbols such as `Delta` as generic externals;
+  - updated `AGENTS.md` so future converter and parser work predeclares
+    Wilson targets before expression parsing and stores basis/index/order
+    metadata on Symbolica labels rather than in Python-only side tables.
+- Verification for the Wilson metadata slice so far:
+  - inspected Symbolica's Python stubs for `S(..., data=...)`,
+    `Expression.get_symbol_data(...)`, `Expression.get_tags()`, and
+    `Expression.req_tag(...)`, confirming symbol data is attached at symbol
+    creation and should be predeclared before parsing;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py::test_wilson_coefficients_store_basis_and_matching_target_metadata
+    tests/unit/definitions/test_theory_definitions.py::test_external_metadata_must_be_registered_before_generic_use
+    tests/unit/loaders/test_matchete_previous_results_converter.py
+    tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata
+    tests/unit/definitions/test_public_api.py -q'` passed: 8 passed in
+    0.21s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py
+    tests/unit/loaders/test_matchete_previous_results_converter.py
+    tests/unit/loaders/test_matchete_model_state_converter.py
+    tests/integration/models/test_model_loaders.py
+    tests/integration/validation/test_validation_fixtures.py::test_committed_default_matching_fixtures_load_structured_results_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata
+    tests/unit/definitions/test_public_api.py -q'` passed: 49 passed in
+    5.68s;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 28
+    passed in 255.28s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 263 passed, 1
+    skipped in 261.11s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

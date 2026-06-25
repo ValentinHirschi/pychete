@@ -30,6 +30,7 @@ from .theory_metadata import (
     DynkinInput,
     ExternalDefinition,
     ExternalHandle,
+    ExternalKind,
     FieldChirality,
     FieldDefinition,
     FieldHandle,
@@ -49,6 +50,7 @@ from .theory_metadata import (
     _coupling_name_for_label,
     _decode_symbol_data_value,
     _encode_symbol_data_value,
+    _external_symbol_tags,
     _field_symbol_tags,
     _group_entry,
     _group_symbol_tags,
@@ -86,6 +88,10 @@ from .theory_metadata import (
     field_self_conjugate_from_label,
     field_type_from_label,
     field_zero_mode_from_label,
+    external_basis_from_label,
+    external_eft_order_from_label,
+    external_indices_from_label,
+    external_kind_from_label,
     representation_dimension_from_label,
     representation_dynkin_from_label,
     representation_group_from_label,
@@ -140,8 +146,20 @@ class Theory:
             }
             if role_name == SymbolRole.EXTERNAL.value:
                 symbol_data_payload[SymbolDataKey.NAME.value] = name
+                symbol_data_payload[SymbolDataKey.EXTERNAL_KIND.value] = ExternalKind.GENERIC.value
+                symbol_data_payload[SymbolDataKey.INDICES.value] = []
+                symbol_data_payload[SymbolDataKey.EFT_ORDER.value] = 0
+                symbol_data_payload[SymbolDataKey.BASIS.value] = ""
             if data:
                 symbol_data_payload.update(data)
+            if role_name == SymbolRole.EXTERNAL.value:
+                symbol_tags.extend(
+                    _external_symbol_tags(
+                        ExternalKind.from_user(symbol_data_payload.get(SymbolDataKey.EXTERNAL_KIND.value)),
+                        str(symbol_data_payload.get(SymbolDataKey.BASIS.value) or ""),
+                    )
+                )
+                symbol_tags = list(dict.fromkeys(symbol_tags))
             self._symbols[key] = s.user(
                 self.name,
                 symbol_name,
@@ -149,7 +167,15 @@ class Theory:
                 data=symbol_data_payload,
             )
         if role_name == SymbolRole.EXTERNAL.value and name not in self.externals:
-            self.externals[name] = ExternalDefinition(name=name, label=self._symbols[key])
+            symbol = self._symbols[key]
+            self.externals[name] = ExternalDefinition(
+                name=name,
+                label=symbol,
+                external_kind=external_kind_from_label(symbol),
+                indices=external_indices_from_label(symbol),
+                eft_order=external_eft_order_from_label(symbol),
+                basis=external_basis_from_label(symbol),
+            )
         return self._symbols[key]
 
     def symbol_manifest(self) -> list[dict[str, Any]]:
@@ -204,6 +230,13 @@ class Theory:
                 reps = data.get(SymbolDataKey.CG_REPRESENTATIONS.value, [])
                 rank = len(reps) if isinstance(reps, list) else 0
                 tags.extend(_cg_tensor_symbol_tags(rank))
+            elif role == SymbolRole.EXTERNAL.value:
+                tags.extend(
+                    _external_symbol_tags(
+                        ExternalKind.from_user(data.get(SymbolDataKey.EXTERNAL_KIND.value)),
+                        str(data.get(SymbolDataKey.BASIS.value) or ""),
+                    )
+                )
             symbol = self.symbol(name, role=role, data=data, tags=tags)
             if role == SymbolRole.REPRESENTATION.value:
                 self.representation_labels[name] = symbol
@@ -525,7 +558,15 @@ class Theory:
 
         return ExternalHandle(self, self.externals[name])
 
-    def define_external(self, name: str) -> ExternalHandle:
+    def define_external(
+        self,
+        name: str,
+        *,
+        external_kind: ExternalKind | str | None = ExternalKind.GENERIC,
+        indices: Iterable[Expression] = (),
+        eft_order: int = 0,
+        basis: str | None = None,
+    ) -> ExternalHandle:
         """Register or return an external symbol owned by this theory.
 
         External symbols represent imported names that are intentionally not
@@ -534,16 +575,74 @@ class Theory:
         symbols that must still round-trip with Symbolica tags and symbol data.
         """
 
+        kind = ExternalKind.from_user(external_kind)
+        indices_tuple = tuple(indices)
+        basis_value = basis or ""
+        if eft_order < 0:
+            raise ValueError("external EFT order must be non-negative")
         if name in self.externals:
-            return ExternalHandle(self, self.externals[name])
+            definition = self.externals[name]
+            requested_generic = (
+                kind is ExternalKind.GENERIC
+                and not indices_tuple
+                and eft_order == 0
+                and not basis_value
+            )
+            if requested_generic:
+                return ExternalHandle(self, definition)
+            existing_matches = (
+                definition.kind is kind
+                and [canonical_string(index) for index in definition.index_exprs]
+                == [canonical_string(index) for index in indices_tuple]
+                and definition.order == eft_order
+                and (definition.basis_name or "") == basis_value
+            )
+            if existing_matches:
+                return ExternalHandle(self, definition)
+            raise ValueError(
+                f"external symbol {name!r} is already registered with incompatible metadata; "
+                "register Wilson/external metadata before parsing expressions that use it"
+            )
         label = self.symbol(
             name,
             role=SymbolRole.EXTERNAL,
-            data={SymbolDataKey.NAME.value: name},
+            data={
+                SymbolDataKey.NAME.value: name,
+                SymbolDataKey.EXTERNAL_KIND.value: kind.value,
+                SymbolDataKey.INDICES.value: list(indices_tuple),
+                SymbolDataKey.EFT_ORDER.value: eft_order,
+                SymbolDataKey.BASIS.value: basis_value,
+            },
+            tags=_external_symbol_tags(kind, basis_value),
         )
-        definition = ExternalDefinition(name=name, label=label)
+        definition = ExternalDefinition(
+            name=name,
+            label=label,
+            external_kind=kind,
+            indices=indices_tuple,
+            eft_order=eft_order,
+            basis=basis_value or None,
+        )
         self.externals[name] = definition
         return ExternalHandle(self, definition)
+
+    def define_wilson_coefficient(
+        self,
+        name: str,
+        *,
+        indices: Iterable[Expression] = (),
+        eft_order: int = 0,
+        basis: str = "SMEFT",
+    ) -> ExternalHandle:
+        """Register a Wilson-coefficient target as a theory-owned external."""
+
+        return self.define_external(
+            name,
+            external_kind=ExternalKind.WILSON_COEFFICIENT,
+            indices=indices,
+            eft_order=eft_order,
+            basis=basis,
+        )
 
     def define_cg_tensor(
         self,
@@ -1138,6 +1237,12 @@ class Theory:
                 self_conjugate=bool(data.get("self_conjugate", False)),
                 mass=mass,
             )
-        for name in obj.get("externals", {}):
-            theory.define_external(str(name))
+        for name, data in obj.get("externals", {}).items():
+            theory.define_external(
+                str(name),
+                external_kind=str(data.get("external_kind", ExternalKind.GENERIC.value)),
+                indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
+                eft_order=int(data.get("eft_order", 0)),
+                basis=str(data["basis"]) if data.get("basis") is not None else None,
+            )
         return theory

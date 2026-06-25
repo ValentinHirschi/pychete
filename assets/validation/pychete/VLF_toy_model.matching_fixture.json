@@ -180,6 +180,32 @@
             "unitary": false
           }
         },
+        "externals": {
+          "epsilon": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "VLF_toy_model::external_epsilon",
+            "name": "epsilon"
+          },
+          "hbar": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "VLF_toy_model::external_hbar",
+            "name": "hbar"
+          },
+          "mubar2": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "VLF_toy_model::external_mubar2",
+            "name": "mubar2"
+          }
+        },
         "fields": {
           "A": {
             "charges": [],
@@ -510,7 +536,12 @@
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "epsilon",
+              "name": "epsilon",
               "role": "external",
               "theory": "VLF_toy_model"
             },
@@ -519,12 +550,18 @@
             "symbol": "VLF_toy_model::external_epsilon",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "hbar",
+              "name": "hbar",
               "role": "external",
               "theory": "VLF_toy_model"
             },
@@ -533,12 +570,18 @@
             "symbol": "VLF_toy_model::external_hbar",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
               "label": "mubar2",
+              "name": "mubar2",
               "role": "external",
               "theory": "VLF_toy_model"
             },
@@ -547,7 +590,8 @@
             "symbol": "VLF_toy_model::external_mubar2",
             "tags": [
               "python::pychete",
-              "python::external"
+              "python::external",
+              "python::external_kind_generic"
             ]
           }
         ],

@@ -58,6 +58,34 @@ class FieldVariation(StrEnum):
             raise ValueError("variation must be FieldVariation.AUTO, FieldVariation.FIELD, or FieldVariation.BAR") from exc
 
 
+class ExternalKind(StrEnum):
+    """Classification for theory-owned external symbols imported from input."""
+
+    GENERIC = "generic"
+    WILSON_COEFFICIENT = "wilson_coefficient"
+
+    @classmethod
+    def from_user(cls, value: ExternalKind | str | None) -> ExternalKind:
+        """Normalize a user-provided external-symbol kind."""
+
+        if value is None:
+            return cls.GENERIC
+        if isinstance(value, cls):
+            return value
+        normalized = str(value).replace("-", "_").lower()
+        aliases = {
+            "external": cls.GENERIC,
+            "generic": cls.GENERIC,
+            "wilson": cls.WILSON_COEFFICIENT,
+            "wilsoncoefficient": cls.WILSON_COEFFICIENT,
+            "wilson_coefficient": cls.WILSON_COEFFICIENT,
+        }
+        try:
+            return aliases[normalized]
+        except KeyError as exc:
+            raise ValueError(f"unsupported external kind {value!r}") from exc
+
+
 class FieldChirality(StrEnum):
     """Chirality metadata for fermion fields."""
 
@@ -316,6 +344,11 @@ def _normalized_restored_symbol_data(role: str, data: dict[str, Any]) -> dict[st
     elif role == SymbolRole.CG_TENSOR.value:
         normalized.setdefault(SymbolDataKey.CG_REPRESENTATIONS.value, [])
         normalized.setdefault(SymbolDataKey.CG_SOURCE.value, "")
+    elif role == SymbolRole.EXTERNAL.value:
+        normalized.setdefault(SymbolDataKey.EXTERNAL_KIND.value, ExternalKind.GENERIC.value)
+        normalized.setdefault(SymbolDataKey.INDICES.value, [])
+        normalized.setdefault(SymbolDataKey.EFT_ORDER.value, 0)
+        normalized.setdefault(SymbolDataKey.BASIS.value, "")
     return normalized
 
 
@@ -391,6 +424,25 @@ def field_mass_expr_from_label(label: Expression) -> Expression | None:
         return None
     order = 0 if field_mass_kind_from_label(label) is FieldMassKind.HEAVY else 1
     return s.Coupling(mass_label, list_expr(*field_mass_indices_from_label(label)), order)
+
+
+def external_kind_from_label(label: Expression) -> ExternalKind:
+    value = symbol_data(label, SymbolDataKey.EXTERNAL_KIND, ExternalKind.GENERIC.value)
+    return ExternalKind.from_user(str(value))
+
+
+def external_indices_from_label(label: Expression) -> tuple[Expression, ...]:
+    return _expression_list_from_symbol_data(label, SymbolDataKey.INDICES)
+
+
+def external_eft_order_from_label(label: Expression) -> int:
+    return int(symbol_data(label, SymbolDataKey.EFT_ORDER, 0))
+
+
+def external_basis_from_label(label: Expression) -> str | None:
+    value = symbol_data(label, SymbolDataKey.BASIS, "")
+    basis = str(value)
+    return basis or None
 
 
 def coupling_eft_order_from_label(label: Expression) -> int:
@@ -588,6 +640,13 @@ def _representation_symbol_tags(group: str, reality: RepresentationReality) -> t
 
 def _cg_tensor_symbol_tags(rank: int) -> tuple[str, ...]:
     return (f"cg_tensor_rank_{rank}",)
+
+
+def _external_symbol_tags(external_kind: ExternalKind, basis: str | None) -> tuple[str, ...]:
+    tags = ["external", f"external_kind_{safe_symbol_name(external_kind.value)}"]
+    if basis:
+        tags.append(f"basis_{safe_symbol_name(basis)}")
+    return tuple(tags)
 
 
 def _builtin_cg_tensor_name(kind: str, group: str, representation_name: str | None = None) -> str:
@@ -951,6 +1010,34 @@ class ExternalDefinition:
 
     name: str
     label: Expression
+    external_kind: ExternalKind = ExternalKind.GENERIC
+    indices: tuple[Expression, ...] = ()
+    eft_order: int = 0
+    basis: str | None = None
+
+    @property
+    def kind(self) -> ExternalKind:
+        """External-symbol classification stored on the label."""
+
+        return external_kind_from_label(self.label)
+
+    @property
+    def index_exprs(self) -> tuple[Expression, ...]:
+        """Target index expressions stored on the external label."""
+
+        return external_indices_from_label(self.label)
+
+    @property
+    def order(self) -> int:
+        """EFT order stored on the external label."""
+
+        return external_eft_order_from_label(self.label)
+
+    @property
+    def basis_name(self) -> str | None:
+        """Operator basis name stored on the external label, when available."""
+
+        return external_basis_from_label(self.label)
 
     def expr(self, *args: Expression) -> Expression:
         """Build this external symbol as an atom or function call."""
@@ -967,6 +1054,10 @@ class ExternalDefinition:
         return {
             "name": self.name,
             "label": canonical_string(self.label),
+            "external_kind": self.kind.value,
+            "indices": [canonical_string(index) for index in self.index_exprs],
+            "eft_order": self.order,
+            "basis": self.basis_name,
         }
 
 
@@ -1104,6 +1195,7 @@ __all__ = [
     "DynkinInput",
     "ExternalDefinition",
     "ExternalHandle",
+    "ExternalKind",
     "FieldChirality",
     "FieldDefinition",
     "FieldHandle",
@@ -1128,6 +1220,10 @@ __all__ = [
     "coupling_symmetries_from_label",
     "coupling_thermal_power_counting_from_label",
     "coupling_unitary_from_label",
+    "external_basis_from_label",
+    "external_eft_order_from_label",
+    "external_indices_from_label",
+    "external_kind_from_label",
     "field_charges_from_label",
     "field_chirality_from_label",
     "field_indices_from_label",

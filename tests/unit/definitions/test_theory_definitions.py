@@ -6,6 +6,7 @@ from symbolica import Expression, S
 
 from pychete import (
     BuiltinIndexType,
+    ExternalKind,
     FieldChirality,
     FieldMassKind,
     FieldRole,
@@ -421,6 +422,48 @@ def test_external_symbols_are_registered_with_symbol_data_and_survive_json_resto
     assert canonical_string(restored_external.label) == canonical_string(external.label)
     assert restored_external.label.get_symbol_data(SymbolDataKey.ROLE.value) == SymbolRole.EXTERNAL.value
     assert canonical_string(restored_expression) == canonical_string(expression)
+
+
+def test_wilson_coefficients_store_basis_and_matching_target_metadata() -> None:
+    theory = Theory("wilson_defs")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    i = theory.index("i1", flavor.symbol)
+    j = theory.index("i2", flavor.symbol)
+    wilson = theory.define_wilson_coefficient("cHd", indices=[i, j], basis="SMEFT")
+
+    assert wilson.definition.kind is ExternalKind.WILSON_COEFFICIENT
+    assert wilson.definition.basis_name == "SMEFT"
+    assert wilson.definition.order == 0
+    assert [canonical_string(index) for index in wilson.definition.index_exprs] == [
+        canonical_string(i),
+        canonical_string(j),
+    ]
+    assert wilson.label.get_symbol_data(SymbolDataKey.EXTERNAL_KIND.value) == ExternalKind.WILSON_COEFFICIENT.value
+    assert wilson.label.get_symbol_data(SymbolDataKey.BASIS.value) == "SMEFT"
+    assert "external_kind_wilson_coefficient" in _local_tags(wilson.label)
+    assert "basis_SMEFT" in _local_tags(wilson.label)
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    restored_wilson = restored.external_handle("cHd")
+
+    assert restored_wilson.definition.kind is ExternalKind.WILSON_COEFFICIENT
+    assert restored_wilson.definition.basis_name == "SMEFT"
+    assert [canonical_string(index) for index in restored_wilson.definition.index_exprs] == [
+        canonical_string(i),
+        canonical_string(j),
+    ]
+
+
+def test_external_metadata_must_be_registered_before_generic_use() -> None:
+    theory = Theory("external_metadata_order")
+    theory.define_external("cHB")
+
+    try:
+        theory.define_wilson_coefficient("cHB", basis="SMEFT")
+    except ValueError as exc:
+        assert "before parsing" in str(exc)
+    else:
+        raise AssertionError("external metadata was silently changed after generic registration")
 
 
 def test_symbol_collectors_require_role_tags_on_user_labels_except_indices() -> None:

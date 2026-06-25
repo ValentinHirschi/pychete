@@ -5,8 +5,12 @@ import argparse
 import json
 from pathlib import Path
 
+from symbolica import Expression
+from symbolica.core import AtomType, ParseMode
+
+from pychete.expr import as_int
 from pychete.loaders import parse_matchete_expression
-from pychete.loaders.mathematica import _split_top_level, _strip_comments
+from pychete.loaders.mathematica import _clean_name, _convert_expression, _normalize_expression, _split_top_level, _strip_comments
 from pychete.state import PycheteState
 from pychete.symbols import canonical_string
 from pychete.theory import Theory
@@ -88,9 +92,49 @@ def _rule_list(text: str) -> list[tuple[str, str]]:
     return [_split_rule(part) for part in _split_top_level(value[1:-1], ",")]
 
 
+def _plain_name(expr: Expression) -> str:
+    if expr.get_type() is not AtomType.Var and expr.get_type() is not AtomType.Fn:
+        raise ValueError("Expression does not have a symbol name")
+    return expr.get_name().split("::")[-1]
+
+
+def _is_head(expr: Expression, name: str) -> bool:
+    return expr.get_type() is AtomType.Fn and _plain_name(expr) == name
+
+
+def _parsed_coupling_calls(expr: Expression) -> list[Expression]:
+    found: list[Expression] = []
+    if _is_head(expr, "Coupling"):
+        found.append(expr)
+    if expr.get_type() in (AtomType.Add, AtomType.Mul, AtomType.Pow, AtomType.Fn):
+        for i in range(len(expr)):
+            found.extend(_parsed_coupling_calls(expr[i]))
+    return found
+
+
+def _predeclare_matching_condition_wilson_target(theory: Theory, lhs_text: str, *, basis: str = "SMEFT") -> None:
+    parsed = Expression.parse(_normalize_expression(lhs_text), mode=ParseMode.Mathematica)
+    for coupling in _parsed_coupling_calls(parsed):
+        if len(coupling) != 3 or coupling[0].get_type() is not AtomType.Var:
+            continue
+        name = _clean_name(_plain_name(coupling[0]))
+        if name in theory.couplings:
+            continue
+        indices = (
+            tuple(_convert_expression(coupling[1][i], theory, {}) for i in range(len(coupling[1])))
+            if _is_head(coupling[1], "List")
+            else ()
+        )
+        eft_order = as_int(_convert_expression(coupling[2], theory, {}))
+        if eft_order is None:
+            continue
+        theory.define_wilson_coefficient(name, indices=indices, eft_order=eft_order, basis=basis)
+
+
 def _add_matching_conditions(state: PycheteState, theory: Theory, text: str) -> dict[str, str]:
     condition_refs: dict[str, str] = {}
     for i, (lhs_text, rhs_text) in enumerate(_rule_list(text), start=1):
+        _predeclare_matching_condition_wilson_target(theory, lhs_text)
         lhs = parse_matchete_expression(lhs_text, theory)
         rhs = parse_matchete_expression(rhs_text, theory)
         expression_name = f"matchete_matching_condition_{i:03d}"
