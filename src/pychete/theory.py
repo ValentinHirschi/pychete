@@ -11,13 +11,19 @@ from symbolica import Expression, Replacement, S
 from .expr import (
     bar_field_inner,
     bar_field_pattern,
+    bar_field_strength_inner,
+    bar_field_strength_pattern,
     covariant_derivative_commutator_pattern,
     field_derivatives,
     field_label,
     field_pattern,
+    field_strength_derivatives,
+    field_strength_pattern,
+    field_strength_with_derivatives,
     field_with_derivatives,
     is_head,
     is_bar_field,
+    is_bar_field_strength,
     list_expr,
     list_items,
     matching_subexpressions,
@@ -1207,17 +1213,19 @@ class Theory:
     def emit_covariant_derivative_commutators(self, expr: Expression, *, max_passes: int = 1) -> Expression:
         """Emit formal commutators by commuting adjacent derivative slots.
 
-        Registered ``Field`` and ``Bar[Field]`` atoms with adjacent covariant
-        derivative indices out of canonical order are rewritten with the
-        identity ``D_a D_b X = D_b D_a X + [D_a,D_b] X``. The emitted
+        Registered ``Field``/``Bar[Field]`` and
+        ``FieldStrength``/``Bar[FieldStrength]`` atoms with adjacent
+        covariant derivative indices out of canonical order are rewritten with
+        the identity ``D_a D_b X = D_b D_a X + [D_a,D_b] X``. The emitted
         ``CovariantDerivativeCommutator`` markers are intentionally left
         formal; call :meth:`expand_covariant_derivative_commutators` to lower
-        them to ``FieldStrength`` insertions. Prefix derivatives are kept as
-        explicit ``CD(...)`` wrappers so existing Symbolica replacement passes
-        can apply product rules later without forcing a global expansion here.
-        ``max_passes`` bounds repeated adjacent swaps; the default performs one
-        local commute, while larger values can canonicalize longer derivative
-        lists without enabling an unbounded expression-growth loop.
+        field-body markers to ``FieldStrength`` insertions. Prefix derivatives
+        are kept as explicit ``CD(...)`` wrappers so existing Symbolica
+        replacement passes can apply product rules later without forcing a
+        global expansion here. ``max_passes`` bounds repeated adjacent swaps;
+        the default performs one local commute, while larger values can
+        canonicalize longer derivative lists without enabling an unbounded
+        expression-growth loop.
         """
 
         self._validate_registered_expression(expr)
@@ -1234,8 +1242,16 @@ class Theory:
     def _emit_covariant_derivative_commutator_pass(self, expr: Expression) -> Expression:
         field_pat = field_pattern()
         bar_pat = bar_field_pattern()
+        strength_pat = field_strength_pattern()
+        bar_strength_pat = bar_field_strength_pattern()
         field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+        strength_label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
         commutator_pat = covariant_derivative_commutator_pattern()
+
+        if not bool(expr.matches(field_pat, field_label_is_tagged)) and not bool(
+            expr.matches(strength_pat, strength_label_is_tagged)
+        ):
+            return expr
 
         protect_commutator_replacements: list[Replacement] = []
         restore_commutator_replacements: list[Replacement] = []
@@ -1247,7 +1263,9 @@ class Theory:
         out = expr
         if protect_commutator_replacements:
             out = out.replace_multiple(protect_commutator_replacements)
-        if not bool(out.matches(field_pat, field_label_is_tagged)):
+        has_field = bool(out.matches(field_pat, field_label_is_tagged))
+        has_strength = bool(out.matches(strength_pat, strength_label_is_tagged))
+        if not has_field and not has_strength:
             if restore_commutator_replacements:
                 return out.replace_multiple(restore_commutator_replacements)
             return out
@@ -1260,14 +1278,25 @@ class Theory:
             restore_bar_replacements.append(
                 Replacement(key, self._commuted_covariant_derivative_atom(atom, conjugate_field=True))
             )
+        for atom in matching_subexpressions(out, bar_strength_pat, strength_label_is_tagged):
+            key = s.CovariantDerivativeProtectedBar(Expression.num(len(restore_bar_replacements)))
+            protect_bar_replacements.append(Replacement(atom, key))
+            restore_bar_replacements.append(
+                Replacement(key, self._commuted_covariant_derivative_atom(atom, conjugate_field=True))
+            )
 
         def field_replacement(match: dict[Expression, Expression]) -> Expression:
             atom = field_pat.replace_wildcards(match)
             return self._commuted_covariant_derivative_atom(atom, conjugate_field=False)
 
+        def strength_replacement(match: dict[Expression, Expression]) -> Expression:
+            atom = strength_pat.replace_wildcards(match)
+            return self._commuted_covariant_derivative_atom(atom, conjugate_field=False)
+
         if protect_bar_replacements:
             out = out.replace_multiple(protect_bar_replacements)
         out = out.replace(field_pat, field_replacement, field_label_is_tagged, rhs_cache_size=0)
+        out = out.replace(strength_pat, strength_replacement, strength_label_is_tagged, rhs_cache_size=0)
         if restore_bar_replacements:
             out = out.replace_multiple(restore_bar_replacements)
         if restore_commutator_replacements:
@@ -1275,8 +1304,8 @@ class Theory:
         return out
 
     def _commuted_covariant_derivative_atom(self, atom: Expression, *, conjugate_field: bool) -> Expression:
-        base_field = bar_field_inner(atom) if conjugate_field else atom
-        derivatives = field_derivatives(base_field)
+        base_atom = self._covariant_derivative_commutator_base_atom(atom, conjugate_field=conjugate_field)
+        derivatives = self._covariant_derivative_atom_derivatives(base_atom)
         swap_position = _adjacent_covariant_derivative_inversion(derivatives)
         if swap_position is None:
             return atom
@@ -1290,15 +1319,42 @@ class Theory:
             left_index,
             *suffix,
         )
-        swapped_field = field_with_derivatives(base_field, swapped_derivatives)
-        swapped_atom = s.Bar(swapped_field) if conjugate_field else swapped_field
-        commutator_body = field_with_derivatives(base_field, suffix)
+        swapped_payload = self._covariant_derivative_atom_with_derivatives(base_atom, swapped_derivatives)
+        swapped_atom = s.Bar(swapped_payload) if conjugate_field else swapped_payload
+        commutator_body = self._covariant_derivative_atom_with_derivatives(base_atom, suffix)
         if conjugate_field:
             commutator_body = s.Bar(commutator_body)
         commutator = s.CovariantDerivativeCommutator(left_index, right_index, commutator_body)
         if prefix:
             commutator = s.CD(list_expr(*prefix), commutator)
         return swapped_atom + commutator
+
+    def _covariant_derivative_commutator_base_atom(self, atom: Expression, *, conjugate_field: bool) -> Expression:
+        if not conjugate_field:
+            return atom
+        if is_bar_field(atom):
+            return bar_field_inner(atom)
+        if is_bar_field_strength(atom):
+            return bar_field_strength_inner(atom)
+        raise ValueError(f"Expected Bar[Field] or Bar[FieldStrength], got {canonical_string(atom)}")
+
+    def _covariant_derivative_atom_derivatives(self, atom: Expression) -> tuple[Expression, ...]:
+        if is_head(atom, s.Field):
+            return field_derivatives(atom)
+        if is_head(atom, s.FieldStrength):
+            return field_strength_derivatives(atom)
+        raise ValueError(f"Expected Field or FieldStrength expression, got {canonical_string(atom)}")
+
+    def _covariant_derivative_atom_with_derivatives(
+        self,
+        atom: Expression,
+        derivatives: Iterable[Expression],
+    ) -> Expression:
+        if is_head(atom, s.Field):
+            return field_with_derivatives(atom, derivatives)
+        if is_head(atom, s.FieldStrength):
+            return field_strength_with_derivatives(atom, derivatives)
+        raise ValueError(f"Expected Field or FieldStrength expression, got {canonical_string(atom)}")
 
     def _field_definition_for_label(self, label: Expression) -> FieldDefinition:
         name = symbol_data(label, SymbolDataKey.NAME)

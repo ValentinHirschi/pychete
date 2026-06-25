@@ -574,6 +574,41 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
   `git diff --check` passed.
 
+## Current FieldStrength Commutator-Emission Slice
+
+- Added reusable `FieldStrength(...)` derivative-slot helpers in
+  `src/pychete/expr.py` so field-strength atoms can be manipulated through the
+  same central pychete expression API as fields instead of open-coded child
+  indexing at call sites.
+- Generalized `Theory.emit_covariant_derivative_commutators(...)` so registered
+  `FieldStrength(...)` and `Bar(FieldStrength(...))` atoms participate in the
+  same native Symbolica replacement pass as `Field(...)` atoms. The pass still
+  protects already-emitted `CovariantDerivativeCommutator(...)` markers first,
+  protects barred payloads before unbarred replacement, and keeps prefix
+  derivatives as explicit `CD(List(...), commutator)` wrappers.
+- `Theory.expand_covariant_derivative_commutators(...)` deliberately still
+  lowers only field-body commutators. Field-strength-body commutators are now
+  emitted structurally but remain formal until the next group-algebra slice
+  implements the adjoint action/lowering for field-strength payloads through
+  the idenso/spenso-backed path.
+- Performance note: the emitter now checks for both tagged field and tagged
+  field-strength matches before building temporary protection replacements, and
+  it does not force expression expansion.
+- Validation so far for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py -k "commutator" -q`
+  passed with 12 tests and 32 deselected. The grouped milestone gate also
+  passed:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_pretty_printing.py -k "commutator or
+  builtin_pychete" -q` with 13 tests and 41 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "covariant_derivative_commutators" -q` with 2 tests and 55 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
+  `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -603,10 +638,11 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Extend the commutator emitter to derivative-slot `FieldStrength(...)` atoms
-  and integrate the emitter/lowering pair into the generated supertrace/CDE
-  stages that produce the gauge Wilson structures needed by `cHB`, `cHW`,
-  `cHWB`, and related fermionic Higgs-current coefficients.
+- Lower field-strength-body commutator markers through the appropriate
+  adjoint/group action, then integrate the emitter/lowering pair into the
+  generated supertrace/CDE stages that produce the gauge Wilson structures
+  needed by `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current
+  coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.

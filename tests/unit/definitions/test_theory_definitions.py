@@ -557,6 +557,74 @@ def test_emit_covariant_derivative_commutators_protects_existing_commutator_mark
         raise AssertionError("negative max_passes was accepted")
 
 
+def test_emit_covariant_derivative_commutators_rewrites_field_strength_derivative_slots() -> None:
+    theory = Theory("emit_field_strength_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    vector = theory.field_handle("B")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    b = theory.index("b")
+    c = theory.index("c")
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(c, b))
+
+    emitted = theory.emit_covariant_derivative_commutators(strength)
+    expected = (
+        s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(b, c))
+        + s.CovariantDerivativeCommutator(c, b, s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List()))
+    )
+
+    assert_expr_equal(emitted, expected)
+    assert_expr_equal(theory.expand_covariant_derivative_commutators(emitted), expected)
+
+
+def test_emit_covariant_derivative_commutators_protects_barred_field_strengths_and_prefixes() -> None:
+    theory = Theory("emit_barred_field_strength_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    vector = theory.field_handle("B")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(a, c, b))
+
+    emitted = theory.emit_covariant_derivative_commutators(s.Bar(strength))
+    expected = (
+        s.Bar(s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(a, b, c)))
+        + s.CD(
+            s.List(a),
+            s.CovariantDerivativeCommutator(
+                c,
+                b,
+                s.Bar(s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())),
+            ),
+        )
+    )
+
+    assert_expr_equal(emitted, expected)
+
+
+def test_emit_covariant_derivative_commutators_protects_existing_field_strength_commutator_markers() -> None:
+    theory = Theory("emit_field_strength_commutator_protects_markers")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    vector = theory.field_handle("B")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    b = theory.index("b")
+    c = theory.index("c")
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(c, b))
+    existing = s.CovariantDerivativeCommutator(c, b, strength)
+
+    emitted = theory.emit_covariant_derivative_commutators(existing + strength, max_passes=3)
+    expected = (
+        existing
+        + s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(b, c))
+        + s.CovariantDerivativeCommutator(c, b, s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List()))
+    )
+
+    assert_expr_equal(emitted, expected)
+
+
 def test_covariant_derivative_commutator_builds_non_abelian_field_strength_insertions() -> None:
     theory = Theory("nonabelian_commutator")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")

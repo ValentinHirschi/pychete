@@ -82,6 +82,10 @@ def bar_field_pattern(label: Expr | None = None) -> Expr:
     return s.Bar(field_pattern(label))
 
 
+def bar_field_strength_pattern(label: Expr | None = None) -> Expr:
+    return s.Bar(field_strength_pattern(label))
+
+
 def index_pattern() -> Expr:
     return s.Index(s.IndexLabelWildcard, s.IndexRepresentationWildcard)
 
@@ -163,6 +167,22 @@ def field_with_derivatives(expr: Expr, derivatives: Iterable[Expr]) -> Expr:
     return s.Field(field_label(expr), field_type(expr), expr[2], list_expr(*derivatives))
 
 
+def field_strength_label(expr: Expr) -> Expr:
+    if not is_head(expr, s.FieldStrength):
+        raise ValueError(f"Expected FieldStrength expression, got {canonical_string(expr)}")
+    return expr[0]
+
+
+def field_strength_derivatives(expr: Expr) -> tuple[Expr, ...]:
+    if not is_head(expr, s.FieldStrength):
+        raise ValueError(f"Expected FieldStrength expression, got {canonical_string(expr)}")
+    return list_items(expr[3])
+
+
+def field_strength_with_derivatives(expr: Expr, derivatives: Iterable[Expr]) -> Expr:
+    return s.FieldStrength(field_strength_label(expr), expr[1], expr[2], list_expr(*derivatives))
+
+
 def is_bar_field(expr: Expr) -> bool:
     return is_head(expr, s.Bar) and is_head(expr[0], s.Field)
 
@@ -170,4 +190,14 @@ def is_bar_field(expr: Expr) -> bool:
 def bar_field_inner(expr: Expr) -> Expr:
     if not is_bar_field(expr):
         raise ValueError(f"Expected Bar[Field] expression, got {canonical_string(expr)}")
+    return expr[0]
+
+
+def is_bar_field_strength(expr: Expr) -> bool:
+    return is_head(expr, s.Bar) and is_head(expr[0], s.FieldStrength)
+
+
+def bar_field_strength_inner(expr: Expr) -> Expr:
+    if not is_bar_field_strength(expr):
+        raise ValueError(f"Expected Bar[FieldStrength] expression, got {canonical_string(expr)}")
     return expr[0]
