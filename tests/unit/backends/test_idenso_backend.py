@@ -3,6 +3,7 @@ from __future__ import annotations
 from symbolica import Expression, S
 from symbolica.community import idenso as native_idenso
 
+from pychete import Theory
 from pychete.backends import idenso
 from pychete.group_algebra import simplify_color, simplify_gamma, simplify_metrics
 from pychete.symbols import canonical_string, s
@@ -98,6 +99,42 @@ def test_idenso_bridge_simplifies_pychete_dirac_products_inside_ncm() -> None:
         ),
         s.NCM(S("left"), s.DiracProduct(s.Gamma(mu), s.PL), S("right")),
     )
+
+
+def test_idenso_bridge_simplifies_registered_open_fermion_chains_through_native_gamma() -> None:
+    theory = Theory("idenso_open_fermion_chain")
+    left = theory.define_field("psi", s.Fermion)
+    right = theory.define_field("Psi", s.Fermion)
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+
+    assert _same(
+        idenso.simplify_pychete_open_dirac_chains(
+            s.NCM(s.Bar(left()), s.PR, s.Gamma(mu), s.PR, right())
+        ),
+        Expression.num(0),
+    )
+    assert _same(
+        idenso.simplify_pychete_open_dirac_chains(
+            s.NCM(s.Bar(left()), s.PR, s.Gamma(mu), s.PL, right())
+        ),
+        s.NCM(s.Bar(left()), s.DiracProduct(s.Gamma(mu), s.PL), right()),
+    )
+    assert _same(
+        idenso.simplify_pychete_open_dirac_chains(
+            s.NCM(s.Bar(left()), s.Gamma(mu), s.Gamma(mu), right())
+        ),
+        4 * s.NCM(s.Bar(left()), right()),
+    )
+
+
+def test_idenso_open_fermion_chain_bridge_requires_registered_field_labels() -> None:
+    theory = Theory("idenso_open_fermion_chain_tags")
+    right = theory.define_field("Psi", s.Fermion)
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+    plain_left = s.Field(S("plain_left"), s.Fermion, s.List(), s.List())
+    expression = s.NCM(s.Bar(plain_left), s.PR, s.Gamma(mu), s.PR, right())
+
+    assert _same(idenso.simplify_pychete_open_dirac_chains(expression), expression)
 
 
 def test_idenso_bridge_simplifies_contiguous_dirac_subwords_inside_mixed_ncm() -> None:

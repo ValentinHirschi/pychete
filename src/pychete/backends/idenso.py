@@ -8,7 +8,7 @@ from symbolica.core import AtomType
 
 from .common import import_backend
 from ..expr import args, as_int, factors, is_head, product_expr, sum_expr
-from ..symbols import s
+from ..symbols import SymbolRole, s
 
 _MAX_NATIVE_PROJECTOR_POWER = 16
 _MAX_NATIVE_DIRAC_WORD_ARITY = 8
@@ -119,8 +119,21 @@ def simplify_pychete_dirac_algebra(expr: Expression) -> Expression:
     out = simplify_pychete_dirac_projectors(expr)
     out = out.replace_multiple(_dirac_product_replacements())
     out = out.replace_multiple(_ncm_dirac_word_replacements())
+    out = simplify_pychete_open_dirac_chains(out)
     out = out.replace_multiple(_mixed_ncm_dirac_subword_replacements())
     return simplify_pychete_dirac_projectors(out).expand()
+
+
+def simplify_pychete_open_dirac_chains(expr: Expression) -> Expression:
+    """Simplify Dirac words between registered pychete fermion endpoints.
+
+    The endpoint selection is done with Symbolica patterns restricted to
+    theory-created field labels. Only the Dirac middle word is lowered to
+    native spenso tensors and simplified by idenso; pychete field endpoints
+    remain in the public expression representation.
+    """
+
+    return expr.replace_multiple(_open_fermion_ncm_dirac_chain_replacements()).expand()
 
 
 def simplify_metrics(expr: Expression) -> Expression:
@@ -221,6 +234,34 @@ def _mixed_ncm_dirac_subword_replacements() -> tuple[Replacement, ...]:
     return tuple(replacements)
 
 
+@cache
+def _open_fermion_ncm_dirac_chain_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
+        middle_wildcards = _dirac_word_wildcards("open_ncm", arity)
+        left_label = s.head(f"dirac_open_{arity}_left_label_")
+        left_indices = s.head(f"dirac_open_{arity}_left_indices_")
+        left_derivatives = s.head(f"dirac_open_{arity}_left_derivatives_")
+        right_label = s.head(f"dirac_open_{arity}_right_label_")
+        right_indices = s.head(f"dirac_open_{arity}_right_indices_")
+        right_derivatives = s.head(f"dirac_open_{arity}_right_derivatives_")
+        left_endpoint = s.Bar(s.Field(left_label, s.Fermion, left_indices, left_derivatives))
+        right_endpoint = s.Field(right_label, s.Fermion, right_indices, right_derivatives)
+        pattern = s.NCM(left_endpoint, *middle_wildcards, right_endpoint)
+        field_labels_are_registered = left_label.req_tag(SymbolRole.FIELD.value) & right_label.req_tag(
+            SymbolRole.FIELD.value
+        )
+        replacements.append(
+            Replacement(
+                pattern,
+                _open_fermion_ncm_dirac_chain_replacement(pattern, left_endpoint, middle_wildcards, right_endpoint),
+                field_labels_are_registered,
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
 def _dirac_word_replacements(head: Expression, kind: str) -> tuple[Replacement, ...]:
     replacements: list[Replacement] = []
     for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
@@ -234,6 +275,36 @@ def _dirac_word_replacements(head: Expression, kind: str) -> tuple[Replacement, 
             )
         )
     return tuple(replacements)
+
+
+def _open_fermion_ncm_dirac_chain_replacement(
+    pattern: Expression,
+    left_endpoint: Expression,
+    middle_wildcards: tuple[Expression, ...],
+    right_endpoint: Expression,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_open_chain(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        factors_to_simplify = _flatten_pychete_dirac_factors(tuple(match[wildcard] for wildcard in middle_wildcards))
+        if factors_to_simplify is None:
+            return matched
+        simplified = _native_dirac_word(factors_to_simplify)
+        split = None if simplified is None else _split_mixed_ncm_dirac_result(simplified)
+        if split is None:
+            return matched
+        scalar, replacement_operands = split
+        if bool(scalar == Expression.num(0)):
+            return Expression.num(0)
+        return _ncm_with_commutative_coefficient(
+            scalar,
+            (
+                left_endpoint.replace_wildcards(match),
+                *replacement_operands,
+                right_endpoint.replace_wildcards(match),
+            ),
+        )
+
+    return replace_open_chain
 
 
 def _dirac_word_replacement(
@@ -505,6 +576,7 @@ __all__ = [
     "simplify_index_algebra",
     "simplify_metrics",
     "simplify_pychete_dirac_algebra",
+    "simplify_pychete_open_dirac_chains",
     "simplify_pychete_dirac_projectors",
     "to_dots",
     "wrap_dummies",

@@ -3085,6 +3085,44 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest
     tests/unit/backends/test_vacuum_integrals_backend.py -q'` passed:
     15 passed.
+- Added an endpoint-aware open Dirac-chain simplification pass in the idenso
+  bridge:
+  - `pychete.backends.idenso.simplify_pychete_open_dirac_chains(...)` matches
+    `NCM(Bar(Field(..., Fermion, ...)), dirac..., Field(..., Fermion, ...))`
+    with Symbolica field-label tag restrictions, so it only applies to
+    theory-registered pychete fermion fields and skips untagged
+    `Field(...)` lookalikes;
+  - the matched Dirac middle word is still lowered to native spenso
+    `gamma`/`projp`/`projm` tensors and simplified through
+    `idenso.simplify_gamma(...)`; the pychete field endpoints remain in the
+    public Symbolica representation;
+  - `simplify_pychete_dirac_algebra(...)` now runs this endpoint-aware pass
+    before the generic mixed-`NCM` contiguous-subword pass, so VLF-like
+    `bar(psi) ** P_R ** gamma(mu) ** P_L ** Psi` chains get the explicit
+    field-endpoint route where possible;
+  - added focused tests for vanishing same-chirality open chains, surviving
+    `gamma(mu) P_L` open chains, contracted `gamma(mu) gamma(mu)` open chains,
+    and tag-restricted rejection of unregistered field labels.
+- Verification for the endpoint-aware idenso open-chain slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_idenso_backend.py -q'` passed: 10 passed.
+- Final verification for the endpoint-aware idenso open-chain slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_idenso_backend.py -q'` passed: 10 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_fluctuation_operator.py -q'` passed:
+    37 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 204 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -3125,15 +3163,15 @@ discoveries, dependency patches, blockers, and remaining work.
   near-degenerate expansion policies. Native vakint remains available for
   topology-independent tensor reduction and supported single-scale massive
   analytic evaluation cross-checks.
-- Extend the new compact Dirac bridge into full pychete field-endpoint
+- Extend the new endpoint-aware Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
   artifacts, bare `P_R^2`/`P_L^2` powers in the covered numerator path, or
-  unsupported compact `DiracProduct` gamma/projector identities, and mixed
-  `NCM` chains now simplify contiguous supported Dirac subwords. The remaining
-  gap is proper field-endpoint orientation, conjugation normalization,
-  full `NCM(bar(field), ..., field)` lowering into idenso chain expressions
-  with spinor endpoints, and final vakint evaluation before pychete can
-  canonically agree with Matchete's saved `DiracProduct[...]` expressions.
+  unsupported compact `DiracProduct` gamma/projector identities; registered
+  `NCM(bar(field), dirac..., field)` chains now have an explicit tag-restricted
+  native idenso middle-word route. The remaining gap is proper field-endpoint
+  orientation, conjugation normalization, native spinor-index endpoint
+  lowering, and final vakint evaluation before pychete can canonically agree
+  with Matchete's saved `DiracProduct[...]` expressions.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
   fixtures.
