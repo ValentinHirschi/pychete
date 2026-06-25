@@ -968,6 +968,53 @@
   pytest tests/integration/validation/test_numeric_probes.py -k "projection or
   matching_result" -q` passed with 18 tests and 15 deselected.
 
+## Current Scalar CDE NCM Projection Slice
+
+- A public CDE matching probe for the heavy/light scalar toy model showed that
+  the selected `hScalar-lScalar` trace generated the expected zero-order
+  scalar source, but kept it inside `NCM(-phi*y, -phi*y)`. This made
+  projection onto an ordinary scalar target such as `phi^2` return zero even
+  though the backend result was physically a scalar product.
+- Added `pychete.noncommutative.scalarize_commutative_ncm_chains(...)`, a
+  bounded-arity Symbolica `replace_multiple(...)` pass over `NCM(...)` chains.
+  It only collapses chains whose operands contain no fermion fields,
+  `Bar(Fermion)` endpoints, projectors, gamma/sigma/Dirac-product markers,
+  nested `NCM`, or unacted `OpenCD`. Fermion and open-derivative chains stay
+  available for the existing idenso/CDE routes.
+- Wired that scalarization pass into
+  `SupertraceBlockTrace.bosonic_cde_expansion_terms(...)` after optional
+  open-derivative action and commutator lowering/expansion. This keeps the
+  default one-loop path unchanged, but makes opt-in bosonic CDE scalar
+  numerators visible to projection and integral backends as ordinary
+  commutative products.
+- Extended the matching-condition projection extractor so products and powers
+  such as `phi^2`, not only sums, use the cached native
+  `collect_factors()`/`factor()` coefficient fallbacks when direct
+  `Expression.coefficient(...)` returns zero. This fixes the common case where
+  a scalar operator factor sits in the numerator of a rational backend result
+  and `matching_condition_expand_source=False` is intentionally used to avoid
+  global expansion.
+- Performance note: rejected NCM chains are not fed through `repeat=True`, so
+  fermion/projector/open-CD chains remain a bounded no-op. The projection
+  fallback still delegates to Symbolica collection/factorization and only runs
+  after direct coefficient extraction fails for a composite product/power/sum
+  target.
+- Validation for this slice so far:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_noncommutative.py -q` passed with 3 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_matching_projects_scalar_ncm_chains
+  -q` passed with 1 test; `PYTHONPATH=src dependencies/.venv/bin/python -m
+  pytest tests/unit/functional/test_cde.py
+  tests/unit/functional/test_noncommutative.py -q` passed with 12 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k "bosonic_cde" -q`
+  passed with 3 tests and 57 deselected; `PYTHONPATH=src
+  dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py -k "projection or
+  matching_result" -q` passed with 18 tests and 15 deselected; and
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -993,8 +1040,10 @@
   extend it beyond the currently tested simple generator/Fierz/f-structure
   contractions where needed, then use targeted fixture probes to determine
   which projected Wilson gaps move.
-- Continue improving Dirac/NCM simplification in generated supertraces through
-  idenso-backed paths and Symbolica replacement rules.
+- Continue improving fermionic/Dirac NCM simplification in generated
+  supertraces through idenso-backed paths and Symbolica replacement rules. The
+  scalar bosonic CDE `NCM(...)` case is now covered only for conservative
+  all-commutative chains.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
 - Extend the generated CDE commutator output into basis-reduction/projected

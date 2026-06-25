@@ -6,6 +6,7 @@ from html import escape
 from typing import TYPE_CHECKING
 
 from symbolica import Expression, Replacement
+from symbolica.core import AtomType
 
 from .eft import series_eft
 from .functional import expand_cd_operators
@@ -725,7 +726,8 @@ def _matching_projection_coefficient(
 
 
 def _is_composite_projection_target(target: Expression) -> bool:
-    return len(terms(target)) > 1
+    kind = target.get_type()
+    return kind is AtomType.Add or kind is AtomType.Mul or kind is AtomType.Pow
 
 
 def _ibp_scalar_bilinear_projection_aliases(target: Expression) -> tuple[tuple[Expression, Expression], ...]:

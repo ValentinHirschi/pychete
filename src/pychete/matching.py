@@ -36,6 +36,7 @@ from .matching_options import (
     one_loop_normalization_label,
 )
 from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
+from .noncommutative import scalarize_commutative_ncm_chains
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
 from .theory import Theory
 from .theory_metadata import (
@@ -688,6 +689,7 @@ class SupertraceBlockTrace:
                     emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                     expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 )
+                numerator = scalarize_commutative_ncm_chains(numerator)
                 if is_zero(numerator):
                     continue
                 terms.append(

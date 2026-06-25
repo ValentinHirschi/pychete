@@ -1723,10 +1723,7 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
     assert_expr_equal(kernels["interaction_bosonic_cde_kernel[hScalar-lScalar,0]"], expected_kernel)
     assert_expr_equal(integrals["interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]"], expected_integral)
 
-    acted_numerator = -2 * Expression.I * s.LoopMomentum(mu) * s.NCM(
-        first_entry,
-        -y() * light(derivatives=[mu]),
-    )
+    acted_numerator = -2 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
     expected_acted_integral = vakint_backend.one_loop_vacuum_integral(
         acted_numerator,
         (light_mass**2, heavy_mass**2),
@@ -1826,6 +1823,40 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
         trace.bosonic_cde_expansion_terms(((mu,),))
     with pytest.raises(KeyError, match="missing"):
         setup.interaction_bosonic_cde_kernel_expression_map({"missing": ((),)})
+
+
+def test_public_bosonic_cde_matching_projects_scalar_ncm_chains() -> None:
+    theory = Theory("one_loop_setup_interaction_bosonic_cde_projection")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            bosonic_cde_trace_names=("hScalar-lScalar",),
+            bosonic_cde_max_total_order=0,
+            tensor_reduce=False,
+            combine_terms=True,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={"phi2": light() ** 2},
+        matching_condition_expand_source=False,
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["stage"] == "interaction_bosonic_cde_internal_integral_result"
+    assert result.metadata["matching_conditions_projected"] is True
+    assert result.metadata["matching_condition_projection_expand_source"] is False
+    assert "pychete::NCM(" not in canonical_string(result.off_shell_eft_lagrangian)
+    assert canonical_string(result.matching_conditions["phi2"]) != "0"
+    assert_expr_equal(
+        result.matching_conditions["phi2"],
+        result.off_shell_eft_lagrangian.collect_factors().coefficient(light() ** 2).expand(),
+    )
 
 
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:
