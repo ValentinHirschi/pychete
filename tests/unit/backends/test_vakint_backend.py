@@ -6,6 +6,7 @@ from typing import Any
 import pytest
 from symbolica import Expression, S
 
+from pychete import Theory
 from pychete.backends import vakint
 from pychete.symbols import canonical_string, s
 
@@ -242,6 +243,55 @@ def test_vakint_adapters_collect_identical_propagators_before_engine_call() -> N
     vakint.tensor_reduce(expr, engine=engine)
 
     assert canonical_string(engine.calls[0][1][0]) == canonical_string(expected)
+
+
+def test_vakint_decodes_native_pychete_namespace_wrappers() -> None:
+    theory = Theory("vakint_decode_wrappers")
+    phi = theory.define_field("phi", s.Scalar)
+    kappa = theory.define_coupling("kappa")
+    native = vakint.symbol("Field")(
+        vakint.symbol("phi"),
+        vakint.symbol("Scalar"),
+        vakint.symbol("List"),
+        vakint.symbol("List"),
+    ) * vakint.symbol("Coupling")(vakint.symbol("kappa"), vakint.symbol("List"), 0)
+
+    decoded = vakint.decode_pychete_namespace(theory, native)
+
+    assert canonical_string(decoded) == canonical_string(phi() * kappa())
+
+
+def test_vakint_tensor_reduction_round_trips_pychete_fields_and_couplings() -> None:
+    theory = Theory("vakint_decode_scalar")
+    phi = theory.define_field("phi", s.Scalar, mass=("Heavy", "M"))
+    kappa = theory.define_coupling("kappa")
+    expr = phi() * kappa() * vakint.one_loop_vacuum_topology((theory.mass_expr(phi.definition) ** 2,))
+
+    reduced = vakint.tensor_reduce(expr)
+    decoded = vakint.decode_pychete_namespace(theory, reduced)
+
+    assert "vakint::Field" in canonical_string(reduced)
+    assert "vakint::Coupling(vakint::kappa" in canonical_string(reduced)
+    assert "vakint::Field" not in canonical_string(decoded)
+    assert "vakint::Coupling(vakint::kappa" not in canonical_string(decoded)
+    assert canonical_string(decoded) == canonical_string(expr)
+
+
+def test_vakint_tensor_reduction_round_trips_indexed_pychete_fields() -> None:
+    theory = Theory("vakint_decode_indexed")
+    theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=(fund,))
+    kappa = theory.define_coupling("kappa")
+    index = theory.dummy_index(1, fund)
+    expr = higgs(index) * kappa() * vakint.one_loop_vacuum_topology((S("M") ** 2,))
+
+    reduced = vakint.tensor_reduce(expr)
+    decoded = vakint.decode_pychete_namespace(theory, reduced)
+
+    assert "vakint::Index" in canonical_string(reduced)
+    assert "vakint::Index" not in canonical_string(decoded)
+    assert canonical_string(decoded) == canonical_string(expr)
 
 
 def test_vakint_adapters_delegate_numerical_operations_to_engine() -> None:

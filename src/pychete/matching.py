@@ -568,7 +568,10 @@ class SupertraceBlockTrace:
 
         return replace(
             self,
-            expression=vakint.to_canonical(self.expression, short_form=short_form, engine=engine),
+            expression=vakint.decode_pychete_namespace(
+                self.theory,
+                vakint.to_canonical(self.expression, short_form=short_form, engine=engine),
+            ),
         )
 
     def tensor_reduce_integrals(self, *, engine: Any | None = None) -> SupertraceBlockTrace:
@@ -576,14 +579,26 @@ class SupertraceBlockTrace:
 
         from .backends import vakint
 
-        return replace(self, expression=vakint.tensor_reduce(self.expression, engine=engine))
+        return replace(
+            self,
+            expression=vakint.decode_pychete_namespace(
+                self.theory,
+                vakint.tensor_reduce(self.expression, engine=engine),
+            ),
+        )
 
     def evaluate_integrals(self, *, engine: Any | None = None) -> SupertraceBlockTrace:
         """Return this trace kernel after native vakint integral evaluation."""
 
         from .backends import vakint
 
-        return replace(self, expression=vakint.evaluate(self.expression, engine=engine))
+        return replace(
+            self,
+            expression=vakint.decode_pychete_namespace(
+                self.theory,
+                vakint.evaluate(self.expression, engine=engine),
+            ),
+        )
 
     def evaluate_tensor_network(
         self,
@@ -1232,10 +1247,13 @@ class OneLoopSetup:
         from .backends import vakint
 
         if selected is VakintIntegralStage.CANONICAL:
-            return vakint.to_canonical(raw, short_form=short_form, engine=engine)
+            return vakint.decode_pychete_namespace(
+                self.theory,
+                vakint.to_canonical(raw, short_form=short_form, engine=engine),
+            )
         if selected is VakintIntegralStage.TENSOR_REDUCED:
-            return vakint.tensor_reduce(raw, engine=engine)
-        return vakint.evaluate(raw, engine=engine)
+            return vakint.decode_pychete_namespace(self.theory, vakint.tensor_reduce(raw, engine=engine))
+        return vakint.decode_pychete_namespace(self.theory, vakint.evaluate(raw, engine=engine))
 
     def power_type_internal_integral_sum(
         self,
@@ -1268,6 +1286,7 @@ class OneLoopSetup:
 
             with progress("tensor-reducing power-type one-loop integrals", logger=_LOGGER):
                 raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+            raw = vakint.decode_pychete_namespace(self.theory, raw)
         from .backends import vacuum_integrals
 
         with progress("evaluating power-type scalar vacuum integrals", logger=_LOGGER):
@@ -1437,12 +1456,15 @@ class OneLoopSetup:
 
         if selected is VakintIntegralStage.CANONICAL:
             with progress("canonicalizing interaction-power vakint integrals", logger=_LOGGER):
-                return vakint.to_canonical(raw, short_form=short_form, engine=engine)
+                return vakint.decode_pychete_namespace(
+                    self.theory,
+                    vakint.to_canonical(raw, short_form=short_form, engine=engine),
+                )
         if selected is VakintIntegralStage.TENSOR_REDUCED:
             with progress("tensor-reducing interaction-power vakint integrals", logger=_LOGGER):
-                return vakint.tensor_reduce(raw, engine=engine)
+                return vakint.decode_pychete_namespace(self.theory, vakint.tensor_reduce(raw, engine=engine))
         with progress("evaluating interaction-power vakint integrals", logger=_LOGGER):
-            return vakint.evaluate(raw, engine=engine)
+            return vakint.decode_pychete_namespace(self.theory, vakint.evaluate(raw, engine=engine))
 
     def interaction_power_type_internal_integral_sum(
         self,
@@ -1478,6 +1500,7 @@ class OneLoopSetup:
 
             with progress("tensor-reducing interaction-power one-loop integrals", logger=_LOGGER):
                 raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+            raw = vakint.decode_pychete_namespace(self.theory, raw)
         from .backends import vacuum_integrals
 
         with progress("evaluating interaction-power scalar vacuum integrals", logger=_LOGGER):
@@ -2226,7 +2249,10 @@ class OneLoopSetup:
         from .backends import vakint
 
         return {
-            name: vakint.to_canonical(expr, short_form=short_form, engine=engine)
+            name: vakint.decode_pychete_namespace(
+                self.theory,
+                vakint.to_canonical(expr, short_form=short_form, engine=engine),
+            )
             for name, expr in self.vakint_integral_expression_map(
                 prefix=prefix,
                 include_light=include_light,
@@ -2245,7 +2271,10 @@ class OneLoopSetup:
         from .backends import vakint
 
         return {
-            name: vakint.tensor_reduce(expr, engine=engine)
+            name: vakint.decode_pychete_namespace(
+                self.theory,
+                vakint.tensor_reduce(expr, engine=engine),
+            )
             for name, expr in self.vakint_integral_expression_map(
                 prefix=prefix,
                 include_light=include_light,
@@ -2264,7 +2293,10 @@ class OneLoopSetup:
         from .backends import vakint
 
         return {
-            name: vakint.evaluate(expr, engine=engine)
+            name: vakint.decode_pychete_namespace(
+                self.theory,
+                vakint.evaluate(expr, engine=engine),
+            )
             for name, expr in self.vakint_integral_expression_map(
                 prefix=prefix,
                 include_light=include_light,
@@ -3390,6 +3422,7 @@ def _named_vakint_supertraces(
     return {
         contribution.name: _vakint_expression_at_stage(
             contribution.vakint_integral_expression(include_light=include_light),
+            theory=contribution.theory,
             stage=selected,
             short_form=short_form,
             engine=engine,
@@ -3415,6 +3448,7 @@ def _named_internal_supertraces(
         raw = contribution.vakint_integral_expression(include_light=include_light)
         if tensor_reduce:
             raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+            raw = vakint.decode_pychete_namespace(contribution.theory, raw)
         out[contribution.name] = vacuum_integrals.evaluate_one_loop_vakint_expression(
             raw,
             epsilon=epsilon,
@@ -3442,6 +3476,7 @@ def _finite_named_supertraces(
 def _vakint_expression_at_stage(
     expr: Expression,
     *,
+    theory: Theory | None = None,
     stage: VakintIntegralStage,
     short_form: bool | None = None,
     engine: Any | None = None,
@@ -3451,10 +3486,14 @@ def _vakint_expression_at_stage(
     from .backends import vakint
 
     if stage is VakintIntegralStage.CANONICAL:
-        return vakint.to_canonical(expr, short_form=short_form, engine=engine)
-    if stage is VakintIntegralStage.TENSOR_REDUCED:
-        return vakint.tensor_reduce(expr, engine=engine)
-    return vakint.evaluate(expr, engine=engine)
+        result = vakint.to_canonical(expr, short_form=short_form, engine=engine)
+    elif stage is VakintIntegralStage.TENSOR_REDUCED:
+        result = vakint.tensor_reduce(expr, engine=engine)
+    else:
+        result = vakint.evaluate(expr, engine=engine)
+    if theory is None:
+        return result
+    return vakint.decode_pychete_namespace(theory, result)
 
 
 def _fluctuation_statistics(field_type: Expression, field_role: FieldRole) -> FluctuationStatistics:

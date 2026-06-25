@@ -5,9 +5,9 @@ from typing import Any, Mapping, Sequence
 
 from symbolica import Expression, Replacement, S
 
-from ..expr import as_int, factors, is_head, pow_parts, product_expr, sum_expr
+from ..expr import args, as_int, factors, is_head, list_expr, pow_parts, product_expr, sum_expr
 from ..logging import get_logger, progress
-from ..symbols import canonical_string, s
+from ..symbols import SymbolRole, canonical_string, s, safe_symbol_name
 from .common import import_backend
 
 _LOGGER = get_logger("backends.vakint")
@@ -352,6 +352,272 @@ def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> E
     return _engine(engine).evaluate(integral_expression)
 
 
+def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
+    """Decode pychete atoms that native vakint emitted in its own namespace.
+
+    Vakint's tensor reducer preserves arbitrary numerator factors but can emit
+    pychete ``Field``/``Coupling``/``Index`` atoms as ``vakint::...`` wrappers.
+    Matching-condition projection expects the theory-owned pychete heads, so
+    convert only those known wrappers back through Symbolica replacement rules.
+    """
+
+    context = _DecodeContext(theory)
+    return expr.replace_multiple(
+        (
+            Replacement(
+                _vakint_bar_pattern(),
+                lambda match: context.decode_bar(match[_wild("bar_body")]),
+            ),
+            Replacement(
+                _vakint_index_pattern(),
+                lambda match: context.decode_index(
+                    match[_wild("index_label")],
+                    match[_wild("index_representation")],
+                ),
+            ),
+            Replacement(
+                _vakint_coupling_pattern(),
+                lambda match: context.decode_coupling(
+                    match[_wild("coupling_label")],
+                    match[_wild("coupling_indices")],
+                    match[_wild("coupling_order")],
+                ),
+            ),
+            Replacement(
+                _vakint_field_pattern(),
+                lambda match: context.decode_field(
+                    match[_wild("field_label")],
+                    match[_wild("field_type")],
+                    match[_wild("field_indices")],
+                    match[_wild("field_derivatives")],
+                ),
+            ),
+            Replacement(
+                _vakint_field_strength_pattern(),
+                lambda match: context.decode_field_strength(
+                    match[_wild("field_strength_label")],
+                    match[_wild("field_strength_lorentz")],
+                    match[_wild("field_strength_indices")],
+                    match[_wild("field_strength_derivatives")],
+                ),
+            ),
+        )
+    )
+
+
+class _DecodeContext:
+    def __init__(self, theory: Any) -> None:
+        self.theory = theory
+        self.fields_by_safe_name = _registry_safe_name_map(theory.fields)
+        self.couplings_by_safe_name = _registry_safe_name_map(theory.couplings)
+        self.externals_by_safe_name = _registry_safe_name_map(theory.externals)
+        self.groups_by_safe_name = _registry_safe_name_map(theory.groups)
+
+    def decode_bar(self, body: Expression) -> Expression:
+        return s.Bar(self.decode_payload(body))
+
+    def decode_field(
+        self,
+        label: Expression,
+        type_expr: Expression,
+        indices: Expression,
+        derivatives: Expression,
+    ) -> Expression:
+        name = _vakint_local_name(label)
+        field_name = self._registered_name(name, self.theory.fields, self.fields_by_safe_name)
+        if field_name is None:
+            return symbol("Field")(label, type_expr, indices, derivatives)
+        return s.Field(
+            self.theory.field_handle(field_name).label,
+            self.decode_payload(type_expr),
+            list_expr(*self.decode_sequence(indices)),
+            list_expr(*self.decode_sequence(derivatives)),
+        )
+
+    def decode_field_strength(
+        self,
+        label: Expression,
+        lorentz: Expression,
+        indices: Expression,
+        derivatives: Expression,
+    ) -> Expression:
+        name = _vakint_local_name(label)
+        field_name = self._registered_name(name, self.theory.fields, self.fields_by_safe_name)
+        if field_name is None:
+            return symbol("FieldStrength")(label, lorentz, indices, derivatives)
+        return s.FieldStrength(
+            self.theory.field_handle(field_name).label,
+            list_expr(*self.decode_sequence(lorentz)),
+            list_expr(*self.decode_sequence(indices)),
+            list_expr(*self.decode_sequence(derivatives)),
+        )
+
+    def decode_coupling(self, label: Expression, indices: Expression, order: Expression) -> Expression:
+        name = _vakint_local_name(label)
+        coupling_name = self._registered_name(name, self.theory.couplings, self.couplings_by_safe_name)
+        if coupling_name is not None:
+            decoded_label = self.theory.coupling_handle(coupling_name).label
+        else:
+            external_name = self._registered_name(name, self.theory.externals, self.externals_by_safe_name)
+            if external_name is None:
+                return symbol("Coupling")(label, indices, order)
+            decoded_label = self.theory.external_handle(external_name).label
+        return s.Coupling(decoded_label, list_expr(*self.decode_sequence(indices)), order)
+
+    def decode_index(self, label: Expression, representation: Expression) -> Expression:
+        return s.Index(self.decode_index_label(label), self.decode_payload(representation))
+
+    def decode_sequence(self, expr: Expression) -> tuple[Expression, ...]:
+        if _is_bare_vakint_symbol(expr, "List"):
+            return ()
+        if is_head(expr, symbol("List")):
+            return tuple(self.decode_payload(item) for item in args(expr))
+        if is_head(expr, s.List):
+            return tuple(self.decode_payload(item) for item in args(expr))
+        return (self.decode_payload(expr),)
+
+    def decode_index_label(self, label: Expression) -> Expression:
+        if is_head(label, symbol("dummy_index")) and len(label) == 1:
+            return s.dummy_index(label[0])
+        return self.decode_payload(label)
+
+    def decode_payload(self, expr: Expression) -> Expression:
+        builtin = _decode_vakint_builtin(expr)
+        if builtin is not None:
+            return builtin
+        if is_head(expr, symbol("List")):
+            return list_expr(*(self.decode_payload(item) for item in args(expr)))
+        if is_head(expr, symbol("Bar")) and len(expr) == 1:
+            return self.decode_bar(expr[0])
+        if is_head(expr, symbol("Index")) and len(expr) == 2:
+            return self.decode_index(expr[0], expr[1])
+        if is_head(expr, symbol("Coupling")) and len(expr) == 3:
+            return self.decode_coupling(expr[0], expr[1], expr[2])
+        if is_head(expr, symbol("Field")) and len(expr) == 4:
+            return self.decode_field(expr[0], expr[1], expr[2], expr[3])
+        if is_head(expr, symbol("FieldStrength")) and len(expr) == 4:
+            return self.decode_field_strength(expr[0], expr[1], expr[2], expr[3])
+        if is_head(expr, symbol("Vector")) and len(expr) == 1:
+            return s.Vector(self.decode_payload(expr[0]))
+        if is_head(expr, symbol("Ghost")) and len(expr) == 1:
+            return s.Ghost(self.decode_payload(expr[0]))
+        if is_head(expr, symbol("AntiGhost")) and len(expr) == 1:
+            return s.AntiGhost(self.decode_payload(expr[0]))
+        group_expr = self._decode_group_expression(expr)
+        if group_expr is not None:
+            return group_expr
+        return expr
+
+    def _decode_group_expression(self, expr: Expression) -> Expression | None:
+        name = _vakint_local_name(expr)
+        if name is None:
+            return None
+        group_name = self._registered_name(name, self.theory.groups, self.groups_by_safe_name)
+        if group_name is None or not is_head(expr, symbol(name)):
+            return None
+        return self.theory.symbol(group_name, role=SymbolRole.GROUP)(
+            *(self.decode_payload(item) for item in args(expr))
+        )
+
+    @staticmethod
+    def _registered_name(
+        name: str | None,
+        registry: Mapping[str, Any],
+        safe_names: Mapping[str, str],
+    ) -> str | None:
+        if name is None:
+            return None
+        if name in registry:
+            return name
+        return safe_names.get(name)
+
+
+def _registry_safe_name_map(registry: Mapping[str, Any]) -> dict[str, str]:
+    return {safe_symbol_name(name): name for name in registry}
+
+
+def _vakint_local_name(expr: Expression) -> str | None:
+    try:
+        name = expr.get_name()
+    except TypeError:
+        return None
+    prefix = "vakint::"
+    if not name.startswith(prefix):
+        return None
+    return name.removeprefix(prefix)
+
+
+def _is_vakint_symbol(expr: Expression, name: str) -> bool:
+    return _vakint_local_name(expr) == name
+
+
+def _is_bare_vakint_symbol(expr: Expression, name: str) -> bool:
+    return _is_vakint_symbol(expr, name) and not is_head(expr, symbol(name))
+
+
+def _decode_vakint_builtin(expr: Expression) -> Expression | None:
+    name = _vakint_local_name(expr)
+    if name is None:
+        return None
+    if name == "List" and _is_bare_vakint_symbol(expr, "List"):
+        return s.List()
+    if name == "Scalar":
+        return s.Scalar
+    if name == "Fermion":
+        return s.Fermion
+    if name == "Lorentz":
+        return s.Lorentz
+    if name == "fund":
+        return s.fund
+    if name == "adj":
+        return s.adj
+    return None
+
+
+@cache
+def _wild(name: str) -> Expression:
+    return S(f"vakint_decode_{name}_")
+
+
+@cache
+def _vakint_bar_pattern() -> Expression:
+    return symbol("Bar")(_wild("bar_body"))
+
+
+@cache
+def _vakint_index_pattern() -> Expression:
+    return symbol("Index")(_wild("index_label"), _wild("index_representation"))
+
+
+@cache
+def _vakint_coupling_pattern() -> Expression:
+    return symbol("Coupling")(
+        _wild("coupling_label"),
+        _wild("coupling_indices"),
+        _wild("coupling_order"),
+    )
+
+
+@cache
+def _vakint_field_pattern() -> Expression:
+    return symbol("Field")(
+        _wild("field_label"),
+        _wild("field_type"),
+        _wild("field_indices"),
+        _wild("field_derivatives"),
+    )
+
+
+@cache
+def _vakint_field_strength_pattern() -> Expression:
+    return symbol("FieldStrength")(
+        _wild("field_strength_label"),
+        _wild("field_strength_lorentz"),
+        _wild("field_strength_indices"),
+        _wild("field_strength_derivatives"),
+    )
+
+
 @cache
 def _pychete_loop_momentum_pattern() -> Expression:
     return s.LoopMomentum(s.LoopMomentumIndexWildcard)
@@ -455,6 +721,7 @@ def finite_part(expr: Expression, *, epsilon: Expression | None = None) -> Expre
 __all__ = [
     "create_engine",
     "collect_identical_propagators",
+    "decode_pychete_namespace",
     "default_engine",
     "edge",
     "epsilon_coefficient",

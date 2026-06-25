@@ -269,6 +269,43 @@
   frontier: 42/72 accepted matching conditions, 30 different; 39/64 accepted
   Wilson conditions, 25 different.
 
+## Current Vakint Namespace Decode Slice
+
+- Found a correctness blocker in the internal one-loop path after native
+  vakint tensor reduction: vakint rewrites pychete numerator atoms such as
+  `Field(...)`, `Coupling(...)`, `Bar(...)`, `Index(...)`, populated/empty
+  `List(...)`, and field-strength payloads into `vakint::...` wrappers. The
+  scalar integral evaluation can still run, but matching-condition projection
+  then sees no pychete fields/couplings and extracts zero coefficients.
+- Added `pychete.backends.vakint.decode_pychete_namespace(theory, expr)`.
+  It uses Symbolica replacement rules for the known native wrapper heads and
+  theory-registry lookups for field, coupling, external, group, and
+  representation labels. The implementation avoids a full Python expression
+  traversal; Python only decodes the wildcard payloads passed by Symbolica's
+  matcher. This keeps the boundary fix lightweight for larger expressions.
+- Threaded the decoder through theory-aware vakint stage outputs in
+  `SupertraceBlockTrace`, one-loop aggregate `power_type_*` and
+  `interaction_power_type_*` methods, generated vakint expression maps, and
+  named supertrace helpers. Raw generated expressions remain unchanged; native
+  canonicalized, tensor-reduced, and evaluated stage outputs are decoded when
+  a `Theory` is available.
+- Added focused vakint backend tests proving synthetic wrappers and real
+  native tensor-reduction output round-trip back to pychete fields,
+  couplings, dummy indices, and registered SU(2) fundamental representations.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_vakint_backend.py -q`
+  passed with 27 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py tests/integration/validation/test_validation_fixtures.py -k "heavy_scalar or forwards_pychete_color" -q`
+  passed with 19 tests and 33 deselected; `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
+  passed.
+- A targeted Singlet Scalar Extension public-match probe with the same
+  performance-oriented options as the previous frontier still reports
+  72/72 projected targets, 42 accepted, 30 different; 39/64 Wilson targets
+  accepted. This confirms the namespace recovery fix does not by itself close
+  the remaining physics-equivalence gaps. Continue with the broader
+  covariant-derivative/group-algebra and on-shell/EOM feature families.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
