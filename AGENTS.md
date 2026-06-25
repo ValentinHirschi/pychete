@@ -289,6 +289,14 @@ through the idenso adapter. Use `simplify_pychete_loop_momentum_metrics(...)`
 or `simplify_index_algebra(..., metrics=True)` so expressions like
 `Metric(mu, nu) * LoopMomentum(mu) * LoopMomentum(nu)` reduce to
 `LoopMomentumSquared` before vacuum-integral evaluation.
+Field-strength Lorentz antisymmetry and metric contractions must also stay in
+the backend simplification path. Use
+`pychete.backends.idenso.simplify_pychete_field_strength_metrics(...)` or the
+public `simplify_index_algebra(..., metrics=True)` pipeline so
+`Metric(mu, nu) * FieldStrength(label, {mu, nu}, ...)` vanishes and contracted
+slots are rewritten before EFT truncation or matching-condition projection.
+Do not paper over these tensor identities with Wilson-specific projection
+special cases.
 
 Internal pychete categories must not be stringly typed. Use explicit enum or
 Symbolica constants such as `FieldMassKind`, `BuiltinIndexType`, and the

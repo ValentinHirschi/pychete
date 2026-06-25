@@ -262,6 +262,46 @@ def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
     )
 
 
+def test_idenso_bridge_simplifies_pychete_field_strength_metrics() -> None:
+    theory = Theory("idenso_field_strength_metrics")
+    vector = theory.define_field("V", s.Vector, self_conjugate=True, mass=0)
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+    nu = s.Index(s.dummy_index(1), s.Lorentz)
+    rho = s.Index(s.dummy_index(2), s.Lorentz)
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
+
+    assert _same(
+        idenso.simplify_pychete_field_strength_metrics(s.Metric(mu, rho) * strength),
+        -s.FieldStrength(vector.label, s.List(nu, rho), s.List(), s.List()),
+    )
+    assert _same(
+        idenso.simplify_pychete_field_strength_metrics(s.Metric(mu, nu) * strength),
+        Expression.num(0),
+    )
+    assert _same(
+        idenso.simplify_pychete_field_strength_metrics(
+            s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List())
+        ),
+        -strength,
+    )
+
+
+def test_idenso_pipeline_simplifies_cde_field_strength_metric_trace() -> None:
+    theory = Theory("idenso_cde_field_strength_trace")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W_gauge")
+    adjoint_representation = theory.define_representation("SU2L", "adj")
+    vector = theory.define_field("W", s.Vector, self_conjugate=True, mass=0)
+    b = s.Index(S("b"), s.Lorentz)
+    c = s.Index(S("c"), s.Lorentz)
+    adjoint = theory.index("A", adjoint_representation)
+    source = S("x") * s.Metric(b, c) * s.FieldStrength(vector.label, s.List(c, b), s.List(adjoint), s.List())
+
+    assert _same(
+        idenso.simplify_index_algebra(source, expand=False, gamma=False, color=False, dots=False),
+        Expression.num(0),
+    )
+
+
 def test_idenso_pipeline_contracts_pychete_loop_momentum_metrics() -> None:
     mu = s.Index(s.dummy_index(0), s.Lorentz)
     nu = s.Index(s.dummy_index(1), s.Lorentz)

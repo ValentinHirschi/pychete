@@ -1953,6 +1953,41 @@ def test_bosonic_cde_internal_tensor_reduction_decodes_native_vakint_tensors() -
         + theory.free_lag(vector)
         - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
     )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=1)
+    result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(
+        {"hScalar": ((theory.index("b"), theory.index("c")),)},
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=True,
+        emit_covariant_derivative_commutator_passes=2,
+        expand_covariant_derivative_commutators=True,
+        tensor_reduce=True,
+        combine_terms=False,
+    )
+    rendered = canonical_string(result.off_shell_eft_lagrangian)
+
+    assert result.metadata["stage"] == "interaction_bosonic_cde_hybrid_internal_integral_result"
+    assert "vakint::g" not in rendered
+    assert "vakint::CG" not in rendered
+    assert "pychete::Metric" in rendered
+    assert "pychete::CG" in rendered
+    assert "pychete::FieldStrength" in rendered
+
+
+def test_public_bosonic_cde_simplifies_metric_traced_field_strengths() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_simplify_field_strength_metrics")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    vector = theory.field_handle("W")
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        + theory.free_lag(vector)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
     result = theory.match(
         lagrangian,
         loop_order=1,
@@ -1971,14 +2006,12 @@ def test_bosonic_cde_internal_tensor_reduction_decodes_native_vakint_tensors() -
             truncate_eft_result=False,
         ),
     )
-    rendered = canonical_string(result.off_shell_eft_lagrangian)
+    rendered = canonical_string(result.on_shell_eft_lagrangian)
 
-    assert result.metadata["stage"] == "interaction_bosonic_cde_hybrid_internal_integral_result"
+    assert result.metadata["field_strength_metric_simplified"] is True
+    assert "pychete::FieldStrength" not in rendered
     assert "vakint::g" not in rendered
     assert "vakint::CG" not in rendered
-    assert "pychete::Metric" in rendered
-    assert "pychete::CG" in rendered
-    assert "pychete::FieldStrength" in rendered
 
 
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:

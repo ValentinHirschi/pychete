@@ -124,6 +124,39 @@
     passed.
   - `git diff --check` passed.
 
+## Current Field-Strength Metric Simplification Slice
+
+- Probed the Singlet scalar CDE/tensor-reduced public path after vakint wrapper
+  decoding. The output did contain pychete `FieldStrength(...)`, but the
+  immediate order-2 CDE terms were single field strengths whose two Lorentz
+  slots were contracted by `Metric(b, c)`. These terms are zero by
+  field-strength antisymmetry, and keeping them alive obscures later
+  basis-projection diagnostics.
+- Added `pychete.backends.idenso.simplify_pychete_field_strength_metrics(...)`.
+  It uses Symbolica `Replacement` rules to contract pychete `Metric`/`Delta`
+  factors into `FieldStrength(...)` Lorentz slots, drop traced
+  `Metric(mu, nu) * FieldStrength(... {mu, nu} ...)` terms, and canonicalize
+  the antisymmetric Lorentz-slot ordering. The helper is wired into
+  `simplify_index_algebra(..., metrics=True)`.
+- Public `match_one_loop(...)` now applies this field-strength metric cleanup
+  to the generated result before heavy-scalar substitution, on-shell
+  reduction, EFT truncation, and matching-condition projection. Low-level CDE
+  diagnostic builders remain raw so generated kernels and backend output can
+  still be inspected.
+- Added focused backend tests for metric-slot contraction, traced
+  field-strength cancellation, Lorentz antisymmetry, and the idenso pipeline.
+  Added an integration regression showing public CDE/tensor-reduced matching
+  removes the spurious metric-traced field strengths while preserving the raw
+  diagnostic coverage from the previous vakint decode slice.
+- Validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py -q'`
+    passed with 25 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "vakint_tensors or metric_traced_field_strengths" -q'`
+    passed with 2 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

@@ -197,6 +197,14 @@ def simplify_pychete_loop_momentum_metrics(expr: Expression) -> Expression:
     return expr.replace_multiple(_loop_momentum_metric_replacements(), repeat=True).expand()
 
 
+def simplify_pychete_field_strength_metrics(expr: Expression) -> Expression:
+    """Simplify metric contractions and Lorentz antisymmetry of field strengths."""
+
+    result = expr.replace_multiple(_field_strength_metric_trace_replacements(), repeat=True)
+    result = result.replace_multiple(_field_strength_metric_slot_replacements(), repeat=True)
+    return result.replace_multiple(_field_strength_lorentz_antisymmetry_replacements()).expand()
+
+
 def to_dots(expr: Expression) -> Expression:
     """Delegate contracted-vector dot-product conversion to idenso."""
 
@@ -237,8 +245,10 @@ def simplify_index_algebra(
         result = simplify_color(result)
     if metrics:
         result = simplify_pychete_loop_momentum_metrics(result)
+        result = simplify_pychete_field_strength_metrics(result)
         result = simplify_metrics(result)
         result = simplify_pychete_loop_momentum_metrics(result)
+        result = simplify_pychete_field_strength_metrics(result)
     if dots:
         result = to_dots(result)
     return simplify_pychete_dirac_algebra(result)
@@ -259,6 +269,102 @@ def _loop_momentum_metric_replacements() -> tuple[Replacement, ...]:
             )
         )
     return tuple(replacements)
+
+
+@cache
+def _field_strength_metric_trace_replacements() -> tuple[Replacement, ...]:
+    label = s.head("field_strength_metric_trace_label_")
+    indices = s.head("field_strength_metric_trace_indices_")
+    derivatives = s.head("field_strength_metric_trace_derivatives_")
+    first = s.head("field_strength_metric_trace_first_")
+    second = s.head("field_strength_metric_trace_second_")
+    label_is_field = label.req_tag(SymbolRole.FIELD.value)
+    replacements: list[Replacement] = []
+    for metric_head in (s.Metric, s.Delta):
+        metric = metric_head(first, second)
+        direct = s.FieldStrength(label, s.List(first, second), indices, derivatives)
+        swapped = s.FieldStrength(label, s.List(second, first), indices, derivatives)
+        replacements.extend(
+            (
+                Replacement(metric * direct, Expression.num(0), label_is_field),
+                Replacement(metric * swapped, Expression.num(0), label_is_field),
+            )
+        )
+    return tuple(replacements)
+
+
+@cache
+def _field_strength_metric_slot_replacements() -> tuple[Replacement, ...]:
+    label = s.head("field_strength_metric_slot_label_")
+    indices = s.head("field_strength_metric_slot_indices_")
+    derivatives = s.head("field_strength_metric_slot_derivatives_")
+    first = s.head("field_strength_metric_slot_first_")
+    second = s.head("field_strength_metric_slot_second_")
+    replacement = s.head("field_strength_metric_slot_replacement_")
+    label_is_field = label.req_tag(SymbolRole.FIELD.value)
+    strength = s.FieldStrength(label, s.List(first, second), indices, derivatives)
+
+    def replace_first(match: dict[Expression, Expression]) -> Expression:
+        return s.FieldStrength(
+            match[label],
+            s.List(match[replacement], match[second]),
+            match[indices],
+            match[derivatives],
+        )
+
+    def replace_second(match: dict[Expression, Expression]) -> Expression:
+        return s.FieldStrength(
+            match[label],
+            s.List(match[first], match[replacement]),
+            match[indices],
+            match[derivatives],
+        )
+
+    replacements: list[Replacement] = []
+    for metric_head in (s.Metric, s.Delta):
+        replacements.extend(
+            (
+                Replacement(metric_head(first, replacement) * strength, replace_first, label_is_field),
+                Replacement(metric_head(replacement, first) * strength, replace_first, label_is_field),
+                Replacement(metric_head(second, replacement) * strength, replace_second, label_is_field),
+                Replacement(metric_head(replacement, second) * strength, replace_second, label_is_field),
+            )
+        )
+    return tuple(replacements)
+
+
+@cache
+def _field_strength_lorentz_antisymmetry_replacements() -> tuple[Replacement, ...]:
+    label = s.head("field_strength_lorentz_label_")
+    indices = s.head("field_strength_lorentz_indices_")
+    derivatives = s.head("field_strength_lorentz_derivatives_")
+    first = s.head("field_strength_lorentz_first_")
+    second = s.head("field_strength_lorentz_second_")
+    strength = s.FieldStrength(label, s.List(first, second), indices, derivatives)
+
+    def canonicalize(match: dict[Expression, Expression]) -> Expression:
+        first_index = match[first]
+        second_index = match[second]
+        if bool(first_index == second_index):
+            return Expression.num(0)
+        field_strength = strength.replace_wildcards(match)
+        if canonical_string(second_index) < canonical_string(first_index):
+            return -s.FieldStrength(
+                match[label],
+                s.List(second_index, first_index),
+                match[indices],
+                match[derivatives],
+            )
+        return field_strength
+
+    return (
+        Replacement(
+            strength,
+            canonicalize,
+            label.req_tag(SymbolRole.FIELD.value),
+            rhs_cache_size=0,
+        ),
+    )
 
 
 def _projector_power_replacement(
@@ -1034,6 +1140,7 @@ __all__ = [
     "expand_pychete_ncm_powers",
     "simplify_pychete_color_algebra",
     "simplify_pychete_dirac_algebra",
+    "simplify_pychete_field_strength_metrics",
     "simplify_pychete_open_dirac_chains",
     "simplify_pychete_dirac_projectors",
     "simplify_pychete_loop_momentum_metrics",

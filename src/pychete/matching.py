@@ -5444,6 +5444,7 @@ def match_one_loop(
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )
+    result = _simplify_result_field_strength_metrics(result)
     if options.substitute_heavy_scalar_solutions:
         solution_lagrangian = (
             options.heavy_scalar_solution_lagrangian
@@ -5551,6 +5552,32 @@ def match_one_loop(
     )
     _log_one_loop_result(projected)
     return projected
+
+
+def _simplify_result_field_strength_metrics(result: MatchingResult) -> MatchingResult:
+    from .backends import idenso as idenso_backend
+
+    simplified_off_shell = idenso_backend.simplify_pychete_field_strength_metrics(result.off_shell_eft_lagrangian)
+    simplified_on_shell = idenso_backend.simplify_pychete_field_strength_metrics(result.on_shell_eft_lagrangian)
+    simplified_matching_conditions = {
+        name: idenso_backend.simplify_pychete_field_strength_metrics(expression)
+        for name, expression in result.matching_conditions.items()
+    }
+    simplified_supertraces = {
+        name: idenso_backend.simplify_pychete_field_strength_metrics(expression)
+        for name, expression in result.supertraces.items()
+    }
+    return replace(
+        result,
+        off_shell_eft_lagrangian=simplified_off_shell,
+        on_shell_eft_lagrangian=simplified_on_shell,
+        matching_conditions=simplified_matching_conditions,
+        supertraces=simplified_supertraces,
+        metadata={
+            **result.metadata,
+            "field_strength_metric_simplified": True,
+        },
+    )
 
 
 def _log_one_loop_result(result: MatchingResult) -> None:
