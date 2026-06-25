@@ -3157,6 +3157,49 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 204 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Started a CG tensor payload-preservation slice for the loaded-Matchete-model
+  converter and spenso bridge:
+  - kept the optional Mathematica conversion route committed through the
+    top-level `scripts/` wrappers while preserving the rule that pychete
+    runtime code and normal pytest runs are Matchete- and
+    Mathematica-independent;
+  - inspected the committed loaded-model fixtures and confirmed that non-native
+    `tFundf_*` CG tensors were still preserved only as opaque
+    `SparseArray[...]` source strings, while built-in delta/epsilon support
+    already had native component fallback coverage;
+  - added `pychete.backends.spenso.cg_tensor_component_expression(...)` and
+    `cg_tensor_components_from_expression(...)` to encode/decode dense
+    row-major CG component payloads as pychete-owned Symbolica metadata;
+  - added `stored_cg_tensor_components(...)` and taught spenso library
+    registration to consume stored CG component metadata before falling back to
+    generated formal symbolic components;
+  - extended `helper_mathematica_scripts/convert_matchete_model_state.py` to
+    decode Matchete's compressed four-argument `SparseArray[...]` shape into
+    dense pychete CG tensor metadata when possible, while retaining the raw
+    source string for provenance and warning/falling back to source-only
+    preservation if the sparse shape is unsupported;
+  - fixed the supported Mathematica expression converter so `Sqrt[...]` is
+    converted to Symbolica's native square-root primitive instead of an
+    external `sqrt` symbol, which is required for exact CG component values
+    such as `Sqrt[3]/4`;
+  - added focused tests for stored CG tensor metadata registration through
+    spenso and for sparse CG tensor decoding through the optional Matchete
+    model-state converter.
+- Verification for the CG sparse-tensor payload slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_spenso_backend.py
+    tests/unit/loaders/test_matchete_model_state_converter.py'` passed:
+    24 passed.
+- Final verification for the CG sparse-tensor payload slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 206 passed,
+    1 skipped in 147.12s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -3165,11 +3208,13 @@ discoveries, dependency patches, blockers, and remaining work.
   cover both raw/vakint and public finite/MS preview gap reports, but final
   Matchete equivalence is still incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
-  initial contract, especially complete CG tensor lowering, richer
-  vector/zero-mode metadata, and generated fixtures for complicated Matchete
-  models that exceed the direct Python loader's documented subset. Internal
-  coupling-symmetry associations are now preserved as explicit signed
-  pychete permutation metadata.
+  initial contract, especially generated fixtures for sparse CG component
+  payloads in the default models, richer vector/zero-mode metadata, and
+  complicated Matchete models that exceed the direct Python loader's documented
+  subset. Internal coupling-symmetry associations are now preserved as
+  explicit signed pychete permutation metadata, and new conversions can store
+  supported compressed `SparseArray[...]` CG tensors as dense Symbolica
+  component metadata consumable by spenso.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
   full propagator expansion beyond the new scalar operator-derived denominator,

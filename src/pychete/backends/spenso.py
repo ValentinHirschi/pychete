@@ -8,12 +8,43 @@ from typing import Any
 from symbolica import Expression, Replacement
 
 from .common import import_backend
-from ..expr import args, cg_tensor_pattern, is_head
+from ..expr import args, as_int, cg_tensor_pattern, is_head, list_expr, list_items
 from ..symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, s, safe_symbol_name
 from ..theory import Theory
 from ..theory_metadata import CGTensorDefinition, CGTensorHandle, RepresentationReality
 
 TensorComponent = Expression | int | float | complex
+
+
+def cg_tensor_component_expression(dimensions: Sequence[int], components: Sequence[Expression | int]) -> Expression:
+    """Encode dense row-major CG component data as pychete-owned Symbolica metadata."""
+
+    dimension_exprs = tuple(Expression.num(int(dimension)) for dimension in dimensions)
+    component_exprs = tuple(component if isinstance(component, Expression) else Expression.num(int(component)) for component in components)
+    count = 1
+    for dimension in dimensions:
+        count *= int(dimension)
+    if len(component_exprs) != count:
+        raise ValueError(f"CG tensor component data expects {count} components, got {len(component_exprs)}")
+    return list_expr(list_expr(*dimension_exprs), list_expr(*component_exprs))
+
+
+def cg_tensor_components_from_expression(tensor: Expression) -> tuple[tuple[int, ...], tuple[Expression, ...]] | None:
+    """Decode pychete's dense CG component metadata expression."""
+
+    if not is_head(tensor, s.List) or len(tensor) != 2:
+        return None
+    dimensions = tuple(as_int(item) for item in list_items(tensor[0]))
+    if any(dimension is None for dimension in dimensions):
+        return None
+    components = list_items(tensor[1])
+    count = 1
+    decoded_dimensions = tuple(int(dimension) for dimension in dimensions if dimension is not None)
+    for dimension in decoded_dimensions:
+        count *= dimension
+    if len(components) != count:
+        raise ValueError(f"CG tensor component metadata expects {count} components, got {len(components)}")
+    return decoded_dimensions, components
 
 
 def native_module():
@@ -185,6 +216,29 @@ def builtin_cg_tensor_components(
     return None
 
 
+def stored_cg_tensor_components(
+    theory: Theory,
+    cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle,
+) -> tuple[Expression, ...] | None:
+    """Return dense component data stored on a registered CG tensor label."""
+
+    definition = _cg_tensor_definition(theory, cg_tensor)
+    tensor = definition.tensor_expr
+    if tensor is None:
+        return None
+    decoded = cg_tensor_components_from_expression(tensor)
+    if decoded is None:
+        return None
+    dimensions, components = decoded
+    expected_dimensions = _cg_tensor_dimensions(theory, definition)
+    if dimensions != expected_dimensions:
+        raise ValueError(
+            f"CG tensor {definition.name!r} stores dimensions {dimensions}, "
+            f"but its registered representations have dimensions {expected_dimensions}"
+        )
+    return components
+
+
 def _symbolic_cg_components(theory: Theory, definition: CGTensorDefinition, count: int) -> tuple[Expression, ...]:
     return tuple(
         theory.symbol(
@@ -218,12 +272,15 @@ def cg_tensor_library_tensor_to_spenso(
     if components is None:
         if builtin_components:
             components = builtin_cg_tensor_components(theory, definition)
+        if components is None:
+            components = stored_cg_tensor_components(theory, definition)
         if components is not None:
             component_values: Sequence[TensorComponent] = tuple(components)
         elif not symbolic_components:
             raise ValueError(
                 "CG tensor library registration requires explicit components; "
-                "pass builtin_components=True for supported built-ins or "
+                "store dense component metadata on the CG tensor label, "
+                "pass builtin_components=True for supported built-ins, or "
                 "symbolic_components=True to create formal component symbols"
             )
         else:
@@ -271,10 +328,12 @@ def cg_tensor_library_to_spenso(
 ) -> Any:
     """Register pychete CG tensors in a native spenso ``TensorLibrary``."""
 
-    if components_by_name is None and not builtin_components and not symbolic_components:
+    has_stored_components = any(definition.tensor_expr is not None for definition in theory.cg_tensors.values())
+    if components_by_name is None and not builtin_components and not symbolic_components and not has_stored_components:
         raise ValueError(
             "CG tensor library construction requires components_by_name, "
-            "builtin_components=True, or symbolic_components=True"
+            "stored CG tensor component metadata, builtin_components=True, "
+            "or symbolic_components=True"
         )
     tensor_library = empty_tensor_library() if library is None else library
     explicit_components = {} if components_by_name is None else dict(components_by_name)
@@ -285,6 +344,8 @@ def cg_tensor_library_to_spenso(
         components = explicit_components.get(name)
         if components is None and builtin_components:
             components = builtin_cg_tensor_components(theory, name)
+        if components is None:
+            components = stored_cg_tensor_components(theory, name)
         if components is None and not symbolic_components:
             continue
         register_cg_tensor_in_spenso_library(

@@ -10,15 +10,18 @@ from typing import Any
 from symbolica import Expression
 
 from pychete.loaders import parse_matchete_expression
+from pychete.backends.spenso import cg_tensor_component_expression
 from pychete.loaders.mathematica import (
     _clean_name,
     _eval_expression,
     _eval_expression_list,
     _field_type,
     _parse_chirality,
+    _parse_call,
     _parse_coupling_self_conjugate,
     _parse_diagonal_coupling,
     _parse_int,
+    _parse_int_list,
     _parse_representation_name,
     _preprocess_names,
     _split_top_level,
@@ -214,6 +217,74 @@ def _parse_symmetries(raw: str, theory: Theory, warnings: list[str], coupling_na
     return tuple(_eval_expression_list(value, theory))
 
 
+def _mathematica_list_parts(raw: str) -> list[str]:
+    value = _strip_comments(_preprocess_names(raw)).strip()
+    if value.startswith("{") and value.endswith("}"):
+        return _split_top_level(value[1:-1], ",")
+    if value.startswith("List[") and value.endswith("]"):
+        return _split_top_level(value[5:-1], ",")
+    raise ValueError(f"Expected a Wolfram list, got {raw[:120]}")
+
+
+def _row_major_index(indices: tuple[int, ...], dimensions: tuple[int, ...]) -> int:
+    flat = 0
+    for index, dimension in zip(indices, dimensions, strict=True):
+        flat = flat * dimension + index
+    return flat
+
+
+def _sparse_array_components(raw: str, theory: Theory) -> Expression | None:
+    value = _strip_comments(_preprocess_names(raw)).strip()
+    if not value.startswith("SparseArray["):
+        return None
+
+    head, parts = _parse_call(value)
+    if head != "SparseArray" or len(parts) != 4:
+        raise ValueError(f"Only four-argument Matchete SparseArray tensors are supported, got {raw[:120]}")
+
+    dimensions = tuple(int(dimension) for dimension in _parse_int_list(parts[1]))
+    if not dimensions:
+        raise ValueError("SparseArray tensor has no dimensions")
+    component_count = 1
+    for dimension in dimensions:
+        component_count *= dimension
+
+    default = _eval_expression(parts[2], theory, {})
+    compressed_parts = _mathematica_list_parts(parts[3])
+    if len(compressed_parts) != 3:
+        raise ValueError(f"Unsupported SparseArray compressed data shape: {parts[3][:120]}")
+    version = _parse_int(compressed_parts[0])
+    if version != 1:
+        raise ValueError(f"Unsupported SparseArray compressed data version {version}")
+
+    pointer_parts = _mathematica_list_parts(compressed_parts[1])
+    if len(pointer_parts) != 2:
+        raise ValueError(f"Unsupported SparseArray pointer data shape: {compressed_parts[1][:120]}")
+    row_pointers = tuple(_parse_int(part) for part in _mathematica_list_parts(pointer_parts[0]))
+    coordinates = tuple(tuple(_parse_int_list(part)) for part in _mathematica_list_parts(pointer_parts[1]))
+    values = tuple(_eval_expression(part, theory, {}) for part in _mathematica_list_parts(compressed_parts[2]))
+
+    if len(row_pointers) != dimensions[0] + 1:
+        raise ValueError(f"SparseArray row pointer length {len(row_pointers)} is incompatible with {dimensions[0]} rows")
+    if len(coordinates) != len(values):
+        raise ValueError(f"SparseArray coordinate count {len(coordinates)} does not match value count {len(values)}")
+    if row_pointers[-1] != len(values):
+        raise ValueError(f"SparseArray row pointer terminates at {row_pointers[-1]}, but has {len(values)} values")
+
+    components = [default for _ in range(component_count)]
+    rank = len(dimensions)
+    for first_index in range(1, dimensions[0] + 1):
+        for position in range(row_pointers[first_index - 1], row_pointers[first_index]):
+            full_indices = (first_index, *coordinates[position])
+            if len(full_indices) != rank:
+                raise ValueError(f"SparseArray coordinate {full_indices} has rank {len(full_indices)}, expected {rank}")
+            if any(index < 1 or index > dimension for index, dimension in zip(full_indices, dimensions, strict=True)):
+                raise ValueError(f"SparseArray coordinate {full_indices} is outside dimensions {dimensions}")
+            components[_row_major_index(tuple(index - 1 for index in full_indices), dimensions)] = values[position]
+
+    return cg_tensor_component_expression(dimensions, components)
+
+
 def build_fixture_from_model_state(data: dict[str, Any], *, include_lagrangian: bool = True) -> tuple[dict[str, Any], list[str]]:
     if data.get("kind") != "matchete_loaded_model_state":
         raise ValueError("expected kind='matchete_loaded_model_state'")
@@ -296,7 +367,15 @@ def build_fixture_from_model_state(data: dict[str, Any], *, include_lagrangian: 
         try:
             representations = _entry_expressions(entry, "representations_input_form", theory)
             if name not in theory.cg_tensors:
-                theory.define_cg_tensor(name, representations, source=str(entry.get("tensor_input_form") or "matchete_exported_tensor"))
+                source = str(entry.get("tensor_input_form") or "matchete_exported_tensor")
+                tensor: Expression | None = None
+                try:
+                    tensor = _sparse_array_components(source, theory)
+                except Exception as exc:  # noqa: BLE001 - keep raw Matchete source if sparse decoding is incomplete.
+                    warnings.append(
+                        f"Kept CG tensor {entry['name_input_form']} source only; could not decode SparseArray: {exc}"
+                    )
+                theory.define_cg_tensor(name, representations, tensor=tensor, source=source)
         except Exception as exc:  # noqa: BLE001 - development converter records unsupported Matchete metadata.
             warnings.append(f"Skipped CG tensor {entry['name_input_form']}: {exc}")
 

@@ -624,6 +624,10 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
             if len(expr) != 1:
                 raise NotImplementedError(f"Unsupported Log expression: {expr.format_plain()}")
             return _convert_expression(expr[0], theory, env).log()
+        if name == "sqrt":
+            if len(expr) != 1:
+                raise NotImplementedError(f"Unsupported Sqrt expression: {expr.format_plain()}")
+            return _convert_expression(expr[0], theory, env).sqrt()
         if name == "PlusHc":
             body = _convert_expression(expr[0], theory, env)
             return body + s.Bar(body)

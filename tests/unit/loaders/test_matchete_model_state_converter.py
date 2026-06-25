@@ -6,6 +6,7 @@ from pathlib import Path
 from types import ModuleType
 
 from pychete.symbols import SymbolDataKey, canonical_string, s
+from pychete.backends import spenso
 from pychete.validation_fixtures import load_validation_fixture
 
 
@@ -126,6 +127,56 @@ def test_matchete_model_state_exporter_documents_loaded_state_contract() -> None
     assert "GetCouplings[]" in text
     assert "GetGaugeGroups[]" in text
     assert "GetRepresentations[]" in text
+
+
+def test_matchete_model_state_converter_decodes_sparse_cg_tensor_components(tmp_path: Path) -> None:
+    converter = _load_converter()
+    exported = {
+        "schema_version": 1,
+        "kind": "matchete_loaded_model_state",
+        "generator": "export_matchete_model_state.wls",
+        "model": "Sparse_CG_Model",
+        "lagrangian_input_form": "",
+        "flavor_indices": [],
+        "gauge_groups": [],
+        "global_groups": [
+            {
+                "name_input_form": "SU2F",
+                "kind": "global",
+                "group_input_form": "SU @ 2",
+                "abelian": False,
+            }
+        ],
+        "representations": [],
+        "couplings": [],
+        "fields": [],
+        "cg_tensors": [
+            {
+                "name_input_form": "customEps",
+                "representations_input_form": ["SU2F[fund]", "SU2F[fund]"],
+                "tensor_input_form": (
+                    "SparseArray[Automatic, {2, 2}, 0, "
+                    "{1, {{0, 1, 2}, {{2}, {1}}}, {Sqrt[3], -1}}]"
+                ),
+            }
+        ],
+    }
+
+    fixture_obj, warnings = converter.build_fixture_from_model_state(exported)
+    assert warnings == []
+
+    path = tmp_path / "Sparse_CG_Model.model_fixture.json"
+    path.write_text(json.dumps(fixture_obj), encoding="utf-8")
+    fixture = load_validation_fixture(path)
+    theory = fixture.theory()
+    definition = theory.cg_tensor_handle("customEps").definition
+    decoded = spenso.cg_tensor_components_from_expression(definition.tensor_expr)
+
+    assert decoded is not None
+    dimensions, components = decoded
+    assert dimensions == (2, 2)
+    assert [canonical_string(component) for component in components] == ["0", "sqrt(3)", "-1", "0"]
+    assert "SparseArray[Automatic" in (definition.source_text or "")
 
 
 def test_optional_top_level_matchete_conversion_scripts_are_checked_in_wrappers() -> None:

@@ -222,6 +222,27 @@ def test_spenso_backend_registers_cg_tensor_components_in_native_library() -> No
     assert canonical_string(registered.get_name().to_expression()) == "spenso_python::pychete_spenso_bridge_library_cg_eps_SU2F"
 
 
+def test_spenso_backend_uses_stored_cg_tensor_component_metadata() -> None:
+    theory = Theory("spenso_bridge_stored_library")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    fund = theory.define_representation("SU2F", "fund")
+    tensor_data = spenso.cg_tensor_component_expression(
+        (2, 2),
+        (Expression.num(0), S("a"), -S("a"), Expression.num(0)),
+    )
+    custom = theory.define_cg_tensor("custom_eps", (fund, fund), tensor=tensor_data, source="unit-test")
+
+    components = spenso.stored_cg_tensor_components(theory, custom)
+    library = spenso.cg_tensor_library_to_spenso(theory)
+    structure = spenso.cg_tensor_structure_to_spenso(theory, custom)
+    registered = library[structure.get_name().to_expression()]
+
+    assert components is not None
+    assert [canonical_string(component) for component in components] == ["0", "python::a", "-python::a", "0"]
+    assert type(registered).__name__ == "TensorStructure"
+    assert len(registered) == 4
+
+
 def test_spenso_backend_can_build_symbolic_cg_tensor_library() -> None:
     theory = Theory("spenso_bridge_symbolic_library")
     theory.define_global_group("SU2F", s.SU(Expression.num(2)))

@@ -145,3 +145,7 @@ discoveries, dependency patches, blockers, and remaining work.
   directory. The maintained implementation can still live under
   `helper_mathematica_scripts/`, but the user-facing convenience wrappers
   should stay committed with pychete.
+- Continue treating the top-level Mathematica conversion scripts as optional
+  convenience tooling only. It is acceptable to improve those scripts so users
+  with Mathematica can generate pychete-owned fixtures, but runtime pychete and
+  pytest must remain independent of Matchete and Mathematica.
