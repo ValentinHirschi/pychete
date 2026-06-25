@@ -56,18 +56,19 @@ def test_vlf_toy_model_asset_loads_without_runtime_reference_dependency() -> Non
     theory._validate_registered_expression(expressions["lagrangian"])
 
 
-def test_vlf_mathematica_and_python_assets_canonicalize_to_same_json() -> None:
+def test_vlf_mathematica_and_python_assets_share_metadata_with_distinct_free_lag_conventions() -> None:
     mathematica_theory, mathematica_expressions = load_matchete_model(Path("assets/models/VLF_toy_model.m"))
     python_theory, python_expressions = load_python_model(Path("assets/models/VLF_toy_model.py"))
+    mathematica_lagrangian = canonical_string(mathematica_expressions["lagrangian"])
+    python_lagrangian = canonical_string(python_expressions["lagrangian"])
 
     assert mathematica_theory.to_json_obj() == python_theory.to_json_obj()
-    assert {
-        name: canonical_string(expression)
-        for name, expression in mathematica_expressions.items()
-    } == {
-        name: canonical_string(expression)
-        for name, expression in python_expressions.items()
-    }
+    assert set(mathematica_expressions) == set(python_expressions) == {"lagrangian"}
+    assert mathematica_lagrangian != python_lagrangian
+    assert mathematica_lagrangian.count("field_A") == 1
+    assert python_lagrangian.count("field_A") == 3
+    assert "/pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2" in mathematica_lagrangian
+    assert "/pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2" not in python_lagrangian
 
 
 def test_matchete_loader_preserves_supported_coupling_options(tmp_path: Path) -> None:

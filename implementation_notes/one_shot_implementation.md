@@ -770,3 +770,43 @@ Latest verified baseline before this compact rollover:
     5.66s. The skipped test was the GammaLoop API import check because the
     dependency manifest indicates GammaLoop was not requested for this local
     dependency build.
+
+## Current Slice: Explicit Free-Lagrangian Conventions
+
+- Continued the model-definition and vector/gauge batch by addressing a
+  convention mismatch exposed by the Abelian-current work:
+  - pychete's Pythonic `Theory.free_lag(...)` now expands Abelian charge
+    currents and uses canonical gauge kinetic terms;
+  - Matchete `.m` files use `FreeLag[...]` with Matchete's implicit
+    covariant-derivative convention and gauge kinetic `1/g^2` normalization.
+- Added public enum `FreeLagConvention` with values:
+  - `FreeLagConvention.PYCHETE` for canonical pychete free Lagrangians;
+  - `FreeLagConvention.MATCHETE` for Matchete loader compatibility.
+- Extended `Theory.free_lag(..., convention=...)`:
+  - default remains `PYCHETE`;
+  - `MATCHETE` suppresses explicit Abelian current expansion because those
+    interactions remain implicit in Matchete derivative slots;
+  - gauge vector kinetic terms in `MATCHETE` divide by the registered gauge
+    coupling squared, using coupling metadata stored on the group symbol.
+- Updated the Mathematica model loader so parsed `FreeLag[...]` calls use
+  `FreeLagConvention.MATCHETE` explicitly. This prevents `.m` loading from
+  silently inheriting pychete's canonical convention.
+- Updated VLF model-loader coverage: the Python and Mathematica assets still
+  share identical theory metadata, but their Lagrangian expressions are now
+  intentionally distinct because they use different free-Lagrangian
+  conventions.
+- Verification in this slice so far:
+  - focused Matchete free-Lagrangian convention unit test passed:
+    1 passed, 25 deselected in 0.02s;
+  - focused VLF model-loader convention split test passed:
+    1 passed, 42 deselected in 0.14s.
+  - grouped definitions + model-loader gate passed:
+    76 passed in 0.40s;
+  - grouped matching integration gate passed:
+    65 passed in 1.59s;
+  - `mypy` passed with no issues in 32 source files;
+  - `git diff --check` passed;
+  - broader non-slow gate passed: 263 passed, 1 skipped, 50 deselected in
+    5.57s. The skipped test was the GammaLoop API import check because the
+    dependency manifest indicates GammaLoop was not requested for this local
+    dependency build.

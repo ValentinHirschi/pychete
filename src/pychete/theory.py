@@ -37,6 +37,7 @@ from .theory_metadata import (
     FieldMassKind,
     FieldRole,
     FieldVariation,
+    FreeLagConvention,
     GroupKind,
     IndexType,
     JsonValue,
@@ -965,14 +966,38 @@ class Theory:
             terms.append(charge[0] * self.coupling_handle(coupling_name)() * self.field_handle(field_name)())
         return sum_expr(terms).expand()
 
-    def free_lag(self, *field_names_or_handles: str | FieldHandle) -> Expression:
+    def _vector_gauge_coupling(self, definition: FieldDefinition) -> Expression | None:
+        type_expr = definition.type_expr
+        if not is_head(type_expr, s.Vector) or len(type_expr) != 1:
+            return None
+        group_symbol = type_expr[0]
+        group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
+        if group_kind is not GroupKind.GAUGE:
+            return None
+        coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+        if not isinstance(coupling_name, str):
+            return None
+        if coupling_name not in self.couplings:
+            raise KeyError(f"Gauge group {canonical_string(group_symbol)} references unknown coupling {coupling_name!r}")
+        return self.coupling_handle(coupling_name)()
+
+    def free_lag(
+        self,
+        *field_names_or_handles: str | FieldHandle,
+        convention: FreeLagConvention | str = FreeLagConvention.PYCHETE,
+    ) -> Expression:
         """Build the free Lagrangian for registered fields.
 
         Each argument may be either a field name or a ``FieldHandle``. The
         returned Symbolica expression is independent of the theory object and
-        can be stored or transformed separately.
+        can be stored or transformed separately. The default pychete convention
+        uses canonical gauge kinetic terms and expands Abelian gauge charges
+        into scalarized current interactions. The Matchete convention keeps
+        covariant-derivative interactions implicit in derivative slots and
+        normalizes gauge kinetic terms with Matchete's coupling denominator.
         """
 
+        convention_kind = FreeLagConvention.from_user(convention)
         out = Expression.num(0)
         for item in field_names_or_handles:
             handle = item if isinstance(item, FieldHandle) else self.field_handle(item)
@@ -985,7 +1010,11 @@ class Theory:
             is_self_conjugate = definition.is_self_conjugate
             if bool(type_expr == s.Scalar):
                 mass = self.mass_expr(definition)
-                connection = self._abelian_gauge_connection(definition)
+                connection = (
+                    self._abelian_gauge_connection(definition)
+                    if convention_kind is FreeLagConvention.PYCHETE
+                    else Expression.num(0)
+                )
                 if is_self_conjugate:
                     if not bool(connection == Expression.num(0)):
                         raise ValueError("self-conjugate scalar fields cannot carry Abelian gauge charges in free_lag")
@@ -1010,13 +1039,21 @@ class Theory:
             elif is_head(type_expr, s.Vector):
                 nu = self.dummy_index(1)
                 strength = s.FieldStrength(definition.label, list_expr(mu, nu), list_expr(), list_expr())
-                out = out - strength**2 / 4
+                gauge_coupling = self._vector_gauge_coupling(definition)
+                vector_kinetic = -strength**2 / 4
+                if convention_kind is FreeLagConvention.MATCHETE and gauge_coupling is not None:
+                    vector_kinetic = vector_kinetic / gauge_coupling**2
+                out = out + vector_kinetic
                 mass = self.mass_expr(definition)
                 if mass is not None:
                     out = out - mass**2 * field_expr**2 / 2
             elif bool(type_expr == s.Fermion):
                 mass = self.mass_expr(definition)
-                connection = self._abelian_gauge_connection(definition)
+                connection = (
+                    self._abelian_gauge_connection(definition)
+                    if convention_kind is FreeLagConvention.PYCHETE
+                    else Expression.num(0)
+                )
                 dirac = Expression.I * s.NCM(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))
                 if not bool(connection == Expression.num(0)):
                     dirac = dirac + connection * s.NCM(s.Bar(field_expr), s.Gamma(mu), field_expr)

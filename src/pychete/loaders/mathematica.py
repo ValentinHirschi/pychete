@@ -30,7 +30,7 @@ from ..backends.vacuum_integrals import canonize_loop_function, loop_function
 from ..expr import args, as_int, list_expr, product_expr, sum_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
 from ..theory import Theory
-from ..theory_metadata import CouplingSelfConjugate, FieldChirality, FieldRole
+from ..theory_metadata import CouplingSelfConjugate, FieldChirality, FieldRole, FreeLagConvention
 
 
 _COMMENT_RE = re.compile(r"\(\*.*?\*\)", re.DOTALL)
@@ -686,7 +686,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
             return body + s.Bar(body)
         if name == "FreeLag":
             names = [_clean_name(_plain_name(child)) for child in args(expr)]
-            return theory.free_lag(*names)
+            return theory.free_lag(*names, convention=FreeLagConvention.MATCHETE)
         symmetry_heads = {
             "SymmetricIndices": s.SymmetricIndices,
             "AntisymmetricIndices": s.AntisymmetricIndices,

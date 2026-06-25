@@ -177,6 +177,31 @@ class GroupKind(StrEnum):
             raise ValueError(f"unsupported group kind {value!r}") from exc
 
 
+class FreeLagConvention(StrEnum):
+    """Convention used when constructing symbolic free Lagrangians."""
+
+    PYCHETE = "pychete"
+    MATCHETE = "matchete"
+
+    @classmethod
+    def from_user(cls, value: FreeLagConvention | str) -> FreeLagConvention:
+        """Normalize a user-provided free-Lagrangian convention."""
+
+        if isinstance(value, cls):
+            return value
+        normalized = str(value).replace("-", "_").lower()
+        aliases = {
+            "canonical": cls.PYCHETE,
+            "pychete": cls.PYCHETE,
+            "matchete": cls.MATCHETE,
+            "mathematica": cls.MATCHETE,
+        }
+        try:
+            return aliases[normalized]
+        except KeyError as exc:
+            raise ValueError(f"unsupported free-Lagrangian convention {value!r}") from exc
+
+
 class RepresentationReality(StrEnum):
     """Reality class for a registered group representation.
 
@@ -1206,6 +1231,7 @@ __all__ = [
     "FieldMassKind",
     "FieldRole",
     "FieldVariation",
+    "FreeLagConvention",
     "GroupKind",
     "IndexType",
     "JsonValue",

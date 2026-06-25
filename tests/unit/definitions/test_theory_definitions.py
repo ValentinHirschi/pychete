@@ -10,6 +10,7 @@ from pychete import (
     FieldChirality,
     FieldMassKind,
     FieldRole,
+    FreeLagConvention,
     GroupKind,
     RepresentationReality,
     SymbolDataKey,
@@ -172,6 +173,31 @@ def test_free_lag_rejects_abelian_charged_self_conjugate_scalars() -> None:
         assert "self-conjugate scalar fields cannot carry Abelian gauge charges" in str(exc)
     else:
         raise AssertionError("charged self-conjugate scalar free_lag did not fail")
+
+
+def test_free_lag_matchete_convention_keeps_covariant_terms_implicit() -> None:
+    theory = Theory("matchete_free_lag_convention")
+    theory.define_gauge_group("U1e", s.U1, "e", "A")
+    psi = theory.define_field(
+        "psi",
+        s.Fermion,
+        charges=[theory.group_charge("U1e", 1)],
+        mass=(FieldMassKind.HEAVY, "M"),
+    )
+    vector = theory.field_handle("A")
+    coupling = theory.coupling_handle("e")
+    mass = theory.coupling_handle("M")
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    field = psi()
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
+    expected = (
+        -strength**2 / (4 * coupling() ** 2)
+        + Expression.I * s.NCM(s.Bar(field), s.Gamma(mu), psi(derivatives=[mu]))
+        - mass() * s.NCM(s.Bar(field), field)
+    )
+
+    assert_expr_equal(theory.free_lag("A", psi, convention=FreeLagConvention.MATCHETE), expected)
 
 
 def test_matching_condition_targets_expose_symbolica_role_metadata() -> None:

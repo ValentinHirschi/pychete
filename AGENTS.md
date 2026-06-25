@@ -183,6 +183,13 @@ one combined Abelian connection from all gauged U(1) charges before expanding
 the kinetic/current term. Global U(1) charges remain metadata only, and
 non-Abelian covariant terms must wait for the idenso/spenso-backed group
 algebra path rather than ad hoc Python expansion.
+Keep free-Lagrangian conventions explicit with `FreeLagConvention`. The
+default `FreeLagConvention.PYCHETE` uses canonical gauge kinetic terms and
+expanded scalarized Abelian currents. The Matchete loader must use
+`FreeLagConvention.MATCHETE`, where covariant-derivative interactions remain
+implicit in derivative slots and gauge kinetic terms carry Matchete's
+`1/g^2` normalization. Do not make `.m` loading silently depend on pychete's
+canonical free-Lagrangian convention.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
