@@ -233,6 +233,38 @@
     passed.
   - `git diff --check` passed.
 
+## Current Vakint Constant Decode Slice
+
+- Continued probing the order-4 CDE Wilson projection failure. The public CDE
+  source contains pychete `FieldStrength(...)` and `CD(...)` atoms, but direct
+  Wilson projection for `cHW`, `cHBox`, `cHD`, and `cH` still returns zero.
+  The immediate actionable backend-boundary issue found in this probe was a
+  public-output leak of `vakint::𝑖` from both native vakint evaluation results
+  and pychete's internal analytic vacuum-integral normalization.
+- Extended `pychete.backends.vakint.decode_pychete_namespace(...)` so native
+  vakint imaginary-unit and pi symbols (`vakint::𝑖`, `vakint::I`,
+  `vakint::𝜋`, `vakint::π`) decode to Symbolica's `Expression.I` and
+  `Expression.PI` through Symbolica replacement rules. The direct backend unit
+  test now verifies that those constants normalize canonically.
+- Changed `pychete.backends.vacuum_integrals.imaginary_unit_symbol()` to return
+  native `Expression.I` directly. This keeps pychete-owned analytic
+  one-loop-evaluation output in Symbolica form instead of reusing vakint's
+  namespace convention.
+- Updated the vakint/internal cross-check tests so raw native vakint results
+  are decoded before comparing against pychete's internal analytic evaluator.
+  The equality check still validates agreement with vakint, but now at the
+  pychete backend boundary representation.
+- Added an order-4 public CDE regression assertion that `vakint::𝑖` does not
+  leak into matching output.
+- Validation for this slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_vakint_backend.py tests/unit/backends/test_vacuum_integrals_backend.py -q'`
+    passed with 68 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "vakint_tensors or metric_traced_field_strengths or order_four_covariant_derivatives" -q'`
+    passed with 3 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

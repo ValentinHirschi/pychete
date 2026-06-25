@@ -28,9 +28,9 @@ def mu_r_squared_symbol() -> Expression:
 
 
 def imaginary_unit_symbol() -> Expression:
-    """Return vakint's imaginary-unit convention for backend comparison."""
+    """Return the native Symbolica imaginary unit used by pychete results."""
 
-    return S("vakint::𝑖")
+    return Expression.I
 
 
 def loop_function(masses: tuple[Expression, ...], powers: tuple[LoopFunctionPower, ...]) -> Expression:

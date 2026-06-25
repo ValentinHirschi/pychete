@@ -363,6 +363,10 @@ def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
 
     context = _DecodeContext(theory)
     namespace_replacements = (
+        Replacement(symbol("𝑖"), Expression.I),
+        Replacement(symbol("I"), Expression.I),
+        Replacement(symbol("𝜋"), Expression.PI),
+        Replacement(symbol("π"), Expression.PI),
         Replacement(
             _vakint_bar_pattern(),
             lambda match: context.decode_bar(match[_wild("bar_body")]),
@@ -611,6 +615,10 @@ def _decode_vakint_builtin(expr: Expression) -> Expression | None:
     name = _vakint_local_name(expr)
     if name is None:
         return None
+    if name in {"𝑖", "I"}:
+        return Expression.I
+    if name in {"𝜋", "π"}:
+        return Expression.PI
     if name == "List" and _is_bare_vakint_symbol(expr, "List"):
         return s.List()
     if name == "Scalar":

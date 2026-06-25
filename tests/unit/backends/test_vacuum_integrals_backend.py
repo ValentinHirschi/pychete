@@ -3,9 +3,16 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
+from pychete import Theory
 from pychete.backends import vakint, vacuum_integrals
 from pychete.symbols import canonical_string, s
 from tests.conftest import assert_expr_equal
+
+_DECODE_THEORY = Theory("vacuum_integrals_decode")
+
+
+def _decode_native_constants(expr: Expression) -> Expression:
+    return vakint.decode_pychete_namespace(_DECODE_THEORY, expr)
 
 
 def _loop_function_topology(masses: tuple[Expression, ...], powers: tuple[int, ...]) -> Expression:
@@ -283,7 +290,7 @@ def test_internal_single_scale_tadpoles_match_vakint_finite_order_evaluation() -
 
     for power in range(1, 6):
         integral = vakint.one_loop_vacuum_integral(numerator, (mass**2,), powers=(power,))
-        vakint_result = vakint.evaluate(integral, engine=engine)
+        vakint_result = _decode_native_constants(vakint.evaluate(integral, engine=engine))
         internal_result = vacuum_integrals.evaluate_one_loop_single_scale_vacuum_integral(
             numerator,
             mass,
@@ -303,7 +310,7 @@ def test_internal_single_scale_mass_squared_tadpoles_match_vakint_finite_order_e
 
     for power in range(1, 5):
         integral = vakint.one_loop_vacuum_integral(numerator, (mass_squared,), powers=(power,))
-        vakint_result = vakint.evaluate(integral, engine=engine)
+        vakint_result = _decode_native_constants(vakint.evaluate(integral, engine=engine))
         internal_result = vacuum_integrals.evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared(
             numerator,
             mass_squared,
@@ -326,7 +333,7 @@ def test_internal_single_scale_vakint_expression_evaluator_matches_native_vakint
         number_of_terms_in_epsilon_expansion=2,
     )
 
-    native_result = vakint.evaluate(expression, engine=engine)
+    native_result = _decode_native_constants(vakint.evaluate(expression, engine=engine))
     internal_result = vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(expression)
 
     assert_expr_equal(internal_result, native_result)

@@ -294,6 +294,15 @@ def test_vakint_tensor_reduction_round_trips_indexed_pychete_fields() -> None:
     assert canonical_string(decoded) == canonical_string(expr)
 
 
+def test_vakint_decodes_native_imaginary_and_pi_symbols() -> None:
+    theory = Theory("vakint_decode_builtin_numbers")
+    native = vakint.symbol("𝑖") * vakint.symbol("I") * vakint.symbol("𝜋") * vakint.symbol("π")
+
+    decoded = vakint.decode_pychete_namespace(theory, native)
+
+    assert canonical_string(decoded) == canonical_string(-Expression.PI**2)
+
+
 def test_vakint_decodes_native_metric_and_cg_wrappers() -> None:
     theory = Theory("vakint_decode_metric_cg")
     theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")

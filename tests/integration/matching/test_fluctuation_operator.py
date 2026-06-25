@@ -2054,6 +2054,7 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
     assert result.metadata["native_color_wrappers_decoded"] is True
     assert "vakint::CD" not in rendered
     assert "vakint::List" not in rendered
+    assert "vakint::𝑖" not in rendered
     assert "spenso::" not in rendered
     assert "pychete::CD" in rendered
     assert "pychete::FieldStrength" in rendered
