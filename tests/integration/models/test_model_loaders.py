@@ -5,7 +5,9 @@ from pathlib import Path
 from symbolica import Expression
 
 from pychete import FieldChirality, FieldMassKind, FieldRole, GroupKind, RepresentationReality, SymbolDataKey, SymbolRole, Theory, canonical_string, s
+from pychete.backends import spenso
 from pychete.loaders import load_matchete_model, load_python_model, parse_matchete_expression
+from pychete.validation_fixtures import load_validation_fixture
 
 
 def _local_tags(label: Expression) -> set[str]:
@@ -287,6 +289,28 @@ def test_default_parent_model_child_lagrangians_parse_with_parent_metadata() -> 
         assert set(expressions) == {"lagrangian"}
         assert {"H", "q", "l"} <= set(theory.fields)
         theory._validate_registered_expression(expressions["lagrangian"])
+
+
+def test_default_loaded_model_fixtures_store_sparse_cg_components_for_spenso() -> None:
+    expected_components = {"tFundf_SU2L": 36, "tFundf_SU3c": 576}
+    for name in ("Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
+        fixture = load_validation_fixture(Path(f"assets/validation/pychete/{name}.model_fixture.json"))
+        theory = fixture.theory()
+        library = spenso.cg_tensor_library_to_spenso(theory)
+
+        for tensor_name, component_count in expected_components.items():
+            definition = theory.cg_tensor_handle(tensor_name).definition
+            components = spenso.stored_cg_tensor_components(theory, tensor_name)
+            structure = spenso.cg_tensor_structure_to_spenso(theory, tensor_name)
+            registered = library[structure.get_name().to_expression()]
+
+            assert definition.tensor_expr is not None
+            assert definition.source_text is not None
+            assert definition.source_text.startswith("SparseArray[Automatic")
+            assert components is not None
+            assert len(components) == component_count
+            assert type(registered).__name__ == "TensorStructure"
+            assert len(registered) == component_count
 
 
 def test_runtime_code_does_not_depend_on_matchete_reference_checkout() -> None:

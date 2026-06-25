@@ -961,14 +961,48 @@ class Theory:
 
         Path(path).write_text(self.to_json(), encoding="utf-8")
 
+    @staticmethod
+    def _symbols_with_checkpoint_cg_tensor_data(obj: dict[str, Any]) -> list[dict[str, Any]] | None:
+        entries = obj.get("symbols")
+        if entries is None:
+            return None
+        if not isinstance(entries, list):
+            raise ValueError("Theory symbol manifest must be a list")
+        tensor_by_name = {
+            str(name): str(data["tensor"])
+            for name, data in obj.get("cg_tensors", {}).items()
+            if isinstance(data, dict) and data.get("tensor") is not None
+        }
+        if not tensor_by_name:
+            return entries
+
+        merged: list[dict[str, Any]] = []
+        for entry in entries:
+            if not isinstance(entry, dict):
+                raise ValueError("Theory symbol manifest entries must be objects")
+            next_entry = dict(entry)
+            if entry.get("role") == SymbolRole.CG_TENSOR.value and str(entry.get("name")) in tensor_by_name:
+                raw_data = entry.get("data", {})
+                if not isinstance(raw_data, dict):
+                    raise ValueError(f"CG tensor symbol manifest entry {entry.get('name')!r} has non-object data")
+                next_data = dict(raw_data)
+                next_data.setdefault(
+                    SymbolDataKey.CG_TENSOR.value,
+                    expression_from_canonical(tensor_by_name[str(entry["name"])]),
+                )
+                next_entry["data"] = next_data
+            merged.append(next_entry)
+        return merged
+
     @classmethod
     def from_json_obj(cls, obj: dict[str, Any]) -> Theory:
         """Restore theory metadata from a JSON object."""
 
         s.register_builtins()
         theory = cls(obj["theory_name"])
-        if "symbols" in obj:
-            theory._restore_symbol_manifest(obj["symbols"])
+        symbol_entries = cls._symbols_with_checkpoint_cg_tensor_data(obj)
+        if symbol_entries is not None:
+            theory._restore_symbol_manifest(symbol_entries)
         for name, data in obj.get("index_types", {}).items():
             if name != BuiltinIndexType.LORENTZ.value:
                 theory.define_index_type(name, data.get("dimension"))

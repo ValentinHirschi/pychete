@@ -216,6 +216,23 @@ def test_cg_tensors_store_symbolica_metadata_and_survive_json_restore() -> None:
     assert restored_eps(S("i"), S("j")) == expr
 
 
+def test_cg_tensor_restore_backfills_legacy_manifest_tensor_data() -> None:
+    theory = Theory("cg_legacy_manifest")
+    su2 = theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    fund = su2(s.fund)
+    theory.define_cg_tensor("eps2", [fund, fund], tensor=s.List(s.List(2, 2), s.List(0, 1, -1, 0)))
+    obj = theory.to_json_obj()
+    for entry in obj["symbols"]:
+        if entry["role"] == SymbolRole.CG_TENSOR.value and entry["name"] == "eps2":
+            entry["data"].pop(SymbolDataKey.CG_TENSOR.value)
+
+    restored = Theory.from_json_obj(obj)
+    restored_tensor = restored.cg_tensor_handle("eps2").definition.tensor_expr
+
+    assert restored_tensor is not None
+    assert canonical_string(restored_tensor) == "pychete::List(pychete::List(2,2),pychete::List(0,1,-1,0))"
+
+
 def test_field_symbol_data_stores_field_roles_and_propagation_flags() -> None:
     theory = Theory("field_roles")
     ghost = theory.define_field("c", s.Ghost, mass=(FieldMassKind.HEAVY, "Mc"))

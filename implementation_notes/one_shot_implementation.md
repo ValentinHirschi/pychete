@@ -3200,6 +3200,44 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 206 passed,
     1 skipped in 147.12s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Extended the sparse-CG tensor payload slice into the committed default
+  Matchete model fixtures:
+  - populated stored dense `cg_tensor` metadata for the non-native
+    `tFundf_SU2L` and `tFundf_SU3c` tensors in
+    `Singlet_Scalar_Extension.model_fixture.json`, `E_VLL.model_fixture.json`,
+    and `S1S3LQs.model_fixture.json`, deriving the payloads from the existing
+    Matchete `SparseArray[...]` source strings without requiring Mathematica at
+    test time;
+  - stored each payload in both the high-level `cg_tensors` registry entry and
+    the Symbolica symbol manifest data, preserving the symbol-manifest-first
+    checkpoint safety invariant;
+  - added a restore-time normalization in `Theory.from_json_obj(...)` so legacy
+    or hand-edited checkpoints that have a `cg_tensors[name]["tensor"]` payload
+    but stale symbol-manifest data backfill the complete `cg_tensor` symbol
+    data before any theory-owned symbols are created;
+  - added a legacy-manifest unit test for this restore path;
+  - added an integration regression that loads the three default model fixtures
+    without Mathematica, verifies stored `tFundf_*` component counts, and
+    registers those tensors in a native spenso `TensorLibrary` directly from
+    fixture metadata.
+- Verification for the committed default-fixture sparse-CG payload slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py
+    tests/integration/models/test_model_loaders.py -q'` passed: 32 passed.
+- Final verification for the committed default-fixture sparse-CG payload slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py
+    tests/integration/models/test_model_loaders.py -q'` passed: 32 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 208 passed,
+    1 skipped in 148.01s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -3208,13 +3246,12 @@ discoveries, dependency patches, blockers, and remaining work.
   cover both raw/vakint and public finite/MS preview gap reports, but final
   Matchete equivalence is still incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
-  initial contract, especially generated fixtures for sparse CG component
-  payloads in the default models, richer vector/zero-mode metadata, and
+  initial contract, especially richer vector/zero-mode metadata and
   complicated Matchete models that exceed the direct Python loader's documented
   subset. Internal coupling-symmetry associations are now preserved as
-  explicit signed pychete permutation metadata, and new conversions can store
-  supported compressed `SparseArray[...]` CG tensors as dense Symbolica
-  component metadata consumable by spenso.
+  explicit signed pychete permutation metadata, and the default loaded-model
+  fixtures now store supported compressed `SparseArray[...]` CG tensors as
+  dense Symbolica component metadata consumable by spenso.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
   full propagator expansion beyond the new scalar operator-derived denominator,
