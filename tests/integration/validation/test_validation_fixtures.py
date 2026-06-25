@@ -532,13 +532,13 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
         },
         "Singlet_Scalar_Extension": {
             "conditions": 72,
-            "accepted": 39,
-            "different_after_probe": 33,
+            "accepted": 42,
+            "different_after_probe": 30,
         },
         "E_VLL": {
             "conditions": 72,
-            "accepted": 25,
-            "different_after_probe": 47,
+            "accepted": 27,
+            "different_after_probe": 45,
         },
         "S1S3LQs": {
             "conditions": 72,
@@ -598,8 +598,14 @@ def test_validation_fixture_gap_report_can_project_conditions_through_public_mat
     assert report.reference_matching_condition_count == 72
     assert len(report.common_matching_condition_names) == 72
     assert report.missing_reference_matching_condition_count == 0
-    assert report.accepted_common_matching_condition_count == 39
-    assert report.different_after_probe_common_matching_condition_count == 33
+    assert report.accepted_common_matching_condition_count == 42
+    assert report.different_after_probe_common_matching_condition_count == 30
+    assert "pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)" in (
+        report.accepted_common_matching_condition_names
+    )
+    assert "pychete::Coupling(Singlet_Scalar_Extension::external_cHB,pychete::List(),0)" in (
+        report.different_after_probe_common_matching_condition_names
+    )
 
 
 def test_default_matching_condition_probe_accepts_fixture_function_indeterminates() -> None:

@@ -4328,13 +4328,63 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 257 passed, 1
     skipped in 261.02s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added tree-level model-coupling identity support for projected matching
+  conditions:
+  - `MatchingResult.project_matching_conditions(...)` and
+    `with_projected_matching_conditions(...)` now accept
+    `include_coupling_identities=True`, adding the identity value for a target
+    `Coupling(...)` only when the coupling label is tag-restricted as a
+    Symbolica/pychete coupling and the same coupling name is registered in the
+    candidate theory;
+  - this uses native Symbolica pattern matching,
+    `target.matches(coupling_pattern(), s.CouplingLabelWildcard.req_tag(...),
+    partial=False)`, plus Symbolica symbol data to avoid string-prefix
+    heuristics and to leave external Wilson targets absent from the candidate
+    theory at zero;
+  - `Theory.match(..., loop_order=1, matching_condition_targets=...)` exposes
+    the option as `matching_condition_include_coupling_identities`, and Matchete
+    validation fixture gap reports enable it by default because their projected
+    condition targets represent final Wilson/coupling values, not just
+    loop-correction coefficients.
+- Current default projected matching-condition frontier after this slice:
+  - `VLF_toy_model`: 0 accepted / 0 total, unchanged because the fixture has no
+    saved matching conditions;
+  - `Singlet_Scalar_Extension`: 42 accepted / 72 total, improved from 39 by
+    accepting unchanged `gL`, `gY`, and `gs` model-coupling identities while
+    leaving external Wilson coefficients such as `cHB` non-identity targets;
+  - `E_VLL`: 27 accepted / 72 total, improved from 25 by accepting unchanged
+    model gauge couplings;
+  - `S1S3LQs`: 12 accepted / 72 total, unchanged because its current
+    differences are not simple registered-coupling identity gaps.
+- Verification so far for the coupling-identity projection slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_can_project_requested_matching_conditions
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_conditions_through_public_match_api
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_condition_probe_accepts_fixture_function_indeterminates
+    -q'` passed: 4 passed in 61.34s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 40
+    passed in 254.90s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 257 passed, 1
+    skipped in 261.76s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
 - Continue using the four committed default Matchete matching fixtures as
   acceptance targets for the pychete one-loop matching engine; current tests
-  cover both raw/vakint and public finite/MS preview gap reports, but final
-  Matchete equivalence is still incomplete.
+  cover both raw/vakint and public finite/MS preview gap reports, and projected
+  matching-condition reports now include registered model-coupling identity
+  values. Final Matchete equivalence is still incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
   initial contract, especially richer vector/zero-mode metadata and
   complicated Matchete models that exceed the direct Python loader's documented

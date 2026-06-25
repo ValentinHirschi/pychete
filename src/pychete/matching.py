@@ -3251,6 +3251,7 @@ def match_one_loop(
     matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | None = None,
     matching_condition_source: str = "on_shell_eft_lagrangian",
     matching_condition_drop_zero: bool = False,
+    matching_condition_include_coupling_identities: bool = False,
 ) -> MatchingResult:
     """Run the current internal-analytic one-loop matching pipeline.
 
@@ -3377,6 +3378,7 @@ def match_one_loop(
         matching_condition_targets,
         source=matching_condition_source,
         drop_zero=matching_condition_drop_zero,
+        include_coupling_identities=matching_condition_include_coupling_identities,
     )
 
 

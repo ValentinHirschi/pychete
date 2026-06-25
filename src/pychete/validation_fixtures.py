@@ -560,6 +560,7 @@ class ValidationFixture:
         project_reference_matching_conditions: bool = False,
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_drop_zero: bool = False,
+        matching_condition_include_coupling_identities: bool = True,
         use_public_match_api: bool = False,
         simplify_loop_functions_for_comparison: bool = False,
         evaluate_loop_functions_for_comparison: bool = False,
@@ -611,6 +612,9 @@ class ValidationFixture:
                 matching_condition_targets=projected_targets,
                 matching_condition_source=matching_condition_projection_source,
                 matching_condition_drop_zero=matching_condition_projection_drop_zero,
+                matching_condition_include_coupling_identities=(
+                    matching_condition_include_coupling_identities
+                ),
             )
             if not isinstance(matched, MatchingResult):
                 raise TypeError("public one-loop match returned a tree-level expression")
@@ -662,6 +666,7 @@ class ValidationFixture:
                 projected_targets or {},
                 source=matching_condition_projection_source,
                 drop_zero=matching_condition_projection_drop_zero,
+                include_coupling_identities=matching_condition_include_coupling_identities,
             )
         return _gap_report(
             self.name,

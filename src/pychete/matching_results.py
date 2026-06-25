@@ -7,13 +7,14 @@ from typing import TYPE_CHECKING
 
 from symbolica import Expression
 
+from .expr import coupling_pattern
 from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
     one_loop_normalization_factor,
     one_loop_normalization_label,
 )
-from .symbols import canonical_string
+from .symbols import SymbolDataKey, SymbolRole, canonical_string, s, symbol_data
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 if TYPE_CHECKING:
@@ -152,6 +153,7 @@ class MatchingResult:
         source: str = "on_shell_eft_lagrangian",
         expand_source: bool = True,
         drop_zero: bool = False,
+        include_coupling_identities: bool = False,
     ) -> dict[str, Expression]:
         """Project matching conditions from a result expression using Symbolica coefficients.
 
@@ -160,6 +162,11 @@ class MatchingResult:
         their canonical pychete string as the condition key. Coefficients are
         extracted with native ``Expression.coefficient(...)`` so products such
         as ``C*O`` can be projected without a Python expression walker.
+        ``include_coupling_identities`` adds the tree-level identity value for
+        target couplings that are registered in the candidate theory. This is
+        intended for loop-correction expressions where unchanged renormalizable
+        couplings should still project to themselves, while external Wilson
+        coefficients absent from the candidate theory remain zero.
         """
 
         expr = self.expression(source)
@@ -168,6 +175,10 @@ class MatchingResult:
         conditions: dict[str, Expression] = {}
         for name, target in _matching_condition_targets(targets):
             coefficient = expr.coefficient(target).expand()
+            if include_coupling_identities:
+                identity = _tree_level_coupling_identity(self.theory, target)
+                if identity is not None:
+                    coefficient = (coefficient + identity).expand()
             if drop_zero and _canonical_expr(coefficient) == "0":
                 continue
             conditions[name] = coefficient
@@ -181,6 +192,7 @@ class MatchingResult:
         expand_source: bool = True,
         drop_zero: bool = False,
         merge: bool = True,
+        include_coupling_identities: bool = False,
     ) -> MatchingResult:
         """Return a result with matching conditions projected from an expression stage."""
 
@@ -189,6 +201,7 @@ class MatchingResult:
             source=source,
             expand_source=expand_source,
             drop_zero=drop_zero,
+            include_coupling_identities=include_coupling_identities,
         )
         matching_conditions = {**self.matching_conditions, **projected} if merge else projected
         return replace(
@@ -199,6 +212,7 @@ class MatchingResult:
                 "matching_conditions_projected": True,
                 "matching_condition_projection_source": source,
                 "matching_condition_projection_count": len(projected),
+                "matching_condition_projection_coupling_identities": include_coupling_identities,
             },
         )
 
@@ -375,6 +389,21 @@ def _matching_condition_targets(
     if isinstance(targets, Mapping):
         return tuple((str(name), target) for name, target in targets.items())
     return tuple((canonical_string(target), target) for target in targets)
+
+
+def _tree_level_coupling_identity(theory: Theory, target: Expression) -> Expression | None:
+    if not bool(
+        target.matches(
+            coupling_pattern(),
+            s.CouplingLabelWildcard.req_tag(SymbolRole.COUPLING.value),
+            partial=False,
+        )
+    ):
+        return None
+    name = symbol_data(target[0], SymbolDataKey.LABEL)
+    if not isinstance(name, str) or name not in theory.couplings:
+        return None
+    return target
 
 
 def _canonical_expr(expr: Expression) -> str:

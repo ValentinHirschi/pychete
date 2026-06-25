@@ -142,6 +142,24 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     assert result.metadata["matching_conditions_projected"] is True
     assert result.metadata["matching_condition_projection_source"] == "on_shell_eft_lagrangian"
     assert result.metadata["matching_condition_projection_count"] == 1
+    assert result.metadata["matching_condition_projection_coupling_identities"] is False
+
+    with_identity = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        matching_condition_targets={
+            "g2_phi2": target,
+            "unused": unused(),
+        },
+        matching_condition_drop_zero=True,
+        matching_condition_include_coupling_identities=True,
+    )
+
+    assert isinstance(with_identity, MatchingResult)
+    assert set(with_identity.matching_conditions) == {"g2_phi2", "unused"}
+    assert_expr_equal(with_identity.matching_conditions["unused"], unused())
+    assert with_identity.metadata["matching_condition_projection_coupling_identities"] is True
 
 
 def test_one_loop_match_options_select_backend_and_trace_order() -> None:
