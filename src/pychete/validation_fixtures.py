@@ -19,7 +19,7 @@ from .matching_options import (
 )
 from .matching_results import MatchingResult
 from .state import PycheteState
-from .supertraces import supertrace_word_order
+from .supertraces import is_unnormalized_supertrace_alias, supertrace_word_order
 from .theory import Theory
 from .validation import (
     NumericProbePlan,
@@ -944,6 +944,10 @@ def _sorted_names(names: Iterable[str]) -> tuple[str, ...]:
     return tuple(sorted(names))
 
 
+def _validation_supertrace_names(supertraces: Mapping[str, Expression]) -> set[str]:
+    return {name for name in supertraces if not is_unnormalized_supertrace_alias(name)}
+
+
 def _resolve_max_trace_order(max_trace_order: TraceOrderInput, reference: MatchingResult) -> int:
     if max_trace_order == "reference":
         return max(1, _max_supertrace_order(reference.supertraces))
@@ -1134,8 +1138,8 @@ def _gap_report(
     if auto_probe_samples and probe_supertrace_names is None and probe_matching_condition_names is None:
         raise ValueError("auto_probe_samples requires probe_supertrace_names or probe_matching_condition_names")
 
-    candidate_supertraces = set(candidate.supertraces)
-    reference_supertraces = set(reference.supertraces)
+    candidate_supertraces = _validation_supertrace_names(candidate.supertraces)
+    reference_supertraces = _validation_supertrace_names(reference.supertraces)
     common_supertraces = candidate_supertraces & reference_supertraces
     base_compared_supertraces = candidate.compare_to(
         reference,

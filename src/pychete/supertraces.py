@@ -31,4 +31,16 @@ def is_named_supertrace(name: str) -> bool:
     return supertrace_word_order(name) > 0
 
 
-__all__ = ["SUPERTRACE_CATEGORY_WORDS", "is_named_supertrace", "supertrace_word_order"]
+def is_unnormalized_supertrace_alias(name: str) -> bool:
+    """Whether ``name`` stores a raw convention copy of a normalized supertrace."""
+
+    suffix = "[unnormalized]"
+    return name.endswith(suffix) and is_named_supertrace(name[: -len(suffix)])
+
+
+__all__ = [
+    "SUPERTRACE_CATEGORY_WORDS",
+    "is_named_supertrace",
+    "is_unnormalized_supertrace_alias",
+    "supertrace_word_order",
+]

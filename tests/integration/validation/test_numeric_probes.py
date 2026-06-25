@@ -390,6 +390,7 @@ def test_fixture_gap_report_records_supertrace_word_orders() -> None:
         on_shell_eft_lagrangian=Expression.num(0),
         supertraces={
             "hScalar": Expression.num(0),
+            "hScalar[unnormalized]": Expression.num(1),
             "hScalar-lScalar": Expression.num(0),
             "aggregate_stage": Expression.num(0),
         },
@@ -413,6 +414,8 @@ def test_fixture_gap_report_records_supertrace_word_orders() -> None:
     assert report.candidate_max_supertrace_order == 2
     assert report.reference_max_supertrace_order == 3
     assert report.max_supertrace_order_gap == 1
+    assert report.candidate_supertrace_count == 3
+    assert "hScalar[unnormalized]" not in report.candidate_supertrace_names
     assert tuple(coverage_by_order) == (1, 2, 3)
     assert coverage_by_order[1].candidate_count == 1
     assert coverage_by_order[1].reference_count == 1
