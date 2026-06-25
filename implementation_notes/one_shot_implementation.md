@@ -941,6 +941,33 @@
   pytest tests/integration/validation/test_numeric_probes.py -k "projection or
   matching_result" -q` passed with 15 tests and 15 deselected.
 
+## Current Composite Target Projection Slice
+
+- Fixed a native coefficient-extraction gap for additive composite projection
+  targets. Direct literal `Expression.coefficient(...)` can return zero for a
+  source equal to an expanded composite operator such as SMEFT `cHBox`; the
+  projection path now falls back to Symbolica `collect_factors()` and
+  `factor()` for composite targets when the literal coefficient vanishes.
+- The fallback is cached per projected source expression through an internal
+  `_ProjectionCoefficientExtractor`, so expensive native collection/factoring
+  is computed at most once for a given projection call and reused for all
+  selected targets and IBP aliases.
+- The same extractor is used by the opt-in IBP scalar-bilinear alias path, so
+  indexed `cHBox` targets can project from the total-derivative-equivalent
+  `-D_mu(H^\dagger H) D_mu(H^\dagger H)` shape after derivative normalization
+  and native index canonicalization.
+- Added focused fixture-backed SMEFT tests proving direct `cHBox` self
+  projection, indexed `cHBox` IBP projection, and canonicalized Higgs
+  derivative-current projection onto `cHD`.
+- Validation for this slice so far:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_factors_composite_smeft_hbox_targets
+  tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_handles_indexed_smeft_hbox_ibp_alias
+  tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd
+  -q` passed with 3 tests; `PYTHONPATH=src dependencies/.venv/bin/python -m
+  pytest tests/integration/validation/test_numeric_probes.py -k "projection or
+  matching_result" -q` passed with 18 tests and 15 deselected.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -977,7 +1004,10 @@
 - Extend the initial target-local IBP scalar-bilinear projection into a broader
   on-shell/IBP basis-reduction strategy for derivative-slot Higgs operators so
   generated derivative distributions can project onto Warsaw basis targets
-  such as `cH`, `cHBox`, and `cHD`.
+  such as `cH`, `cHBox`, and `cHD`. Direct composite `cHBox` projection and
+  the first indexed `cHBox`/`cHD` target-local probes are now covered; the
+  remaining work is broader EOM/field-redefinition reduction and fixture-level
+  generated-source validation.
 - Optimize the opt-in heavy-scalar solution substitution/projection path so it
   can be safely enabled for larger order-3 SMEFT target sets without causing
   avoidable expression growth. Candidate directions: apply heavy-field

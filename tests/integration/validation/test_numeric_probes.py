@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from pathlib import Path
+
 import pytest
 from symbolica import Expression, Replacement, S
 
@@ -11,12 +13,19 @@ from pychete import (
     canonical_string,
     deterministic_probe_samples,
     evaluator_probe_equal,
+    load_validation_fixture,
     registered_wilson_matching_condition_targets,
     s,
+    smeft_warsaw_operator,
 )
 from pychete.backends import vacuum_integrals
+from pychete.functional import expand_cd_operators
 from pychete.validation_fixtures import _gap_report
 from tests.conftest import assert_expr_equal
+
+
+def _singlet_scalar_extension_theory() -> Theory:
+    return load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json")).theory()
 
 
 def test_evaluator_probe_equal_accepts_symbolically_equivalent_expressions() -> None:
@@ -476,6 +485,88 @@ def test_matching_result_projection_can_use_ibp_scalar_bilinear_aliases() -> Non
     assert_expr_equal(normalized.matching_conditions["listed"], coefficient)
     assert_expr_equal(normalized.matching_conditions["nested"], coefficient)
     assert normalized.metadata["matching_condition_projection_normalize_ibp_scalar_bilinears"] is True
+
+
+def test_matching_result_projection_factors_composite_smeft_hbox_targets() -> None:
+    coefficient = S("condition_projection_hbox_factor_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    target = smeft_warsaw_operator(theory, "cHBox")
+    assert target is not None
+    source = coefficient * expand_cd_operators(target)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+
+    projected = result.project_matching_conditions({"cHBox": target})
+
+    assert_expr_equal(projected["cHBox"], coefficient)
+
+
+def test_matching_result_projection_handles_indexed_smeft_hbox_ibp_alias() -> None:
+    coefficient = S("condition_projection_indexed_hbox_ibp_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    target = smeft_warsaw_operator(theory, "cHBox")
+    assert target is not None
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_hbox_i"), fund)
+    j = theory.index(theory.symbol("projection_hbox_j"), fund)
+    mu = theory.dummy_index(0)
+    left_bilinear = s.Bar(higgs(i)) * higgs(i)
+    right_bilinear = s.Bar(higgs(j)) * higgs(j)
+    source_operator = -(
+        expand_cd_operators(s.CD(mu, left_bilinear)) * expand_cd_operators(s.CD(mu, right_bilinear))
+    ).expand()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    raw = result.project_matching_conditions({"cHBox": target})
+    projected = result.project_matching_conditions(
+        {"cHBox": target},
+        normalize_ibp_scalar_bilinears=True,
+    )
+
+    assert_expr_equal(raw["cHBox"], Expression.num(0))
+    assert_expr_equal(projected["cHBox"], coefficient)
+
+
+def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd() -> None:
+    coefficient = S("condition_projection_chd_current_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    target = smeft_warsaw_operator(theory, "cHD")
+    assert target is not None
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_chd_i"), fund)
+    j = theory.index(theory.symbol("projection_chd_j"), fund)
+    mu = theory.dummy_index(0)
+    left_current = (
+        Expression.I * s.Bar(higgs(i)) * s.CD(mu, higgs(i))
+        - Expression.I * higgs(i) * s.CD(mu, s.Bar(higgs(i)))
+    )
+    right_current = (
+        Expression.I * s.Bar(higgs(j)) * s.CD(mu, higgs(j))
+        - Expression.I * higgs(j) * s.CD(mu, s.Bar(higgs(j)))
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * expand_cd_operators((left_current * right_current).expand()),
+    )
+
+    raw = result.project_matching_conditions({"cHD": target}, canonize_indices=False)
+    projected = result.project_matching_conditions({"cHD": target})
+
+    assert_expr_equal(raw["cHD"], Expression.num(0))
+    assert_expr_equal(projected["cHD"], 2 * coefficient)
 
 
 def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() -> None:

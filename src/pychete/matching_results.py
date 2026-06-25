@@ -304,13 +304,18 @@ class MatchingResult:
                         for aliases in ibp_projection_aliases
                     )
         conditions: dict[str, Expression] = {}
+        coefficient_extractor = _ProjectionCoefficientExtractor(expr)
         for target, projection_expression, ibp_aliases in zip(
             structured_targets,
             projection_expressions,
             ibp_projection_aliases,
             strict=True,
         ):
-            coefficient = _matching_projection_coefficient(expr, projection_expression, ibp_aliases)
+            coefficient = _matching_projection_coefficient(
+                coefficient_extractor,
+                projection_expression,
+                ibp_aliases,
+            )
             if eft_order is not None:
                 coefficient = _truncate_projected_coefficient(
                     coefficient,
@@ -668,39 +673,59 @@ def _transform_optional_expression(
     return expression_transform(expr)
 
 
+@dataclass
+class _ProjectionCoefficientExtractor:
+    source: Expression
+    collected_source: Expression | None = None
+    factored_source: Expression | None = None
+
+    def coefficient(self, target: Expression) -> Expression:
+        coefficient = self.source.coefficient(target).expand()
+        if not is_zero(coefficient) or not _is_composite_projection_target(target):
+            return coefficient
+        collected = self._collected_source()
+        coefficient = collected.coefficient(target).expand()
+        if not is_zero(coefficient):
+            return coefficient
+        factored_target = target.factor()
+        coefficient = collected.coefficient(factored_target).expand()
+        if not is_zero(coefficient):
+            return coefficient
+        factored = self._factored_source()
+        coefficient = factored.coefficient(target).expand()
+        if not is_zero(coefficient):
+            return coefficient
+        return factored.coefficient(factored_target).expand()
+
+    def _collected_source(self) -> Expression:
+        if self.collected_source is None:
+            self.collected_source = self.source.collect_factors()
+        return self.collected_source
+
+    def _factored_source(self) -> Expression:
+        if self.factored_source is None:
+            self.factored_source = self.source.factor()
+        return self.factored_source
+
+
 def _matching_projection_coefficient(
-    source: Expression,
+    extractor: _ProjectionCoefficientExtractor,
     projection_expression: Expression,
     ibp_aliases: Sequence[tuple[Expression, Expression]],
 ) -> Expression:
-    coefficient = source.coefficient(projection_expression).expand()
+    coefficient = extractor.coefficient(projection_expression)
     if not ibp_aliases or not is_zero(coefficient):
         return coefficient
     alias_contributions = (
-        weight * _matching_projection_alias_coefficient(source, alias)
+        weight * extractor.coefficient(alias)
         for alias, weight in ibp_aliases
         if not is_zero(alias)
     )
     return sum_expr(alias_contributions).expand()
 
 
-def _matching_projection_alias_coefficient(source: Expression, alias: Expression) -> Expression:
-    coefficient = source.coefficient(alias).expand()
-    if not is_zero(coefficient):
-        return coefficient
-    collected = source.collect_factors()
-    coefficient = collected.coefficient(alias).expand()
-    if not is_zero(coefficient):
-        return coefficient
-    factored_alias = alias.factor()
-    coefficient = collected.coefficient(factored_alias).expand()
-    if not is_zero(coefficient):
-        return coefficient
-    factored = source.factor()
-    coefficient = factored.coefficient(alias).expand()
-    if not is_zero(coefficient):
-        return coefficient
-    return factored.coefficient(factored_alias).expand()
+def _is_composite_projection_target(target: Expression) -> bool:
+    return len(terms(target)) > 1
 
 
 def _ibp_scalar_bilinear_projection_aliases(target: Expression) -> tuple[tuple[Expression, Expression], ...]:
