@@ -118,6 +118,11 @@ class OneLoopMatchOptions:
     up to that bound. When explicit or generated CDE expansion is supplied,
     backend selection and later on-shell/EFT post-processing use the
     CDE-expanded aggregate instead of the older interaction-power aggregate.
+    ``bosonic_cde_emit_covariant_derivative_commutators`` and
+    ``bosonic_cde_expand_covariant_derivative_commutators`` apply the existing
+    Symbolica replacement-rule commutator emitter/lowerer to CDE numerators
+    after optional open-derivative action. This is separate from the pre-setup
+    Lagrangian commutator flags above.
     """
 
     max_trace_order: int = 2
@@ -159,6 +164,9 @@ class OneLoopMatchOptions:
     bosonic_cde_max_slot_order: int | None = None
     bosonic_cde_index_prefix: str = "cde"
     bosonic_cde_act_open_derivatives: bool = False
+    bosonic_cde_emit_covariant_derivative_commutators: bool = False
+    bosonic_cde_emit_covariant_derivative_commutator_passes: int = 1
+    bosonic_cde_expand_covariant_derivative_commutators: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True

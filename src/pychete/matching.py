@@ -636,6 +636,9 @@ class SupertraceBlockTrace:
         expansion_indices: Sequence[Sequence[Expression]],
         *,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
     ) -> tuple[BosonicCDETraceExpansionTerm, ...]:
         """Return CDE-expanded bosonic propagator terms for this ordered trace.
 
@@ -643,7 +646,10 @@ class SupertraceBlockTrace:
         propagator slot after each block in the closed trace. The returned
         terms preserve ordered block entries, splice in the corresponding
         ``OpenCD`` operands, and keep topology powers explicit for the existing
-        vakint/internal integral backends.
+        vakint/internal integral backends. Optional commutator emission and
+        lowering act only on the generated numerator after open CDE derivatives
+        have had a chance to act, keeping this post-processing local to the
+        selected trace/order entry.
         """
 
         if len(expansion_indices) != len(self.blocks):
@@ -675,6 +681,13 @@ class SupertraceBlockTrace:
                 numerator = (prefactor * loop_numerator * _ncm_chain(*operands)).expand()
                 if act_open_derivatives:
                     numerator = act_with_open_covariant_derivatives(numerator)
+                numerator = _postprocess_bosonic_cde_numerator(
+                    self.theory,
+                    numerator,
+                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                )
                 if is_zero(numerator):
                     continue
                 terms.append(
@@ -1275,6 +1288,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
     ) -> dict[str, Expression]:
         """Return selected interaction traces after bosonic CDE propagator expansion.
 
@@ -1290,6 +1306,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         ).items():
             for index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{index}]"] = term.kernel_expression(
@@ -1304,6 +1323,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
     ) -> dict[str, tuple[BosonicCDETraceExpansionTerm, ...]]:
         """Return selected CDE-expanded interaction terms grouped by trace or plan label."""
 
@@ -1320,6 +1342,9 @@ class OneLoopSetup:
             grouped[entry.label] = traces[entry.trace_name].bosonic_cde_expansion_terms(
                 entry.expansion_indices,
                 act_open_derivatives=act_open_derivatives,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             )
         return grouped
 
@@ -1330,6 +1355,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
     ) -> tuple[BosonicCDETraceExpansionTerm, ...]:
         """Return selected CDE-expanded interaction terms in deterministic order."""
 
@@ -1338,6 +1366,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         return tuple(term for terms in grouped.values() for term in terms)
 
@@ -1349,6 +1380,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
     ) -> dict[str, Expression]:
         """Return selected CDE-expanded interaction traces as vakint topologies."""
 
@@ -1358,6 +1392,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         ).items():
             for index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{index}]"] = term.vakint_integral_expression()
@@ -1370,6 +1407,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
         stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         short_form: bool | None = None,
         engine: Any | None = None,
@@ -1383,6 +1423,9 @@ class OneLoopSetup:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=act_open_derivatives,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             )
         ).expand()
         return _vakint_expression_at_stage(
@@ -1400,6 +1443,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
         epsilon: Expression | None = None,
@@ -1415,6 +1461,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         if tensor_reduce:
             with progress("tensor-reducing CDE-expanded interaction integrals", logger=_LOGGER):
@@ -2056,6 +2105,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
@@ -2074,6 +2126,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             stage=selected_vakint_stage,
             short_form=vakint_short_form,
             engine=vakint_engine,
@@ -2083,6 +2138,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         named_integrals = {
             name: _vakint_expression_at_stage(
@@ -2099,6 +2157,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         supertraces = {
             **self.interaction_bosonic_cde_kernel_expression_map(
@@ -2106,6 +2167,9 @@ class OneLoopSetup:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=act_open_derivatives,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             ),
             **named_integrals,
             "interaction_bosonic_cde_vakint_integral_sum": vakint_sum,
@@ -2140,6 +2204,13 @@ class OneLoopSetup:
                 **_cde_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_bosonic_cde_term_count": len(terms),
                 "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
+                "interaction_bosonic_cde_commutators_emitted": emit_covariant_derivative_commutators,
+                "interaction_bosonic_cde_commutator_emit_passes": (
+                    emit_covariant_derivative_commutator_passes
+                    if emit_covariant_derivative_commutators
+                    else 0
+                ),
+                "interaction_bosonic_cde_commutators_expanded": expand_covariant_derivative_commutators,
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
                 "named_supertrace_stage": selected_named_stage.value,
@@ -2155,6 +2226,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
         max_pole_order: int = 1,
@@ -2171,18 +2245,27 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         raw_vakint_sum = self.interaction_bosonic_cde_vakint_integral_sum(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         evaluated = self.interaction_bosonic_cde_internal_integral_sum(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
             epsilon=epsilon,
@@ -2206,12 +2289,18 @@ class OneLoopSetup:
                     loop_momentum_squared=loop_momentum_squared,
                     require_registered_mass=require_registered_mass,
                     act_open_derivatives=act_open_derivatives,
+                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 ),
                 **self.interaction_bosonic_cde_vakint_integral_expression_map(
                     expansion_indices_by_trace,
                     loop_momentum_squared=loop_momentum_squared,
                     require_registered_mass=require_registered_mass,
                     act_open_derivatives=act_open_derivatives,
+                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 ),
                 "interaction_bosonic_cde_vakint_integral_sum": raw_vakint_sum,
                 "interaction_bosonic_cde_internal_integral_sum": evaluated,
@@ -2228,6 +2317,13 @@ class OneLoopSetup:
                 **_cde_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_bosonic_cde_term_count": len(terms),
                 "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
+                "interaction_bosonic_cde_commutators_emitted": emit_covariant_derivative_commutators,
+                "interaction_bosonic_cde_commutator_emit_passes": (
+                    emit_covariant_derivative_commutator_passes
+                    if emit_covariant_derivative_commutators
+                    else 0
+                ),
+                "interaction_bosonic_cde_commutators_expanded": expand_covariant_derivative_commutators,
                 "on_shell_reduced": False,
                 "integral_backend": "pychete_internal",
                 "tensor_reduce": tensor_reduce,
@@ -2245,6 +2341,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
         max_pole_order: int = 1,
@@ -2259,6 +2358,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
             max_pole_order=max_pole_order,
@@ -2297,6 +2399,9 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
         vakint_engine: Any | None = None,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
@@ -2313,6 +2418,9 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             stage=VakintIntegralStage.EVALUATED,
             engine=vakint_engine,
         )
@@ -2325,12 +2433,18 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         raw_named_integrals = self.interaction_bosonic_cde_vakint_integral_expression_map(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
         named_integrals = {
             name: _vakint_expression_at_stage(
@@ -2357,6 +2471,9 @@ class OneLoopSetup:
                     loop_momentum_squared=loop_momentum_squared,
                     require_registered_mass=require_registered_mass,
                     act_open_derivatives=act_open_derivatives,
+                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 ),
                 **named_integrals,
                 "interaction_bosonic_cde_vakint_integral_sum": evaluated,
@@ -2375,6 +2492,13 @@ class OneLoopSetup:
                 **_cde_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_bosonic_cde_term_count": len(terms),
                 "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
+                "interaction_bosonic_cde_commutators_emitted": emit_covariant_derivative_commutators,
+                "interaction_bosonic_cde_commutator_emit_passes": (
+                    emit_covariant_derivative_commutator_passes
+                    if emit_covariant_derivative_commutators
+                    else 0
+                ),
+                "interaction_bosonic_cde_commutators_expanded": expand_covariant_derivative_commutators,
                 "on_shell_reduced": False,
                 "vakint_stage": VakintIntegralStage.EVALUATED.value,
                 "named_supertrace_stage": selected_named_stage.value,
@@ -4198,6 +4322,24 @@ def _fluctuation_mass_squared(mode: FluctuationMode) -> Expression:
     return Expression.num(0) if mode.mass_squared is None else mode.mass_squared
 
 
+def _postprocess_bosonic_cde_numerator(
+    theory: Theory,
+    numerator: Expression,
+    *,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    expand_covariant_derivative_commutators: bool,
+) -> Expression:
+    if emit_covariant_derivative_commutators:
+        numerator = theory.emit_covariant_derivative_commutators(
+            numerator,
+            max_passes=emit_covariant_derivative_commutator_passes,
+        )
+    if expand_covariant_derivative_commutators:
+        numerator = theory.expand_covariant_derivative_commutators(numerator)
+    return numerator
+
+
 def _normalize_cde_expansion_indices(
     expansion_indices: Sequence[Sequence[Expression]],
 ) -> tuple[tuple[Expression, ...], ...]:
@@ -4714,6 +4856,9 @@ def match_one_loop(
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            emit_covariant_derivative_commutators=options.bosonic_cde_emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=options.bosonic_cde_emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=options.bosonic_cde_expand_covariant_derivative_commutators,
             tensor_reduce=options.tensor_reduce,
             tensor_reduce_engine=options.tensor_reduce_engine,
             max_pole_order=options.max_pole_order,
@@ -4730,6 +4875,9 @@ def match_one_loop(
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            emit_covariant_derivative_commutators=options.bosonic_cde_emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=options.bosonic_cde_emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=options.bosonic_cde_expand_covariant_derivative_commutators,
             tensor_reduce=options.tensor_reduce,
             tensor_reduce_engine=options.tensor_reduce_engine,
             max_pole_order=options.max_pole_order,
@@ -4746,6 +4894,9 @@ def match_one_loop(
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            emit_covariant_derivative_commutators=options.bosonic_cde_emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=options.bosonic_cde_emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=options.bosonic_cde_expand_covariant_derivative_commutators,
             vakint_engine=options.vakint_engine,
             max_pole_order=options.max_pole_order,
             epsilon=options.epsilon,
@@ -4759,6 +4910,9 @@ def match_one_loop(
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            emit_covariant_derivative_commutators=options.bosonic_cde_emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=options.bosonic_cde_emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=options.bosonic_cde_expand_covariant_derivative_commutators,
             vakint_stage=options.vakint_stage,
             vakint_short_form=options.vakint_short_form,
             vakint_engine=options.vakint_engine,
@@ -4870,6 +5024,13 @@ def match_one_loop(
             "bosonic_cde_max_slot_order": options.bosonic_cde_max_slot_order,
             "bosonic_cde_index_prefix": options.bosonic_cde_index_prefix,
             "bosonic_cde_act_open_derivatives": options.bosonic_cde_act_open_derivatives,
+            "bosonic_cde_commutators_emitted": options.bosonic_cde_emit_covariant_derivative_commutators,
+            "bosonic_cde_commutator_emit_passes": (
+                options.bosonic_cde_emit_covariant_derivative_commutator_passes
+                if options.bosonic_cde_emit_covariant_derivative_commutators
+                else 0
+            ),
+            "bosonic_cde_commutators_expanded": options.bosonic_cde_expand_covariant_derivative_commutators,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )

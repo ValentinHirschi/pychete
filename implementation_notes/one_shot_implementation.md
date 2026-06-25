@@ -868,6 +868,50 @@
   deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed;
   and `git diff --check` passed.
 
+## Current CDE Commutator Post-Processing Slice
+
+- Added CDE-local commutator post-processing controls to
+  `SupertraceBlockTrace.bosonic_cde_expansion_terms(...)` and the
+  corresponding `OneLoopSetup.interaction_bosonic_cde_*` aggregate/result
+  helpers. The optional sequence is: act open CDE derivatives, emit formal
+  `CovariantDerivativeCommutator` markers with the existing theory-level
+  Symbolica replacement-rule emitter, then optionally lower those markers to
+  registered `FieldStrength` insertions with the existing commutator expander.
+- Added user-facing `OneLoopMatchOptions` controls:
+  `bosonic_cde_emit_covariant_derivative_commutators`,
+  `bosonic_cde_emit_covariant_derivative_commutator_passes`, and
+  `bosonic_cde_expand_covariant_derivative_commutators`. These are separate
+  from the pre-setup Lagrangian commutator flags and operate only on selected
+  CDE-expanded numerators.
+- Threaded the same CDE commutator controls through validation fixture preview
+  and public-match gap-report forwarding, so Matchete-independent fixture
+  diagnostics can exercise the exact public one-loop API route.
+- Result metadata now records both the outer public CDE commutator flags and
+  the inner `interaction_bosonic_cde_*` result-stage flags, including bounded
+  emit-pass counts. This keeps notebook/debug output explicit about whether
+  generated CDE derivative slots were canonicalized and lowered.
+- Added a charged-scalar CDE integration test that verifies open CDE
+  derivative action first creates out-of-order derivative slots, commutator
+  emission matches `Theory.emit_covariant_derivative_commutators(...)`, and
+  lowering matches `Theory.expand_covariant_derivative_commutators(...)` while
+  producing `FieldStrength` kernels in a generated CDE plan used through
+  `Theory.match(..., loop_order=1)`.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators
+  -q` passed with 1 test;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api
+  -q` passed with 1 test;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_cde.py tests/unit/definitions/test_public_api.py
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k "cde or
+  public_api or forwards_pychete_color or covariant_derivative_commutators or
+  preview_can_use_internal_integral_backend" -q` passed with 21 tests and 87
+  deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed;
+  and `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -897,10 +941,10 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Integrate the commutator emitter/lowering pair into generated CDE stages so
-  planned derivative distributions can produce the gauge Wilson structures
-  needed by `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current
-  coefficients.
+- Extend the generated CDE commutator output into basis-reduction/projected
+  fixture probes so gauge Wilson structures such as `cHB`, `cHW`, `cHWB`, and
+  related fermionic Higgs-current coefficients can be validated against the
+  Matchete fixtures.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.

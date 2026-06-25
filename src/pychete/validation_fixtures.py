@@ -644,6 +644,9 @@ class ValidationFixture:
         bosonic_cde_max_slot_order: int | None = None,
         bosonic_cde_index_prefix: str = "cde",
         bosonic_cde_act_open_derivatives: bool = False,
+        bosonic_cde_emit_covariant_derivative_commutators: bool = False,
+        bosonic_cde_emit_covariant_derivative_commutator_passes: int = 1,
+        bosonic_cde_expand_covariant_derivative_commutators: bool = False,
         simplify_pychete_color_algebra: bool = False,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
@@ -725,6 +728,9 @@ class ValidationFixture:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
+                emit_covariant_derivative_commutators=bosonic_cde_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=bosonic_cde_emit_covariant_derivative_commutator_passes,
+                expand_covariant_derivative_commutators=bosonic_cde_expand_covariant_derivative_commutators,
                 tensor_reduce=internal_tensor_reduce,
                 tensor_reduce_engine=vakint_engine,
                 epsilon=epsilon,
@@ -740,6 +746,9 @@ class ValidationFixture:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
+                emit_covariant_derivative_commutators=bosonic_cde_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=bosonic_cde_emit_covariant_derivative_commutator_passes,
+                expand_covariant_derivative_commutators=bosonic_cde_expand_covariant_derivative_commutators,
                 tensor_reduce=internal_tensor_reduce,
                 tensor_reduce_engine=vakint_engine,
                 combine_terms=internal_combine_terms,
@@ -756,6 +765,9 @@ class ValidationFixture:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
+                emit_covariant_derivative_commutators=bosonic_cde_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=bosonic_cde_emit_covariant_derivative_commutator_passes,
+                expand_covariant_derivative_commutators=bosonic_cde_expand_covariant_derivative_commutators,
                 vakint_engine=vakint_engine,
                 max_pole_order=internal_max_pole_order,
                 epsilon=epsilon,
@@ -769,6 +781,9 @@ class ValidationFixture:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
+                emit_covariant_derivative_commutators=bosonic_cde_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=bosonic_cde_emit_covariant_derivative_commutator_passes,
+                expand_covariant_derivative_commutators=bosonic_cde_expand_covariant_derivative_commutators,
                 vakint_stage=vakint_stage,
                 vakint_short_form=vakint_short_form,
                 vakint_engine=vakint_engine,
@@ -888,6 +903,13 @@ class ValidationFixture:
                 "bosonic_cde_max_slot_order": bosonic_cde_max_slot_order,
                 "bosonic_cde_index_prefix": bosonic_cde_index_prefix,
                 "bosonic_cde_act_open_derivatives": bosonic_cde_act_open_derivatives,
+                "bosonic_cde_commutators_emitted": bosonic_cde_emit_covariant_derivative_commutators,
+                "bosonic_cde_commutator_emit_passes": (
+                    bosonic_cde_emit_covariant_derivative_commutator_passes
+                    if bosonic_cde_emit_covariant_derivative_commutators
+                    else 0
+                ),
+                "bosonic_cde_commutators_expanded": bosonic_cde_expand_covariant_derivative_commutators,
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
             },
         )
@@ -954,6 +976,9 @@ class ValidationFixture:
         bosonic_cde_max_slot_order: int | None = None,
         bosonic_cde_index_prefix: str = "cde",
         bosonic_cde_act_open_derivatives: bool = False,
+        bosonic_cde_emit_covariant_derivative_commutators: bool = False,
+        bosonic_cde_emit_covariant_derivative_commutator_passes: int = 1,
+        bosonic_cde_expand_covariant_derivative_commutators: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         project_reference_matching_conditions: bool = False,
@@ -1037,6 +1062,13 @@ class ValidationFixture:
                     bosonic_cde_max_slot_order=bosonic_cde_max_slot_order,
                     bosonic_cde_index_prefix=bosonic_cde_index_prefix,
                     bosonic_cde_act_open_derivatives=bosonic_cde_act_open_derivatives,
+                    bosonic_cde_emit_covariant_derivative_commutators=bosonic_cde_emit_covariant_derivative_commutators,
+                    bosonic_cde_emit_covariant_derivative_commutator_passes=(
+                        bosonic_cde_emit_covariant_derivative_commutator_passes
+                    ),
+                    bosonic_cde_expand_covariant_derivative_commutators=(
+                        bosonic_cde_expand_covariant_derivative_commutators
+                    ),
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                 ),
@@ -1108,6 +1140,13 @@ class ValidationFixture:
                 bosonic_cde_max_slot_order=bosonic_cde_max_slot_order,
                 bosonic_cde_index_prefix=bosonic_cde_index_prefix,
                 bosonic_cde_act_open_derivatives=bosonic_cde_act_open_derivatives,
+                bosonic_cde_emit_covariant_derivative_commutators=bosonic_cde_emit_covariant_derivative_commutators,
+                bosonic_cde_emit_covariant_derivative_commutator_passes=(
+                    bosonic_cde_emit_covariant_derivative_commutator_passes
+                ),
+                bosonic_cde_expand_covariant_derivative_commutators=(
+                    bosonic_cde_expand_covariant_derivative_commutators
+                ),
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         if project_reference_matching_conditions and not use_public_match_api:

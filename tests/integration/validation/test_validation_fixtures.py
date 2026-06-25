@@ -874,6 +874,9 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         bosonic_cde_max_slot_order=1,
         bosonic_cde_index_prefix="forwarded_cde",
         bosonic_cde_act_open_derivatives=True,
+        bosonic_cde_emit_covariant_derivative_commutators=True,
+        bosonic_cde_emit_covariant_derivative_commutator_passes=2,
+        bosonic_cde_expand_covariant_derivative_commutators=True,
         matching_condition_projection_expand_source=False,
         matching_condition_projection_canonize_indices=False,
         matching_condition_projection_normalize_derivative_operators=False,
@@ -890,6 +893,9 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert options.bosonic_cde_max_slot_order == 1
     assert options.bosonic_cde_index_prefix == "forwarded_cde"
     assert options.bosonic_cde_act_open_derivatives is True
+    assert options.bosonic_cde_emit_covariant_derivative_commutators is True
+    assert options.bosonic_cde_emit_covariant_derivative_commutator_passes == 2
+    assert options.bosonic_cde_expand_covariant_derivative_commutators is True
     assert captured["matching_condition_expand_source"] is False
     assert captured["matching_condition_canonize_indices"] is False
     assert captured["matching_condition_normalize_derivative_operators"] is False

@@ -1828,6 +1828,88 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
         setup.interaction_bosonic_cde_kernel_expression_map({"missing": ((),)})
 
 
+def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:
+    theory = Theory("one_loop_setup_interaction_bosonic_cde_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=(FieldMassKind.LIGHT, "m"),
+    )
+    vector = theory.field_handle("B")
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(light)
+        + theory.free_lag(vector)
+        - y() * heavy() * s.Bar(light()) * light()
+    )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    b = theory.index("b")
+    c = theory.index("c")
+    expansion = {"hScalar-lScalar": ((b, c), ())}
+
+    base_terms = setup.interaction_bosonic_cde_expansion_terms(
+        expansion,
+        act_open_derivatives=True,
+    )
+    emitted_terms = setup.interaction_bosonic_cde_expansion_terms(
+        expansion,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=True,
+    )
+    lowered_terms = setup.interaction_bosonic_cde_expansion_terms(
+        expansion,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=True,
+        expand_covariant_derivative_commutators=True,
+    )
+
+    assert len(base_terms) == len(emitted_terms) == len(lowered_terms) == 4
+    for base, emitted, lowered in zip(base_terms, emitted_terms, lowered_terms, strict=True):
+        assert_expr_equal(
+            emitted.numerator,
+            theory.emit_covariant_derivative_commutators(base.numerator),
+        )
+        assert_expr_equal(
+            lowered.numerator,
+            theory.expand_covariant_derivative_commutators(emitted.numerator),
+        )
+    assert any("CovariantDerivativeCommutator" in canonical_string(term.numerator) for term in emitted_terms)
+    assert any("FieldStrength" in canonical_string(term.numerator) for term in lowered_terms)
+    assert all("CovariantDerivativeCommutator" not in canonical_string(term.numerator) for term in lowered_terms)
+
+    planned_match = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            bosonic_cde_trace_names=("hScalar-lScalar",),
+            bosonic_cde_max_total_order=2,
+            bosonic_cde_max_slot_order=2,
+            bosonic_cde_act_open_derivatives=True,
+            bosonic_cde_emit_covariant_derivative_commutators=True,
+            bosonic_cde_emit_covariant_derivative_commutator_passes=2,
+            bosonic_cde_expand_covariant_derivative_commutators=True,
+            truncate_eft_result=False,
+        ),
+    )
+    assert planned_match.metadata["bosonic_cde_expansion_planned"] is True
+    assert planned_match.metadata["bosonic_cde_commutators_emitted"] is True
+    assert planned_match.metadata["bosonic_cde_commutator_emit_passes"] == 2
+    assert planned_match.metadata["bosonic_cde_commutators_expanded"] is True
+    assert planned_match.metadata["interaction_bosonic_cde_commutators_emitted"] is True
+    assert planned_match.metadata["interaction_bosonic_cde_commutators_expanded"] is True
+    assert any(
+        "FieldStrength" in canonical_string(expr)
+        for name, expr in planned_match.supertraces.items()
+        if name.startswith("interaction_bosonic_cde_kernel")
+    )
+
+
 def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients() -> None:
     theory = Theory("one_loop_setup_poles")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
