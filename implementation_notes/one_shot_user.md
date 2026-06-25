@@ -149,3 +149,8 @@ discoveries, dependency patches, blockers, and remaining work.
   convenience tooling only. It is acceptable to improve those scripts so users
   with Mathematica can generate pychete-owned fixtures, but runtime pychete and
   pytest must remain independent of Matchete and Mathematica.
+- Keep a one-command optional Wolfram entry point under top-level `scripts/`
+  for users who want Mathematica to perform the loaded-model export and then
+  invoke pychete's fixture converter. This is a convenience wrapper only; the
+  committed fixtures remain the canonical pychete inputs for users/tests
+  without Mathematica.

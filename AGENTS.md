@@ -410,6 +410,7 @@ runnable Matchete checkout.
 
 Keep optional user-facing entry points for this route under the top-level
 `scripts/` directory, including `scripts/export_matchete_model_state.wls`,
+`scripts/convert_matchete_model_state.wls`,
 `scripts/convert_matchete_model_state.py`,
 `scripts/export_matchete_matching_snapshots.wls`, and
 `scripts/convert_matchete_previous_results.py`. These scripts are convenience

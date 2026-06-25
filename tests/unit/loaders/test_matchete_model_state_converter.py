@@ -180,28 +180,38 @@ def test_matchete_model_state_converter_decodes_sparse_cg_tensor_components(tmp_
 
 
 def test_optional_top_level_matchete_conversion_scripts_are_checked_in_wrappers() -> None:
-    wrappers = {
-        Path("scripts/export_matchete_model_state.wls"): Path(
-            "helper_mathematica_scripts/export_matchete_model_state.wls"
+    wrappers: dict[Path, tuple[Path, ...]] = {
+        Path("scripts/export_matchete_model_state.wls"): (
+            Path("helper_mathematica_scripts/export_matchete_model_state.wls"),
         ),
-        Path("scripts/convert_matchete_model_state.py"): Path(
-            "helper_mathematica_scripts/convert_matchete_model_state.py"
+        Path("scripts/convert_matchete_model_state.wls"): (
+            Path("scripts/export_matchete_model_state.wls"),
+            Path("scripts/convert_matchete_model_state.py"),
         ),
-        Path("scripts/export_matchete_matching_snapshots.wls"): Path(
-            "helper_mathematica_scripts/export_matchete_matching_snapshots.wls"
+        Path("scripts/convert_matchete_model_state.py"): (
+            Path("helper_mathematica_scripts/convert_matchete_model_state.py"),
         ),
-        Path("scripts/convert_matchete_previous_results.py"): Path(
-            "helper_mathematica_scripts/convert_matchete_previous_results.py"
+        Path("scripts/export_matchete_matching_snapshots.wls"): (
+            Path("helper_mathematica_scripts/export_matchete_matching_snapshots.wls"),
+        ),
+        Path("scripts/convert_matchete_previous_results.py"): (
+            Path("helper_mathematica_scripts/convert_matchete_previous_results.py"),
         ),
     }
 
-    for wrapper, helper in wrappers.items():
+    for wrapper, dependencies in wrappers.items():
         assert wrapper.is_file()
-        assert helper.is_file()
         text = wrapper.read_text(encoding="utf-8")
-        assert helper.parent.name in text
-        assert helper.name in text
+        for dependency in dependencies:
+            assert dependency.is_file()
+            assert dependency.parent.name in text
+            assert dependency.name in text
+
+    one_command_wrapper = Path("scripts/convert_matchete_model_state.wls").read_text(encoding="utf-8")
+    assert "PYTHONPATH=" in one_command_wrapper
+    assert "Runtime pychete code and pytest must not call this script" in one_command_wrapper
 
     readme = " ".join(Path("scripts/README.md").read_text(encoding="utf-8").split())
     assert "not imported by pychete" in readme
     assert "not used by pytest" in readme
+    assert "One-command optional export and conversion" in readme

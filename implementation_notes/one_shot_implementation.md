@@ -3315,6 +3315,37 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 212 passed,
     1 skipped in 145.35s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added a one-command optional top-level Wolfram conversion wrapper for users
+  with Mathematica:
+  - `scripts/convert_matchete_model_state.wls` now exports loaded Matchete
+    model state through the existing top-level
+    `scripts/export_matchete_model_state.wls` wrapper and then invokes
+    `scripts/convert_matchete_model_state.py` with `PYTHONPATH=src`;
+  - the wrapper defaults to `dependencies/.venv/bin/python` when available,
+    falls back to `python3`, and supports `--python`, `--raw-out`,
+    `--fixtures-dir`, `--models`, and `--no-lagrangian`;
+  - `scripts/README.md`, `AGENTS.md`, and the copied user notes now explicitly
+    keep this route as optional user convenience tooling under `scripts/`;
+  - no runtime pychete import path, normal pytest path, or committed fixture
+    dependency on Mathematica, `wolframscript`, or Matchete was introduced.
+- Verification for the one-command optional conversion-wrapper slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_matchete_model_state_converter.py -q'` passed:
+    4 passed.
+- Final verification for the one-command optional conversion-wrapper slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_matchete_model_state_converter.py -q'` passed:
+    4 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 212 passed,
+    1 skipped in 144.53s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

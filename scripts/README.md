@@ -7,6 +7,18 @@ Mathematica- and Matchete-independent.
 
 ## Loaded Model State
 
+One-command optional export and conversion:
+
+```sh
+wolframscript -file scripts/convert_matchete_model_state.wls \
+  --raw-out /tmp/pychete_model_state \
+  --fixtures-dir assets/validation/pychete \
+  --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs
+```
+
+This wrapper uses `dependencies/.venv/bin/python` when it exists, otherwise
+`python3`. Pass `--python /path/to/python` to override it.
+
 Export loaded Matchete model state:
 
 ```sh
