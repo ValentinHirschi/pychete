@@ -24,6 +24,8 @@ from .expr import (
 )
 from .functional import derive_eom, partial_functional_derivative
 from .matching_options import (
+    OneLoopIntegralBackend,
+    OneLoopMatchOptions,
     OneLoopNormalization,
     OneLoopNormalizationInput,
     VakintIntegralStage,
@@ -3274,6 +3276,7 @@ def match_one_loop(
     lagrangian: Expression,
     *,
     eft_order: int = 6,
+    one_loop_options: OneLoopMatchOptions | None = None,
     matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | None = None,
     matching_condition_source: str = "on_shell_eft_lagrangian",
     matching_condition_drop_zero: bool = False,
@@ -3282,22 +3285,64 @@ def match_one_loop(
 
     This returns an explicitly incomplete minimal-subtraction preview built
     from the interaction-only fluctuation operator and pychete's internal
-    analytic scalar vacuum-integral backend. The result metadata carries
-    ``complete=False`` until the remaining Matchete-level matching stages are
-    implemented and validated. Requested matching conditions are projected from
-    the selected result expression stage with native Symbolica coefficient
-    extraction.
+    analytic scalar vacuum-integral backend unless ``one_loop_options`` selects
+    a different preview backend. The result metadata carries ``complete=False``
+    until the remaining Matchete-level matching stages are implemented and
+    validated. Requested matching conditions are projected from the selected
+    result expression stage with native Symbolica coefficient extraction.
     """
 
     theory._validate_registered_expression(lagrangian)
-    result = one_loop_setup(
+    options = one_loop_options or OneLoopMatchOptions()
+    setup = one_loop_setup(
         theory,
         lagrangian,
         eft_order=eft_order,
-    ).interaction_power_type_internal_minimal_subtraction_result(
-        tensor_reduce=False,
-        combine_terms=True,
+        max_trace_order=options.max_trace_order,
+        include_light_only=options.include_light_only,
     )
+    selected_backend = OneLoopIntegralBackend.from_user(options.integral_backend)
+    if selected_backend is OneLoopIntegralBackend.INTERNAL:
+        result = setup.interaction_power_type_internal_matching_result(
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            tensor_reduce=options.tensor_reduce,
+            tensor_reduce_engine=options.tensor_reduce_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            mu_r_squared=options.mu_r_squared,
+            combine_terms=options.combine_terms,
+        )
+    elif selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION:
+        result = setup.interaction_power_type_internal_minimal_subtraction_result(
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            tensor_reduce=options.tensor_reduce,
+            tensor_reduce_engine=options.tensor_reduce_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            mu_r_squared=options.mu_r_squared,
+            combine_terms=options.combine_terms,
+        )
+    else:
+        result = setup.interaction_power_type_matching_result(
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            vakint_stage=options.vakint_stage,
+            vakint_short_form=options.vakint_short_form,
+            vakint_engine=options.vakint_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            named_supertrace_stage=options.named_supertrace_stage,
+            named_supertrace_short_form=options.named_supertrace_short_form,
+            named_supertrace_engine=options.named_supertrace_engine,
+        )
     if matching_condition_targets is None:
         return result
     return result.with_projected_matching_conditions(

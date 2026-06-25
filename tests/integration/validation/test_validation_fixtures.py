@@ -402,6 +402,31 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
         )
 
 
+def test_validation_fixture_gap_report_can_project_conditions_through_public_match_api() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference_fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    reference = reference_fixture.matching_result("matchete_previous")
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+        internal_tensor_reduce=False,
+        internal_combine_terms=True,
+        project_reference_matching_conditions=True,
+        use_public_match_api=True,
+    )
+
+    assert report.candidate_stage == "interaction_power_type_internal_minimal_subtraction_result"
+    assert report.candidate_matching_condition_count == 72
+    assert report.reference_matching_condition_count == 72
+    assert len(report.common_matching_condition_names) == 72
+    assert report.missing_reference_matching_condition_count == 0
+    assert report.accepted_common_matching_condition_count == 39
+    assert report.different_after_probe_common_matching_condition_count == 33
+
+
 def test_default_matching_condition_probe_accepts_fixture_function_indeterminates() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference_fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))

@@ -2,14 +2,14 @@ from __future__ import annotations
 
 import json
 from collections.abc import Iterable, Mapping, Sequence
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from html import escape
 from pathlib import Path
 from typing import Any
 
 from symbolica import Expression
 
-from .matching_options import OneLoopIntegralBackend, VakintIntegralStage
+from .matching_options import OneLoopIntegralBackend, OneLoopMatchOptions, VakintIntegralStage
 from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
@@ -496,39 +496,89 @@ class ValidationFixture:
         project_reference_matching_conditions: bool = False,
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_drop_zero: bool = False,
+        use_public_match_api: bool = False,
     ) -> MatchingFixtureGapReport:
         """Report current one-loop preview coverage against a reference result."""
 
-        candidate = self.one_loop_preview(
-            lagrangian=lagrangian,
-            eft_order=eft_order,
-            max_trace_order=max_trace_order,
-            include_light_only=include_light_only,
-            heavy_field_dimension=heavy_field_dimension,
-            include_light=include_light,
-            vakint_stage=vakint_stage,
-            vakint_short_form=vakint_short_form,
-            vakint_engine=vakint_engine,
-            integral_backend=integral_backend,
-            internal_tensor_reduce=internal_tensor_reduce,
-            internal_combine_terms=internal_combine_terms,
-            internal_max_pole_order=internal_max_pole_order,
-            named_supertrace_stage=named_supertrace_stage,
-            named_supertrace_short_form=named_supertrace_short_form,
-            named_supertrace_engine=named_supertrace_engine,
-            evaluate_tensor_networks=evaluate_tensor_networks,
-            tensor_network_library=tensor_network_library,
-            tensor_network_cg_components_by_name=tensor_network_cg_components_by_name,
-            tensor_network_builtin_cg_components=tensor_network_builtin_cg_components,
-            tensor_network_native_hep_cg_builtins=tensor_network_native_hep_cg_builtins,
-            tensor_network_symbolic_cg_components=tensor_network_symbolic_cg_components,
-            tensor_network_function_library=tensor_network_function_library,
-            tensor_network_n_steps=tensor_network_n_steps,
-            tensor_network_mode=tensor_network_mode,
+        projected_targets = (
+            _reference_matching_condition_targets(reference)
+            if project_reference_matching_conditions
+            else None
         )
-        if project_reference_matching_conditions:
+        if use_public_match_api:
+            if evaluate_tensor_networks:
+                raise ValueError("use_public_match_api does not support fixture-local tensor-network evaluation")
+            matched = self.theory().match(
+                self.expression(lagrangian),
+                eft_order=eft_order,
+                loop_order=1,
+                one_loop_options=OneLoopMatchOptions(
+                    max_trace_order=max_trace_order,
+                    include_light_only=include_light_only,
+                    heavy_field_dimension=heavy_field_dimension,
+                    include_light=include_light,
+                    integral_backend=integral_backend,
+                    vakint_stage=vakint_stage,
+                    vakint_short_form=vakint_short_form,
+                    vakint_engine=vakint_engine,
+                    named_supertrace_stage=named_supertrace_stage,
+                    named_supertrace_short_form=named_supertrace_short_form,
+                    named_supertrace_engine=named_supertrace_engine,
+                    tensor_reduce=internal_tensor_reduce,
+                    tensor_reduce_engine=vakint_engine,
+                    combine_terms=internal_combine_terms,
+                    max_pole_order=internal_max_pole_order,
+                ),
+                matching_condition_targets=projected_targets,
+                matching_condition_source=matching_condition_projection_source,
+                matching_condition_drop_zero=matching_condition_projection_drop_zero,
+            )
+            if not isinstance(matched, MatchingResult):
+                raise TypeError("public one-loop match returned a tree-level expression")
+            candidate = replace(
+                matched,
+                metadata={
+                    **matched.metadata,
+                    "fixture": self.name,
+                    "fixture_kind": self.kind,
+                    "lagrangian_expression": lagrangian,
+                    "tensor_networks_evaluated": False,
+                    "tensor_network_cg_component_source": None,
+                    "tensor_network_native_hep_cg_builtins": False,
+                    "fixture_preview_source": "public_match_api",
+                },
+            )
+        else:
+            candidate = self.one_loop_preview(
+                lagrangian=lagrangian,
+                eft_order=eft_order,
+                max_trace_order=max_trace_order,
+                include_light_only=include_light_only,
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
+                vakint_stage=vakint_stage,
+                vakint_short_form=vakint_short_form,
+                vakint_engine=vakint_engine,
+                integral_backend=integral_backend,
+                internal_tensor_reduce=internal_tensor_reduce,
+                internal_combine_terms=internal_combine_terms,
+                internal_max_pole_order=internal_max_pole_order,
+                named_supertrace_stage=named_supertrace_stage,
+                named_supertrace_short_form=named_supertrace_short_form,
+                named_supertrace_engine=named_supertrace_engine,
+                evaluate_tensor_networks=evaluate_tensor_networks,
+                tensor_network_library=tensor_network_library,
+                tensor_network_cg_components_by_name=tensor_network_cg_components_by_name,
+                tensor_network_builtin_cg_components=tensor_network_builtin_cg_components,
+                tensor_network_native_hep_cg_builtins=tensor_network_native_hep_cg_builtins,
+                tensor_network_symbolic_cg_components=tensor_network_symbolic_cg_components,
+                tensor_network_function_library=tensor_network_function_library,
+                tensor_network_n_steps=tensor_network_n_steps,
+                tensor_network_mode=tensor_network_mode,
+            )
+        if project_reference_matching_conditions and not use_public_match_api:
             candidate = candidate.with_projected_matching_conditions(
-                _reference_matching_condition_targets(reference),
+                projected_targets or {},
                 source=matching_condition_projection_source,
                 drop_zero=matching_condition_projection_drop_zero,
             )

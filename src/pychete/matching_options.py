@@ -1,7 +1,8 @@
 from __future__ import annotations
 
+from dataclasses import dataclass
 from enum import StrEnum
-from typing import TypeAlias
+from typing import Any, TypeAlias
 
 from symbolica import Expression
 
@@ -66,6 +67,45 @@ class OneLoopNormalization(StrEnum):
 
 
 OneLoopNormalizationInput: TypeAlias = OneLoopNormalization | str | Expression | None
+
+
+@dataclass(frozen=True, slots=True)
+class OneLoopMatchOptions:
+    """User-facing options for ``Theory.match(..., loop_order=1)``.
+
+    The defaults preserve pychete's current public one-loop preview: an
+    interaction-power internal minimal-subtraction result, no native vakint
+    tensor reduction, and a native Symbolica ``together()`` combine pass after
+    pychete's analytic one-loop integral evaluation.
+    """
+
+    max_trace_order: int = 2
+    include_light_only: bool = False
+    heavy_field_dimension: bool = False
+    include_light: bool = True
+    integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
+    vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW
+    vakint_short_form: bool | None = None
+    vakint_engine: Any | None = None
+    named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW
+    named_supertrace_short_form: bool | None = None
+    named_supertrace_engine: Any | None = None
+    tensor_reduce: bool = False
+    tensor_reduce_engine: Any | None = None
+    combine_terms: bool = True
+    max_pole_order: int = 1
+    epsilon: Expression | None = None
+    mu_r_squared: Expression | None = None
+    loop_momentum_squared: Expression | None = None
+    require_registered_mass: bool = True
+
+    def _repr_latex_(self) -> str:
+        backend = OneLoopIntegralBackend.from_user(self.integral_backend).value.replace("_", r"\_")
+        return rf"$\mathrm{{OneLoopMatchOptions}}\left({backend},\ N={self.max_trace_order}\right)$"
+
+    def _repr_html_(self) -> str:
+        backend = OneLoopIntegralBackend.from_user(self.integral_backend).value
+        return f"<code>OneLoopMatchOptions(backend={backend} max_trace_order={self.max_trace_order})</code>"
 
 
 def one_loop_normalization_factor(

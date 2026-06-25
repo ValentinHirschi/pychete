@@ -25,6 +25,7 @@ from .matching import (
 )
 from .matching_options import (
     OneLoopIntegralBackend,
+    OneLoopMatchOptions,
     OneLoopNormalization,
     VakintIntegralStage,
     one_loop_normalization_factor,
@@ -82,6 +83,7 @@ __all__ = [
     "NumericProbeResult",
     "OneLoopMatchingNotImplementedError",
     "OneLoopIntegralBackend",
+    "OneLoopMatchOptions",
     "OneLoopNormalization",
     "OneLoopSetup",
     "PowerTypeSupertraceContribution",

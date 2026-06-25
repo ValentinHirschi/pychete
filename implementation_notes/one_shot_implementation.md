@@ -3704,6 +3704,50 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 223 passed, 1
     skipped in 216.49s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added a public one-loop matching options object and routed an opt-in fixture
+  validation path through the public `Theory.match(...)` API:
+  - introduced `OneLoopMatchOptions` as a package-root public API export for
+    `Theory.match(..., loop_order=1)`, keeping advanced backend/trace/order
+    controls discoverable without adding a large keyword surface directly to
+    `Theory.match`;
+  - `match_one_loop(...)` now dispatches through `OneLoopIntegralBackend`
+    options to the existing vakint, internal analytic, or internal
+    minimal-subtraction preview backends, while preserving the previous public
+    defaults (`internal_minimal_subtraction`, `tensor_reduce=False`,
+    `combine_terms=True`);
+  - `ValidationFixture.one_loop_preview_gap_report(...,
+    use_public_match_api=True)` can now build the candidate through
+    `Theory.match(..., one_loop_options=..., matching_condition_targets=...)`
+    and therefore tests public one-loop projection directly against committed
+    Matchete-derived fixtures;
+  - the default fixture preview route remains unchanged so fixture-local
+    tensor-network evaluation and broader preview knobs are still available
+    without pretending they are part of the public `Theory.match` surface yet;
+  - added Mathematica-independent tests for options-driven backend/trace-order
+    selection, loop-order option rejection in tree matching, and projected
+    Singlet Scalar Extension matching-condition comparison through the public
+    match path.
+- Final verification for the public one-loop options slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py -q'` passed: 10
+    passed in 0.27s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_conditions_through_public_match_api
+    -q'` passed: 1 passed in 9.07s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 225 passed, 1
+    skipped in 226.54s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

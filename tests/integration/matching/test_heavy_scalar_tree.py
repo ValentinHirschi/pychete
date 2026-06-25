@@ -3,7 +3,15 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression
 
-from pychete import FieldMassKind, MatchingResult, Theory, canonical_string, s
+from pychete import (
+    FieldMassKind,
+    MatchingResult,
+    OneLoopIntegralBackend,
+    OneLoopMatchOptions,
+    Theory,
+    canonical_string,
+    s,
+)
 
 from tests.conftest import assert_expr_equal
 
@@ -118,12 +126,39 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     assert result.metadata["matching_condition_projection_count"] == 1
 
 
+def test_one_loop_match_options_select_backend_and_trace_order() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            tensor_reduce=False,
+            combine_terms=True,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["stage"] == "interaction_power_type_internal_integral_result"
+    assert result.metadata["max_trace_order"] == 1
+    assert result.metadata["integral_backend"] == "pychete_internal"
+    assert result.metadata["tensor_reduce"] is False
+    assert result.metadata["combine_terms"] is True
+
+
 def test_tree_match_rejects_matching_condition_targets() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()
     lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
 
     with pytest.raises(ValueError, match="loop_order=1"):
         theory.match(lagrangian, matching_condition_targets={"phi": phi()})
+
+    with pytest.raises(ValueError, match="loop_order=1"):
+        theory.match(lagrangian, one_loop_options=OneLoopMatchOptions())
 
 
 def test_one_theory_can_match_two_lagrangians_without_cross_talk() -> None:
