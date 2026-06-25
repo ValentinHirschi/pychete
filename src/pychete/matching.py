@@ -1086,6 +1086,29 @@ class OneLoopSetup:
         expansion-index sequences.
         """
 
+        entries: dict[str, Expression] = {}
+        for trace_name, terms in self.interaction_bosonic_cde_expansion_terms_by_trace(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        ).items():
+            for index, term in enumerate(terms):
+                entries[f"{prefix}[{trace_name},{index}]"] = term.kernel_expression(
+                    loop_momentum_squared=loop_momentum_squared,
+                )
+        return entries
+
+    def interaction_bosonic_cde_expansion_terms_by_trace(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+    ) -> dict[str, tuple[BosonicCDETraceExpansionTerm, ...]]:
+        """Return selected CDE-expanded interaction terms grouped by trace name."""
+
         traces = {
             trace.name: trace
             for trace in self.interaction_power_type_traces(
@@ -1093,19 +1116,33 @@ class OneLoopSetup:
                 require_registered_mass=require_registered_mass,
             )
         }
-        entries: dict[str, Expression] = {}
+        grouped: dict[str, tuple[BosonicCDETraceExpansionTerm, ...]] = {}
         for trace_name, expansion_indices in expansion_indices_by_trace.items():
             if trace_name not in traces:
                 raise KeyError(f"One-loop setup has no interaction trace {trace_name!r}")
-            terms = traces[trace_name].bosonic_cde_expansion_terms(
+            grouped[trace_name] = traces[trace_name].bosonic_cde_expansion_terms(
                 expansion_indices,
                 act_open_derivatives=act_open_derivatives,
             )
-            for index, term in enumerate(terms):
-                entries[f"{prefix}[{trace_name},{index}]"] = term.kernel_expression(
-                    loop_momentum_squared=loop_momentum_squared,
-                )
-        return entries
+        return grouped
+
+    def interaction_bosonic_cde_expansion_terms(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+    ) -> tuple[BosonicCDETraceExpansionTerm, ...]:
+        """Return selected CDE-expanded interaction terms in deterministic order."""
+
+        grouped = self.interaction_bosonic_cde_expansion_terms_by_trace(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        return tuple(term for terms in grouped.values() for term in terms)
 
     def interaction_bosonic_cde_vakint_integral_expression_map(
         self,
@@ -1118,24 +1155,81 @@ class OneLoopSetup:
     ) -> dict[str, Expression]:
         """Return selected CDE-expanded interaction traces as vakint topologies."""
 
-        traces = {
-            trace.name: trace
-            for trace in self.interaction_power_type_traces(
-                loop_momentum_squared=loop_momentum_squared,
-                require_registered_mass=require_registered_mass,
-            )
-        }
         entries: dict[str, Expression] = {}
-        for trace_name, expansion_indices in expansion_indices_by_trace.items():
-            if trace_name not in traces:
-                raise KeyError(f"One-loop setup has no interaction trace {trace_name!r}")
-            terms = traces[trace_name].bosonic_cde_expansion_terms(
-                expansion_indices,
-                act_open_derivatives=act_open_derivatives,
-            )
+        for trace_name, terms in self.interaction_bosonic_cde_expansion_terms_by_trace(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        ).items():
             for index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{index}]"] = term.vakint_integral_expression()
         return entries
+
+    def interaction_bosonic_cde_vakint_integral_sum(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+    ) -> Expression:
+        """Return the summed selected CDE-expanded interaction topologies."""
+
+        raw = sum_expr(
+            term.vakint_integral_expression()
+            for term in self.interaction_bosonic_cde_expansion_terms(
+                expansion_indices_by_trace,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                act_open_derivatives=act_open_derivatives,
+            )
+        ).expand()
+        return _vakint_expression_at_stage(
+            raw,
+            theory=self.theory,
+            stage=VakintIntegralStage.from_user(stage),
+            short_form=short_form,
+            engine=engine,
+        )
+
+    def interaction_bosonic_cde_internal_integral_sum(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> Expression:
+        """Evaluate selected CDE-expanded interaction integrals with pychete."""
+
+        from .backends import vakint, vacuum_integrals
+
+        raw = self.interaction_bosonic_cde_vakint_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        if tensor_reduce:
+            with progress("tensor-reducing CDE-expanded interaction integrals", logger=_LOGGER):
+                raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+            raw = vakint.decode_pychete_namespace(self.theory, raw)
+        with progress("evaluating CDE-expanded scalar vacuum integrals", logger=_LOGGER):
+            return vacuum_integrals.evaluate_one_loop_vakint_expression(
+                raw,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+                combine_terms=combine_terms,
+            )
 
     def operator_propagator_denominator_chain(
         self,
@@ -1757,6 +1851,343 @@ class OneLoopSetup:
             engine=engine,
         )
         return vakint.finite_part(expr, epsilon=epsilon)
+
+    def interaction_bosonic_cde_matching_result(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the selected CDE-expanded interaction one-loop result."""
+
+        selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
+        vakint_sum = self.interaction_bosonic_cde_vakint_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            stage=selected_vakint_stage,
+            short_form=vakint_short_form,
+            engine=vakint_engine,
+        )
+        raw_named_integrals = self.interaction_bosonic_cde_vakint_integral_expression_map(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        named_integrals = {
+            name: _vakint_expression_at_stage(
+                expr,
+                theory=self.theory,
+                stage=selected_named_stage,
+                short_form=named_supertrace_short_form,
+                engine=named_supertrace_engine,
+            )
+            for name, expr in raw_named_integrals.items()
+        }
+        terms = self.interaction_bosonic_cde_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        supertraces = {
+            **self.interaction_bosonic_cde_kernel_expression_map(
+                expansion_indices_by_trace,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                act_open_derivatives=act_open_derivatives,
+            ),
+            **named_integrals,
+            "interaction_bosonic_cde_vakint_integral_sum": vakint_sum,
+            f"interaction_bosonic_cde_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
+        }
+        if selected_vakint_stage is VakintIntegralStage.EVALUATED:
+            from .backends import vakint
+
+            supertraces["interaction_bosonic_cde_vakint_pole_part"] = vakint.pole_part(
+                vakint_sum,
+                max_pole_order=max_pole_order,
+                epsilon=epsilon,
+            )
+            supertraces["interaction_bosonic_cde_vakint_finite_part"] = vakint.finite_part(vakint_sum, epsilon=epsilon)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=vakint_sum,
+            on_shell_eft_lagrangian=vakint_sum,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces=supertraces,
+            metadata={
+                "stage": "interaction_bosonic_cde_vakint_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "interaction_bosonic_cde_trace_count": len(expansion_indices_by_trace),
+                "interaction_bosonic_cde_term_count": len(terms),
+                "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
+                "on_shell_reduced": False,
+                "vakint_stage": selected_vakint_stage.value,
+                "named_supertrace_stage": selected_named_stage.value,
+                "uses_interaction_operator": True,
+                "uses_bosonic_cde_expansion": True,
+            },
+        )
+
+    def interaction_bosonic_cde_internal_matching_result(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the CDE-expanded interaction result evaluated internally."""
+
+        from .backends import vakint
+
+        terms = self.interaction_bosonic_cde_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        raw_vakint_sum = self.interaction_bosonic_cde_vakint_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        evaluated = self.interaction_bosonic_cde_internal_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=evaluated,
+            on_shell_eft_lagrangian=evaluated,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces={
+                **self.interaction_bosonic_cde_kernel_expression_map(
+                    expansion_indices_by_trace,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                    act_open_derivatives=act_open_derivatives,
+                ),
+                **self.interaction_bosonic_cde_vakint_integral_expression_map(
+                    expansion_indices_by_trace,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                    act_open_derivatives=act_open_derivatives,
+                ),
+                "interaction_bosonic_cde_vakint_integral_sum": raw_vakint_sum,
+                "interaction_bosonic_cde_internal_integral_sum": evaluated,
+                "interaction_bosonic_cde_internal_integral_pole_part": pole,
+                "interaction_bosonic_cde_internal_integral_finite_part": finite,
+            },
+            metadata={
+                "stage": "interaction_bosonic_cde_internal_integral_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "interaction_bosonic_cde_trace_count": len(expansion_indices_by_trace),
+                "interaction_bosonic_cde_term_count": len(terms),
+                "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
+                "on_shell_reduced": False,
+                "integral_backend": "pychete_internal",
+                "tensor_reduce": tensor_reduce,
+                "combine_terms": combine_terms,
+                "uses_interaction_operator": True,
+                "uses_bosonic_cde_expansion": True,
+                "max_pole_order": max_pole_order,
+            },
+        )
+
+    def interaction_bosonic_cde_internal_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the internal CDE result after minimal-subtraction pole removal."""
+
+        unrenormalized = self.interaction_bosonic_cde_internal_matching_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = unrenormalized.expression("interaction_bosonic_cde_internal_integral_pole_part")
+        finite = unrenormalized.expression("interaction_bosonic_cde_internal_integral_finite_part")
+        counterterm = (-pole).expand()
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            matching_conditions=unrenormalized.matching_conditions,
+            fluctuation_operators=unrenormalized.fluctuation_operators,
+            supertraces={
+                **unrenormalized.supertraces,
+                "interaction_bosonic_cde_internal_integral_ms_counterterm": counterterm,
+            },
+            metadata={
+                **unrenormalized.metadata,
+                "stage": "interaction_bosonic_cde_internal_minimal_subtraction_result",
+                "complete": False,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "on_shell_reduced": False,
+            },
+        )
+
+    def interaction_bosonic_cde_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the finite native-vakint CDE result after pole subtraction."""
+
+        from .backends import vakint
+
+        evaluated = self.interaction_bosonic_cde_vakint_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            stage=VakintIntegralStage.EVALUATED,
+            engine=vakint_engine,
+        )
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        counterterm = (-pole).expand()
+        terms = self.interaction_bosonic_cde_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        raw_named_integrals = self.interaction_bosonic_cde_vakint_integral_expression_map(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+        )
+        named_integrals = {
+            name: _vakint_expression_at_stage(
+                expr,
+                theory=self.theory,
+                stage=selected_named_stage,
+                short_form=named_supertrace_short_form,
+                engine=named_supertrace_engine,
+            )
+            for name, expr in raw_named_integrals.items()
+        }
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces={
+                **self.interaction_bosonic_cde_kernel_expression_map(
+                    expansion_indices_by_trace,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                    act_open_derivatives=act_open_derivatives,
+                ),
+                **named_integrals,
+                "interaction_bosonic_cde_vakint_integral_sum": evaluated,
+                "interaction_bosonic_cde_vakint_integral_sum[evaluated]": evaluated,
+                "interaction_bosonic_cde_vakint_pole_part": pole,
+                "interaction_bosonic_cde_vakint_ms_counterterm": counterterm,
+                "interaction_bosonic_cde_vakint_finite_part": finite,
+            },
+            metadata={
+                "stage": "interaction_bosonic_cde_minimal_subtraction_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "interaction_bosonic_cde_trace_count": len(expansion_indices_by_trace),
+                "interaction_bosonic_cde_term_count": len(terms),
+                "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
+                "on_shell_reduced": False,
+                "vakint_stage": VakintIntegralStage.EVALUATED.value,
+                "named_supertrace_stage": selected_named_stage.value,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "max_pole_order": max_pole_order,
+                "uses_interaction_operator": True,
+                "uses_bosonic_cde_expansion": True,
+            },
+        )
 
     def interaction_power_type_matching_result(
         self,
@@ -3987,7 +4418,68 @@ def match_one_loop(
             mode=options.tensor_network_mode,
         )
     _LOGGER.info("building one-loop result for %s with %s backend", theory.name, selected_backend.value)
-    if selected_backend is OneLoopIntegralBackend.INTERNAL:
+    cde_expansion_indices_by_trace = options.bosonic_cde_expansion_indices_by_trace
+    if cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
+        result = setup.interaction_bosonic_cde_internal_matching_result(
+            cde_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            tensor_reduce=options.tensor_reduce,
+            tensor_reduce_engine=options.tensor_reduce_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            mu_r_squared=options.mu_r_squared,
+            combine_terms=options.combine_terms,
+        )
+    elif (
+        cde_expansion_indices_by_trace is not None
+        and selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
+    ):
+        result = setup.interaction_bosonic_cde_internal_minimal_subtraction_result(
+            cde_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            tensor_reduce=options.tensor_reduce,
+            tensor_reduce_engine=options.tensor_reduce_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            mu_r_squared=options.mu_r_squared,
+            combine_terms=options.combine_terms,
+        )
+    elif (
+        cde_expansion_indices_by_trace is not None
+        and selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION
+    ):
+        result = setup.interaction_bosonic_cde_minimal_subtraction_result(
+            cde_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            vakint_engine=options.vakint_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            named_supertrace_stage=options.named_supertrace_stage,
+            named_supertrace_short_form=options.named_supertrace_short_form,
+            named_supertrace_engine=options.named_supertrace_engine,
+        )
+    elif cde_expansion_indices_by_trace is not None:
+        result = setup.interaction_bosonic_cde_matching_result(
+            cde_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            act_open_derivatives=options.bosonic_cde_act_open_derivatives,
+            vakint_stage=options.vakint_stage,
+            vakint_short_form=options.vakint_short_form,
+            vakint_engine=options.vakint_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            named_supertrace_stage=options.named_supertrace_stage,
+            named_supertrace_short_form=options.named_supertrace_short_form,
+            named_supertrace_engine=options.named_supertrace_engine,
+        )
+    elif selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_power_type_internal_matching_result(
             heavy_field_dimension=options.heavy_field_dimension,
             include_light=options.include_light,
@@ -4078,6 +4570,8 @@ def match_one_loop(
                 else 0
             ),
             "covariant_derivative_commutators_expanded": options.expand_covariant_derivative_commutators,
+            "bosonic_cde_expansion_enabled": cde_expansion_indices_by_trace is not None,
+            "bosonic_cde_act_open_derivatives": options.bosonic_cde_act_open_derivatives,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )

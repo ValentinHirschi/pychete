@@ -1707,6 +1707,10 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
         expansion,
         act_open_derivatives=True,
     )
+    acted_result = setup.interaction_bosonic_cde_matching_result(
+        expansion,
+        act_open_derivatives=True,
+    )
 
     assert len(terms) == 1
     assert isinstance(terms[0], BosonicCDETraceExpansionTerm)
@@ -1729,6 +1733,47 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
         acted_integrals["interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]"],
         expected_acted_integral,
     )
+    assert acted_result.metadata["stage"] == "interaction_bosonic_cde_vakint_result"
+    assert acted_result.metadata["uses_bosonic_cde_expansion"] is True
+    assert acted_result.metadata["interaction_bosonic_cde_term_count"] == 1
+    assert acted_result.metadata["interaction_bosonic_cde_act_open_derivatives"] is True
+    assert_expr_equal(acted_result.off_shell_eft_lagrangian, expected_acted_integral)
+    assert_expr_equal(
+        acted_result.expression("interaction_bosonic_cde_vakint_integral_sum"),
+        expected_acted_integral,
+    )
+
+    zero_order_expansion = {"hScalar-lScalar": ((), ())}
+    zero_order_integral = setup.interaction_bosonic_cde_vakint_integral_sum(zero_order_expansion)
+    internal_result = setup.interaction_bosonic_cde_internal_matching_result(
+        zero_order_expansion,
+        tensor_reduce=False,
+        combine_terms=True,
+    )
+    expected_internal = vacuum_integrals_backend.evaluate_one_loop_vakint_expression(
+        zero_order_integral,
+        combine_terms=True,
+    )
+    assert internal_result.metadata["stage"] == "interaction_bosonic_cde_internal_integral_result"
+    assert internal_result.metadata["integral_backend"] == "pychete_internal"
+    assert internal_result.metadata["uses_bosonic_cde_expansion"] is True
+    assert_expr_equal(internal_result.off_shell_eft_lagrangian, expected_internal)
+
+    matched = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            bosonic_cde_expansion_indices_by_trace=expansion,
+            bosonic_cde_act_open_derivatives=True,
+            truncate_eft_result=False,
+        ),
+    )
+    assert isinstance(matched, MatchingResult)
+    assert matched.metadata["stage"] == "interaction_bosonic_cde_vakint_result"
+    assert matched.metadata["bosonic_cde_expansion_enabled"] is True
+    assert matched.metadata["bosonic_cde_act_open_derivatives"] is True
+    assert_expr_equal(matched.off_shell_eft_lagrangian, expected_acted_integral)
     with pytest.raises(ValueError, match="one entry per trace block"):
         trace.bosonic_cde_expansion_terms(((mu,),))
     with pytest.raises(KeyError, match="missing"):

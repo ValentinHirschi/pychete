@@ -9,6 +9,7 @@ import pytest
 
 from pychete import (
     ExternalKind,
+    FieldMassKind,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
     OneLoopNormalization,
@@ -539,6 +540,48 @@ def test_validation_fixture_preview_can_use_internal_integral_backend_without_ma
     preview.validate()
 
 
+def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathematica() -> None:
+    theory = Theory("validation_fixture_cde")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
+    fixture = ValidationFixture(
+        name="validation_fixture_cde",
+        kind="model_smoke",
+        state=state,
+        source={"generator": "pytest", "mathematica_runtime_required": False},
+        expression_names=("lagrangian",),
+    )
+    mu = theory.lorentz_index("mu")
+    expansion = {"hScalar-lScalar": ((mu,), ())}
+    expected = theory.one_loop_setup(
+        lagrangian,
+        eft_order=6,
+        max_trace_order=2,
+    ).interaction_bosonic_cde_matching_result(
+        expansion,
+        act_open_derivatives=True,
+    )
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        bosonic_cde_expansion_indices_by_trace=expansion,
+        bosonic_cde_act_open_derivatives=True,
+    )
+
+    assert preview.metadata["stage"] == "interaction_bosonic_cde_vakint_result"
+    assert preview.metadata["fixture"] == fixture.name
+    assert preview.metadata["bosonic_cde_expansion_enabled"] is True
+    assert preview.metadata["bosonic_cde_act_open_derivatives"] is True
+    assert_expr_equal(preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
+    preview.validate()
+
+
 def test_validation_fixture_preview_accepts_custom_internal_series_symbols_without_mathematica() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     eps = S("fixture_custom_eps")
@@ -807,6 +850,8 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         use_public_match_api=True,
         simplify_pychete_color_algebra=True,
         substitute_heavy_scalar_solutions=True,
+        bosonic_cde_expansion_indices_by_trace={"hScalar": ((S("mu"),),)},
+        bosonic_cde_act_open_derivatives=True,
         matching_condition_projection_expand_source=False,
         matching_condition_projection_canonize_indices=False,
         matching_condition_projection_normalize_derivative_operators=False,
@@ -817,6 +862,8 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert isinstance(options, OneLoopMatchOptions)
     assert options.simplify_pychete_color_algebra is True
     assert options.substitute_heavy_scalar_solutions is True
+    assert options.bosonic_cde_expansion_indices_by_trace == {"hScalar": ((S("mu"),),)}
+    assert options.bosonic_cde_act_open_derivatives is True
     assert captured["matching_condition_expand_source"] is False
     assert captured["matching_condition_canonize_indices"] is False
     assert captured["matching_condition_normalize_derivative_operators"] is False

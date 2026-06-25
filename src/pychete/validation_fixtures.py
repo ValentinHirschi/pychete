@@ -637,6 +637,8 @@ class ValidationFixture:
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
+        bosonic_cde_expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]] | None = None,
+        bosonic_cde_act_open_derivatives: bool = False,
         simplify_pychete_color_algebra: bool = False,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
@@ -702,7 +704,66 @@ class ValidationFixture:
                 n_steps=tensor_network_n_steps,
                 mode=tensor_network_mode,
             )
-        if selected_backend is OneLoopIntegralBackend.INTERNAL:
+        if bosonic_cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
+            result = setup.interaction_bosonic_cde_internal_matching_result(
+                bosonic_cde_expansion_indices_by_trace,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                act_open_derivatives=bosonic_cde_act_open_derivatives,
+                tensor_reduce=internal_tensor_reduce,
+                tensor_reduce_engine=vakint_engine,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+                combine_terms=internal_combine_terms,
+            )
+        elif (
+            bosonic_cde_expansion_indices_by_trace is not None
+            and selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
+        ):
+            result = setup.interaction_bosonic_cde_internal_minimal_subtraction_result(
+                bosonic_cde_expansion_indices_by_trace,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                act_open_derivatives=bosonic_cde_act_open_derivatives,
+                tensor_reduce=internal_tensor_reduce,
+                tensor_reduce_engine=vakint_engine,
+                combine_terms=internal_combine_terms,
+                max_pole_order=internal_max_pole_order,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+            )
+        elif (
+            bosonic_cde_expansion_indices_by_trace is not None
+            and selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION
+        ):
+            result = setup.interaction_bosonic_cde_minimal_subtraction_result(
+                bosonic_cde_expansion_indices_by_trace,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                act_open_derivatives=bosonic_cde_act_open_derivatives,
+                vakint_engine=vakint_engine,
+                max_pole_order=internal_max_pole_order,
+                epsilon=epsilon,
+                named_supertrace_stage=named_supertrace_stage,
+                named_supertrace_short_form=named_supertrace_short_form,
+                named_supertrace_engine=named_supertrace_engine,
+            )
+        elif bosonic_cde_expansion_indices_by_trace is not None:
+            result = setup.interaction_bosonic_cde_matching_result(
+                bosonic_cde_expansion_indices_by_trace,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                act_open_derivatives=bosonic_cde_act_open_derivatives,
+                vakint_stage=vakint_stage,
+                vakint_short_form=vakint_short_form,
+                vakint_engine=vakint_engine,
+                max_pole_order=internal_max_pole_order,
+                epsilon=epsilon,
+                named_supertrace_stage=named_supertrace_stage,
+                named_supertrace_short_form=named_supertrace_short_form,
+                named_supertrace_engine=named_supertrace_engine,
+            )
+        elif selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_power_type_internal_matching_result(
                 heavy_field_dimension=heavy_field_dimension,
                 include_light=include_light,
@@ -801,6 +862,8 @@ class ValidationFixture:
                     else 0
                 ),
                 "covariant_derivative_commutators_expanded": expand_covariant_derivative_commutators,
+                "bosonic_cde_expansion_enabled": bosonic_cde_expansion_indices_by_trace is not None,
+                "bosonic_cde_act_open_derivatives": bosonic_cde_act_open_derivatives,
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
             },
         )
@@ -861,6 +924,8 @@ class ValidationFixture:
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
+        bosonic_cde_expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]] | None = None,
+        bosonic_cde_act_open_derivatives: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         project_reference_matching_conditions: bool = False,
@@ -938,6 +1003,8 @@ class ValidationFixture:
                     emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                     emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                     expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                    bosonic_cde_expansion_indices_by_trace=bosonic_cde_expansion_indices_by_trace,
+                    bosonic_cde_act_open_derivatives=bosonic_cde_act_open_derivatives,
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                 ),
@@ -1003,6 +1070,8 @@ class ValidationFixture:
                 emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                 emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                bosonic_cde_expansion_indices_by_trace=bosonic_cde_expansion_indices_by_trace,
+                bosonic_cde_act_open_derivatives=bosonic_cde_act_open_derivatives,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         if project_reference_matching_conditions and not use_public_match_api:

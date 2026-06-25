@@ -768,6 +768,53 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
   `git diff --check` passed.
 
+## Current Opt-In CDE Matching-Result Slice
+
+- Added `OneLoopMatchOptions.bosonic_cde_expansion_indices_by_trace` and
+  `OneLoopMatchOptions.bosonic_cde_act_open_derivatives`. Supplying the trace
+  expansion map explicitly switches `match_one_loop(...)` from the older
+  interaction-power aggregate to the selected CDE-expanded interaction
+  aggregate, while preserving the existing backend selection, normalization,
+  on-shell/EOM reduction, final EFT truncation, and matching-condition
+  projection pipeline.
+- Added CDE aggregate/result helpers on `OneLoopSetup`:
+  `interaction_bosonic_cde_expansion_terms_by_trace(...)`,
+  `interaction_bosonic_cde_expansion_terms(...)`,
+  `interaction_bosonic_cde_vakint_integral_sum(...)`,
+  `interaction_bosonic_cde_internal_integral_sum(...)`,
+  `interaction_bosonic_cde_matching_result(...)`,
+  `interaction_bosonic_cde_internal_matching_result(...)`,
+  `interaction_bosonic_cde_internal_minimal_subtraction_result(...)`, and
+  `interaction_bosonic_cde_minimal_subtraction_result(...)`.
+- The new result methods expose named CDE kernels, named CDE vakint
+  topologies, aggregate sums, pole/finite pieces where applicable, and
+  metadata recording CDE trace/term counts and whether open derivatives were
+  acted. Internal evaluation still delegates tensor reduction to vakint when
+  requested and scalar topology evaluation to pychete's analytic one-loop
+  backend.
+- Threaded the same explicit CDE options through validation fixture preview
+  and public-match gap-report helpers, so fixture diagnostics can exercise the
+  new path without Mathematica or custom scripts.
+- Performance/scaling note: there is still no global automatic CDE expansion.
+  Callers must select trace names and expansion-index sequences explicitly, so
+  exploratory CDE work scales with the requested trace/order subset. Automatic
+  expansion-order planning remains a later matching-stage feature.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathematica
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api
+  tests/unit/definitions/test_public_api.py::test_public_api_methods_have_docstrings
+  -q` passed with 4 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_cde.py tests/unit/definitions/test_public_api.py
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k "cde or
+  public_api or forwards_pychete_color or
+  preview_can_use_internal_integral_backend" -q` passed with 18 tests and 89
+  deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed;
+  and `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -797,11 +844,10 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Wire the selected CDE supertrace expansion into the full one-loop matching
-  path behind explicit options, then integrate the commutator emitter/lowering
-  pair into the generated CDE stages that produce the gauge Wilson structures
-  needed by `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current
-  coefficients.
+- Add automatic CDE expansion-order planning for selected trace families, then
+  integrate the commutator emitter/lowering pair into the generated CDE stages
+  that produce the gauge Wilson structures needed by `cHB`, `cHW`, `cHWB`,
+  and related fermionic Higgs-current coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.
