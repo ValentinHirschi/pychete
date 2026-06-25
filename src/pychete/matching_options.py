@@ -90,10 +90,12 @@ class OneLoopMatchOptions:
     derivatives can be expanded before fluctuation-operator extraction with
     ``expand_abelian_covariant_derivatives`` and
     ``expand_non_abelian_covariant_derivatives``. Explicit formal
-    ``CovariantDerivativeCommutator`` markers can be lowered to
-    ``FieldStrength`` insertions with ``expand_covariant_derivative_commutators``.
-    Registered pychete CG generator and structure-constant tensors can be
-    simplified through idenso's native SU(N) color algebra with
+    ``CovariantDerivativeCommutator`` markers can be emitted from out-of-order
+    derivative slots with ``emit_covariant_derivative_commutators`` and lowered
+    to ``FieldStrength`` insertions with
+    ``expand_covariant_derivative_commutators``. Registered pychete CG
+    generator and structure-constant tensors can be simplified through
+    idenso's native SU(N) color algebra with
     ``simplify_pychete_color_algebra``.
     Heavy scalar backgrounds can be substituted by their tree-level EFT
     solutions before final EFT truncation and projection by enabling
@@ -136,6 +138,7 @@ class OneLoopMatchOptions:
     truncate_eft_result: bool = True
     expand_abelian_covariant_derivatives: bool = False
     expand_non_abelian_covariant_derivatives: bool = False
+    emit_covariant_derivative_commutators: bool = False
     expand_covariant_derivative_commutators: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None

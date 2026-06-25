@@ -12,6 +12,7 @@ from .expr import (
     bar_field_inner,
     bar_field_pattern,
     covariant_derivative_commutator_pattern,
+    field_derivatives,
     field_label,
     field_pattern,
     field_with_derivatives,
@@ -116,6 +117,15 @@ from .theory_metadata import (
 
 _COVARIANT_DERIVATIVE_OUTPUT_INDEX_KIND = 0
 _COVARIANT_DERIVATIVE_ADJOINT_INDEX_KIND = 1
+
+
+def _adjacent_covariant_derivative_inversion(derivatives: tuple[Expression, ...]) -> int | None:
+    for index, (left, right) in enumerate(zip(derivatives, derivatives[1:], strict=False)):
+        if not is_head(left, s.Index) or not is_head(right, s.Index):
+            continue
+        if canonical_string(left) > canonical_string(right):
+            return index
+    return None
 
 
 class Theory:
@@ -1193,6 +1203,73 @@ class Theory:
             return s.CovariantDerivativeCommutator(left_index, right_index, body)
 
         return expr.replace(pattern, commutator_replacement, rhs_cache_size=0).expand()
+
+    def emit_covariant_derivative_commutators(self, expr: Expression) -> Expression:
+        """Emit formal commutators by commuting adjacent derivative slots.
+
+        Registered ``Field`` and ``Bar[Field]`` atoms with adjacent covariant
+        derivative indices out of canonical order are rewritten with the
+        identity ``D_a D_b X = D_b D_a X + [D_a,D_b] X``. The emitted
+        ``CovariantDerivativeCommutator`` markers are intentionally left
+        formal; call :meth:`expand_covariant_derivative_commutators` to lower
+        them to ``FieldStrength`` insertions. Prefix derivatives are kept as
+        explicit ``CD(...)`` wrappers so existing Symbolica replacement passes
+        can apply product rules later without forcing a global expansion here.
+        """
+
+        self._validate_registered_expression(expr)
+        field_pat = field_pattern()
+        bar_pat = bar_field_pattern()
+        field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+        if not bool(expr.matches(field_pat, field_label_is_tagged)):
+            return expr
+
+        protect_bar_replacements: list[Replacement] = []
+        restore_bar_replacements: list[Replacement] = []
+        for atom in matching_subexpressions(expr, bar_pat, field_label_is_tagged):
+            key = s.CovariantDerivativeProtectedBar(Expression.num(len(restore_bar_replacements)))
+            protect_bar_replacements.append(Replacement(atom, key))
+            restore_bar_replacements.append(
+                Replacement(key, self._commuted_covariant_derivative_atom(atom, conjugate_field=True))
+            )
+
+        def field_replacement(match: dict[Expression, Expression]) -> Expression:
+            atom = field_pat.replace_wildcards(match)
+            return self._commuted_covariant_derivative_atom(atom, conjugate_field=False)
+
+        out = expr
+        if protect_bar_replacements:
+            out = out.replace_multiple(protect_bar_replacements)
+        out = out.replace(field_pat, field_replacement, field_label_is_tagged, rhs_cache_size=0)
+        if restore_bar_replacements:
+            out = out.replace_multiple(restore_bar_replacements)
+        return out
+
+    def _commuted_covariant_derivative_atom(self, atom: Expression, *, conjugate_field: bool) -> Expression:
+        base_field = bar_field_inner(atom) if conjugate_field else atom
+        derivatives = field_derivatives(base_field)
+        swap_position = _adjacent_covariant_derivative_inversion(derivatives)
+        if swap_position is None:
+            return atom
+        left_index = derivatives[swap_position]
+        right_index = derivatives[swap_position + 1]
+        prefix = derivatives[:swap_position]
+        suffix = derivatives[swap_position + 2 :]
+        swapped_derivatives = (
+            *prefix,
+            right_index,
+            left_index,
+            *suffix,
+        )
+        swapped_field = field_with_derivatives(base_field, swapped_derivatives)
+        swapped_atom = s.Bar(swapped_field) if conjugate_field else swapped_field
+        commutator_body = field_with_derivatives(base_field, suffix)
+        if conjugate_field:
+            commutator_body = s.Bar(commutator_body)
+        commutator = s.CovariantDerivativeCommutator(left_index, right_index, commutator_body)
+        if prefix:
+            commutator = s.CD(list_expr(*prefix), commutator)
+        return swapped_atom + commutator
 
     def _field_definition_for_label(self, label: Expression) -> FieldDefinition:
         name = symbol_data(label, SymbolDataKey.NAME)

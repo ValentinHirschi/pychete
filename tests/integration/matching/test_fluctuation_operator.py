@@ -337,6 +337,61 @@ def test_one_loop_match_option_expands_covariant_derivative_commutators_before_s
     assert_expr_equal(captured["lagrangian"], theory.covariant_derivative_commutator(phi(), mu, nu))
 
 
+def test_one_loop_match_option_emits_and_expands_covariant_derivative_commutators_before_setup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("match_emit_covariant_commutators")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        mass=0,
+    )
+    b = theory.index("b")
+    c = theory.index("c")
+    captured: dict[str, Expression] = {}
+
+    class FakeSetup:
+        def interaction_power_type_internal_matching_result(self, **_kwargs: object) -> MatchingResult:
+            return MatchingResult(
+                theory=theory,
+                uv_lagrangian=captured["lagrangian"],
+                off_shell_eft_lagrangian=captured["lagrangian"],
+                on_shell_eft_lagrangian=captured["lagrangian"],
+                metadata={"stage": "fake_internal"},
+            )
+
+    def fake_one_loop_setup(
+        _theory: Theory,
+        lagrangian: Expression,
+        **_kwargs: object,
+    ) -> FakeSetup:
+        captured["lagrangian"] = lagrangian
+        return FakeSetup()
+
+    monkeypatch.setattr(matching_module, "one_loop_setup", fake_one_loop_setup)
+
+    result = theory.match(
+        phi(derivatives=[c, b]),
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            emit_covariant_derivative_commutators=True,
+            expand_covariant_derivative_commutators=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["covariant_derivative_commutators_emitted"] is True
+    assert result.metadata["covariant_derivative_commutators_expanded"] is True
+    assert_expr_equal(
+        captured["lagrangian"],
+        phi(derivatives=[b, c]) + theory.covariant_derivative_commutator(phi(), c, b),
+    )
+
+
 def test_charged_fermion_free_lag_subtracts_only_registered_free_inverse() -> None:
     theory = Theory("fluctuation_charged_fermion_free")
     theory.define_gauge_group("U1e", s.U1, "e", "A")

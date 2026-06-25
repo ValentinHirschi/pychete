@@ -506,6 +506,41 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
   `git diff --check` passed.
 
+## Current Covariant-Derivative Commutator Emitter Slice
+
+- Added `Theory.emit_covariant_derivative_commutators(...)` as the first CDE
+  emitter using the Matchete `CommuteCDs` identity in pychete's derivative-slot
+  representation. Registered `Field(...)` and `Bar(Field(...))` atoms with an
+  adjacent covariant derivative pair out of canonical order are rewritten as
+  the swapped derivative-slot atom plus a formal
+  `CovariantDerivativeCommutator(left, right, body)` marker.
+- The emitter is implemented through native Symbolica pattern matching and
+  replacement callbacks. Barred fields are protected before unbarred field
+  replacement, so conjugate fields keep the barred commutator sign convention
+  instead of being rewritten through the unbarred inner field.
+- Prefix derivatives are preserved as explicit `CD(List(...), commutator)`
+  wrappers around the emitted marker. This mirrors Matchete's `TakeDev[prefix,
+  GAction[...]]` structure while avoiding mandatory global expansion; later
+  passes can call the existing `expand_cd_operators(...)` machinery when they
+  need the full product rule.
+- Added `OneLoopMatchOptions.emit_covariant_derivative_commutators` and
+  threaded it through public `match_one_loop(...)` plus validation fixture
+  preview/gap-report helpers. The one-loop ordering is now: optional Abelian
+  first-derivative expansion, optional non-Abelian first-derivative expansion,
+  optional commutator emission, optional formal commutator expansion to
+  `FieldStrength(...)`, then fluctuation-operator setup. Result metadata records
+  `covariant_derivative_commutators_emitted`.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_public_api.py -k "commutator or
+  public_api_methods" -q` passed with 8 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "covariant_derivative_commutators" -q` passed with 2 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
+  `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -535,11 +570,12 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Add the actual CDE emitter that recognizes or constructs anti-symmetrized
-  derivative products and emits `CovariantDerivativeCommutator(...)` markers
-  before the new formal expansion pass lowers them to `FieldStrength(...)`
-  operators needed by gauge Wilsons such as `cHB`, `cHW`, `cHWB`, and related
-  fermionic Higgs-current coefficients.
+- Extend the commutator emitter beyond the first adjacent out-of-order
+  derivative-slot pass: support repeated canonicalization where it is
+  performance-safe, derivative-slot `FieldStrength(...)` atoms, and targeted
+  integration into the generated supertrace/CDE stages that produce the gauge
+  Wilson structures needed by `cHB`, `cHW`, `cHWB`, and related fermionic
+  Higgs-current coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.

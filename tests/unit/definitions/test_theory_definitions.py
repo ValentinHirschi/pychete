@@ -476,6 +476,42 @@ def test_expand_covariant_derivative_commutators_preserves_non_field_bodies() ->
     assert_expr_equal(theory.expand_covariant_derivative_commutators(formal), formal)
 
 
+def test_emit_covariant_derivative_commutators_rewrites_adjacent_inversions() -> None:
+    theory = Theory("emit_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        mass=0,
+    )
+    b = theory.index("b")
+    c = theory.index("c")
+    emitted = theory.emit_covariant_derivative_commutators(phi(derivatives=[c, b]))
+    expected = phi(derivatives=[b, c]) + s.CovariantDerivativeCommutator(c, b, phi())
+
+    assert_expr_equal(emitted, expected)
+    assert_expr_equal(
+        theory.expand_covariant_derivative_commutators(emitted),
+        phi(derivatives=[b, c]) + theory.covariant_derivative_commutator(phi(), c, b),
+    )
+
+
+def test_emit_covariant_derivative_commutators_protects_barred_fields_and_prefixes() -> None:
+    theory = Theory("emit_barred_commutator")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+    emitted = theory.emit_covariant_derivative_commutators(s.Bar(phi(derivatives=[a, c, b])))
+    expected = (
+        s.Bar(phi(derivatives=[a, b, c]))
+        + s.CD(s.List(a), s.CovariantDerivativeCommutator(c, b, s.Bar(phi())))
+    )
+
+    assert_expr_equal(emitted, expected)
+
+
 def test_covariant_derivative_commutator_builds_non_abelian_field_strength_insertions() -> None:
     theory = Theory("nonabelian_commutator")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
