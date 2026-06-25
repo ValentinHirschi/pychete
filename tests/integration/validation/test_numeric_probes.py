@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from symbolica import Expression, S
+from symbolica import Expression, Replacement, S
 
 from pychete import (
     MatchingResult,
@@ -16,6 +16,7 @@ from pychete import (
 )
 from pychete.backends import vacuum_integrals
 from pychete.validation_fixtures import _gap_report
+from tests.conftest import assert_expr_equal
 
 
 def test_evaluator_probe_equal_accepts_symbolically_equivalent_expressions() -> None:
@@ -327,6 +328,29 @@ def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> 
 
     with pytest.raises(ValueError, match="registered_wilsons"):
         result.project_matching_conditions("all_wilsons")
+
+
+def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() -> None:
+    theory = Theory("result_on_shell_reduction")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    coupling = theory.define_coupling("c", self_conjugate=True)
+    off_shell = coupling() * phi() ** 2 + coupling()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=off_shell,
+        on_shell_eft_lagrangian=off_shell,
+    )
+
+    reduced = result.with_on_shell_reduction((Replacement(phi() ** 2, Expression.num(0)),))
+
+    assert reduced.metadata["on_shell_reduced"] is True
+    assert reduced.metadata["on_shell_reduction_source"] == "on_shell_eft_lagrangian"
+    assert reduced.metadata["on_shell_reduction_replacement_count"] == 1
+    assert_expr_equal(reduced.off_shell_eft_lagrangian, off_shell)
+    assert_expr_equal(reduced.expression("on_shell_eft_lagrangian_before_reduction"), off_shell)
+    assert_expr_equal(reduced.expression("on_shell_eft_lagrangian_after_reduction"), coupling())
+    assert_expr_equal(reduced.on_shell_eft_lagrangian, coupling())
 
 
 def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:

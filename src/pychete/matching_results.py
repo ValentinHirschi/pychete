@@ -5,12 +5,13 @@ from dataclasses import dataclass, field, replace
 from html import escape
 from typing import TYPE_CHECKING
 
-from symbolica import Expression
+from symbolica import Expression, Replacement
 
 from .expr import as_int, coupling_pattern, list_items
 from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
+    OnShellReplacementInput,
     one_loop_normalization_factor,
     one_loop_normalization_label,
 )
@@ -356,6 +357,47 @@ class MatchingResult:
             },
         )
 
+    def with_on_shell_reduction(
+        self,
+        replacements: OnShellReplacementInput,
+        *,
+        source: str = "on_shell_eft_lagrangian",
+        repeat: bool = False,
+        expand: bool = True,
+    ) -> MatchingResult:
+        """Return a result with the on-shell Lagrangian reduced by Symbolica replacements.
+
+        ``replacements`` can be either a mapping of exact expressions to
+        replacements or an ordered sequence of Symbolica ``Replacement``
+        objects. The actual rewrite is delegated to
+        ``Expression.replace_multiple(...)`` so EOM/on-shell rules can use the
+        same native matching machinery as the rest of pychete.
+        """
+
+        replacement_rules = _on_shell_replacement_rules(replacements)
+        if not replacement_rules:
+            return self
+        input_expression = self.expression(source)
+        reduced = input_expression.replace_multiple(replacement_rules, repeat=repeat)
+        if expand:
+            reduced = reduced.expand()
+        return replace(
+            self,
+            on_shell_eft_lagrangian=reduced,
+            supertraces={
+                **self.supertraces,
+                "on_shell_eft_lagrangian_before_reduction": input_expression,
+                "on_shell_eft_lagrangian_after_reduction": reduced,
+            },
+            metadata={
+                **self.metadata,
+                "on_shell_reduced": True,
+                "on_shell_reduction_source": source,
+                "on_shell_reduction_replacement_count": len(replacement_rules),
+                "on_shell_reduction_repeat": repeat,
+            },
+        )
+
     def compare_to(
         self,
         reference: MatchingResult,
@@ -468,6 +510,14 @@ def _transform_optional_expression(
     if expr is None or expression_transform is None:
         return expr
     return expression_transform(expr)
+
+
+def _on_shell_replacement_rules(replacements: OnShellReplacementInput) -> tuple[Replacement, ...]:
+    if replacements is None:
+        return ()
+    if isinstance(replacements, Mapping):
+        return tuple(Replacement(old, new) for old, new in replacements.items())
+    return tuple(replacements)
 
 
 def registered_wilson_matching_condition_targets(

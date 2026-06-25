@@ -3784,6 +3784,11 @@ def match_one_loop(
             "tensor_network_native_hep_cg_builtins": options.tensor_network_native_hep_cg_builtins,
         },
     )
+    if options.on_shell_replacements is not None:
+        result = result.with_on_shell_reduction(
+            options.on_shell_replacements,
+            repeat=options.on_shell_replacement_repeat,
+        )
     if matching_condition_targets is None:
         _log_one_loop_result(result)
         return result

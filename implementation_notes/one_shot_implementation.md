@@ -382,3 +382,32 @@
     `pytest -m matching tests/integration/matching -q`: 65 passed.
   - `python -m mypy`: success, no issues in 33 source files.
   - `git diff --check`: clean.
+
+## Current Slice: On-Shell Reduction Hook
+
+- The current one-loop preview results still mark `on_shell_reduced=False`.
+  This slice adds a narrow on-shell reduction hook without pretending the full
+  Matchete EOM reduction pipeline is complete.
+- Added optional `OneLoopMatchOptions.on_shell_replacements` plus
+  `on_shell_replacement_repeat`. Replacements may be exact expression mappings
+  or native Symbolica `Replacement` objects. They are applied with
+  `Expression.replace_multiple(...)`, preserving the Symbolica-first rule and
+  allowing future EOM rules to use native pattern restrictions.
+- Added `MatchingResult.with_on_shell_reduction(...)`, which preserves the
+  off-shell EFT Lagrangian, stores before/after on-shell stages in
+  `supertraces`, updates on-shell metadata, and lets subsequent matching
+  condition projection read the reduced `on_shell_eft_lagrangian`.
+- Wired `match_one_loop(...)` so optional on-shell replacements run after
+  backend evaluation/normalization and before matching-condition projection.
+- Kept the `OnShellReplacementInput` typing alias local to
+  `matching_options`; package-root exports continue to contain only
+  docstring-bearing public objects.
+- Targeted validation so far:
+  - exact result-level and public `Theory.match(..., loop_order=1)` regressions:
+    `pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_applies_on_shell_replacements_with_symbolica_rules tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_applies_on_shell_reduction_before_condition_projection -q`:
+    2 passed.
+  - combined changed-surface gate:
+    `pytest tests/integration/matching tests/integration/validation/test_numeric_probes.py tests/unit/definitions/test_public_api.py -q`:
+    93 passed.
+  - `python -m mypy`: success, no issues in 33 source files.
+  - `git diff --check`: clean.

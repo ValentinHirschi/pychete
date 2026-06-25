@@ -176,6 +176,34 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     assert_expr_equal(registered_wilson_projection.matching_conditions[wilson_name], expected)
 
 
+def test_one_loop_match_applies_on_shell_reduction_before_condition_projection() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    target = g() ** 2 * phi() ** 2
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            tensor_reduce=False,
+            combine_terms=True,
+            on_shell_replacements={target: Expression.num(0)},
+        ),
+        matching_condition_targets={"g2_phi2": target},
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["on_shell_reduced"] is True
+    assert result.metadata["on_shell_reduction_replacement_count"] == 1
+    assert result.metadata["matching_conditions_projected"] is True
+    assert_expr_equal(result.off_shell_eft_lagrangian, result.expression("on_shell_eft_lagrangian_before_reduction"))
+    assert_expr_equal(result.on_shell_eft_lagrangian, Expression.num(0))
+    assert_expr_equal(result.expression("on_shell_eft_lagrangian_after_reduction"), Expression.num(0))
+    assert_expr_equal(result.matching_conditions["g2_phi2"], Expression.num(0))
+
+
 def test_one_loop_match_options_select_backend_and_trace_order() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()
     lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2

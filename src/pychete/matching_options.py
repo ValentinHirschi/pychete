@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from typing import Any, Mapping, Sequence, TypeAlias
 
-from symbolica import Expression
+from symbolica import Expression, Replacement
 
 from .symbols import s
 
@@ -69,6 +69,7 @@ class OneLoopNormalization(StrEnum):
 
 
 OneLoopNormalizationInput: TypeAlias = OneLoopNormalization | str | Expression | None
+OnShellReplacementInput: TypeAlias = Mapping[Expression, Expression] | Sequence[Replacement] | None
 TensorComponentInput: TypeAlias = Expression | int | float | complex
 
 
@@ -100,6 +101,8 @@ class OneLoopMatchOptions:
     max_pole_order: int = 1
     epsilon: Expression | None = None
     mu_r_squared: Expression | None = None
+    on_shell_replacements: OnShellReplacementInput = None
+    on_shell_replacement_repeat: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True
     evaluate_tensor_networks: bool = False
@@ -152,6 +155,7 @@ __all__ = [
     "OneLoopIntegralBackend",
     "OneLoopNormalization",
     "OneLoopNormalizationInput",
+    "OnShellReplacementInput",
     "VakintIntegralStage",
     "one_loop_normalization_factor",
     "one_loop_normalization_label",
