@@ -4,6 +4,7 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
+from typing import Any
 
 from symbolica import Expression
 from symbolica.core import AtomType, ParseMode
@@ -144,7 +145,37 @@ def _add_matching_conditions(state: PycheteState, theory: Theory, text: str) -> 
     return condition_refs
 
 
-def _build_fixture(model: str, reference_root: Path, fixtures_dir: Path) -> dict[str, object]:
+def _write_enriched_model_fixture(
+    model_fixture_path: Path,
+    model_fixture: Any,
+    *,
+    matching_condition_count: int,
+    reference_result: Path,
+    reference_root: Path,
+) -> None:
+    if matching_condition_count == 0:
+        return
+    payload = json.loads(model_fixture_path.read_text(encoding="utf-8"))
+    payload["state"] = model_fixture.state.to_json_obj()
+    payload["source"] = {
+        **payload.get("source", {}),
+        "smeft_wilson_metadata": {
+            "source": "matching_condition_lhs",
+            "generator": "helper_mathematica_scripts/convert_matchete_previous_results.py",
+            "reference_result": str(reference_result.relative_to(reference_root)),
+            "matching_condition_count": matching_condition_count,
+        },
+    }
+    model_fixture_path.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+
+
+def _build_fixture(
+    model: str,
+    reference_root: Path,
+    fixtures_dir: Path,
+    *,
+    update_model_fixture_wilson_metadata: bool = False,
+) -> dict[str, object]:
     model_fixture_path = fixtures_dir / f"{model}.model_fixture.json"
     result_path = reference_root / "Validation" / "MatchingResults" / "previous" / f"{model}-EFT.m"
     model_fixture = load_validation_fixture(model_fixture_path)
@@ -178,6 +209,14 @@ def _build_fixture(model: str, reference_root: Path, fixtures_dir: Path) -> dict
         state.add_expression(expression_name, theory, parse_matchete_expression(expression_text, theory))
     matching_condition_refs = _add_matching_conditions(state, theory, result["Matching Conditions"])
     matching_conditions_included = bool(matching_condition_refs)
+    if update_model_fixture_wilson_metadata:
+        _write_enriched_model_fixture(
+            model_fixture_path,
+            model_fixture,
+            matching_condition_count=len(matching_condition_refs),
+            reference_result=result_path,
+            reference_root=reference_root,
+        )
 
     return {
         "schema_version": 1,
@@ -221,10 +260,23 @@ def main() -> int:
     parser.add_argument("--reference-root", type=Path, default=Path("Mathematica_reference/Matchete"))
     parser.add_argument("--fixtures-dir", type=Path, default=Path("assets/validation/pychete"))
     parser.add_argument("--models", default=",".join(DEFAULT_MODELS))
+    parser.add_argument(
+        "--update-model-fixture-wilson-metadata",
+        action="store_true",
+        help=(
+            "Also write the exact SMEFT Wilson target metadata parsed from "
+            "matching-condition left-hand sides back into each paired model fixture."
+        ),
+    )
     args = parser.parse_args()
 
     for model in [item.strip() for item in args.models.split(",") if item.strip()]:
-        fixture = _build_fixture(model, args.reference_root, args.fixtures_dir)
+        fixture = _build_fixture(
+            model,
+            args.reference_root,
+            args.fixtures_dir,
+            update_model_fixture_wilson_metadata=args.update_model_fixture_wilson_metadata,
+        )
         out_path = args.fixtures_dir / f"{model}.matching_fixture.json"
         out_path.write_text(json.dumps(fixture, indent=2, sort_keys=True) + "\n", encoding="utf-8")
         print(f"Wrote {out_path}")

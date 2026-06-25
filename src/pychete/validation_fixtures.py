@@ -18,10 +18,16 @@ from .matching_options import (
     VakintIntegralStage,
     one_loop_normalization_label,
 )
-from .matching_results import MatchingResult
+from .matching_results import (
+    MatchingConditionTarget,
+    MatchingResult,
+    registered_wilson_matching_condition_targets,
+)
 from .state import PycheteState
 from .supertraces import is_unnormalized_supertrace_alias, supertrace_word_order
+from .symbols import SymbolDataKey, s, symbol_data
 from .theory import Theory
+from .theory_metadata import ExternalKind
 from .validation import (
     NumericProbePlan,
     NumericValue,
@@ -36,6 +42,14 @@ ProbeNameSelection = Iterable[str] | ProbeNamePreset
 _PROBE_NAME_PRESETS = {"common", "canonical_different", "wilson", "canonical_different_wilson"}
 _WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
 _LOGGER = get_logger("validation")
+
+
+@dataclass(frozen=True)
+class _MatchingConditionProjectionTargets:
+    targets: dict[str, Expression]
+    registered_wilson_names: tuple[str, ...] = ()
+    reference_non_wilson_names: tuple[str, ...] = ()
+    reference_wilson_fallback_names: tuple[str, ...] = ()
 
 
 @dataclass(frozen=True)
@@ -169,6 +183,9 @@ class MatchingFixtureGapReport:
     numeric_probe_different_common_matching_condition_names: tuple[str, ...]
     common_expression_names: tuple[str, ...]
     reference_wilson_matching_condition_names: tuple[str, ...]
+    matching_condition_projection_registered_wilson_names: tuple[str, ...] = ()
+    matching_condition_projection_reference_non_wilson_names: tuple[str, ...] = ()
+    matching_condition_projection_reference_wilson_fallback_names: tuple[str, ...] = ()
 
     @property
     def complete(self) -> bool:
@@ -333,6 +350,24 @@ class MatchingFixtureGapReport:
         return len(self.reference_wilson_matching_condition_names)
 
     @property
+    def matching_condition_projection_registered_wilson_count(self) -> int:
+        """Number of projected targets sourced from theory-registered Wilson metadata."""
+
+        return len(self.matching_condition_projection_registered_wilson_names)
+
+    @property
+    def matching_condition_projection_reference_non_wilson_count(self) -> int:
+        """Number of projected targets sourced from reference non-Wilson conditions."""
+
+        return len(self.matching_condition_projection_reference_non_wilson_names)
+
+    @property
+    def matching_condition_projection_reference_wilson_fallback_count(self) -> int:
+        """Number of projected Wilson targets not available from theory metadata."""
+
+        return len(self.matching_condition_projection_reference_wilson_fallback_names)
+
+    @property
     def common_wilson_matching_condition_names(self) -> tuple[str, ...]:
         """Shared matching-condition names whose reference target is a Wilson coefficient."""
 
@@ -431,6 +466,15 @@ class MatchingFixtureGapReport:
             ),
             "accepted_common_matching_condition_count": self.accepted_common_matching_condition_count,
             "reference_wilson_matching_condition_count": self.reference_wilson_matching_condition_count,
+            "matching_condition_projection_registered_wilson_count": (
+                self.matching_condition_projection_registered_wilson_count
+            ),
+            "matching_condition_projection_reference_non_wilson_count": (
+                self.matching_condition_projection_reference_non_wilson_count
+            ),
+            "matching_condition_projection_reference_wilson_fallback_count": (
+                self.matching_condition_projection_reference_wilson_fallback_count
+            ),
             "common_wilson_matching_condition_count": self.common_wilson_matching_condition_count,
             "accepted_common_wilson_matching_condition_count": self.accepted_common_wilson_matching_condition_count,
             "different_after_probe_common_wilson_matching_condition_count": (
@@ -464,6 +508,15 @@ class MatchingFixtureGapReport:
             ),
             "accepted_common_matching_condition_names": list(self.accepted_common_matching_condition_names),
             "reference_wilson_matching_condition_names": list(self.reference_wilson_matching_condition_names),
+            "matching_condition_projection_registered_wilson_names": list(
+                self.matching_condition_projection_registered_wilson_names
+            ),
+            "matching_condition_projection_reference_non_wilson_names": list(
+                self.matching_condition_projection_reference_non_wilson_names
+            ),
+            "matching_condition_projection_reference_wilson_fallback_names": list(
+                self.matching_condition_projection_reference_wilson_fallback_names
+            ),
             "common_wilson_matching_condition_names": list(self.common_wilson_matching_condition_names),
             "accepted_common_wilson_matching_condition_names": list(
                 self.accepted_common_wilson_matching_condition_names
@@ -788,11 +841,12 @@ class ValidationFixture:
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
         resolved_max_trace_order = _resolve_max_trace_order(max_trace_order, reference)
-        projected_targets = (
-            _reference_matching_condition_targets(reference)
+        projected_target_selection = (
+            _matching_condition_projection_targets(self.theory(), reference)
             if project_reference_matching_conditions
             else None
         )
+        projected_targets = projected_target_selection.targets if projected_target_selection is not None else None
         if use_public_match_api:
             matched = self.theory().match(
                 self.expression(lagrangian),
@@ -909,6 +963,7 @@ class ValidationFixture:
                     evaluate_loop_functions_for_comparison=evaluate_loop_functions_for_comparison,
                     comparison_combine_terms=comparison_combine_terms,
                 ),
+                matching_condition_projection_targets=projected_target_selection,
             )
         _LOGGER.info(
             (
@@ -1067,11 +1122,64 @@ def _tensor_network_component_source(
     return None
 
 
-def _reference_matching_condition_targets(reference: MatchingResult) -> dict[str, Expression]:
-    return {
-        target.name: target.expression
-        for target in reference.matching_condition_targets()
-    }
+def _matching_condition_projection_targets(
+    theory: Theory,
+    reference: MatchingResult,
+) -> _MatchingConditionProjectionTargets:
+    registered_wilsons = registered_wilson_matching_condition_targets(theory)
+    registered_wilsons_by_external_name = _registered_wilson_targets_by_external_name(theory)
+    targets: dict[str, Expression] = {}
+    registered_wilson_names: list[str] = []
+    reference_non_wilson_names: list[str] = []
+    reference_wilson_fallback_names: list[str] = []
+    for target in reference.matching_condition_targets():
+        if target.is_wilson_coefficient:
+            registered_target = registered_wilsons.get(target.name)
+            if registered_target is None:
+                external_name = _matching_condition_target_external_name(target)
+                registered_target = (
+                    None
+                    if external_name is None
+                    else registered_wilsons_by_external_name.get(external_name)
+                )
+            if registered_target is not None:
+                targets[target.name] = registered_target
+                registered_wilson_names.append(target.name)
+            else:
+                targets[target.name] = target.expression
+                reference_wilson_fallback_names.append(target.name)
+            continue
+        targets[target.name] = target.expression
+        reference_non_wilson_names.append(target.name)
+    return _MatchingConditionProjectionTargets(
+        targets=targets,
+        registered_wilson_names=_sorted_names(registered_wilson_names),
+        reference_non_wilson_names=_sorted_names(reference_non_wilson_names),
+        reference_wilson_fallback_names=_sorted_names(reference_wilson_fallback_names),
+    )
+
+
+def _registered_wilson_targets_by_external_name(theory: Theory) -> dict[str, Expression]:
+    targets: dict[str, Expression] = {}
+    for name, definition in theory.externals.items():
+        if definition.kind is not ExternalKind.WILSON_COEFFICIENT:
+            continue
+        if definition.operator_expr is None:
+            continue
+        targets[name] = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    return targets
+
+
+def _matching_condition_target_external_name(target: MatchingConditionTarget) -> str | None:
+    if target.label is None:
+        return None
+    name = symbol_data(target.label, SymbolDataKey.NAME)
+    if isinstance(name, str) and name:
+        return name
+    label = symbol_data(target.label, SymbolDataKey.LABEL)
+    if isinstance(label, str) and label:
+        return label
+    return None
 
 
 def _reference_wilson_matching_condition_names(reference: MatchingResult) -> tuple[str, ...]:
@@ -1165,6 +1273,7 @@ def _gap_report(
     probe_absolute_tolerance: float = 1e-9,
     probe_relative_tolerance: float = 1e-9,
     comparison_expression_transform: Callable[[Expression], Expression] | None = None,
+    matching_condition_projection_targets: _MatchingConditionProjectionTargets | None = None,
 ) -> MatchingFixtureGapReport:
     if auto_probe_samples and (probe_parameters is not None or probe_samples is not None):
         raise ValueError("auto_probe_samples cannot be combined with explicit probe_parameters/probe_samples")
@@ -1336,6 +1445,21 @@ def _gap_report(
         ),
         common_expression_names=_sorted_names(candidate_names & reference_names),
         reference_wilson_matching_condition_names=reference_wilson_conditions,
+        matching_condition_projection_registered_wilson_names=(
+            ()
+            if matching_condition_projection_targets is None
+            else matching_condition_projection_targets.registered_wilson_names
+        ),
+        matching_condition_projection_reference_non_wilson_names=(
+            ()
+            if matching_condition_projection_targets is None
+            else matching_condition_projection_targets.reference_non_wilson_names
+        ),
+        matching_condition_projection_reference_wilson_fallback_names=(
+            ()
+            if matching_condition_projection_targets is None
+            else matching_condition_projection_targets.reference_wilson_fallback_names
+        ),
     )
 
 

@@ -309,3 +309,46 @@
     8 passed.
   - `python -m mypy`: success, no issues in 33 source files.
   - `git diff --check`: clean.
+
+## Current Slice: Registered Wilson Metadata In Model Fixtures
+
+- The previous selector slice exposed a structural gap: matching fixtures had
+  the full 64 SMEFT Wilson externals with operator metadata, but the paired
+  model fixtures used to build candidate previews did not. Consequently,
+  projected validation reports still had to fall back to reference-owned
+  Wilson targets.
+- A generic "define all SMEFT Wilsons" enrichment is not safe for committed
+  fixtures because Symbolica rejects reusing the same namespaced symbol with
+  different symbol data. The model fixture and matching fixture must carry
+  identical Wilson symbol data, including flavor-index labels and operator
+  monomial strings.
+- Updated `convert_matchete_previous_results.py` with
+  `--update-model-fixture-wilson-metadata`, which writes the exact Wilson
+  target metadata parsed from Matchete matching-condition left-hand sides back
+  into the paired model fixture when regenerating previous-result fixtures.
+- Enriched the committed `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`
+  model fixtures with exact external symbol metadata copied from their matching
+  fixtures. Each now carries 64 Wilson coefficients with operator metadata.
+  `VLF_toy_model` remains unchanged because its reference has no matching
+  conditions.
+- Changed validation projection target construction so
+  `one_loop_preview_gap_report(..., project_reference_matching_conditions=True)`
+  prefers theory-registered Wilson targets, matches indexed Wilsons by
+  external symbol data name when canonical condition names use different dummy
+  labels, and only falls back to reference Wilson targets when no registered
+  candidate-theory target exists. Non-Wilson matching targets still come from
+  the reference result.
+- `MatchingFixtureGapReport` now records projection target source counts and
+  names: registered Wilson targets, reference non-Wilson targets, and reference
+  Wilson fallbacks.
+- Targeted validation for this slice:
+  - focused structural projection regression:
+    `pytest tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_projects_registered_wilsons_before_reference_targets -q`:
+    1 passed.
+  - affected projection frontier:
+    `pytest tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_projects_registered_wilsons_before_reference_targets tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_conditions_through_public_match_api tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica -q`:
+    3 passed.
+  - fixture/converter metadata gate:
+    `pytest tests/integration/validation/test_validation_fixtures.py::test_committed_model_fixtures_store_matching_smeft_wilson_metadata tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata tests/unit/loaders/test_matchete_previous_results_converter.py -q`:
+    3 passed.
+  - `python -m mypy`: success, no issues in 33 source files.

@@ -13,6 +13,8 @@ from pychete import (
     OneLoopMatchOptions,
     OneLoopNormalization,
     SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
+    Theory,
+    ValidationFixture,
     one_loop_normalization_factor,
     registered_wilson_matching_condition_targets,
 )
@@ -157,6 +159,28 @@ def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     assert targets[chd_name].eft_order == 0
     assert targets[chd_name].operator is not None
     assert targets[chd_name].projection_expression == targets[chd_name].operator
+
+
+def test_committed_model_fixtures_store_matching_smeft_wilson_metadata() -> None:
+    for model in ("Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
+        model_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
+        matching_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.matching_fixture.json"))
+        model_theory = model_fixture.theory()
+        matching_theory = matching_fixture.theory()
+        model_wilsons = {
+            name
+            for name, external in model_theory.externals.items()
+            if external.kind is ExternalKind.WILSON_COEFFICIENT
+        }
+
+        assert model_wilsons == set(SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES)
+        assert model_fixture.source["smeft_wilson_metadata"]["source"] == "matching_fixture_symbol_metadata"
+        assert model_fixture.source["smeft_wilson_metadata"]["wilson_count"] == 64
+        for name in model_wilsons:
+            assert model_theory.external_handle(name).definition.to_json() == (
+                matching_theory.external_handle(name).definition.to_json()
+            )
+            assert model_theory.external_handle(name).definition.operator_expr is not None
 
 
 def test_validation_fixture_restores_structured_matching_result(tmp_path: Path) -> None:
@@ -585,6 +609,9 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
             "wilson": 0,
             "accepted_wilson": 0,
             "different_wilson": 0,
+            "projection_registered_wilson": 0,
+            "projection_reference_non_wilson": 0,
+            "projection_reference_wilson_fallback": 0,
         },
         "Singlet_Scalar_Extension": {
             "conditions": 72,
@@ -593,6 +620,9 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
             "wilson": 64,
             "accepted_wilson": 39,
             "different_wilson": 25,
+            "projection_registered_wilson": 64,
+            "projection_reference_non_wilson": 8,
+            "projection_reference_wilson_fallback": 0,
         },
         "E_VLL": {
             "conditions": 72,
@@ -601,6 +631,9 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
             "wilson": 64,
             "accepted_wilson": 25,
             "different_wilson": 39,
+            "projection_registered_wilson": 64,
+            "projection_reference_non_wilson": 8,
+            "projection_reference_wilson_fallback": 0,
         },
         "S1S3LQs": {
             "conditions": 72,
@@ -609,6 +642,9 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
             "wilson": 64,
             "accepted_wilson": 12,
             "different_wilson": 52,
+            "projection_registered_wilson": 64,
+            "projection_reference_non_wilson": 8,
+            "projection_reference_wilson_fallback": 0,
         },
     }
 
@@ -637,6 +673,18 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
         assert report.common_wilson_matching_condition_count == expected_counts["wilson"]
         assert report.accepted_common_wilson_matching_condition_count == expected_counts["accepted_wilson"]
         assert (
+            report.matching_condition_projection_registered_wilson_count
+            == expected_counts["projection_registered_wilson"]
+        )
+        assert (
+            report.matching_condition_projection_reference_non_wilson_count
+            == expected_counts["projection_reference_non_wilson"]
+        )
+        assert (
+            report.matching_condition_projection_reference_wilson_fallback_count
+            == expected_counts["projection_reference_wilson_fallback"]
+        )
+        assert (
             report.different_after_probe_common_wilson_matching_condition_count
             == expected_counts["different_wilson"]
         )
@@ -646,6 +694,18 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
         assert report_obj["reference_wilson_matching_condition_count"] == expected_counts["wilson"]
         assert report_obj["common_wilson_matching_condition_count"] == expected_counts["wilson"]
         assert report_obj["accepted_common_wilson_matching_condition_count"] == expected_counts["accepted_wilson"]
+        assert (
+            report_obj["matching_condition_projection_registered_wilson_count"]
+            == expected_counts["projection_registered_wilson"]
+        )
+        assert (
+            report_obj["matching_condition_projection_reference_non_wilson_count"]
+            == expected_counts["projection_reference_non_wilson"]
+        )
+        assert (
+            report_obj["matching_condition_projection_reference_wilson_fallback_count"]
+            == expected_counts["projection_reference_wilson_fallback"]
+        )
         assert (
             report_obj["different_after_probe_common_matching_condition_count"]
             == expected_counts["different_after_probe"]
@@ -677,6 +737,9 @@ def test_validation_fixture_gap_report_can_project_conditions_through_public_mat
     assert report.reference_matching_condition_count == 72
     assert len(report.common_matching_condition_names) == 72
     assert report.missing_reference_matching_condition_count == 0
+    assert report.matching_condition_projection_registered_wilson_count == 64
+    assert report.matching_condition_projection_reference_non_wilson_count == 8
+    assert report.matching_condition_projection_reference_wilson_fallback_count == 0
     assert report.accepted_common_matching_condition_count == 42
     assert report.different_after_probe_common_matching_condition_count == 30
     assert "pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)" in (
@@ -685,6 +748,66 @@ def test_validation_fixture_gap_report_can_project_conditions_through_public_mat
     assert "pychete::Coupling(Singlet_Scalar_Extension::external_cHB,pychete::List(),0)" in (
         report.different_after_probe_common_matching_condition_names
     )
+
+
+def test_validation_fixture_gap_report_projects_registered_wilsons_before_reference_targets(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("registered_projection_fixture")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    coupling = theory.define_coupling("g", self_conjugate=True)
+    operator = phi() ** 2
+    wilson = theory.define_wilson_coefficient("cPhi2", operator=operator)
+    wilson_target = s.Coupling(wilson.label, s.List(), Expression.num(0))
+    wilson_name = canonical_string(wilson_target)
+    coupling_name = canonical_string(coupling())
+    projected_lagrangian = 3 * operator + 5 * coupling()
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, Expression.num(0))
+    fixture = ValidationFixture(
+        name="registered_projection_fixture",
+        kind="unit_validation",
+        state=state,
+        source={"generator": "pytest"},
+        expression_names=("lagrangian",),
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            wilson_name: Expression.num(3),
+            coupling_name: Expression.num(5),
+        },
+    )
+
+    def fake_one_loop_preview(self: ValidationFixture, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=theory,
+            uv_lagrangian=Expression.num(0),
+            off_shell_eft_lagrangian=projected_lagrangian,
+            on_shell_eft_lagrangian=projected_lagrangian,
+        )
+
+    monkeypatch.setattr(ValidationFixture, "one_loop_preview", fake_one_loop_preview)
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        project_reference_matching_conditions=True,
+        matching_condition_include_coupling_identities=False,
+    )
+    report_obj = report.to_json_obj()
+
+    assert set(report.common_matching_condition_names) == {wilson_name, coupling_name}
+    assert set(report.accepted_common_matching_condition_names) == {wilson_name, coupling_name}
+    assert report.matching_condition_projection_registered_wilson_names == (wilson_name,)
+    assert report.matching_condition_projection_reference_non_wilson_names == (coupling_name,)
+    assert report.matching_condition_projection_reference_wilson_fallback_names == ()
+    assert report_obj["matching_condition_projection_registered_wilson_count"] == 1
+    assert report_obj["matching_condition_projection_reference_non_wilson_count"] == 1
+    assert report_obj["matching_condition_projection_reference_wilson_fallback_count"] == 0
 
 
 def test_default_matching_condition_probe_accepts_fixture_function_indeterminates() -> None:

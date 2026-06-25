@@ -51,8 +51,12 @@ fixtures:
 ```sh
 PYTHONPATH=src dependencies/.venv/bin/python scripts/convert_matchete_previous_results.py \
   --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs \
-  --fixtures-dir assets/validation/pychete
+  --fixtures-dir assets/validation/pychete \
+  --update-model-fixture-wilson-metadata
 ```
+
+The Wilson metadata flag should be used for the default SMEFT fixtures so model
+fixtures and matching fixtures share identical theory-owned Wilson symbols.
 
 The committed fixtures under `assets/validation/pychete/` are the artifacts
 used by pychete tests and users who do not have Mathematica. These scripts are

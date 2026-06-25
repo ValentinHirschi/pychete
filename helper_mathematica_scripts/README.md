@@ -60,5 +60,11 @@ Run the converter from the repository root with the managed environment:
 source "$HOME/.bashrc"
 PYTHONPATH=src dependencies/.venv/bin/python \
   helper_mathematica_scripts/convert_matchete_previous_results.py \
-  --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs
+  --models VLF_toy_model,Singlet_Scalar_Extension,E_VLL,S1S3LQs \
+  --update-model-fixture-wilson-metadata
 ```
+
+Use `--update-model-fixture-wilson-metadata` when refreshing the committed
+default SMEFT fixtures so the paired model fixtures receive the exact
+theory-owned Wilson target metadata parsed from Matchete's matching-condition
+left-hand sides.

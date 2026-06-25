@@ -200,3 +200,7 @@ discoveries, dependency patches, blockers, and remaining work.
   reference fixtures. A selector such as `registered_wilsons` is the preferred
   user-facing path for projecting all Wilson coefficients that have stored
   operator metadata.
+- Default SMEFT model fixtures must carry the same theory-owned Wilson symbol
+  metadata as their matching fixtures. This avoids Symbolica symbol
+  redefinition conflicts and lets validation projection prefer candidate
+  theory metadata instead of reference-owned Wilson targets.
