@@ -2,6 +2,8 @@ from __future__ import annotations
 
 from .eft import operator_dimension, series_eft
 from .backends.vacuum_integrals import (
+    canonize_loop_function,
+    canonize_loop_functions,
     evaluate_loop_functions,
     evaluate_one_loop_single_scale_vakint_expression,
     evaluate_one_loop_single_scale_vacuum_integral,
@@ -102,6 +104,8 @@ __all__ = [
     "Theory",
     "VakintIntegralStage",
     "canonical_string",
+    "canonize_loop_function",
+    "canonize_loop_functions",
     "collect_indices",
     "display_string",
     "dummy_indices",

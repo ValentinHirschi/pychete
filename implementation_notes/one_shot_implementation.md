@@ -4033,6 +4033,59 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 239 passed, 1
     skipped in 249.89s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added explicit Matchete-style loop-function atom canonicalization:
+  - exposed `canonize_loop_function(...)` and
+    `canonize_loop_functions(...)` through `pychete.api` and the package root;
+  - the canonicalizer uses Symbolica wildcard replacement over
+    `s.LoopFunction(...)` atoms, combines repeated masses by summing their
+    massive propagator powers, removes zero massive powers, orders remaining
+    masses by descending propagator power and canonical mass name, preserves
+    the final massless propagator power, and turns purely scaleless massless
+    remnants into zero;
+  - `evaluate_loop_functions(...)` now canonicalizes each matched loop
+    function atom before lowering/evaluation, so noncanonical parser or user
+    input still flows through the existing pychete analytic one-loop evaluator;
+  - `loop_function_to_vakint_integral(...)` intentionally keeps direct
+    lowering semantics and does not reorder the caller's propagator slots;
+  - the supported-subset Matchete expression parser now routes `LF[...]`
+    through `loop_function(...)` plus `canonize_loop_function(...)`, matching
+    Matchete's local `LF` behavior for duplicate masses while keeping pytest
+    independent of Mathematica;
+  - checked the committed default matching fixtures under
+    `assets/validation/pychete/*.matching_fixture.json`; applying
+    `canonize_loop_functions(...)` changes zero stored expressions, so no
+    fixture regeneration was needed for this slice;
+  - checked Symbolica's Python stub for `Expression.match`,
+    `Expression.replace`, callable replacement right-hand sides, and
+    `replace_wildcards` before implementation. The expression-wide
+    canonicalizer delegates matching/replacement to Symbolica rather than
+    walking arbitrary expression trees in Python.
+- Verification for the loop-function atom canonicalization slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_canonize_loop_function_combines_duplicate_masses_and_orders_powers
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_canonize_loop_functions_replaces_all_atoms_with_symbolica_matcher
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_canonize_loop_function_sets_scaleless_massless_remnants_to_zero
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_evaluate_loop_functions_accepts_noncanonical_loop_function_atoms
+    tests/unit/loaders/test_mathematica_result_parser.py -q'` passed: 6
+    passed in 0.05s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py -q'` passed: 23
+    passed in 3.10s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_mathematica_result_parser.py
+    tests/unit/definitions/test_public_api.py -q'` passed: 6 passed in
+    0.03s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 243 passed, 1
+    skipped in 251.11s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

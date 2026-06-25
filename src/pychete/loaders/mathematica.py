@@ -26,6 +26,7 @@ from typing import TypeAlias
 from symbolica import Expression
 from symbolica.core import AtomType, ParseMode
 
+from ..backends.vacuum_integrals import canonize_loop_function, loop_function
 from ..expr import args, as_int, list_expr, product_expr, sum_expr
 from ..symbols import SymbolRole, safe_symbol_name, s
 from ..theory import Theory
@@ -666,9 +667,11 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
         if name == "LF":
             if len(expr) != 2:
                 raise NotImplementedError(f"Unsupported LF expression: {expr.format_plain()}")
-            return s.LoopFunction(
-                list_expr(*_matchete_list_items(expr[0], theory, env)),
-                list_expr(*_matchete_list_items(expr[1], theory, env)),
+            return canonize_loop_function(
+                loop_function(
+                    _matchete_list_items(expr[0], theory, env),
+                    _matchete_list_items(expr[1], theory, env),
+                )
             )
         if name == "log":
             if len(expr) != 1:

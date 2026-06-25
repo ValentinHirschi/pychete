@@ -1,12 +1,13 @@
 from __future__ import annotations
 
+from collections.abc import Iterable
 from math import factorial
 from typing import TypeAlias
 
 from symbolica import Expression, Replacement, S
 
 from ..expr import as_int, is_head, list_expr, list_items, pow_parts, product_expr, sum_expr
-from ..symbols import s
+from ..symbols import canonical_string, s
 from . import vakint
 
 LoopFunctionPower: TypeAlias = Expression | int
@@ -42,6 +43,49 @@ def loop_function(masses: tuple[Expression, ...], powers: tuple[LoopFunctionPowe
     power_exprs = tuple(_power_expression(power) for power in powers)
     _validate_loop_function_lengths(masses, power_exprs)
     return s.LoopFunction(list_expr(*masses), list_expr(*power_exprs))
+
+
+def canonize_loop_function(expr: Expression) -> Expression:
+    """Canonize one pychete ``LoopFunction`` atom.
+
+    This mirrors Matchete's local ``LF`` atom normalization: repeated masses
+    have their massive propagator powers summed, zero massive powers are
+    removed, and remaining massive propagators are ordered by descending power
+    and then by canonical mass name. The final massless ``1/k^2`` power is
+    preserved. Purely scaleless massless remnants canonize to zero.
+    """
+
+    masses, powers = _loop_function_data(expr)
+    alpha = powers[-1]
+    mass_powers = _canonized_mass_powers(zip(masses, powers[:-1], strict=True))
+    if not mass_powers:
+        return Expression.num(0)
+    return loop_function(
+        tuple(mass for mass, _power in mass_powers),
+        (*tuple(power for _mass, power in mass_powers), alpha),
+    )
+
+
+def canonize_loop_functions(expr: Expression, *, combine_terms: bool = False) -> Expression:
+    """Canonize all pychete ``LoopFunction`` atoms in an expression.
+
+    Replacement is delegated to Symbolica's native wildcard matcher. When
+    ``combine_terms`` is set, the resulting expression is passed through
+    ``Expression.together()`` so rational coefficients multiplying canonized
+    loop functions can combine deterministically.
+    """
+
+    pattern = _loop_function_pattern()
+    for match in expr.match(pattern):
+        _loop_function_data(pattern.replace_wildcards(match))
+
+    def canonize_match(match: dict[Expression, Expression]) -> Expression:
+        return canonize_loop_function(pattern.replace_wildcards(match))
+
+    return _finish_evaluated_expression(
+        expr.replace(pattern, canonize_match).expand(),
+        combine_terms=combine_terms,
+    )
 
 
 def loop_function_to_vakint_integral(expr: Expression) -> Expression:
@@ -85,7 +129,9 @@ def evaluate_loop_functions(
         _loop_function_data(pattern.replace_wildcards(match))
 
     def evaluate_loop_function(match: dict[Expression, Expression]) -> Expression:
-        loop_expr = pattern.replace_wildcards(match)
+        loop_expr = canonize_loop_function(pattern.replace_wildcards(match))
+        if bool(loop_expr == Expression.num(0)):
+            return Expression.num(0)
         integral = loop_function_to_vakint_integral(loop_expr)
         evaluated = evaluate_one_loop_vakint_expression(
             integral,
@@ -263,6 +309,27 @@ def _loop_function_data(expr: Expression) -> tuple[tuple[Expression, ...], tuple
         if power < 0:
             raise ValueError("LoopFunction massive propagator powers must be nonnegative integers")
     return masses, tuple(powers)
+
+
+def _canonized_mass_powers(
+    items: Iterable[tuple[Expression, int]],
+) -> tuple[tuple[Expression, int], ...]:
+    combined: list[tuple[Expression, int]] = []
+    for mass, power in items:
+        if power == 0:
+            continue
+        for index, (existing_mass, existing_power) in enumerate(combined):
+            if bool(mass == existing_mass):
+                combined[index] = (existing_mass, existing_power + power)
+                break
+        else:
+            combined.append((mass, power))
+    return tuple(
+        sorted(
+            combined,
+            key=lambda item: (-item[1], canonical_string(item[0])),
+        )
+    )
 
 
 def _validate_loop_function_lengths(
@@ -478,6 +545,8 @@ def _propagator_power_pattern() -> Expression:
 
 
 __all__ = [
+    "canonize_loop_function",
+    "canonize_loop_functions",
     "epsilon_symbol",
     "evaluate_loop_functions",
     "evaluate_one_loop_single_scale_vakint_expression",

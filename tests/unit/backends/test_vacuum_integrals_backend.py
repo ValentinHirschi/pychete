@@ -32,6 +32,55 @@ def test_loop_function_placeholder_lowers_to_vakint_topology() -> None:
     assert_expr_equal(vacuum_integrals.loop_function_to_vakint_integral(loop_function), expected)
 
 
+def test_canonize_loop_function_combines_duplicate_masses_and_orders_powers() -> None:
+    m1 = S("M1")
+    m2 = S("M2")
+    dropped = S("Mdropped")
+    loop_function = s.LoopFunction(
+        s.List(m2, m1, m2, dropped),
+        s.List(Expression.num(1), Expression.num(3), Expression.num(2), Expression.num(0), Expression.num(-1)),
+    )
+    expected = vacuum_integrals.loop_function((m1, m2), (3, 3, -1))
+
+    assert_expr_equal(vacuum_integrals.canonize_loop_function(loop_function), expected)
+
+
+def test_canonize_loop_functions_replaces_all_atoms_with_symbolica_matcher() -> None:
+    m1 = S("M1")
+    m2 = S("M2")
+    coefficient = S("coeff")
+    expression = coefficient * s.LoopFunction(
+        s.List(m2, m1, m2),
+        s.List(Expression.num(1), Expression.num(2), Expression.num(3), Expression.num(0)),
+    )
+    expected = coefficient * vacuum_integrals.loop_function((m2, m1), (4, 2, 0))
+
+    assert_expr_equal(vacuum_integrals.canonize_loop_functions(expression), expected)
+
+
+def test_canonize_loop_function_sets_scaleless_massless_remnants_to_zero() -> None:
+    mass = S("M")
+    loop_function = s.LoopFunction(s.List(mass), s.List(Expression.num(0), Expression.num(2)))
+
+    assert_expr_equal(vacuum_integrals.canonize_loop_function(loop_function), Expression.num(0))
+    assert_expr_equal(vacuum_integrals.canonize_loop_functions(3 * loop_function), Expression.num(0))
+
+
+def test_evaluate_loop_functions_accepts_noncanonical_loop_function_atoms() -> None:
+    m1 = S("M1")
+    m2 = S("M2")
+    loop_function = s.LoopFunction(
+        s.List(m2, m1, m2),
+        s.List(Expression.num(1), Expression.num(2), Expression.num(3), Expression.num(0)),
+    )
+    canonical_loop_function = vacuum_integrals.loop_function((m2, m1), (4, 2, 0))
+
+    assert_expr_equal(
+        vacuum_integrals.evaluate_loop_functions(loop_function),
+        vacuum_integrals.evaluate_loop_functions(canonical_loop_function),
+    )
+
+
 def test_evaluate_loop_functions_uses_internal_finite_loop_function_convention() -> None:
     m1 = S("M1")
     m2 = S("M2")

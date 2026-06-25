@@ -22,6 +22,11 @@ def test_parse_matchete_internal_heads_into_pychete_heads() -> None:
     assert canonical_string(parse_matchete_expression(r"LF[{Coupling[M, {}, 0]}, {2, -1}]", theory)) == canonical_string(
         s.LoopFunction(s.List(mass), s.List(2, -1))
     )
+    assert canonical_string(
+        parse_matchete_expression(r"LF[{Coupling[M, {}, 0], Coupling[M, {}, 0]}, {2, 3, -1}]", theory)
+    ) == canonical_string(
+        s.LoopFunction(s.List(mass), s.List(5, -1))
+    )
 
 
 def test_parse_matchete_dirac_chain_and_log_expression() -> None:
