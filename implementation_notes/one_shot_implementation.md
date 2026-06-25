@@ -3390,6 +3390,46 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 213 passed,
     1 skipped in 164.18s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added the first generic matching-condition projection API on structured
+  `MatchingResult` objects:
+  - inspected Symbolica's `Expression.coefficient(...)` stub and checked that
+    it projects literal products such as `C*O` natively before adding pychete
+    wrapper code;
+  - `MatchingResult.project_matching_conditions(...)` now extracts a
+    dictionary of condition values from any named result expression stage,
+    defaulting to `on_shell_eft_lagrangian`, using native Symbolica
+    coefficients rather than Python term walkers;
+  - `MatchingResult.with_projected_matching_conditions(...)` returns a new
+    result carrying those projected conditions, preserving or replacing
+    existing conditions according to the `merge` option and recording
+    projection metadata;
+  - iterable targets are keyed by canonical pychete strings, while mappings can
+    provide stable public condition names. `drop_zero=True` removes conditions
+    whose native coefficient is zero;
+  - this does not complete SMEFT matching-condition extraction, but it gives the
+    one-loop result pipeline a real reusable native-Symbolica coefficient
+    projection step for future SMEFT basis maps.
+- Verification for the matching-condition projection slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py tests/unit/definitions/test_public_api.py
+    -q'` passed: 12 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+- Final verification for the matching-condition projection slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py tests/unit/definitions/test_public_api.py
+    -q'` passed: 12 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 214 passed,
+    1 skipped in 163.10s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

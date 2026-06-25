@@ -1,8 +1,9 @@
 from __future__ import annotations
 
-from dataclasses import dataclass, field
+from collections.abc import Iterable, Mapping, Sequence
+from dataclasses import dataclass, field, replace
 from html import escape
-from typing import TYPE_CHECKING, Iterable, Sequence
+from typing import TYPE_CHECKING
 
 from symbolica import Expression
 
@@ -126,6 +127,63 @@ class MatchingResult:
         for name in self.expression_names():
             self.theory._validate_registered_expression(self.expression(name))
 
+    def project_matching_conditions(
+        self,
+        targets: Mapping[str, Expression] | Iterable[Expression],
+        *,
+        source: str = "on_shell_eft_lagrangian",
+        expand_source: bool = True,
+        drop_zero: bool = False,
+    ) -> dict[str, Expression]:
+        """Project matching conditions from a result expression using Symbolica coefficients.
+
+        ``targets`` may be a mapping from output condition names to target
+        monomials, or an iterable of target expressions. Iterable targets use
+        their canonical pychete string as the condition key. Coefficients are
+        extracted with native ``Expression.coefficient(...)`` so products such
+        as ``C*O`` can be projected without a Python expression walker.
+        """
+
+        expr = self.expression(source)
+        if expand_source:
+            expr = expr.expand()
+        conditions: dict[str, Expression] = {}
+        for name, target in _matching_condition_targets(targets):
+            coefficient = expr.coefficient(target).expand()
+            if drop_zero and _canonical_expr(coefficient) == "0":
+                continue
+            conditions[name] = coefficient
+        return conditions
+
+    def with_projected_matching_conditions(
+        self,
+        targets: Mapping[str, Expression] | Iterable[Expression],
+        *,
+        source: str = "on_shell_eft_lagrangian",
+        expand_source: bool = True,
+        drop_zero: bool = False,
+        merge: bool = True,
+    ) -> MatchingResult:
+        """Return a result with matching conditions projected from an expression stage."""
+
+        projected = self.project_matching_conditions(
+            targets,
+            source=source,
+            expand_source=expand_source,
+            drop_zero=drop_zero,
+        )
+        matching_conditions = {**self.matching_conditions, **projected} if merge else projected
+        return replace(
+            self,
+            matching_conditions=matching_conditions,
+            metadata={
+                **self.metadata,
+                "matching_conditions_projected": True,
+                "matching_condition_projection_source": source,
+                "matching_condition_projection_count": len(projected),
+            },
+        )
+
     def compare_to(
         self,
         reference: MatchingResult,
@@ -213,6 +271,14 @@ def _optional_expression(result: MatchingResult, name: str) -> Expression | None
         return result.expression(name)
     except KeyError:
         return None
+
+
+def _matching_condition_targets(
+    targets: Mapping[str, Expression] | Iterable[Expression],
+) -> tuple[tuple[str, Expression], ...]:
+    if isinstance(targets, Mapping):
+        return tuple((str(name), target) for name, target in targets.items())
+    return tuple((canonical_string(target), target) for target in targets)
 
 
 def _canonical_expr(expr: Expression) -> str:

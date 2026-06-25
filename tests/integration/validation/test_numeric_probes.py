@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import MatchingResult, Theory, evaluator_probe_equal
+from pychete import MatchingResult, Theory, canonical_string, evaluator_probe_equal
 from pychete.validation_fixtures import _gap_report
 
 
@@ -131,6 +131,56 @@ def test_matching_result_comparison_requires_complete_probe_inputs() -> None:
 
     with pytest.raises(ValueError, match="probe_names requires"):
         result.compare_to(result, probe_names=("on_shell_eft_lagrangian",))
+
+
+def test_matching_result_projects_conditions_with_symbolica_coefficients() -> None:
+    coefficient_a, coefficient_b, operator_a, x = S(
+        "condition_projection_a",
+        "condition_projection_b",
+        "condition_projection_operator_a",
+        "condition_projection_x",
+    )
+    theory = Theory("condition_projection")
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=(
+            3 * coefficient_a * operator_a
+            + (x + 1) * coefficient_b
+            + 7 * coefficient_a * operator_a * coefficient_b
+        ),
+        matching_conditions={"existing": x},
+    )
+
+    projected = result.project_matching_conditions(
+        {
+            "a_operator": coefficient_a * operator_a,
+            "b": coefficient_b,
+            "missing": S("condition_projection_missing"),
+        },
+        drop_zero=True,
+    )
+    updated = result.with_projected_matching_conditions(
+        {
+            "a_operator": coefficient_a * operator_a,
+            "b": coefficient_b,
+        }
+    )
+    replacement = result.with_projected_matching_conditions(
+        [coefficient_a * operator_a],
+        merge=False,
+    )
+
+    assert set(projected) == {"a_operator", "b"}
+    assert canonical_string((projected["a_operator"] - (3 + 7 * coefficient_b)).expand()) == "0"
+    assert canonical_string((projected["b"] - (x + 1 + 7 * coefficient_a * operator_a)).expand()) == "0"
+    assert set(updated.matching_conditions) == {"existing", "a_operator", "b"}
+    assert canonical_string(updated.matching_conditions["existing"]) == canonical_string(x)
+    assert updated.metadata["matching_conditions_projected"] is True
+    assert updated.metadata["matching_condition_projection_source"] == "on_shell_eft_lagrangian"
+    assert updated.metadata["matching_condition_projection_count"] == 2
+    assert tuple(replacement.matching_conditions) == (canonical_string(coefficient_a * operator_a),)
 
 
 def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:

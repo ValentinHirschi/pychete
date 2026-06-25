@@ -92,6 +92,8 @@ def test_public_api_methods_have_docstrings() -> None:
             "expression",
             "expression_names",
             "validate",
+            "project_matching_conditions",
+            "with_projected_matching_conditions",
             "compare_to",
         ],
         pychete.MatchingResultComparison: [
