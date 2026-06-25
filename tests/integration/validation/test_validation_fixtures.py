@@ -13,6 +13,7 @@ from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState
 from pychete.symbols import canonical_string
 from pychete.validation_fixtures import load_validation_fixture
+from tests.conftest import assert_expr_equal
 
 
 class FakeNamedVakintEngine:
@@ -263,6 +264,47 @@ def test_validation_fixture_preview_can_use_internal_integral_backend_without_ma
     assert "interaction_power_type_internal_integral_sum" in preview.expression_names()
     assert "interaction_power_type_internal_integral_pole_part" in preview.expression_names()
     preview.validate()
+
+
+def test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    reference_fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.matching_fixture.json"))
+    reference = reference_fixture.matching_result("matchete_previous")
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+        internal_tensor_reduce=False,
+        internal_combine_terms=True,
+    )
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="VLF_toy_model.matchete_previous",
+        max_trace_order=1,
+        integral_backend="internal_minimal_subtraction",
+        internal_tensor_reduce=False,
+        internal_combine_terms=True,
+    )
+
+    assert preview.metadata["stage"] == "interaction_power_type_internal_minimal_subtraction_result"
+    assert preview.metadata["integral_backend"] == "pychete_internal"
+    assert preview.metadata["subtraction_scheme"] == "minimal_subtraction_preview"
+    assert preview.metadata["poles_subtracted"] is True
+    assert preview.metadata["tensor_reduce"] is False
+    assert preview.metadata["combine_terms"] is True
+    assert preview.metadata["fixture"] == fixture.name
+    assert "interaction_power_type_internal_integral_ms_counterterm" in preview.expression_names()
+    assert_expr_equal(
+        preview.off_shell_eft_lagrangian,
+        preview.expression("interaction_power_type_internal_integral_finite_part"),
+    )
+    assert_expr_equal(
+        preview.on_shell_eft_lagrangian,
+        preview.expression("interaction_power_type_internal_integral_finite_part"),
+    )
+    assert report.candidate_stage == "interaction_power_type_internal_minimal_subtraction_result"
+    assert "interaction_power_type_internal_integral_ms_counterterm" in report.candidate_supertrace_names
+    assert report.reference_stage is None
 
 
 def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -> None:

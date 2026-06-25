@@ -13,6 +13,7 @@ class OneLoopIntegralBackend(StrEnum):
 
     VAKINT = "vakint"
     INTERNAL = "internal"
+    INTERNAL_MINIMAL_SUBTRACTION = "internal_minimal_subtraction"
 
     @classmethod
     def from_user(cls, value: OneLoopIntegralBackend | str) -> OneLoopIntegralBackend:
@@ -21,7 +22,10 @@ class OneLoopIntegralBackend(StrEnum):
         try:
             return cls(value)
         except ValueError as exc:
-            raise ValueError("one-loop integral backend must be 'vakint' or 'internal'") from exc
+            raise ValueError(
+                "one-loop integral backend must be 'vakint', 'internal', "
+                "or 'internal_minimal_subtraction'"
+            ) from exc
 
 
 class VakintIntegralStage(StrEnum):

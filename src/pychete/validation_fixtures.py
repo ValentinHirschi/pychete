@@ -207,6 +207,7 @@ class ValidationFixture:
         integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
         internal_tensor_reduce: bool = True,
         internal_combine_terms: bool = False,
+        internal_max_pole_order: int = 1,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
@@ -228,6 +229,15 @@ class ValidationFixture:
                 tensor_reduce=internal_tensor_reduce,
                 tensor_reduce_engine=vakint_engine,
                 combine_terms=internal_combine_terms,
+            )
+        elif selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION:
+            result = setup.interaction_power_type_internal_minimal_subtraction_result(
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
+                tensor_reduce=internal_tensor_reduce,
+                tensor_reduce_engine=vakint_engine,
+                combine_terms=internal_combine_terms,
+                max_pole_order=internal_max_pole_order,
             )
         else:
             result = setup.interaction_power_type_matching_result(
@@ -273,6 +283,7 @@ class ValidationFixture:
         integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
         internal_tensor_reduce: bool = True,
         internal_combine_terms: bool = False,
+        internal_max_pole_order: int = 1,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
@@ -292,6 +303,7 @@ class ValidationFixture:
             integral_backend=integral_backend,
             internal_tensor_reduce=internal_tensor_reduce,
             internal_combine_terms=internal_combine_terms,
+            internal_max_pole_order=internal_max_pole_order,
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,

@@ -2922,6 +2922,42 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 196 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Extended the Mathematica-independent validation fixture preview layer to
+  target the public finite MS stage:
+  - added `OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION` with the
+    user-facing selector string `"internal_minimal_subtraction"`;
+  - `ValidationFixture.one_loop_preview(...)` and
+    `one_loop_preview_gap_report(...)` can now call
+    `OneLoopSetup.interaction_power_type_internal_minimal_subtraction_result(...)`
+    while preserving the existing `vakint` and unrenormalized `internal`
+    preview paths;
+  - the fixture preview exposes the same finite-part off-shell/on-shell EFT
+    Lagrangians, internal pole diagnostics, and MS counterterm diagnostic as
+    the public `Theory.match(..., loop_order=1)` path, while remaining fully
+    Mathematica- and Matchete-independent;
+  - added validation coverage that exercises both the enum selector and the
+    user-facing string selector through preview and gap-report calls against
+    committed VLF fixtures.
+- Verification for the validation fixture MS selector so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_internal_integral_backend_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend_without_mathematica
+    -q'` passed: 2 passed.
+- Final verification for the validation fixture MS selector:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_internal_integral_backend_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend_without_mathematica
+    -q'` passed: 2 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 197 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
