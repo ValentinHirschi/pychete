@@ -256,6 +256,49 @@ def simplify_su2_field_strength_generator_bilinears(theory: Any, expr: Expressio
     return result
 
 
+def simplify_su2_u1_field_strength_generator_bilinears(theory: Any, expr: Expression) -> Expression:
+    """Canonicalize mixed SU(2)-U(1) Higgs field-strength bilinears.
+
+    The CDE source naturally emits terms proportional to
+    ``H_i Bar(H_j) T^A_{i j} W^A B``. SMEFT Warsaw metadata registers the
+    mixed field-strength operator in the ``Bar(H_i) T^A_{i j} H_j W^A B``
+    orientation. This helper rewrites the generated source orientation into
+    the registered target orientation with Symbolica replacement rules; the
+    U(1) charge and coupling factors remain in the surrounding coefficient.
+    """
+
+    result = expr
+    for su2_group in theory.groups:
+        if _su_group_size(theory, su2_group) != 2:
+            continue
+        su2_symbol = theory.symbol(su2_group, role=SymbolRole.GROUP)
+        su2_kind = GroupKind.from_user(
+            str(symbol_data(su2_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+        )
+        if su2_kind is not GroupKind.GAUGE or bool(
+            symbol_data(su2_symbol, SymbolDataKey.GROUP_ABELIAN, 0)
+        ):
+            continue
+        for u1_group in theory.groups:
+            u1_symbol = theory.symbol(u1_group, role=SymbolRole.GROUP)
+            u1_kind = GroupKind.from_user(
+                str(symbol_data(u1_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+            )
+            if u1_kind is not GroupKind.GAUGE or not bool(
+                symbol_data(u1_symbol, SymbolDataKey.GROUP_ABELIAN, 0)
+            ):
+                continue
+            result = result.replace_multiple(
+                _su2_u1_field_strength_generator_bilinear_replacements(
+                    theory,
+                    su2_group,
+                    u1_group,
+                ),
+                repeat=True,
+            ).expand()
+    return result
+
+
 def to_dots(expr: Expression) -> Expression:
     """Delegate contracted-vector dot-product conversion to idenso."""
 
@@ -1314,6 +1357,86 @@ def _su2_field_strength_generator_bilinear_replacements(
     )
 
 
+def _su2_u1_field_strength_generator_bilinear_replacements(
+    theory: Any,
+    su2_group: str,
+    u1_group: str,
+) -> tuple[Replacement, ...]:
+    su2_symbol = theory.symbol(su2_group, role=SymbolRole.GROUP)
+    u1_symbol = theory.symbol(u1_group, role=SymbolRole.GROUP)
+    su2_vector_name = symbol_data(su2_symbol, SymbolDataKey.GROUP_FIELD)
+    u1_vector_name = symbol_data(u1_symbol, SymbolDataKey.GROUP_FIELD)
+    if not isinstance(su2_vector_name, str) or su2_vector_name not in theory.fields:
+        return ()
+    if not isinstance(u1_vector_name, str) or u1_vector_name not in theory.fields:
+        return ()
+    generator_name = f"gen_{su2_group}_fund"
+    if generator_name not in theory.cg_tensors:
+        return ()
+    su2_vector_label = theory.fields[su2_vector_name].label
+    u1_vector_label = theory.fields[u1_vector_name].label
+    generator_label = theory.cg_tensors[generator_name].label
+    fund = su2_symbol(s.fund)
+    adj = su2_symbol(s.adj)
+
+    field_label = s.head(f"su2_u1_fs_gen_{su2_group}_{u1_group}_field_label_")
+    field_index_label = s.head(f"su2_u1_fs_gen_{su2_group}_{u1_group}_field_index_")
+    bar_index_label = s.head(f"su2_u1_fs_gen_{su2_group}_{u1_group}_bar_index_")
+    adjoint_label = s.head(f"su2_u1_fs_gen_{su2_group}_{u1_group}_adjoint_")
+    lorentz_indices = s.head(f"su2_u1_fs_gen_{su2_group}_{u1_group}_lorentz_")
+
+    field_index = s.Index(field_index_label, fund)
+    bar_index = s.Index(bar_index_label, fund)
+    bar_dual_index = s.Index(bar_index_label, s.Bar(fund))
+    adjoint_index = s.Index(adjoint_label, adj)
+
+    field = s.Field(field_label, s.Scalar, s.List(field_index), s.List())
+    barred_field = s.Bar(s.Field(field_label, s.Scalar, s.List(bar_index), s.List()))
+    generator = s.CG(generator_label, s.List(adjoint_index, field_index, bar_dual_index))
+    su2_strength = s.FieldStrength(su2_vector_label, lorentz_indices, s.List(adjoint_index), s.List())
+    u1_strength = s.FieldStrength(u1_vector_label, lorentz_indices, s.List(), s.List())
+    pattern = field * barred_field * generator * su2_strength * u1_strength
+
+    def project(match: dict[Expression, Expression], *, pattern: Expression = pattern) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        label = match[field_label]
+        if not _is_single_fund_scalar_field_label_with_abelian_charge(theory, label, fund, u1_symbol):
+            return matched
+        source_field_index = s.Index(match[field_index_label], fund)
+        source_field_dual_index = s.Index(match[field_index_label], s.Bar(fund))
+        source_bar_index = s.Index(match[bar_index_label], fund)
+        source_adjoint_index = s.Index(match[adjoint_label], adj)
+        canonical_field = s.Field(label, s.Scalar, s.List(source_field_index), s.List())
+        canonical_bar = s.Bar(s.Field(label, s.Scalar, s.List(source_bar_index), s.List()))
+        canonical_generator = s.CG(
+            generator_label,
+            s.List(source_adjoint_index, source_bar_index, source_field_dual_index),
+        )
+        canonical_su2_strength = s.FieldStrength(
+            su2_vector_label,
+            match[lorentz_indices],
+            s.List(source_adjoint_index),
+            s.List(),
+        )
+        canonical_u1_strength = s.FieldStrength(u1_vector_label, match[lorentz_indices], s.List(), s.List())
+        return (
+            canonical_bar
+            * canonical_generator
+            * canonical_field
+            * canonical_su2_strength
+            * canonical_u1_strength
+        ).expand()
+
+    return (
+        Replacement(
+            pattern,
+            project,
+            field_label.req_tag(SymbolRole.FIELD.value),
+            rhs_cache_size=0,
+        ),
+    )
+
+
 def _is_single_fund_scalar_field_label(theory: Any, label: Expression, fund: Expression) -> bool:
     label_key = canonical_string(label)
     for definition in theory.fields.values():
@@ -1324,6 +1447,26 @@ def _is_single_fund_scalar_field_label(theory: Any, label: Expression, fund: Exp
             and len(definition.indices) == 1
             and bool(definition.indices[0] == fund)
         )
+    return False
+
+
+def _is_single_fund_scalar_field_label_with_abelian_charge(
+    theory: Any,
+    label: Expression,
+    fund: Expression,
+    group_symbol: Expression,
+) -> bool:
+    label_key = canonical_string(label)
+    for definition in theory.fields.values():
+        if canonical_string(definition.label) != label_key:
+            continue
+        if (
+            not bool(definition.type_expr == s.Scalar)
+            or len(definition.indices) != 1
+            or not bool(definition.indices[0] == fund)
+        ):
+            return False
+        return any(is_head(charge, group_symbol) for charge in definition.charge_exprs)
     return False
 
 
@@ -1399,6 +1542,7 @@ __all__ = [
     "simplify_index_algebra",
     "simplify_metrics",
     "simplify_su2_field_strength_generator_bilinears",
+    "simplify_su2_u1_field_strength_generator_bilinears",
     "expand_pychete_ncm_powers",
     "simplify_pychete_color_algebra",
     "simplify_pychete_dirac_algebra",

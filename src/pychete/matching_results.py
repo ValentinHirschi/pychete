@@ -20,6 +20,7 @@ from .expr import (
     is_zero,
     list_items,
     matching_subexpressions,
+    product_expr,
     pow_parts,
     sum_expr,
     terms,
@@ -307,7 +308,10 @@ class MatchingResult:
                         for aliases in ibp_projection_aliases
                     )
         conditions: dict[str, Expression] = {}
-        coefficient_extractor = _ProjectionCoefficientExtractor(expr)
+        coefficient_extractor = _ProjectionCoefficientExtractor(
+            expr,
+            wildcard_index_projection=canonize_indices,
+        )
         for target, projection_expression, ibp_aliases in zip(
             structured_targets,
             projection_expressions,
@@ -681,6 +685,7 @@ class _ProjectionCoefficientExtractor:
     source: Expression
     collected_source: Expression | None = None
     factored_source: Expression | None = None
+    wildcard_index_projection: bool = True
 
     def coefficient(self, target: Expression) -> Expression:
         coefficient = self.source.coefficient(target).expand()
@@ -701,9 +706,19 @@ class _ProjectionCoefficientExtractor:
         coefficient = factored.coefficient(factored_target).expand()
         if not is_zero(coefficient):
             return coefficient
+        numeric_normalized = _numeric_factor_normalized_target(target)
+        if numeric_normalized is not None:
+            normalized_target, numeric_factor = numeric_normalized
+            coefficient = self.coefficient(normalized_target)
+            return (coefficient / numeric_factor).expand()
         normalized = _negative_power_normalized_target(target)
         if normalized is None:
-            return coefficient
+            wildcard_coefficient = (
+                _wildcard_index_projection_coefficient(self.source, target)
+                if self.wildcard_index_projection
+                else None
+            )
+            return coefficient if wildcard_coefficient is None else wildcard_coefficient
         normalized_target, denominator = normalized
         coefficient = self.coefficient(normalized_target)
         return (coefficient * denominator).expand()
@@ -717,6 +732,19 @@ class _ProjectionCoefficientExtractor:
         if self.factored_source is None:
             self.factored_source = self.source.factor()
         return self.factored_source
+
+
+def _numeric_factor_normalized_target(target: Expression) -> tuple[Expression, Expression] | None:
+    numeric_factor = Expression.num(1)
+    non_numeric_factors: list[Expression] = []
+    for factor in factors(target):
+        if factor.get_type() is AtomType.Num:
+            numeric_factor *= factor
+        else:
+            non_numeric_factors.append(factor)
+    if bool(numeric_factor == Expression.num(1)):
+        return None
+    return product_expr(non_numeric_factors), numeric_factor
 
 
 def _negative_power_normalized_target(target: Expression) -> tuple[Expression, Expression] | None:
@@ -733,6 +761,35 @@ def _negative_power_normalized_target(target: Expression) -> tuple[Expression, E
     if bool(denominator == Expression.num(1)):
         return None
     return (target * denominator).expand(), denominator
+
+
+def _wildcard_index_projection_coefficient(source: Expression, target: Expression) -> Expression | None:
+    pattern = _index_wildcard_projection_pattern(target)
+    if pattern is None:
+        return None
+    marker = Expression.symbol("pychete::matching_projection_target")
+    rewritten = source.replace(pattern, marker, rhs_cache_size=0)
+    return rewritten.coefficient(marker).expand()
+
+
+def _index_wildcard_projection_pattern(target: Expression) -> Expression | None:
+    wildcard_labels: dict[str, Expression] = {}
+    seen_indices: set[str] = set()
+    pattern = target
+    for index in matching_subexpressions(target, index_pattern()):
+        label_key = canonical_string(index[0])
+        if label_key not in wildcard_labels:
+            wildcard_labels[label_key] = s.head(f"matching_projection_index_{len(wildcard_labels)}_")
+        index_key = canonical_string(index)
+        if index_key in seen_indices:
+            continue
+        seen_indices.add(index_key)
+        pattern = pattern.replace(
+            index,
+            s.Index(wildcard_labels[label_key], index[1]),
+            allow_new_wildcards_on_rhs=True,
+        )
+    return pattern if wildcard_labels else None
 
 
 def _matching_projection_coefficient(

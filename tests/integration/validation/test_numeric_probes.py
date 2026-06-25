@@ -350,6 +350,48 @@ def test_matching_result_projects_alpha_equivalent_index_contractions() -> None:
     assert_expr_equal(uncanonized["HbarH"], Expression.num(0))
 
 
+def test_matching_result_projects_alpha_equivalent_conjugate_representation_indices() -> None:
+    coefficient = S("condition_projection_conjugate_indices_coefficient")
+    theory = Theory("condition_projection_conjugate_indices")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field(
+        "H",
+        s.Scalar,
+        indices=[fund],
+        charges=[theory.group_charge("U1Y", Expression.num(1) / Expression.num(2))],
+        self_conjugate=False,
+        mass=0,
+    )
+    target = smeft_warsaw_operator(theory, "cHWB")
+    assert target is not None
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adjoint = theory.index("A", theory.symbol("SU2L", role="group")(s.adj))
+    left = theory.index("i", fund)
+    right = theory.index("j", fund)
+    right_dual = theory.index("j", s.Bar(fund))
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    source_operator = (
+        s.Bar(higgs(left))
+        * generator(adjoint, left, right_dual)
+        * higgs(right)
+        * s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adjoint), s.List())
+        * s.FieldStrength(theory.field_handle("B").label, s.List(mu, nu), s.List(), s.List())
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    projected = result.project_matching_conditions({"cHWB": target}, expand_source=False)
+
+    assert_expr_equal(projected["cHWB"], coefficient * theory.coupling_handle("gL")() * theory.coupling_handle("gY")() / 2)
+
+
 def test_matching_result_truncates_projected_coefficients_target_locally() -> None:
     x = S("condition_projection_local_eft_x")
     theory = Theory("condition_projection_local_eft")
@@ -430,6 +472,23 @@ def test_matching_result_projects_negative_power_normalized_wilson_targets() -> 
     projected = result.project_matching_conditions([target])
 
     assert_expr_equal(projected[canonical_string(target)], x * coupling() ** 4)
+
+
+def test_matching_result_projects_numeric_prefactor_normalized_targets() -> None:
+    x = S("condition_projection_numeric_prefactor_x")
+    theory = Theory("condition_projection_numeric_prefactor")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    operator = s.Bar(phi()) * phi()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=x * operator,
+    )
+
+    projected = result.project_matching_conditions({"twice_phi": 2 * operator})
+
+    assert_expr_equal(projected["twice_phi"], x / 2)
 
 
 def test_matching_result_projection_normalizes_cd_targets_to_derivative_slots() -> None:

@@ -5587,19 +5587,27 @@ def _decode_result_native_color_wrappers(theory: Theory, result: MatchingResult)
 
     decoded_off_shell = idenso_backend.decode_native_color_wrappers(theory, result.off_shell_eft_lagrangian)
     decoded_off_shell = idenso_backend.simplify_su2_field_strength_generator_bilinears(theory, decoded_off_shell)
+    decoded_off_shell = idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(theory, decoded_off_shell)
     decoded_on_shell = idenso_backend.decode_native_color_wrappers(theory, result.on_shell_eft_lagrangian)
     decoded_on_shell = idenso_backend.simplify_su2_field_strength_generator_bilinears(theory, decoded_on_shell)
+    decoded_on_shell = idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(theory, decoded_on_shell)
     decoded_matching_conditions = {
-        name: idenso_backend.simplify_su2_field_strength_generator_bilinears(
+        name: idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(
             theory,
-            idenso_backend.decode_native_color_wrappers(theory, expression),
+            idenso_backend.simplify_su2_field_strength_generator_bilinears(
+                theory,
+                idenso_backend.decode_native_color_wrappers(theory, expression),
+            ),
         )
         for name, expression in result.matching_conditions.items()
     }
     decoded_supertraces = {
-        name: idenso_backend.simplify_su2_field_strength_generator_bilinears(
+        name: idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(
             theory,
-            idenso_backend.decode_native_color_wrappers(theory, expression),
+            idenso_backend.simplify_su2_field_strength_generator_bilinears(
+                theory,
+                idenso_backend.decode_native_color_wrappers(theory, expression),
+            ),
         )
         for name, expression in result.supertraces.items()
     }
@@ -5613,6 +5621,7 @@ def _decode_result_native_color_wrappers(theory: Theory, result: MatchingResult)
             **result.metadata,
             "native_color_wrappers_decoded": True,
             "su2_field_strength_generator_bilinears_simplified": True,
+            "su2_u1_field_strength_generator_bilinears_simplified": True,
         },
     )
 

@@ -314,6 +314,45 @@
     passed.
   - `git diff --check` passed.
 
+## Current Mixed SU(2)-U(1) Field-Strength Projection Slice
+
+- Probed the next gauge/Higgs CDE frontier by adding U(1) hypercharge to the
+  small heavy-scalar/Higgs/SU(2) order-4 CDE smoke model. The existing source
+  already projected nonzero `cHB` once the Higgs carried `Y=1/2`, but `cHWB`
+  remained zero even though mixed `B_{\mu\nu} W^A_{\mu\nu}` structures and
+  registered SU(2) generator CG tensors were present.
+- Added
+  `pychete.backends.idenso.simplify_su2_u1_field_strength_generator_bilinears(...)`.
+  It uses Symbolica replacement rules over theory-owned field, group, and CG
+  metadata to rewrite generated `H_i Bar(H_j) T^A_{i j} W^A B` CDE source
+  structures into the registered Warsaw mixed-field-strength orientation. The
+  U(1) charge, `gY`, and `gL` remain in the ordinary symbolic coefficient; the
+  helper is only an index-orientation normalization and not a Wilson-specific
+  coefficient rule.
+- Wired the mixed helper into the same opt-in native-colour cleanup path as
+  the SU(2) singlet helper. Public result metadata now records
+  `su2_u1_field_strength_generator_bilinears_simplified` when that path is
+  active.
+- Extended `MatchingResult` coefficient extraction in two generic ways:
+  numeric prefactors in target monomials are factored out before projection,
+  and the final indexed-target fallback builds a Symbolica wildcard pattern for
+  target index labels before replacing matched monomials by a temporary marker
+  and extracting its coefficient. This covers conjugate-representation label
+  pairs such as the `cHWB` generator slot without a Python tree matcher.
+- Updated the order-4 public CDE regression to include both `SU2L` and `U1Y`,
+  register `cHW`, `cHB`, and `cHWB`, and assert all three projected Wilson
+  conditions are nonzero.
+- Validation for this slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_numeric_prefactor_normalized_targets tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_alpha_equivalent_conjugate_representation_indices tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_canonicalizes_mixed_su2_u1_field_strength_generator_bilinear tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_decodes_order_four_covariant_derivatives -q'`
+    passed with 4 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 64 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "order_four_covariant_derivatives or metric_traced_field_strengths or vakint_tensors" -q'`
+    passed with 3 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -327,21 +366,21 @@
     Wilson targets accepted.
 - Raising the Singlet trace order from 1 to 3 and enabling opt-in Abelian
   covariant-derivative expansion did not move the frontier.
-- Focused order-4 CDE now produces a nonzero projected `cHW` coefficient for
-  the small heavy-scalar/Higgs/SU(2) regression. The default fixture frontier
-  above has not yet been rerun after this slice; rerun targeted fixture probes
-  after the next feature slice materially changes basis/on-shell reduction or
-  generated sources.
+- Focused order-4 CDE now produces nonzero projected `cHW`, `cHB`, and `cHWB`
+  coefficients for the small heavy-scalar/Higgs/SU(2)xU(1) regression. The
+  default fixture frontier above has not yet been rerun after this slice;
+  rerun targeted fixture probes after the next feature slice materially changes
+  basis/on-shell reduction or generated sources.
 
 ## Current Remaining Work
 
 - Continue the CDE/basis-reduction feature family from the new hybrid source:
   use the cyclic derivative/field-strength CDE output together with the
   interaction-power remainder, then add the needed EOM/IBP/Warsaw-basis
-  reductions for remaining gauge/Higgs Wilson structures such as `cHB`,
-  `cHWB`, `cHBox`, `cHD`, and fermionic Higgs-current coefficients. `cHW` now
-  has a focused nonzero order-4 CDE projection, but default fixture parity has
-  not yet been remeasured.
+  reductions for remaining gauge/Higgs Wilson structures such as `cHBox`,
+  `cHD`, `cH`, and fermionic Higgs-current coefficients. `cHW`, `cHB`, and
+  `cHWB` now have focused nonzero order-4 CDE projections, but default fixture
+  parity has not yet been remeasured.
 - Extend idenso/spenso-backed group algebra beyond the current simple
   generator, Fierz, metric, structure-constant, and native generator-chain
   decode cases as fixture probes expose missing contractions.

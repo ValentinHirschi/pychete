@@ -2018,17 +2018,29 @@ def test_public_bosonic_cde_simplifies_metric_traced_field_strengths() -> None:
 def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
     theory = Theory("one_loop_setup_bosonic_cde_decode_order_four_cd")
     theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
     fund = theory.define_representation("SU2L", "fund")
     heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
-    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    higgs = theory.define_field(
+        "H",
+        s.Scalar,
+        indices=[fund],
+        charges=[theory.group_charge("U1Y", Expression.num(1) / Expression.num(2))],
+        self_conjugate=False,
+        mass=0,
+    )
     vector = theory.field_handle("W")
     kappa = theory.define_coupling("kappa", self_conjugate=True)
-    define_smeft_wilson_coefficient(theory, "cHW")
+    wilson_handles = {
+        name: define_smeft_wilson_coefficient(theory, name)
+        for name in ("cHW", "cHB", "cHWB")
+    }
     i = theory.dummy_index(1, fund)
     lagrangian = (
         theory.free_lag(heavy)
         + theory.free_lag(higgs)
         + theory.free_lag(vector)
+        + theory.free_lag(theory.field_handle("B"))
         - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
     )
     result = theory.match(
@@ -2058,6 +2070,7 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
     assert result.metadata["field_strength_metric_simplified"] is True
     assert result.metadata["native_color_wrappers_decoded"] is True
     assert result.metadata["su2_field_strength_generator_bilinears_simplified"] is True
+    assert result.metadata["su2_u1_field_strength_generator_bilinears_simplified"] is True
     assert result.metadata["matching_conditions_projected"] is True
     assert "vakint::CD" not in rendered
     assert "vakint::List" not in rendered
@@ -2065,8 +2078,13 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
     assert "spenso::" not in rendered
     assert "pychete::CD" in rendered
     assert "pychete::FieldStrength" in rendered
-    assert len(result.matching_conditions) == 1
-    assert not bool(next(iter(result.matching_conditions.values())).expand() == Expression.num(0))
+    expected_targets = {
+        name: canonical_string(s.Coupling(handle.label, s.List(), Expression.num(0)))
+        for name, handle in wilson_handles.items()
+    }
+    assert set(result.matching_conditions) == set(expected_targets.values())
+    for target in expected_targets.values():
+        assert not bool(result.matching_conditions[target].expand() == Expression.num(0))
 
 
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:

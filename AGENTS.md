@@ -271,6 +271,18 @@ to project symmetric `Bar(H_j) H_i T^A_{i k} T^B_{k j} W^A W^B` structures to
 the singlet `Bar(H_i) H_i W^A W^A`. The singlet coefficient must be computed
 from an idenso-simplified generator trace and applied with Symbolica
 replacement rules; do not add Wilson-specific projection hacks for `cHW`.
+For mixed SU(2)-U(1) Higgs/gauge CDE structures, use
+`pychete.backends.idenso.simplify_su2_u1_field_strength_generator_bilinears(...)`
+to canonicalize `H_i Bar(H_j) T^A_{i j} W^A B` source terms into the registered
+Warsaw `cHWB` orientation. The U(1) charge and gauge couplings must remain in
+the surrounding Symbolica coefficient; the helper is only an index-orientation
+normalization over registered theory metadata.
+When projecting indexed targets with conjugate-representation label pairs, use
+the `MatchingResult` projection path rather than direct ad hoc coefficient
+calls. Its final fallback builds a Symbolica pattern by replacing target index
+labels with linked wildcards and then extracts the temporary marker
+coefficient natively, which covers CG targets such as `cHWB` where
+`Index(label, rep)` and `Index(label, Bar(rep))` must alpha-match together.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
