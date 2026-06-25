@@ -3030,6 +3030,37 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 199 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Added selective evaluator-probe targeting for validation comparisons:
+  - `MatchingResult.compare_to(...)` now accepts `probe_names`, allowing
+    numeric probes to be restricted to selected compared expressions while all
+    expressions still receive canonical equality checks;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` forwards
+    `probe_supertrace_names` to that comparison layer, so concrete Matchete
+    fixture reports can probe only supertraces with suitable deterministic
+    sample points instead of trying to evaluate every shared symbolic object;
+  - added tests showing that one canonical-different trigonometric identity is
+    accepted by Symbolica's evaluator probe while a second canonical-different
+    identity remains unprobed and reported as canonical-only different;
+  - this keeps the validation policy honest: canonical equality remains the
+    primary metric, and numeric probes are an explicit, per-expression fallback.
+- Verification for the selective evaluator-probe targeting slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed:
+    7 passed.
+- Final verification for the selective evaluator-probe targeting slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed:
+    7 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 200 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -3085,9 +3116,10 @@ discoveries, dependency patches, blockers, and remaining work.
   new spenso/idenso adapter layer.
 - Expand the converter/fixture path to additional mappable Matchete validation
   assets beyond the default matching targets.
-- Apply the new evaluator-probe gap-report plumbing to concrete Matchete
-  fixture comparisons once suitable deterministic sample points are available
-  for each model's free parameters and singularity constraints.
+- Apply the selective evaluator-probe gap-report plumbing to concrete Matchete
+  fixture comparisons once suitable deterministic sample points and per-name
+  probe eligibility are available for each model's free parameters and
+  singularity constraints.
 - Extend field metadata further for representation reality and SMEFT basis data.
 - Extend theory metadata further for representation reality, CG tensors, and
   SMEFT basis data.

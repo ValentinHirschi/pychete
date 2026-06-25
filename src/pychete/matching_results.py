@@ -133,6 +133,7 @@ class MatchingResult:
         names: Iterable[str] | None = None,
         probe_parameters: Sequence[Expression] | None = None,
         probe_samples: Sequence[Sequence[NumericValue]] | None = None,
+        probe_names: Iterable[str] | None = None,
         absolute_tolerance: float = 1e-9,
         relative_tolerance: float = 1e-9,
     ) -> MatchingResultComparison:
@@ -141,17 +142,21 @@ class MatchingResult:
         Canonical Symbolica equality is the primary comparison. If
         ``probe_parameters`` and ``probe_samples`` are provided, expressions
         that are not canonically equal are additionally tested with
-        Symbolica's evaluator-backed numeric probes.
+        Symbolica's evaluator-backed numeric probes. ``probe_names`` can
+        restrict the probe fallback to a subset of compared names.
         """
 
         if self.theory.name != reference.theory.name:
             raise ValueError(f"Cannot compare matching results from {self.theory.name!r} and {reference.theory.name!r}")
         if (probe_parameters is None) != (probe_samples is None):
             raise ValueError("probe_parameters and probe_samples must be provided together")
+        if probe_names is not None and probe_parameters is None:
+            raise ValueError("probe_names requires probe_parameters and probe_samples")
         if names is None:
             comparison_names = tuple(dict.fromkeys((*self.expression_names(), *reference.expression_names())))
         else:
             comparison_names = tuple(names)
+        probed_names = set(comparison_names) if probe_names is None else set(probe_names)
         comparisons: list[MatchingExpressionComparison] = []
         for name in comparison_names:
             candidate_expr = _optional_expression(self, name)
@@ -169,6 +174,7 @@ class MatchingResult:
                 and reference_expr is not None
                 and probe_parameters is not None
                 and probe_samples is not None
+                and name in probed_names
             ):
                 numeric_probe = evaluator_probe_equal(
                     candidate_expr,

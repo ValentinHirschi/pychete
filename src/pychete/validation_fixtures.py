@@ -306,6 +306,7 @@ class ValidationFixture:
         internal_max_pole_order: int = 1,
         probe_parameters: Sequence[Expression] | None = None,
         probe_samples: Sequence[Sequence[NumericValue]] | None = None,
+        probe_supertrace_names: Iterable[str] | None = None,
         probe_absolute_tolerance: float = 1e-9,
         probe_relative_tolerance: float = 1e-9,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
@@ -339,6 +340,7 @@ class ValidationFixture:
             reference,
             probe_parameters=probe_parameters,
             probe_samples=probe_samples,
+            probe_supertrace_names=probe_supertrace_names,
             probe_absolute_tolerance=probe_absolute_tolerance,
             probe_relative_tolerance=probe_relative_tolerance,
         )
@@ -410,6 +412,7 @@ def _gap_report(
     *,
     probe_parameters: Sequence[Expression] | None = None,
     probe_samples: Sequence[Sequence[NumericValue]] | None = None,
+    probe_supertrace_names: Iterable[str] | None = None,
     probe_absolute_tolerance: float = 1e-9,
     probe_relative_tolerance: float = 1e-9,
 ) -> MatchingFixtureGapReport:
@@ -421,6 +424,7 @@ def _gap_report(
         names=_sorted_names(common_supertraces),
         probe_parameters=probe_parameters,
         probe_samples=probe_samples,
+        probe_names=probe_supertrace_names,
         absolute_tolerance=probe_absolute_tolerance,
         relative_tolerance=probe_relative_tolerance,
     )

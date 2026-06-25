@@ -75,6 +75,48 @@ def test_matching_result_comparison_can_use_evaluator_probe_fallback() -> None:
     assert expression.numeric_probe.equal is True
 
 
+def test_matching_result_comparison_can_restrict_evaluator_probe_names() -> None:
+    x = S("comparison_probe_selected_x")
+    theory = Theory("comparison_probe_selected")
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            "selected": x.sin() ** 2 + x.cos() ** 2,
+            "unselected": x.sin() ** 2 + x.cos() ** 2 + x,
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            "selected": Expression.num(1),
+            "unselected": x + 1,
+        },
+    )
+
+    comparison = candidate.compare_to(
+        reference,
+        names=("selected", "unselected"),
+        probe_parameters=[x],
+        probe_samples=[[0.0], [0.7]],
+        probe_names=("selected",),
+    )
+
+    selected, unselected = comparison.expressions
+    assert selected.equal is True
+    assert selected.numeric_probe is not None
+    assert selected.numeric_probe.equal is True
+    assert selected.canonical_equal is False
+    assert unselected.equal is False
+    assert unselected.canonical_equal is False
+    assert unselected.numeric_probe is None
+
+
 def test_matching_result_comparison_requires_complete_probe_inputs() -> None:
     theory = Theory("comparison_probe_input")
     result = MatchingResult(
@@ -87,6 +129,9 @@ def test_matching_result_comparison_requires_complete_probe_inputs() -> None:
     with pytest.raises(ValueError, match="provided together"):
         result.compare_to(result, probe_parameters=[])
 
+    with pytest.raises(ValueError, match="probe_names requires"):
+        result.compare_to(result, probe_names=("on_shell_eft_lagrangian",))
+
 
 def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     x = S("fixture_gap_probe_x")
@@ -96,14 +141,20 @@ def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
         uv_lagrangian=Expression.num(0),
         off_shell_eft_lagrangian=Expression.num(0),
         on_shell_eft_lagrangian=Expression.num(0),
-        supertraces={"probe": x.sin() ** 2 + x.cos() ** 2},
+        supertraces={
+            "probe": x.sin() ** 2 + x.cos() ** 2,
+            "unprobed": x.sin() ** 2 + x.cos() ** 2 + x,
+        },
     )
     reference = MatchingResult(
         theory=theory,
         uv_lagrangian=Expression.num(0),
         off_shell_eft_lagrangian=Expression.num(0),
         on_shell_eft_lagrangian=Expression.num(0),
-        supertraces={"probe": Expression.num(1)},
+        supertraces={
+            "probe": Expression.num(1),
+            "unprobed": x + 1,
+        },
     )
 
     report = _gap_report(
@@ -113,12 +164,13 @@ def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
         reference,
         probe_parameters=[x],
         probe_samples=[[0.0], [0.7], [1.3]],
+        probe_supertrace_names=("probe",),
     )
     report_obj = report.to_json_obj()
 
-    assert report.common_supertrace_names == ("probe",)
+    assert report.common_supertrace_names == ("probe", "unprobed")
     assert report.canonical_equal_common_supertrace_names == ()
-    assert report.canonical_different_common_supertrace_names == ("probe",)
+    assert report.canonical_different_common_supertrace_names == ("probe", "unprobed")
     assert report.numeric_probe_equal_common_supertrace_names == ("probe",)
     assert report.numeric_probe_different_common_supertrace_names == ()
     assert report.numeric_probe_equal_common_supertrace_count == 1
