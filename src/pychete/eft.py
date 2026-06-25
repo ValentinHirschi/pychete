@@ -21,6 +21,7 @@ from .expr import (
     list_items,
     sum_expr,
 )
+from .linear_external import linear_external_function_heads
 from .symbols import SymbolRole, canonical_string, s
 from .theory import Theory
 from .theory_metadata import FieldMassKind, field_mass_kind_from_label
@@ -127,7 +128,55 @@ def _eft_weighted_expression(
     heavy_field_dimension: bool,
 ) -> Expression:
     weighted = expr.replace_multiple(_eft_weight_replacements(theory, heavy_field_dimension=heavy_field_dimension))
+    weighted = _extract_linear_external_eft_markers(weighted)
     return _extract_ncm_eft_markers(weighted).expand()
+
+
+def _extract_linear_external_eft_markers(expr: Expression) -> Expression:
+    replacements = _linear_external_eft_marker_replacements(expr)
+    if not replacements:
+        return expr
+    out = expr
+    for _ in range(8):
+        updated = out.replace_multiple(replacements)
+        if bool(updated == out):
+            return updated
+        out = updated.expand()
+    return out
+
+
+def _linear_external_eft_marker_replacements(expr: Expression) -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for index, head in enumerate(linear_external_function_heads(expr)):
+        body_wildcard = s.head(f"eft_linear_external_body_{index}_")
+        pattern = head(body_wildcard)
+        replacements.append(
+            Replacement(
+                pattern,
+                _linear_external_eft_marker_replacement(pattern, body_wildcard),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _linear_external_eft_marker_replacement(
+    pattern: Expression,
+    body_wildcard: Expression,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_function(match: dict[Expression, Expression]) -> Expression:
+        terms = _marker_terms(match[body_wildcard])
+        if len(terms) == 1 and terms[0][0] == 0:
+            return pattern.replace_wildcards(match)
+        expanded_terms = []
+        for marker_power, coefficient in terms:
+            if is_zero(coefficient):
+                continue
+            function_call = pattern.replace_wildcards({body_wildcard: coefficient})
+            expanded_terms.append((_marker_power(marker_power) * function_call).expand())
+        return sum_expr(expanded_terms).expand()
+
+    return replace_function
 
 
 def _extract_ncm_eft_markers(expr: Expression) -> Expression:

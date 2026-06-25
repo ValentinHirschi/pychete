@@ -57,6 +57,21 @@ def test_series_eft_extracts_marker_powers_from_noncommutative_chains() -> None:
     assert "eft_order_parameter" not in canonical_string(series_eft(expr, theory, eft_order=6))
 
 
+def test_series_eft_extracts_marker_powers_from_linear_external_wrappers_in_chains() -> None:
+    theory = Theory("eft_ncm_transp")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    psi = theory.define_field("psi", s.Fermion, self_conjugate=False, mass=0)
+    transpose = theory.define_external("Transp")
+    chain = phi() * s.NCM(transpose(psi()), s.PR, psi())
+    higher = phi() ** 4 * s.NCM(transpose(psi()), s.PL, psi())
+    expr = chain + higher
+
+    assert_expr_equal(series_eft(expr, theory, eft_order=3), Expression.num(0))
+    assert_expr_equal(series_eft(expr, theory, eft_order=4), chain)
+    assert_expr_equal(series_eft(expr, theory, eft_order=(4,)), chain)
+    assert "eft_order_parameter" not in canonical_string(series_eft(expr, theory, eft_order=6))
+
+
 def test_operator_dimension_uses_pattern_weighted_atoms() -> None:
     theory = Theory("eft_weighted_atoms")
     heavy = theory.define_field("heavy", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

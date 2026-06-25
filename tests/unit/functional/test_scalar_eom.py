@@ -4,6 +4,8 @@ from symbolica import Expression, S
 
 from pychete import FieldMassKind, Theory, s
 from pychete.functional import apply_cd, partial_functional_derivative
+from pychete.symbols import canonical_string
+from pychete.theory_metadata import EXTERNAL_LINEAR_FUNCTION_TAG
 
 from tests.conftest import assert_expr_equal
 
@@ -101,3 +103,33 @@ def test_functional_derivative_bar_protector_requires_field_tag() -> None:
     lagrangian = untagged_bar * phi()
 
     assert_expr_equal(partial_functional_derivative(lagrangian, phi()), untagged_bar)
+
+
+def test_functional_derivative_linearizes_tagged_external_transpose_wrapper() -> None:
+    theory = Theory("fd_external_transp")
+    psi = theory.define_field("psi", s.Fermion, mass=0)
+    transpose = theory.define_external("Transp")
+    lagrangian = s.NCM(transpose(psi()), s.PR, psi())
+
+    derivative = partial_functional_derivative(lagrangian, psi())
+
+    assert any(tag.split("::")[-1] == EXTERNAL_LINEAR_FUNCTION_TAG for tag in transpose.label.get_tags())
+    assert "der(" not in canonical_string(derivative)
+    assert "functional_variation_parameter" not in canonical_string(derivative)
+    assert_expr_equal(
+        derivative,
+        s.NCM(transpose(psi()), s.PR) + s.NCM(transpose(Expression.num(1)), s.PR, psi()),
+    )
+
+
+def test_apply_cd_linearizes_tagged_external_transpose_wrapper() -> None:
+    theory = Theory("cd_external_transp")
+    psi = theory.define_field("psi", s.Fermion, mass=0)
+    transpose = theory.define_external("Transp")
+    mu = theory.lorentz_index("mu")
+
+    derivative = apply_cd([mu], transpose(psi()))
+
+    assert "der(" not in canonical_string(derivative)
+    assert "cd_variation_parameter" not in canonical_string(derivative)
+    assert_expr_equal(derivative, transpose(psi(derivatives=[mu])))

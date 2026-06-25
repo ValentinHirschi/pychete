@@ -284,6 +284,11 @@ def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathe
         assert preview.metadata["named_supertrace_stage"] == "raw"
         assert preview.metadata["tensor_networks_evaluated"] is False
         assert len(preview.supertraces) == counts["supertraces"]
+        if model == "S1S3LQs":
+            for trace_name in ("hScalar-lFermion-lScalar", "hScalar-lScalar-lFermion"):
+                trace_text = canonical_string(preview.expression(trace_name))
+                assert "pychete::eft_order_parameter" not in trace_text
+                assert "der(" not in trace_text
         preview.validate()
 
 

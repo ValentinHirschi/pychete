@@ -23,6 +23,7 @@ from .expr import (
     sum_expr,
     terms,
 )
+from .linear_external import linear_external_function_heads
 from .symbols import SymbolRole, canonical_string, s
 from .theory import Theory
 from .theory_metadata import (
@@ -46,7 +47,7 @@ def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expressio
 
 def _single_cd(index: Expression, expr: Expression) -> Expression:
     varied = expr.replace_multiple(_cd_variation_replacements(index))
-    varied = _linearize_noncommutative_variation(varied, s.CDVariationParameter)
+    varied = _linearize_variation_wrappers(varied, s.CDVariationParameter)
     return varied.series(s.CDVariationParameter, 0, 1).to_expression().coefficient(s.CDVariationParameter).expand()
 
 
@@ -105,7 +106,7 @@ def partial_functional_derivative(lagrangian: Expression, target_field: Expressi
         else [bar_protector, target_replacement]
     )
     varied = lagrangian.replace_multiple(replacements)
-    varied = _linearize_noncommutative_variation(varied, s.FunctionalVariationParameter)
+    varied = _linearize_variation_wrappers(varied, s.FunctionalVariationParameter)
     return (
         varied.series(s.FunctionalVariationParameter, 0, 1)
         .to_expression()
@@ -172,6 +173,47 @@ def _conjugated_coupling(expr: Expression, spec: CouplingSelfConjugate) -> Expre
         if len(indices) == len(spec):
             return s.Coupling(expr[0], s.List(*(indices[i - 1] for i in spec)), expr[2])
     return s.Bar(expr)
+
+
+def _linearize_variation_wrappers(expr: Expression, parameter: Expression) -> Expression:
+    expr = _linearize_external_function_variation(expr, parameter)
+    return _linearize_noncommutative_variation(expr, parameter)
+
+
+def _linearize_external_function_variation(expr: Expression, parameter: Expression) -> Expression:
+    replacements: list[Replacement] = []
+    for index, head in enumerate(linear_external_function_heads(expr)):
+        body_wildcard = s.head(f"linear_external_body_{index}_")
+        pattern = head(body_wildcard)
+        replacements.append(
+            Replacement(
+                pattern,
+                _external_function_variation_replacement(head, pattern, body_wildcard, parameter),
+                rhs_cache_size=0,
+            )
+        )
+    return expr.replace_multiple(replacements) if replacements else expr
+
+
+def _external_function_variation_replacement(
+    head: Expression,
+    pattern: Expression,
+    body_wildcard: Expression,
+    parameter: Expression,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_function(match: dict[Expression, Expression]) -> Expression:
+        body = match[body_wildcard]
+        variation = _coefficient_of_parameter_power(body, parameter, 1)
+        if is_zero(variation):
+            return pattern.replace_wildcards(match)
+        constant = _coefficient_of_parameter_power(body, parameter, 0)
+        return (_call_linear_head(head, constant) + parameter * _call_linear_head(head, variation)).expand()
+
+    return replace_function
+
+
+def _call_linear_head(head: Expression, body: Expression) -> Expression:
+    return Expression.num(0) if is_zero(body) else head(body)
 
 
 def _linearize_noncommutative_variation(expr: Expression, parameter: Expression) -> Expression:

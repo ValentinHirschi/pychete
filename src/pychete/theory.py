@@ -157,6 +157,7 @@ class Theory:
                     _external_symbol_tags(
                         ExternalKind.from_user(symbol_data_payload.get(SymbolDataKey.EXTERNAL_KIND.value)),
                         str(symbol_data_payload.get(SymbolDataKey.BASIS.value) or ""),
+                        name=name,
                     )
                 )
                 symbol_tags = list(dict.fromkeys(symbol_tags))
@@ -235,6 +236,7 @@ class Theory:
                     _external_symbol_tags(
                         ExternalKind.from_user(data.get(SymbolDataKey.EXTERNAL_KIND.value)),
                         str(data.get(SymbolDataKey.BASIS.value) or ""),
+                        name=name,
                     )
                 )
             symbol = self.symbol(name, role=role, data=data, tags=tags)
@@ -613,7 +615,7 @@ class Theory:
                 SymbolDataKey.EFT_ORDER.value: eft_order,
                 SymbolDataKey.BASIS.value: basis_value,
             },
-            tags=_external_symbol_tags(kind, basis_value),
+            tags=_external_symbol_tags(kind, basis_value, name=name),
         )
         definition = ExternalDefinition(
             name=name,

@@ -250,6 +250,8 @@ DynkinInput: TypeAlias = Iterable[Expression | int]
 JsonValue: TypeAlias = dict[str, Any] | list[Any] | str | int | float | bool | None
 
 _EXPRESSION_DATA_KEY = "__pychete_expression__"
+EXTERNAL_LINEAR_FUNCTION_TAG = "external_linear_function"
+LINEAR_EXTERNAL_FUNCTION_NAMES = frozenset({"Transp"})
 _SYMBOL_ROLE_ORDER = {
     SymbolRole.INDEX_TYPE.value: 0,
     SymbolRole.GROUP.value: 1,
@@ -642,8 +644,10 @@ def _cg_tensor_symbol_tags(rank: int) -> tuple[str, ...]:
     return (f"cg_tensor_rank_{rank}",)
 
 
-def _external_symbol_tags(external_kind: ExternalKind, basis: str | None) -> tuple[str, ...]:
+def _external_symbol_tags(external_kind: ExternalKind, basis: str | None, name: str | None = None) -> tuple[str, ...]:
     tags = ["external", f"external_kind_{safe_symbol_name(external_kind.value)}"]
+    if name in LINEAR_EXTERNAL_FUNCTION_NAMES:
+        tags.append(EXTERNAL_LINEAR_FUNCTION_TAG)
     if basis:
         tags.append(f"basis_{safe_symbol_name(basis)}")
     return tuple(tags)

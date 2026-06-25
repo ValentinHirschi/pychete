@@ -242,3 +242,47 @@ Latest verified baseline before this compact rollover:
   - full pytest suite passed: 274 passed, 1 skipped in 279.84s. The skip is
     the existing GammaLoop API import check because GammaLoop was not requested
     in the current dependency manifest.
+
+## Current Slice: Linear External Wrapper Extraction
+
+- Addressed the S1S3LQs follow-up from the NCM EFT marker slice. The raw
+  order-three traces `hScalar-lFermion-lScalar` and
+  `hScalar-lScalar-lFermion` no longer contain formal `der(...)` wrappers or
+  leaked `eft_order_parameter` factors inside `external_Transp(...)`.
+- Added structural metadata for known linear external helper functions.
+  `Theory.define_external("Transp")` now attaches the
+  `external_linear_function` Symbolica tag during normal creation and fixture
+  restoration. This keeps the behavior tied to symbol tags/data rather than to
+  ad hoc parser-side string checks in the matching pipeline.
+- Centralized discovery of tagged linear external function heads in the
+  internal `src/pychete/linear_external.py` helper so functional variation and
+  EFT marker extraction share the same Symbolica tag semantics.
+- Extended functional variation and covariant-derivative variation lowering to
+  discover tagged linear external function heads with
+  `Expression.get_all_symbols()`, then build exact-head Symbolica
+  `Replacement` rules. The replacement uses native coefficient extraction in
+  the temporary variation parameter before the existing NCM multilinear
+  extraction runs.
+- Extended `series_eft(...)` so EFT weights hidden inside tagged linear
+  external wrappers are first expanded as external multilinear terms, then
+  passed through the existing NCM marker extractor. This prevents Symbolica's
+  top-level EFT coefficient selection from missing weights inside constructs
+  such as `NCM(Transp(eft^3 field), ...)`.
+- Added focused tests for:
+  - functional derivative linearization of `Transp(field)` inside NCM chains;
+  - covariant derivative linearization of `Transp(field)`;
+  - EFT truncation of NCM chains containing `Transp(field)`;
+  - S1S3LQs fixture preview traces that previously leaked markers.
+- Updated `AGENTS.md` to state that known linear external helper functions
+  must be tagged and linearized before variation, EFT marker extraction, or
+  NCM coefficient selection.
+- Verification in this slice so far:
+  - functional and EFT unit tests passed: 16 passed in 0.04s;
+  - default model order-three one-loop preview fixture test passed:
+    1 passed in 43.14s;
+  - `mypy` passed with no issues in 31 source files;
+  - fluctuation-operator integration plus raw/internal-MS gap-report smoke
+    coverage passed: 41 passed in 66.35s;
+  - full pytest suite passed: 277 passed, 1 skipped in 304.04s. The skip is
+    the existing GammaLoop API import check because GammaLoop was not requested
+    in the current dependency manifest.

@@ -137,6 +137,13 @@ helper symbols: it preserves `external` Symbolica tags, symbol data, JSON
 round-trips, and Jupyter-friendly metadata objects. Do not scatter direct
 `Theory.symbol(..., role=SymbolRole.EXTERNAL)` calls in parsers or converters
 unless you are maintaining the low-level registry primitive itself.
+Known linear external helper functions, currently including Matchete-style
+`Transp`, must receive the `external_linear_function` Symbolica tag and be
+linearized through Symbolica replacement rules before variation extraction,
+EFT marker extraction, or NCM coefficient selection. Do not allow EFT markers
+or formal variation parameters to remain hidden inside tagged linear wrappers;
+pull them outside with native `coefficient_list(...)`/`replace_multiple(...)`
+logic before selecting operator dimensions or supertrace terms.
 Matching-condition Wilson coefficients must be registered through
 `Theory.define_wilson_coefficient(...)` before any expression containing that
 symbol is parsed. Symbolica symbol data is fixed at creation time, so converters
