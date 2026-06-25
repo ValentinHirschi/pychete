@@ -149,6 +149,36 @@
   - `S1S3LQs`: 72/72 projected targets, 12 accepted, 60 different; 12/64
     Wilson targets accepted.
 
+## Current Heavy-Scalar On-Shell Slice
+
+- Added reusable heavy-scalar Symbolica replacement rules through
+  `heavy_scalar_solution_replacements(...)`, reusing the existing
+  `solve_heavy_scalar_eoms(...)` tree-level solver and `Replacement`
+  callbacks instead of adding another Python expression traversal.
+- Added `replace_heavy_scalar_solutions(...)` as the expression-level helper
+  used by tree matching and the one-loop path.
+- Added `OneLoopMatchOptions.substitute_heavy_scalar_solutions` and
+  `OneLoopMatchOptions.heavy_scalar_solution_lagrangian`. When enabled,
+  `match_one_loop(...)` solves heavy scalar EOMs from the selected Lagrangian,
+  applies the resulting native Symbolica replacement rules to the on-shell
+  one-loop EFT expression before optional user on-shell/EOM rules, final EFT
+  truncation, and matching-condition projection, and records the rule/source
+  counts in result metadata.
+- The option is deliberately opt-in for now. A targeted Singlet Scalar
+  Extension probe showed that applying this reduction before all 72 order-3
+  SMEFT projection targets can cause large expression growth and slow native
+  projection substantially. The mechanism is tested and available, but the
+  default validation frontier remains unchanged until the projection path is
+  optimized or the reduction is applied more selectively.
+- Threaded `substitute_heavy_scalar_solutions` through the validation
+  gap-report public-match path so future fixture probes can enable it
+  deliberately.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py tests/integration/validation/test_validation_fixtures.py -k "heavy_scalar or forwards_pychete_color" -q`
+  passed with 19 tests; an earlier broader focused run passed with 21 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; `git diff --check`
+  passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -178,6 +208,11 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
+- Optimize the opt-in heavy-scalar solution substitution/projection path so it
+  can be safely enabled for larger order-3 SMEFT target sets without causing
+  avoidable expression growth. Candidate directions: apply heavy-field
+  replacement before expansion where possible, project smaller target groups,
+  and use Symbolica collection/coefficient primitives on less-expanded stages.
 - Re-run targeted projected-condition validation only after a slice materially
   changes fixture matching behavior.
 - Keep this live file compact. When it grows large again, move it unchanged to

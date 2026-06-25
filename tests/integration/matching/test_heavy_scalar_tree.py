@@ -178,6 +178,38 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     assert_expr_equal(registered_wilson_projection.matching_conditions[wilson_name], expected)
 
 
+def test_one_loop_match_substitutes_heavy_scalar_solution_before_projection() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    cubic = theory.define_coupling("a", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2 - cubic() * heavy() ** 3 / 6
+    raw_options = OneLoopMatchOptions(
+        max_trace_order=2,
+        tensor_reduce=False,
+        substitute_heavy_scalar_solutions=False,
+    )
+    options = OneLoopMatchOptions(
+        max_trace_order=2,
+        tensor_reduce=False,
+        substitute_heavy_scalar_solutions=True,
+    )
+
+    raw = theory.match(lagrangian, eft_order=6, loop_order=1, one_loop_options=raw_options)
+    reduced = theory.match(lagrangian, eft_order=6, loop_order=1, one_loop_options=options)
+    heavy_atom = canonical_string(heavy())
+
+    assert isinstance(raw, MatchingResult)
+    assert isinstance(reduced, MatchingResult)
+    assert raw.metadata["heavy_scalar_solutions_substituted"] is False
+    assert raw.metadata["heavy_scalar_solution_source"] == "disabled"
+    assert reduced.metadata["heavy_scalar_solutions_substituted"] is True
+    assert reduced.metadata["heavy_scalar_solution_count"] == 1
+    assert reduced.metadata["heavy_scalar_solution_rule_count"] == 2
+    assert reduced.metadata["heavy_scalar_solution_source"] == "matching_lagrangian"
+    assert heavy_atom in canonical_string(raw.on_shell_eft_lagrangian)
+    assert heavy_atom in canonical_string(reduced.expression("on_shell_eft_lagrangian_before_reduction"))
+    assert heavy_atom not in canonical_string(reduced.on_shell_eft_lagrangian)
+
+
 def test_one_loop_match_applies_on_shell_reduction_before_condition_projection() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()
     lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2

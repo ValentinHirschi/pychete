@@ -93,6 +93,11 @@ class OneLoopMatchOptions:
     generator and structure-constant tensors can be simplified through
     idenso's native SU(N) color algebra with
     ``simplify_pychete_color_algebra``.
+    Heavy scalar backgrounds can be substituted by their tree-level EFT
+    solutions before final EFT truncation and projection by enabling
+    ``substitute_heavy_scalar_solutions``. This is opt-in while the full
+    Matchete-scale projection path is still being optimized for large
+    expressions.
     """
 
     max_trace_order: int = 2
@@ -119,6 +124,8 @@ class OneLoopMatchOptions:
     on_shell_eom_min_derivative_order: int = 2
     on_shell_eom_strict: bool = False
     on_shell_replacement_repeat: bool = False
+    substitute_heavy_scalar_solutions: bool = False
+    heavy_scalar_solution_lagrangian: Expression | None = None
     truncate_eft_result: bool = True
     expand_abelian_covariant_derivatives: bool = False
     expand_non_abelian_covariant_derivatives: bool = False

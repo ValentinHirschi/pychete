@@ -53,7 +53,12 @@ from .theory_metadata import (
     field_self_conjugate_from_label,
     field_type_from_label,
 )
-from .tree_matching import HeavyScalarSolution, match_tree, solve_heavy_scalar_eoms
+from .tree_matching import (
+    HeavyScalarSolution,
+    heavy_scalar_solution_replacements,
+    match_tree,
+    solve_heavy_scalar_eoms,
+)
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
 ExpressionMatrix: TypeAlias = tuple[tuple[Expression, ...], ...]
@@ -3808,6 +3813,45 @@ def match_one_loop(
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )
+    if options.substitute_heavy_scalar_solutions:
+        solution_lagrangian = (
+            options.heavy_scalar_solution_lagrangian
+            if options.heavy_scalar_solution_lagrangian is not None
+            else matching_lagrangian
+        )
+        theory._validate_registered_expression(solution_lagrangian)
+        solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
+        replacement_rules = heavy_scalar_solution_replacements(solutions)
+        if replacement_rules:
+            _LOGGER.info(
+                "substituting %d heavy scalar solution(s) in one-loop result for %s",
+                len(solutions),
+                theory.name,
+            )
+            result = result.with_on_shell_reduction(replacement_rules)
+        result = replace(
+            result,
+            metadata={
+                **result.metadata,
+                "heavy_scalar_solutions_substituted": bool(replacement_rules),
+                "heavy_scalar_solution_count": len(solutions),
+                "heavy_scalar_solution_rule_count": len(replacement_rules),
+                "heavy_scalar_solution_source": (
+                    "option" if options.heavy_scalar_solution_lagrangian is not None else "matching_lagrangian"
+                ),
+            },
+        )
+    else:
+        result = replace(
+            result,
+            metadata={
+                **result.metadata,
+                "heavy_scalar_solutions_substituted": False,
+                "heavy_scalar_solution_count": 0,
+                "heavy_scalar_solution_rule_count": 0,
+                "heavy_scalar_solution_source": "disabled",
+            },
+        )
     if options.on_shell_replacements is not None:
         result = result.with_on_shell_reduction(
             options.on_shell_replacements,

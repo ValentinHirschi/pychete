@@ -122,6 +122,13 @@ def solve_heavy_scalar_eoms(theory: Theory, lagrangian: Expression, *, eft_order
 
 
 def _replace_heavy_fields(expr: Expression, solutions: dict[str, HeavyScalarSolution]) -> Expression:
+    replacements = heavy_scalar_solution_replacements(solutions)
+    return expr.replace_multiple(replacements).expand() if replacements else expr.expand()
+
+
+def heavy_scalar_solution_replacements(solutions: dict[str, HeavyScalarSolution]) -> tuple[Replacement, ...]:
+    """Return Symbolica replacement rules for solved heavy scalar fields."""
+
     replacements: list[Replacement] = []
     for solution in solutions.values():
         label = solution.field.label
@@ -134,7 +141,13 @@ def _replace_heavy_fields(expr: Expression, solutions: dict[str, HeavyScalarSolu
 
         replacements.append(Replacement(bar_field_pattern(label), bar_solution))
         replacements.append(Replacement(field_pattern(label), field_solution))
-    return expr.replace_multiple(replacements).expand() if replacements else expr.expand()
+    return tuple(replacements)
+
+
+def replace_heavy_scalar_solutions(expr: Expression, solutions: dict[str, HeavyScalarSolution]) -> Expression:
+    """Replace heavy scalar fields in ``expr`` by solved EFT-order solutions."""
+
+    return _replace_heavy_fields(expr, solutions)
 
 
 def match_tree(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
@@ -146,4 +159,10 @@ def match_tree(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) ->
     return truncated.expand()
 
 
-__all__ = ["HeavyScalarSolution", "match_tree", "solve_heavy_scalar_eoms"]
+__all__ = [
+    "HeavyScalarSolution",
+    "heavy_scalar_solution_replacements",
+    "match_tree",
+    "replace_heavy_scalar_solutions",
+    "solve_heavy_scalar_eoms",
+]
