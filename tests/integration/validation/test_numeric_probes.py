@@ -253,8 +253,14 @@ def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     assert report.numeric_probe_different_common_supertrace_names == ()
     assert report.numeric_probe_equal_common_supertrace_count == 1
     assert report.numeric_probe_different_common_supertrace_count == 0
+    assert report.accepted_common_supertrace_names == ("probe",)
+    assert report.different_after_probe_common_supertrace_names == ("unprobed",)
+    assert report.accepted_common_supertrace_count == 1
+    assert report.different_after_probe_common_supertrace_count == 1
     assert report_obj["numeric_probe_equal_common_supertrace_names"] == ["probe"]
     assert report_obj["numeric_probe_equal_common_supertrace_count"] == 1
+    assert report_obj["accepted_common_supertrace_names"] == ["probe"]
+    assert report_obj["different_after_probe_common_supertrace_count"] == 1
 
 
 def test_fixture_gap_report_compares_common_matching_conditions() -> None:
@@ -291,10 +297,16 @@ def test_fixture_gap_report_compares_common_matching_conditions() -> None:
     assert report.canonical_different_common_matching_condition_names == (canonical_string(c_diff),)
     assert report.canonical_equal_common_matching_condition_count == 1
     assert report.canonical_different_common_matching_condition_count == 1
+    assert report.accepted_common_matching_condition_names == (canonical_string(c_equal),)
+    assert report.different_after_probe_common_matching_condition_names == (canonical_string(c_diff),)
+    assert report.accepted_common_matching_condition_count == 1
+    assert report.different_after_probe_common_matching_condition_count == 1
     assert report.candidate_only_matching_condition_names == ("candidate_only",)
     assert report.reference_only_matching_condition_names == ("reference_only",)
     assert report_obj["canonical_equal_common_matching_condition_names"] == [canonical_string(c_equal)]
     assert report_obj["canonical_different_common_matching_condition_count"] == 1
+    assert report_obj["accepted_common_matching_condition_names"] == [canonical_string(c_equal)]
+    assert report_obj["different_after_probe_common_matching_condition_count"] == 1
 
 
 def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() -> None:
@@ -339,8 +351,14 @@ def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() 
     assert report.numeric_probe_different_common_matching_condition_names == ()
     assert report.numeric_probe_equal_common_matching_condition_count == 1
     assert report.numeric_probe_different_common_matching_condition_count == 0
+    assert report.accepted_common_matching_condition_names == ("probe_condition",)
+    assert report.different_after_probe_common_matching_condition_names == ("unprobed_condition",)
+    assert report.accepted_common_matching_condition_count == 1
+    assert report.different_after_probe_common_matching_condition_count == 1
     assert report_obj["numeric_probe_equal_common_matching_condition_names"] == ["probe_condition"]
     assert report_obj["numeric_probe_equal_common_matching_condition_count"] == 1
+    assert report_obj["accepted_common_matching_condition_names"] == ["probe_condition"]
+    assert report_obj["different_after_probe_common_matching_condition_count"] == 1
 
 
 def test_fixture_gap_report_auto_probe_requires_unambiguous_inputs() -> None:

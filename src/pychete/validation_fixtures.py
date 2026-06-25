@@ -100,6 +100,39 @@ class MatchingFixtureGapReport:
         return len(self.numeric_probe_different_common_supertrace_names)
 
     @property
+    def accepted_common_supertrace_names(self) -> tuple[str, ...]:
+        """Shared supertrace names accepted by canonical equality or numeric probe."""
+
+        return _accepted_names(
+            self.common_supertrace_names,
+            self.canonical_equal_common_supertrace_names,
+            self.numeric_probe_equal_common_supertrace_names,
+        )
+
+    @property
+    def accepted_common_supertrace_count(self) -> int:
+        """Number of shared supertraces accepted by canonical equality or probes."""
+
+        return len(self.accepted_common_supertrace_names)
+
+    @property
+    def different_after_probe_common_supertrace_names(self) -> tuple[str, ...]:
+        """Shared supertrace names still different after enabled probe fallbacks."""
+
+        accepted = set(self.accepted_common_supertrace_names)
+        return tuple(
+            name
+            for name in self.common_supertrace_names
+            if name not in accepted
+        )
+
+    @property
+    def different_after_probe_common_supertrace_count(self) -> int:
+        """Number of shared supertraces still different after enabled probes."""
+
+        return len(self.different_after_probe_common_supertrace_names)
+
+    @property
     def candidate_matching_condition_count(self) -> int:
         """Number of matching conditions exposed by the candidate."""
 
@@ -141,6 +174,39 @@ class MatchingFixtureGapReport:
 
         return len(self.numeric_probe_different_common_matching_condition_names)
 
+    @property
+    def accepted_common_matching_condition_names(self) -> tuple[str, ...]:
+        """Shared matching conditions accepted by canonical equality or numeric probe."""
+
+        return _accepted_names(
+            self.common_matching_condition_names,
+            self.canonical_equal_common_matching_condition_names,
+            self.numeric_probe_equal_common_matching_condition_names,
+        )
+
+    @property
+    def accepted_common_matching_condition_count(self) -> int:
+        """Number of shared matching conditions accepted by canonical equality or probes."""
+
+        return len(self.accepted_common_matching_condition_names)
+
+    @property
+    def different_after_probe_common_matching_condition_names(self) -> tuple[str, ...]:
+        """Shared matching conditions still different after enabled probe fallbacks."""
+
+        accepted = set(self.accepted_common_matching_condition_names)
+        return tuple(
+            name
+            for name in self.common_matching_condition_names
+            if name not in accepted
+        )
+
+    @property
+    def different_after_probe_common_matching_condition_count(self) -> int:
+        """Number of shared matching conditions still different after enabled probes."""
+
+        return len(self.different_after_probe_common_matching_condition_names)
+
     def to_json_obj(self) -> dict[str, Any]:
         """Return a JSON-serializable representation of this report."""
 
@@ -159,6 +225,8 @@ class MatchingFixtureGapReport:
             "canonical_different_common_supertrace_count": self.canonical_different_common_supertrace_count,
             "numeric_probe_equal_common_supertrace_count": self.numeric_probe_equal_common_supertrace_count,
             "numeric_probe_different_common_supertrace_count": self.numeric_probe_different_common_supertrace_count,
+            "accepted_common_supertrace_count": self.accepted_common_supertrace_count,
+            "different_after_probe_common_supertrace_count": self.different_after_probe_common_supertrace_count,
             "candidate_matching_condition_count": self.candidate_matching_condition_count,
             "reference_matching_condition_count": self.reference_matching_condition_count,
             "common_matching_condition_count": len(self.common_matching_condition_names),
@@ -174,6 +242,10 @@ class MatchingFixtureGapReport:
             "numeric_probe_different_common_matching_condition_count": (
                 self.numeric_probe_different_common_matching_condition_count
             ),
+            "accepted_common_matching_condition_count": self.accepted_common_matching_condition_count,
+            "different_after_probe_common_matching_condition_count": (
+                self.different_after_probe_common_matching_condition_count
+            ),
             "common_expression_names": list(self.common_expression_names),
             "candidate_only_supertrace_names": list(self.candidate_only_supertrace_names),
             "reference_only_supertrace_names": list(self.reference_only_supertrace_names),
@@ -181,6 +253,10 @@ class MatchingFixtureGapReport:
             "canonical_different_common_supertrace_names": list(self.canonical_different_common_supertrace_names),
             "numeric_probe_equal_common_supertrace_names": list(self.numeric_probe_equal_common_supertrace_names),
             "numeric_probe_different_common_supertrace_names": list(self.numeric_probe_different_common_supertrace_names),
+            "accepted_common_supertrace_names": list(self.accepted_common_supertrace_names),
+            "different_after_probe_common_supertrace_names": list(
+                self.different_after_probe_common_supertrace_names
+            ),
             "candidate_only_matching_condition_names": list(self.candidate_only_matching_condition_names),
             "reference_only_matching_condition_names": list(self.reference_only_matching_condition_names),
             "canonical_equal_common_matching_condition_names": list(self.canonical_equal_common_matching_condition_names),
@@ -193,6 +269,10 @@ class MatchingFixtureGapReport:
             "numeric_probe_different_common_matching_condition_names": list(
                 self.numeric_probe_different_common_matching_condition_names
             ),
+            "accepted_common_matching_condition_names": list(self.accepted_common_matching_condition_names),
+            "different_after_probe_common_matching_condition_names": list(
+                self.different_after_probe_common_matching_condition_names
+            ),
         }
 
     def _repr_latex_(self) -> str:
@@ -200,7 +280,7 @@ class MatchingFixtureGapReport:
         return (
             rf"$\mathrm{{MatchingFixtureGapReport}}\left({status},\ "
             rf"{self.candidate_supertrace_count}/{self.reference_supertrace_count}\ \mathrm{{STr}},\ "
-            rf"{self.canonical_equal_common_supertrace_count}\ \mathrm{{equal}}\right)$"
+            rf"{self.accepted_common_supertrace_count}\ \mathrm{{accepted}}\right)$"
         )
 
     def _repr_html_(self) -> str:
@@ -209,12 +289,9 @@ class MatchingFixtureGapReport:
             f"<code>MatchingFixtureGapReport({escape(self.candidate_fixture)} vs "
             f"{escape(self.reference_name)}: {status}, "
             f"supertraces={self.candidate_supertrace_count}/{self.reference_supertrace_count}, "
-            f"canonical_equal_common_supertraces={self.canonical_equal_common_supertrace_count}, "
-            f"numeric_probe_equal_common_supertraces={self.numeric_probe_equal_common_supertrace_count}, "
+            f"accepted_common_supertraces={self.accepted_common_supertrace_count}, "
             f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count}, "
-            f"canonical_equal_common_matching_conditions={self.canonical_equal_common_matching_condition_count}, "
-            f"numeric_probe_equal_common_matching_conditions="
-            f"{self.numeric_probe_equal_common_matching_condition_count})</code>"
+            f"accepted_common_matching_conditions={self.accepted_common_matching_condition_count})</code>"
         )
 
 
@@ -517,6 +594,15 @@ def load_validation_fixture(path: str | Path) -> ValidationFixture:
 
 def _sorted_names(names: Iterable[str]) -> tuple[str, ...]:
     return tuple(sorted(names))
+
+
+def _accepted_names(
+    common_names: Iterable[str],
+    canonical_equal_names: Iterable[str],
+    numeric_probe_equal_names: Iterable[str],
+) -> tuple[str, ...]:
+    accepted = set(canonical_equal_names) | set(numeric_probe_equal_names)
+    return tuple(name for name in common_names if name in accepted)
 
 
 def _metadata_stage(result: MatchingResult) -> str | None:

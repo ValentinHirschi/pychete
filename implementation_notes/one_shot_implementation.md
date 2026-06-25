@@ -3538,6 +3538,37 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 219 passed, 1
     skipped in 172.01s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added canonical-or-probe acceptance reporting to fixture gap reports:
+  - `MatchingFixtureGapReport` now exposes accepted shared supertrace and
+    matching-condition names/counts, where accepted means either canonical
+    Symbolica equality or successful Symbolica evaluator probe fallback;
+  - the report also exposes the remaining shared names that are still
+    different after enabled probes, giving Matchete fixture comparisons a
+    direct view of "accepted by validation policy" versus "still unresolved";
+  - JSON output and Jupyter-friendly HTML/LaTeX summaries now surface accepted
+    counts, while the raw canonical and numeric-probe split remains available
+    for diagnosis.
+- Final verification for the canonical-or-probe acceptance-report slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 12
+    passed in 0.07s.
+  - `git diff --check` passed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 12
+    passed in 0.05s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 17
+    passed in 167.77s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 219 passed, 1
+    skipped in 173.61s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
