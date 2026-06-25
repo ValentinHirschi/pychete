@@ -207,3 +207,38 @@ Latest verified baseline before this compact rollover:
   - full pytest suite passed: 273 passed, 1 skipped in 276.10s. The skip is
     the existing GammaLoop API import check because GammaLoop was not requested
     in the current dependency manifest.
+
+## Current Slice: NCM EFT Marker Extraction
+
+- Found a direct `series_eft(...)` bug exposed by the newly nonzero E_VLL
+  fermion traces: EFT weights inserted into fields inside `NCM(...)` operands
+  remained trapped as `NCM(eft_order_parameter^n * field, ...)`, so
+  Symbolica's top-level `coefficient_list(EFTExpansionParameter)` could not
+  see those weights.
+- Added an NCM-specific Symbolica replacement pass in `src/pychete/eft.py`.
+  For bounded NCM arities it uses each operand's native
+  `coefficient_list(EFTExpansionParameter)`, expands the multilinear NCM
+  product over operand marker terms, and pulls the total marker power outside
+  as a commutative prefactor before the existing EFT coefficient selection.
+- Added unit coverage showing that `series_eft(...)` now truncates and selects
+  direct noncommutative fermion chains correctly and leaves no
+  `eft_order_parameter` residue in the retained expression.
+- Added an integration assertion that the VLF-style
+  `hFermion-lFermion` numerator no longer leaks the EFT marker while still
+  simplifying projector words through idenso.
+- Verified by direct fixture inspection that the E_VLL affected traces no
+  longer contain `eft_order_parameter`. S1S3LQs still has marker residue inside
+  derivative-wrapped external constructs such as `der(..., NCM, ...,
+  external_Transp(...))`; this is a separate external-function/linearity
+  lowering gap for a later slice.
+- Verification in this slice so far:
+  - EFT unit tests and VLF projector numerator test passed: 6 passed in 0.26s;
+  - default raw order-three gap-report coverage passed: 1 passed in 42.02s;
+  - narrowed internal-MS gap-report coverage passed: 1 passed in 23.37s;
+  - `mypy` passed with no issues in 30 source files;
+  - full fluctuation-operator integration file passed: 39 passed in 1.01s;
+  - selected numeric-probe and validation slice passed: 22 passed in 65.30s;
+  - `git diff --check` passed;
+  - full pytest suite passed: 274 passed, 1 skipped in 279.84s. The skip is
+    the existing GammaLoop API import check because GammaLoop was not requested
+    in the current dependency manifest.

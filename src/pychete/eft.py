@@ -1,5 +1,9 @@
 from __future__ import annotations
 
+from collections.abc import Callable
+from functools import cache
+from itertools import product
+
 from symbolica import Expression, Replacement
 
 from .expr import (
@@ -13,12 +17,15 @@ from .expr import (
     field_pattern,
     field_strength_pattern,
     field_type,
+    is_zero,
     list_items,
     sum_expr,
 )
 from .symbols import SymbolRole, canonical_string, s
 from .theory import Theory
 from .theory_metadata import FieldMassKind, field_mass_kind_from_label
+
+_MAX_NCM_EFT_ARITY = 8
 
 
 def type_dimension(type_expr: Expression) -> int | float:
@@ -119,7 +126,71 @@ def _eft_weighted_expression(
     *,
     heavy_field_dimension: bool,
 ) -> Expression:
-    return expr.replace_multiple(_eft_weight_replacements(theory, heavy_field_dimension=heavy_field_dimension))
+    weighted = expr.replace_multiple(_eft_weight_replacements(theory, heavy_field_dimension=heavy_field_dimension))
+    return _extract_ncm_eft_markers(weighted).expand()
+
+
+def _extract_ncm_eft_markers(expr: Expression) -> Expression:
+    return expr.replace_multiple(_ncm_eft_marker_replacements())
+
+
+@cache
+def _ncm_eft_marker_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_NCM_EFT_ARITY + 1):
+        wildcards = tuple(s.head(f"eft_ncm_operand_{arity}_{index}_") for index in range(arity))
+        pattern = s.NCM(*wildcards)
+        replacements.append(
+            Replacement(
+                pattern,
+                _ncm_eft_marker_replacement(pattern, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _ncm_eft_marker_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_ncm(match: dict[Expression, Expression]) -> Expression:
+        operand_terms = tuple(_marker_terms(match[wildcard]) for wildcard in wildcards)
+        if all(len(terms) == 1 and terms[0][0] == 0 for terms in operand_terms):
+            return pattern.replace_wildcards(match)
+        expanded_terms: list[Expression] = []
+        for combination in product(*operand_terms):
+            marker_power = sum(power for power, _coefficient in combination)
+            coefficients = tuple(coefficient for _power, coefficient in combination)
+            chain = _ncm_expr(*coefficients)
+            if is_zero(chain):
+                continue
+            expanded_terms.append((_marker_power(marker_power) * chain).expand())
+        return sum_expr(expanded_terms).expand()
+
+    return replace_ncm
+
+
+def _marker_terms(expr: Expression) -> tuple[tuple[int, Expression], ...]:
+    terms: list[tuple[int, Expression]] = []
+    for key, coefficient in expr.coefficient_list(s.EFTExpansionParameter):
+        dimension = _marker_key_scaled_dimension(key)
+        if dimension is None:
+            terms.append((0, (key * coefficient).expand()))
+        else:
+            terms.append((dimension, coefficient))
+    return tuple(terms) if terms else ((0, Expression.num(0)),)
+
+
+def _ncm_expr(*operands: Expression) -> Expression:
+    kept = tuple(operand for operand in operands if not is_zero(operand) and not bool(operand == Expression.num(1)))
+    if len(kept) != len(operands) and any(is_zero(operand) for operand in operands):
+        return Expression.num(0)
+    if not kept:
+        return Expression.num(1)
+    if len(kept) == 1:
+        return kept[0]
+    return s.NCM(*kept)
 
 
 def _marker_key_scaled_dimension(key: Expression) -> int | None:

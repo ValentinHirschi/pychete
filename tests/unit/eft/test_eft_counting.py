@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from pychete import FieldMassKind, SymbolRole, Theory, operator_dimension, series_eft, s
+from symbolica import Expression
+
+from pychete import FieldMassKind, SymbolRole, Theory, canonical_string, operator_dimension, series_eft, s
 from pychete.expr import list_expr
 
 from tests.conftest import assert_expr_equal
@@ -39,6 +41,20 @@ def test_series_eft_uses_symbolica_marker_coefficients_for_exact_and_inclusive_o
 
     assert_expr_equal(series_eft(expr, theory, eft_order=6), dim_three + dim_six)
     assert_expr_equal(series_eft(expr, theory, eft_order=(6,)), dim_six)
+
+
+def test_series_eft_extracts_marker_powers_from_noncommutative_chains() -> None:
+    theory = Theory("eft_ncm")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    psi = theory.define_field("psi", s.Fermion, self_conjugate=False, mass=0)
+    chain = phi() * s.NCM(s.Bar(psi()), s.PR, psi())
+    higher = phi() ** 4 * s.NCM(s.Bar(psi()), s.PL, psi())
+    expr = chain + higher
+
+    assert_expr_equal(series_eft(expr, theory, eft_order=3), Expression.num(0))
+    assert_expr_equal(series_eft(expr, theory, eft_order=4), chain)
+    assert_expr_equal(series_eft(expr, theory, eft_order=(4,)), chain)
+    assert "eft_order_parameter" not in canonical_string(series_eft(expr, theory, eft_order=6))
 
 
 def test_operator_dimension_uses_pattern_weighted_atoms() -> None:

@@ -1358,6 +1358,7 @@ def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> N
     result = setup.interaction_power_type_matching_result()
     numerator = result.expression("interaction_power_type_supertrace[hFermion-lFermion,eft_numerator]")
 
+    assert "pychete::eft_order_parameter" not in canonical_string(numerator)
     assert "pychete::PR^2" not in canonical_string(numerator)
     assert "pychete::PL^2" not in canonical_string(numerator)
     assert_expr_equal(
