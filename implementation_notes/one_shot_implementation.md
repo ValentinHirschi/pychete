@@ -3346,6 +3346,50 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 212 passed,
     1 skipped in 144.53s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added an opt-in spenso tensor-network evaluation hook to the
+  Mathematica-independent validation preview path:
+  - rescanned the local spenso Python stub around `TensorLibrary`,
+    `TensorNetwork.execute(...)`, and `TensorNetwork.result_scalar(...)`
+    before adding the hook;
+  - `ValidationFixture.one_loop_preview(...)` can now call
+    `OneLoopSetup.evaluate_tensor_networks(...)` before building the
+    interaction-power preview, with pass-through controls for explicit CG
+    component maps, built-in CG components, native HEP builtins, symbolic
+    components, an existing native library, function libraries, step limits,
+    and execution mode;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` mirrors those options
+    so current-vs-Matchete fixture comparisons can opt into the same native
+    spenso route;
+  - preview metadata now records whether tensor networks were evaluated and
+    which CG component source was used (`explicit`, `builtin`, `symbolic`,
+    `stored`, `native_hep`, or `library`);
+  - added a focused integration test on the committed `S1S3LQs` model fixture
+    proving the validation preview can route generated kernels through spenso,
+    automatically build a native `TensorLibrary` from stored Matchete sparse-CG
+    component metadata, and remove `pychete::CG` atoms before native tensor
+    execution, while keeping default previews unchanged.
+- Verification for the validation-preview spenso hook so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_evaluate_tensor_networks_with_stored_cg_components
+    -q'` passed: 1 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed:
+    16 passed.
+- Final verification for the validation-preview spenso hook:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed:
+    16 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 213 passed,
+    1 skipped in 164.18s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

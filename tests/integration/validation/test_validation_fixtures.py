@@ -8,6 +8,7 @@ from symbolica import Expression, S
 import pytest
 
 from pychete import OneLoopIntegralBackend
+from pychete.backends import spenso as spenso_backend
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState
@@ -23,6 +24,11 @@ class FakeNamedVakintEngine:
     def to_canonical(self, expr: Expression, short_form: bool | None = None) -> Expression:
         self.calls.append(("to_canonical", expr, short_form))
         return S("fixture_canonical")(expr)
+
+
+class FakeTensorNetwork:
+    def __init__(self, expr: Expression) -> None:
+        self.expr = expr
 
 
 def _fixture_obj_from_model(path: Path) -> dict[str, object]:
@@ -218,8 +224,43 @@ def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathe
         assert preview.metadata["power_type_contribution_count"] == counts["contributions"]
         assert preview.metadata["interaction_power_type_contribution_count"] == counts["contributions"]
         assert preview.metadata["named_supertrace_stage"] == "raw"
+        assert preview.metadata["tensor_networks_evaluated"] is False
         assert len(preview.supertraces) == counts["supertraces"]
         preview.validate()
+
+
+def test_validation_fixture_preview_can_evaluate_tensor_networks_with_stored_cg_components(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/S1S3LQs.model_fixture.json"))
+    calls: list[tuple[Expression, object | None]] = []
+
+    def fake_evaluate_tensor_network(
+        expr: Expression,
+        *,
+        library: object | None = None,
+        function_library: object | None = None,
+        n_steps: int | None = None,
+        mode: object | None = None,
+    ) -> FakeTensorNetwork:
+        calls.append((expr, library))
+        return FakeTensorNetwork(expr)
+
+    def fake_tensor_network_result_scalar(network: FakeTensorNetwork) -> Expression:
+        return S("tensor")(network.expr)
+
+    monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
+    monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
+
+    preview = fixture.one_loop_preview(max_trace_order=1, evaluate_tensor_networks=True)
+
+    assert preview.metadata["tensor_networks_evaluated"] is True
+    assert preview.metadata["tensor_network_cg_component_source"] == "stored"
+    assert preview.metadata["tensor_network_native_hep_cg_builtins"] is False
+    assert calls
+    assert len(calls) == preview.metadata["supertrace_kernel_count"]
+    assert all(type(library).__name__ == "TensorLibrary" for _expr, library in calls)
+    assert all("pychete::CG" not in canonical_string(expr) for expr, _library in calls)
 
 
 def test_validation_fixture_preview_can_stage_named_supertraces_with_vakint_engine() -> None:

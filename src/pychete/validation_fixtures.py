@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable, Mapping, Sequence
 from dataclasses import dataclass, field
 from html import escape
 from pathlib import Path
@@ -14,6 +14,8 @@ from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
 from .validation import NumericValue
+
+TensorComponent = Expression | int | float | complex
 
 
 @dataclass(frozen=True)
@@ -231,6 +233,15 @@ class ValidationFixture:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        evaluate_tensor_networks: bool = False,
+        tensor_network_library: Any | None = None,
+        tensor_network_cg_components_by_name: Mapping[str, Sequence[TensorComponent]] | None = None,
+        tensor_network_builtin_cg_components: bool = False,
+        tensor_network_native_hep_cg_builtins: bool = False,
+        tensor_network_symbolic_cg_components: bool = False,
+        tensor_network_function_library: Any | None = None,
+        tensor_network_n_steps: int | None = None,
+        tensor_network_mode: Any | None = None,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
 
@@ -241,6 +252,26 @@ class ValidationFixture:
             max_trace_order=max_trace_order,
             include_light_only=include_light_only,
         )
+        tensor_network_cg_component_source: str | None = None
+        if evaluate_tensor_networks:
+            tensor_network_cg_component_source = _tensor_network_component_source(
+                theory,
+                library=tensor_network_library,
+                cg_components_by_name=tensor_network_cg_components_by_name,
+                builtin_cg_components=tensor_network_builtin_cg_components,
+                native_hep_cg_builtins=tensor_network_native_hep_cg_builtins,
+                symbolic_cg_components=tensor_network_symbolic_cg_components,
+            )
+            setup = setup.evaluate_tensor_networks(
+                library=tensor_network_library,
+                cg_components_by_name=tensor_network_cg_components_by_name,
+                builtin_cg_components=tensor_network_builtin_cg_components,
+                native_hep_cg_builtins=tensor_network_native_hep_cg_builtins,
+                symbolic_cg_components=tensor_network_symbolic_cg_components,
+                function_library=tensor_network_function_library,
+                n_steps=tensor_network_n_steps,
+                mode=tensor_network_mode,
+            )
         selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
         if selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_power_type_internal_matching_result(
@@ -283,6 +314,9 @@ class ValidationFixture:
                 "fixture": self.name,
                 "fixture_kind": self.kind,
                 "lagrangian_expression": lagrangian,
+                "tensor_networks_evaluated": evaluate_tensor_networks,
+                "tensor_network_cg_component_source": tensor_network_cg_component_source,
+                "tensor_network_native_hep_cg_builtins": tensor_network_native_hep_cg_builtins,
             },
         )
 
@@ -312,6 +346,15 @@ class ValidationFixture:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        evaluate_tensor_networks: bool = False,
+        tensor_network_library: Any | None = None,
+        tensor_network_cg_components_by_name: Mapping[str, Sequence[TensorComponent]] | None = None,
+        tensor_network_builtin_cg_components: bool = False,
+        tensor_network_native_hep_cg_builtins: bool = False,
+        tensor_network_symbolic_cg_components: bool = False,
+        tensor_network_function_library: Any | None = None,
+        tensor_network_n_steps: int | None = None,
+        tensor_network_mode: Any | None = None,
     ) -> MatchingFixtureGapReport:
         """Report current one-loop preview coverage against a reference result."""
 
@@ -332,6 +375,15 @@ class ValidationFixture:
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
+            evaluate_tensor_networks=evaluate_tensor_networks,
+            tensor_network_library=tensor_network_library,
+            tensor_network_cg_components_by_name=tensor_network_cg_components_by_name,
+            tensor_network_builtin_cg_components=tensor_network_builtin_cg_components,
+            tensor_network_native_hep_cg_builtins=tensor_network_native_hep_cg_builtins,
+            tensor_network_symbolic_cg_components=tensor_network_symbolic_cg_components,
+            tensor_network_function_library=tensor_network_function_library,
+            tensor_network_n_steps=tensor_network_n_steps,
+            tensor_network_mode=tensor_network_mode,
         )
         return _gap_report(
             self.name,
@@ -402,6 +454,32 @@ def _sorted_names(names: Iterable[str]) -> tuple[str, ...]:
 def _metadata_stage(result: MatchingResult) -> str | None:
     stage = result.metadata.get("stage")
     return str(stage) if stage is not None else None
+
+
+def _tensor_network_component_source(
+    theory: Theory,
+    *,
+    library: Any | None,
+    cg_components_by_name: Mapping[str, Sequence[TensorComponent]] | None,
+    builtin_cg_components: bool,
+    native_hep_cg_builtins: bool,
+    symbolic_cg_components: bool,
+) -> str | None:
+    if cg_components_by_name is not None:
+        return "explicit"
+    if builtin_cg_components:
+        return "builtin"
+    if symbolic_cg_components:
+        return "symbolic"
+    from .backends import spenso
+
+    if spenso.has_stored_cg_tensor_components(theory):
+        return "stored"
+    if native_hep_cg_builtins:
+        return "native_hep"
+    if library is not None:
+        return "library"
+    return None
 
 
 def _gap_report(
