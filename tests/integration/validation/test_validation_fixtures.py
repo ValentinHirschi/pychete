@@ -807,12 +807,14 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         use_public_match_api=True,
         simplify_pychete_color_algebra=True,
         substitute_heavy_scalar_solutions=True,
+        matching_condition_projection_expand_source=False,
     )
 
     options = captured["one_loop_options"]
     assert isinstance(options, OneLoopMatchOptions)
     assert options.simplify_pychete_color_algebra is True
     assert options.substitute_heavy_scalar_solutions is True
+    assert captured["matching_condition_expand_source"] is False
 
 
 def test_validation_fixture_gap_report_projects_registered_wilsons_before_reference_targets(

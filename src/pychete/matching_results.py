@@ -280,6 +280,7 @@ class MatchingResult:
                 "matching_conditions_projected": True,
                 "matching_condition_projection_source": source,
                 "matching_condition_projection_count": len(projected),
+                "matching_condition_projection_expand_source": expand_source,
                 "matching_condition_projection_coupling_identities": include_coupling_identities,
             },
         )

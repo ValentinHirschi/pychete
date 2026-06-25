@@ -135,6 +135,7 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
             "g2_phi2": target,
             "unused": unused(),
         },
+        matching_condition_expand_source=False,
         matching_condition_drop_zero=True,
     )
 
@@ -145,6 +146,7 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     assert canonical_string(expected) != "0"
     assert result.metadata["matching_conditions_projected"] is True
     assert result.metadata["matching_condition_projection_source"] == "on_shell_eft_lagrangian"
+    assert result.metadata["matching_condition_projection_expand_source"] is False
     assert result.metadata["matching_condition_projection_count"] == 1
     assert result.metadata["matching_condition_projection_coupling_identities"] is False
 
@@ -205,6 +207,7 @@ def test_one_loop_match_substitutes_heavy_scalar_solution_before_projection() ->
     assert reduced.metadata["heavy_scalar_solution_count"] == 1
     assert reduced.metadata["heavy_scalar_solution_rule_count"] == 2
     assert reduced.metadata["heavy_scalar_solution_source"] == "matching_lagrangian"
+    assert reduced.metadata["heavy_scalar_solution_expand"] is False
     assert heavy_atom in canonical_string(raw.on_shell_eft_lagrangian)
     assert heavy_atom in canonical_string(reduced.expression("on_shell_eft_lagrangian_before_reduction"))
     assert heavy_atom not in canonical_string(reduced.on_shell_eft_lagrangian)

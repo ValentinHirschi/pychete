@@ -845,6 +845,7 @@ class ValidationFixture:
         substitute_heavy_scalar_solutions: bool = False,
         project_reference_matching_conditions: bool = False,
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
+        matching_condition_projection_expand_source: bool = True,
         matching_condition_projection_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = True,
         use_public_match_api: bool = False,
@@ -913,6 +914,7 @@ class ValidationFixture:
                 ),
                 matching_condition_targets=projected_targets,
                 matching_condition_source=matching_condition_projection_source,
+                matching_condition_expand_source=matching_condition_projection_expand_source,
                 matching_condition_drop_zero=matching_condition_projection_drop_zero,
                 matching_condition_include_coupling_identities=(
                     matching_condition_include_coupling_identities
@@ -970,6 +972,7 @@ class ValidationFixture:
             candidate = candidate.with_projected_matching_conditions(
                 projected_targets or {},
                 source=matching_condition_projection_source,
+                expand_source=matching_condition_projection_expand_source,
                 drop_zero=matching_condition_projection_drop_zero,
                 include_coupling_identities=matching_condition_include_coupling_identities,
             )

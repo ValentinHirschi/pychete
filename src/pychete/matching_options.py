@@ -98,6 +98,10 @@ class OneLoopMatchOptions:
     ``substitute_heavy_scalar_solutions``. This is opt-in while the full
     Matchete-scale projection path is still being optimized for large
     expressions.
+    ``heavy_scalar_solution_expand`` controls whether that replacement stage
+    immediately expands the reduced on-shell expression; keep it disabled for
+    exploratory large-model projection when a less-expanded expression scales
+    better.
     """
 
     max_trace_order: int = 2
@@ -126,6 +130,7 @@ class OneLoopMatchOptions:
     on_shell_replacement_repeat: bool = False
     substitute_heavy_scalar_solutions: bool = False
     heavy_scalar_solution_lagrangian: Expression | None = None
+    heavy_scalar_solution_expand: bool = False
     truncate_eft_result: bool = True
     expand_abelian_covariant_derivatives: bool = False
     expand_non_abelian_covariant_derivatives: bool = False

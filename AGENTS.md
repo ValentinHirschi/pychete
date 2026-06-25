@@ -128,6 +128,12 @@ algorithms, tree walkers, replacement loops, simplifiers, derivative engines,
 polynomial routines, tensor contractions, or integral reducers are forbidden
 unless the local Symbolica/idenso/spenso/vakint/GammaLoop APIs have first been
 checked and found insufficient for the specific operation.
+For computationally heavy matching stages, keep scalability in view before
+settling on an implementation shape: avoid mandatory full-expression expansion
+when a factored/native coefficient route is available, expose explicit controls
+for expensive projection or simplification stages, and prefer algorithms whose
+cost grows with the selected targets or backend operation rather than the full
+SMEFT expression whenever practical.
 
 Before adding or modifying symbolic code, explicitly inspect the Python stubs
 and source listed below. Prefer native primitives even when a Python loop seems

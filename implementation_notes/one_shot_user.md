@@ -204,3 +204,8 @@ discoveries, dependency patches, blockers, and remaining work.
   metadata as their matching fixtures. This avoids Symbolica symbol
   redefinition conflicts and lets validation projection prefer candidate
   theory metadata instead of reference-owned Wilson targets.
+- Keep performance and scaling under active consideration throughout the
+  one-shot implementation. Do not over-optimize prematurely, but for heavy
+  symbolic matching paths prefer algorithms that avoid unnecessary global
+  expansion, support target-selective projection/simplification, and delegate
+  expensive algebra to native Symbolica/idenso/spenso/vakint primitives.

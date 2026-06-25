@@ -288,7 +288,29 @@ def test_matching_result_projects_conditions_with_symbolica_coefficients() -> No
     assert updated.metadata["matching_conditions_projected"] is True
     assert updated.metadata["matching_condition_projection_source"] == "on_shell_eft_lagrangian"
     assert updated.metadata["matching_condition_projection_count"] == 2
+    assert updated.metadata["matching_condition_projection_expand_source"] is True
     assert tuple(replacement.matching_conditions) == (canonical_string(coefficient_a * operator_a),)
+
+
+def test_matching_result_can_project_from_unexpanded_source_expression() -> None:
+    x = S("condition_projection_unexpanded_x")
+    theory = Theory("condition_projection_unexpanded")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    operator = phi() ** 2
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=(x + 1) * operator,
+    )
+
+    projected = result.with_projected_matching_conditions(
+        {"phi2": operator},
+        expand_source=False,
+    )
+
+    assert projected.metadata["matching_condition_projection_expand_source"] is False
+    assert_expr_equal(projected.matching_conditions["phi2"], x + 1)
 
 
 def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> None:

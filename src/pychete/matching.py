@@ -3660,6 +3660,7 @@ def match_one_loop(
     one_loop_options: OneLoopMatchOptions | None = None,
     matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
     matching_condition_source: str = "on_shell_eft_lagrangian",
+    matching_condition_expand_source: bool = True,
     matching_condition_drop_zero: bool = False,
     matching_condition_include_coupling_identities: bool = False,
 ) -> MatchingResult:
@@ -3828,7 +3829,10 @@ def match_one_loop(
                 len(solutions),
                 theory.name,
             )
-            result = result.with_on_shell_reduction(replacement_rules)
+            result = result.with_on_shell_reduction(
+                replacement_rules,
+                expand=options.heavy_scalar_solution_expand,
+            )
         result = replace(
             result,
             metadata={
@@ -3839,6 +3843,7 @@ def match_one_loop(
                 "heavy_scalar_solution_source": (
                     "option" if options.heavy_scalar_solution_lagrangian is not None else "matching_lagrangian"
                 ),
+                "heavy_scalar_solution_expand": options.heavy_scalar_solution_expand,
             },
         )
     else:
@@ -3850,6 +3855,7 @@ def match_one_loop(
                 "heavy_scalar_solution_count": 0,
                 "heavy_scalar_solution_rule_count": 0,
                 "heavy_scalar_solution_source": "disabled",
+                "heavy_scalar_solution_expand": False,
             },
         )
     if options.on_shell_replacements is not None:
@@ -3902,6 +3908,7 @@ def match_one_loop(
     projected = result.with_projected_matching_conditions(
         matching_condition_targets,
         source=matching_condition_source,
+        expand_source=matching_condition_expand_source,
         drop_zero=matching_condition_drop_zero,
         include_coupling_identities=matching_condition_include_coupling_identities,
     )

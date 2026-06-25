@@ -1531,6 +1531,7 @@ class Theory:
         one_loop_options: OneLoopMatchOptions | None = None,
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         matching_condition_source: str = "on_shell_eft_lagrangian",
+        matching_condition_expand_source: bool = True,
         matching_condition_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = False,
     ) -> Expression | MatchingResult:
@@ -1545,7 +1546,10 @@ class Theory:
         ``matching_condition_targets`` is supplied for ``loop_order=1``, the
         returned result projects those matching conditions from
         ``matching_condition_source`` using native Symbolica coefficient
-        extraction. Pass ``"registered_wilsons"`` to project all
+        extraction. Set ``matching_condition_expand_source=False`` to extract
+        from the selected source expression without first expanding the whole
+        expression, which can scale better for large factored one-loop
+        results. Pass ``"registered_wilsons"`` to project all
         theory-registered Wilson coefficients that have stored operator
         metadata. Set ``matching_condition_include_coupling_identities`` to
         include tree-level identity values for target couplings registered in
@@ -1569,6 +1573,7 @@ class Theory:
                 one_loop_options=one_loop_options,
                 matching_condition_targets=matching_condition_targets,
                 matching_condition_source=matching_condition_source,
+                matching_condition_expand_source=matching_condition_expand_source,
                 matching_condition_drop_zero=matching_condition_drop_zero,
                 matching_condition_include_coupling_identities=(
                     matching_condition_include_coupling_identities

@@ -33,6 +33,11 @@
   grouped targeted gates (`definitions`, `models`, `matching`, `backend`,
   `validation`, `not slow`) before green milestone commits. Avoid running the
   full/slow suite after every small edit.
+- Keep performance and scaling under active review for heavy symbolic stages:
+  avoid mandatory global expansion when native factored coefficient extraction
+  is sufficient, expose explicit controls for expensive projection/simplifier
+  stages, and prefer algorithms that scale with selected targets where
+  practical.
 - Commit and push only coherent green milestones to `origin/one-shot-port`.
   Keep these notes current with status, validation, backend discoveries, and
   remaining gaps.
@@ -179,6 +184,32 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; `git diff --check`
   passed.
 
+## Current Projection Scalability Slice
+
+- Exposed `matching_condition_expand_source` on public `Theory.match(...)` and
+  `match_one_loop(...)`, threading it through
+  `MatchingResult.with_projected_matching_conditions(...)`. The default stays
+  `True` for compatibility, but callers can now project from a less-expanded
+  result expression with native `Expression.coefficient(...)` when factored
+  forms scale better.
+- Added `matching_condition_projection_expand_source` to validation fixture
+  gap reports and forwarded it through both the public-match and lower-level
+  preview projection paths. This makes performance-oriented projection probes
+  possible without custom scripts.
+- Recorded projection metadata as
+  `matching_condition_projection_expand_source` in `MatchingResult.metadata`
+  so reports and notebooks can tell whether matching conditions came from an
+  expanded or factored source.
+- Added `OneLoopMatchOptions.heavy_scalar_solution_expand`. The opt-in
+  heavy-scalar solution substitution now applies its native Symbolica
+  replacement rules without expanding immediately by default; users can still
+  force expansion when desired. This keeps large-model exploratory matching
+  from paying an avoidable expansion cost before projection strategy is
+  chosen.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py tests/integration/validation/test_numeric_probes.py tests/integration/validation/test_validation_fixtures.py -k "heavy_scalar or project or forwards_pychete_color" -q`
+  passed with 26 tests and 51 deselected.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -213,6 +244,10 @@
   avoidable expression growth. Candidate directions: apply heavy-field
   replacement before expansion where possible, project smaller target groups,
   and use Symbolica collection/coefficient primitives on less-expanded stages.
+- Use the new `matching_condition_expand_source=False` and
+  `heavy_scalar_solution_expand=False` controls in targeted order-3 Singlet
+  probes once the next backend feature slice materially changes the projected
+  EFT expression.
 - Re-run targeted projected-condition validation only after a slice materially
   changes fixture matching behavior.
 - Keep this live file compact. When it grows large again, move it unchanged to
