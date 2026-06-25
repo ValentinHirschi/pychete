@@ -4086,6 +4086,57 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 243 passed, 1
     skipped in 251.11s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added a focused loop-function IBP first-power reduction slice:
+  - exposed `loop_function_pole_part(...)`,
+    `reduce_loop_function_first_power(...)`, and
+    `reduce_loop_functions_first_power(...)` through `pychete.api` and the
+    package root;
+  - `loop_function_pole_part(...)` lowers one finite
+    `pychete::LoopFunction(...)` atom to the existing internal analytic
+    one-loop evaluator, divides out pychete's vakint imaginary-unit convention,
+    and extracts the Laurent pole part with native Symbolica
+    `Expression.coefficient_list(...)` via the existing `vakint.pole_part(...)`
+    helper;
+  - `reduce_loop_function_first_power(...)` implements the first-power part of
+    Matchete's `SimpTempLFRules`: it moves the selected massive propagator into
+    the first slot, applies the IBP rule with Symbolica's callable
+    `Expression.replace(...)` until that first massive power is one, inserts
+    the full-loop pole pieces needed for finite extraction, and takes the
+    epsilon-finite coefficient through the native coefficient path;
+  - `reduce_loop_functions_first_power(...)` applies that reducer across an
+    expression through Symbolica wildcard matching over `s.LoopFunction(...)`
+    atoms. This is intentionally narrower than Matchete's full
+    `SimplifyMassFunction` optimizer across sums, but it removes a concrete LF
+    reduction gap while preserving the larger optimizer as future work;
+  - the new tests verify the Matchete pole-treatment identity for
+    `LF[{a,b},{2,1,1}]`, expression-wide replacement, no-op behavior for
+    already first-power-reduced atoms, and exact pole extraction against the
+    existing internal one-loop evaluator.
+- Verification for the loop-function IBP first-power reduction slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_loop_function_pole_part_extracts_full_loop_pole_piece
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_reduce_loop_function_first_power_matches_matchete_pole_treatment_identity
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_reduce_loop_functions_first_power_replaces_atoms_expression_wide
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_reduce_loop_function_first_power_leaves_already_reduced_atoms_unchanged
+    -q'` passed: 4 passed in 0.03s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py -q'` passed: 27
+    passed in 2.99s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_mathematica_result_parser.py
+    tests/unit/definitions/test_public_api.py -q'` passed: 6 passed in
+    0.03s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 247 passed, 1
+    skipped in 253.59s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

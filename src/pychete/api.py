@@ -10,7 +10,10 @@ from .backends.vacuum_integrals import (
     evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared,
     evaluate_one_loop_vakint_expression,
     loop_function,
+    loop_function_pole_part,
     loop_function_to_vakint_integral,
+    reduce_loop_function_first_power,
+    reduce_loop_functions_first_power,
 )
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
@@ -118,12 +121,15 @@ __all__ = [
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
     "evaluate_one_loop_vakint_expression",
     "loop_function",
+    "loop_function_pole_part",
     "loop_function_to_vakint_integral",
     "load_state",
     "latex_string",
     "open_indices",
     "operator_dimension",
     "one_loop_normalization_factor",
+    "reduce_loop_function_first_power",
+    "reduce_loop_functions_first_power",
     "relabel_dummy_indices",
     "s",
     "series_eft",

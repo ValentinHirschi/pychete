@@ -4,7 +4,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete.backends import vakint, vacuum_integrals
-from pychete.symbols import s
+from pychete.symbols import canonical_string, s
 from tests.conftest import assert_expr_equal
 
 
@@ -79,6 +79,57 @@ def test_evaluate_loop_functions_accepts_noncanonical_loop_function_atoms() -> N
         vacuum_integrals.evaluate_loop_functions(loop_function),
         vacuum_integrals.evaluate_loop_functions(canonical_loop_function),
     )
+
+
+def test_loop_function_pole_part_extracts_full_loop_pole_piece() -> None:
+    mass = S("M")
+    loop_function = vacuum_integrals.loop_function((mass,), (2, 2))
+    expected = vakint.pole_part(
+        (
+            vacuum_integrals.evaluate_one_loop_vakint_expression(
+                vacuum_integrals.loop_function_to_vakint_integral(loop_function)
+            )
+            / vacuum_integrals.imaginary_unit_symbol()
+        ).expand()
+    )
+
+    assert_expr_equal(vacuum_integrals.loop_function_pole_part(loop_function), expected)
+
+
+def test_reduce_loop_function_first_power_matches_matchete_pole_treatment_identity() -> None:
+    a = S("a")
+    b = S("b")
+    loop_function = vacuum_integrals.loop_function((a, b), (2, 1, 1))
+    reduced = vacuum_integrals.reduce_loop_function_first_power(loop_function)
+
+    assert "LoopFunction" in canonical_string(reduced)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_loop_functions(loop_function - reduced, combine_terms=True),
+        Expression.num(0),
+    )
+
+
+def test_reduce_loop_functions_first_power_replaces_atoms_expression_wide() -> None:
+    a = S("a")
+    b = S("b")
+    coefficient = S("coeff")
+    loop_function = vacuum_integrals.loop_function((a, b), (3, 1, 0))
+    expression = coefficient * loop_function
+    reduced = vacuum_integrals.reduce_loop_functions_first_power(expression)
+
+    assert canonical_string(reduced) != canonical_string(expression)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_loop_functions(expression - reduced, combine_terms=True),
+        Expression.num(0),
+    )
+
+
+def test_reduce_loop_function_first_power_leaves_already_reduced_atoms_unchanged() -> None:
+    a = S("a")
+    b = S("b")
+    loop_function = vacuum_integrals.loop_function((a, b), (1, 1, 0))
+
+    assert_expr_equal(vacuum_integrals.reduce_loop_function_first_power(loop_function), loop_function)
 
 
 def test_evaluate_loop_functions_uses_internal_finite_loop_function_convention() -> None:
