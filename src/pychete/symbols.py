@@ -551,6 +551,7 @@ class SymbolStore:
         "SupertraceKernel",
         "DifferentialOperator",
         "LoopFunction",
+        "CovariantDerivativeProtectedBar",
         "SymmetricIndices",
         "AntisymmetricIndices",
         "SymmetricPermutation",
@@ -727,6 +728,10 @@ class SymbolStore:
     @cached_property
     def LoopFunction(self) -> Expression:
         return self.head("LoopFunction")
+
+    @cached_property
+    def CovariantDerivativeProtectedBar(self) -> Expression:
+        return self.head("covariant_derivative_protected_bar")
 
     @cached_property
     def SymmetricIndices(self) -> Expression:

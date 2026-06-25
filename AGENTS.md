@@ -208,6 +208,14 @@ expanded scalarized Abelian currents. The Matchete loader must use
 implicit in derivative slots and gauge kinetic terms carry Matchete's
 `1/g^2` normalization. Do not make `.m` loading silently depend on pychete's
 canonical free-Lagrangian convention.
+When a Matchete-style expression with implicit Abelian covariant derivatives
+must be expanded for matching, use `Theory.expand_abelian_covariant_derivatives`
+or `OneLoopMatchOptions.expand_abelian_covariant_derivatives`. This path is
+implemented with Symbolica replacement rules over registered first-derivative
+`Field` atoms and Symbolica symbol data for Abelian gauge groups. Do not
+duplicate the expansion by hand in loaders or matching code. Non-Abelian
+covariant derivatives must remain delegated to the planned idenso/spenso-backed
+group-algebra path rather than an ad hoc scalarized Python implementation.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

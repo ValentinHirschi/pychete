@@ -7,7 +7,16 @@ from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 from symbolica import Expression, Replacement, S
 
-from .expr import is_head, list_expr, sum_expr
+from .expr import (
+    bar_field_pattern,
+    field_pattern,
+    field_with_derivatives,
+    is_head,
+    list_expr,
+    list_items,
+    matching_subexpressions,
+    sum_expr,
+)
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
@@ -989,6 +998,59 @@ class Theory:
                 raise KeyError(f"Gauge group {canonical_string(group_symbol)} references unknown vector field {field_name!r}")
             terms.append(charge[0] * self.coupling_handle(coupling_name)() * self.field_handle(field_name)())
         return sum_expr(terms).expand()
+
+    def expand_abelian_covariant_derivatives(self, expr: Expression) -> Expression:
+        """Expand first-order Abelian covariant derivatives in ``expr``.
+
+        Matchete-style model input can encode gauge interactions implicitly in
+        derivative slots. This helper rewrites first derivatives of fields
+        carrying registered Abelian gauge charges as scalarized pychete gauge
+        connections, using native Symbolica replacement rules. Non-Abelian
+        covariant derivatives are intentionally left untouched for the
+        idenso/spenso-backed group-algebra path.
+        """
+
+        self._validate_registered_expression(expr)
+        protect_bar_replacements: list[Replacement] = []
+        restore_bar_replacements: list[Replacement] = []
+        field_replacements: list[Replacement] = []
+        for definition in self.fields.values():
+            connection = self._abelian_gauge_connection(definition)
+            if bool(connection == Expression.num(0)):
+                continue
+            field_pat = field_pattern(definition.label)
+            bar_pat = bar_field_pattern(definition.label)
+
+            def field_replacement(
+                match: dict[Expression, Expression],
+                pattern: Expression = field_pat,
+                connection: Expression = connection,
+            ) -> Expression:
+                atom = pattern.replace_wildcards(match)
+                if len(list_items(match[s.FieldDerivativesWildcard])) != 1:
+                    return atom
+                base = field_with_derivatives(atom, ())
+                return atom - Expression.I * connection * base
+
+            for atom in matching_subexpressions(expr, bar_pat):
+                if len(list_items(atom[0][3])) != 1:
+                    continue
+                base = field_with_derivatives(atom[0], ())
+                key = s.CovariantDerivativeProtectedBar(Expression.num(len(restore_bar_replacements)))
+                protect_bar_replacements.append(Replacement(atom, key))
+                restore_bar_replacements.append(Replacement(key, atom + Expression.I * connection * s.Bar(base)))
+
+            field_replacements.append(Replacement(field_pat, field_replacement))
+        if not protect_bar_replacements and not field_replacements:
+            return expr
+        out = expr
+        if protect_bar_replacements:
+            out = out.replace_multiple(protect_bar_replacements)
+        if field_replacements:
+            out = out.replace_multiple(field_replacements)
+        if restore_bar_replacements:
+            out = out.replace_multiple(restore_bar_replacements)
+        return out.expand()
 
     def _vector_gauge_coupling(self, definition: FieldDefinition) -> Expression | None:
         type_expr = definition.type_expr

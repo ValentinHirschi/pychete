@@ -9,7 +9,10 @@ from pychete import (
     FieldRole,
     FluctuationSector,
     FluctuationStatistics,
+    FreeLagConvention,
     MatchingResult,
+    OneLoopIntegralBackend,
+    OneLoopMatchOptions,
     OneLoopNormalization,
     PowerTypeSupertraceContribution,
     SupertraceBlockTrace,
@@ -19,6 +22,7 @@ from pychete import (
     one_loop_normalization_factor,
     s,
 )
+import pychete.matching as matching_module
 from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals as vacuum_integrals_backend
@@ -176,6 +180,61 @@ def test_charged_scalar_free_lag_generates_gauge_interactions() -> None:
     assert_expr_equal(operator.free_inverse_entry(vector, vector), s.LoopMomentumSquared)
     assert_expr_equal(operator.propagator_denominator_for_mode(vector()), denominator)
     assert_expr_equal(operator.interaction_entry(vector, vector), 2 * coupling() ** 2 * phi() * s.Bar(phi()))
+
+
+def test_one_loop_match_option_expands_abelian_covariant_derivatives_before_setup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("match_expand_abelian_covariant_derivatives")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    captured: dict[str, Expression] = {}
+
+    class FakeSetup:
+        def interaction_power_type_internal_matching_result(self, **_kwargs: object) -> MatchingResult:
+            return MatchingResult(
+                theory=theory,
+                uv_lagrangian=captured["lagrangian"],
+                off_shell_eft_lagrangian=captured["lagrangian"],
+                on_shell_eft_lagrangian=captured["lagrangian"],
+                metadata={"stage": "fake_internal"},
+            )
+
+    def fake_one_loop_setup(
+        _theory: Theory,
+        lagrangian: Expression,
+        **_kwargs: object,
+    ) -> FakeSetup:
+        captured["lagrangian"] = lagrangian
+        return FakeSetup()
+
+    monkeypatch.setattr(matching_module, "one_loop_setup", fake_one_loop_setup)
+
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            expand_abelian_covariant_derivatives=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["abelian_covariant_derivatives_expanded"] is True
+    assert_expr_equal(
+        captured["lagrangian"].coefficient(coupling() ** 2 * vector() ** 2 * phi() * s.Bar(phi())).expand(),
+        Expression.num(1),
+    )
 
 
 def test_charged_fermion_free_lag_subtracts_only_registered_free_inverse() -> None:

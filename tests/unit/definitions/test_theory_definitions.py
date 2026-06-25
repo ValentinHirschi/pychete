@@ -135,6 +135,38 @@ def test_free_lag_uses_abelian_charge_symbol_data_for_complex_scalar_kinetic() -
     assert_expr_equal(theory.free_lag(phi), expected)
 
 
+def test_expand_abelian_covariant_derivatives_uses_symbolica_replacements() -> None:
+    theory = Theory("expand_abelian_covariant_derivatives")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    theory.define_global_group("U1Global", s.U1)
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[
+            theory.group_charge("U1Y", S("qY")),
+            theory.group_charge("U1Global", 3),
+        ],
+        self_conjugate=False,
+        mass=0,
+    )
+    coupling = theory.coupling_handle("gY")
+    vector = theory.field_handle("B")
+    mu = theory.dummy_index(0)
+    field = phi()
+    derived = phi(derivatives=[mu])
+    connection = S("qY") * coupling() * vector()
+    implicit = s.Bar(derived) * derived + s.Bar(field) * field
+    expected = (
+        s.Bar(derived) * derived
+        + Expression.I * connection * s.Bar(field) * derived
+        - Expression.I * connection * s.Bar(derived) * field
+        + connection**2 * s.Bar(field) * field
+        + s.Bar(field) * field
+    )
+
+    assert_expr_equal(theory.expand_abelian_covariant_derivatives(implicit), expected)
+
+
 def test_free_lag_uses_abelian_charge_symbol_data_for_fermion_current() -> None:
     theory = Theory("charged_fermion_free")
     theory.define_gauge_group("U1e", s.U1, "e", "A")

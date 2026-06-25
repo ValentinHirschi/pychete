@@ -3678,9 +3678,14 @@ def match_one_loop(
         eft_order,
         options.max_trace_order,
     )
+    matching_lagrangian = (
+        theory.expand_abelian_covariant_derivatives(lagrangian)
+        if options.expand_abelian_covariant_derivatives
+        else lagrangian
+    )
     setup = one_loop_setup(
         theory,
-        lagrangian,
+        matching_lagrangian,
         eft_order=eft_order,
         max_trace_order=options.max_trace_order,
         include_light_only=options.include_light_only,
@@ -3782,6 +3787,7 @@ def match_one_loop(
             "tensor_networks_evaluated": options.evaluate_tensor_networks,
             "tensor_network_cg_component_source": tensor_network_cg_component_source,
             "tensor_network_native_hep_cg_builtins": options.tensor_network_native_hep_cg_builtins,
+            "abelian_covariant_derivatives_expanded": options.expand_abelian_covariant_derivatives,
         },
     )
     if options.on_shell_replacements is not None:

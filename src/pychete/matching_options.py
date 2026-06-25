@@ -86,7 +86,9 @@ class OneLoopMatchOptions:
     ``on_shell_eom_lagrangian`` by matching derivative field targets in the
     evaluated one-loop result. Final off/on-shell result stages are truncated
     to the requested inclusive EFT order by default before matching-condition
-    projection.
+    projection. Matchete-style implicit Abelian covariant derivatives can be
+    expanded before fluctuation-operator extraction with
+    ``expand_abelian_covariant_derivatives``.
     """
 
     max_trace_order: int = 2
@@ -114,6 +116,7 @@ class OneLoopMatchOptions:
     on_shell_eom_strict: bool = False
     on_shell_replacement_repeat: bool = False
     truncate_eft_result: bool = True
+    expand_abelian_covariant_derivatives: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True
     evaluate_tensor_networks: bool = False
