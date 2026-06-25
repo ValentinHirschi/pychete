@@ -206,11 +206,14 @@ def test_matching_condition_targets_expose_symbolica_role_metadata() -> None:
     i = theory.index("i", flavor.symbol)
     j = theory.index("j", flavor.symbol)
     yukawa = theory.define_coupling("Y", indices=[flavor.symbol, flavor.symbol])
+    higgs = theory.define_field("H", s.Scalar, mass=0)
+    operator = (s.Bar(higgs()) * higgs()) ** 3
     wilson = theory.define_wilson_coefficient(
         "cHl",
         indices=[i, j],
         eft_order=6,
         basis="SMEFT",
+        operator=operator,
     )
 
     targets = matching_condition_targets(
@@ -233,6 +236,8 @@ def test_matching_condition_targets_expose_symbolica_role_metadata() -> None:
     assert by_name["wilson"].basis == "SMEFT"
     assert by_name["wilson"].indices == (i, j)
     assert by_name["wilson"].eft_order == 6
+    assert by_name["wilson"].operator == operator
+    assert by_name["wilson"].projection_expression == operator
 
 
 def test_gauge_and_global_groups_store_kind_and_abelian_symbol_data() -> None:
@@ -571,10 +576,13 @@ def test_wilson_coefficients_store_basis_and_matching_target_metadata() -> None:
     flavor = theory.define_flavor_index("Flavor", 3)
     i = theory.index("i1", flavor.symbol)
     j = theory.index("i2", flavor.symbol)
-    wilson = theory.define_wilson_coefficient("cHd", indices=[i, j], basis="SMEFT")
+    higgs = theory.define_field("H", s.Scalar, mass=0)
+    operator = s.Bar(higgs()) * higgs() * s.Bar(higgs()) * higgs()
+    wilson = theory.define_wilson_coefficient("cHd", indices=[i, j], basis="SMEFT", operator=operator)
 
     assert wilson.definition.kind is ExternalKind.WILSON_COEFFICIENT
     assert wilson.definition.basis_name == "SMEFT"
+    assert wilson.definition.operator_expr == operator
     assert wilson.definition.order == 0
     assert [canonical_string(index) for index in wilson.definition.index_exprs] == [
         canonical_string(i),
@@ -582,14 +590,18 @@ def test_wilson_coefficients_store_basis_and_matching_target_metadata() -> None:
     ]
     assert wilson.label.get_symbol_data(SymbolDataKey.EXTERNAL_KIND.value) == ExternalKind.WILSON_COEFFICIENT.value
     assert wilson.label.get_symbol_data(SymbolDataKey.BASIS.value) == "SMEFT"
+    assert wilson.label.get_symbol_data(SymbolDataKey.OPERATOR.value) == operator
     assert "external_kind_wilson_coefficient" in _local_tags(wilson.label)
     assert "basis_SMEFT" in _local_tags(wilson.label)
 
-    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+    payload = json.loads(theory.to_json())
+    assert payload["externals"]["cHd"]["operator"] == canonical_string(operator)
+    restored = Theory.from_json_obj(payload)
     restored_wilson = restored.external_handle("cHd")
 
     assert restored_wilson.definition.kind is ExternalKind.WILSON_COEFFICIENT
     assert restored_wilson.definition.basis_name == "SMEFT"
+    assert canonical_string(restored_wilson.definition.operator_expr) == canonical_string(operator)
     assert [canonical_string(index) for index in restored_wilson.definition.index_exprs] == [
         canonical_string(i),
         canonical_string(j),

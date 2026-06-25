@@ -16,7 +16,12 @@ from .matching_options import (
 )
 from .supertraces import is_named_supertrace
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
-from .theory_metadata import ExternalKind, external_basis_from_label, external_kind_from_label
+from .theory_metadata import (
+    ExternalKind,
+    external_basis_from_label,
+    external_kind_from_label,
+    external_operator_from_label,
+)
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 if TYPE_CHECKING:
@@ -109,6 +114,7 @@ class MatchingConditionTarget:
     indices: tuple[Expression, ...] = ()
     eft_order: int | None = None
     basis: str | None = None
+    operator: Expression | None = None
 
     @property
     def is_coupling(self) -> bool:
@@ -127,6 +133,12 @@ class MatchingConditionTarget:
         """Whether the target label is tagged as a Wilson coefficient."""
 
         return self.external_kind is ExternalKind.WILSON_COEFFICIENT
+
+    @property
+    def projection_expression(self) -> Expression:
+        """Expression whose coefficient defines this matching condition."""
+
+        return self.operator if self.operator is not None else self.expression
 
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{MatchingConditionTarget}}\left({latex_string(self.expression)}\right)$"
@@ -209,7 +221,10 @@ class MatchingResult:
         monomials, or an iterable of target expressions. Iterable targets use
         their canonical pychete string as the condition key. Coefficients are
         extracted with native ``Expression.coefficient(...)`` so products such
-        as ``C*O`` can be projected without a Python expression walker.
+        as ``C*O`` can be projected without a Python expression walker. Wilson
+        coefficient targets with stored operator metadata project the
+        coefficient of the operator monomial, while ordinary targets project
+        the coefficient of the target expression itself.
         ``include_coupling_identities`` adds the tree-level identity value for
         target couplings that are registered in the candidate theory. This is
         intended for loop-correction expressions where unchanged renormalizable
@@ -222,7 +237,7 @@ class MatchingResult:
             expr = expr.expand()
         conditions: dict[str, Expression] = {}
         for target in matching_condition_targets(targets):
-            coefficient = expr.coefficient(target.expression).expand()
+            coefficient = expr.coefficient(target.projection_expression).expand()
             if include_coupling_identities:
                 identity = _tree_level_coupling_identity(self.theory, target)
                 if identity is not None:
@@ -510,6 +525,7 @@ def _coupling_matching_condition_target(
         indices=list_items(expression[1]),
         eft_order=as_int(expression[2]),
         basis=external_basis_from_label(label) if symbol_role is SymbolRole.EXTERNAL else None,
+        operator=external_operator_from_label(label) if symbol_role is SymbolRole.EXTERNAL else None,
     )
 
 

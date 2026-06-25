@@ -93,6 +93,7 @@ from .theory_metadata import (
     external_eft_order_from_label,
     external_indices_from_label,
     external_kind_from_label,
+    external_operator_from_label,
     representation_dimension_from_label,
     representation_dynkin_from_label,
     representation_group_from_label,
@@ -177,6 +178,7 @@ class Theory:
                 indices=external_indices_from_label(symbol),
                 eft_order=external_eft_order_from_label(symbol),
                 basis=external_basis_from_label(symbol),
+                operator=external_operator_from_label(symbol),
             )
         return self._symbols[key]
 
@@ -569,6 +571,7 @@ class Theory:
         indices: Iterable[Expression] = (),
         eft_order: int = 0,
         basis: str | None = None,
+        operator: Expression | None = None,
     ) -> ExternalHandle:
         """Register or return an external symbol owned by this theory.
 
@@ -576,6 +579,8 @@ class Theory:
         pychete fields, couplings, groups, representations, or CG tensors. The
         primary use is Matchete-derived Wilson-condition labels and helper
         symbols that must still round-trip with Symbolica tags and symbol data.
+        ``operator`` may store the EFT operator monomial associated with a
+        Wilson-like matching target.
         """
 
         kind = ExternalKind.from_user(external_kind)
@@ -590,15 +595,25 @@ class Theory:
                 and not indices_tuple
                 and eft_order == 0
                 and not basis_value
+                and operator is None
             )
             if requested_generic:
                 return ExternalHandle(self, definition)
+            existing_operator = definition.operator_expr
             existing_matches = (
                 definition.kind is kind
                 and [canonical_string(index) for index in definition.index_exprs]
                 == [canonical_string(index) for index in indices_tuple]
                 and definition.order == eft_order
                 and (definition.basis_name or "") == basis_value
+                and (
+                    (existing_operator is None and operator is None)
+                    or (
+                        existing_operator is not None
+                        and operator is not None
+                        and canonical_string(existing_operator) == canonical_string(operator)
+                    )
+                )
             )
             if existing_matches:
                 return ExternalHandle(self, definition)
@@ -615,6 +630,7 @@ class Theory:
                 SymbolDataKey.INDICES.value: list(indices_tuple),
                 SymbolDataKey.EFT_ORDER.value: eft_order,
                 SymbolDataKey.BASIS.value: basis_value,
+                **({SymbolDataKey.OPERATOR.value: operator} if operator is not None else {}),
             },
             tags=_external_symbol_tags(kind, basis_value, name=name),
         )
@@ -625,6 +641,7 @@ class Theory:
             indices=indices_tuple,
             eft_order=eft_order,
             basis=basis_value or None,
+            operator=operator,
         )
         self.externals[name] = definition
         return ExternalHandle(self, definition)
@@ -636,8 +653,14 @@ class Theory:
         indices: Iterable[Expression] = (),
         eft_order: int = 0,
         basis: str = "SMEFT",
+        operator: Expression | None = None,
     ) -> ExternalHandle:
-        """Register a Wilson-coefficient target as a theory-owned external."""
+        """Register a Wilson-coefficient target as a theory-owned external.
+
+        ``operator`` stores the basis monomial whose coefficient should be
+        projected for this Wilson target when matching conditions are extracted
+        from an EFT Lagrangian.
+        """
 
         return self.define_external(
             name,
@@ -645,6 +668,7 @@ class Theory:
             indices=indices,
             eft_order=eft_order,
             basis=basis,
+            operator=operator,
         )
 
     def define_cg_tensor(
@@ -1337,11 +1361,17 @@ class Theory:
                 mass=mass,
             )
         for name, data in obj.get("externals", {}).items():
+            operator_data = data.get("operator")
             theory.define_external(
                 str(name),
                 external_kind=str(data.get("external_kind", ExternalKind.GENERIC.value)),
                 indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
                 eft_order=int(data.get("eft_order", 0)),
                 basis=str(data["basis"]) if data.get("basis") is not None else None,
+                operator=(
+                    theory._parse_registered_expression(str(operator_data))
+                    if operator_data is not None
+                    else None
+                ),
             )
         return theory

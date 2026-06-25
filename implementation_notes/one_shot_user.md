@@ -116,7 +116,10 @@ discoveries, dependency patches, blockers, and remaining work.
   use smoke probes and focused pytest markers such as `definitions`,
   `functional`, `loaders`, `models`, `backend`, `matching`, `validation`, and
   `typing`; run broader `not slow` or slow validation gates only when the
-  completed slice justifies the cost.
+  completed slice justifies the cost. Before starting a slice, consider the
+  remaining implementation frontier and choose a coherent feature family to
+  finish together; do not repeatedly run the whole suite while a design is
+  still being reshaped.
 
 ## Workflow
 

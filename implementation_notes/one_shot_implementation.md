@@ -35,6 +35,8 @@
   `validation`, `not slow`) before green milestone commits. Avoid running the
   full/slow suite after every small edit. Plan and implement complete feature
   families first, then run the smallest marker group that exercises the slice.
+  Smoke probes and single-test runs are allowed while exploring, but a slice
+  should not keep bouncing through the whole suite while still being designed.
 - Commit and push only coherent green milestones to `origin/one-shot-port`.
   Keep these notes current with status, validation, backend discoveries, and
   remaining gaps.
@@ -80,8 +82,7 @@
 - The Mathematica model loader now uses `FreeLagConvention.MATCHETE` for
   parsed `FreeLag[...]`. VLF Python and Mathematica assets intentionally share
   theory metadata but use distinct free-Lagrangian expression conventions.
-- Last pushed green milestone: `3bf2ccc Improve loader parity and targeted
-  test grouping`.
+- Last pushed green milestone: `3e572d1 Add opt-in parent Lagrangian loading`.
 - Last broader non-slow gate at that milestone:
   `263 passed, 1 skipped, 50 deselected`; the skip was the expected GammaLoop
   manifest skip for a local dependency build without GammaLoop requested.
@@ -163,3 +164,31 @@
   child heavy fields while preserving registered expression validation.
 - Targeted validation so far:
   - `pytest -m loaders tests/unit/loaders tests/integration/models`: 26 passed.
+
+## Current Slice: Wilson Operator Projection Metadata
+
+- The next matching-condition frontier needs structural SMEFT operator
+  metadata rather than another loader-specific parser branch. This slice stores
+  optional Wilson/operator monomials directly on the theory-owned external
+  Symbolica label, so the data survives checkpoint serialization before any
+  later expression parsing can create an untyped symbol.
+- Implemented:
+  - added `operator` metadata to `define_external(...)` and
+    `define_wilson_coefficient(...)`;
+  - exposed it through `ExternalDefinition.operator_expr`;
+  - preserved it in theory JSON and the Symbolica symbol manifest;
+  - extended `MatchingConditionTarget` with `projection_expression`, so Wilson
+    targets with stored operator metadata project with native
+    `Expression.coefficient(operator)`;
+  - added focused definition/checkpoint and matching-projection regressions.
+- Targeted validation for this slice:
+  - exact metadata tests:
+    `pytest tests/unit/definitions/test_theory_definitions.py::test_wilson_coefficients_store_basis_and_matching_target_metadata tests/unit/definitions/test_theory_definitions.py::test_matching_condition_targets_expose_symbolica_role_metadata -q`:
+    2 passed.
+  - exact projection tests:
+    `pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_conditions_with_symbolica_coefficients tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_wilson_conditions_from_operator_metadata -q`:
+    2 passed.
+  - grouped metadata gate:
+    `pytest -m definitions tests/unit/definitions -q`: 59 passed.
+  - `python -m mypy`: success, no issues in 32 source files.
+  - `git diff --check`: clean.

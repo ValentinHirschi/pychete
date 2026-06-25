@@ -472,6 +472,15 @@ def external_basis_from_label(label: Expression) -> str | None:
     return basis or None
 
 
+def external_operator_from_label(label: Expression) -> Expression | None:
+    value = symbol_data(label, SymbolDataKey.OPERATOR)
+    if value is None:
+        return None
+    if not isinstance(value, Expression):
+        raise ValueError(f"External operator is not stored as an expression on {canonical_string(label)}")
+    return value
+
+
 def coupling_eft_order_from_label(label: Expression) -> int:
     return int(symbol_data(label, SymbolDataKey.EFT_ORDER, 0))
 
@@ -1043,6 +1052,7 @@ class ExternalDefinition:
     indices: tuple[Expression, ...] = ()
     eft_order: int = 0
     basis: str | None = None
+    operator: Expression | None = None
 
     @property
     def kind(self) -> ExternalKind:
@@ -1068,6 +1078,12 @@ class ExternalDefinition:
 
         return external_basis_from_label(self.label)
 
+    @property
+    def operator_expr(self) -> Expression | None:
+        """Operator monomial stored on the external label, when available."""
+
+        return external_operator_from_label(self.label)
+
     def expr(self, *args: Expression) -> Expression:
         """Build this external symbol as an atom or function call."""
 
@@ -1087,6 +1103,7 @@ class ExternalDefinition:
             "indices": [canonical_string(index) for index in self.index_exprs],
             "eft_order": self.order,
             "basis": self.basis_name,
+            "operator": canonical_string(operator) if (operator := self.operator_expr) is not None else None,
         }
 
 
@@ -1254,6 +1271,7 @@ __all__ = [
     "external_eft_order_from_label",
     "external_indices_from_label",
     "external_kind_from_label",
+    "external_operator_from_label",
     "field_charges_from_label",
     "field_chirality_from_label",
     "field_indices_from_label",

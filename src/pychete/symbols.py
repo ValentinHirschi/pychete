@@ -505,6 +505,7 @@ class SymbolDataKey(StrEnum):
     CG_SOURCE = "cg_source"
     EXTERNAL_KIND = "external_kind"
     BASIS = "basis"
+    OPERATOR = "operator"
 
 
 class SymbolStore:

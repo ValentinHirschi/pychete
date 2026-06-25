@@ -289,6 +289,26 @@ def test_matching_result_projects_conditions_with_symbolica_coefficients() -> No
     assert tuple(replacement.matching_conditions) == (canonical_string(coefficient_a * operator_a),)
 
 
+def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> None:
+    x = S("condition_projection_wilson_x")
+    theory = Theory("condition_projection_wilson_operator")
+    higgs = theory.define_field("H", s.Scalar, mass=0)
+    operator = (s.Bar(higgs()) * higgs()) ** 3
+    wilson = theory.define_wilson_coefficient("cH", eft_order=6, basis="SMEFT", operator=operator)
+    target = s.Coupling(wilson.label, s.List(), Expression.num(6))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=11 * operator + 3 * target * operator + x * higgs(),
+    )
+
+    projected = result.project_matching_conditions([target])
+
+    assert tuple(projected) == (canonical_string(target),)
+    assert canonical_string((projected[canonical_string(target)] - (11 + 3 * target)).expand()) == "0"
+
+
 def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     x = S("fixture_gap_probe_x")
     theory = Theory("fixture_gap_probe")

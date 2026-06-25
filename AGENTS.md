@@ -63,6 +63,10 @@ chunk. Prefer smoke scripts and one or two focused tests during exploration;
 promote them into regression tests once the design has settled. Run the broad
 `not slow` gate only before a green milestone commit, and run slow validation
 only when the batch materially changes fixture validation behavior.
+Before starting a slice, review the remaining one-loop frontier and choose a
+larger feature family that can be completed coherently. Do not run the whole
+suite repeatedly while redesigning internals; reserve broad validation for the
+end of the slice after focused checks pass.
 
 Always use the managed virtual environment for pychete development and tests.
 Do not use the ambient system Python when importing Symbolica, idenso, spenso,
