@@ -69,6 +69,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "is_conjugate_representation",
             "group_charge",
             "mass_expr",
+            "non_abelian_gauge_generator_insertion",
             "expand_abelian_covariant_derivatives",
             "free_lag",
             "derive_eom",

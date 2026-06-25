@@ -999,6 +999,89 @@ class Theory:
             terms.append(charge[0] * self.coupling_handle(coupling_name)() * self.field_handle(field_name)())
         return sum_expr(terms).expand()
 
+    def non_abelian_gauge_generator_insertion(
+        self,
+        field: Expression,
+        field_index: int,
+        *,
+        output_index: Expression,
+        adjoint_index: Expression,
+        lorentz_index: Expression | None = None,
+    ) -> Expression:
+        """Build the non-Abelian ``g V T`` insertion for one indexed field.
+
+        ``field`` must be a concrete ``Field`` expression whose
+        ``field_index`` slot transforms in a registered non-Abelian gauge
+        representation. The returned expression is
+        ``g * V(..., adjoint_index) * CG(gen, adjoint, output, input_dual)
+        * field(output)``, with the field derivative slots preserved. The
+        conventional covariant-derivative sign and factor of ``I`` are left to
+        the caller.
+        """
+
+        self._validate_registered_expression(field)
+        if not is_head(field, s.Field):
+            raise ValueError(f"Expected a Field expression, got {canonical_string(field)}")
+        indices = list(list_items(field[2]))
+        if field_index < 0 or field_index >= len(indices):
+            raise IndexError(f"Field index slot {field_index} is out of range for {canonical_string(field)}")
+        input_index = indices[field_index]
+        if not is_head(input_index, s.Index) or len(input_index) != 2:
+            raise ValueError(f"Field index slot {field_index} is not an Index expression: {canonical_string(input_index)}")
+        input_representation = input_index[1]
+        representation = self.representation_definition(input_representation)
+        group_entry = self.groups.get(representation.group)
+        if group_entry is None:
+            raise KeyError(f"Representation {canonical_string(input_representation)} belongs to unknown group {representation.group!r}")
+        group_kind = GroupKind.from_user(str(group_entry.get("kind", GroupKind.GLOBAL.value)))
+        if group_kind is not GroupKind.GAUGE or bool(group_entry.get("abelian", False)):
+            raise ValueError(f"Representation {canonical_string(input_representation)} is not a non-Abelian gauge representation")
+        group_symbol = self.symbol(representation.group, role=SymbolRole.GROUP)
+        coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+        vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+        if not isinstance(coupling_name, str) or not isinstance(vector_name, str):
+            raise ValueError(f"Gauge group {representation.group!r} is missing coupling/vector symbol data")
+        generator_name = _builtin_cg_tensor_name("gen", representation.group, representation.name)
+        if generator_name not in self.cg_tensors:
+            raise KeyError(
+                f"Gauge representation {canonical_string(input_representation)} has no registered generator "
+                f"CG tensor {generator_name!r}"
+            )
+        generator = self.cg_tensor_handle(generator_name)
+        generator_reps = generator.definition.representation_exprs
+        if len(generator_reps) != 3:
+            raise ValueError(f"Generator CG tensor {generator.name!r} must have rank 3")
+        if not bool(input_representation == generator_reps[1]):
+            raise ValueError(
+                f"Generator insertion currently expects field index representation "
+                f"{canonical_string(generator_reps[1])}, got {canonical_string(input_representation)}"
+            )
+        adjoint_representation = generator_reps[0]
+        if not is_head(adjoint_index, s.Index) or len(adjoint_index) != 2:
+            raise ValueError(f"Adjoint index must be an Index expression: {canonical_string(adjoint_index)}")
+        if not bool(adjoint_index[1] == adjoint_representation):
+            raise ValueError(
+                f"Adjoint index has representation {canonical_string(adjoint_index[1])}, "
+                f"expected {canonical_string(adjoint_representation)}"
+            )
+        if not is_head(output_index, s.Index) or len(output_index) != 2:
+            raise ValueError(f"Output index must be an Index expression: {canonical_string(output_index)}")
+        if not bool(output_index[1] == generator_reps[1]):
+            raise ValueError(
+                f"Output index has representation {canonical_string(output_index[1])}, "
+                f"expected {canonical_string(generator_reps[1])}"
+            )
+        indices[field_index] = output_index
+        input_dual_index = s.Index(input_index[0], generator_reps[2])
+        transformed_field = s.Field(field[0], field[1], list_expr(*indices), field[3])
+        vector_indices = (adjoint_index,) if lorentz_index is None else (lorentz_index, adjoint_index)
+        return (
+            self.coupling_handle(coupling_name)()
+            * self.field_handle(vector_name)(*vector_indices)
+            * generator(adjoint_index, output_index, input_dual_index)
+            * transformed_field
+        )
+
     def expand_abelian_covariant_derivatives(self, expr: Expression) -> Expression:
         """Expand first-order Abelian covariant derivatives in ``expr``.
 

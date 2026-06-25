@@ -370,6 +370,58 @@ def test_conjugate_representation_lookup_uses_underlying_registered_metadata() -
         raise AssertionError("unregistered conjugate representation metadata lookup was accepted")
 
 
+def test_non_abelian_gauge_generator_insertion_uses_registered_cg_metadata() -> None:
+    theory = Theory("nonabelian_generator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], mass=0)
+
+    mu = theory.index("mu")
+    adjoint = theory.index("A", adj)
+    input_index = theory.index("i", fund)
+    output_index = theory.index("j", fund)
+    field = higgs(input_index, derivatives=[mu])
+
+    insertion = theory.non_abelian_gauge_generator_insertion(
+        field,
+        0,
+        output_index=output_index,
+        adjoint_index=adjoint,
+        lorentz_index=mu,
+    )
+    expected_input_dual = theory.index(input_index[0], s.Bar(fund))
+    expected = (
+        theory.coupling_handle("gL")()
+        * theory.field_handle("W")(mu, adjoint)
+        * theory.cg_tensor_handle("gen_SU2L_fund")(adjoint, output_index, expected_input_dual)
+        * higgs(output_index, derivatives=[mu])
+    )
+
+    assert_expr_equal(insertion, expected)
+    assert "cg_tensor_gen_SU2L_fund" in canonical_string(insertion)
+
+
+def test_non_abelian_gauge_generator_insertion_rejects_non_gauge_representations() -> None:
+    theory = Theory("nonabelian_generator_validation")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    fund = theory.define_representation("SU2F", "fund")
+    adj = theory.define_representation("SU2F", "adj")
+    scalar = theory.define_field("phi", s.Scalar, indices=[fund], mass=0)
+
+    try:
+        theory.non_abelian_gauge_generator_insertion(
+            scalar(theory.index("i", fund)),
+            0,
+            output_index=theory.index("j", fund),
+            adjoint_index=theory.index("A", adj),
+        )
+    except ValueError as exc:
+        assert "non-Abelian gauge representation" in str(exc)
+    else:
+        raise AssertionError("global representations must not produce gauge-generator insertions")
+
+
 def test_cg_tensors_store_symbolica_metadata_and_survive_json_restore() -> None:
     theory = Theory("cg_metadata")
     su2 = theory.define_global_group("SU2F", s.SU(Expression.num(2)))

@@ -216,6 +216,12 @@ implemented with Symbolica replacement rules over registered first-derivative
 duplicate the expansion by hand in loaders or matching code. Non-Abelian
 covariant derivatives must remain delegated to the planned idenso/spenso-backed
 group-algebra path rather than an ad hoc scalarized Python implementation.
+For non-Abelian covariant-derivative work, construct generator insertions
+through `Theory.non_abelian_gauge_generator_insertion(...)` so the gauge
+coupling, vector field, adjoint index, dual representation slot, and registered
+`CG(gen, ...)` tensor come from theory-owned Symbolica metadata in one place.
+Do not duplicate the `g * V * CG(gen) * field` expression shape manually in new
+code.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

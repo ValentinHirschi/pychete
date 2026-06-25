@@ -83,6 +83,21 @@
   the remaining gauge-dependent Wilson gaps need broader non-Abelian/full
   covariant-derivative and group-algebra work.
 
+## Current Non-Abelian Infrastructure Slice
+
+- Added `Theory.non_abelian_gauge_generator_insertion(...)` as the first tested
+  structural primitive for non-Abelian covariant-derivative work. It builds the
+  theory-owned Symbolica expression `g * V * CG(gen) * field` for one concrete
+  field index in a registered non-Abelian gauge representation, preserving field
+  derivative slots and using the registered generator CG tensor, gauge coupling,
+  vector field, and representation symbol data.
+- This slice intentionally does not yet expand full non-Abelian covariant
+  derivatives. It centralizes the CG/gauge-vector construction so the later
+  replacement pass can use one tested Symbolica expression builder instead of
+  scattered ad hoc generator construction.
+- Validation so far: `tests/unit/definitions/test_theory_definitions.py` and
+  `tests/unit/definitions/test_public_api.py` pass with 35 tests.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -104,8 +119,9 @@
 ## Current Remaining Work
 
 - Implement the broader covariant-derivative/group-algebra feature family:
-  non-Abelian gauge connections, generator/CG tensor handling, and idenso/spenso
-  backed simplification/contraction for gauge interactions in supertraces.
+  complete non-Abelian gauge-connection expansion on top of
+  `Theory.non_abelian_gauge_generator_insertion(...)`, then idenso/spenso-backed
+  simplification/contraction for gauge interactions in supertraces.
 - Continue improving Dirac/NCM simplification in generated supertraces through
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
