@@ -412,6 +412,26 @@ def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> 
         result.project_matching_conditions("all_wilsons")
 
 
+def test_matching_result_projects_negative_power_normalized_wilson_targets() -> None:
+    x = S("condition_projection_negative_power_x")
+    theory = Theory("condition_projection_negative_power")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    coupling = theory.define_coupling("g", self_conjugate=True)
+    operator = s.Bar(phi()) * phi() / coupling() ** 2
+    wilson = theory.define_wilson_coefficient("cPhi", eft_order=2, basis="toy", operator=operator)
+    target = s.Coupling(wilson.label, s.List(), Expression.num(2))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=x * coupling() ** 2 * s.Bar(phi()) * phi(),
+    )
+
+    projected = result.project_matching_conditions([target])
+
+    assert_expr_equal(projected[canonical_string(target)], x * coupling() ** 4)
+
+
 def test_matching_result_projection_normalizes_cd_targets_to_derivative_slots() -> None:
     coefficient = S("condition_projection_cd_coefficient")
     theory = Theory("condition_projection_cd_normalization")

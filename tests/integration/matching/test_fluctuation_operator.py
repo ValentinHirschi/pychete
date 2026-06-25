@@ -23,6 +23,7 @@ from pychete import (
     Theory,
     VakintIntegralStage,
     canonical_string,
+    define_smeft_wilson_coefficient,
     one_loop_normalization_factor,
     s,
 )
@@ -2022,6 +2023,7 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
     higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
     vector = theory.field_handle("W")
     kappa = theory.define_coupling("kappa", self_conjugate=True)
+    define_smeft_wilson_coefficient(theory, "cHW")
     i = theory.dummy_index(1, fund)
     lagrangian = (
         theory.free_lag(heavy)
@@ -2032,6 +2034,9 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
     result = theory.match(
         lagrangian,
         loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
         one_loop_options=OneLoopMatchOptions(
             integral_backend=OneLoopIntegralBackend.INTERNAL,
             max_trace_order=1,
@@ -2052,12 +2057,16 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
 
     assert result.metadata["field_strength_metric_simplified"] is True
     assert result.metadata["native_color_wrappers_decoded"] is True
+    assert result.metadata["su2_field_strength_generator_bilinears_simplified"] is True
+    assert result.metadata["matching_conditions_projected"] is True
     assert "vakint::CD" not in rendered
     assert "vakint::List" not in rendered
     assert "vakint::𝑖" not in rendered
     assert "spenso::" not in rendered
     assert "pychete::CD" in rendered
     assert "pychete::FieldStrength" in rendered
+    assert len(result.matching_conditions) == 1
+    assert not bool(next(iter(result.matching_conditions.values())).expand() == Expression.num(0))
 
 
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:

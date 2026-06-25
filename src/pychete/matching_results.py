@@ -14,11 +14,13 @@ from .expr import (
     as_int,
     cd_pattern,
     coupling_pattern,
+    factors,
     index_pattern,
     is_head,
     is_zero,
     list_items,
     matching_subexpressions,
+    pow_parts,
     sum_expr,
     terms,
 )
@@ -696,7 +698,15 @@ class _ProjectionCoefficientExtractor:
         coefficient = factored.coefficient(target).expand()
         if not is_zero(coefficient):
             return coefficient
-        return factored.coefficient(factored_target).expand()
+        coefficient = factored.coefficient(factored_target).expand()
+        if not is_zero(coefficient):
+            return coefficient
+        normalized = _negative_power_normalized_target(target)
+        if normalized is None:
+            return coefficient
+        normalized_target, denominator = normalized
+        coefficient = self.coefficient(normalized_target)
+        return (coefficient * denominator).expand()
 
     def _collected_source(self) -> Expression:
         if self.collected_source is None:
@@ -707,6 +717,22 @@ class _ProjectionCoefficientExtractor:
         if self.factored_source is None:
             self.factored_source = self.source.factor()
         return self.factored_source
+
+
+def _negative_power_normalized_target(target: Expression) -> tuple[Expression, Expression] | None:
+    denominator = Expression.num(1)
+    for factor in factors(target):
+        parts = pow_parts(factor)
+        if parts is None:
+            continue
+        base, exponent = parts
+        power = as_int(exponent)
+        if power is None or power >= 0:
+            continue
+        denominator *= base ** (-power)
+    if bool(denominator == Expression.num(1)):
+        return None
+    return (target * denominator).expand(), denominator
 
 
 def _matching_projection_coefficient(
@@ -964,7 +990,7 @@ def _truncate_projected_coefficient(
         eft_order=eft_order,
         heavy_field_dimension=heavy_field_dimension,
     )
-    return projected_piece.coefficient(target).expand()
+    return _ProjectionCoefficientExtractor(projected_piece).coefficient(target)
 
 
 def _metadata_eft_order(eft_order: int | tuple[int, ...] | None) -> int | str | None:

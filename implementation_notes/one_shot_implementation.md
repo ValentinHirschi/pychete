@@ -265,6 +265,55 @@
     passed.
   - `git diff --check` passed.
 
+## Current SU(2) Field-Strength Projection Slice
+
+- Followed the next order-4 CDE blocker after backend wrapper/constant cleanup:
+  the generated source had pychete `FieldStrength(...)` atoms and decoded
+  generator CG tensors, but the `cHW` registered Wilson projection stayed zero.
+  The immediate cause was twofold. First, barred non-Abelian generator
+  insertions used the same output/input-dual orientation as unbarred fields,
+  producing duplicate dual slots that native idenso/spenso could not contract.
+  Second, the Wilson target is conventionally normalized as
+  `Hbar H W^A W^A / gL^2`, while the projection extractor only tried direct
+  coefficient extraction on that negative-power target.
+- Corrected `Theory.non_abelian_gauge_generator_insertion(...)` and the
+  commutator field/field-strength insertion paths so barred/conjugate fields
+  use `CG(gen, adjoint, input, output_dual) * Bar(field(output))`. This keeps
+  generated fund/dual contractions explicit for native backend algebra.
+- Added `pychete.backends.idenso.simplify_su2_field_strength_generator_bilinears(...)`.
+  It matches the symmetric SU(2) CDE structure
+  `Bar(H_j) H_i T^A_{i k} T^B_{k j} W^A W^B` with Symbolica replacement rules,
+  computes the singlet coefficient from an idenso-simplified contracted
+  generator trace, and rewrites the term to the Warsaw-like
+  `Bar(H_i) H_i W^A W^A` structure. This remains in the idenso backend path and
+  avoids a Wilson-specific projection special case.
+- Wired that helper into the opt-in public colour cleanup path after native
+  colour wrapper decoding. Public result metadata now records
+  `su2_field_strength_generator_bilinears_simplified` when this cleanup path is
+  active.
+- Extended matching-condition coefficient extraction so negative-power target
+  normalizations are handled generically. If exact extraction of a target such
+  as `operator / g^2` vanishes, pychete extracts the numerator monomial and
+  multiplies the denominator factor back into the coefficient. EFT truncation
+  now uses the same extractor so registered Wilson projection and
+  target-selective truncation agree.
+- Updated the order-4 public CDE regression to register `cHW`, project
+  `registered_wilsons`, and assert the projected coefficient is nonzero.
+- Validation for this slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_projects_su2_field_strength_generator_bilinear_to_singlet tests/unit/definitions/test_theory_definitions.py -k "non_abelian or covariant_derivative_commutator" -q'`
+    passed with 19 tests and 29 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_spenso_backend.py::test_spenso_backend_lowers_generated_non_abelian_derivative_cg_tensors tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_decodes_native_generator_chain_with_pychete_payload -q'`
+    passed with 2 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_decodes_order_four_covariant_derivatives -q'`
+    passed with 1 test.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_negative_power_normalized_wilson_targets tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_projects_su2_field_strength_generator_bilinear_to_singlet tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_decodes_order_four_covariant_derivatives -q'`
+    passed with 3 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py tests/unit/definitions/test_theory_definitions.py tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 108 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -278,20 +327,21 @@
     Wilson targets accepted.
 - Raising the Singlet trace order from 1 to 3 and enabling opt-in Abelian
   covariant-derivative expansion did not move the frontier.
-- Selected Singlet `hScalar` CDE through order 2 now generates field-strength
-  supertrace terms after cyclic OpenCD action and commutator lowering, but the
-  CDE-only route previously dropped unselected traces and reported 41/72
-  accepted versus the 42/72 default. The current hybrid source fix removes that
-  aggregation bug; rerun targeted fixture probes only after the next feature
-  slice materially changes basis/on-shell reduction or generated sources.
+- Focused order-4 CDE now produces a nonzero projected `cHW` coefficient for
+  the small heavy-scalar/Higgs/SU(2) regression. The default fixture frontier
+  above has not yet been rerun after this slice; rerun targeted fixture probes
+  after the next feature slice materially changes basis/on-shell reduction or
+  generated sources.
 
 ## Current Remaining Work
 
 - Continue the CDE/basis-reduction feature family from the new hybrid source:
   use the cyclic derivative/field-strength CDE output together with the
   interaction-power remainder, then add the needed EOM/IBP/Warsaw-basis
-  reductions before expecting gauge Wilson structures such as `cHB`, `cHW`,
-  `cHWB`, `cHBox`, `cHD`, and fermionic Higgs-current coefficients to move.
+  reductions for remaining gauge/Higgs Wilson structures such as `cHB`,
+  `cHWB`, `cHBox`, `cHD`, and fermionic Higgs-current coefficients. `cHW` now
+  has a focused nonzero order-4 CDE projection, but default fixture parity has
+  not yet been remeasured.
 - Extend idenso/spenso-backed group algebra beyond the current simple
   generator, Fierz, metric, structure-constant, and native generator-chain
   decode cases as fixture probes expose missing contractions.

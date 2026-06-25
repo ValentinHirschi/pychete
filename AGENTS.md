@@ -242,6 +242,10 @@ first-derivative expansion. Construct individual generator insertions through
 `Theory.non_abelian_gauge_generator_insertion(...)` so the gauge coupling,
 vector field, adjoint index, dual representation slot, and registered
 `CG(gen, ...)` tensor come from theory-owned Symbolica metadata in one place.
+For barred/conjugate fields, the generator must act on the conjugate slot as
+`CG(gen, adjoint, input, output_dual) * Bar(field(output))`; do not reuse the
+unbarred `CG(gen, adjoint, output, input_dual)` orientation because that hides
+fund/dual contractions from native idenso/spenso colour algebra.
 Do not duplicate the `g * V * CG(gen) * field` expression shape manually in new
 code. After such expansion, simplify/contract the generated CG tensors through
 the spenso/idenso-backed group-algebra path rather than Python-side tensor
@@ -261,6 +265,12 @@ with generated theory-owned internal index labels; do not replace them with
 handwritten SU(N) identities in Python. Do not let simple native `spenso::t`,
 `spenso::f`, `spenso::g`, or decodable `spenso::chain` forms leak into
 pychete-facing results when the originating theory group is unambiguous.
+For the SMEFT-relevant SU(2) Higgs/gauge CDE structures, use
+`pychete.backends.idenso.simplify_su2_field_strength_generator_bilinears(...)`
+to project symmetric `Bar(H_j) H_i T^A_{i k} T^B_{k j} W^A W^B` structures to
+the singlet `Bar(H_i) H_i W^A W^A`. The singlet coefficient must be computed
+from an idenso-simplified generator trace and applied with Symbolica
+replacement rules; do not add Wilson-specific projection hacks for `cHW`.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

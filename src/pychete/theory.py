@@ -1042,10 +1042,12 @@ class Theory:
         ``field_index`` slot transforms in a registered non-Abelian gauge
         representation. The returned expression is
         ``g * V(..., adjoint_index) * CG(gen, adjoint, output, input_dual)
-        * field(output)`` or its barred-field analogue when
-        ``conjugate_field=True``, with the field derivative slots preserved.
-        The conventional covariant-derivative sign and factor of ``I`` are
-        left to the caller.
+        * field(output)`` for unbarred fields. For barred fields, the
+        generator acts on the conjugate slot as
+        ``CG(gen, adjoint, input, output_dual) * Bar(field(output))`` so the
+        resulting fund/dual contractions remain visible to native idenso and
+        spenso colour algebra. The conventional covariant-derivative sign and
+        factor of ``I`` are left to the caller.
         """
 
         self._validate_registered_expression(field)
@@ -1101,16 +1103,39 @@ class Theory:
                 f"expected {canonical_string(generator_reps[1])}"
             )
         indices[field_index] = output_index
-        input_dual_index = s.Index(input_index[0], generator_reps[2])
         transformed_field = s.Field(field[0], field[1], list_expr(*indices), field[3])
         field_factor = s.Bar(transformed_field) if conjugate_field else transformed_field
+        generator_factor = self._non_abelian_generator_factor(
+            generator,
+            generator_reps,
+            adjoint_index,
+            input_index,
+            output_index,
+            conjugate_field=conjugate_field,
+        )
         vector_indices = (adjoint_index,) if lorentz_index is None else (lorentz_index, adjoint_index)
         return (
             self.coupling_handle(coupling_name)()
             * self.field_handle(vector_name)(*vector_indices)
-            * generator(adjoint_index, output_index, input_dual_index)
+            * generator_factor
             * field_factor
         )
+
+    def _non_abelian_generator_factor(
+        self,
+        generator: CGTensorHandle,
+        generator_reps: tuple[Expression, ...],
+        adjoint_index: Expression,
+        input_index: Expression,
+        output_index: Expression,
+        *,
+        conjugate_field: bool,
+    ) -> Expression:
+        if conjugate_field:
+            output_dual_index = s.Index(output_index[0], generator_reps[2])
+            return generator(adjoint_index, input_index, output_dual_index)
+        input_dual_index = s.Index(input_index[0], generator_reps[2])
+        return generator(adjoint_index, output_index, input_dual_index)
 
     def covariant_derivative_commutator(
         self,
@@ -1495,17 +1520,24 @@ class Theory:
             transformed_indices[field_index] = output_index
             transformed_field = s.Field(field[0], field[1], list_expr(*transformed_indices), field[3])
             field_factor = s.Bar(transformed_field) if conjugate_field else transformed_field
-            input_dual_index = s.Index(input_index[0], generator_reps[2])
             strength = s.FieldStrength(
                 self.fields[vector_name].label,
                 list_expr(left_index, right_index),
                 list_expr(adjoint_index),
                 list_expr(),
             )
+            generator_factor = self._non_abelian_generator_factor(
+                generator,
+                generator_reps,
+                adjoint_index,
+                input_index,
+                output_index,
+                conjugate_field=conjugate_field,
+            )
             terms.append(
                 self.coupling_handle(coupling_name)()
                 * strength
-                * generator(adjoint_index, output_index, input_dual_index)
+                * generator_factor
                 * field_factor
             )
         return sum_expr(terms).expand()
@@ -1604,17 +1636,24 @@ class Theory:
             transformed_indices[field_index] = output_index
             transformed_strength = s.FieldStrength(strength[0], strength[1], list_expr(*transformed_indices), strength[3])
             strength_factor = s.Bar(transformed_strength) if conjugate_field else transformed_strength
-            input_dual_index = s.Index(input_index[0], generator_reps[2])
             source_strength = s.FieldStrength(
                 self.fields[vector_name].label,
                 list_expr(left_index, right_index),
                 list_expr(adjoint_index),
                 list_expr(),
             )
+            generator_factor = self._non_abelian_generator_factor(
+                generator,
+                generator_reps,
+                adjoint_index,
+                input_index,
+                output_index,
+                conjugate_field=conjugate_field,
+            )
             terms.append(
                 self.coupling_handle(coupling_name)()
                 * source_strength
-                * generator(adjoint_index, output_index, input_dual_index)
+                * generator_factor
                 * strength_factor
             )
         return sum_expr(terms).expand()

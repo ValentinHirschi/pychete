@@ -11,7 +11,8 @@ from symbolica.core import AtomType
 
 from .common import import_backend
 from ..expr import args, as_int, cg_tensor_pattern, factors, is_head, list_items, product_expr, sum_expr
-from ..symbols import SymbolRole, canonical_string, expression_from_canonical, s
+from ..symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, symbol_data
+from ..theory_metadata import GroupKind
 
 _MAX_NATIVE_PROJECTOR_POWER = 16
 _MAX_NATIVE_DIRAC_WORD_ARITY = 8
@@ -230,6 +231,29 @@ def simplify_pychete_field_strength_metrics(expr: Expression) -> Expression:
     result = expr.replace_multiple(_field_strength_metric_trace_replacements(), repeat=True)
     result = result.replace_multiple(_field_strength_metric_slot_replacements(), repeat=True)
     return result.replace_multiple(_field_strength_lorentz_antisymmetry_replacements()).expand()
+
+
+def simplify_su2_field_strength_generator_bilinears(theory: Any, expr: Expression) -> Expression:
+    """Project symmetric SU(2) field-strength generator bilinears to singlets.
+
+    The CDE commutator expansion can generate terms of the form
+    ``Bar(H_j) H_i T^A_{i k} T^B_{k j} W^A W^B``. For SU(2), the
+    field-strength pair is symmetric in ``A`` and ``B`` and idenso's native
+    colour trace fixes the singlet coefficient. This helper keeps the match in
+    Symbolica replacement rules and delegates the group coefficient to idenso
+    instead of hard-coding generator algebra in projection code.
+    """
+
+    result = expr
+    for group in theory.groups:
+        coefficient = _su2_field_strength_generator_bilinear_coefficient(theory, group)
+        if coefficient is None:
+            continue
+        result = result.replace_multiple(
+            _su2_field_strength_generator_bilinear_replacements(theory, group, coefficient),
+            repeat=True,
+        ).expand()
+    return result
 
 
 def to_dots(expr: Expression) -> Expression:
@@ -1183,6 +1207,126 @@ def _su_group_size(theory: Any, group: str) -> int | None:
     return n
 
 
+def _su2_field_strength_generator_bilinear_coefficient(theory: Any, group: str) -> Expression | None:
+    if _su_group_size(theory, group) != 2:
+        return None
+    group_symbol = theory.symbol(group, role=SymbolRole.GROUP)
+    group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
+    if group_kind is not GroupKind.GAUGE or bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+        return None
+    vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+    if not isinstance(vector_name, str) or vector_name not in theory.fields:
+        return None
+    generator_name = f"gen_{group}_fund"
+    delta_fund_name = f"del_{group}_fund"
+    delta_adj_name = f"del_{group}_adj"
+    if generator_name not in theory.cg_tensors or delta_fund_name not in theory.cg_tensors or delta_adj_name not in theory.cg_tensors:
+        return None
+    adj_dim = _native_color_group_dimension(theory, group, "adj")
+    fund_dim = _native_color_group_dimension(theory, group, "fund")
+    if adj_dim is None or fund_dim is None:
+        return None
+    adj = group_symbol(s.adj)
+    fund = group_symbol(s.fund)
+    adjoint_a = s.Index(Expression.symbol(f"pychete::{group}_su2_project_A"), adj)
+    adjoint_b = s.Index(Expression.symbol(f"pychete::{group}_su2_project_B"), adj)
+    fund_i = s.Index(Expression.symbol(f"pychete::{group}_su2_project_i"), fund)
+    fund_k = s.Index(Expression.symbol(f"pychete::{group}_su2_project_k"), fund)
+    fund_i_dual = s.Index(fund_i[0], s.Bar(fund))
+    fund_k_dual = s.Index(fund_k[0], s.Bar(fund))
+    generator = theory.cg_tensor_handle(generator_name)
+    delta_fund = theory.cg_tensor_handle(delta_fund_name)
+    delta_adj = theory.cg_tensor_handle(delta_adj_name)
+    contracted_trace = (
+        delta_adj(adjoint_a, adjoint_b)
+        * generator(adjoint_a, fund_i, fund_k_dual)
+        * generator(adjoint_b, fund_k, fund_i_dual)
+    )
+    traced = simplify_pychete_color_algebra(theory, contracted_trace)
+    trace_coefficient = traced.coefficient(delta_fund(fund_i, fund_i_dual)).expand()
+    if not bool(trace_coefficient == Expression.num(0)):
+        return (trace_coefficient / Expression.num(adj_dim)).expand()
+    if tuple(traced.match(cg_tensor_pattern(), s.CGTensorLabelWildcard.req_tag(SymbolRole.CG_TENSOR.value))):
+        return None
+    return (traced / Expression.num(adj_dim * fund_dim)).expand()
+
+
+def _su2_field_strength_generator_bilinear_replacements(
+    theory: Any,
+    group: str,
+    coefficient: Expression,
+) -> tuple[Replacement, ...]:
+    group_symbol = theory.symbol(group, role=SymbolRole.GROUP)
+    vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+    if not isinstance(vector_name, str) or vector_name not in theory.fields:
+        return ()
+    generator_name = f"gen_{group}_fund"
+    if generator_name not in theory.cg_tensors:
+        return ()
+    vector_label = theory.fields[vector_name].label
+    generator_label = theory.cg_tensors[generator_name].label
+    fund = group_symbol(s.fund)
+    adj = group_symbol(s.adj)
+
+    field_label = s.head(f"su2_fs_gen_{group}_field_label_")
+    field_index_label = s.head(f"su2_fs_gen_{group}_field_index_")
+    bar_index_label = s.head(f"su2_fs_gen_{group}_bar_index_")
+    internal_index_label = s.head(f"su2_fs_gen_{group}_internal_index_")
+    adjoint_left_label = s.head(f"su2_fs_gen_{group}_adjoint_left_")
+    adjoint_right_label = s.head(f"su2_fs_gen_{group}_adjoint_right_")
+    lorentz_indices = s.head(f"su2_fs_gen_{group}_lorentz_")
+
+    field_index = s.Index(field_index_label, fund)
+    bar_index = s.Index(bar_index_label, fund)
+    bar_dual_index = s.Index(bar_index_label, s.Bar(fund))
+    internal_index = s.Index(internal_index_label, fund)
+    internal_dual_index = s.Index(internal_index_label, s.Bar(fund))
+    adjoint_left = s.Index(adjoint_left_label, adj)
+    adjoint_right = s.Index(adjoint_right_label, adj)
+
+    field = s.Field(field_label, s.Scalar, s.List(field_index), s.List())
+    barred_field = s.Bar(s.Field(field_label, s.Scalar, s.List(bar_index), s.List()))
+    left_strength = s.FieldStrength(vector_label, lorentz_indices, s.List(adjoint_left), s.List())
+    right_strength = s.FieldStrength(vector_label, lorentz_indices, s.List(adjoint_right), s.List())
+    left_generator = s.CG(generator_label, s.List(adjoint_left, field_index, internal_dual_index))
+    right_generator = s.CG(generator_label, s.List(adjoint_right, internal_index, bar_dual_index))
+    pattern = field * barred_field * left_generator * right_generator * left_strength * right_strength
+
+    def project(match: dict[Expression, Expression], *, pattern: Expression = pattern) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        label = match[field_label]
+        if not _is_single_fund_scalar_field_label(theory, label, fund):
+            return matched
+        singlet_index = s.Index(match[field_index_label], fund)
+        adjoint_index = s.Index(match[adjoint_left_label], adj)
+        singlet_field = s.Field(label, s.Scalar, s.List(singlet_index), s.List())
+        singlet_bar = s.Bar(s.Field(label, s.Scalar, s.List(singlet_index), s.List()))
+        singlet_strength = s.FieldStrength(vector_label, match[lorentz_indices], s.List(adjoint_index), s.List())
+        return (coefficient * singlet_field * singlet_bar * singlet_strength * singlet_strength).expand()
+
+    return (
+        Replacement(
+            pattern,
+            project,
+            field_label.req_tag(SymbolRole.FIELD.value),
+            rhs_cache_size=0,
+        ),
+    )
+
+
+def _is_single_fund_scalar_field_label(theory: Any, label: Expression, fund: Expression) -> bool:
+    label_key = canonical_string(label)
+    for definition in theory.fields.values():
+        if canonical_string(definition.label) != label_key:
+            continue
+        return (
+            bool(definition.type_expr == s.Scalar)
+            and len(definition.indices) == 1
+            and bool(definition.indices[0] == fund)
+        )
+    return False
+
+
 @cache
 def _native_color_symbol(name: str) -> Expression:
     return Expression.symbol(f"spenso::{name}")
@@ -1254,6 +1398,7 @@ __all__ = [
     "simplify_gamma",
     "simplify_index_algebra",
     "simplify_metrics",
+    "simplify_su2_field_strength_generator_bilinears",
     "expand_pychete_ncm_powers",
     "simplify_pychete_color_algebra",
     "simplify_pychete_dirac_algebra",

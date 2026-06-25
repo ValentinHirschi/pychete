@@ -689,14 +689,14 @@ def test_expand_covariant_derivative_commutators_lowers_barred_non_abelian_field
     input_index = theory.index("A", adj)
     output_index = theory.index(theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX), adj)
     adjoint_index = theory.index(theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX), adj)
-    input_dual = theory.index(input_index[0], adj)
+    output_dual = theory.index(output_index[0], adj)
     source_strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(adjoint_index), s.List())
     transformed_strength = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(output_index), s.List())
     strength = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(input_index), s.List())
     expected = Expression.I * theory.coupling_handle("gL")() * source_strength * generator(
         adjoint_index,
-        output_index,
-        input_dual,
+        input_index,
+        output_dual,
     ) * s.Bar(transformed_strength)
 
     assert_expr_equal(theory.covariant_derivative_commutator(s.Bar(strength), mu, nu), expected)
@@ -719,6 +719,7 @@ def test_covariant_derivative_commutator_builds_non_abelian_field_strength_inser
     output_index = theory.index(theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX), fund)
     adjoint_index = theory.index(theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX), adj)
     input_dual = theory.index(input_index[0], s.Bar(fund))
+    output_dual = theory.index(output_index[0], s.Bar(fund))
     strength = s.FieldStrength(
         theory.field_handle("W").label,
         s.List(mu, nu),
@@ -742,7 +743,7 @@ def test_covariant_derivative_commutator_builds_non_abelian_field_strength_inser
         Expression.I
         * theory.coupling_handle("gL")()
         * strength
-        * generator(adjoint_index, output_index, input_dual)
+        * generator(adjoint_index, input_index, output_dual)
         * s.Bar(higgs(output_index)),
     )
 
