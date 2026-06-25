@@ -115,11 +115,14 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
     nu = theory.lorentz_index("nu")
     builtins = (
         s.List(mu, nu),
+        s.InternalIndices(mu, nu),
+        s.DerivativeIndices(mu, nu),
+        s.LorentzIndices(mu, nu),
         phi(),
         lam(),
         mu,
         s.dummy_index(0),
-        s.FieldStrength(phi.label, s.List(mu, nu), s.List(), s.List()),
+        s.FieldStrength(phi.label, s.LorentzIndices(mu, nu), s.InternalIndices(), s.DerivativeIndices()),
         s.Bar(phi()),
         s.CD(mu, phi()),
         s.Delta(mu, nu),

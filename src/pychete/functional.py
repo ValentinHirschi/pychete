@@ -5,6 +5,7 @@ from symbolica import Expression, Replacement
 from .expr import (
     bar_field_pattern,
     cd_pattern,
+    derivative_indices_expr,
     field_pattern,
     field_with_derivatives,
     is_zero,
@@ -37,7 +38,7 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
             match[s.FieldLabelWildcard],
             match[s.FieldTypeWildcard],
             match[s.FieldIndicesWildcard],
-            s.List(*list_items(match[s.FieldDerivativesWildcard]), index),
+            derivative_indices_expr(*list_items(match[s.FieldDerivativesWildcard]), index),
         )
         return matched + s.CDVariationParameter * derivative
 
@@ -48,7 +49,7 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
                 match[s.FieldLabelWildcard],
                 match[s.FieldTypeWildcard],
                 match[s.FieldIndicesWildcard],
-                s.List(*list_items(match[s.FieldDerivativesWildcard]), index),
+                derivative_indices_expr(*list_items(match[s.FieldDerivativesWildcard]), index),
             )
         )
         return matched + s.CDVariationParameter * derivative

@@ -9,7 +9,7 @@ from typing import TYPE_CHECKING, Any, Iterable, TypeAlias
 
 from symbolica import Expression, S
 
-from .expr import is_head, list_expr
+from .expr import derivative_indices_expr, internal_indices_expr, is_head, lorentz_indices_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
@@ -165,7 +165,7 @@ def field_mass_expr_from_label(label: Expression) -> Expression | None:
     if mass_label is None:
         return None
     order = 0 if field_mass_kind_from_label(label) is FieldMassKind.HEAVY else 1
-    return s.Coupling(mass_label, list_expr(*field_mass_indices_from_label(label)), order)
+    return s.Coupling(mass_label, internal_indices_expr(*field_mass_indices_from_label(label)), order)
 
 
 def coupling_eft_order_from_label(label: Expression) -> int:
@@ -228,7 +228,7 @@ class CouplingDefinition:
 
         if not indices:
             indices = ()
-        return s.Coupling(self.label, list_expr(*indices), coupling_eft_order_from_label(self.label))
+        return s.Coupling(self.label, internal_indices_expr(*indices), coupling_eft_order_from_label(self.label))
 
     def _repr_latex_(self) -> str:
         return f"${latex_string(self.expr())}$"
@@ -280,7 +280,7 @@ class FieldDefinition:
     def expr(self, *indices: Expression, derivatives: Iterable[Expression] = ()) -> Expression:
         """Build a Symbolica field expression."""
 
-        return s.Field(self.label, self.type_expr, list_expr(*indices), list_expr(*tuple(derivatives)))
+        return s.Field(self.label, self.type_expr, internal_indices_expr(*indices), derivative_indices_expr(*tuple(derivatives)))
 
     def mass_expr(self) -> Expression | None:
         """Return the mass coupling expression, if one was registered."""
@@ -719,7 +719,7 @@ class Theory:
                 out = out + kinetic
             elif is_head(type_expr, s.Vector):
                 nu = self.dummy_index(1)
-                strength = s.FieldStrength(definition.label, list_expr(mu, nu), list_expr(), list_expr())
+                strength = s.FieldStrength(definition.label, lorentz_indices_expr(mu, nu), internal_indices_expr(), derivative_indices_expr())
                 out = out - strength**2 / 4
             elif bool(type_expr == s.Fermion):
                 mass = self.mass_expr(definition)

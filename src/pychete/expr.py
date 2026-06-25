@@ -16,9 +16,21 @@ def list_expr(*items: Expr) -> Expr:
 
 
 def list_items(expr: Expr) -> tuple[Expr, ...]:
-    if not is_head(expr, s.List):
-        raise ValueError(f"Expected pychete List expression, got {canonical_string(expr)}")
+    if not any(is_head(expr, head) for head in (s.List, s.InternalIndices, s.DerivativeIndices, s.LorentzIndices)):
+        raise ValueError(f"Expected pychete index collection expression, got {canonical_string(expr)}")
     return tuple(expr[i] for i in range(len(expr)))
+
+
+def internal_indices_expr(*items: Expr) -> Expr:
+    return s.InternalIndices(*items)
+
+
+def derivative_indices_expr(*items: Expr) -> Expr:
+    return s.DerivativeIndices(*items)
+
+
+def lorentz_indices_expr(*items: Expr) -> Expr:
+    return s.LorentzIndices(*items)
 
 
 def is_head(expr: Expr, head: Expr) -> bool:
@@ -145,7 +157,7 @@ def field_derivatives(expr: Expr) -> tuple[Expr, ...]:
 
 
 def field_with_derivatives(expr: Expr, derivatives: Iterable[Expr]) -> Expr:
-    return s.Field(field_label(expr), field_type(expr), expr[2], list_expr(*derivatives))
+    return s.Field(field_label(expr), field_type(expr), expr[2], derivative_indices_expr(*derivatives))
 
 
 def is_bar_field(expr: Expr) -> bool:

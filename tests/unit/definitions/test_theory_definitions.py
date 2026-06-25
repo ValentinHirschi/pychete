@@ -28,8 +28,14 @@ def test_field_and_mass_coupling_definitions_follow_matchete_orders() -> None:
     assert theory.fields[heavy.name].heavy is True
     assert theory.couplings["MPhi"].eft_order == 0
     assert theory.couplings["mpsi"].eft_order == 1
-    assert canonical_string(heavy(theory.index("f", flavor.symbol))).startswith("pychete::Field")
-    assert canonical_string(light(theory.index("f", flavor.symbol))).startswith("pychete::Field")
+    heavy_text = canonical_string(heavy(theory.index("f", flavor.symbol)))
+    light_text = canonical_string(light(theory.index("f", flavor.symbol)))
+    assert heavy_text.startswith("pychete::Field")
+    assert light_text.startswith("pychete::Field")
+    assert "pychete::InternalIndices(" in heavy_text
+    assert "pychete::DerivativeIndices()" in heavy_text
+    assert "pychete::InternalIndices(" in light_text
+    assert "pychete::DerivativeIndices()" in light_text
 
 
 def test_field_symbol_data_stores_local_mass_metadata() -> None:
@@ -47,6 +53,7 @@ def test_field_symbol_data_stores_local_mass_metadata() -> None:
     assert label.get_symbol_data(SymbolDataKey.MASS_LABEL.value) == theory.coupling_handle("MPhi").label
     assert label.get_symbol_data(SymbolDataKey.MASS_INDICES.value) == [flavor.symbol]
     assert theory.mass_expr(heavy.definition) == theory.coupling_handle("MPhi")(flavor.symbol)
+    assert "pychete::InternalIndices(" in canonical_string(theory.mass_expr(heavy.definition))
 
 
 def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:
@@ -110,6 +117,8 @@ def test_theory_json_checkpoint_contains_metadata_without_lagrangian_expression(
     assert payload["fields"]["phi"]["mass_kind"] == FieldMassKind.LIGHT.value
     assert payload["fields"]["phi"]["mass_label"] is None
     theory._validate_registered_expression(lagrangian)
+    assert "pychete::InternalIndices()" in canonical_string(lagrangian)
+    assert "pychete::DerivativeIndices(" in canonical_string(lagrangian)
     assert "pychete::Index(pychete::dummy_index(0),pychete::Lorentz)" in canonical_string(lagrangian)
     assert "pychete::index_d" not in canonical_string(lagrangian)
 

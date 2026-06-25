@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from pychete import FieldMassKind, SymbolRole, Theory, operator_dimension, series_eft, s
-from pychete.expr import list_expr
+from pychete.expr import derivative_indices_expr, internal_indices_expr, lorentz_indices_expr
 
 from tests.conftest import assert_expr_equal
 
@@ -48,7 +48,7 @@ def test_operator_dimension_uses_pattern_weighted_atoms() -> None:
     vector = theory.define_field("A", s.Vector(theory.symbol("G", role=SymbolRole.GROUP)), self_conjugate=True, mass=0)
     mu = theory.lorentz_index("mu")
     nu = theory.lorentz_index("nu")
-    strength = s.FieldStrength(vector.label, list_expr(mu, nu), list_expr(), list_expr())
+    strength = s.FieldStrength(vector.label, lorentz_indices_expr(mu, nu), internal_indices_expr(), derivative_indices_expr())
 
     assert operator_dimension(heavy(), theory) == 2
     assert operator_dimension(heavy(), theory, heavy_field_dimension=False) == 1

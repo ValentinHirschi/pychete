@@ -263,6 +263,9 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
 
     handlers = {
         "List": lambda: "{" + _join(tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode) + "}",
+        "InternalIndices": lambda: _call("InternalIndices", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "DerivativeIndices": lambda: _call("DerivativeIndices", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "LorentzIndices": lambda: _call("LorentzIndices", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "Field": lambda: _print_field(expr, mode, kwargs),
         "Coupling": lambda: _print_coupling(expr, mode, kwargs),
         "Index": lambda: _print_index(expr, mode, kwargs),
@@ -422,6 +425,9 @@ class SymbolStore:
     namespace = "pychete"
     builtin_registry_names = (
         "List",
+        "InternalIndices",
+        "DerivativeIndices",
+        "LorentzIndices",
         "Field",
         "Coupling",
         "Index",
@@ -493,6 +499,18 @@ class SymbolStore:
     @cached_property
     def List(self) -> Expression:
         return self.head("List")
+
+    @cached_property
+    def InternalIndices(self) -> Expression:
+        return self.head("InternalIndices")
+
+    @cached_property
+    def DerivativeIndices(self) -> Expression:
+        return self.head("DerivativeIndices")
+
+    @cached_property
+    def LorentzIndices(self) -> Expression:
+        return self.head("LorentzIndices")
 
     @cached_property
     def Field(self) -> Expression:
