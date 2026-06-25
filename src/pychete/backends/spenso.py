@@ -9,7 +9,15 @@ from symbolica import Expression, Replacement
 
 from .common import import_backend
 from ..expr import args, as_int, cg_tensor_pattern, is_head, list_expr, list_items
-from ..symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, s, safe_symbol_name
+from ..symbols import (
+    SymbolDataKey,
+    SymbolRole,
+    canonical_string,
+    display_string,
+    expression_from_canonical,
+    s,
+    safe_symbol_name,
+)
 from ..theory import Theory
 from ..theory_metadata import CGTensorDefinition, CGTensorHandle, RepresentationReality
 
@@ -91,19 +99,32 @@ def representation_to_spenso(theory: Theory, representation: Expression) -> Any:
 
 
 def native_hep_representation_to_spenso(theory: Theory, representation: Expression) -> Any | None:
-    """Lower compatible SU(3) pychete representations to spenso HEP representations."""
+    """Lower compatible SU(N) pychete representations to spenso HEP representations."""
 
     definition = theory.representation_definition(representation)
-    group_entry = theory.groups.get(definition.group)
-    if group_entry is None or group_entry.get("type") != canonical_string(s.SU(Expression.num(3))):
+    n = _native_hep_su_size(theory, definition.group)
+    if n is None:
         return None
     spenso = native_module()
-    if definition.name == "fund" and definition.dimension_value == 3:
-        native = spenso.Representation.cof(3)
+    if definition.name == "fund" and definition.dimension_value == n:
+        native = spenso.Representation.cof(n)
         return native.dual() if theory.is_conjugate_representation(representation) else native
-    if definition.name == "adj" and definition.dimension_value == 8:
-        return spenso.Representation.coad(8)
+    if definition.name == "adj" and definition.dimension_value == n * n - 1:
+        return spenso.Representation.coad(n * n - 1)
     return None
+
+
+def _native_hep_su_size(theory: Theory, group: str) -> int | None:
+    group_entry = theory.groups.get(group)
+    if group_entry is None:
+        return None
+    group_type = expression_from_canonical(str(group_entry["type"]))
+    if not is_head(group_type, s.SU) or len(group_type) != 1:
+        return None
+    n = as_int(group_type[0])
+    if n is None or n <= 1:
+        return None
+    return n
 
 
 def _cg_tensor_definition(theory: Theory, cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle) -> CGTensorDefinition:
@@ -136,7 +157,7 @@ def native_hep_cg_tensor_structure_to_spenso(
     theory: Theory,
     cg_tensor: str | Expression | CGTensorDefinition | CGTensorHandle,
 ) -> Any | None:
-    """Lower compatible built-in SU(3) CG tensors to spenso HEP structures."""
+    """Lower compatible built-in SU(N) CG tensors to spenso HEP structures."""
 
     definition = _cg_tensor_definition(theory, cg_tensor)
     representations = tuple(

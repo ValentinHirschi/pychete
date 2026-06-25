@@ -53,22 +53,31 @@ def test_spenso_backend_lowers_registered_representations() -> None:
     )
 
 
-def test_spenso_backend_lowers_compatible_su3_representations_to_native_hep_reps() -> None:
+def test_spenso_backend_lowers_compatible_sun_representations_to_native_hep_reps() -> None:
     theory = Theory("spenso_bridge_hep_reps")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
     theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    theory.define_global_group("U1X", s.U1)
     su3_fund = theory.define_representation("SU3c", "fund")
     su3_adj = theory.define_representation("SU3c", "adj")
     su2_fund = theory.define_representation("SU2F", "fund")
+    su2_adj = theory.define_representation("SU2F", "adj")
+    u1_charge = theory.define_representation("U1X", "charge")
 
     native_fund = spenso.native_hep_representation_to_spenso(theory, su3_fund)
     native_conjugate = spenso.native_hep_representation_to_spenso(theory, s.Bar(su3_fund))
     native_adj = spenso.native_hep_representation_to_spenso(theory, su3_adj)
+    native_su2_fund = spenso.native_hep_representation_to_spenso(theory, su2_fund)
+    native_su2_conjugate = spenso.native_hep_representation_to_spenso(theory, s.Bar(su2_fund))
+    native_su2_adj = spenso.native_hep_representation_to_spenso(theory, su2_adj)
 
     assert canonical_string(native_fund.to_expression()) == "spenso::cof(3)"
     assert canonical_string(native_conjugate.to_expression()) == "spenso::dind(spenso::cof(3))"
     assert canonical_string(native_adj.to_expression()) == "spenso::coad(8)"
-    assert spenso.native_hep_representation_to_spenso(theory, su2_fund) is None
+    assert canonical_string(native_su2_fund.to_expression()) == "spenso::cof(2)"
+    assert canonical_string(native_su2_conjugate.to_expression()) == "spenso::dind(spenso::cof(2))"
+    assert canonical_string(native_su2_adj.to_expression()) == "spenso::coad(3)"
+    assert spenso.native_hep_representation_to_spenso(theory, u1_charge) is None
 
 
 def test_spenso_backend_lowers_registered_cg_tensors() -> None:
@@ -92,15 +101,22 @@ def test_spenso_backend_lowers_registered_cg_tensors() -> None:
     )
 
 
-def test_spenso_backend_lowers_compatible_su3_cg_tensors_to_native_hep_tensors() -> None:
+def test_spenso_backend_lowers_compatible_sun_cg_tensors_to_native_hep_tensors() -> None:
     theory = Theory("spenso_bridge_hep_cg")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
     theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    theory.define_global_group("U1X", s.U1)
     generator = theory.cg_tensor_handle("gen_SU3c_fund")
     fstruct = theory.cg_tensor_handle("fStruct_SU3c")
+    su2_generator = theory.cg_tensor_handle("gen_SU2F_fund")
+    su2_fstruct = theory.cg_tensor_handle("fStruct_SU2F")
+    u1_charge = theory.define_representation("U1X", "charge")
+    u1_tensor = theory.define_cg_tensor("custom_U1X", (u1_charge,), source="unit-test")
 
     gen_structure = spenso.native_hep_cg_tensor_structure_to_spenso(theory, generator)
     f_structure = spenso.native_hep_cg_tensor_structure_to_spenso(theory, fstruct)
+    su2_gen_structure = spenso.native_hep_cg_tensor_structure_to_spenso(theory, su2_generator)
+    su2_f_structure = spenso.native_hep_cg_tensor_structure_to_spenso(theory, su2_fstruct)
     gen_indexed = spenso.indexed_cg_tensor_to_spenso(
         theory,
         generator(S("A"), S("i"), S("j")),
@@ -111,16 +127,34 @@ def test_spenso_backend_lowers_compatible_su3_cg_tensors_to_native_hep_tensors()
         fstruct(S("A"), S("B"), S("C")),
         native_hep_builtins=True,
     )
+    su2_gen_indexed = spenso.indexed_cg_tensor_to_spenso(
+        theory,
+        su2_generator(S("a"), S("i"), S("j")),
+        native_hep_builtins=True,
+    )
+    su2_f_indexed = spenso.indexed_cg_tensor_to_spenso(
+        theory,
+        su2_fstruct(S("a"), S("b"), S("c")),
+        native_hep_builtins=True,
+    )
 
     assert canonical_string(gen_structure.get_name().to_expression()) == "spenso::t"
     assert canonical_string(f_structure.get_name().to_expression()) == "spenso::f"
+    assert canonical_string(su2_gen_structure.get_name().to_expression()) == "spenso::t"
+    assert canonical_string(su2_f_structure.get_name().to_expression()) == "spenso::f"
     assert canonical_string(gen_indexed.to_expression()) == (
         "spenso::t(spenso::coad(8,python::A),spenso::cof(3,python::i),spenso::dind(spenso::cof(3,python::j)))"
     )
     f_text = canonical_string(f_indexed.to_expression())
     assert "spenso::f(" in f_text
     assert all(label in f_text for label in ("python::A", "python::B", "python::C"))
-    assert spenso.native_hep_cg_tensor_structure_to_spenso(theory, "gen_SU2F_fund") is None
+    assert canonical_string(su2_gen_indexed.to_expression()) == (
+        "spenso::t(spenso::coad(3,python::a),spenso::cof(2,python::i),spenso::dind(spenso::cof(2,python::j)))"
+    )
+    su2_f_text = canonical_string(su2_f_indexed.to_expression())
+    assert "spenso::f(" in su2_f_text
+    assert all(label in su2_f_text for label in ("python::a", "python::b", "python::c"))
+    assert spenso.native_hep_cg_tensor_structure_to_spenso(theory, u1_tensor) is None
 
 
 def test_spenso_backend_lowers_cg_atoms_with_symbolica_replacement() -> None:
@@ -155,8 +189,8 @@ def test_spenso_backend_lowers_cg_atoms_with_native_hep_builtins() -> None:
 
 def test_spenso_backend_lowers_generated_non_abelian_derivative_cg_tensors() -> None:
     theory = Theory("spenso_bridge_generated_nonabelian_cd")
-    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
-    fund = theory.define_representation("SU3c", "fund")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
     higgs = theory.define_field("H", s.Scalar, indices=[fund], mass=0)
     mu = theory.dummy_index(0)
     index = theory.index("i", fund)

@@ -103,13 +103,20 @@
   `TensorStructure.index(..., cook_indices=True)`. This fixes the generated
   non-Abelian covariant-derivative CG tensors and also closes an older gap for
   loader-produced CG tensors that carry full pychete `Index(...)` arguments.
+- Generalized the native HEP spenso bridge from hard-coded SU(3) colour to
+  compatible registered SU(N) fundamental/adjoint metadata. The adapter now
+  parses the theory-owned group type, lowers `fund`/`Bar[fund]`/`adj` through
+  native `Representation.cof(N)` and `Representation.coad(N^2 - 1)`, and routes
+  built-in `gen`/`fStruct` tensors for SMEFT `SU2L` as well as `SU3c` through
+  spenso's native `TensorName.t()`/`TensorName.f()` objects.
 - This slice still does not complete non-Abelian group-algebra simplification:
   expanded CG tensors can now lower through spenso, but broader supertrace
   simplification/contraction and fixture validation remain to be improved.
-- Validation so far: definitions/public-API tests pass with 37 tests, the
-  focused one-loop covariant-derivative option tests pass with 2 selected
-  integration tests, and focused spenso lowering tests pass with 8 selected
-  backend tests.
+- Validation so far: definitions/public-API tests pass with 37 tests from the
+  earlier non-Abelian slice; after the SU(N) native-HEP bridge update, the
+  focused spenso backend file passes with 22 tests, the selected one-loop
+  native-HEP/non-Abelian covariant-derivative integration checks pass with 2
+  tests, `python -m mypy` passes, and `git diff --check` passes.
 
 ## Current Validation Frontier
 
