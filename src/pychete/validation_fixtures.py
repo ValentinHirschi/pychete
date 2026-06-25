@@ -786,8 +786,8 @@ def _tensor_network_component_source(
 
 def _reference_matching_condition_targets(reference: MatchingResult) -> dict[str, Expression]:
     return {
-        name: reference.theory._parse_registered_expression(name)
-        for name in reference.matching_conditions
+        target.name: target.expression
+        for target in reference.matching_condition_targets()
     }
 
 

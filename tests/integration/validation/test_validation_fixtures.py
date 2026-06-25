@@ -20,7 +20,7 @@ from pychete.backends import vakint as vakint_backend
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState
-from pychete.symbols import canonical_string
+from pychete.symbols import canonical_string, s
 from pychete.validation_fixtures import load_validation_fixture
 from tests.conftest import assert_expr_equal
 
@@ -119,6 +119,11 @@ def test_committed_vlf_model_fixture_is_mathematica_independent() -> None:
 def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
     theory = fixture.theory()
+    result = fixture.matching_result("matchete_previous")
+    targets = {target.name: target for target in result.matching_condition_targets()}
+    chd = theory.external_handle("cHd")
+    chd_indices = chd.definition.index_exprs
+    chd_name = canonical_string(s.Coupling(chd.label, s.List(*chd_indices), Expression.num(0)))
 
     assert theory.external_handle("cHB").definition.kind is ExternalKind.WILSON_COEFFICIENT
     assert theory.external_handle("cHB").definition.basis_name == "SMEFT"
@@ -128,6 +133,11 @@ def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     assert len(theory.external_handle("cHd").definition.index_exprs) == 2
     assert theory.external_handle("Delta").definition.kind is ExternalKind.GENERIC
     assert "gL" not in theory.externals
+    assert targets[chd_name].is_wilson_coefficient is True
+    assert targets[chd_name].basis == "SMEFT"
+    assert targets[chd_name].external_kind is ExternalKind.WILSON_COEFFICIENT
+    assert len(targets[chd_name].indices) == 2
+    assert targets[chd_name].eft_order == 0
 
 
 def test_validation_fixture_restores_structured_matching_result(tmp_path: Path) -> None:

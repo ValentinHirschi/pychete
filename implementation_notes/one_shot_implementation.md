@@ -4477,6 +4477,56 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 263 passed, 1
     skipped in 261.11s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added structured matching-condition target metadata on top of the Wilson
+  external-symbol registry:
+  - introduced public `MatchingConditionTarget` and
+    `matching_condition_targets(...)`, exported through `pychete.api` and the
+    package root;
+  - `MatchingResult.matching_condition_targets()` now returns typed projection
+    targets for stored matching conditions, reconstructing the target
+    expressions through the owning theory before reading Symbolica label data;
+  - validation fixture gap reports now derive projected reference targets from
+    `MatchingResult.matching_condition_targets()` rather than duplicating the
+    parse path locally;
+  - `MatchingResult.project_matching_conditions(...)` now routes through these
+    target objects, while still extracting coefficients with native
+    `Expression.coefficient(...)`;
+  - coupling and external target recognition uses native Symbolica
+    `Expression.matches(...)` with `req_tag(...)` restrictions on the coupling
+    label wildcard, so registered model couplings and imported Wilson/external
+    targets are distinguished through Symbolica tags rather than string
+    prefixes;
+  - Wilson targets expose `external_kind`, `basis`, target index expressions,
+    and EFT order through the public target object, giving later SMEFT basis
+    projection code a structural API for Matchete matching-condition targets.
+- Verification for the structured matching-condition target slice so far:
+  - re-inspected local Symbolica stubs for `Expression.matches`,
+    `Expression.match`, `Expression.req_tag`, `Expression.get_symbol_data`,
+    `Expression.get_tags`, and `Expression.coefficient`;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py::test_matching_condition_targets_expose_symbolica_role_metadata
+    tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata
+    tests/unit/definitions/test_public_api.py -q'` passed: 6 passed in
+    0.27s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py
+    tests/unit/definitions/test_public_api.py
+    tests/integration/validation/test_numeric_probes.py
+    tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_conditions_through_public_match_api
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
+    -q'` passed: 45 passed in 90.76s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 264 passed,
+    1 skipped in 259.83s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

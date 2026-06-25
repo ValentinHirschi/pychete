@@ -17,6 +17,7 @@ from pychete import (
     Theory,
     canonical_string,
     collect_indices,
+    matching_condition_targets,
     s,
 )
 from pychete.expr import cg_tensor_pattern, coupling_pattern, field_pattern, matching_subexpressions
@@ -91,6 +92,41 @@ def test_field_symbol_data_stores_charges_and_chirality() -> None:
     assert [canonical_string(charge_expr) for charge_expr in restored_field.definition.charge_exprs] == [canonical_string(charge)]
     assert restored.groups == theory.groups
     assert canonical_string(restored.group_charge("U1Y", S("qY"))) == canonical_string(charge)
+
+
+def test_matching_condition_targets_expose_symbolica_role_metadata() -> None:
+    theory = Theory("target_metadata")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    i = theory.index("i", flavor.symbol)
+    j = theory.index("j", flavor.symbol)
+    yukawa = theory.define_coupling("Y", indices=[flavor.symbol, flavor.symbol])
+    wilson = theory.define_wilson_coefficient(
+        "cHl",
+        indices=[i, j],
+        eft_order=6,
+        basis="SMEFT",
+    )
+
+    targets = matching_condition_targets(
+        {
+            "y": yukawa(i, j),
+            "wilson": s.Coupling(wilson.label, s.List(i, j), Expression.num(6)),
+        }
+    )
+    by_name = {target.name: target for target in targets}
+
+    assert by_name["y"].is_coupling is True
+    assert by_name["y"].is_external is False
+    assert by_name["y"].is_wilson_coefficient is False
+    assert by_name["y"].indices == (i, j)
+    assert by_name["y"].eft_order == 0
+    assert by_name["wilson"].is_coupling is False
+    assert by_name["wilson"].is_external is True
+    assert by_name["wilson"].is_wilson_coefficient is True
+    assert by_name["wilson"].external_kind is ExternalKind.WILSON_COEFFICIENT
+    assert by_name["wilson"].basis == "SMEFT"
+    assert by_name["wilson"].indices == (i, j)
+    assert by_name["wilson"].eft_order == 6
 
 
 def test_gauge_and_global_groups_store_kind_and_abelian_symbol_data() -> None:

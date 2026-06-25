@@ -7,14 +7,15 @@ from typing import TYPE_CHECKING
 
 from symbolica import Expression
 
-from .expr import coupling_pattern
+from .expr import as_int, coupling_pattern, list_items
 from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
     one_loop_normalization_factor,
     one_loop_normalization_label,
 )
-from .symbols import SymbolDataKey, SymbolRole, canonical_string, s, symbol_data
+from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
+from .theory_metadata import ExternalKind, external_basis_from_label, external_kind_from_label
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 if TYPE_CHECKING:
@@ -96,6 +97,52 @@ class MatchingResultComparison:
 
 
 @dataclass(frozen=True)
+class MatchingConditionTarget:
+    """Structured metadata for a matching-condition projection target."""
+
+    name: str
+    expression: Expression
+    label: Expression | None = None
+    symbol_role: SymbolRole | None = None
+    external_kind: ExternalKind | None = None
+    indices: tuple[Expression, ...] = ()
+    eft_order: int | None = None
+    basis: str | None = None
+
+    @property
+    def is_coupling(self) -> bool:
+        """Whether the target label is a registered model coupling."""
+
+        return self.symbol_role is SymbolRole.COUPLING
+
+    @property
+    def is_external(self) -> bool:
+        """Whether the target label is an imported external symbol."""
+
+        return self.symbol_role is SymbolRole.EXTERNAL
+
+    @property
+    def is_wilson_coefficient(self) -> bool:
+        """Whether the target label is tagged as a Wilson coefficient."""
+
+        return self.external_kind is ExternalKind.WILSON_COEFFICIENT
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{MatchingConditionTarget}}\left({latex_string(self.expression)}\right)$"
+
+    def _repr_html_(self) -> str:
+        details: list[str] = []
+        if self.symbol_role is not None:
+            details.append(self.symbol_role.value)
+        if self.external_kind is not None:
+            details.append(self.external_kind.value)
+        if self.basis:
+            details.append(self.basis)
+        suffix = "" if not details else f" {' '.join(escape(detail) for detail in details)}"
+        return f"<code>MatchingConditionTarget({escape(display_string(self.expression))}{suffix})</code>"
+
+
+@dataclass(frozen=True)
 class MatchingResult:
     """Structured output of a pychete matching calculation.
 
@@ -173,15 +220,15 @@ class MatchingResult:
         if expand_source:
             expr = expr.expand()
         conditions: dict[str, Expression] = {}
-        for name, target in _matching_condition_targets(targets):
-            coefficient = expr.coefficient(target).expand()
+        for target in matching_condition_targets(targets):
+            coefficient = expr.coefficient(target.expression).expand()
             if include_coupling_identities:
                 identity = _tree_level_coupling_identity(self.theory, target)
                 if identity is not None:
                     coefficient = (coefficient + identity).expand()
             if drop_zero and _canonical_expr(coefficient) == "0":
                 continue
-            conditions[name] = coefficient
+            conditions[target.name] = coefficient
         return conditions
 
     def with_projected_matching_conditions(
@@ -356,6 +403,16 @@ class MatchingResult:
             )
         return MatchingResultComparison(candidate=self, reference=reference, expressions=tuple(comparisons))
 
+    def matching_condition_targets(self) -> tuple[MatchingConditionTarget, ...]:
+        """Return structured projection-target metadata for stored matching conditions."""
+
+        return matching_condition_targets(
+            {
+                name: self.theory._parse_registered_expression(name)
+                for name in self.matching_conditions
+            }
+        )
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{MatchingResult}}\left({self.theory.name},\ {len(self.supertraces)}\ \mathrm{{supertraces}}\right)$"
 
@@ -391,19 +448,66 @@ def _matching_condition_targets(
     return tuple((canonical_string(target), target) for target in targets)
 
 
-def _tree_level_coupling_identity(theory: Theory, target: Expression) -> Expression | None:
-    if not bool(
-        target.matches(
+def matching_condition_targets(
+    targets: Mapping[str, Expression] | Iterable[Expression],
+) -> tuple[MatchingConditionTarget, ...]:
+    """Return structured matching-condition targets from user expressions.
+
+    Coupling targets are recognized with native Symbolica pattern matching and
+    role-tag restrictions. Any Symbolica expression can still be projected, but
+    pychete coupling/external targets carry explicit metadata for later SMEFT
+    basis and Wilson-coefficient logic.
+    """
+
+    return tuple(_matching_condition_target(name, target) for name, target in _matching_condition_targets(targets))
+
+
+def _matching_condition_target(name: str, expression: Expression) -> MatchingConditionTarget:
+    if bool(
+        expression.matches(
             coupling_pattern(),
             s.CouplingLabelWildcard.req_tag(SymbolRole.COUPLING.value),
             partial=False,
         )
     ):
+        return _coupling_matching_condition_target(name, expression, SymbolRole.COUPLING)
+    if bool(
+        expression.matches(
+            coupling_pattern(),
+            s.CouplingLabelWildcard.req_tag(SymbolRole.EXTERNAL.value),
+            partial=False,
+        )
+    ):
+        return _coupling_matching_condition_target(name, expression, SymbolRole.EXTERNAL)
+    return MatchingConditionTarget(name=name, expression=expression)
+
+
+def _coupling_matching_condition_target(
+    name: str,
+    expression: Expression,
+    symbol_role: SymbolRole,
+) -> MatchingConditionTarget:
+    label = expression[0]
+    external_kind = external_kind_from_label(label) if symbol_role is SymbolRole.EXTERNAL else None
+    return MatchingConditionTarget(
+        name=name,
+        expression=expression,
+        label=label,
+        symbol_role=symbol_role,
+        external_kind=external_kind,
+        indices=list_items(expression[1]),
+        eft_order=as_int(expression[2]),
+        basis=external_basis_from_label(label) if symbol_role is SymbolRole.EXTERNAL else None,
+    )
+
+
+def _tree_level_coupling_identity(theory: Theory, target: MatchingConditionTarget) -> Expression | None:
+    if target.symbol_role is not SymbolRole.COUPLING or target.label is None:
         return None
-    name = symbol_data(target[0], SymbolDataKey.LABEL)
+    name = symbol_data(target.label, SymbolDataKey.LABEL)
     if not isinstance(name, str) or name not in theory.couplings:
         return None
-    return target
+    return target.expression
 
 
 def _canonical_expr(expr: Expression) -> str:
@@ -411,7 +515,9 @@ def _canonical_expr(expr: Expression) -> str:
 
 
 __all__ = [
+    "MatchingConditionTarget",
     "MatchingExpressionComparison",
     "MatchingResult",
     "MatchingResultComparison",
+    "matching_condition_targets",
 ]

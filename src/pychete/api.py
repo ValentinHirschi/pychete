@@ -41,7 +41,13 @@ from .matching_options import (
     VakintIntegralStage,
     one_loop_normalization_factor,
 )
-from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
+from .matching_results import (
+    MatchingConditionTarget,
+    MatchingExpressionComparison,
+    MatchingResult,
+    MatchingResultComparison,
+    matching_condition_targets,
+)
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import Theory
@@ -94,6 +100,7 @@ __all__ = [
     "GroupKind",
     "HeavyScalarSolution",
     "MatchingExpressionComparison",
+    "MatchingConditionTarget",
     "MatchingResult",
     "MatchingResultComparison",
     "NumericProbePlan",
@@ -137,6 +144,7 @@ __all__ = [
     "open_indices",
     "operator_dimension",
     "one_loop_normalization_factor",
+    "matching_condition_targets",
     "reduce_loop_function_first_power",
     "reduce_loop_function_ibp",
     "reduce_loop_functions_first_power",
