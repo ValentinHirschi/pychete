@@ -24,6 +24,7 @@ from .expr import (
     sum_expr,
 )
 from .functional import derive_eom, partial_functional_derivative
+from .logging import get_logger, progress
 from .matching_options import (
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
@@ -55,6 +56,7 @@ from .tree_matching import HeavyScalarSolution, match_tree, solve_heavy_scalar_e
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
 ExpressionMatrix: TypeAlias = tuple[tuple[Expression, ...], ...]
+_LOGGER = get_logger("matching")
 
 
 class FluctuationStatistics(StrEnum):
@@ -1245,6 +1247,7 @@ class OneLoopSetup:
         Symbolica's native ``together()`` common-denominator pass.
         """
 
+        _LOGGER.info("assembling power-type vakint integral sum for %s", self.theory.name)
         raw = self.power_type_vakint_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
@@ -1252,15 +1255,17 @@ class OneLoopSetup:
         if tensor_reduce:
             from .backends import vakint
 
-            raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+            with progress("tensor-reducing power-type one-loop integrals", logger=_LOGGER):
+                raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
         from .backends import vacuum_integrals
 
-        return vacuum_integrals.evaluate_one_loop_vakint_expression(
-            raw,
-            epsilon=epsilon,
-            mu_r_squared=mu_r_squared,
-            combine_terms=combine_terms,
-        )
+        with progress("evaluating power-type scalar vacuum integrals", logger=_LOGGER):
+            return vacuum_integrals.evaluate_one_loop_vakint_expression(
+                raw,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+                combine_terms=combine_terms,
+            )
 
     def interaction_power_type_vakint_integral_sum(
         self,
@@ -1289,10 +1294,13 @@ class OneLoopSetup:
         from .backends import vakint
 
         if selected is VakintIntegralStage.CANONICAL:
-            return vakint.to_canonical(raw, short_form=short_form, engine=engine)
+            with progress("canonicalizing interaction-power vakint integrals", logger=_LOGGER):
+                return vakint.to_canonical(raw, short_form=short_form, engine=engine)
         if selected is VakintIntegralStage.TENSOR_REDUCED:
-            return vakint.tensor_reduce(raw, engine=engine)
-        return vakint.evaluate(raw, engine=engine)
+            with progress("tensor-reducing interaction-power vakint integrals", logger=_LOGGER):
+                return vakint.tensor_reduce(raw, engine=engine)
+        with progress("evaluating interaction-power vakint integrals", logger=_LOGGER):
+            return vakint.evaluate(raw, engine=engine)
 
     def interaction_power_type_internal_integral_sum(
         self,
@@ -1317,6 +1325,7 @@ class OneLoopSetup:
         common-denominator pass.
         """
 
+        _LOGGER.info("assembling interaction-power vakint integral sum for %s", self.theory.name)
         raw = self.interaction_power_type_vakint_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
@@ -1326,15 +1335,17 @@ class OneLoopSetup:
         if tensor_reduce:
             from .backends import vakint
 
-            raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+            with progress("tensor-reducing interaction-power one-loop integrals", logger=_LOGGER):
+                raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
         from .backends import vacuum_integrals
 
-        return vacuum_integrals.evaluate_one_loop_vakint_expression(
-            raw,
-            epsilon=epsilon,
-            mu_r_squared=mu_r_squared,
-            combine_terms=combine_terms,
-        )
+        with progress("evaluating interaction-power scalar vacuum integrals", logger=_LOGGER):
+            return vacuum_integrals.evaluate_one_loop_vakint_expression(
+                raw,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+                combine_terms=combine_terms,
+            )
 
     def interaction_power_type_vakint_epsilon_coefficient(
         self,
@@ -2663,23 +2674,28 @@ def fluctuation_operator(
     if not basis:
         raise ValueError("at least one fluctuation field is required")
     _validate_unique_fluctuation_basis(basis)
-    matrix = tuple(
-        tuple(
-            partial_functional_derivative(
-                partial_functional_derivative(lagrangian, row),
-                column,
-            ).expand()
-            for column in basis
+    with progress(
+        f"building fluctuation operator for {theory.name} ({len(basis)} modes)",
+        logger=_LOGGER,
+        level="DEBUG",
+    ):
+        matrix = tuple(
+            tuple(
+                partial_functional_derivative(
+                    partial_functional_derivative(lagrangian, row),
+                    column,
+                ).expand()
+                for column in basis
+            )
+            for row in basis
         )
-        for row in basis
-    )
-    differential_matrix = tuple(
-        tuple(
-            _fluctuation_differential_entry(theory, lagrangian, row, column)
-            for column in basis
+        differential_matrix = tuple(
+            tuple(
+                _fluctuation_differential_entry(theory, lagrangian, row, column)
+                for column in basis
+            )
+            for row in basis
         )
-        for row in basis
-    )
     return FluctuationOperator(
         theory=theory,
         basis=basis,
@@ -2694,6 +2710,7 @@ def fluctuation_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasi
 
     theory._validate_registered_expression(lagrangian)
     fields = _discover_fluctuation_basis(lagrangian)
+    _LOGGER.debug("discovered %d fluctuation fields for %s", len(fields), theory.name)
     return FluctuationBasis(theory=theory, modes=tuple(_fluctuation_mode(theory, field) for field in fields))
 
 
@@ -2710,21 +2727,35 @@ def one_loop_setup(
     if max_trace_order < 1:
         raise ValueError("max_trace_order must be at least 1")
     theory._validate_registered_expression(lagrangian)
-    operator = fluctuation_operator(theory, lagrangian)
-    plan = operator.supertrace_plan()
-    block_traces = tuple(
-        trace
-        for order in range(1, max_trace_order + 1)
-        for trace in plan.closed_category_traces(order, include_light_only=include_light_only)
+    with progress(
+        (
+            f"preparing one-loop setup for {theory.name} "
+            f"(eft_order={eft_order}, max_trace_order={max_trace_order})"
+        ),
+        logger=_LOGGER,
+    ):
+        operator = fluctuation_operator(theory, lagrangian)
+        plan = operator.supertrace_plan()
+        block_traces = tuple(
+            trace
+            for order in range(1, max_trace_order + 1)
+            for trace in plan.closed_category_traces(order, include_light_only=include_light_only)
+        )
+        setup = OneLoopSetup(
+            theory=theory,
+            uv_lagrangian=lagrangian,
+            eft_order=eft_order,
+            fluctuation_operator=operator,
+            supertrace_plan=plan,
+            block_traces=block_traces,
+        )
+    _LOGGER.info(
+        "one-loop setup for %s contains %d fluctuation modes and %d trace kernels",
+        theory.name,
+        len(operator.basis),
+        setup.supertrace_kernel_count,
     )
-    return OneLoopSetup(
-        theory=theory,
-        uv_lagrangian=lagrangian,
-        eft_order=eft_order,
-        fluctuation_operator=operator,
-        supertrace_plan=plan,
-        block_traces=block_traces,
-    )
+    return setup
 
 
 def _fluctuation_basis_expression(theory: Theory, field: FluctuationBasisItem) -> Expression:
@@ -3299,6 +3330,19 @@ def match_one_loop(
 
     theory._validate_registered_expression(lagrangian)
     options = one_loop_options or OneLoopMatchOptions()
+    selected_backend = OneLoopIntegralBackend.from_user(options.integral_backend)
+    normalization_label = one_loop_normalization_label(options.normalization)
+    _LOGGER.info(
+        (
+            "running one-loop match for %s "
+            "(backend=%s, normalization=%s, eft_order=%s, max_trace_order=%s)"
+        ),
+        theory.name,
+        selected_backend.value,
+        normalization_label,
+        eft_order,
+        options.max_trace_order,
+    )
     setup = one_loop_setup(
         theory,
         lagrangian,
@@ -3308,6 +3352,7 @@ def match_one_loop(
     )
     tensor_network_cg_component_source: str | None = None
     if options.evaluate_tensor_networks:
+        _LOGGER.info("evaluating one-loop tensor networks for %s", theory.name)
         tensor_network_cg_component_source = _one_loop_tensor_network_component_source(theory, options)
         setup = setup.evaluate_tensor_networks(
             library=options.tensor_network_library,
@@ -3319,8 +3364,7 @@ def match_one_loop(
             n_steps=options.tensor_network_n_steps,
             mode=options.tensor_network_mode,
         )
-    selected_backend = OneLoopIntegralBackend.from_user(options.integral_backend)
-    normalization_label = one_loop_normalization_label(options.normalization)
+    _LOGGER.info("building one-loop result for %s with %s backend", theory.name, selected_backend.value)
     if selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_power_type_internal_matching_result(
             heavy_field_dimension=options.heavy_field_dimension,
@@ -3406,12 +3450,24 @@ def match_one_loop(
         },
     )
     if matching_condition_targets is None:
+        _log_one_loop_result(result)
         return result
-    return result.with_projected_matching_conditions(
+    projected = result.with_projected_matching_conditions(
         matching_condition_targets,
         source=matching_condition_source,
         drop_zero=matching_condition_drop_zero,
         include_coupling_identities=matching_condition_include_coupling_identities,
+    )
+    _log_one_loop_result(projected)
+    return projected
+
+
+def _log_one_loop_result(result: MatchingResult) -> None:
+    _LOGGER.info(
+        "one-loop result for %s contains %d supertraces and %d matching conditions",
+        result.theory.name,
+        len(result.supertraces),
+        len(result.matching_conditions),
     )
 
 

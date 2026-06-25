@@ -46,6 +46,24 @@ source "$HOME/.bashrc"
 dependencies/.venv/bin/python -m pytest tests
 ```
 
+## Logging And Progress Output
+
+Use pychete's package logging layer for user-facing progress and debugging
+output. Do not add ad hoc `print(...)` calls inside library code. Exported
+helpers are available as:
+
+```python
+import pychete
+
+pychete.configure_logging()
+```
+
+Use `pychete.logging.get_logger(...)` and `pychete.logging.progress(...)` from
+implementation modules. Log high-level, notebook-friendly progress at `INFO`
+for expensive matching, validation, tensor-reduction, and integral-evaluation
+steps. Use `DEBUG` for lower-level internals. Never log full large Symbolica
+expressions by default; log stage names, backend choices, counts, and timings.
+
 ## Dependency Policy
 
 Using `sympy` and `scipy` is strictly forbidden in this project, including
@@ -108,6 +126,11 @@ Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator
 factors. Keep this lowering implemented as Symbolica replacement rules over
 `DifferentialOperator(...)`, then hand tensor numerator reduction to vakint
 where applicable.
+Before native vakint engine calls, lower pychete loop-momentum numerator heads
+with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
+This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
+`LoopMomentumSquared` to native `vakint::k(loop_id, 1)^2`, matching the
+vakint tensor-reduction API.
 Metric and Kronecker-delta contractions involving pychete loop momenta must go
 through the idenso adapter. Use `simplify_pychete_loop_momentum_metrics(...)`
 or `simplify_index_algebra(..., metrics=True)` so expressions like

@@ -7,7 +7,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete.backends import vakint
-from pychete.symbols import canonical_string
+from pychete.symbols import canonical_string, s
 
 
 @dataclass
@@ -116,6 +116,47 @@ def test_vakint_adapters_delegate_single_scale_massive_topologies_to_engine() ->
         S("canonical")(expr)
     )
     assert [name for name, _args in engine.calls] == ["to_canonical"]
+
+
+def test_vakint_loop_momentum_builders_use_native_tensor_numerator_syntax() -> None:
+    mu = S("mu")
+
+    assert canonical_string(vakint.loop_momentum(2)) == canonical_string(S("vakint::k")(2))
+    assert canonical_string(vakint.loop_momentum(2, mu)) == canonical_string(S("vakint::k")(2, mu))
+    assert canonical_string(vakint.loop_momentum_squared(2, 3)) == canonical_string(S("vakint::k")(2, 3) ** 2)
+
+
+def test_vakint_lowers_pychete_loop_momentum_numerators_with_symbolica_patterns() -> None:
+    mu = S("mu")
+    expr = S("x") * s.LoopMomentum(mu) + s.LoopMomentumSquared
+    expected = S("x") * S("vakint::k")(3, mu) + S("vakint::k")(3, 7) ** 2
+
+    lowered = vakint.lower_pychete_loop_momentum_numerators(expr, loop_id=3, scalar_index=7)
+
+    assert canonical_string(lowered) == canonical_string(expected)
+
+
+def test_vakint_one_loop_vacuum_integral_lowers_pychete_loop_momentum_numerators() -> None:
+    mu = S("mu")
+    mass_squared = S("M") ** 2
+    topology = vakint.one_loop_vacuum_topology((mass_squared,))
+    expected = (S("x") * S("vakint::k")(1, mu) + S("vakint::k")(1, 1) ** 2) * topology
+
+    integral = vakint.one_loop_vacuum_integral(S("x") * s.LoopMomentum(mu) + s.LoopMomentumSquared, (mass_squared,))
+
+    assert canonical_string(integral) == canonical_string(expected)
+
+
+def test_vakint_tensor_reduce_lowers_direct_pychete_loop_momentum_numerators_before_engine_call() -> None:
+    engine = FakeVakintEngine()
+    mu = S("mu")
+    topology = vakint.one_loop_vacuum_topology((S("M") ** 2,))
+    expr = s.LoopMomentum(mu) * topology
+
+    vakint.tensor_reduce(expr, engine=engine)
+
+    expected = S("vakint::k")(1, mu) * topology
+    assert canonical_string(engine.calls[0][1][0]) == canonical_string(expected)
 
 
 def test_vakint_one_loop_vacuum_topology_builders_use_native_namespace() -> None:

@@ -7,10 +7,12 @@ from typing import TypeAlias
 from symbolica import Expression, Replacement, S
 
 from ..expr import as_int, is_head, list_expr, list_items, pow_parts, product_expr, sum_expr, terms
+from ..logging import get_logger
 from ..symbols import canonical_string, s
 from . import vakint
 
 LoopFunctionPower: TypeAlias = Expression | int
+_LOGGER = get_logger("backends.vacuum_integrals")
 
 
 def epsilon_symbol() -> Expression:
@@ -463,6 +465,7 @@ def evaluate_one_loop_single_scale_vakint_expression(
     finite sums of loop functions.
     """
 
+    _LOGGER.info("evaluating single-scale one-loop vakint expression with pychete analytic backend")
     pattern = _topology_pattern()
     for match in expr.match(pattern):
         _single_scale_topology_data(pattern.replace_wildcards(match))
@@ -503,6 +506,7 @@ def evaluate_one_loop_vakint_expression(
     cancellations across finite sums of loop functions.
     """
 
+    _LOGGER.info("evaluating one-loop vakint expression with pychete analytic backend")
     pattern = _topology_pattern()
     for match in expr.match(pattern):
         _topology_data(pattern.replace_wildcards(match))

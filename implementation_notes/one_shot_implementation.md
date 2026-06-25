@@ -350,3 +350,77 @@ Latest verified baseline before this compact rollover:
   - full pytest suite passed: 281 passed, 1 skipped in 290.74s. The skip is
     the existing GammaLoop API import check because GammaLoop was not requested
     in the current dependency manifest.
+
+## Current Slice: Vakint Loop-Momentum Numerator Lowering
+
+- Confirmed from vakint's Python stub and Rust examples that native tensor
+  numerators use `vakint::k(loop_id, index)` and scalar loop-momentum products
+  use `vakint::k(loop_id, scalar_index)^2`, while topology propagators keep
+  using `vakint::k(loop_id)`.
+- Added central `s.LoopMomentumIndexWildcard` for reusable Symbolica pattern
+  matching of pychete loop-momentum heads.
+- Extended `pychete.backends.vakint.loop_momentum(...)` so it can build both
+  topology momenta and indexed tensor-numerator components, and added
+  `loop_momentum_squared(...)` for vakint's scalar-product convention.
+- Added `lower_pychete_loop_momentum_numerators(...)`, implemented with
+  Symbolica `Replacement` / `replace_multiple`, to map:
+  - `LoopMomentum(index) -> vakint::k(loop_id, index)`;
+  - `LoopMomentumSquared -> vakint::k(loop_id, scalar_index)^2`.
+- Integrated this lowering at the vakint handoff boundary:
+  `one_loop_vacuum_integral(...)`, `to_canonical(...)`, `tensor_reduce(...)`,
+  `evaluate_integral(...)`, and `evaluate(...)` now normalize pychete momentum
+  heads before native engine calls.
+- Updated `AGENTS.md` to preserve this vakint-lowering convention for future
+  work.
+- Verification in this slice so far:
+  - focused vakint backend tests passed: 20 passed in 0.06s;
+  - `mypy` passed with no issues in 31 source files;
+  - backend/fluctuation regression coverage passed: 94 passed in 5.08s;
+  - native vakint smoke check accepted a lowered `LoopMomentum(mu) *
+    LoopMomentum(nu)` numerator and tensor-reduced it to a metric times
+    scalar loop momentum;
+  - full pytest suite passed after preserving expression shape in the lowering
+    helper: 285 passed, 1 skipped in 293.06s. The skip is the existing
+    GammaLoop API import check because GammaLoop was not requested in the
+    current dependency manifest.
+
+## Current Slice: Package Logging And Progress Output
+
+- Added `src/pychete/logging.py`, a package-level Python `logging` wrapper with
+  `get_logger(...)`, `configure_logging(...)`, `disable_logging()`, and a
+  `progress(...)` context manager for timed start/done/failure messages.
+- Exported `configure_logging`, `disable_logging`, and `get_logger` through
+  `pychete.api` and the package root. Notebook users can now call
+  `pychete.configure_logging()` before heavier matching/validation workflows to
+  see concise progress messages.
+- Instrumented high-level one-loop stages:
+  - fluctuation-basis discovery and fluctuation-operator construction;
+  - one-loop setup generation with fluctuation-mode and supertrace-kernel
+    counts;
+  - `match_one_loop(...)` backend/normalization selection and result counts;
+  - optional tensor-network evaluation;
+  - interaction/power-type vakint integral assembly, native tensor reduction,
+    and internal scalar vacuum-integral evaluation;
+  - validation fixture preview generation and gap-report summaries.
+- Added backend logs for direct native vakint engine construction and direct
+  internal analytic vacuum-integral evaluation.
+- Updated `README.md` and `AGENTS.md` to document the logging convention and to
+  forbid ad hoc library `print(...)` progress output.
+- Verification in this slice so far:
+  - logging and public API tests passed: 9 passed in 0.08s;
+  - `mypy` passed with no issues in 32 source files;
+  - logging-enabled one-loop preview smoke showed concise fixture/backend
+    selection, timed setup, fluctuation-mode/kernel counts, and preview
+    supertrace count;
+  - affected backend/matching/validation tests passed: 104 passed in 24.65s;
+  - `git diff --check` passed;
+  - full pytest suite passed: 289 passed, 1 skipped in 314.76s. The skip is
+    the existing GammaLoop API import check because GammaLoop was not requested
+    in the current dependency manifest.
+
+## Planning Note For Future Slices
+
+- Full pytest now takes about five minutes because of the validation fixtures.
+  Future implementation slices should batch more related one-shot matching
+  features before paying the full-suite validation cost, while still using
+  targeted tests and focused smoke checks during the slice.

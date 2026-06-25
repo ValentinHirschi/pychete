@@ -9,6 +9,7 @@ from typing import Any, Literal
 
 from symbolica import Expression
 
+from .logging import get_logger, progress
 from .matching_options import (
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
@@ -34,6 +35,7 @@ ProbeNamePreset = Literal["common", "canonical_different", "wilson", "canonical_
 ProbeNameSelection = Iterable[str] | ProbeNamePreset
 _PROBE_NAME_PRESETS = {"common", "canonical_different", "wilson", "canonical_different_wilson"}
 _WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
+_LOGGER = get_logger("validation")
 
 
 @dataclass(frozen=True)
@@ -580,6 +582,19 @@ class ValidationFixture:
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
 
+        selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
+        normalization_label = one_loop_normalization_label(normalization)
+        _LOGGER.info(
+            (
+                "building one-loop preview for fixture %s "
+                "(backend=%s, normalization=%s, eft_order=%s, max_trace_order=%s)"
+            ),
+            self.name,
+            selected_backend.value,
+            normalization_label,
+            eft_order,
+            max_trace_order,
+        )
         theory = self.theory()
         setup = theory.one_loop_setup(
             self.expression(lagrangian),
@@ -607,8 +622,6 @@ class ValidationFixture:
                 n_steps=tensor_network_n_steps,
                 mode=tensor_network_mode,
             )
-        selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
-        normalization_label = one_loop_normalization_label(normalization)
         if selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_power_type_internal_matching_result(
                 heavy_field_dimension=heavy_field_dimension,
@@ -683,7 +696,7 @@ class ValidationFixture:
             and result.metadata.get("loop_normalization_applied") is not True
         ):
             result = result.with_loop_normalization(normalization)
-        return MatchingResult(
+        preview = MatchingResult(
             theory=result.theory,
             uv_lagrangian=result.uv_lagrangian,
             off_shell_eft_lagrangian=result.off_shell_eft_lagrangian,
@@ -701,6 +714,12 @@ class ValidationFixture:
                 "tensor_network_native_hep_cg_builtins": tensor_network_native_hep_cg_builtins,
             },
         )
+        _LOGGER.info(
+            "one-loop preview for fixture %s contains %d supertraces",
+            self.name,
+            len(preview.supertraces),
+        )
+        return preview
 
     def one_loop_preview_gap_report(
         self,
@@ -767,6 +786,7 @@ class ValidationFixture:
         Wilson-coefficient targets identified from Symbolica symbol metadata.
         """
 
+        _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
         resolved_max_trace_order = _resolve_max_trace_order(max_trace_order, reference)
         projected_targets = (
             _reference_matching_condition_targets(reference)
@@ -868,27 +888,40 @@ class ValidationFixture:
                 drop_zero=matching_condition_projection_drop_zero,
                 include_coupling_identities=matching_condition_include_coupling_identities,
             )
-        return _gap_report(
-            self.name,
-            reference_name,
-            candidate,
-            reference,
-            probe_parameters=probe_parameters,
-            probe_samples=probe_samples,
-            probe_supertrace_names=probe_supertrace_names,
-            probe_matching_condition_names=probe_matching_condition_names,
-            auto_probe_samples=auto_probe_samples,
-            probe_sample_count=probe_sample_count,
-            probe_exclude_symbols=probe_exclude_symbols,
-            probe_parameter_mode=probe_parameter_mode,
-            probe_absolute_tolerance=probe_absolute_tolerance,
-            probe_relative_tolerance=probe_relative_tolerance,
-            comparison_expression_transform=_comparison_expression_transform(
-                simplify_loop_functions_for_comparison=simplify_loop_functions_for_comparison,
-                evaluate_loop_functions_for_comparison=evaluate_loop_functions_for_comparison,
-                comparison_combine_terms=comparison_combine_terms,
+        with progress(f"comparing fixture {self.name} one-loop preview to {reference_name}", logger=_LOGGER):
+            report = _gap_report(
+                self.name,
+                reference_name,
+                candidate,
+                reference,
+                probe_parameters=probe_parameters,
+                probe_samples=probe_samples,
+                probe_supertrace_names=probe_supertrace_names,
+                probe_matching_condition_names=probe_matching_condition_names,
+                auto_probe_samples=auto_probe_samples,
+                probe_sample_count=probe_sample_count,
+                probe_exclude_symbols=probe_exclude_symbols,
+                probe_parameter_mode=probe_parameter_mode,
+                probe_absolute_tolerance=probe_absolute_tolerance,
+                probe_relative_tolerance=probe_relative_tolerance,
+                comparison_expression_transform=_comparison_expression_transform(
+                    simplify_loop_functions_for_comparison=simplify_loop_functions_for_comparison,
+                    evaluate_loop_functions_for_comparison=evaluate_loop_functions_for_comparison,
+                    comparison_combine_terms=comparison_combine_terms,
+                ),
+            )
+        _LOGGER.info(
+            (
+                "gap report for fixture %s: %d/%d common supertraces canonical-equal, "
+                "%d/%d common matching conditions canonical-equal"
             ),
+            self.name,
+            report.canonical_equal_common_supertrace_count,
+            len(report.common_supertrace_names),
+            report.canonical_equal_common_matching_condition_count,
+            len(report.common_matching_condition_names),
         )
+        return report
 
     @classmethod
     def from_json_obj(cls, obj: dict[str, Any]) -> ValidationFixture:

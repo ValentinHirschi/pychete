@@ -19,6 +19,7 @@ from .backends.vacuum_integrals import (
     simplify_loop_functions,
 )
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
+from .logging import configure_logging, disable_logging, get_logger
 from .matching import (
     FluctuationBasis,
     FluctuationMode,
@@ -135,7 +136,9 @@ __all__ = [
     "canonize_loop_function",
     "canonize_loop_functions",
     "collect_indices",
+    "configure_logging",
     "display_string",
+    "disable_logging",
     "dummy_indices",
     "build_numeric_probe_plan",
     "deterministic_probe_samples",
@@ -145,6 +148,7 @@ __all__ = [
     "evaluate_one_loop_single_scale_vacuum_integral",
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
     "evaluate_one_loop_vakint_expression",
+    "get_logger",
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",

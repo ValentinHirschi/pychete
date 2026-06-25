@@ -579,6 +579,7 @@ class SymbolStore:
         "FieldStrengthLorentzWildcard",
         "FieldStrengthIndicesWildcard",
         "FieldStrengthDerivativesWildcard",
+        "LoopMomentumIndexWildcard",
         "LoopFunctionMassesWildcard",
         "LoopFunctionPowersWildcard",
         "EFTExpansionParameter",
@@ -854,6 +855,10 @@ class SymbolStore:
     @cached_property
     def FieldStrengthDerivativesWildcard(self) -> Expression:
         return self.head("field_strength_derivatives_")
+
+    @cached_property
+    def LoopMomentumIndexWildcard(self) -> Expression:
+        return self.head("loop_momentum_index_")
 
     @cached_property
     def LoopFunctionMassesWildcard(self) -> Expression:

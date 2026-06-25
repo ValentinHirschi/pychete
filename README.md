@@ -11,6 +11,15 @@ adding Python-side symbolic algorithms.
 The intended public Python API is listed in `src/pychete/api.py` and re-exported
 from the package root.
 
+For interactive debugging of heavier matching or validation workflows, enable
+package progress logs with:
+
+```python
+import pychete
+
+pychete.configure_logging()
+```
+
 References:
 
 - Matchete source repository: <https://gitlab.com/matchete/matchete>

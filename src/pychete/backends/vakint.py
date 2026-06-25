@@ -3,10 +3,14 @@ from __future__ import annotations
 from functools import cache
 from typing import Any, Mapping, Sequence
 
-from symbolica import Expression, S
+from symbolica import Expression, Replacement, S
 
 from ..expr import is_head, product_expr, sum_expr
+from ..logging import get_logger, progress
+from ..symbols import s
 from .common import import_backend
+
+_LOGGER = get_logger("backends.vakint")
 
 
 def native_module():
@@ -27,10 +31,52 @@ def epsilon_symbol() -> Expression:
     return symbol("ε")
 
 
-def loop_momentum(loop_id: int = 1) -> Expression:
-    """Return vakint's loop-momentum expression ``k(loop_id)``."""
+def loop_momentum(loop_id: int = 1, index: Expression | int | None = None) -> Expression:
+    """Return vakint's loop-momentum expression.
 
+    ``loop_momentum(loop_id)`` is the momentum object used in topology
+    propagators, while ``loop_momentum(loop_id, index)`` is vakint's native
+    tensor-numerator component ``k(loop_id, index)``.
+    """
+
+    if index is not None:
+        return symbol("k")(loop_id, index)
     return symbol("k")(loop_id)
+
+
+def loop_momentum_squared(loop_id: int = 1, scalar_index: int = 1) -> Expression:
+    """Return vakint's native scalar loop-momentum product ``k(loop_id, i)^2``."""
+
+    return loop_momentum(loop_id, scalar_index) ** 2
+
+
+def lower_pychete_loop_momentum_numerators(
+    expr: Expression,
+    *,
+    loop_id: int = 1,
+    scalar_index: int = 1,
+) -> Expression:
+    """Lower pychete loop-momentum numerator heads to vakint-native syntax.
+
+    Open pychete numerator components ``LoopMomentum(mu)`` become
+    ``vakint::k(loop_id, mu)`` and the scalar ``LoopMomentumSquared`` becomes
+    ``vakint::k(loop_id, scalar_index)^2``. The replacement is delegated to
+    Symbolica's wildcard matcher so callers can pass a full integral expression
+    or only a numerator.
+    """
+
+    pattern = _pychete_loop_momentum_pattern()
+
+    def lower_open_momentum(match: dict[Expression, Expression]) -> Expression:
+        return loop_momentum(loop_id, match[s.LoopMomentumIndexWildcard])
+
+    return expr.replace_multiple(
+        (
+            Replacement(s.LoopMomentumSquared, loop_momentum_squared(loop_id, scalar_index)),
+            Replacement(pattern, lower_open_momentum),
+        ),
+        repeat=True,
+    )
 
 
 def edge(left: int = 1, right: int = 1) -> Expression:
@@ -86,7 +132,10 @@ def one_loop_vacuum_integral(
 ) -> Expression:
     """Build a vakint one-loop vacuum integral from a numerator and masses."""
 
-    return numerator * one_loop_vacuum_topology(mass_squareds, powers=powers)
+    return lower_pychete_loop_momentum_numerators(numerator) * one_loop_vacuum_topology(
+        mass_squareds,
+        powers=powers,
+    )
 
 
 def _combine_equal_mass_powers(
@@ -136,7 +185,8 @@ def create_engine(**kwargs: Any) -> Any:
     during matching workflows.
     """
 
-    return native_module().Vakint(**kwargs)
+    with progress("creating native vakint engine", logger=_LOGGER):
+        return native_module().Vakint(**kwargs)
 
 
 @cache
@@ -196,7 +246,9 @@ def to_canonical(
 ) -> Expression:
     """Canonicalize a vakint integral expression with native vakint."""
 
+    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
     _raise_for_native_analytic_integral_scope(integral_expression)
+    _LOGGER.debug("canonicalizing vakint expression with native engine")
     return _engine(engine).to_canonical(integral_expression, short_form)
 
 
@@ -207,21 +259,32 @@ def tensor_reduce(integral_expression: Expression, *, engine: Any | None = None)
     analytic handling of zero-mass or mixed-mass vacuum-integral topologies.
     """
 
+    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
+    _LOGGER.debug("tensor-reducing vakint expression with native engine")
     return _engine(engine).tensor_reduce(integral_expression)
 
 
 def evaluate_integral(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Evaluate only the integral factor of a vakint expression."""
 
+    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
     _raise_for_native_analytic_integral_scope(integral_expression)
+    _LOGGER.debug("evaluating vakint integral factor with native engine")
     return _engine(engine).evaluate_integral(integral_expression)
 
 
 def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Run vakint's complete tensor reduction and integral evaluation."""
 
+    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
     _raise_for_native_analytic_integral_scope(integral_expression)
+    _LOGGER.debug("evaluating vakint expression with native engine")
     return _engine(engine).evaluate(integral_expression)
+
+
+@cache
+def _pychete_loop_momentum_pattern() -> Expression:
+    return s.LoopMomentum(s.LoopMomentumIndexWildcard)
 
 
 def _raise_for_native_analytic_integral_scope(integral_expression: Expression) -> None:
@@ -324,6 +387,8 @@ __all__ = [
     "evaluate",
     "evaluate_integral",
     "finite_part",
+    "loop_momentum_squared",
+    "lower_pychete_loop_momentum_numerators",
     "loop_momentum",
     "native_module",
     "new_alphaloop_method",
