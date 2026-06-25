@@ -36,7 +36,7 @@ from .matching_options import (
     one_loop_normalization_label,
 )
 from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
-from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
+from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
 from .theory import Theory
 from .theory_metadata import (
     FieldChirality,
@@ -734,6 +734,97 @@ class BosonicCDETraceExpansionTerm:
 
 
 @dataclass(frozen=True)
+class BosonicCDEExpansionPlanEntry:
+    """One generated CDE expansion request for a selected interaction trace."""
+
+    trace_name: str
+    expansion_indices: tuple[tuple[Expression, ...], ...]
+    total_order: int
+    slot_orders: tuple[int, ...]
+    label: str
+
+    def as_explicit_map(self) -> dict[str, tuple[tuple[Expression, ...], ...]]:
+        """Return this entry as the legacy single-trace explicit expansion map."""
+
+        return {self.trace_name: self.expansion_indices}
+
+    def _repr_latex_(self) -> str:
+        orders = ",".join(str(order) for order in self.slot_orders)
+        return rf"$\mathrm{{BosonicCDEExpansionPlanEntry}}\left({escape(self.trace_name)},\ [{orders}]\right)$"
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>BosonicCDEExpansionPlanEntry({escape(self.trace_name)} "
+            f"orders={self.slot_orders} total={self.total_order})</code>"
+        )
+
+
+@dataclass(frozen=True)
+class BosonicCDEExpansionPlan:
+    """Generated CDE expansion plan for selected interaction-supertrace families."""
+
+    theory: Theory
+    entries: tuple[BosonicCDEExpansionPlanEntry, ...]
+    trace_names: tuple[str, ...]
+    max_total_order: int
+    max_slot_order: int | None = None
+
+    @property
+    def entry_count(self) -> int:
+        """Number of generated trace-slot expansion entries."""
+
+        return len(self.entries)
+
+    @property
+    def trace_count(self) -> int:
+        """Number of selected trace families represented by the plan."""
+
+        return len(self.trace_names)
+
+    def by_trace(self) -> dict[str, tuple[BosonicCDEExpansionPlanEntry, ...]]:
+        """Return generated entries grouped by source trace name."""
+
+        grouped: dict[str, list[BosonicCDEExpansionPlanEntry]] = {trace_name: [] for trace_name in self.trace_names}
+        for entry in self.entries:
+            grouped.setdefault(entry.trace_name, []).append(entry)
+        return {trace_name: tuple(entries) for trace_name, entries in grouped.items()}
+
+    def explicit_maps(self) -> tuple[dict[str, tuple[tuple[Expression, ...], ...]], ...]:
+        """Return legacy one-entry expansion maps for each generated plan entry."""
+
+        return tuple(entry.as_explicit_map() for entry in self.entries)
+
+    def __iter__(self) -> Iterator[BosonicCDEExpansionPlanEntry]:
+        """Iterate over generated plan entries in deterministic evaluation order."""
+
+        return iter(self.entries)
+
+    def __len__(self) -> int:
+        """Return ``entry_count`` for convenient notebook inspection."""
+
+        return self.entry_count
+
+    def _repr_latex_(self) -> str:
+        max_slot = r"\infty" if self.max_slot_order is None else str(self.max_slot_order)
+        return (
+            rf"$\mathrm{{BosonicCDEExpansionPlan}}\left({self.trace_count}\ \mathrm{{traces}},\ "
+            rf"{self.entry_count}\ \mathrm{{entries}},\ N={self.max_total_order},\ n_\max={max_slot}\right)$"
+        )
+
+    def _repr_html_(self) -> str:
+        max_slot = "unbounded" if self.max_slot_order is None else str(self.max_slot_order)
+        return (
+            f"<code>BosonicCDEExpansionPlan(traces={self.trace_count} entries={self.entry_count} "
+            f"max_total_order={self.max_total_order} max_slot_order={max_slot})</code>"
+        )
+
+
+BosonicCDEExpansionRequest: TypeAlias = (
+    Mapping[str, Sequence[Sequence[Expression]]] | BosonicCDEExpansionPlan
+)
+
+
+@dataclass(frozen=True)
 class PowerTypeSupertraceContribution:
     """Power-type one-loop supertrace contribution before final reduction."""
 
@@ -1069,9 +1160,116 @@ class OneLoopSetup:
             entries.update(trace.to_expression_map(prefix=prefix))
         return entries
 
+    def interaction_bosonic_cde_expansion_plan(
+        self,
+        *,
+        trace_names: Sequence[str] | None = None,
+        max_total_order: int,
+        max_slot_order: int | None = None,
+        index_prefix: str = "cde",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> BosonicCDEExpansionPlan:
+        """Generate deterministic CDE derivative-order entries for interaction traces.
+
+        The planner enumerates weak compositions of the total derivative order
+        over each selected trace's propagator slots. It only allocates
+        theory-owned Lorentz-index labels; the symbolic CDE expansion and
+        subsequent vakint lowering stay in the native expression path used by
+        ``interaction_bosonic_cde_expansion_terms``.
+        """
+
+        if max_total_order < 0:
+            raise ValueError("max_total_order must be non-negative")
+        if max_slot_order is not None and max_slot_order < 0:
+            raise ValueError("max_slot_order must be non-negative")
+        traces = self._interaction_bosonic_cde_trace_map(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        selected_trace_names = tuple(traces) if trace_names is None else tuple(dict.fromkeys(trace_names))
+        entries: list[BosonicCDEExpansionPlanEntry] = []
+        for trace_name in selected_trace_names:
+            if trace_name not in traces:
+                raise KeyError(f"One-loop setup has no interaction trace {trace_name!r}")
+            trace = traces[trace_name]
+            for total_order in range(max_total_order + 1):
+                for slot_orders in _cde_slot_order_allocations(
+                    total_order,
+                    len(trace.blocks),
+                    max_slot_order=max_slot_order,
+                ):
+                    entry_index = len(entries)
+                    label = _cde_plan_entry_label(trace_name, entry_index, slot_orders)
+                    entries.append(
+                        BosonicCDEExpansionPlanEntry(
+                            trace_name=trace_name,
+                            expansion_indices=_cde_plan_expansion_indices(
+                                self.theory,
+                                trace_name=trace_name,
+                                entry_index=entry_index,
+                                slot_orders=slot_orders,
+                                index_prefix=index_prefix,
+                            ),
+                            total_order=total_order,
+                            slot_orders=slot_orders,
+                            label=label,
+                        )
+                    )
+        return BosonicCDEExpansionPlan(
+            theory=self.theory,
+            entries=tuple(entries),
+            trace_names=selected_trace_names,
+            max_total_order=max_total_order,
+            max_slot_order=max_slot_order,
+        )
+
+    def _interaction_bosonic_cde_trace_map(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> dict[str, SupertraceBlockTrace]:
+        return {
+            trace.name: trace
+            for trace in self.interaction_power_type_traces(
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
+        }
+
+    def _interaction_bosonic_cde_plan_entries(
+        self,
+        expansion_request: BosonicCDEExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> tuple[BosonicCDEExpansionPlanEntry, ...]:
+        traces = self._interaction_bosonic_cde_trace_map(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
+        if isinstance(expansion_request, BosonicCDEExpansionPlan):
+            entries = expansion_request.entries
+        else:
+            entries = tuple(
+                BosonicCDEExpansionPlanEntry(
+                    trace_name=trace_name,
+                    expansion_indices=_normalize_cde_expansion_indices(expansion_indices),
+                    total_order=sum(len(indices) for indices in expansion_indices),
+                    slot_orders=tuple(len(indices) for indices in expansion_indices),
+                    label=trace_name,
+                )
+                for trace_name, expansion_indices in expansion_request.items()
+            )
+        for entry in entries:
+            if entry.trace_name not in traces:
+                raise KeyError(f"One-loop setup has no interaction trace {entry.trace_name!r}")
+        return entries
+
     def interaction_bosonic_cde_kernel_expression_map(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         prefix: str = "interaction_bosonic_cde_kernel",
         loop_momentum_squared: Expression | None = None,
@@ -1101,34 +1299,33 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_expansion_terms_by_trace(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         act_open_derivatives: bool = False,
     ) -> dict[str, tuple[BosonicCDETraceExpansionTerm, ...]]:
-        """Return selected CDE-expanded interaction terms grouped by trace name."""
+        """Return selected CDE-expanded interaction terms grouped by trace or plan label."""
 
-        traces = {
-            trace.name: trace
-            for trace in self.interaction_power_type_traces(
-                loop_momentum_squared=loop_momentum_squared,
-                require_registered_mass=require_registered_mass,
-            )
-        }
+        traces = self._interaction_bosonic_cde_trace_map(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        )
         grouped: dict[str, tuple[BosonicCDETraceExpansionTerm, ...]] = {}
-        for trace_name, expansion_indices in expansion_indices_by_trace.items():
-            if trace_name not in traces:
-                raise KeyError(f"One-loop setup has no interaction trace {trace_name!r}")
-            grouped[trace_name] = traces[trace_name].bosonic_cde_expansion_terms(
-                expansion_indices,
+        for entry in self._interaction_bosonic_cde_plan_entries(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+        ):
+            grouped[entry.label] = traces[entry.trace_name].bosonic_cde_expansion_terms(
+                entry.expansion_indices,
                 act_open_derivatives=act_open_derivatives,
             )
         return grouped
 
     def interaction_bosonic_cde_expansion_terms(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -1146,7 +1343,7 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_vakint_integral_expression_map(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         prefix: str = "interaction_bosonic_cde_vakint_integral",
         loop_momentum_squared: Expression | None = None,
@@ -1168,7 +1365,7 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_vakint_integral_sum(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -1198,7 +1395,7 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_internal_integral_sum(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -1854,7 +2051,7 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_matching_result(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -1940,7 +2137,7 @@ class OneLoopSetup:
                 "eft_order": self.eft_order,
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
-                "interaction_bosonic_cde_trace_count": len(expansion_indices_by_trace),
+                **_cde_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_bosonic_cde_term_count": len(terms),
                 "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
                 "on_shell_reduced": False,
@@ -1953,7 +2150,7 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_internal_matching_result(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -2028,7 +2225,7 @@ class OneLoopSetup:
                 "eft_order": self.eft_order,
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
-                "interaction_bosonic_cde_trace_count": len(expansion_indices_by_trace),
+                **_cde_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_bosonic_cde_term_count": len(terms),
                 "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
                 "on_shell_reduced": False,
@@ -2043,7 +2240,7 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_internal_minimal_subtraction_result(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -2095,7 +2292,7 @@ class OneLoopSetup:
 
     def interaction_bosonic_cde_minimal_subtraction_result(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -2175,7 +2372,7 @@ class OneLoopSetup:
                 "eft_order": self.eft_order,
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
-                "interaction_bosonic_cde_trace_count": len(expansion_indices_by_trace),
+                **_cde_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_bosonic_cde_term_count": len(terms),
                 "interaction_bosonic_cde_act_open_derivatives": act_open_derivatives,
                 "on_shell_reduced": False,
@@ -4001,6 +4198,89 @@ def _fluctuation_mass_squared(mode: FluctuationMode) -> Expression:
     return Expression.num(0) if mode.mass_squared is None else mode.mass_squared
 
 
+def _normalize_cde_expansion_indices(
+    expansion_indices: Sequence[Sequence[Expression]],
+) -> tuple[tuple[Expression, ...], ...]:
+    return tuple(tuple(indices) for indices in expansion_indices)
+
+
+def _cde_slot_order_allocations(
+    total_order: int,
+    slot_count: int,
+    *,
+    max_slot_order: int | None,
+) -> tuple[tuple[int, ...], ...]:
+    if total_order < 0:
+        raise ValueError("total_order must be non-negative")
+    if slot_count < 1:
+        raise ValueError("slot_count must be positive")
+    if slot_count == 1:
+        if max_slot_order is not None and total_order > max_slot_order:
+            return ()
+        return ((total_order,),)
+    allocations: list[tuple[int, ...]] = []
+    first_max = total_order if max_slot_order is None else min(total_order, max_slot_order)
+    for first_order in range(first_max + 1):
+        for tail in _cde_slot_order_allocations(
+            total_order - first_order,
+            slot_count - 1,
+            max_slot_order=max_slot_order,
+        ):
+            allocations.append((first_order, *tail))
+    return tuple(allocations)
+
+
+def _cde_plan_expansion_indices(
+    theory: Theory,
+    *,
+    trace_name: str,
+    entry_index: int,
+    slot_orders: tuple[int, ...],
+    index_prefix: str,
+) -> tuple[tuple[Expression, ...], ...]:
+    trace_key = safe_symbol_name(trace_name)
+    prefix_key = safe_symbol_name(index_prefix)
+    slots: list[tuple[Expression, ...]] = []
+    for slot_index, slot_order in enumerate(slot_orders):
+        indices: list[Expression] = []
+        for derivative_index in range(slot_order):
+            label = f"{prefix_key}_{trace_key}_{entry_index}_{slot_index}_{derivative_index}"
+            label_symbol = theory.symbol(
+                label,
+                role=SymbolRole.INDEX,
+                data={SymbolDataKey.NAME.value: label},
+                tags=("cde", "cde_plan"),
+            )
+            indices.append(theory.index(label_symbol, s.Lorentz))
+        slots.append(tuple(indices))
+    return tuple(slots)
+
+
+def _cde_plan_entry_label(trace_name: str, entry_index: int, slot_orders: tuple[int, ...]) -> str:
+    order_label = "_".join(str(order) for order in slot_orders)
+    return f"{trace_name}#cde{entry_index}_o{order_label}"
+
+
+def _cde_expansion_request_metadata(expansion_request: BosonicCDEExpansionRequest) -> dict[str, Any]:
+    if isinstance(expansion_request, BosonicCDEExpansionPlan):
+        return {
+            "interaction_bosonic_cde_trace_count": expansion_request.trace_count,
+            "interaction_bosonic_cde_plan_entry_count": expansion_request.entry_count,
+            "interaction_bosonic_cde_planned": True,
+            "interaction_bosonic_cde_plan_trace_names": expansion_request.trace_names,
+            "interaction_bosonic_cde_plan_max_total_order": expansion_request.max_total_order,
+            "interaction_bosonic_cde_plan_max_slot_order": expansion_request.max_slot_order,
+        }
+    return {
+        "interaction_bosonic_cde_trace_count": len(expansion_request),
+        "interaction_bosonic_cde_plan_entry_count": len(expansion_request),
+        "interaction_bosonic_cde_planned": False,
+        "interaction_bosonic_cde_plan_trace_names": tuple(expansion_request),
+        "interaction_bosonic_cde_plan_max_total_order": None,
+        "interaction_bosonic_cde_plan_max_slot_order": None,
+    }
+
+
 def _flatten_expression_slots(slots: Iterable[Iterable[Expression]]) -> tuple[Expression, ...]:
     return tuple(item for slot in slots for item in slot)
 
@@ -4418,7 +4698,16 @@ def match_one_loop(
             mode=options.tensor_network_mode,
         )
     _LOGGER.info("building one-loop result for %s with %s backend", theory.name, selected_backend.value)
-    cde_expansion_indices_by_trace = options.bosonic_cde_expansion_indices_by_trace
+    cde_expansion_indices_by_trace: Any = options.bosonic_cde_expansion_indices_by_trace
+    if cde_expansion_indices_by_trace is None and options.bosonic_cde_max_total_order is not None:
+        cde_expansion_indices_by_trace = setup.interaction_bosonic_cde_expansion_plan(
+            trace_names=options.bosonic_cde_trace_names,
+            max_total_order=options.bosonic_cde_max_total_order,
+            max_slot_order=options.bosonic_cde_max_slot_order,
+            index_prefix=options.bosonic_cde_index_prefix,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+        )
     if cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_bosonic_cde_internal_matching_result(
             cde_expansion_indices_by_trace,
@@ -4571,6 +4860,15 @@ def match_one_loop(
             ),
             "covariant_derivative_commutators_expanded": options.expand_covariant_derivative_commutators,
             "bosonic_cde_expansion_enabled": cde_expansion_indices_by_trace is not None,
+            "bosonic_cde_expansion_planned": isinstance(cde_expansion_indices_by_trace, BosonicCDEExpansionPlan),
+            "bosonic_cde_trace_names": (
+                ",".join(cde_expansion_indices_by_trace.trace_names)
+                if isinstance(cde_expansion_indices_by_trace, BosonicCDEExpansionPlan)
+                else ",".join(options.bosonic_cde_expansion_indices_by_trace or ())
+            ),
+            "bosonic_cde_max_total_order": options.bosonic_cde_max_total_order,
+            "bosonic_cde_max_slot_order": options.bosonic_cde_max_slot_order,
+            "bosonic_cde_index_prefix": options.bosonic_cde_index_prefix,
             "bosonic_cde_act_open_derivatives": options.bosonic_cde_act_open_derivatives,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },

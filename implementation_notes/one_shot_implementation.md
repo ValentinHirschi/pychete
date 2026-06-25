@@ -815,6 +815,59 @@
   deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed;
   and `git diff --check` passed.
 
+## Current Automatic CDE Planning Slice
+
+- Added public planner objects `BosonicCDEExpansionPlan` and
+  `BosonicCDEExpansionPlanEntry`, exported through `pychete.api` and package
+  root `pychete`. They record selected trace families, derivative slot
+  allocations, generated Lorentz-index sequences, stable entry labels, and
+  notebook-friendly reprs.
+- Added `OneLoopSetup.interaction_bosonic_cde_expansion_plan(...)`. It
+  enumerates weak compositions of total CDE derivative order over the
+  propagator slots of selected interaction-power trace families. Generated
+  Lorentz-index labels are theory-owned `SymbolRole.INDEX` symbols with
+  `cde`/`cde_plan` tags and symbol data, so the plan follows pychete's symbol
+  registry and state-safety rules.
+- Existing explicit CDE result helpers now accept either the legacy
+  `{trace_name: expansion_indices}` map or a generated
+  `BosonicCDEExpansionPlan`. Explicit maps keep their old output keys; plans
+  use stable per-entry labels such as `hScalar-lScalar#cde1_o0_1`, and result
+  metadata now records trace count, plan-entry count, max total order, max
+  slot order, and whether a generated plan was used.
+- Added `OneLoopMatchOptions.bosonic_cde_trace_names`,
+  `bosonic_cde_max_total_order`, `bosonic_cde_max_slot_order`, and
+  `bosonic_cde_index_prefix`. When `bosonic_cde_max_total_order` is set and no
+  explicit map is supplied, `match_one_loop(...)` builds the CDE plan after
+  the requested setup preprocessing and routes the selected backend through
+  the same CDE-expanded result path.
+- Threaded the same planner controls through validation fixture previews and
+  public-match gap-report forwarding. This keeps Matchete-independent fixture
+  diagnostics on the same public API surface as ordinary one-loop matching.
+- This is still a selected-trace planner, not a global all-orders CDE
+  expansion. It intentionally scales with requested trace families and bounded
+  derivative order. The next CDE work is to connect commutator emission/lowering
+  and basis reduction to the planned derivative distributions.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_public_api.py::test_public_api_exports_have_docstrings
+  tests/unit/definitions/test_public_api.py::test_public_api_methods_have_docstrings
+  -q` passed with 2 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint
+  -q` passed with 1 test;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathematica
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api
+  -q` passed with 2 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_cde.py tests/unit/definitions/test_public_api.py
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k "cde or
+  public_api or forwards_pychete_color or
+  preview_can_use_internal_integral_backend" -q` passed with 18 tests and 89
+  deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed;
+  and `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -844,10 +897,10 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Add automatic CDE expansion-order planning for selected trace families, then
-  integrate the commutator emitter/lowering pair into the generated CDE stages
-  that produce the gauge Wilson structures needed by `cHB`, `cHW`, `cHWB`,
-  and related fermionic Higgs-current coefficients.
+- Integrate the commutator emitter/lowering pair into generated CDE stages so
+  planned derivative distributions can produce the gauge Wilson structures
+  needed by `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current
+  coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.

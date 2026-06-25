@@ -142,6 +142,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "evaluate_integrals",
             "evaluate_tensor_networks",
             "interaction_block_traces",
+            "interaction_bosonic_cde_expansion_plan",
             "interaction_bosonic_cde_expansion_terms",
             "interaction_bosonic_cde_expansion_terms_by_trace",
             "interaction_power_type_contribution_count",
@@ -291,6 +292,15 @@ def test_public_api_methods_have_docstrings() -> None:
         pychete.BosonicCDETraceExpansionTerm: [
             "kernel_expression",
             "vakint_integral_expression",
+        ],
+        pychete.BosonicCDEExpansionPlanEntry: [
+            "as_explicit_map",
+        ],
+        pychete.BosonicCDEExpansionPlan: [
+            "by_trace",
+            "entry_count",
+            "explicit_maps",
+            "trace_count",
         ],
     }
     missing = [

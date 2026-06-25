@@ -24,6 +24,8 @@ from .backends.vacuum_integrals import (
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .logging import configure_logging, disable_logging, get_logger
 from .matching import (
+    BosonicCDEExpansionPlan,
+    BosonicCDEExpansionPlanEntry,
     BosonicCDETraceExpansionTerm,
     FluctuationBasis,
     FluctuationMode,
@@ -99,6 +101,8 @@ from .validation_fixtures import (
 __all__ = [
     "BuiltinIndexType",
     "absorb_vakint_scalar_loop_momentum_numerators",
+    "BosonicCDEExpansionPlan",
+    "BosonicCDEExpansionPlanEntry",
     "BosonicCDETraceExpansionTerm",
     "CGTensorDefinition",
     "CGTensorHandle",

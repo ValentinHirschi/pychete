@@ -112,9 +112,12 @@ class OneLoopMatchOptions:
     ``bosonic_cde_expansion_indices_by_trace`` enables the current opt-in CDE
     interaction-supertrace path for explicitly selected trace names. The value
     maps each trace name to one Lorentz-index sequence per propagator slot in
-    that trace. When supplied, backend selection and later on-shell/EFT
-    post-processing use the CDE-expanded aggregate instead of the older
-    interaction-power aggregate.
+    that trace. For generated plans, set ``bosonic_cde_max_total_order`` and
+    optionally ``bosonic_cde_trace_names``/``bosonic_cde_max_slot_order``; the
+    one-loop setup will enumerate all trace-slot derivative-order allocations
+    up to that bound. When explicit or generated CDE expansion is supplied,
+    backend selection and later on-shell/EFT post-processing use the
+    CDE-expanded aggregate instead of the older interaction-power aggregate.
     """
 
     max_trace_order: int = 2
@@ -151,6 +154,10 @@ class OneLoopMatchOptions:
     emit_covariant_derivative_commutator_passes: int = 1
     expand_covariant_derivative_commutators: bool = False
     bosonic_cde_expansion_indices_by_trace: BosonicCDEExpansionInput = None
+    bosonic_cde_trace_names: Sequence[str] | None = None
+    bosonic_cde_max_total_order: int | None = None
+    bosonic_cde_max_slot_order: int | None = None
+    bosonic_cde_index_prefix: str = "cde"
     bosonic_cde_act_open_derivatives: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None

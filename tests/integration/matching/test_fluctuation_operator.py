@@ -4,6 +4,8 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import (
+    BosonicCDEExpansionPlan,
+    BosonicCDEExpansionPlanEntry,
     BosonicCDETraceExpansionTerm,
     FieldChirality,
     FieldMassKind,
@@ -17,6 +19,7 @@ from pychete import (
     OneLoopNormalization,
     PowerTypeSupertraceContribution,
     SupertraceBlockTrace,
+    SymbolRole,
     Theory,
     VakintIntegralStage,
     canonical_string,
@@ -1774,6 +1777,51 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
     assert matched.metadata["bosonic_cde_expansion_enabled"] is True
     assert matched.metadata["bosonic_cde_act_open_derivatives"] is True
     assert_expr_equal(matched.off_shell_eft_lagrangian, expected_acted_integral)
+
+    plan = setup.interaction_bosonic_cde_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=1,
+        index_prefix="pytest_cde",
+    )
+    assert isinstance(plan, BosonicCDEExpansionPlan)
+    assert all(isinstance(entry, BosonicCDEExpansionPlanEntry) for entry in plan)
+    assert plan.trace_names == ("hScalar-lScalar",)
+    assert tuple(entry.slot_orders for entry in plan.entries) == ((0, 0), (0, 1), (1, 0))
+    assert len(plan) == 3
+    assert plan.entry_count == 3
+    assert plan.trace_count == 1
+    assert tuple(plan.by_trace()) == ("hScalar-lScalar",)
+    generated_index_label = plan.entries[1].expansion_indices[1][0][0]
+    assert any(tag.endswith(f"::{SymbolRole.INDEX.value}") for tag in generated_index_label.get_tags())
+    plan_integral_sum = setup.interaction_bosonic_cde_vakint_integral_sum(plan)
+    expected_plan_integral_sum = Expression.num(0)
+    for entry in plan:
+        expected_plan_integral_sum += setup.interaction_bosonic_cde_vakint_integral_sum(entry.as_explicit_map())
+    assert_expr_equal(plan_integral_sum, expected_plan_integral_sum.expand())
+    plan_integrals = setup.interaction_bosonic_cde_vakint_integral_expression_map(plan)
+    assert tuple(plan_integrals) == (
+        "interaction_bosonic_cde_vakint_integral[hScalar-lScalar#cde0_o0_0,0]",
+        "interaction_bosonic_cde_vakint_integral[hScalar-lScalar#cde1_o0_1,0]",
+        "interaction_bosonic_cde_vakint_integral[hScalar-lScalar#cde2_o1_0,0]",
+    )
+    planned_match = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            bosonic_cde_trace_names=("hScalar-lScalar",),
+            bosonic_cde_max_total_order=1,
+            bosonic_cde_index_prefix="pytest_cde",
+            truncate_eft_result=False,
+        ),
+    )
+    assert isinstance(planned_match, MatchingResult)
+    assert planned_match.metadata["bosonic_cde_expansion_enabled"] is True
+    assert planned_match.metadata["bosonic_cde_expansion_planned"] is True
+    assert planned_match.metadata["interaction_bosonic_cde_trace_count"] == 1
+    assert planned_match.metadata["interaction_bosonic_cde_plan_entry_count"] == 3
+    assert planned_match.metadata["interaction_bosonic_cde_term_count"] == 3
+    assert_expr_equal(planned_match.off_shell_eft_lagrangian, plan_integral_sum)
     with pytest.raises(ValueError, match="one entry per trace block"):
         trace.bosonic_cde_expansion_terms(((mu,),))
     with pytest.raises(KeyError, match="missing"):

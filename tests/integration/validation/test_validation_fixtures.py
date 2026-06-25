@@ -558,11 +558,12 @@ def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathem
     )
     mu = theory.lorentz_index("mu")
     expansion = {"hScalar-lScalar": ((mu,), ())}
-    expected = theory.one_loop_setup(
+    setup = theory.one_loop_setup(
         lagrangian,
         eft_order=6,
         max_trace_order=2,
-    ).interaction_bosonic_cde_matching_result(
+    )
+    expected = setup.interaction_bosonic_cde_matching_result(
         expansion,
         act_open_derivatives=True,
     )
@@ -580,6 +581,23 @@ def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathem
     assert preview.metadata["bosonic_cde_act_open_derivatives"] is True
     assert_expr_equal(preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
     preview.validate()
+
+    generated_plan = setup.interaction_bosonic_cde_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=0,
+    )
+    expected_generated = setup.interaction_bosonic_cde_matching_result(generated_plan)
+    generated_preview = fixture.one_loop_preview(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        bosonic_cde_trace_names=("hScalar-lScalar",),
+        bosonic_cde_max_total_order=0,
+    )
+    assert generated_preview.metadata["bosonic_cde_expansion_enabled"] is True
+    assert generated_preview.metadata["bosonic_cde_expansion_planned"] is True
+    assert generated_preview.metadata["interaction_bosonic_cde_plan_entry_count"] == 1
+    assert_expr_equal(generated_preview.off_shell_eft_lagrangian, expected_generated.off_shell_eft_lagrangian)
+    generated_preview.validate()
 
 
 def test_validation_fixture_preview_accepts_custom_internal_series_symbols_without_mathematica() -> None:
@@ -851,6 +869,10 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         simplify_pychete_color_algebra=True,
         substitute_heavy_scalar_solutions=True,
         bosonic_cde_expansion_indices_by_trace={"hScalar": ((S("mu"),),)},
+        bosonic_cde_trace_names=("hScalar",),
+        bosonic_cde_max_total_order=2,
+        bosonic_cde_max_slot_order=1,
+        bosonic_cde_index_prefix="forwarded_cde",
         bosonic_cde_act_open_derivatives=True,
         matching_condition_projection_expand_source=False,
         matching_condition_projection_canonize_indices=False,
@@ -863,6 +885,10 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert options.simplify_pychete_color_algebra is True
     assert options.substitute_heavy_scalar_solutions is True
     assert options.bosonic_cde_expansion_indices_by_trace == {"hScalar": ((S("mu"),),)}
+    assert options.bosonic_cde_trace_names == ("hScalar",)
+    assert options.bosonic_cde_max_total_order == 2
+    assert options.bosonic_cde_max_slot_order == 1
+    assert options.bosonic_cde_index_prefix == "forwarded_cde"
     assert options.bosonic_cde_act_open_derivatives is True
     assert captured["matching_condition_expand_source"] is False
     assert captured["matching_condition_canonize_indices"] is False
