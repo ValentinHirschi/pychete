@@ -122,6 +122,8 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     unused = theory.define_coupling("unused", self_conjugate=True)
     lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
     target = g() ** 2 * phi() ** 2
+    wilson = theory.define_wilson_coefficient("cPhi2", operator=target)
+    wilson_name = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
 
     result = theory.match(
         lagrangian,
@@ -160,6 +162,18 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     assert set(with_identity.matching_conditions) == {"g2_phi2", "unused"}
     assert_expr_equal(with_identity.matching_conditions["unused"], unused())
     assert with_identity.metadata["matching_condition_projection_coupling_identities"] is True
+
+    registered_wilson_projection = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_drop_zero=True,
+    )
+
+    assert isinstance(registered_wilson_projection, MatchingResult)
+    assert set(registered_wilson_projection.matching_conditions) == {wilson_name}
+    assert_expr_equal(registered_wilson_projection.matching_conditions[wilson_name], expected)
 
 
 def test_one_loop_match_options_select_backend_and_trace_order() -> None:

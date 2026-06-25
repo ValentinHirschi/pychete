@@ -3516,7 +3516,7 @@ def match_one_loop(
     *,
     eft_order: int = 6,
     one_loop_options: OneLoopMatchOptions | None = None,
-    matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | None = None,
+    matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
     matching_condition_source: str = "on_shell_eft_lagrangian",
     matching_condition_drop_zero: bool = False,
     matching_condition_include_coupling_identities: bool = False,

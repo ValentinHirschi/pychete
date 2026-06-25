@@ -28,6 +28,9 @@ if TYPE_CHECKING:
     from .theory import Theory
 
 
+MatchingConditionTargetInput = Mapping[str, Expression] | Iterable[Expression] | str
+
+
 _DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES = {
     "interaction_power_type_vakint_pole_part": "interaction_power_type_normalized_vakint_pole_part",
     "interaction_power_type_vakint_finite_part": "interaction_power_type_normalized_vakint_finite_part",
@@ -208,7 +211,7 @@ class MatchingResult:
 
     def project_matching_conditions(
         self,
-        targets: Mapping[str, Expression] | Iterable[Expression],
+        targets: MatchingConditionTargetInput,
         *,
         source: str = "on_shell_eft_lagrangian",
         expand_source: bool = True,
@@ -236,7 +239,7 @@ class MatchingResult:
         if expand_source:
             expr = expr.expand()
         conditions: dict[str, Expression] = {}
-        for target in matching_condition_targets(targets):
+        for target in matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets)):
             coefficient = expr.coefficient(target.projection_expression).expand()
             if include_coupling_identities:
                 identity = _tree_level_coupling_identity(self.theory, target)
@@ -249,7 +252,7 @@ class MatchingResult:
 
     def with_projected_matching_conditions(
         self,
-        targets: Mapping[str, Expression] | Iterable[Expression],
+        targets: MatchingConditionTargetInput,
         *,
         source: str = "on_shell_eft_lagrangian",
         expand_source: bool = True,
@@ -467,11 +470,55 @@ def _transform_optional_expression(
     return expression_transform(expr)
 
 
+def registered_wilson_matching_condition_targets(
+    theory: Theory,
+    *,
+    basis: str | None = None,
+    include_without_operator: bool = False,
+) -> dict[str, Expression]:
+    """Return target expressions for theory-registered Wilson coefficients.
+
+    The targets are built from the theory-owned external labels and stored
+    index/EFT-order metadata. By default only Wilson coefficients with stored
+    operator monomials are returned, because those can be projected from an EFT
+    Lagrangian through ``MatchingConditionTarget.projection_expression``.
+    """
+
+    targets: dict[str, Expression] = {}
+    for name in sorted(theory.externals):
+        definition = theory.externals[name]
+        if definition.kind is not ExternalKind.WILSON_COEFFICIENT:
+            continue
+        if basis is not None and definition.basis_name != basis:
+            continue
+        if not include_without_operator and definition.operator_expr is None:
+            continue
+        expression = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+        targets[canonical_string(expression)] = expression
+    return targets
+
+
+def _resolve_matching_condition_targets(
+    theory: Theory,
+    targets: MatchingConditionTargetInput,
+) -> Mapping[str, Expression] | Iterable[Expression]:
+    if not isinstance(targets, str):
+        return targets
+    if targets in {"registered_wilsons", "registered_wilson_coefficients"}:
+        return registered_wilson_matching_condition_targets(theory)
+    raise ValueError(
+        "Unknown matching-condition target selector "
+        f"{targets!r}; supported selector is 'registered_wilsons'"
+    )
+
+
 def _matching_condition_targets(
     targets: Mapping[str, Expression] | Iterable[Expression],
 ) -> tuple[tuple[str, Expression], ...]:
     if isinstance(targets, Mapping):
         return tuple((str(name), target) for name, target in targets.items())
+    if isinstance(targets, str):
+        raise ValueError("String target selectors require a MatchingResult or Theory context")
     return tuple((canonical_string(target), target) for target in targets)
 
 
@@ -548,4 +595,5 @@ __all__ = [
     "MatchingResult",
     "MatchingResultComparison",
     "matching_condition_targets",
+    "registered_wilson_matching_condition_targets",
 ]

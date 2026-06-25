@@ -11,6 +11,7 @@ from pychete import (
     canonical_string,
     deterministic_probe_samples,
     evaluator_probe_equal,
+    registered_wilson_matching_condition_targets,
     s,
 )
 from pychete.backends import vacuum_integrals
@@ -295,6 +296,8 @@ def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> 
     higgs = theory.define_field("H", s.Scalar, mass=0)
     operator = (s.Bar(higgs()) * higgs()) ** 3
     wilson = theory.define_wilson_coefficient("cH", eft_order=6, basis="SMEFT", operator=operator)
+    theory.define_wilson_coefficient("cMissing", basis="SMEFT")
+    theory.define_wilson_coefficient("cLEFT", basis="LEFT")
     target = s.Coupling(wilson.label, s.List(), Expression.num(6))
     result = MatchingResult(
         theory=theory,
@@ -304,9 +307,26 @@ def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> 
     )
 
     projected = result.project_matching_conditions([target])
+    selector_projected = result.project_matching_conditions("registered_wilsons")
+    smeft_targets = registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    all_smeft_targets = registered_wilson_matching_condition_targets(
+        theory,
+        basis="SMEFT",
+        include_without_operator=True,
+    )
 
     assert tuple(projected) == (canonical_string(target),)
     assert canonical_string((projected[canonical_string(target)] - (11 + 3 * target)).expand()) == "0"
+    assert tuple(selector_projected) == (canonical_string(target),)
+    assert canonical_string((selector_projected[canonical_string(target)] - (11 + 3 * target)).expand()) == "0"
+    assert set(smeft_targets) == {canonical_string(target)}
+    assert set(all_smeft_targets) == {
+        canonical_string(target),
+        canonical_string(s.Coupling(theory.external_handle("cMissing").label, s.List(), Expression.num(0))),
+    }
+
+    with pytest.raises(ValueError, match="registered_wilsons"):
+        result.project_matching_conditions("all_wilsons")
 
 
 def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:

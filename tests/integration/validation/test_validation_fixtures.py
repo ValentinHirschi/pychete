@@ -14,6 +14,7 @@ from pychete import (
     OneLoopNormalization,
     SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
     one_loop_normalization_factor,
+    registered_wilson_matching_condition_targets,
 )
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals
@@ -132,6 +133,9 @@ def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     }
 
     assert wilsons_with_operators == set(SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES)
+    assert set(registered_wilson_matching_condition_targets(theory)) == {
+        target.name for target in result.matching_condition_targets() if target.is_wilson_coefficient
+    }
     assert theory.external_handle("cHB").definition.kind is ExternalKind.WILSON_COEFFICIENT
     assert theory.external_handle("cHB").definition.basis_name == "SMEFT"
     assert theory.external_handle("cHB").definition.index_exprs == ()

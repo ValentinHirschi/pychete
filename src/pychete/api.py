@@ -50,6 +50,7 @@ from .matching_results import (
     MatchingResult,
     MatchingResultComparison,
     matching_condition_targets,
+    registered_wilson_matching_condition_targets,
 )
 from .smeft import (
     SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
@@ -178,6 +179,7 @@ __all__ = [
     "reduce_loop_functions_first_power",
     "reduce_loop_functions_ibp",
     "relabel_dummy_indices",
+    "registered_wilson_matching_condition_targets",
     "s",
     "series_eft",
     "smeft_warsaw_operator",

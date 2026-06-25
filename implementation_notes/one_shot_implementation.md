@@ -37,6 +37,11 @@
   families first, then run the smallest marker group that exercises the slice.
   Smoke probes and single-test runs are allowed while exploring, but a slice
   should not keep bouncing through the whole suite while still being designed.
+- Before starting each one-shot slice, review the remaining implementation
+  frontier and choose a larger coherent feature family that can be completed as
+  a unit. If focused tests expose a design issue, refactor within that slice
+  and then rerun the narrowest relevant gate; reserve full-suite validation for
+  larger green milestones.
 - Commit and push only coherent green milestones to `origin/one-shot-port`.
   Keep these notes current with status, validation, backend discoveries, and
   remaining gaps.
@@ -82,7 +87,8 @@
 - The Mathematica model loader now uses `FreeLagConvention.MATCHETE` for
   parsed `FreeLag[...]`. VLF Python and Mathematica assets intentionally share
   theory metadata but use distinct free-Lagrangian expression conventions.
-- Last pushed green milestone: `a18fb40 Add SMEFT Warsaw operator metadata registry`.
+- Last pushed green milestone:
+  `9cd2c6b Complete SMEFT Warsaw operator metadata coverage`.
 - Last broader non-slow gate at that milestone:
   `263 passed, 1 skipped, 50 deselected`; the skip was the expected GammaLoop
   manifest skip for a local dependency build without GammaLoop requested.
@@ -226,7 +232,6 @@
   - `pytest tests/unit/definitions/test_theory_definitions.py::test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata tests/unit/definitions/test_public_api.py tests/unit/loaders/test_matchete_previous_results_converter.py::test_previous_result_converter_predeclares_lhs_wilson_targets_only tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata -q`:
     8 passed.
   - `python -m mypy`: success, no issues in 33 source files.
-  - `git diff --check`: clean.
 
 ## Current Slice: Complete Warsaw Operator Metadata Coverage
 
@@ -263,3 +268,44 @@
   - `pytest tests/unit/definitions/test_theory_definitions.py::test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata tests/unit/definitions/test_public_api.py tests/unit/loaders/test_matchete_previous_results_converter.py::test_previous_result_converter_predeclares_lhs_wilson_targets_only tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata -q`:
     8 passed.
   - `python -m mypy`: success, no issues in 33 source files.
+
+## Current Slice: Registered Wilson Projection Selector
+
+- User emphasized again that the one-shot work should batch larger coherent
+  implementation chunks and avoid whole-suite churn. This slice therefore
+  closes the next Wilson metadata projection family by letting matching APIs
+  consume the complete theory-owned Wilson registry directly, then validates
+  only selector/projection/public-API/type paths.
+- Added `registered_wilson_matching_condition_targets(theory, ...)` as a public
+  helper. It constructs matching-condition target expressions from
+  `ExternalDefinition` metadata: external Symbolica label, registered index
+  expressions, EFT order, Wilson kind, basis name, and stored operator
+  monomial. By default it returns only Wilson coefficients with operator
+  metadata, because those can be projected from the EFT Lagrangian by native
+  Symbolica `Expression.coefficient(...)`.
+- Extended `MatchingResult.project_matching_conditions(...)`,
+  `MatchingResult.with_projected_matching_conditions(...)`, `match_one_loop`,
+  and `Theory.match(...)` to accept the selector string
+  `registered_wilsons`. This projects all registered Wilson coefficients with
+  stored operator metadata without requiring fixture-derived target maps.
+- The projection implementation remains Symbolica-first: selector resolution
+  only builds target expressions; coefficient extraction still uses
+  `MatchingConditionTarget.projection_expression` and
+  `Expression.coefficient(...)`.
+- Added regressions covering:
+  - registered Wilson selector projection in a direct `Theory.match(...)`
+    heavy-scalar integration test;
+  - basis filtering and `include_without_operator=True` behavior for the
+    public helper;
+  - default validation fixtures exposing exactly the same complete Wilson
+    target set through the registered selector as through stored matching
+    targets.
+- Targeted validation for this slice:
+  - frontier smoke before the selector edit:
+    `pytest tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica -q`:
+    1 passed in 50.94s.
+  - exact selector/API gate:
+    `pytest tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_can_project_requested_matching_conditions tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_wilson_conditions_from_operator_metadata tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata tests/unit/definitions/test_public_api.py -q`:
+    8 passed.
+  - `python -m mypy`: success, no issues in 33 source files.
+  - `git diff --check`: clean.
