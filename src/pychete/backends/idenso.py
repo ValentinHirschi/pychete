@@ -1,14 +1,16 @@
 from __future__ import annotations
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from functools import cache
+from typing import Any
 
 from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .common import import_backend
-from ..expr import args, as_int, factors, is_head, product_expr, sum_expr
-from ..symbols import SymbolRole, s
+from ..expr import args, as_int, cg_tensor_pattern, factors, is_head, product_expr, sum_expr
+from ..symbols import SymbolRole, canonical_string, expression_from_canonical, s
 
 _MAX_NATIVE_PROJECTOR_POWER = 16
 _MAX_NATIVE_DIRAC_WORD_ARITY = 8
@@ -79,6 +81,36 @@ def simplify_color(expr: Expression) -> Expression:
     """Delegate colour algebra simplification to idenso."""
 
     return native_module().simplify_color(expr)
+
+
+def simplify_pychete_color_algebra(
+    theory: Any,
+    expr: Expression,
+    *,
+    decode_metrics: bool = True,
+    substitute_group_constants: bool = True,
+) -> Expression:
+    """Simplify registered pychete ``CG`` colour tensors through idenso.
+
+    pychete stores generators and structure constants as theory-owned
+    ``CG(label, indices)`` atoms. This adapter lowers compatible built-in
+    SU(N) fundamental/adjoint tensors to spenso's native HEP tensor heads,
+    delegates the algebra to idenso's Rust-backed ``simplify_color`` and
+    ``simplify_metrics`` routines, then decodes simple native metrics back to
+    registered pychete delta CG tensors when the originating group is
+    unambiguous.
+    """
+
+    from . import spenso
+
+    lowered = spenso.lower_native_hep_cg_tensors_to_spenso(theory, expr)
+    simplified = simplify_metrics(simplify_color(lowered).expand()).expand()
+    groups = _cg_groups_in_expression(theory, expr)
+    if substitute_group_constants:
+        simplified = _substitute_native_color_constants(theory, simplified, groups)
+    if decode_metrics:
+        simplified = _decode_native_color_metrics(theory, simplified, groups)
+    return simplified.expand()
 
 
 def simplify_gamma(expr: Expression) -> Expression:
@@ -585,6 +617,161 @@ def _decode_simple_native_dirac_result(expr: Expression) -> Expression | None:
     return None
 
 
+def _cg_groups_in_expression(theory: Any, expr: Expression) -> tuple[str, ...]:
+    pattern = cg_tensor_pattern()
+    groups: list[str] = []
+    for match in expr.match(pattern, s.CGTensorLabelWildcard.req_tag(SymbolRole.CG_TENSOR.value)):
+        atom = pattern.replace_wildcards(match)
+        definition = _cg_tensor_definition_for_label(theory, atom[0])
+        if definition is None:
+            continue
+        for representation in definition.representation_exprs:
+            group = theory.representation_definition(representation).group
+            if group not in groups:
+                groups.append(group)
+    return tuple(groups)
+
+
+def _cg_tensor_definition_for_label(theory: Any, label: Expression) -> Any | None:
+    label_text = canonical_string(label)
+    for definition in theory.cg_tensors.values():
+        if canonical_string(definition.label) == label_text:
+            return definition
+    return None
+
+
+def _substitute_native_color_constants(theory: Any, expr: Expression, groups: tuple[str, ...]) -> Expression:
+    replacements: list[Replacement] = [Replacement(_native_color_symbol("TR"), Expression.num(1) / Expression.num(2))]
+    sizes: tuple[int, ...] = tuple(
+        dict.fromkeys(size for group in groups if (size := _su_group_size(theory, group)) is not None)
+    )
+    if len(sizes) == 1:
+        n = sizes[0]
+        replacements.extend(
+            [
+                Replacement(_native_color_symbol("CA"), Expression.num(n)),
+                Replacement(_native_color_symbol("CF"), Expression.num(n * n - 1) / Expression.num(2 * n)),
+                Replacement(_native_color_symbol("Nc"), Expression.num(n)),
+                Replacement(_native_color_symbol("NA"), Expression.num(n * n - 1)),
+            ]
+        )
+    return expr.replace_multiple(replacements).expand()
+
+
+def _decode_native_color_metrics(theory: Any, expr: Expression, groups: tuple[str, ...]) -> Expression:
+    left = s.head("native_color_metric_left_")
+    right = s.head("native_color_metric_right_")
+    pattern = _native_color_symbol("g")(left, right)
+
+    def decode(match: dict[Expression, Expression]) -> Expression:
+        original = pattern.replace_wildcards(match)
+        decoded = _decode_native_color_metric(theory, match[left], match[right], groups)
+        return original if decoded is None else decoded
+
+    return expr.replace_multiple([Replacement(pattern, decode)], repeat=True).expand()
+
+
+def _decode_native_color_metric(
+    theory: Any,
+    left: Expression,
+    right: Expression,
+    groups: tuple[str, ...],
+) -> Expression | None:
+    left_slot = _decode_native_color_slot(left)
+    right_slot = _decode_native_color_slot(right)
+    if left_slot is None or right_slot is None:
+        return None
+    group = _native_color_metric_group(theory, left_slot, right_slot, groups)
+    if group is None:
+        return None
+    group_symbol = theory.symbol(group, role=SymbolRole.GROUP)
+    if left_slot.kind == "adj" and right_slot.kind == "adj":
+        adj = group_symbol(s.adj)
+        delta_name = f"del_{group}_adj"
+        if delta_name not in theory.cg_tensors:
+            return None
+        return theory.cg_tensor_handle(delta_name)(theory.index(left_slot.label, adj), theory.index(right_slot.label, adj))
+    if left_slot.kind == "fund" and right_slot.kind == "fund" and left_slot.dual != right_slot.dual:
+        fund = group_symbol(s.fund)
+        delta_name = f"del_{group}_fund"
+        if delta_name not in theory.cg_tensors:
+            return None
+        if left_slot.dual:
+            return theory.cg_tensor_handle(delta_name)(
+                theory.index(right_slot.label, fund),
+                theory.index(left_slot.label, s.Bar(fund)),
+            )
+        return theory.cg_tensor_handle(delta_name)(
+            theory.index(left_slot.label, fund),
+            theory.index(right_slot.label, s.Bar(fund)),
+        )
+    return None
+
+
+def _native_color_metric_group(
+    theory: Any,
+    left: "_NativeColorSlot",
+    right: "_NativeColorSlot",
+    groups: tuple[str, ...],
+) -> str | None:
+    if left.kind != right.kind or left.dimension != right.dimension:
+        return None
+    candidates = [
+        group
+        for group in groups
+        if _native_color_group_dimension(theory, group, left.kind) == left.dimension
+    ]
+    return candidates[0] if len(candidates) == 1 else None
+
+
+@dataclass(frozen=True)
+class _NativeColorSlot:
+    kind: str
+    dimension: int
+    label: Expression
+    dual: bool
+
+
+def _decode_native_color_slot(expr: Expression) -> _NativeColorSlot | None:
+    dual = False
+    body = expr
+    if is_head(body, _native_color_symbol("dind")) and len(body) == 1:
+        dual = True
+        body = body[0]
+    if is_head(body, _native_color_symbol("cof")) and len(body) == 2:
+        dimension = as_int(body[0])
+        return None if dimension is None else _NativeColorSlot("fund", dimension, body[1], dual)
+    if is_head(body, _native_color_symbol("coad")) and len(body) == 2:
+        dimension = as_int(body[0])
+        return None if dimension is None else _NativeColorSlot("adj", dimension, body[1], dual)
+    return None
+
+
+def _native_color_group_dimension(theory: Any, group: str, kind: str) -> int | None:
+    n = _su_group_size(theory, group)
+    if n is None:
+        return None
+    return n if kind == "fund" else n * n - 1
+
+
+def _su_group_size(theory: Any, group: str) -> int | None:
+    group_entry = theory.groups.get(group)
+    if group_entry is None:
+        return None
+    group_type = expression_from_canonical(str(group_entry["type"]))
+    if not is_head(group_type, s.SU) or len(group_type) != 1:
+        return None
+    n = as_int(group_type[0])
+    if n is None or n <= 1:
+        return None
+    return n
+
+
+@cache
+def _native_color_symbol(name: str) -> Expression:
+    return Expression.symbol(f"spenso::{name}")
+
+
 def _decode_native_dirac_chain(expr: Expression) -> Expression | None:
     if (
         expr.get_type() is not AtomType.Fn
@@ -651,6 +838,7 @@ __all__ = [
     "simplify_index_algebra",
     "simplify_metrics",
     "expand_pychete_ncm_powers",
+    "simplify_pychete_color_algebra",
     "simplify_pychete_dirac_algebra",
     "simplify_pychete_open_dirac_chains",
     "simplify_pychete_dirac_projectors",

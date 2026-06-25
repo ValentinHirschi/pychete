@@ -109,14 +109,31 @@
   native `Representation.cof(N)` and `Representation.coad(N^2 - 1)`, and routes
   built-in `gen`/`fStruct` tensors for SMEFT `SU2L` as well as `SU3c` through
   spenso's native `TensorName.t()`/`TensorName.f()` objects.
+- Added a pychete-aware idenso colour bridge:
+  `pychete.group_algebra.simplify_pychete_color(...)` and
+  `pychete.backends.idenso.simplify_pychete_color_algebra(...)` now lower only
+  spenso-native HEP-compatible `gen`/`fStruct` CG tensors, delegate SU(N)
+  contractions to idenso's native `simplify_color`/`simplify_metrics`, preserve
+  unrelated pychete CG tensors, substitute unambiguous fixed-group constants,
+  and decode simple native metrics back to registered pychete `del[...]` CG
+  tensors. `SupertraceBlockTrace.simplify_index_algebra(...)`,
+  `OneLoopSetup.simplify_index_algebra(...)`, and public
+  `OneLoopMatchOptions.simplify_pychete_color_algebra=True` can now opt into
+  this bridge.
 - This slice still does not complete non-Abelian group-algebra simplification:
-  expanded CG tensors can now lower through spenso, but broader supertrace
-  simplification/contraction and fixture validation remain to be improved.
+  expanded CG tensors can now lower through spenso and simple generator,
+  Fierz, and structure-constant contractions can simplify through idenso, but
+  broader supertrace fixture validation and multi-group edge cases remain to be
+  improved.
 - Validation so far: definitions/public-API tests pass with 37 tests from the
   earlier non-Abelian slice; after the SU(N) native-HEP bridge update, the
   focused spenso backend file passes with 22 tests, the selected one-loop
   native-HEP/non-Abelian covariant-derivative integration checks pass with 2
-  tests, `python -m mypy` passes, and `git diff --check` passes.
+  tests, `python -m mypy` passes, and `git diff --check` passes. For the idenso
+  colour bridge slice, focused idenso/spenso backend tests, selected matching
+  idenso/native-HEP/pychete-colour tests, selected one-loop option tests, and
+  public API tests pass locally; `python -m mypy` and `git diff --check` also
+  pass.
 
 ## Current Validation Frontier
 
@@ -139,9 +156,10 @@
 ## Current Remaining Work
 
 - Implement the broader covariant-derivative/group-algebra feature family:
-  idenso/spenso-backed simplification/contraction for the CG tensors generated
-  by `Theory.expand_non_abelian_covariant_derivatives(...)`, then use targeted
-  fixture probes to determine which projected Wilson gaps move.
+  use the new idenso-backed pychete colour bridge on generated supertraces,
+  extend it beyond the currently tested simple generator/Fierz/f-structure
+  contractions where needed, then use targeted fixture probes to determine
+  which projected Wilson gaps move.
 - Continue improving Dirac/NCM simplification in generated supertraces through
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where

@@ -528,6 +528,7 @@ class SupertraceBlockTrace:
         expand: bool = True,
         gamma: bool = True,
         color: bool = True,
+        pychete_color: bool = False,
         metrics: bool = True,
         dots: bool = False,
     ) -> SupertraceBlockTrace:
@@ -535,16 +536,19 @@ class SupertraceBlockTrace:
 
         from .backends import idenso
 
+        expression = idenso.simplify_index_algebra(
+            self.expression,
+            expand=expand,
+            gamma=gamma,
+            color=color,
+            metrics=metrics,
+            dots=dots,
+        )
+        if pychete_color:
+            expression = idenso.simplify_pychete_color_algebra(self.theory, expression)
         return replace(
             self,
-            expression=idenso.simplify_index_algebra(
-                self.expression,
-                expand=expand,
-                gamma=gamma,
-                color=color,
-                metrics=metrics,
-                dots=dots,
-            ),
+            expression=expression,
         )
 
     def canonicalize_integrals(
@@ -2284,6 +2288,7 @@ class OneLoopSetup:
         expand: bool = True,
         gamma: bool = True,
         color: bool = True,
+        pychete_color: bool = False,
         metrics: bool = True,
         dots: bool = False,
     ) -> OneLoopSetup:
@@ -2296,6 +2301,7 @@ class OneLoopSetup:
                     expand=expand,
                     gamma=gamma,
                     color=color,
+                    pychete_color=pychete_color,
                     metrics=metrics,
                     dots=dots,
                 )
@@ -3690,6 +3696,16 @@ def match_one_loop(
         max_trace_order=options.max_trace_order,
         include_light_only=options.include_light_only,
     )
+    if options.simplify_pychete_color_algebra:
+        _LOGGER.info("simplifying one-loop pychete colour algebra for %s", theory.name)
+        setup = setup.simplify_index_algebra(
+            expand=False,
+            gamma=False,
+            color=False,
+            pychete_color=True,
+            metrics=False,
+            dots=False,
+        )
     tensor_network_cg_component_source: str | None = None
     if options.evaluate_tensor_networks:
         _LOGGER.info("evaluating one-loop tensor networks for %s", theory.name)
@@ -3789,6 +3805,7 @@ def match_one_loop(
             "tensor_network_native_hep_cg_builtins": options.tensor_network_native_hep_cg_builtins,
             "abelian_covariant_derivatives_expanded": options.expand_abelian_covariant_derivatives,
             "non_abelian_covariant_derivatives_expanded": options.expand_non_abelian_covariant_derivatives,
+            "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )
     if options.on_shell_replacements is not None:

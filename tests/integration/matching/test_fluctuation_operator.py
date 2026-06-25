@@ -1794,6 +1794,39 @@ def test_supertrace_block_trace_contracts_loop_momentum_metrics_through_idenso_b
     assert_expr_equal(simplified.expression, S("x") * s.LoopMomentumSquared)
 
 
+def test_supertrace_block_trace_can_simplify_pychete_color_cg_tensors() -> None:
+    theory = Theory("one_loop_setup_pychete_color")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    delta_adj = theory.cg_tensor_handle("del_SU2L_adj")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    i_dual = theory.index("i", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+    trace = SupertraceBlockTrace(
+        theory=theory,
+        name="su2_generator_trace",
+        blocks=(),
+        modes=(),
+        expression=generator(adj_a, i, j_dual) * generator(adj_b, j, i_dual),
+    )
+
+    simplified = trace.simplify_index_algebra(
+        expand=False,
+        gamma=False,
+        color=False,
+        pychete_color=True,
+        metrics=False,
+    )
+
+    assert_expr_equal(simplified.expression, delta_adj(adj_a, adj_b) / 2)
+    assert "spenso::" not in canonical_string(simplified.expression)
+
+
 def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> None:
     theory = Theory("one_loop_setup_vlf_projectors")
     heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))

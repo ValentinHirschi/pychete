@@ -187,6 +187,23 @@ def test_spenso_backend_lowers_cg_atoms_with_native_hep_builtins() -> None:
     assert "pychete::CG" not in lowered_text
 
 
+def test_spenso_backend_can_lower_only_native_hep_cg_atoms() -> None:
+    theory = Theory("spenso_bridge_native_hep_only")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    delta = theory.cg_tensor_handle("del_SU2L_fund")
+
+    lowered = spenso.lower_native_hep_cg_tensors_to_spenso(
+        theory,
+        generator(S("A"), S("i"), S("j")) + delta(S("i"), S("j")),
+    )
+    lowered_text = canonical_string(lowered)
+
+    assert "spenso::t(spenso::coad(3,python::A),spenso::cof(2,python::i),spenso::dind(spenso::cof(2,python::j)))" in lowered_text
+    assert "spenso_python::pychete_spenso_bridge_native_hep_only_cg_del_SU2L_fund" not in lowered_text
+    assert "pychete::CG(spenso_bridge_native_hep_only::cg_tensor_del_SU2L_fund" in lowered_text
+
+
 def test_spenso_backend_lowers_generated_non_abelian_derivative_cg_tensors() -> None:
     theory = Theory("spenso_bridge_generated_nonabelian_cd")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")

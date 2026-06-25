@@ -89,7 +89,10 @@ class OneLoopMatchOptions:
     projection. Matchete-style implicit Abelian and non-Abelian covariant
     derivatives can be expanded before fluctuation-operator extraction with
     ``expand_abelian_covariant_derivatives`` and
-    ``expand_non_abelian_covariant_derivatives``.
+    ``expand_non_abelian_covariant_derivatives``. Registered pychete CG
+    generator and structure-constant tensors can be simplified through
+    idenso's native SU(N) color algebra with
+    ``simplify_pychete_color_algebra``.
     """
 
     max_trace_order: int = 2
@@ -119,6 +122,7 @@ class OneLoopMatchOptions:
     truncate_eft_result: bool = True
     expand_abelian_covariant_derivatives: bool = False
     expand_non_abelian_covariant_derivatives: bool = False
+    simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True
     evaluate_tensor_networks: bool = False

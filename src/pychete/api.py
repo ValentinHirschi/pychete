@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .eft import operator_dimension, series_eft
 from .functional import hermitian_conjugate
+from .group_algebra import simplify_pychete_color
 from .backends.vacuum_integrals import (
     absorb_vakint_scalar_loop_momentum_numerators,
     canonize_loop_function,
@@ -185,4 +186,5 @@ __all__ = [
     "smeft_warsaw_operator",
     "smeft_warsaw_operator_names",
     "simplify_loop_functions",
+    "simplify_pychete_color",
 ]

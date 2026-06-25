@@ -415,6 +415,29 @@ def lower_cg_tensors_to_spenso(
     )
 
 
+def lower_native_hep_cg_tensors_to_spenso(theory: Theory, expr: Expression) -> Expression:
+    """Replace only spenso-native HEP-compatible pychete CG atoms."""
+
+    pattern = cg_tensor_pattern()
+
+    def lower(match: dict[Expression, Expression]) -> Expression:
+        atom = pattern.replace_wildcards(match)
+        structure = native_hep_cg_tensor_structure_to_spenso(theory, atom[0])
+        if structure is None:
+            return atom
+        return structure.index(*_cg_index_labels(atom), cook_indices=True).to_expression()
+
+    return expr.replace_multiple(
+        [
+            Replacement(
+                pattern,
+                lower,
+                s.CGTensorLabelWildcard.req_tag(SymbolRole.CG_TENSOR.value),
+            )
+        ]
+    )
+
+
 def empty_tensor_library() -> Any:
     """Create an empty native spenso tensor library."""
 
@@ -545,6 +568,7 @@ __all__ = [
     "hep_tensor_library",
     "indexed_cg_tensor_to_spenso",
     "lower_cg_tensors_to_spenso",
+    "lower_native_hep_cg_tensors_to_spenso",
     "native_module",
     "native_hep_cg_tensor_structure_to_spenso",
     "native_hep_representation_to_spenso",

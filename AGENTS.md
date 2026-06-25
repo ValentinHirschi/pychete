@@ -364,6 +364,17 @@ Built-in Matchete CG labels such as `gen[group[rep]]`, `eps[group]`,
 `fStruct[group]`, `dSym[group]`, and `del[group[rep]]` must resolve to the
 auto-registered theory-owned CG tensor labels, not to generic external
 functions.
+For symbolic colour/group simplification of registered pychete CG tensors, use
+`pychete.group_algebra.simplify_pychete_color(...)` or the low-level
+`pychete.backends.idenso.simplify_pychete_color_algebra(...)`. This bridge must
+lower only spenso-native HEP-compatible `gen` and `fStruct` tensors, delegate
+the SU(N) algebra to idenso's native `simplify_color`/`simplify_metrics`, and
+decode simple native metrics back to registered pychete `del[...]` CG tensors.
+Do not lower every registered CG tensor to a generic spenso tensor when calling
+idenso; unrelated pychete `del`, `eps`, `dSym`, and model-specific CG tensors
+must stay in pychete representation unless a backend-native simplification
+explicitly handles them. Public one-loop matching can opt into this bridge with
+`OneLoopMatchOptions.simplify_pychete_color_algebra=True`.
 
 Every reusable pychete built-in symbol must be created through the central
 `SymbolStore` so it receives pychete's custom Symbolica print callback. Human

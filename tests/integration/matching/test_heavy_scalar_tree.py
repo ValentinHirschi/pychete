@@ -8,6 +8,7 @@ from pychete import (
     MatchingResult,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
+    OneLoopSetup,
     OneLoopNormalization,
     Theory,
     VakintIntegralStage,
@@ -367,6 +368,43 @@ def test_one_loop_match_options_route_public_match_through_spenso(monkeypatch: p
     assert result.metadata["tensor_networks_evaluated"] is True
     assert result.metadata["tensor_network_cg_component_source"] == "library"
     assert result.metadata["tensor_network_native_hep_cg_builtins"] is False
+
+
+def test_one_loop_match_option_simplifies_pychete_color_algebra(monkeypatch: pytest.MonkeyPatch) -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    calls: list[dict[str, object]] = []
+
+    def fake_simplify_index_algebra(self: OneLoopSetup, **kwargs: object) -> OneLoopSetup:
+        calls.append(kwargs)
+        return self
+
+    monkeypatch.setattr(OneLoopSetup, "simplify_index_algebra", fake_simplify_index_algebra)
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            tensor_reduce=False,
+            simplify_pychete_color_algebra=True,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert calls == [
+        {
+            "expand": False,
+            "gamma": False,
+            "color": False,
+            "pychete_color": True,
+            "metrics": False,
+            "dots": False,
+        }
+    ]
+    assert result.metadata["pychete_color_algebra_simplified"] is True
 
 
 def test_one_loop_match_options_apply_vakint_normalization() -> None:

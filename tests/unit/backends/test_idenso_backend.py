@@ -5,7 +5,7 @@ from symbolica.community import idenso as native_idenso
 
 from pychete import Theory
 from pychete.backends import idenso
-from pychete.group_algebra import simplify_color, simplify_gamma, simplify_metrics
+from pychete.group_algebra import simplify_color, simplify_gamma, simplify_metrics, simplify_pychete_color
 from pychete.symbols import canonical_string, s
 
 
@@ -40,10 +40,113 @@ def test_existing_group_algebra_shim_uses_idenso_backend() -> None:
     assert _same(simplify_metrics(x), idenso.simplify_metrics(x))
 
 
+def test_group_algebra_shim_exposes_pychete_color_bridge() -> None:
+    theory = Theory("idenso_group_algebra_shim")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adjoint = theory.index("A", adj)
+    left = theory.index("i", fund)
+    right = theory.index("i", s.Bar(fund))
+
+    assert _same(simplify_pychete_color(theory, generator(adjoint, left, right)), Expression.num(0))
+
+
 def test_idenso_pipeline_is_native_noop_for_plain_symbol() -> None:
     x = S("x")
 
     assert _same(idenso.simplify_index_algebra(x, dots=True), x)
+
+
+def test_idenso_bridge_simplifies_pychete_su2_generator_trace() -> None:
+    theory = Theory("idenso_color_su2_trace")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    delta_adj = theory.cg_tensor_handle("del_SU2L_adj")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    i_fund = theory.index("i", fund)
+    j_fund = theory.index("j", fund)
+    i_dual = theory.index("i", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+
+    expr = generator(adj_a, i_fund, j_dual) * generator(adj_b, j_fund, i_dual)
+    expected = (Expression.num(1) / Expression.num(2)) * delta_adj(adj_a, adj_b)
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+
+    assert _same(simplified, expected)
+    assert "spenso::" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_preserves_non_native_pychete_cg_tensors() -> None:
+    theory = Theory("idenso_color_preserve_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    delta_fund = theory.cg_tensor_handle("del_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    i_dual = theory.index("i", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+    spectator_delta = delta_fund(i, j_dual)
+
+    expr = spectator_delta + generator(adj_a, i, j_dual) * generator(adj_b, j, i_dual)
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+    simplified_text = canonical_string(simplified)
+
+    assert "pychete::CG(idenso_color_preserve_delta::cg_tensor_del_SU2L_fund" in simplified_text
+    assert "spenso_python::" not in simplified_text
+    assert "spenso::" not in simplified_text
+
+
+def test_idenso_bridge_simplifies_pychete_su3_structure_constants() -> None:
+    theory = Theory("idenso_color_su3_f")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    adj = theory.define_representation("SU3c", "adj")
+    fstruct = theory.cg_tensor_handle("fStruct_SU3c")
+    delta_adj = theory.cg_tensor_handle("del_SU3c_adj")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    adj_c = theory.index("C", adj)
+    adj_d = theory.index("D", adj)
+
+    expr = fstruct(adj_a, adj_b, adj_c) * fstruct(adj_a, adj_b, adj_d)
+    expected = Expression.num(3) * delta_adj(adj_c, adj_d)
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+
+    assert _same(simplified, expected)
+    assert "pychete::CG" in canonical_string(simplified)
+    assert "spenso::" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_simplifies_pychete_su2_fierz_contraction() -> None:
+    theory = Theory("idenso_color_su2_fierz")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    delta_fund = theory.cg_tensor_handle("del_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    i = theory.index("i", fund)
+    k = theory.index("k", fund)
+    j = theory.index("j", s.Bar(fund))
+    l = theory.index("l", s.Bar(fund))
+
+    expr = generator(adj_a, i, j) * generator(adj_a, k, l)
+    expected = (
+        (Expression.num(1) / Expression.num(2)) * delta_fund(i, l) * delta_fund(k, j)
+        - (Expression.num(1) / Expression.num(4)) * delta_fund(i, j) * delta_fund(k, l)
+    )
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+
+    assert _same(simplified, expected.expand())
+    assert "spenso::" not in canonical_string(simplified)
 
 
 def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
