@@ -3569,6 +3569,37 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 219 passed, 1
     skipped in 173.61s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Expanded the Mathematica-independent matching-condition acceptance frontier
+  over all four default Matchete one-loop matching targets:
+  - `tests/integration/validation/test_validation_fixtures.py` now projects
+    reference matching-condition keys for `VLF_toy_model`,
+    `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs` from current pychete
+    preview Lagrangians and checks accepted/unresolved counts through the new
+    canonical-or-probe report fields;
+  - current `max_trace_order=1` projected matching-condition frontier is
+    `VLF_toy_model` 0/0, `Singlet_Scalar_Extension` 39/72 accepted,
+    `E_VLL` 25/72 accepted, and `S1S3LQs` 12/72 accepted;
+  - this keeps pytest fully Mathematica-independent while making the default
+    SMEFT-oriented matching-condition target gap explicit for future one-loop
+    matching slices.
+- Final verification for the default projected matching-condition frontier
+  slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica
+    -q'` passed: 1 passed in 37.62s.
+  - `git diff --check` passed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 17
+    passed in 196.03s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 219 passed, 1
+    skipped in 203.12s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
