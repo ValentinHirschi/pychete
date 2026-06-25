@@ -210,6 +210,34 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py tests/integration/validation/test_numeric_probes.py tests/integration/validation/test_validation_fixtures.py -k "heavy_scalar or project or forwards_pychete_color" -q`
   passed with 26 tests and 51 deselected.
 
+## Current Target-Local EFT Projection Slice
+
+- Added target-local EFT truncation to
+  `MatchingResult.project_matching_conditions(...)` and
+  `with_projected_matching_conditions(...)`. When `eft_order` is supplied, the
+  implementation first extracts a target coefficient with native
+  `Expression.coefficient(...)`, then applies `series_eft(...)` only to the
+  smaller `coefficient * target` contribution before extracting the coefficient
+  again. This preserves the total EFT-order semantics of a global truncation
+  without expanding the full one-loop result.
+- Exposed the path through public `Theory.match(...,
+  matching_condition_truncate_eft=True)` and `match_one_loop(...)`; the
+  one-loop API passes the requested `eft_order` and the active
+  `OneLoopMatchOptions.heavy_field_dimension` into the target-local projection
+  stage.
+- Threaded `matching_condition_projection_truncate_eft` through validation
+  fixture gap reports for both public-match and lower-level preview projection
+  paths, so future Singlet/E_VLL/S1S3LQs probes can combine
+  `matching_condition_projection_expand_source=False`,
+  `matching_condition_projection_truncate_eft=True`, and
+  `truncate_eft_result=False` where a target-local path is cheaper.
+- Matching-result metadata now records
+  `matching_condition_projection_eft_order` and
+  `matching_condition_projection_heavy_field_dimension`.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py tests/integration/matching/test_heavy_scalar_tree.py tests/integration/validation/test_validation_fixtures.py -k "project or heavy_scalar or forwards_pychete_color" -q`
+  passed with 27 tests and 51 deselected.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -245,9 +273,10 @@
   replacement before expansion where possible, project smaller target groups,
   and use Symbolica collection/coefficient primitives on less-expanded stages.
 - Use the new `matching_condition_expand_source=False` and
-  `heavy_scalar_solution_expand=False` controls in targeted order-3 Singlet
-  probes once the next backend feature slice materially changes the projected
-  EFT expression.
+  `matching_condition_truncate_eft=True` controls, together with
+  `heavy_scalar_solution_expand=False`, in targeted order-3 Singlet probes
+  once the next backend feature slice materially changes the projected EFT
+  expression.
 - Re-run targeted projected-condition validation only after a slice materially
   changes fixture matching behavior.
 - Keep this live file compact. When it grows large again, move it unchanged to

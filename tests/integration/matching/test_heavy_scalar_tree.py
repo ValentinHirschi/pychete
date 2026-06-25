@@ -136,6 +136,7 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
             "unused": unused(),
         },
         matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
         matching_condition_drop_zero=True,
     )
 
@@ -147,6 +148,7 @@ def test_one_loop_match_can_project_requested_matching_conditions() -> None:
     assert result.metadata["matching_conditions_projected"] is True
     assert result.metadata["matching_condition_projection_source"] == "on_shell_eft_lagrangian"
     assert result.metadata["matching_condition_projection_expand_source"] is False
+    assert result.metadata["matching_condition_projection_eft_order"] == 6
     assert result.metadata["matching_condition_projection_count"] == 1
     assert result.metadata["matching_condition_projection_coupling_identities"] is False
 

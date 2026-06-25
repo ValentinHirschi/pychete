@@ -313,6 +313,29 @@ def test_matching_result_can_project_from_unexpanded_source_expression() -> None
     assert_expr_equal(projected.matching_conditions["phi2"], x + 1)
 
 
+def test_matching_result_truncates_projected_coefficients_target_locally() -> None:
+    x = S("condition_projection_local_eft_x")
+    theory = Theory("condition_projection_local_eft")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    operator = phi() ** 2
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=(x + phi() ** 4) * operator,
+    )
+
+    projected = result.with_projected_matching_conditions(
+        {"phi2": operator},
+        expand_source=False,
+        eft_order=4,
+    )
+
+    assert projected.metadata["matching_condition_projection_eft_order"] == 4
+    assert projected.metadata["matching_condition_projection_heavy_field_dimension"] is False
+    assert_expr_equal(projected.matching_conditions["phi2"], x)
+
+
 def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> None:
     x = S("condition_projection_wilson_x")
     theory = Theory("condition_projection_wilson_operator")

@@ -1532,6 +1532,7 @@ class Theory:
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         matching_condition_source: str = "on_shell_eft_lagrangian",
         matching_condition_expand_source: bool = True,
+        matching_condition_truncate_eft: bool = False,
         matching_condition_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = False,
     ) -> Expression | MatchingResult:
@@ -1549,7 +1550,10 @@ class Theory:
         extraction. Set ``matching_condition_expand_source=False`` to extract
         from the selected source expression without first expanding the whole
         expression, which can scale better for large factored one-loop
-        results. Pass ``"registered_wilsons"`` to project all
+        results. Set ``matching_condition_truncate_eft=True`` to apply the
+        requested ``eft_order`` target-locally to each projected contribution
+        instead of requiring global result truncation before projection. Pass
+        ``"registered_wilsons"`` to project all
         theory-registered Wilson coefficients that have stored operator
         metadata. Set ``matching_condition_include_coupling_identities`` to
         include tree-level identity values for target couplings registered in
@@ -1574,6 +1578,7 @@ class Theory:
                 matching_condition_targets=matching_condition_targets,
                 matching_condition_source=matching_condition_source,
                 matching_condition_expand_source=matching_condition_expand_source,
+                matching_condition_truncate_eft=matching_condition_truncate_eft,
                 matching_condition_drop_zero=matching_condition_drop_zero,
                 matching_condition_include_coupling_identities=(
                     matching_condition_include_coupling_identities

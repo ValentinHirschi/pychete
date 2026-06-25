@@ -219,6 +219,8 @@ class MatchingResult:
         expand_source: bool = True,
         drop_zero: bool = False,
         include_coupling_identities: bool = False,
+        eft_order: int | tuple[int, ...] | None = None,
+        heavy_field_dimension: bool = False,
     ) -> dict[str, Expression]:
         """Project matching conditions from a result expression using Symbolica coefficients.
 
@@ -230,6 +232,11 @@ class MatchingResult:
         coefficient targets with stored operator metadata project the
         coefficient of the operator monomial, while ordinary targets project
         the coefficient of the target expression itself.
+        If ``eft_order`` is supplied, each projected contribution is truncated
+        target-locally by applying ``series_eft`` to ``coefficient * target``
+        and then extracting the target coefficient again. This preserves the
+        total EFT-order semantics of a global truncation while avoiding a full
+        expansion of the entire source expression for large matching results.
         ``include_coupling_identities`` adds the tree-level identity value for
         target couplings that are registered in the candidate theory. This is
         intended for loop-correction expressions where unchanged renormalizable
@@ -243,6 +250,14 @@ class MatchingResult:
         conditions: dict[str, Expression] = {}
         for target in matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets)):
             coefficient = expr.coefficient(target.projection_expression).expand()
+            if eft_order is not None:
+                coefficient = _truncate_projected_coefficient(
+                    coefficient,
+                    target.projection_expression,
+                    self.theory,
+                    eft_order=eft_order,
+                    heavy_field_dimension=heavy_field_dimension,
+                )
             if include_coupling_identities:
                 identity = _tree_level_coupling_identity(self.theory, target)
                 if identity is not None:
@@ -261,6 +276,8 @@ class MatchingResult:
         drop_zero: bool = False,
         merge: bool = True,
         include_coupling_identities: bool = False,
+        eft_order: int | tuple[int, ...] | None = None,
+        heavy_field_dimension: bool = False,
     ) -> MatchingResult:
         """Return a result with matching conditions projected from an expression stage."""
 
@@ -270,6 +287,8 @@ class MatchingResult:
             expand_source=expand_source,
             drop_zero=drop_zero,
             include_coupling_identities=include_coupling_identities,
+            eft_order=eft_order,
+            heavy_field_dimension=heavy_field_dimension,
         )
         matching_conditions = {**self.matching_conditions, **projected} if merge else projected
         return replace(
@@ -282,6 +301,8 @@ class MatchingResult:
                 "matching_condition_projection_count": len(projected),
                 "matching_condition_projection_expand_source": expand_source,
                 "matching_condition_projection_coupling_identities": include_coupling_identities,
+                "matching_condition_projection_eft_order": _metadata_eft_order(eft_order),
+                "matching_condition_projection_heavy_field_dimension": heavy_field_dimension,
             },
         )
 
@@ -696,6 +717,31 @@ def _tree_level_coupling_identity(theory: Theory, target: MatchingConditionTarge
     if not isinstance(name, str) or name not in theory.couplings:
         return None
     return target.expression
+
+
+def _truncate_projected_coefficient(
+    coefficient: Expression,
+    target: Expression,
+    theory: Theory,
+    *,
+    eft_order: int | tuple[int, ...],
+    heavy_field_dimension: bool,
+) -> Expression:
+    projected_piece = series_eft(
+        (coefficient * target).expand(),
+        theory,
+        eft_order=eft_order,
+        heavy_field_dimension=heavy_field_dimension,
+    )
+    return projected_piece.coefficient(target).expand()
+
+
+def _metadata_eft_order(eft_order: int | tuple[int, ...] | None) -> int | str | None:
+    if eft_order is None:
+        return None
+    if isinstance(eft_order, tuple):
+        return ",".join(str(item) for item in eft_order)
+    return eft_order
 
 
 def _canonical_expr(expr: Expression) -> str:

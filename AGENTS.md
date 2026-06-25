@@ -134,6 +134,12 @@ when a factored/native coefficient route is available, expose explicit controls
 for expensive projection or simplification stages, and prefer algorithms whose
 cost grows with the selected targets or backend operation rather than the full
 SMEFT expression whenever practical.
+For matching-condition extraction from large one-loop expressions, prefer
+`matching_condition_expand_source=False` plus
+`matching_condition_truncate_eft=True` when appropriate. This projects each
+target coefficient first with native `Expression.coefficient(...)`, then
+applies `series_eft(...)` to only `coefficient * target`, preserving total
+EFT-order semantics without forcing global expansion of the full result.
 
 Before adding or modifying symbolic code, explicitly inspect the Python stubs
 and source listed below. Prefer native primitives even when a Python loop seems

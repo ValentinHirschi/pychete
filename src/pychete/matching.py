@@ -3661,6 +3661,7 @@ def match_one_loop(
     matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
     matching_condition_source: str = "on_shell_eft_lagrangian",
     matching_condition_expand_source: bool = True,
+    matching_condition_truncate_eft: bool = False,
     matching_condition_drop_zero: bool = False,
     matching_condition_include_coupling_identities: bool = False,
 ) -> MatchingResult:
@@ -3911,6 +3912,8 @@ def match_one_loop(
         expand_source=matching_condition_expand_source,
         drop_zero=matching_condition_drop_zero,
         include_coupling_identities=matching_condition_include_coupling_identities,
+        eft_order=eft_order if matching_condition_truncate_eft else None,
+        heavy_field_dimension=options.heavy_field_dimension,
     )
     _log_one_loop_result(projected)
     return projected
