@@ -3471,6 +3471,35 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 216 passed, 1
     skipped in 174.51s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Extended selective evaluator-probe reporting from supertraces to projected
+  matching conditions:
+  - `MatchingFixtureGapReport` now records numeric-probe-equal and
+    numeric-probe-different shared matching-condition names and JSON counts;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` and `_gap_report(...)`
+    accept `probe_matching_condition_names`, keeping condition probes opt-in so
+    supertrace probe samples do not accidentally evaluate every projected
+    matching condition;
+  - the implementation reuses `MatchingResult.compare_to(...)` and
+    `Expression.evaluator_multiple(...)`, preserving the Symbolica-first
+    evaluator policy for non-canonical but numerically equivalent validation
+    expressions.
+- Final verification for the matching-condition evaluator-probe slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 10
+    passed in 0.07s.
+  - `git diff --check` passed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 17
+    passed in 166.02s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 217 passed, 1
+    skipped in 174.16s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

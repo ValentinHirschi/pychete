@@ -42,6 +42,8 @@ class MatchingFixtureGapReport:
     reference_only_matching_condition_names: tuple[str, ...]
     canonical_equal_common_matching_condition_names: tuple[str, ...]
     canonical_different_common_matching_condition_names: tuple[str, ...]
+    numeric_probe_equal_common_matching_condition_names: tuple[str, ...]
+    numeric_probe_different_common_matching_condition_names: tuple[str, ...]
     common_expression_names: tuple[str, ...]
 
     @property
@@ -127,6 +129,18 @@ class MatchingFixtureGapReport:
 
         return len(self.canonical_different_common_matching_condition_names)
 
+    @property
+    def numeric_probe_equal_common_matching_condition_count(self) -> int:
+        """Number of canonical-different shared matching conditions accepted by probes."""
+
+        return len(self.numeric_probe_equal_common_matching_condition_names)
+
+    @property
+    def numeric_probe_different_common_matching_condition_count(self) -> int:
+        """Number of numeric-probed shared matching conditions that remain different."""
+
+        return len(self.numeric_probe_different_common_matching_condition_names)
+
     def to_json_obj(self) -> dict[str, Any]:
         """Return a JSON-serializable representation of this report."""
 
@@ -151,7 +165,15 @@ class MatchingFixtureGapReport:
             "missing_reference_matching_condition_count": self.missing_reference_matching_condition_count,
             "candidate_only_matching_condition_count": len(self.candidate_only_matching_condition_names),
             "canonical_equal_common_matching_condition_count": self.canonical_equal_common_matching_condition_count,
-            "canonical_different_common_matching_condition_count": self.canonical_different_common_matching_condition_count,
+            "canonical_different_common_matching_condition_count": (
+                self.canonical_different_common_matching_condition_count
+            ),
+            "numeric_probe_equal_common_matching_condition_count": (
+                self.numeric_probe_equal_common_matching_condition_count
+            ),
+            "numeric_probe_different_common_matching_condition_count": (
+                self.numeric_probe_different_common_matching_condition_count
+            ),
             "common_expression_names": list(self.common_expression_names),
             "candidate_only_supertrace_names": list(self.candidate_only_supertrace_names),
             "reference_only_supertrace_names": list(self.reference_only_supertrace_names),
@@ -164,6 +186,12 @@ class MatchingFixtureGapReport:
             "canonical_equal_common_matching_condition_names": list(self.canonical_equal_common_matching_condition_names),
             "canonical_different_common_matching_condition_names": list(
                 self.canonical_different_common_matching_condition_names
+            ),
+            "numeric_probe_equal_common_matching_condition_names": list(
+                self.numeric_probe_equal_common_matching_condition_names
+            ),
+            "numeric_probe_different_common_matching_condition_names": list(
+                self.numeric_probe_different_common_matching_condition_names
             ),
         }
 
@@ -184,7 +212,9 @@ class MatchingFixtureGapReport:
             f"canonical_equal_common_supertraces={self.canonical_equal_common_supertrace_count}, "
             f"numeric_probe_equal_common_supertraces={self.numeric_probe_equal_common_supertrace_count}, "
             f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count}, "
-            f"canonical_equal_common_matching_conditions={self.canonical_equal_common_matching_condition_count})</code>"
+            f"canonical_equal_common_matching_conditions={self.canonical_equal_common_matching_condition_count}, "
+            f"numeric_probe_equal_common_matching_conditions="
+            f"{self.numeric_probe_equal_common_matching_condition_count})</code>"
         )
 
 
@@ -362,6 +392,7 @@ class ValidationFixture:
         probe_parameters: Sequence[Expression] | None = None,
         probe_samples: Sequence[Sequence[NumericValue]] | None = None,
         probe_supertrace_names: Iterable[str] | None = None,
+        probe_matching_condition_names: Iterable[str] | None = None,
         probe_absolute_tolerance: float = 1e-9,
         probe_relative_tolerance: float = 1e-9,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
@@ -423,6 +454,7 @@ class ValidationFixture:
             probe_parameters=probe_parameters,
             probe_samples=probe_samples,
             probe_supertrace_names=probe_supertrace_names,
+            probe_matching_condition_names=probe_matching_condition_names,
             probe_absolute_tolerance=probe_absolute_tolerance,
             probe_relative_tolerance=probe_relative_tolerance,
         )
@@ -528,6 +560,7 @@ def _gap_report(
     probe_parameters: Sequence[Expression] | None = None,
     probe_samples: Sequence[Sequence[NumericValue]] | None = None,
     probe_supertrace_names: Iterable[str] | None = None,
+    probe_matching_condition_names: Iterable[str] | None = None,
     probe_absolute_tolerance: float = 1e-9,
     probe_relative_tolerance: float = 1e-9,
 ) -> MatchingFixtureGapReport:
@@ -546,9 +579,16 @@ def _gap_report(
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
     common_conditions = candidate_conditions & reference_conditions
+    condition_probe_parameters = probe_parameters if probe_matching_condition_names is not None else None
+    condition_probe_samples = probe_samples if probe_matching_condition_names is not None else None
     compared_conditions = candidate.compare_to(
         reference,
         names=_sorted_names(common_conditions),
+        probe_parameters=condition_probe_parameters,
+        probe_samples=condition_probe_samples,
+        probe_names=probe_matching_condition_names,
+        absolute_tolerance=probe_absolute_tolerance,
+        relative_tolerance=probe_relative_tolerance,
     )
     candidate_names = set(candidate.expression_names())
     reference_names = set(reference.expression_names())
@@ -588,6 +628,16 @@ def _gap_report(
         ),
         canonical_different_common_matching_condition_names=tuple(
             item.name for item in compared_conditions.expressions if not item.canonical_equal
+        ),
+        numeric_probe_equal_common_matching_condition_names=tuple(
+            item.name
+            for item in compared_conditions.expressions
+            if not item.canonical_equal and item.numeric_probe is not None and item.numeric_probe.equal
+        ),
+        numeric_probe_different_common_matching_condition_names=tuple(
+            item.name
+            for item in compared_conditions.expressions
+            if item.numeric_probe is not None and not item.numeric_probe.equal
         ),
         common_expression_names=_sorted_names(candidate_names & reference_names),
     )

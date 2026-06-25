@@ -267,3 +267,49 @@ def test_fixture_gap_report_compares_common_matching_conditions() -> None:
     assert report.reference_only_matching_condition_names == ("reference_only",)
     assert report_obj["canonical_equal_common_matching_condition_names"] == [canonical_string(c_equal)]
     assert report_obj["canonical_different_common_matching_condition_count"] == 1
+
+
+def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() -> None:
+    x = S("fixture_gap_condition_probe_x")
+    theory = Theory("fixture_gap_condition_probe")
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            "probe_condition": x.sin() ** 2 + x.cos() ** 2,
+            "unprobed_condition": x.sin() ** 2 + x.cos() ** 2 + x,
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            "probe_condition": Expression.num(1),
+            "unprobed_condition": x + 1,
+        },
+    )
+
+    report = _gap_report(
+        "candidate_fixture",
+        "reference_fixture",
+        candidate,
+        reference,
+        probe_parameters=[x],
+        probe_samples=[[0.0], [0.7], [1.3]],
+        probe_matching_condition_names=("probe_condition",),
+    )
+    report_obj = report.to_json_obj()
+
+    assert report.common_matching_condition_names == ("probe_condition", "unprobed_condition")
+    assert report.canonical_equal_common_matching_condition_names == ()
+    assert report.canonical_different_common_matching_condition_names == ("probe_condition", "unprobed_condition")
+    assert report.numeric_probe_equal_common_matching_condition_names == ("probe_condition",)
+    assert report.numeric_probe_different_common_matching_condition_names == ()
+    assert report.numeric_probe_equal_common_matching_condition_count == 1
+    assert report.numeric_probe_different_common_matching_condition_count == 0
+    assert report_obj["numeric_probe_equal_common_matching_condition_names"] == ["probe_condition"]
+    assert report_obj["numeric_probe_equal_common_matching_condition_count"] == 1
