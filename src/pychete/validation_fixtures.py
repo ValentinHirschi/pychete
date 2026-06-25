@@ -13,7 +13,12 @@ from .matching_options import OneLoopIntegralBackend, VakintIntegralStage
 from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
-from .validation import NumericProbePlan, NumericValue, build_numeric_probe_plan
+from .validation import (
+    NumericProbePlan,
+    NumericValue,
+    ProbeParameterMode,
+    build_numeric_probe_plan,
+)
 
 TensorComponent = Expression | int | float | complex
 
@@ -473,6 +478,7 @@ class ValidationFixture:
         auto_probe_samples: bool = False,
         probe_sample_count: int = 3,
         probe_exclude_symbols: Sequence[Expression] = (),
+        probe_parameter_mode: ProbeParameterMode = "symbols",
         probe_absolute_tolerance: float = 1e-9,
         probe_relative_tolerance: float = 1e-9,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
@@ -538,6 +544,7 @@ class ValidationFixture:
             auto_probe_samples=auto_probe_samples,
             probe_sample_count=probe_sample_count,
             probe_exclude_symbols=probe_exclude_symbols,
+            probe_parameter_mode=probe_parameter_mode,
             probe_absolute_tolerance=probe_absolute_tolerance,
             probe_relative_tolerance=probe_relative_tolerance,
         )
@@ -650,6 +657,7 @@ def _probe_plan_for_names(
     *,
     sample_count: int,
     exclude_symbols: Sequence[Expression],
+    parameter_mode: ProbeParameterMode,
 ) -> NumericProbePlan:
     expressions: list[Expression] = []
     for name in names:
@@ -661,6 +669,7 @@ def _probe_plan_for_names(
     return build_numeric_probe_plan(
         expressions,
         exclude_symbols=exclude_symbols,
+        parameter_mode=parameter_mode,
         sample_count=sample_count,
     )
 
@@ -678,6 +687,7 @@ def _gap_report(
     auto_probe_samples: bool = False,
     probe_sample_count: int = 3,
     probe_exclude_symbols: Sequence[Expression] = (),
+    probe_parameter_mode: ProbeParameterMode = "symbols",
     probe_absolute_tolerance: float = 1e-9,
     probe_relative_tolerance: float = 1e-9,
 ) -> MatchingFixtureGapReport:
@@ -698,6 +708,7 @@ def _gap_report(
             probe_supertrace_names,
             sample_count=probe_sample_count,
             exclude_symbols=probe_exclude_symbols,
+            parameter_mode=probe_parameter_mode,
         )
         supertrace_probe_parameters = supertrace_plan.parameters
         supertrace_probe_samples = supertrace_plan.samples
@@ -731,6 +742,7 @@ def _gap_report(
             probe_matching_condition_names,
             sample_count=probe_sample_count,
             exclude_symbols=probe_exclude_symbols,
+            parameter_mode=probe_parameter_mode,
         )
         condition_probe_parameters = condition_plan.parameters
         condition_probe_samples = condition_plan.samples

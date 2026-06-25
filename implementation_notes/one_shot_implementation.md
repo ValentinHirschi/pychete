@@ -3600,6 +3600,48 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 219 passed, 1
     skipped in 203.12s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Hardened automatic evaluator probe parameter discovery for pychete function
+  atoms:
+  - `build_numeric_probe_plan(...)` now keeps the default `symbols` parameter
+    discovery mode for ordinary Symbolica numerical functions, preserving
+    probes such as `sin(x)^2 + cos(x)^2 == 1`;
+  - added `parameter_mode="indeterminates"`, which delegates to native
+    `Expression.get_all_indeterminates(enter_functions=False)` so custom
+    pychete function applications such as `Coupling(...)`, `Index(...)`, and
+    stored `log(...)` applications can become evaluator parameters instead of
+    causing Symbolica evaluator construction failures;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` and `_gap_report(...)`
+    thread this through as `probe_parameter_mode`, and focused tests cover the
+    custom-function path.
+- Development probe of the first five canonical-different projected matching
+  conditions in each of `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`
+  with `probe_parameter_mode="indeterminates"` produced no additional
+  numeric-probe equalities; the current acceptance frontier remains 39/72,
+  25/72, and 12/72 respectively.
+- Final verification for the probe parameter-mode slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 13
+    passed in 0.08s.
+  - `git diff --check` passed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 13
+    passed in 0.07s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in 0.02s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 17
+    passed in 199.55s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 220 passed, 1
+    skipped in 207.24s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

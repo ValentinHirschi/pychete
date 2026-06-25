@@ -55,6 +55,7 @@ def test_evaluator_probe_equal_validates_samples_match_parameters() -> None:
 
 def test_build_numeric_probe_plan_discovers_symbols_with_symbolica() -> None:
     x, y, z = S("probe_plan_x", "probe_plan_y", "probe_plan_z")
+    f = S("probe_plan_f")
 
     samples = deterministic_probe_samples([x, z], sample_count=2)
     plan = build_numeric_probe_plan(
@@ -71,6 +72,16 @@ def test_build_numeric_probe_plan_discovers_symbols_with_symbolica() -> None:
     assert plan.samples == samples
     assert plan.parameter_count == 2
     assert plan.sample_count == 2
+
+    function_plan = build_numeric_probe_plan(
+        [f(x) + y],
+        exclude_symbols=[y],
+        parameter_mode="indeterminates",
+        sample_count=1,
+    )
+    assert tuple(canonical_string(parameter) for parameter in function_plan.parameters) == (
+        canonical_string(f(x)),
+    )
 
 
 def test_matching_result_comparison_can_use_evaluator_probe_fallback() -> None:
@@ -359,6 +370,43 @@ def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() 
     assert report_obj["numeric_probe_equal_common_matching_condition_count"] == 1
     assert report_obj["accepted_common_matching_condition_names"] == ["probe_condition"]
     assert report_obj["different_after_probe_common_matching_condition_count"] == 1
+
+
+def test_fixture_gap_report_auto_probe_handles_function_application_parameters() -> None:
+    f, x = S("fixture_gap_function_probe_f", "fixture_gap_function_probe_x")
+    theory = Theory("fixture_gap_function_probe")
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            "function_condition": f(x),
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            "function_condition": f(x) + 1,
+        },
+    )
+
+    report = _gap_report(
+        "candidate_fixture",
+        "reference_fixture",
+        candidate,
+        reference,
+        auto_probe_samples=True,
+        probe_parameter_mode="indeterminates",
+        probe_matching_condition_names=("function_condition",),
+    )
+
+    assert report.numeric_probe_equal_common_matching_condition_names == ()
+    assert report.numeric_probe_different_common_matching_condition_names == ("function_condition",)
+    assert report.different_after_probe_common_matching_condition_names == ("function_condition",)
 
 
 def test_fixture_gap_report_auto_probe_requires_unambiguous_inputs() -> None:

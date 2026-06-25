@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from html import escape
-from typing import Any, Sequence
+from typing import Any, Literal, Sequence
 
 from symbolica import Expression
 
@@ -10,6 +10,7 @@ from .symbols import canonical_string, display_string
 
 
 NumericValue = int | float | complex
+ProbeParameterMode = Literal["symbols", "indeterminates"]
 
 
 @dataclass(frozen=True)
@@ -80,21 +81,30 @@ def build_numeric_probe_plan(
     expressions: Sequence[Expression],
     *,
     exclude_symbols: Sequence[Expression] = (),
-    include_function_symbols: bool = False,
+    parameter_mode: ProbeParameterMode = "symbols",
     sample_count: int = 3,
 ) -> NumericProbePlan:
     """Build deterministic evaluator inputs from symbols appearing in expressions.
 
-    Symbol discovery uses native ``Expression.get_all_symbols(...)`` and sample
-    generation is deterministic so fixture comparisons remain reproducible.
-    ``exclude_symbols`` can remove known constants or parameters that should be
-    held fixed outside the probe.
+    The default ``parameter_mode="symbols"`` uses native
+    ``Expression.get_all_symbols(False)`` so built-in numerical functions such
+    as ``sin(x)`` are evaluated normally through Symbolica's evaluator. Use
+    ``parameter_mode="indeterminates"`` for pychete expressions with custom
+    symbolic function atoms such as ``Coupling(...)``: this delegates to
+    ``Expression.get_all_indeterminates(enter_functions=False)`` so those
+    applications become evaluator parameters.
     """
 
+    if parameter_mode not in {"symbols", "indeterminates"}:
+        raise ValueError("parameter_mode must be 'symbols' or 'indeterminates'")
     excluded = {canonical_string(symbol) for symbol in exclude_symbols}
     by_name: dict[str, Expression] = {}
     for expr in expressions:
-        for symbol in expr.get_all_symbols(include_function_symbols=include_function_symbols):
+        if parameter_mode == "symbols":
+            discovered = expr.get_all_symbols(include_function_symbols=False)
+        else:
+            discovered = expr.get_all_indeterminates(enter_functions=False)
+        for symbol in discovered:
             name = canonical_string(symbol)
             if name in excluded:
                 continue
