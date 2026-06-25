@@ -386,6 +386,42 @@ def derive_eom(
     return residual.expand()
 
 
+def eom_replacement_rule(
+    theory: Theory,
+    lagrangian: Expression,
+    field: FieldHandle | FieldDefinition | str | Expression,
+    *,
+    solve_for: Expression,
+    eft_order: int = 6,
+    variation: FieldVariation | str = FieldVariation.AUTO,
+) -> Replacement:
+    """Build a Symbolica replacement rule by isolating ``solve_for`` in an EOM.
+
+    The equation of motion is derived with :func:`derive_eom`, then the
+    requested target is isolated with native ``Expression.coefficient(...)``.
+    This is intended for on-shell reductions, where the returned
+    :class:`symbolica.Replacement` can be passed directly to
+    ``MatchingResult.with_on_shell_reduction(...)`` or
+    ``OneLoopMatchOptions.on_shell_replacements``.
+    """
+
+    theory._validate_registered_expression(solve_for)
+    eom = derive_eom(theory, lagrangian, field, eft_order=eft_order, variation=variation)
+    coefficient = eom.coefficient(solve_for).expand()
+    if is_zero(coefficient):
+        raise ValueError(
+            "Cannot build EOM replacement rule because the requested target "
+            f"{canonical_string(solve_for)} is absent from the EOM"
+        )
+    remainder = (eom - coefficient * solve_for).expand()
+    if bool(remainder.contains(solve_for)):
+        raise ValueError(
+            "Cannot build a linear EOM replacement rule because the EOM still "
+            f"contains {canonical_string(solve_for)} after coefficient extraction"
+        )
+    return Replacement(solve_for, (-remainder / coefficient).expand())
+
+
 def eom_expression(theory: Theory, lagrangian: Expression, field: FieldHandle | FieldDefinition | str, *, eft_order: int = 6) -> Expression:
     definition = theory.fields[field] if isinstance(field, str) else field.definition if isinstance(field, FieldHandle) else field
     return s.EOM(definition.expr(), derive_eom(theory, lagrangian, definition, eft_order=eft_order))

@@ -353,6 +353,32 @@ def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() ->
     assert_expr_equal(reduced.on_shell_eft_lagrangian, coupling())
 
 
+def test_matching_result_applies_theory_eom_replacement_before_projection() -> None:
+    theory = Theory("result_eom_on_shell_reduction")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    source = theory.define_coupling("J", self_conjugate=True)
+    coefficient = theory.define_coupling("c", self_conjugate=True)
+    mu = theory.dummy_index(0)
+    derivative_target = phi(derivatives=[mu, mu])
+    eom_lagrangian = theory.free_lag(phi) + source() * phi()
+    off_shell = coefficient() * phi() * derivative_target
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=eom_lagrangian,
+        off_shell_eft_lagrangian=off_shell,
+        on_shell_eft_lagrangian=off_shell,
+    )
+
+    reduced = result.with_on_shell_reduction(
+        (theory.eom_replacement_rule(eom_lagrangian, phi, solve_for=derivative_target),)
+    ).with_projected_matching_conditions({"c_phi": coefficient() * phi()})
+
+    assert reduced.metadata["on_shell_reduced"] is True
+    assert reduced.metadata["matching_conditions_projected"] is True
+    assert_expr_equal(reduced.on_shell_eft_lagrangian, coefficient() * phi() * source())
+    assert_expr_equal(reduced.matching_conditions["c_phi"], source())
+
+
 def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     x = S("fixture_gap_probe_x")
     theory = Theory("fixture_gap_probe")

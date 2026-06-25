@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from symbolica import Expression, S
 
 from pychete import FieldMassKind, Theory, hermitian_conjugate, s
@@ -24,6 +25,35 @@ def test_phi4_scalar_eom_matches_matchete_reference_shape() -> None:
     )
 
     assert_expr_equal(theory.derive_eom(lagrangian, phi), expected)
+
+
+def test_eom_replacement_rule_isolates_requested_derivative_with_symbolica_coefficient() -> None:
+    theory = Theory("phi4_eom_rule")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    lam = theory.define_coupling("lambda", self_conjugate=True)
+    mu = theory.dummy_index(0)
+    source = theory.define_coupling("J", self_conjugate=True)
+
+    lagrangian = theory.free_lag(phi) - lam() * phi() ** 4 / 24 + source() * phi()
+    target = phi(derivatives=[mu, mu])
+    rule = theory.eom_replacement_rule(lagrangian, phi, solve_for=target)
+
+    reduced = (target + phi() * target).replace_multiple((rule,))
+    expected_rhs = -theory.coupling_handle("m")() ** 2 * phi() - lam() * phi() ** 3 / 6 + source()
+
+    assert_expr_equal(reduced, expected_rhs + phi() * expected_rhs)
+
+
+def test_eom_replacement_rule_rejects_absent_targets() -> None:
+    theory = Theory("phi4_eom_rule_absent")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    chi = theory.define_field("chi", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.dummy_index(0)
+
+    lagrangian = theory.free_lag(phi)
+
+    with pytest.raises(ValueError, match="absent from the EOM"):
+        theory.eom_replacement_rule(lagrangian, phi, solve_for=chi(derivatives=[mu, mu]))
 
 
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:

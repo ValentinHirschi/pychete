@@ -5,7 +5,7 @@ from html import escape
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
-from symbolica import Expression, S
+from symbolica import Expression, Replacement, S
 
 from .expr import is_head, list_expr, sum_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, safe_symbol_name, symbol_data
@@ -1111,6 +1111,35 @@ class Theory:
         from .functional import derive_eom
 
         return derive_eom(self, lagrangian, field, eft_order=eft_order, variation=variation)
+
+    def eom_replacement_rule(
+        self,
+        lagrangian: Expression,
+        field: FieldHandle | FieldDefinition | str | Expression,
+        *,
+        solve_for: Expression,
+        eft_order: int = 6,
+        variation: FieldVariation | str = FieldVariation.AUTO,
+    ) -> Replacement:
+        """Return a Symbolica replacement rule from a linear EOM target.
+
+        ``solve_for`` is isolated with native Symbolica coefficient extraction
+        from the Euler-Lagrange equation for ``field``. The returned
+        ``Replacement`` can be used directly as an on-shell rule in
+        ``OneLoopMatchOptions.on_shell_replacements`` or
+        ``MatchingResult.with_on_shell_reduction(...)``.
+        """
+
+        from .functional import eom_replacement_rule
+
+        return eom_replacement_rule(
+            self,
+            lagrangian,
+            field,
+            solve_for=solve_for,
+            eft_order=eft_order,
+            variation=variation,
+        )
 
     def solve_heavy_scalar_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyScalarSolution]:
         """Solve heavy scalar equations of motion order by order.

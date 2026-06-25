@@ -411,3 +411,32 @@
     93 passed.
   - `python -m mypy`: success, no issues in 33 source files.
   - `git diff --check`: clean.
+
+## Current Slice: EOM-Derived On-Shell Replacement Rules
+
+- Continued the on-shell-reduction feature family with a structural EOM rule
+  builder instead of making users hand-write every replacement. The helper is
+  intentionally narrow: it isolates one requested target from a linear
+  Euler-Lagrange equation and returns a native Symbolica `Replacement`.
+- Added `eom_replacement_rule(...)` in `functional.py` and exposed it as
+  `Theory.eom_replacement_rule(...)`. The implementation derives the EOM with
+  the existing Symbolica variation path, isolates `solve_for` using native
+  `Expression.coefficient(...)`, checks that the residual no longer contains
+  the solved target via `Expression.contains(...)`, and returns a
+  `Replacement` usable directly by `MatchingResult.with_on_shell_reduction(...)`
+  and `OneLoopMatchOptions.on_shell_replacements`.
+- This keeps the symbolic work in Symbolica primitives: no Python equation
+  solver, tree walker, or atom-type dispatch was added. More general future
+  EOM reduction can build on this by generating pattern-restricted
+  `solve_for` targets and passing the resulting `Replacement` objects through
+  the existing `replace_multiple` hook.
+- Added regressions covering:
+  - isolation of a scalar box term in a phi-four EOM with a source term;
+  - rejection of absent targets with a clear `ValueError`;
+  - applying a theory-generated EOM replacement to a `MatchingResult` before
+    Symbolica coefficient projection of matching conditions;
+  - public method docstring coverage for `Theory.eom_replacement_rule`.
+- Targeted validation for this slice:
+  - `pytest tests/unit/functional/test_scalar_eom.py tests/integration/validation/test_numeric_probes.py::test_matching_result_applies_theory_eom_replacement_before_projection tests/unit/definitions/test_public_api.py -q`:
+    19 passed.
+  - `python -m mypy`: success, no issues in 33 source files.
