@@ -33,7 +33,8 @@
 - Use larger implementation slices with focused tests while building, then
   grouped targeted gates (`definitions`, `models`, `matching`, `backend`,
   `validation`, `not slow`) before green milestone commits. Avoid running the
-  full/slow suite after every small edit.
+  full/slow suite after every small edit. Plan and implement complete feature
+  families first, then run the smallest marker group that exercises the slice.
 - Commit and push only coherent green milestones to `origin/one-shot-port`.
   Keep these notes current with status, validation, backend discoveries, and
   remaining gaps.
@@ -101,3 +102,46 @@
 - Keep implementation notes manageable. When this live file grows large again,
   move it unchanged to `one_shot_implementation_part_C.md` and replace it with
   a compact updated status note.
+
+## Current Slice: Test Grouping And VLF Loader Parity
+
+- User requested fewer whole-suite runs and larger, better-planned
+  implementation slices. The workflow is now to batch coherent feature work,
+  use smoke probes during exploration, run focused marker groups for the slice,
+  and reserve broad `not slow` or slow validation gates for coherent green
+  milestones.
+- Added pytest marker groups for `definitions`, `dependencies`, `eft`,
+  `functional`, `integration`, `loaders`, `models`, `typing`, and `unit`, in
+  addition to the existing `backend`, `matching`, `validation`, and `slow`
+  groups.
+- While probing the next model-loader parity slice, the direct supported-subset
+  loader for `assets/models/VLF_toy_model.m` still differed from the committed
+  Matchete-exported model fixture after the `FreeLagConvention.MATCHETE`
+  change. The remaining differences were:
+  - `PlusHc[...]` expanded to an opaque `Bar(body)` instead of a supported
+    hermitian conjugate chain;
+  - parsed Mathematica `NCM[...]` operands and Matchete-convention fermion
+    kinetic terms used bare `PR`/`PL`/`Gamma` instead of Matchete fixture-style
+    `DiracProduct(...)` wrappers.
+- Implemented a public `hermitian_conjugate(...)` helper that reuses pychete's
+  supported field/coupling metadata-aware conjugation rules, updated
+  `PlusHc[...]` parsing to call it, and normalized only the Mathematica loader
+  / Matchete free-Lagrangian convention paths to fixture-style
+  `DiracProduct(...)` wrappers.
+- Added a regression test that the direct VLF Mathematica asset matches the
+  committed Matchete-exported model fixture after deterministic dummy-index
+  relabeling.
+- Extended the supported-subset Mathematica loader so module-local symbols
+  used as field, coupling, and CG-tensor indices are coerced to
+  `Index(label, representation)` using the registered Symbolica metadata for
+  the field/coupling/CG tensor. This avoids leaking local names like `i`, `p`,
+  `J`, and `alpha` as generic external functions in parsed parent-model child
+  Lagrangians.
+- Planned targeted validation for this slice:
+  - `pytest -m functional tests/unit/functional`: 11 passed.
+  - `pytest -m definitions tests/unit/definitions`: 59 passed.
+  - `pytest -m loaders tests/unit/loaders tests/integration/models`: 25 passed.
+  - `pytest --collect-only -q -m "loaders or models or functional or definitions"`
+    collected 95 selected tests and deselected 221.
+  - `python -m mypy`: success, no issues in 32 source files.
+  - `git diff --check`: clean.

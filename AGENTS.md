@@ -38,9 +38,14 @@ Prefer grouped targeted tests during implementation slices, and reserve the
 full suite for larger green milestones:
 
 ```sh
+dependencies/.venv/bin/python -m pytest -m definitions tests/unit/definitions
+dependencies/.venv/bin/python -m pytest -m functional tests/unit/functional
+dependencies/.venv/bin/python -m pytest -m loaders tests/unit/loaders tests/integration/models
+dependencies/.venv/bin/python -m pytest -m models tests/integration/models
 dependencies/.venv/bin/python -m pytest -m backend tests/unit/backends
 dependencies/.venv/bin/python -m pytest -m matching tests/integration/matching
 dependencies/.venv/bin/python -m pytest -m validation tests/integration/validation
+dependencies/.venv/bin/python -m pytest -m typing tests/test_static_typing.py
 dependencies/.venv/bin/python -m pytest -m "not slow" tests
 ```
 
@@ -49,6 +54,15 @@ then run the validation group once. Do not pay for the full suite after every
 small local fix; use focused tests while building the slice, then a broader
 targeted gate, and only then a full-suite gate when the milestone is large
 enough to justify it.
+
+For one-shot matching work, first identify a coherent implementation chunk
+(for example: one model-loader parity gap, one backend normalization family,
+or one supertrace/integral-evaluation feature family), implement the whole
+chunk, and only then run the smallest pytest marker group that exercises that
+chunk. Prefer smoke scripts and one or two focused tests during exploration;
+promote them into regression tests once the design has settled. Run the broad
+`not slow` gate only before a green milestone commit, and run slow validation
+only when the batch materially changes fixture validation behavior.
 
 Always use the managed virtual environment for pychete development and tests.
 Do not use the ambient system Python when importing Symbolica, idenso, spenso,

@@ -10,9 +10,18 @@ testpaths = ["tests"]
 addopts = "-ra"
 markers = [
     "backend: backend adapter and analytic backend tests",
+    "definitions: core symbol, theory, state, printing, and public API tests",
+    "dependencies: dependency installer and local dependency import tests",
+    "eft: EFT counting and truncation tests",
+    "functional: functional derivative, covariant derivative, and EOM tests",
+    "integration: integration tests grouped by feature area",
+    "loaders: Python, Mathematica-subset, and fixture conversion loader tests",
     "matching: one-loop matching and fluctuation-operator integration tests",
+    "models: model asset and model fixture loading tests",
     "validation: committed fixture and gap-report validation tests",
     "slow: tests that are intentionally slower and should be batched before full-suite gates",
+    "typing: static typing and mypy gate tests",
+    "unit: focused unit tests grouped by feature area",
 ]
 
 [tool.mypy]

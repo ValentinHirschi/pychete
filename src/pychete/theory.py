@@ -1054,9 +1054,12 @@ class Theory:
                     if convention_kind is FreeLagConvention.PYCHETE
                     else Expression.num(0)
                 )
-                dirac = Expression.I * s.NCM(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))
+                gamma_mu = s.Gamma(mu)
+                if convention_kind is FreeLagConvention.MATCHETE:
+                    gamma_mu = s.DiracProduct(gamma_mu)
+                dirac = Expression.I * s.NCM(s.Bar(field_expr), gamma_mu, handle(derivatives=[mu]))
                 if not bool(connection == Expression.num(0)):
-                    dirac = dirac + connection * s.NCM(s.Bar(field_expr), s.Gamma(mu), field_expr)
+                    dirac = dirac + connection * s.NCM(s.Bar(field_expr), gamma_mu, field_expr)
                 if mass is not None:
                     dirac = dirac - mass * s.NCM(s.Bar(field_expr), field_expr)
                 out = out + dirac

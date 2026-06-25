@@ -4,10 +4,23 @@ from pathlib import Path
 
 from symbolica import Expression
 
-from pychete import FieldChirality, FieldMassKind, FieldRole, GroupKind, RepresentationReality, SymbolDataKey, SymbolRole, Theory, canonical_string, s
+from pychete import (
+    FieldChirality,
+    FieldMassKind,
+    FieldRole,
+    GroupKind,
+    RepresentationReality,
+    SymbolDataKey,
+    SymbolRole,
+    Theory,
+    canonical_string,
+    relabel_dummy_indices,
+    s,
+)
 from pychete.backends import spenso
 from pychete.loaders import load_matchete_model, load_python_model, parse_matchete_expression
 from pychete.validation_fixtures import load_validation_fixture
+from tests.conftest import assert_expr_equal
 
 
 def _local_tags(label: Expression) -> set[str]:
@@ -69,6 +82,16 @@ def test_vlf_mathematica_and_python_assets_share_metadata_with_distinct_free_lag
     assert python_lagrangian.count("field_A") == 3
     assert "/pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2" in mathematica_lagrangian
     assert "/pychete::Coupling(VLF_toy_model::coupling_e,pychete::List(),0)^2" not in python_lagrangian
+
+
+def test_vlf_mathematica_asset_matches_exported_model_fixture_after_dummy_relabeling() -> None:
+    _theory, expressions = load_matchete_model(Path("assets/models/VLF_toy_model.m"))
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+
+    assert_expr_equal(
+        relabel_dummy_indices(expressions["lagrangian"]),
+        relabel_dummy_indices(fixture.expression("lagrangian")),
+    )
 
 
 def test_matchete_loader_preserves_supported_coupling_options(tmp_path: Path) -> None:
@@ -213,10 +236,17 @@ def test_matchete_loader_preserves_defined_cg_tensors(tmp_path: Path) -> None:
     assert canonical_string(reps[2]) == "pychete::Bar(loader_cg_tensors::group_SU2L(loader_cg_tensors::representation_quad))"
     assert c4.definition.source_text is not None
     assert "InvariantTensors" in c4.definition.source_text
+    lagrangian = canonical_string(expressions["lagrangian"])
+    assert "external_i" not in lagrangian
+    assert "external_j" not in lagrangian
+    assert "external_M" not in lagrangian
     assert (
         "pychete::CG(loader_cg_tensors::cg_tensor_C4,"
-        "pychete::List(loader_cg_tensors::external_i,loader_cg_tensors::external_j,loader_cg_tensors::external_M))"
-        in canonical_string(expressions["lagrangian"])
+        "pychete::List(pychete::Index(loader_cg_tensors::index_i,loader_cg_tensors::group_SU2L(pychete::fund)),"
+        "pychete::Index(loader_cg_tensors::index_j,pychete::Bar(loader_cg_tensors::group_SU2L(pychete::fund))),"
+        "pychete::Index(loader_cg_tensors::index_M,"
+        "pychete::Bar(loader_cg_tensors::group_SU2L(loader_cg_tensors::representation_quad)))))"
+        in lagrangian
     )
     assert "external_C4" not in canonical_string(expressions["lagrangian"])
 
@@ -336,9 +366,13 @@ def test_default_parent_model_assets_load_metadata_without_reference_checkout() 
 def test_default_parent_model_child_lagrangians_parse_with_parent_metadata() -> None:
     for name in ("Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
         theory, expressions = load_matchete_model(Path(f"assets/models/{name}.m"))
+        lagrangian = canonical_string(expressions["lagrangian"])
         assert theory.name == name
         assert set(expressions) == {"lagrangian"}
         assert {"H", "q", "l"} <= set(theory.fields)
+        assert "pychete::Index(" in lagrangian
+        for local_name in ("i", "j", "k", "J", "K", "L", "p", "r", "alpha"):
+            assert f"external_{local_name}" not in lagrangian
         theory._validate_registered_expression(expressions["lagrangian"])
 
 

@@ -38,6 +38,17 @@ from .theory_metadata import (
 _MAX_MULTILINEAR_CHAIN_ARITY = 8
 
 
+def hermitian_conjugate(expr: Expression) -> Expression:
+    """Return pychete's supported symbolic hermitian conjugate of ``expr``.
+
+    The helper expands conjugation over commutative products, reverses
+    non-commutative chains, swaps chiral projectors, and uses field/coupling
+    Symbolica metadata to preserve self-conjugate objects.
+    """
+
+    return _bar_expr(expr, generated=True).expand()
+
+
 def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expression) -> Expression:
     out = expr
     for index in indices:

@@ -112,6 +112,11 @@ discoveries, dependency patches, blockers, and remaining work.
   add Symbolica `Evaluator`-based numeric probes with deterministic sample
   points.
 - Keep `pytest` and `mypy` green at each committed milestone.
+- Structure validation around larger implementation slices. While building,
+  use smoke probes and focused pytest markers such as `definitions`,
+  `functional`, `loaders`, `models`, `backend`, `matching`, `validation`, and
+  `typing`; run broader `not slow` or slow validation gates only when the
+  completed slice justifies the cost.
 
 ## Workflow
 
@@ -120,6 +125,8 @@ discoveries, dependency patches, blockers, and remaining work.
   `implementation_notes/one_shot_implementation.md`.
 - Commit and push only green, coherent milestones to remote branch
   `one-shot-port`.
+- For one-shot work, plan and implement complete feature families before broad
+  validation. Avoid repeated full-suite runs for individual local edits.
 - Preserve the existing public API discipline: intended user APIs are exported
   through `pychete.api` and package root `pychete`, with docstrings and Jupyter
   `_repr_html_` / `_repr_latex_` where relevant.

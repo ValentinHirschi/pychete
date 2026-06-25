@@ -193,7 +193,7 @@ def test_free_lag_matchete_convention_keeps_covariant_terms_implicit() -> None:
     strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
     expected = (
         -strength**2 / (4 * coupling() ** 2)
-        + Expression.I * s.NCM(s.Bar(field), s.Gamma(mu), psi(derivatives=[mu]))
+        + Expression.I * s.NCM(s.Bar(field), s.DiracProduct(s.Gamma(mu)), psi(derivatives=[mu]))
         - mass() * s.NCM(s.Bar(field), field)
     )
 

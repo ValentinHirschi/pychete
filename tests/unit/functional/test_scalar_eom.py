@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from symbolica import Expression, S
 
-from pychete import FieldMassKind, Theory, s
+from pychete import FieldMassKind, Theory, hermitian_conjugate, s
 from pychete.functional import apply_cd, partial_functional_derivative
 from pychete.symbols import canonical_string
 from pychete.theory_metadata import EXTERNAL_LINEAR_FUNCTION_TAG
@@ -133,3 +133,16 @@ def test_apply_cd_linearizes_tagged_external_transpose_wrapper() -> None:
     assert "der(" not in canonical_string(derivative)
     assert "cd_variation_parameter" not in canonical_string(derivative)
     assert_expr_equal(derivative, transpose(psi(derivatives=[mu])))
+
+
+def test_hermitian_conjugate_reverses_supported_yukawa_chains() -> None:
+    theory = Theory("hc_yukawa")
+    light = theory.define_field("psi", s.Fermion, mass=0)
+    heavy = theory.define_field("Psi", s.Fermion, mass=0)
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    y = theory.define_coupling("y")
+
+    interaction = -y() * scalar() * s.NCM(s.Bar(light()), s.PR, heavy())
+    expected = -s.Bar(y()) * scalar() * s.NCM(s.Bar(heavy()), s.PL, light())
+
+    assert_expr_equal(hermitian_conjugate(interaction), expected)

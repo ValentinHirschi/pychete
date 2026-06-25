@@ -27,7 +27,8 @@ from symbolica import Expression
 from symbolica.core import AtomType, ParseMode
 
 from ..backends.vacuum_integrals import canonize_loop_function, loop_function
-from ..expr import args, as_int, list_expr, product_expr, sum_expr
+from ..expr import args, as_int, is_head, list_expr, product_expr, sum_expr
+from ..functional import hermitian_conjugate
 from ..symbols import SymbolRole, safe_symbol_name, s
 from ..theory import Theory
 from ..theory_metadata import CouplingSelfConjugate, FieldChirality, FieldRole, FreeLagConvention
@@ -49,7 +50,12 @@ class _LocalFunction:
     body: str
 
 
-_ModuleEnv: TypeAlias = dict[str, Expression | _LocalFunction]
+@dataclass(frozen=True)
+class _LocalSymbol:
+    name: str
+
+
+_ModuleEnv: TypeAlias = dict[str, Expression | _LocalFunction | _LocalSymbol]
 
 
 def _strip_comments(text: str) -> str:
@@ -477,6 +483,48 @@ def _matchete_list_items(expr: Expression, theory: Theory, env: _ModuleEnv) -> t
     return tuple(_convert_expression(expr[i], theory, env) for i in range(len(expr)))
 
 
+def _matchete_parsed_list_args(expr: Expression) -> tuple[Expression, ...]:
+    if not _is_parsed_head(expr, "List"):
+        raise ValueError(f"Expected Mathematica List expression, got {expr.format_plain()}")
+    return args(expr)
+
+
+def _index_label_from_var(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
+    name = _plain_name(expr)
+    value = env.get(name)
+    if isinstance(value, Expression):
+        return value
+    if isinstance(value, _LocalSymbol):
+        return theory.symbol(value.name, role=SymbolRole.INDEX)
+    return _matchete_index_label(expr, theory, env)
+
+
+def _matchete_index_argument(expr: Expression, representation: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
+    if expr.get_type() is AtomType.Var:
+        label = _index_label_from_var(expr, theory, env)
+        if is_head(label, s.Index):
+            return label
+        return s.Index(label, representation)
+    converted = _convert_expression(expr, theory, env)
+    if is_head(converted, s.Index):
+        return converted
+    return s.Index(converted, representation)
+
+
+def _matchete_index_arguments(
+    raw_args: tuple[Expression, ...],
+    representations: tuple[Expression, ...],
+    theory: Theory,
+    env: _ModuleEnv,
+) -> tuple[Expression, ...]:
+    if len(raw_args) != len(representations):
+        return tuple(_convert_expression(child, theory, env) for child in raw_args)
+    return tuple(
+        _matchete_index_argument(child, representation, theory, env)
+        for child, representation in zip(raw_args, representations, strict=True)
+    )
+
+
 def _matchete_field_type(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
     if expr.get_type() is AtomType.Var:
         name = _plain_name(expr)
@@ -552,7 +600,22 @@ def _matchete_cg(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expressio
     label = _matchete_builtin_cg_label(expr[0], theory, env)
     if label is None:
         label = _convert_expression(expr[0], theory, env)
-    return s.CG(label, list_expr(*_matchete_list_items(expr[1], theory, env)))
+    definition = next(
+        (candidate for candidate in theory.cg_tensors.values() if bool(candidate.label == label)),
+        None,
+    )
+    representations = definition.representation_exprs if definition is not None else ()
+    raw_indices = _matchete_parsed_list_args(expr[1])
+    indices = _matchete_index_arguments(raw_indices, representations, theory, env)
+    return s.CG(label, list_expr(*indices))
+
+
+def _matchete_ncm_operand(expr: Expression) -> Expression:
+    if is_head(expr, s.DiracProduct):
+        return expr
+    if bool(expr == s.PR) or bool(expr == s.PL) or is_head(expr, s.Gamma):
+        return s.DiracProduct(expr)
+    return expr
 
 
 def _plain_name(expr: Expression) -> str:
@@ -572,6 +635,8 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
             value = env[name]
             if isinstance(value, _LocalFunction):
                 raise ValueError(f"Local function {name} was used without arguments")
+            if isinstance(value, _LocalSymbol):
+                return theory.symbol(value.name, role=SymbolRole.INDEX)
             return value
         if name == "PR":
             return s.PR
@@ -622,7 +687,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
         if name == "CConj":
             return s.CConj(_convert_expression(expr[0], theory, env))
         if name == "NCM":
-            return s.NCM(*(_convert_expression(child, theory, env) for child in args(expr)))
+            return s.NCM(*(_matchete_ncm_operand(_convert_expression(child, theory, env)) for child in args(expr)))
         if name == "Field":
             if len(expr) != 4:
                 raise NotImplementedError(f"Unsupported Field expression: {expr.format_plain()}")
@@ -683,7 +748,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
             return _convert_expression(expr[0], theory, env).sqrt()
         if name == "PlusHc":
             body = _convert_expression(expr[0], theory, env)
-            return body + s.Bar(body)
+            return body + hermitian_conjugate(body)
         if name == "FreeLag":
             names = [_clean_name(_plain_name(child)) for child in args(expr)]
             return theory.free_lag(*names, convention=FreeLagConvention.MATCHETE)
@@ -699,11 +764,18 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
         if name in theory.groups:
             return theory.symbol(name, role=SymbolRole.GROUP)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.cg_tensors:
-            return theory.cg_tensor_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
+            cg_definition = theory.cg_tensor_handle(name).definition
+            return theory.cg_tensor_handle(name)(
+                *_matchete_index_arguments(args(expr), cg_definition.representation_exprs, theory, env)
+            )
         if name in theory.fields:
-            return theory.field_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
+            field_definition = theory.field_handle(name).definition
+            return theory.field_handle(name)(*_matchete_index_arguments(args(expr), field_definition.indices, theory, env))
         if name in theory.couplings:
-            return theory.coupling_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
+            coupling_definition = theory.coupling_handle(name).definition
+            return theory.coupling_handle(name)(
+                *_matchete_index_arguments(args(expr), coupling_definition.index_exprs, theory, env)
+            )
         return theory.define_external(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
     raise NotImplementedError(f"Unsupported parsed expression: {expr.format_plain()}")
 
@@ -729,10 +801,22 @@ def _eval_expression_list(text: str, theory: Theory) -> list[Expression]:
     return [_eval_expression(item, theory, {}) for item in items if item.strip()]
 
 
+def _module_local_names(raw: str) -> tuple[str, ...]:
+    normalized = _preprocess_names(raw.strip())
+    if not (normalized.startswith("{") and normalized.endswith("}")):
+        return ()
+    names: list[str] = []
+    for item in _split_top_level(normalized[1:-1], ","):
+        local = item.split("=", 1)[0].strip()
+        if local:
+            names.append(_clean_name(local))
+    return tuple(names)
+
+
 def _eval_module(args_raw: list[str], theory: Theory) -> Expression:
     if len(args_raw) != 2:
         raise NotImplementedError("Only Module[{locals}, body] is supported")
-    env: _ModuleEnv = {}
+    env: _ModuleEnv = {name: _LocalSymbol(name) for name in _module_local_names(args_raw[0])}
     body = args_raw[1]
     statements = _split_top_level(body, ";")
     result = Expression.num(0)
