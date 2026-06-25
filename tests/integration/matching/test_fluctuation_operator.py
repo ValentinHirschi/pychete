@@ -24,6 +24,7 @@ from pychete import (
     VakintIntegralStage,
     canonical_string,
     define_smeft_wilson_coefficient,
+    dummy_indices,
     one_loop_normalization_factor,
     s,
 )
@@ -2123,6 +2124,53 @@ def test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator() -
 
     assert result.metadata["interaction_bosonic_cde_internal_termwise_evaluation"] is True
     assert result.metadata["matching_conditions_projected"] is True
+    assert set(result.matching_conditions) == {target}
+    assert not bool(result.matching_conditions[target].expand() == Expression.num(0))
+
+
+def test_public_bosonic_cde_projects_three_insertion_higgs_potential_operator() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_projects_ch")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    wilson = define_smeft_wilson_coefficient(theory, "cH")
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=3)
+    terms = setup.interaction_bosonic_cde_expansion_terms({"hScalar-hScalar-hScalar": ((), (), ())})
+
+    assert len(terms) == 1
+    assert len({canonical_string(index.label) for index in dummy_indices(terms[0].numerator)}) == 3
+
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            max_trace_order=3,
+            bosonic_cde_trace_names=("hScalar-hScalar-hScalar",),
+            bosonic_cde_max_total_order=0,
+            bosonic_cde_max_slot_order=0,
+            bosonic_cde_act_open_derivatives=True,
+            tensor_reduce=True,
+            combine_terms=False,
+            truncate_eft_result=False,
+        ),
+    )
+    target = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
+
+    assert result.metadata["interaction_bosonic_cde_internal_termwise_evaluation"] is True
+    assert result.metadata["matching_conditions_projected"] is True
+    assert result.metadata["matching_condition_projection_canonize_indices"] is True
     assert set(result.matching_conditions) == {target}
     assert not bool(result.matching_conditions[target].expand() == Expression.num(0))
 

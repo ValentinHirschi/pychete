@@ -154,6 +154,12 @@ instruction. Raw expression targets must remain exact unless
 `normalize_ibp_scalar_bilinears=True` is requested. When aliases are present,
 canonicalize the source, target, and alias expressions through Symbolica's
 `Expression.canonize_tensors(...)` path before any wildcard-index fallback.
+For any equality/projection question where only dummy-index names differ, use
+`Expression.canonize_tensors(...)` with grouped pychete `Index(...)` specs and
+the returned canonical expression, external-index list, and dummy-index list.
+Do not compare raw canonical strings before this normalization, and do not
+write a Python dummy-index canonicalizer when Symbolica can provide the
+canonical replacements.
 
 Before adding or modifying symbolic code, explicitly inspect the Python stubs
 and source listed below. Prefer native primitives even when a Python loop seems
@@ -311,6 +317,12 @@ result. Do not first build one monolithic CDE topology sum and then ask vakint
 to tensor-reduce the whole expression; multi-insertion traces such as
 `hScalar-hScalar` scale much better when the backend boundary is the generated
 CDE term.
+Freshen dummy indices independently on every ordered CDE trace-entry operand
+before multiplying the entry chain. Repeated trace insertions are independent
+index sums; reusing one dummy label across all insertions creates an invalid
+over-contracted source and breaks Symbolica's `canonize_tensors(...)` and
+registered Wilson projection. Use `relabel_dummy_indices(...)` at the trace
+entry boundary rather than a Wilson-specific projection workaround.
 After native vakint tensor reduction or analytic evaluation, decode any public
 expression with `pychete.backends.vakint.decode_pychete_namespace(...)` before
 projection, simplification, or user-facing output. This must convert recognized

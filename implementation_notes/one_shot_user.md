@@ -212,3 +212,7 @@ discoveries, dependency patches, blockers, and remaining work.
 - After the current continuation slice, provide a brief user-facing summary of
   the main technical blockers still preventing full one-loop matching parity
   with Matchete's integration tests.
+- While continuing the CDE/projection slice, remember that Symbolica has native
+  tensor-index canonicalization. Use `Expression.canonize_tensors(...)`, which
+  returns the canonical expression and canonical external/dummy index lists, to
+  compare or project expressions whose dummy-index names need to line up.

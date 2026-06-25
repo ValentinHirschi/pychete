@@ -442,13 +442,24 @@
   With `hScalar-hScalar`, total CDE order 2, tensor reduction, internal
   analytic integral evaluation, and registered Wilson projection, pychete now
   projects a nonzero `cHD` coefficient from the small model in about one
-  second. `cHBox` and `cH` remain zero in that focused source and are still part
-  of the broader Higgs-sector reduction frontier.
+  second. `cHBox` remains a broader Higgs-sector reduction frontier item.
+- Probed the three-insertion `hScalar-hScalar-hScalar` CDE source for the Higgs
+  potential operator `cH`. The source existed but reused the same portal dummy
+  Higgs index in every trace entry, producing an over-contracted expression
+  like `H[d1]^3 Bar(H[d1])^3` that could not canonically project to the
+  registered SMEFT target. Each ordered CDE trace-entry operand now freshens
+  its local dummy contractions with `relabel_dummy_indices(...)` before the NCM
+  chain is multiplied. The public regression verifies that the generated
+  numerator has three independent dummy contractions and that the registered
+  `cH` Wilson coefficient projects nonzero through Symbolica's
+  `Expression.canonize_tensors(...)`-enabled projection path.
 - Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_projects_three_insertion_higgs_potential_operator -q'`
+    passed with 1 test.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator -q'`
     passed with 1 test.
-  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "order_four_covariant_derivatives or two_insertion_higgs_derivative_operator or bosonic_cde_internal_tensor_reduction or metric_traced_field_strengths" -q'`
-    passed with 4 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "order_four_covariant_derivatives or two_insertion_higgs_derivative_operator or three_insertion_higgs_potential_operator or bosonic_cde_internal_tensor_reduction or metric_traced_field_strengths" -q'`
+    passed with 5 tests and 62 deselected.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -q'`
     passed with 37 tests.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
@@ -469,22 +480,23 @@
 - Raising the Singlet trace order from 1 to 3 and enabling opt-in Abelian
   covariant-derivative expansion did not move the frontier.
 - Focused CDE regressions now produce nonzero projected `cHW`, `cHB`, `cHWB`,
-  and `cHD` coefficients for small heavy-scalar/Higgs models. The field-strength
-  targets come from the one-insertion order-4 `hScalar` source; `cHD` comes from
-  the two-insertion order-2 `hScalar-hScalar` source. The default fixture
-  frontier above has not yet been rerun after these slices; rerun targeted
-  fixture probes after the next feature slice materially changes basis/on-shell
-  reduction or generated sources.
+  `cHD`, and `cH` coefficients for small heavy-scalar/Higgs models. The
+  field-strength targets come from the one-insertion order-4 `hScalar` source,
+  `cHD` comes from the two-insertion order-2 `hScalar-hScalar` source, and `cH`
+  comes from the three-insertion order-0 `hScalar-hScalar-hScalar` source. The
+  default fixture frontier above has not yet been rerun after these slices;
+  rerun targeted fixture probes after the next feature slice materially changes
+  basis/on-shell reduction or generated sources.
 
 ## Current Remaining Work
 
 - Continue the CDE/basis-reduction feature family from the new hybrid source:
   use the cyclic derivative/field-strength CDE output together with the
   interaction-power remainder, then add the needed EOM/IBP/Warsaw-basis
-  reductions for remaining gauge/Higgs Wilson structures such as `cHBox`,
-  `cH`, and fermionic Higgs-current coefficients. `cHW`, `cHB`, `cHWB`, and
-  `cHD` now have focused nonzero CDE projections, but default fixture parity
-  has not yet been remeasured.
+  reductions for remaining gauge/Higgs Wilson structures such as `cHBox` and
+  fermionic Higgs-current coefficients. `cHW`, `cHB`, `cHWB`, `cHD`, and `cH`
+  now have focused nonzero CDE projections, but default fixture parity has not
+  yet been remeasured.
 - Extend idenso/spenso-backed group algebra beyond the current simple
   generator, Fierz, metric, structure-constant, and native generator-chain
   decode cases as fixture probes expose missing contractions.

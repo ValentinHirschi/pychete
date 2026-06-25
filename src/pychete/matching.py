@@ -26,6 +26,7 @@ from .expr import (
     sum_expr,
 )
 from .functional import derive_eom, eom_replacement_rules_for_expression, partial_functional_derivative
+from .indices import relabel_dummy_indices
 from .logging import get_logger, progress
 from .matching_options import (
     OneLoopIntegralBackend,
@@ -667,15 +668,17 @@ class SupertraceBlockTrace:
                 operands: list[Expression] = []
                 masses: list[Expression] = []
                 powers: list[int] = []
-                for entry, next_mode, expansion in zip(
-                    entry_path.entries,
-                    entry_path.next_modes,
-                    choices,
-                    strict=True,
+                for slot_index, (entry, next_mode, expansion) in enumerate(
+                    zip(
+                        entry_path.entries,
+                        entry_path.next_modes,
+                        choices,
+                        strict=True,
+                    )
                 ):
                     prefactor *= expansion.prefactor
                     loop_numerator *= expansion.loop_momentum_numerator
-                    operands.append(entry)
+                    operands.append(_fresh_cde_trace_entry_dummy_indices(entry, slot_index))
                     operands.extend(expansion.open_cd_operands)
                     masses.append(_fluctuation_mass_squared(next_mode))
                     powers.append(expansion.denominator_power)
@@ -708,6 +711,12 @@ class SupertraceBlockTrace:
 
     def _repr_html_(self) -> str:
         return f"<code>SupertraceBlockTrace({escape(self.name)} order={self.order})</code>"
+
+
+def _fresh_cde_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expression:
+    """Make dummy contractions local to one ordered CDE trace insertion."""
+
+    return relabel_dummy_indices(entry, start=200_000 + 1_000 * slot_index)
 
 
 @dataclass(frozen=True)
