@@ -82,7 +82,7 @@
 - The Mathematica model loader now uses `FreeLagConvention.MATCHETE` for
   parsed `FreeLag[...]`. VLF Python and Mathematica assets intentionally share
   theory metadata but use distinct free-Lagrangian expression conventions.
-- Last pushed green milestone: `3e572d1 Add opt-in parent Lagrangian loading`.
+- Last pushed green milestone: `466997d Store Wilson operator metadata`.
 - Last broader non-slow gate at that milestone:
   `263 passed, 1 skipped, 50 deselected`; the skip was the expected GammaLoop
   manifest skip for a local dependency build without GammaLoop requested.
@@ -191,4 +191,39 @@
   - grouped metadata gate:
     `pytest -m definitions tests/unit/definitions -q`: 59 passed.
   - `python -m mypy`: success, no issues in 32 source files.
+  - `git diff --check`: clean.
+
+## Current Slice: SMEFT Warsaw Operator Registry
+
+- User reiterated that larger implementation slices should be planned and
+  finished before paying broad validation costs. This slice therefore keeps to
+  a coherent operator-metadata feature family and validates only the affected
+  definition, converter, fixture, public API, typing, and diff-hygiene paths.
+- Added `pychete.smeft` as the pychete-owned registry for SMEFT Warsaw operator
+  metadata. It currently builds pychete-native Symbolica monomials for:
+  `cG`, `cGt`, `cW`, `cWt`, `cH`, `cHBox`, `cHD`, `cHG`, `cHGt`, `cHW`,
+  `cHWt`, `cHB`, `cHBt`, `cHWB`, `cHWtB`, `cHl1`, `cHl3`, `cHe`, `cHq1`,
+  `cHq3`, `cHu`, `cHd`, `ceH`, `cuH`, and `cdH`.
+- Added public helpers through `pychete.api` and package root:
+  `SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES`, `smeft_warsaw_operator_names`,
+  `smeft_warsaw_operator`, and `define_smeft_wilson_coefficient`.
+- Updated the previous-result fixture converter so left-hand-side SMEFT Wilson
+  targets are predeclared through the registry. Known Warsaw targets now carry
+  operator metadata in their Symbolica symbol data; unsupported targets such
+  as `ceW` remain registered as Wilson coefficients with `operator=None`.
+- Regenerated the default validation fixtures and deliberately restored the
+  previously committed `state.expressions` payloads after detecting unrelated
+  expression text drift around barred indices in the round-trip conversion
+  path. The final fixture diff is scoped to theory external/symbol metadata:
+  matching results and stored reference expressions are unchanged.
+- Fixture sanity counts after the scoped update:
+  - `E_VLL`: 64 Wilson coefficients, 25 with operator metadata.
+  - `S1S3LQs`: 64 Wilson coefficients, 25 with operator metadata.
+  - `Singlet_Scalar_Extension`: 64 Wilson coefficients, 25 with operator
+    metadata.
+  - `VLF_toy_model`: 0 Wilson coefficients.
+- Targeted validation for this slice:
+  - `pytest tests/unit/definitions/test_theory_definitions.py::test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata tests/unit/definitions/test_public_api.py tests/unit/loaders/test_matchete_previous_results_converter.py::test_previous_result_converter_predeclares_lhs_wilson_targets_only tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata -q`:
+    8 passed.
+  - `python -m mypy`: success, no issues in 33 source files.
   - `git diff --check`: clean.

@@ -18,8 +18,11 @@ from pychete import (
     Theory,
     canonical_string,
     collect_indices,
+    define_smeft_wilson_coefficient,
     matching_condition_targets,
     s,
+    smeft_warsaw_operator,
+    smeft_warsaw_operator_names,
 )
 from pychete.expr import cg_tensor_pattern, coupling_pattern, field_pattern, matching_subexpressions
 from tests.conftest import assert_expr_equal
@@ -606,6 +609,40 @@ def test_wilson_coefficients_store_basis_and_matching_target_metadata() -> None:
         canonical_string(i),
         canonical_string(j),
     ]
+
+
+def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> None:
+    theory = Theory("smeft_ops")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    su3_fund = theory.define_representation("SU3c", "fund")
+    su2_fund = theory.define_representation("SU2L", "fund")
+    theory.define_field("H", s.Scalar, indices=[su2_fund], mass=0)
+    theory.define_field("l", s.Fermion, indices=[su2_fund, flavor.symbol], mass=0)
+    theory.define_field("d", s.Fermion, indices=[su3_fund, flavor.symbol], mass=0)
+
+    p = theory.index("p", flavor.symbol)
+    r = theory.index("r", flavor.symbol)
+    c_h = define_smeft_wilson_coefficient(theory, "cH")
+    c_hb = define_smeft_wilson_coefficient(theory, "cHB")
+    c_hwb = define_smeft_wilson_coefficient(theory, "cHWB")
+    c_hd = define_smeft_wilson_coefficient(theory, "cHd", indices=[p, r])
+
+    assert {"cH", "cHB", "cHWB", "cHd"} <= set(smeft_warsaw_operator_names())
+    for handle in (c_h, c_hb, c_hwb, c_hd):
+        assert handle.definition.operator_expr is not None
+        theory._validate_registered_expression(handle.definition.operator_expr)
+    assert "field_H" in canonical_string(c_h.definition.operator_expr)
+    assert "field_B" in canonical_string(c_hb.definition.operator_expr)
+    assert "cg_tensor_gen_SU2L_fund" in canonical_string(c_hwb.definition.operator_expr)
+    assert "field_d" in canonical_string(c_hd.definition.operator_expr)
+    assert "pychete::NCM" in canonical_string(c_hd.definition.operator_expr)
+
+    unsupported = define_smeft_wilson_coefficient(theory, "ceW", indices=[p, r])
+    assert unsupported.definition.operator_expr is None
+    assert smeft_warsaw_operator(theory, "ceW", [p, r]) is None
 
 
 def test_external_metadata_must_be_registered_before_generic_use() -> None:

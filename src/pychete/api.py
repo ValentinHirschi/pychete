@@ -51,6 +51,12 @@ from .matching_results import (
     MatchingResultComparison,
     matching_condition_targets,
 )
+from .smeft import (
+    SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
+    define_smeft_wilson_coefficient,
+    smeft_warsaw_operator,
+    smeft_warsaw_operator_names,
+)
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import Theory
@@ -129,6 +135,7 @@ __all__ = [
     "RepresentationDefinition",
     "RepresentationReality",
     "StateExpression",
+    "SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES",
     "SupertraceOrderCoverage",
     "SupertraceBlockTrace",
     "SupertracePlan",
@@ -147,6 +154,7 @@ __all__ = [
     "dummy_indices",
     "build_numeric_probe_plan",
     "deterministic_probe_samples",
+    "define_smeft_wilson_coefficient",
     "evaluator_probe_equal",
     "evaluate_loop_functions",
     "evaluate_one_loop_single_scale_vakint_expression",
@@ -172,5 +180,7 @@ __all__ = [
     "relabel_dummy_indices",
     "s",
     "series_eft",
+    "smeft_warsaw_operator",
+    "smeft_warsaw_operator_names",
     "simplify_loop_functions",
 ]

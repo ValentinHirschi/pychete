@@ -187,7 +187,8 @@
             "external_kind": "generic",
             "indices": [],
             "label": "VLF_toy_model::external_epsilon",
-            "name": "epsilon"
+            "name": "epsilon",
+            "operator": null
           },
           "hbar": {
             "basis": null,
@@ -195,7 +196,8 @@
             "external_kind": "generic",
             "indices": [],
             "label": "VLF_toy_model::external_hbar",
-            "name": "hbar"
+            "name": "hbar",
+            "operator": null
           },
           "mubar2": {
             "basis": null,
@@ -203,7 +205,8 @@
             "external_kind": "generic",
             "indices": [],
             "label": "VLF_toy_model::external_mubar2",
-            "name": "mubar2"
+            "name": "mubar2",
+            "operator": null
           }
         },
         "fields": {

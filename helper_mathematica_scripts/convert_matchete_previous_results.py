@@ -11,6 +11,7 @@ from symbolica.core import AtomType, ParseMode
 from pychete.expr import as_int
 from pychete.loaders import parse_matchete_expression
 from pychete.loaders.mathematica import _clean_name, _convert_expression, _normalize_expression, _split_top_level, _strip_comments
+from pychete.smeft import define_smeft_wilson_coefficient
 from pychete.state import PycheteState
 from pychete.symbols import canonical_string
 from pychete.theory import Theory
@@ -128,7 +129,7 @@ def _predeclare_matching_condition_wilson_target(theory: Theory, lhs_text: str, 
         eft_order = as_int(_convert_expression(coupling[2], theory, {}))
         if eft_order is None:
             continue
-        theory.define_wilson_coefficient(name, indices=indices, eft_order=eft_order, basis=basis)
+        define_smeft_wilson_coefficient(theory, name, indices=indices, eft_order=eft_order, basis=basis)
 
 
 def _add_matching_conditions(state: PycheteState, theory: Theory, text: str) -> dict[str, str]:

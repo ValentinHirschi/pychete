@@ -12,6 +12,7 @@ from pychete import (
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
     OneLoopNormalization,
+    SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
     one_loop_normalization_factor,
 )
 from pychete.backends import spenso as spenso_backend
@@ -124,13 +125,24 @@ def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     chd = theory.external_handle("cHd")
     chd_indices = chd.definition.index_exprs
     chd_name = canonical_string(s.Coupling(chd.label, s.List(*chd_indices), Expression.num(0)))
+    wilsons_with_operators = {
+        name
+        for name, external in theory.externals.items()
+        if external.kind is ExternalKind.WILSON_COEFFICIENT and external.operator_expr is not None
+    }
 
+    assert wilsons_with_operators == set(SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES)
     assert theory.external_handle("cHB").definition.kind is ExternalKind.WILSON_COEFFICIENT
     assert theory.external_handle("cHB").definition.basis_name == "SMEFT"
     assert theory.external_handle("cHB").definition.index_exprs == ()
+    assert theory.external_handle("cHB").definition.operator_expr is not None
+    assert "field_B" in canonical_string(theory.external_handle("cHB").definition.operator_expr)
     assert theory.external_handle("cHd").definition.kind is ExternalKind.WILSON_COEFFICIENT
     assert theory.external_handle("cHd").definition.basis_name == "SMEFT"
     assert len(theory.external_handle("cHd").definition.index_exprs) == 2
+    assert theory.external_handle("cHd").definition.operator_expr is not None
+    assert "field_d" in canonical_string(theory.external_handle("cHd").definition.operator_expr)
+    assert theory.external_handle("ceW").definition.operator_expr is None
     assert theory.external_handle("Delta").definition.kind is ExternalKind.GENERIC
     assert "gL" not in theory.externals
     assert targets[chd_name].is_wilson_coefficient is True
@@ -138,6 +150,8 @@ def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     assert targets[chd_name].external_kind is ExternalKind.WILSON_COEFFICIENT
     assert len(targets[chd_name].indices) == 2
     assert targets[chd_name].eft_order == 0
+    assert targets[chd_name].operator is not None
+    assert targets[chd_name].projection_expression == targets[chd_name].operator
 
 
 def test_validation_fixture_restores_structured_matching_result(tmp_path: Path) -> None:

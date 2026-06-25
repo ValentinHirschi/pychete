@@ -181,3 +181,8 @@ discoveries, dependency patches, blockers, and remaining work.
   backend, matching, validation, and non-slow subsets can be run independently;
   use small focused tests while building a chunk, then targeted grouped gates,
   and reserve full pytest for larger milestones rather than every local fix.
+- Store SMEFT Wilson projection metadata through pychete-owned Symbolica
+  operator expressions. Known Warsaw-basis coefficients should be registered
+  through `pychete.smeft` helpers so matching-condition projection can use the
+  stored operator monomial; unsupported coefficients remain valid Wilson
+  targets with missing operator metadata documented explicitly.

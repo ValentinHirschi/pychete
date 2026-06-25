@@ -249,6 +249,13 @@ and editor hover tooltips such as VS Code/Pylance. When adding or promoting a
 public API, update the public API docstring tests rather than leaving the
 documentation requirement implicit.
 
+SMEFT Warsaw-basis Wilson coefficients with known pychete operator monomials
+must be registered through `src/pychete/smeft.py` helpers such as
+`define_smeft_wilson_coefficient`. Do not scatter ad hoc Wilson-to-operator
+maps in converters, fixtures, or matching code; keep the central registry as
+the source of truth and leave unsupported coefficients as Wilson targets with
+`operator=None` until their pychete-native operator builder exists.
+
 Take full advantage of Symbolica symbol tags, attributes, and symbol data.
 User-defined pychete symbols must be created through `Theory.symbol`, which
 adds role tags such as `field`, `coupling`, `index`, `index_type`, `group`, and

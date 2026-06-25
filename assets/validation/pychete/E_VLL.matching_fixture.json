@@ -1104,7 +1104,17 @@
             "external_kind": "generic",
             "indices": [],
             "label": "E_VLL::external_Delta",
-            "name": "Delta"
+            "name": "Delta",
+            "operator": null
+          },
+          "LCTensor": {
+            "basis": null,
+            "eft_order": 0,
+            "external_kind": "generic",
+            "indices": [],
+            "label": "E_VLL::external_LCTensor",
+            "name": "LCTensor",
+            "operator": null
           },
           "cG": {
             "basis": "SMEFT",
@@ -1112,7 +1122,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cG",
-            "name": "cG"
+            "name": "cG",
+            "operator": "-pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU3c,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^3"
           },
           "cGt": {
             "basis": "SMEFT",
@@ -1120,7 +1131,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cGt",
-            "name": "cGt"
+            "name": "cGt",
+            "operator": "1/2*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU3c,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^3"
           },
           "cH": {
             "basis": "SMEFT",
@@ -1128,7 +1140,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cH",
-            "name": "cH"
+            "name": "cH",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))),pychete::List()))"
           },
           "cHB": {
             "basis": "SMEFT",
@@ -1136,7 +1149,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHB",
-            "name": "cHB"
+            "name": "cHB",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())^2*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))/pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0)^2"
           },
           "cHBox": {
             "basis": "SMEFT",
@@ -1144,7 +1158,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHBox",
-            "name": "cHBox"
+            "name": "cHBox",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())))"
           },
           "cHBt": {
             "basis": "SMEFT",
@@ -1152,7 +1167,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHBt",
-            "name": "cHBt"
+            "name": "cHBt",
+            "operator": "-1/2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0)^2"
           },
           "cHD": {
             "basis": "SMEFT",
@@ -1160,7 +1176,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHD",
-            "name": "cHD"
+            "name": "cHD",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))"
           },
           "cHG": {
             "basis": "SMEFT",
@@ -1168,7 +1185,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHG",
-            "name": "cHG"
+            "name": "cHG",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())^2*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^2"
           },
           "cHGt": {
             "basis": "SMEFT",
@@ -1176,7 +1194,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHGt",
-            "name": "cHGt"
+            "name": "cHGt",
+            "operator": "-1/2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^2"
           },
           "cHW": {
             "basis": "SMEFT",
@@ -1184,7 +1203,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHW",
-            "name": "cHW"
+            "name": "cHW",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())^2*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^2"
           },
           "cHWB": {
             "basis": "SMEFT",
@@ -1192,7 +1212,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHWB",
-            "name": "cHWB"
+            "name": "cHWB",
+            "operator": "2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))/(pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)*pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0))"
           },
           "cHWt": {
             "basis": "SMEFT",
@@ -1200,7 +1221,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHWt",
-            "name": "cHWt"
+            "name": "cHWt",
+            "operator": "-1/2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^2"
           },
           "cHWtB": {
             "basis": "SMEFT",
@@ -1208,7 +1230,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cHWtB",
-            "name": "cHWtB"
+            "name": "cHWtB",
+            "operator": "-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/(pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)*pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0))"
           },
           "cHd": {
             "basis": "SMEFT",
@@ -1219,7 +1242,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHd",
-            "name": "cHd"
+            "name": "cHd",
+            "operator": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
           },
           "cHe": {
             "basis": "SMEFT",
@@ -1230,7 +1254,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHe",
-            "name": "cHe"
+            "name": "cHe",
+            "operator": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
           },
           "cHl1": {
             "basis": "SMEFT",
@@ -1241,7 +1266,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHl1",
-            "name": "cHl1"
+            "name": "cHl1",
+            "operator": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
           },
           "cHl3": {
             "basis": "SMEFT",
@@ -1252,7 +1278,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHl3",
-            "name": "cHl3"
+            "name": "cHl3",
+            "operator": "2*(-2\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_m,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_m,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))"
           },
           "cHq1": {
             "basis": "SMEFT",
@@ -1263,7 +1290,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHq1",
-            "name": "cHq1"
+            "name": "cHq1",
+            "operator": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
           },
           "cHq3": {
             "basis": "SMEFT",
@@ -1274,7 +1302,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHq3",
-            "name": "cHq3"
+            "name": "cHq3",
+            "operator": "2*(-2\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_m,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_m,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))"
           },
           "cHu": {
             "basis": "SMEFT",
@@ -1285,7 +1314,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHu",
-            "name": "cHu"
+            "name": "cHu",
+            "operator": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
           },
           "cHud": {
             "basis": "SMEFT",
@@ -1296,7 +1326,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cHud",
-            "name": "cHud"
+            "name": "cHud",
+            "operator": null
           },
           "cW": {
             "basis": "SMEFT",
@@ -1304,7 +1335,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cW",
-            "name": "cW"
+            "name": "cW",
+            "operator": "-pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU2L,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^3"
           },
           "cWt": {
             "basis": "SMEFT",
@@ -1312,7 +1344,8 @@
             "external_kind": "wilson_coefficient",
             "indices": [],
             "label": "E_VLL::external_cWt",
-            "name": "cWt"
+            "name": "cWt",
+            "operator": "1/2*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU2L,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^3"
           },
           "cdB": {
             "basis": "SMEFT",
@@ -1323,7 +1356,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cdB",
-            "name": "cdB"
+            "name": "cdB",
+            "operator": null
           },
           "cdG": {
             "basis": "SMEFT",
@@ -1334,7 +1368,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cdG",
-            "name": "cdG"
+            "name": "cdG",
+            "operator": null
           },
           "cdH": {
             "basis": "SMEFT",
@@ -1345,7 +1380,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cdH",
-            "name": "cdH"
+            "name": "cdH",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
           },
           "cdW": {
             "basis": "SMEFT",
@@ -1356,7 +1392,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cdW",
-            "name": "cdW"
+            "name": "cdW",
+            "operator": null
           },
           "cdd": {
             "basis": "SMEFT",
@@ -1369,7 +1406,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cdd",
-            "name": "cdd"
+            "name": "cdd",
+            "operator": null
           },
           "cduq": {
             "basis": "SMEFT",
@@ -1382,7 +1420,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cduq",
-            "name": "cduq"
+            "name": "cduq",
+            "operator": null
           },
           "cduu": {
             "basis": "SMEFT",
@@ -1395,7 +1434,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cduu",
-            "name": "cduu"
+            "name": "cduu",
+            "operator": null
           },
           "ceB": {
             "basis": "SMEFT",
@@ -1406,7 +1446,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_ceB",
-            "name": "ceB"
+            "name": "ceB",
+            "operator": null
           },
           "ceH": {
             "basis": "SMEFT",
@@ -1417,7 +1458,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_ceH",
-            "name": "ceH"
+            "name": "ceH",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
           },
           "ceW": {
             "basis": "SMEFT",
@@ -1428,7 +1470,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_ceW",
-            "name": "ceW"
+            "name": "ceW",
+            "operator": null
           },
           "ced": {
             "basis": "SMEFT",
@@ -1441,7 +1484,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_ced",
-            "name": "ced"
+            "name": "ced",
+            "operator": null
           },
           "cee": {
             "basis": "SMEFT",
@@ -1454,7 +1498,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cee",
-            "name": "cee"
+            "name": "cee",
+            "operator": null
           },
           "ceu": {
             "basis": "SMEFT",
@@ -1467,7 +1512,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_ceu",
-            "name": "ceu"
+            "name": "ceu",
+            "operator": null
           },
           "cld": {
             "basis": "SMEFT",
@@ -1480,7 +1526,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cld",
-            "name": "cld"
+            "name": "cld",
+            "operator": null
           },
           "cle": {
             "basis": "SMEFT",
@@ -1493,7 +1540,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cle",
-            "name": "cle"
+            "name": "cle",
+            "operator": null
           },
           "cledq": {
             "basis": "SMEFT",
@@ -1506,7 +1554,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cledq",
-            "name": "cledq"
+            "name": "cledq",
+            "operator": null
           },
           "clequ1": {
             "basis": "SMEFT",
@@ -1519,7 +1568,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_clequ1",
-            "name": "clequ1"
+            "name": "clequ1",
+            "operator": null
           },
           "clequ3": {
             "basis": "SMEFT",
@@ -1532,7 +1582,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_clequ3",
-            "name": "clequ3"
+            "name": "clequ3",
+            "operator": null
           },
           "cll": {
             "basis": "SMEFT",
@@ -1545,7 +1596,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cll",
-            "name": "cll"
+            "name": "cll",
+            "operator": null
           },
           "cllHH": {
             "basis": "SMEFT",
@@ -1556,7 +1608,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cllHH",
-            "name": "cllHH"
+            "name": "cllHH",
+            "operator": null
           },
           "clq1": {
             "basis": "SMEFT",
@@ -1569,7 +1622,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_clq1",
-            "name": "clq1"
+            "name": "clq1",
+            "operator": null
           },
           "clq3": {
             "basis": "SMEFT",
@@ -1582,7 +1636,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_clq3",
-            "name": "clq3"
+            "name": "clq3",
+            "operator": null
           },
           "clu": {
             "basis": "SMEFT",
@@ -1595,7 +1650,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_clu",
-            "name": "clu"
+            "name": "clu",
+            "operator": null
           },
           "cqd1": {
             "basis": "SMEFT",
@@ -1608,7 +1664,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqd1",
-            "name": "cqd1"
+            "name": "cqd1",
+            "operator": null
           },
           "cqd8": {
             "basis": "SMEFT",
@@ -1621,7 +1678,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqd8",
-            "name": "cqd8"
+            "name": "cqd8",
+            "operator": null
           },
           "cqe": {
             "basis": "SMEFT",
@@ -1634,7 +1692,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqe",
-            "name": "cqe"
+            "name": "cqe",
+            "operator": null
           },
           "cqq1": {
             "basis": "SMEFT",
@@ -1647,7 +1706,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqq1",
-            "name": "cqq1"
+            "name": "cqq1",
+            "operator": null
           },
           "cqq3": {
             "basis": "SMEFT",
@@ -1660,7 +1720,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqq3",
-            "name": "cqq3"
+            "name": "cqq3",
+            "operator": null
           },
           "cqqq": {
             "basis": "SMEFT",
@@ -1673,7 +1734,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqqq",
-            "name": "cqqq"
+            "name": "cqqq",
+            "operator": null
           },
           "cqqu": {
             "basis": "SMEFT",
@@ -1686,7 +1748,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqqu",
-            "name": "cqqu"
+            "name": "cqqu",
+            "operator": null
           },
           "cqu1": {
             "basis": "SMEFT",
@@ -1699,7 +1762,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqu1",
-            "name": "cqu1"
+            "name": "cqu1",
+            "operator": null
           },
           "cqu8": {
             "basis": "SMEFT",
@@ -1712,7 +1776,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cqu8",
-            "name": "cqu8"
+            "name": "cqu8",
+            "operator": null
           },
           "cquqd1": {
             "basis": "SMEFT",
@@ -1725,7 +1790,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cquqd1",
-            "name": "cquqd1"
+            "name": "cquqd1",
+            "operator": null
           },
           "cquqd8": {
             "basis": "SMEFT",
@@ -1738,7 +1804,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cquqd8",
-            "name": "cquqd8"
+            "name": "cquqd8",
+            "operator": null
           },
           "cuB": {
             "basis": "SMEFT",
@@ -1749,7 +1816,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cuB",
-            "name": "cuB"
+            "name": "cuB",
+            "operator": null
           },
           "cuG": {
             "basis": "SMEFT",
@@ -1760,7 +1828,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cuG",
-            "name": "cuG"
+            "name": "cuG",
+            "operator": null
           },
           "cuH": {
             "basis": "SMEFT",
@@ -1771,7 +1840,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cuH",
-            "name": "cuH"
+            "name": "cuH",
+            "operator": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(E_VLL::cg_tensor_eps_SU2L,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))))"
           },
           "cuW": {
             "basis": "SMEFT",
@@ -1782,7 +1852,8 @@
               "pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cuW",
-            "name": "cuW"
+            "name": "cuW",
+            "operator": null
           },
           "cud1": {
             "basis": "SMEFT",
@@ -1795,7 +1866,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cud1",
-            "name": "cud1"
+            "name": "cud1",
+            "operator": null
           },
           "cud8": {
             "basis": "SMEFT",
@@ -1808,7 +1880,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cud8",
-            "name": "cud8"
+            "name": "cud8",
+            "operator": null
           },
           "cuu": {
             "basis": "SMEFT",
@@ -1821,7 +1894,8 @@
               "pychete::Index(E_VLL::index_i4,E_VLL::index_type_Flavor)"
             ],
             "label": "E_VLL::external_cuu",
-            "name": "cuu"
+            "name": "cuu",
+            "operator": null
           },
           "eps": {
             "basis": null,
@@ -1829,7 +1903,8 @@
             "external_kind": "generic",
             "indices": [],
             "label": "E_VLL::external_eps",
-            "name": "eps"
+            "name": "eps",
+            "operator": null
           },
           "epsilon": {
             "basis": null,
@@ -1837,7 +1912,8 @@
             "external_kind": "generic",
             "indices": [],
             "label": "E_VLL::external_epsilon",
-            "name": "epsilon"
+            "name": "epsilon",
+            "operator": null
           },
           "hbar": {
             "basis": null,
@@ -1845,7 +1921,8 @@
             "external_kind": "generic",
             "indices": [],
             "label": "E_VLL::external_hbar",
-            "name": "hbar"
+            "name": "hbar",
+            "operator": null
           },
           "mubar2": {
             "basis": null,
@@ -1853,7 +1930,8 @@
             "external_kind": "generic",
             "indices": [],
             "label": "E_VLL::external_mubar2",
-            "name": "mubar2"
+            "name": "mubar2",
+            "operator": null
           }
         },
         "fields": {
@@ -2708,6 +2786,216 @@
           },
           {
             "data": {
+              "label": "smeft_A",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_A",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_A",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_B",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_B",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_B",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_C",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_C",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_C",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_J",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_J",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_J",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_alpha",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_alpha",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_alpha",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_eta",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_eta",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_eta",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_i",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_i",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_i",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_j",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_j",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_j",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_k",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_k",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_k",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_kappa",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_kappa",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_kappa",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_m",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_m",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_m",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_mu",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_mu",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_mu",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_nu",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_nu",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_nu",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_rho",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_rho",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_rho",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
+              "label": "smeft_sigma",
+              "role": "index",
+              "theory": "E_VLL"
+            },
+            "name": "smeft_sigma",
+            "role": "index",
+            "symbol": "E_VLL::index_smeft_sigma",
+            "tags": [
+              "python::pychete",
+              "python::index"
+            ]
+          },
+          {
+            "data": {
               "label": "u33177",
               "role": "index",
               "theory": "E_VLL"
@@ -3386,12 +3674,35 @@
           },
           {
             "data": {
+              "basis": "",
+              "eft_order": 0,
+              "external_kind": "generic",
+              "indices": [],
+              "label": "LCTensor",
+              "name": "LCTensor",
+              "role": "external",
+              "theory": "E_VLL"
+            },
+            "name": "LCTensor",
+            "role": "external",
+            "symbol": "E_VLL::external_LCTensor",
+            "tags": [
+              "python::pychete",
+              "python::external",
+              "python::external_kind_generic"
+            ]
+          },
+          {
+            "data": {
               "basis": "SMEFT",
               "eft_order": 0,
               "external_kind": "wilson_coefficient",
               "indices": [],
               "label": "cG",
               "name": "cG",
+              "operator": {
+                "__pychete_expression__": "-pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU3c,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^3"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3413,6 +3724,9 @@
               "indices": [],
               "label": "cGt",
               "name": "cGt",
+              "operator": {
+                "__pychete_expression__": "1/2*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU3c,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU3c(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU3c(pychete::adj))))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^3"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3434,6 +3748,9 @@
               "indices": [],
               "label": "cH",
               "name": "cH",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3455,6 +3772,9 @@
               "indices": [],
               "label": "cHB",
               "name": "cHB",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())^2*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))/pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0)^2"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3476,6 +3796,9 @@
               "indices": [],
               "label": "cHBox",
               "name": "cHBox",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3497,6 +3820,9 @@
               "indices": [],
               "label": "cHBt",
               "name": "cHBt",
+              "operator": {
+                "__pychete_expression__": "-1/2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0)^2"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3518,6 +3844,9 @@
               "indices": [],
               "label": "cHD",
               "name": "cHD",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3539,6 +3868,9 @@
               "indices": [],
               "label": "cHG",
               "name": "cHG",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())^2*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^2"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3560,6 +3892,9 @@
               "indices": [],
               "label": "cHGt",
               "name": "cHGt",
+              "operator": {
+                "__pychete_expression__": "-1/2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_G,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU3c(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gs,pychete::List(),0)^2"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3581,6 +3916,9 @@
               "indices": [],
               "label": "cHW",
               "name": "cHW",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())^2*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^2"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3602,6 +3940,9 @@
               "indices": [],
               "label": "cHWB",
               "name": "cHWB",
+              "operator": {
+                "__pychete_expression__": "2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))/(pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)*pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3623,6 +3964,9 @@
               "indices": [],
               "label": "cHWt",
               "name": "cHWt",
+              "operator": {
+                "__pychete_expression__": "-1/2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^2"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3644,6 +3988,9 @@
               "indices": [],
               "label": "cHWtB",
               "name": "cHWtB",
+              "operator": {
+                "__pychete_expression__": "-pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::FieldStrength(E_VLL::field_B,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/(pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)*pychete::Coupling(E_VLL::coupling_gY,pychete::List(),0))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3672,6 +4019,9 @@
               ],
               "label": "cHd",
               "name": "cHd",
+              "operator": {
+                "__pychete_expression__": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3700,6 +4050,9 @@
               ],
               "label": "cHe",
               "name": "cHe",
+              "operator": {
+                "__pychete_expression__": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3728,6 +4081,9 @@
               ],
               "label": "cHl1",
               "name": "cHl1",
+              "operator": {
+                "__pychete_expression__": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3756,6 +4112,9 @@
               ],
               "label": "cHl3",
               "name": "cHl3",
+              "operator": {
+                "__pychete_expression__": "2*(-2\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_m,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_m,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3784,6 +4143,9 @@
               ],
               "label": "cHq1",
               "name": "cHq1",
+              "operator": {
+                "__pychete_expression__": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3812,6 +4174,9 @@
               ],
               "label": "cHq3",
               "name": "cHq3",
+              "operator": {
+                "__pychete_expression__": "2*(-2\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),2*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_m,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(E_VLL::cg_tensor_gen_SU2L_fund,pychete::List(pychete::Index(E_VLL::index_smeft_J,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_m,pychete::Bar(E_VLL::group_SU2L(pychete::fund)))))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3840,6 +4205,9 @@
               ],
               "label": "cHu",
               "name": "cHu",
+              "operator": {
+                "__pychete_expression__": "(-1\ud835\udc56*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))+1\ud835\udc56*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Gamma(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz)),pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3889,6 +4257,9 @@
               "indices": [],
               "label": "cW",
               "name": "cW",
+              "operator": {
+                "__pychete_expression__": "-pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU2L,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^3"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3910,6 +4281,9 @@
               "indices": [],
               "label": "cWt",
               "name": "cWt",
+              "operator": {
+                "__pychete_expression__": "1/2*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_rho,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_sigma,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::FieldStrength(E_VLL::field_W,pychete::List(pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz)),pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj))),pychete::List())*pychete::CG(E_VLL::cg_tensor_fStruct_SU2L,pychete::List(pychete::Index(E_VLL::index_smeft_A,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_B,E_VLL::group_SU2L(pychete::adj)),pychete::Index(E_VLL::index_smeft_C,E_VLL::group_SU2L(pychete::adj))))*E_VLL::external_LCTensor(pychete::Index(E_VLL::index_smeft_mu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_nu,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_eta,pychete::Lorentz),pychete::Index(E_VLL::index_smeft_kappa,pychete::Lorentz))/pychete::Coupling(E_VLL::coupling_gL,pychete::List(),0)^3"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -3994,6 +4368,9 @@
               ],
               "label": "cdH",
               "name": "cdH",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Field(E_VLL::field_d,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -4180,6 +4557,9 @@
               ],
               "label": "ceH",
               "name": "ceH",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_l,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Field(E_VLL::field_e,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
@@ -5102,6 +5482,9 @@
               ],
               "label": "cuH",
               "name": "cuH",
+              "operator": {
+                "__pychete_expression__": "pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_i,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(E_VLL::field_H,pychete::Scalar,pychete::List(pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))),pychete::List()))*pychete::NCM(pychete::Bar(pychete::Field(E_VLL::field_q,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_i1,E_VLL::index_type_Flavor)),pychete::List())),pychete::Field(E_VLL::field_u,pychete::Fermion,pychete::List(pychete::Index(E_VLL::index_smeft_alpha,E_VLL::group_SU3c(pychete::fund)),pychete::Index(E_VLL::index_i2,E_VLL::index_type_Flavor)),pychete::List()))*pychete::CG(E_VLL::cg_tensor_eps_SU2L,pychete::List(pychete::Index(E_VLL::index_smeft_j,E_VLL::group_SU2L(pychete::fund)),pychete::Index(E_VLL::index_smeft_k,E_VLL::group_SU2L(pychete::fund))))"
+              },
               "role": "external",
               "theory": "E_VLL"
             },
