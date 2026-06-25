@@ -2071,6 +2071,7 @@ class Theory:
         matching_condition_expand_source: bool = True,
         matching_condition_canonize_indices: bool = True,
         matching_condition_normalize_derivative_operators: bool = True,
+        matching_condition_normalize_ibp_scalar_bilinears: bool = False,
         matching_condition_truncate_eft: bool = False,
         matching_condition_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = False,
@@ -2102,6 +2103,10 @@ class Theory:
         explicit ``CD(...)`` wrappers into pychete field-derivative slots before
         projection, which aligns user-facing operator metadata with generated
         one-loop sources. Set
+        ``matching_condition_normalize_ibp_scalar_bilinears=True`` to allow
+        target-local integration-by-parts projection of scalar bilinears such
+        as ``A * CD([mu, mu], B)`` against sources already written as
+        ``-CD(mu, A) * CD(mu, B)``. Set
         ``matching_condition_include_coupling_identities`` to
         include tree-level identity values for target couplings registered in
         this theory when projecting from a loop-correction expression.
@@ -2128,6 +2133,9 @@ class Theory:
                 matching_condition_canonize_indices=matching_condition_canonize_indices,
                 matching_condition_normalize_derivative_operators=(
                     matching_condition_normalize_derivative_operators
+                ),
+                matching_condition_normalize_ibp_scalar_bilinears=(
+                    matching_condition_normalize_ibp_scalar_bilinears
                 ),
                 matching_condition_truncate_eft=matching_condition_truncate_eft,
                 matching_condition_drop_zero=matching_condition_drop_zero,

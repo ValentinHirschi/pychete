@@ -986,6 +986,7 @@ class ValidationFixture:
         matching_condition_projection_expand_source: bool = True,
         matching_condition_projection_canonize_indices: bool = True,
         matching_condition_projection_normalize_derivative_operators: bool = True,
+        matching_condition_projection_normalize_ibp_scalar_bilinears: bool = False,
         matching_condition_projection_truncate_eft: bool = False,
         matching_condition_projection_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = True,
@@ -1006,6 +1007,9 @@ class ValidationFixture:
         Derivative-operator normalization is enabled by default so explicit
         ``CD(...)`` operators in fixture metadata project against generated
         field-derivative-slot one-loop sources.
+        Set ``matching_condition_projection_normalize_ibp_scalar_bilinears``
+        to additionally recognize target-local total-derivative-equivalent
+        scalar bilinear projections such as ``A * CD([mu, mu], B)``.
         """
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
@@ -1078,6 +1082,9 @@ class ValidationFixture:
                 matching_condition_canonize_indices=matching_condition_projection_canonize_indices,
                 matching_condition_normalize_derivative_operators=(
                     matching_condition_projection_normalize_derivative_operators
+                ),
+                matching_condition_normalize_ibp_scalar_bilinears=(
+                    matching_condition_projection_normalize_ibp_scalar_bilinears
                 ),
                 matching_condition_truncate_eft=matching_condition_projection_truncate_eft,
                 matching_condition_drop_zero=matching_condition_projection_drop_zero,
@@ -1156,6 +1163,7 @@ class ValidationFixture:
                 expand_source=matching_condition_projection_expand_source,
                 canonize_indices=matching_condition_projection_canonize_indices,
                 normalize_derivative_operators=matching_condition_projection_normalize_derivative_operators,
+                normalize_ibp_scalar_bilinears=matching_condition_projection_normalize_ibp_scalar_bilinears,
                 eft_order=eft_order if matching_condition_projection_truncate_eft else None,
                 heavy_field_dimension=heavy_field_dimension,
                 drop_zero=matching_condition_projection_drop_zero,

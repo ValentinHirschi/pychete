@@ -11,8 +11,11 @@ from .eft import series_eft
 from .functional import expand_cd_operators
 from .expr import (
     as_int,
+    cd_pattern,
     coupling_pattern,
     index_pattern,
+    is_head,
+    is_zero,
     list_items,
     matching_subexpressions,
     sum_expr,
@@ -228,6 +231,7 @@ class MatchingResult:
         expand_source: bool = True,
         canonize_indices: bool = True,
         normalize_derivative_operators: bool = True,
+        normalize_ibp_scalar_bilinears: bool = False,
         drop_zero: bool = False,
         include_coupling_identities: bool = False,
         eft_order: int | tuple[int, ...] | None = None,
@@ -263,6 +267,13 @@ class MatchingResult:
         guarded by native Symbolica pattern matching and is primarily needed
         when SMEFT operator metadata uses explicit derivative wrappers while a
         generated one-loop source stores derivatives directly on fields.
+        ``normalize_ibp_scalar_bilinears`` additionally allows target-local
+        integration-by-parts projection aliases for bilinears of the form
+        ``A * CD([mu, mu], B)``. Exact coefficient extraction is still tried
+        first; if it vanishes, pychete extracts the coefficient of the native
+        Symbolica-normalized alias ``CD(mu, A) * CD(mu, B)`` with the
+        corresponding minus sign. This is intentionally limited to projection
+        onto known targets rather than a global IBP simplifier.
         """
 
         expr = self.expression(source)
@@ -270,14 +281,36 @@ class MatchingResult:
             expr = expr.expand()
         structured_targets = matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets))
         projection_expressions = tuple(target.projection_expression for target in structured_targets)
+        ibp_projection_aliases = tuple(
+            _ibp_scalar_bilinear_projection_aliases(target) if normalize_ibp_scalar_bilinears else ()
+            for target in projection_expressions
+        )
         if normalize_derivative_operators:
             expr = expand_cd_operators(expr)
             projection_expressions = tuple(expand_cd_operators(target) for target in projection_expressions)
+            ibp_projection_aliases = tuple(
+                tuple((expand_cd_operators(alias), weight) for alias, weight in aliases)
+                for aliases in ibp_projection_aliases
+            )
         if canonize_indices:
             expr, projection_expressions = _canonize_matching_projection_indices(expr, projection_expressions)
+            if normalize_ibp_scalar_bilinears:
+                flat_aliases = tuple(alias for aliases in ibp_projection_aliases for alias, _weight in aliases)
+                if flat_aliases:
+                    _canon_expr, canon_flat_aliases = _canonize_matching_projection_indices(expr, flat_aliases)
+                    alias_iter = iter(canon_flat_aliases)
+                    ibp_projection_aliases = tuple(
+                        tuple((next(alias_iter), weight) for _alias, weight in aliases)
+                        for aliases in ibp_projection_aliases
+                    )
         conditions: dict[str, Expression] = {}
-        for target, projection_expression in zip(structured_targets, projection_expressions, strict=True):
-            coefficient = expr.coefficient(projection_expression).expand()
+        for target, projection_expression, ibp_aliases in zip(
+            structured_targets,
+            projection_expressions,
+            ibp_projection_aliases,
+            strict=True,
+        ):
+            coefficient = _matching_projection_coefficient(expr, projection_expression, ibp_aliases)
             if eft_order is not None:
                 coefficient = _truncate_projected_coefficient(
                     coefficient,
@@ -303,6 +336,7 @@ class MatchingResult:
         expand_source: bool = True,
         canonize_indices: bool = True,
         normalize_derivative_operators: bool = True,
+        normalize_ibp_scalar_bilinears: bool = False,
         drop_zero: bool = False,
         merge: bool = True,
         include_coupling_identities: bool = False,
@@ -317,6 +351,7 @@ class MatchingResult:
             expand_source=expand_source,
             canonize_indices=canonize_indices,
             normalize_derivative_operators=normalize_derivative_operators,
+            normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
             drop_zero=drop_zero,
             include_coupling_identities=include_coupling_identities,
             eft_order=eft_order,
@@ -334,6 +369,9 @@ class MatchingResult:
                 "matching_condition_projection_expand_source": expand_source,
                 "matching_condition_projection_canonize_indices": canonize_indices,
                 "matching_condition_projection_normalize_derivative_operators": normalize_derivative_operators,
+                "matching_condition_projection_normalize_ibp_scalar_bilinears": (
+                    normalize_ibp_scalar_bilinears
+                ),
                 "matching_condition_projection_coupling_identities": include_coupling_identities,
                 "matching_condition_projection_eft_order": _metadata_eft_order(eft_order),
                 "matching_condition_projection_heavy_field_dimension": heavy_field_dimension,
@@ -628,6 +666,94 @@ def _transform_optional_expression(
     if expr is None or expression_transform is None:
         return expr
     return expression_transform(expr)
+
+
+def _matching_projection_coefficient(
+    source: Expression,
+    projection_expression: Expression,
+    ibp_aliases: Sequence[tuple[Expression, Expression]],
+) -> Expression:
+    coefficient = source.coefficient(projection_expression).expand()
+    if not ibp_aliases or not is_zero(coefficient):
+        return coefficient
+    alias_contributions = (
+        weight * _matching_projection_alias_coefficient(source, alias)
+        for alias, weight in ibp_aliases
+        if not is_zero(alias)
+    )
+    return sum_expr(alias_contributions).expand()
+
+
+def _matching_projection_alias_coefficient(source: Expression, alias: Expression) -> Expression:
+    coefficient = source.coefficient(alias).expand()
+    if not is_zero(coefficient):
+        return coefficient
+    collected = source.collect_factors()
+    coefficient = collected.coefficient(alias).expand()
+    if not is_zero(coefficient):
+        return coefficient
+    factored_alias = alias.factor()
+    coefficient = collected.coefficient(factored_alias).expand()
+    if not is_zero(coefficient):
+        return coefficient
+    factored = source.factor()
+    coefficient = factored.coefficient(alias).expand()
+    if not is_zero(coefficient):
+        return coefficient
+    return factored.coefficient(factored_alias).expand()
+
+
+def _ibp_scalar_bilinear_projection_aliases(target: Expression) -> tuple[tuple[Expression, Expression], ...]:
+    """Return projection-only aliases for ``A * D^2(B)`` up to total derivatives."""
+
+    aliases: list[tuple[Expression, Expression]] = []
+    seen: set[str] = set()
+    for cd_expr in matching_subexpressions(target, cd_pattern()):
+        parts = _cd_box_parts(cd_expr)
+        if parts is None:
+            continue
+        index, body = parts
+        spectator = target.coefficient(cd_expr).expand()
+        if is_zero(spectator):
+            continue
+        alias = s.CD(index, spectator) * s.CD(index, body)
+        key = canonical_string(alias)
+        if key in seen:
+            continue
+        seen.add(key)
+        aliases.append((alias, Expression.num(-1)))
+    return tuple(aliases)
+
+
+def _cd_box_parts(expr: Expression) -> tuple[Expression, Expression] | None:
+    match = _single_cd_match(expr)
+    if match is None:
+        return None
+    indices = _cd_match_indices(match)
+    body = match[s.CDBodyWildcard]
+    if len(indices) == 2 and bool(indices[0] == indices[1]):
+        return indices[0], body
+    if len(indices) != 1:
+        return None
+    nested_match = _single_cd_match(body)
+    if nested_match is None:
+        return None
+    nested_indices = _cd_match_indices(nested_match)
+    if len(nested_indices) == 1 and bool(indices[0] == nested_indices[0]):
+        return indices[0], nested_match[s.CDBodyWildcard]
+    return None
+
+
+def _single_cd_match(expr: Expression) -> dict[Expression, Expression] | None:
+    matches = tuple(expr.match(cd_pattern(), partial=False))
+    if len(matches) != 1:
+        return None
+    return matches[0]
+
+
+def _cd_match_indices(match: Mapping[Expression, Expression]) -> tuple[Expression, ...]:
+    index_expr = match[s.CDIndexWildcard]
+    return list_items(index_expr) if is_head(index_expr, s.List) else (index_expr,)
 
 
 def _on_shell_replacement_rules(replacements: OnShellReplacementInput) -> tuple[Replacement, ...]:

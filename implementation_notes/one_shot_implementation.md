@@ -912,6 +912,35 @@
   deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed;
   and `git diff --check` passed.
 
+## Current Target-Local IBP Projection Slice
+
+- Added opt-in scalar-bilinear integration-by-parts projection aliases through
+  `MatchingResult.project_matching_conditions(..., normalize_ibp_scalar_bilinears=True)`.
+  The initial supported shape is deliberately target-local:
+  `A * CD(List(mu, mu), B)` and nested `A * CD(mu, CD(mu, B))` targets may
+  project against sources that are already written in the total-derivative
+  equivalent form `-CD(mu, A) * CD(mu, B)`.
+- Exact Symbolica coefficient extraction is still attempted first. The IBP
+  alias path only runs when the exact target coefficient vanishes, and it uses
+  native Symbolica `coefficient(...)`, `collect_factors()`, and `factor()` to
+  recover composite additive aliases after derivative-slot expansion.
+- Threaded the new option through `match_one_loop(...)`, public
+  `Theory.match(...)`, and validation fixture gap reports as
+  `matching_condition_normalize_ibp_scalar_bilinears` /
+  `matching_condition_projection_normalize_ibp_scalar_bilinears`. Result
+  metadata records the projection setting for notebook/debug output.
+- Added focused tests for both list-form and nested-CD scalar bilinear targets,
+  plus public validation-fixture forwarding coverage. This is not yet a full
+  Warsaw-basis IBP/EOM reduction engine; it is the first projection-time
+  building block for `cHBox`-like derivative Higgs operators.
+- Validation for this slice so far:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_can_use_ibp_scalar_bilinear_aliases
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api
+  -q` passed with 2 tests; `PYTHONPATH=src dependencies/.venv/bin/python -m
+  pytest tests/integration/validation/test_numeric_probes.py -k "projection or
+  matching_result" -q` passed with 15 tests and 15 deselected.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -945,9 +974,10 @@
   fixture probes so gauge Wilson structures such as `cHB`, `cHW`, `cHWB`, and
   related fermionic Higgs-current coefficients can be validated against the
   Matchete fixtures.
-- Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
-  operators so generated derivative distributions can project onto Warsaw
-  basis targets such as `cH`, `cHBox`, and `cHD`.
+- Extend the initial target-local IBP scalar-bilinear projection into a broader
+  on-shell/IBP basis-reduction strategy for derivative-slot Higgs operators so
+  generated derivative distributions can project onto Warsaw basis targets
+  such as `cH`, `cHBox`, and `cHD`.
 - Optimize the opt-in heavy-scalar solution substitution/projection path so it
   can be safely enabled for larger order-3 SMEFT target sets without causing
   avoidable expression growth. Candidate directions: apply heavy-field

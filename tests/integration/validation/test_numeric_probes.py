@@ -448,6 +448,36 @@ def test_matching_result_projection_normalizes_additive_cd_targets() -> None:
     assert_expr_equal(projected["box"], coefficient)
 
 
+def test_matching_result_projection_can_use_ibp_scalar_bilinear_aliases() -> None:
+    coefficient = S("condition_projection_ibp_box_coefficient")
+    theory = Theory("condition_projection_ibp_box")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    mu = theory.dummy_index(0)
+    bilinear = phi() * s.Bar(phi())
+    derivative_bilinear = phi(derivatives=[mu]) * s.Bar(phi()) + phi() * s.Bar(phi(derivatives=[mu]))
+    source_operator = -(derivative_bilinear * derivative_bilinear).expand()
+    listed_target = bilinear * s.CD(s.List(mu, mu), bilinear)
+    nested_target = bilinear * s.CD(mu, s.CD(mu, bilinear))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    raw = result.project_matching_conditions({"listed": listed_target, "nested": nested_target})
+    normalized = result.with_projected_matching_conditions(
+        {"listed": listed_target, "nested": nested_target},
+        normalize_ibp_scalar_bilinears=True,
+    )
+
+    assert_expr_equal(raw["listed"], Expression.num(0))
+    assert_expr_equal(raw["nested"], Expression.num(0))
+    assert_expr_equal(normalized.matching_conditions["listed"], coefficient)
+    assert_expr_equal(normalized.matching_conditions["nested"], coefficient)
+    assert normalized.metadata["matching_condition_projection_normalize_ibp_scalar_bilinears"] is True
+
+
 def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() -> None:
     theory = Theory("result_on_shell_reduction")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

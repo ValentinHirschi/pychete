@@ -880,6 +880,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         matching_condition_projection_expand_source=False,
         matching_condition_projection_canonize_indices=False,
         matching_condition_projection_normalize_derivative_operators=False,
+        matching_condition_projection_normalize_ibp_scalar_bilinears=True,
         matching_condition_projection_truncate_eft=True,
     )
 
@@ -899,6 +900,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert captured["matching_condition_expand_source"] is False
     assert captured["matching_condition_canonize_indices"] is False
     assert captured["matching_condition_normalize_derivative_operators"] is False
+    assert captured["matching_condition_normalize_ibp_scalar_bilinears"] is True
     assert captured["matching_condition_truncate_eft"] is True
 
 
