@@ -301,6 +301,15 @@ def _print_differential_operator(expr: Expression, mode: PrintMode, kwargs: dict
     return _call("Dop", args, mode)
 
 
+def _print_open_cd(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex and len(args) == 1:
+        return rf"\mathsf{{D}}^{{open}}\left({args[0]}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"OpenCD[{_join(args, mode)}]"
+    return _call("OpenCD", args, mode)
+
+
 def _print_loop_function(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
     masses = _format_child(expr[0], mode, kwargs) if len(expr) > 0 else "{}"
     powers = _format_child(expr[1], mode, kwargs) if len(expr) > 1 else "{}"
@@ -350,6 +359,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "PropagatorDenominator": lambda: _print_propagator_denominator(expr, mode, kwargs),
         "SupertraceKernel": lambda: _print_supertrace_kernel(expr, mode, kwargs),
         "DifferentialOperator": lambda: _print_differential_operator(expr, mode, kwargs),
+        "OpenCD": lambda: _print_open_cd(expr, mode, kwargs),
         "LoopFunction": lambda: _print_loop_function(expr, mode, kwargs),
         "Vector": lambda: _call("Vector", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "SU": lambda: _call("SU", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -563,6 +573,7 @@ class SymbolStore:
         "PropagatorDenominator",
         "SupertraceKernel",
         "DifferentialOperator",
+        "OpenCD",
         "LoopFunction",
         "CovariantDerivativeProtectedBar",
         "CovariantDerivativeProtectedCommutator",
@@ -606,6 +617,7 @@ class SymbolStore:
         "FieldStrengthIndicesWildcard",
         "FieldStrengthDerivativesWildcard",
         "LoopMomentumIndexWildcard",
+        "OpenCDIndicesWildcard",
         "LoopFunctionMassesWildcard",
         "LoopFunctionPowersWildcard",
         "EFTExpansionParameter",
@@ -745,6 +757,10 @@ class SymbolStore:
     @cached_property
     def DifferentialOperator(self) -> Expression:
         return self.head("DifferentialOperator")
+
+    @cached_property
+    def OpenCD(self) -> Expression:
+        return self.head("OpenCD")
 
     @cached_property
     def LoopFunction(self) -> Expression:
@@ -917,6 +933,10 @@ class SymbolStore:
     @cached_property
     def LoopMomentumIndexWildcard(self) -> Expression:
         return self.head("loop_momentum_index_")
+
+    @cached_property
+    def OpenCDIndicesWildcard(self) -> Expression:
+        return self.head("open_cd_indices_")
 
     @cached_property
     def LoopFunctionMassesWildcard(self) -> Expression:

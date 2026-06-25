@@ -89,6 +89,7 @@ def test_supertrace_denominator_heads_print_cleanly_in_all_symbolica_modes() -> 
     denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(2))
     kernel = s.SupertraceKernel(Expression.num(3), s.List(s.List(denominator)))
     momentum = s.LoopMomentum(s.dummy_index(0))
+    open_cd = s.OpenCD(s.List(s.dummy_index(0)))
 
     assert _format_lagrangian(momentum, PrintMode.Symbolica) == "q[d0]"
     assert _format_lagrangian(momentum, PrintMode.Latex) == "q_{d0}"
@@ -101,6 +102,11 @@ def test_supertrace_denominator_heads_print_cleanly_in_all_symbolica_modes() -> 
     assert _format_lagrangian(denominator, PrintMode.Sympy) == "prop_den(q2, 2)"
     assert _format_lagrangian(denominator, PrintMode.Typst) == "prop_den(q^2, 2)"
     assert _format_lagrangian(kernel, PrintMode.Symbolica) == "supertrace_kernel(3, {{prop_den(q2, 2)}})"
+    assert _format_lagrangian(open_cd, PrintMode.Symbolica) == "OpenCD({d0})"
+    assert _format_lagrangian(open_cd, PrintMode.Latex) == r"\mathsf{D}^{open}\left({d0}\right)"
+    assert _format_lagrangian(open_cd, PrintMode.Mathematica) == "OpenCD[{d0}]"
+    assert _format_lagrangian(open_cd, PrintMode.Sympy) == "OpenCD({d0})"
+    assert _format_lagrangian(open_cd, PrintMode.Typst) == "OpenCD({d0})"
 
 
 def test_loop_hbar_symbol_prints_cleanly_in_all_symbolica_modes() -> None:

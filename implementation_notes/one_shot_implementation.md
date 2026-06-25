@@ -667,6 +667,39 @@
   emitted/lowered commutator derivative semantics, not yet a projected
   SMEFT-coverage improvement.
 
+## Current Open-CD CDE Building-Block Slice
+
+- Confirmed by diagnostic that the Singlet Scalar Extension input Lagrangian
+  contains explicit `B`, `W`, and `G` `FieldStrength(...)` kinetic terms, but
+  the generated one-loop source currently contains no field-strength atoms.
+  This means the gauge Wilson gaps such as `cHB`, `cHW`, and `cHWB` are
+  operator-generation gaps, not projection/canonicalization-only gaps.
+- Re-read Matchete's `SuperTrace.m` and `CovariantDerivative.m` CDE logic.
+  The key missing pychete stage is Matchete's open-covariant-derivative
+  expansion: propagator expansions emit `OpenCD[...]` operators in
+  non-commutative chains; `ActWithOpenCDs` lets the rightmost open derivative
+  act on all factors to its right; later `GAction`/commutator logic creates
+  field-strength insertions. pychete's current
+  `DifferentialOperator -> LoopMomentum` lowering skips this stage.
+- Added central `s.OpenCD(...)` support and a new internal `pychete.cde`
+  helper module with `open_covariant_derivative(...)` and
+  `act_with_open_covariant_derivatives(...)`. The action pass uses bounded
+  arity Symbolica replacement patterns over `NCM(...)` chains, matching the
+  strategy already used for non-commutative variation linearization. Python
+  only orchestrates one matched chain callback; `apply_cd(...)` still delegates
+  symbolic derivative semantics to Symbolica replacement/series/coefficient
+  machinery.
+- This slice is deliberately not wired into the default one-loop pipeline yet.
+  It establishes a tested representation and action primitive for the next CDE
+  propagator-expansion slice, where open derivatives must be generated before
+  loop-momentum/tensor-reduction lowering.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_cde.py tests/unit/definitions/test_pretty_printing.py
+  -k "open_covariant or supertrace_denominator" -q` passed with 6 tests and 9
+  deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional -q` passed with 22 tests.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
