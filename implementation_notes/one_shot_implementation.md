@@ -238,6 +238,37 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py tests/integration/matching/test_heavy_scalar_tree.py tests/integration/validation/test_validation_fixtures.py -k "project or heavy_scalar or forwards_pychete_color" -q`
   passed with 27 tests and 51 deselected.
 
+## Current Native CG Round-Trip Slice
+
+- Extended the spenso native-HEP lowering path so compatible built-in
+  `builtin:del` CG tensors lower to native `TensorName.g()` metrics alongside
+  the existing `gen` and `fStruct` lowering. This lets idenso contract pychete
+  generator-delta expressions natively instead of leaving registered deltas as
+  blockers next to native `spenso::chain(...)` generator output.
+- Extended the idenso pychete-colour bridge to decode simple native colour
+  tensors back to registered pychete CG atoms after native simplification:
+  native metrics decode to `del`, native one-generator chains and direct
+  generator tensors decode to `gen`, and native structure constants decode to
+  `fStruct` with antisymmetric canonical ordering. Decoding only occurs when
+  the originating pychete SU(N) group is unambiguous.
+- Added focused backend tests for uncontracted generator round-tripping,
+  generator-delta contraction, uncontracted structure-constant round-tripping,
+  and native delta lowering.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py tests/unit/backends/test_spenso_backend.py -q`
+  passed with 44 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "idenso or pychete_color or non_abelian or native_hep" -q`
+  passed with 5 tests and 50 deselected; and
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "pychete_color or forwards_pychete_color" -q`
+  passed with 2 tests and 32 deselected. `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` and `git diff --check` also passed.
+- A targeted Singlet Scalar Extension public-match probe with `max_trace_order=1`,
+  internal minimal subtraction, pychete colour simplification,
+  `matching_condition_projection_expand_source=False`, and
+  `matching_condition_projection_truncate_eft=True` remains at the prior
+  frontier: 42/72 accepted matching conditions, 30 different; 39/64 accepted
+  Wilson conditions, 25 different.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

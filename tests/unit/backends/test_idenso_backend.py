@@ -81,6 +81,57 @@ def test_idenso_bridge_simplifies_pychete_su2_generator_trace() -> None:
     assert "spenso::" not in canonical_string(simplified)
 
 
+def test_idenso_bridge_decodes_uncontracted_pychete_su2_generator() -> None:
+    theory = Theory("idenso_color_su2_uncontracted_generator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", s.Bar(fund))
+    expr = generator(adj_a, i, j)
+
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+
+    assert _same(simplified, expr)
+    assert "spenso::" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_contracts_pychete_generator_with_delta() -> None:
+    theory = Theory("idenso_color_su2_generator_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    delta_fund = theory.cg_tensor_handle("del_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    k = theory.index("k", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+
+    expr = generator(adj_a, i, j_dual) * delta_fund(j, k)
+    expected = generator(adj_a, i, k)
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+
+    assert _same(simplified, expected)
+    assert "spenso::" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_decodes_uncontracted_pychete_structure_constant() -> None:
+    theory = Theory("idenso_color_su3_uncontracted_f")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    adj = theory.define_representation("SU3c", "adj")
+    fstruct = theory.cg_tensor_handle("fStruct_SU3c")
+    expr = fstruct(theory.index("A", adj), theory.index("B", adj), theory.index("C", adj))
+
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+
+    assert _same(simplified, expr)
+    assert "spenso::" not in canonical_string(simplified)
+
+
 def test_idenso_bridge_preserves_non_native_pychete_cg_tensors() -> None:
     theory = Theory("idenso_color_preserve_delta")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")

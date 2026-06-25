@@ -201,7 +201,7 @@ def test_spenso_backend_can_lower_only_native_hep_cg_atoms() -> None:
 
     assert "spenso::t(spenso::coad(3,python::A),spenso::cof(2,python::i),spenso::dind(spenso::cof(2,python::j)))" in lowered_text
     assert "spenso_python::pychete_spenso_bridge_native_hep_only_cg_del_SU2L_fund" not in lowered_text
-    assert "pychete::CG(spenso_bridge_native_hep_only::cg_tensor_del_SU2L_fund" in lowered_text
+    assert "spenso::g(spenso::dind(spenso::cof(2,python::j)),spenso::cof(2,python::i))" in lowered_text
 
 
 def test_spenso_backend_lowers_generated_non_abelian_derivative_cg_tensors() -> None:

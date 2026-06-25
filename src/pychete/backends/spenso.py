@@ -179,6 +179,12 @@ def native_hep_cg_tensor_structure_to_spenso(
     if definition.source_text == "builtin:fStruct" and len(representations) == 3:
         if all(theory.representation_definition(representation).name == "adj" for representation in definition.representation_exprs):
             return spenso.TensorName.f()(*representations)
+    if definition.source_text == "builtin:del" and len(representations) == 2:
+        left_definition, right_definition = (
+            theory.representation_definition(representation) for representation in definition.representation_exprs
+        )
+        if left_definition.group == right_definition.group and left_definition.name == right_definition.name:
+            return spenso.TensorName.g()(*representations)
     return None
 
 

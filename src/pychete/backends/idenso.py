@@ -110,6 +110,7 @@ def simplify_pychete_color_algebra(
         simplified = _substitute_native_color_constants(theory, simplified, groups)
     if decode_metrics:
         simplified = _decode_native_color_metrics(theory, simplified, groups)
+    simplified = _decode_native_color_tensors(theory, simplified, groups)
     return simplified.expand()
 
 
@@ -690,7 +691,11 @@ def _decode_native_color_metric(
         delta_name = f"del_{group}_adj"
         if delta_name not in theory.cg_tensors:
             return None
-        return theory.cg_tensor_handle(delta_name)(theory.index(left_slot.label, adj), theory.index(right_slot.label, adj))
+        left_index = theory.index(left_slot.label, adj)
+        right_index = theory.index(right_slot.label, adj)
+        if canonical_string(right_index) < canonical_string(left_index):
+            left_index, right_index = right_index, left_index
+        return theory.cg_tensor_handle(delta_name)(left_index, right_index)
     if left_slot.kind == "fund" and right_slot.kind == "fund" and left_slot.dual != right_slot.dual:
         fund = group_symbol(s.fund)
         delta_name = f"del_{group}_fund"
@@ -706,6 +711,163 @@ def _decode_native_color_metric(
             theory.index(right_slot.label, s.Bar(fund)),
         )
     return None
+
+
+def _decode_native_color_tensors(theory: Any, expr: Expression, groups: tuple[str, ...]) -> Expression:
+    adjoint = s.head("native_color_tensor_adjoint_")
+    left = s.head("native_color_tensor_left_")
+    right = s.head("native_color_tensor_right_")
+    first = s.head("native_color_tensor_first_")
+    second = s.head("native_color_tensor_second_")
+    third = s.head("native_color_tensor_third_")
+    generator = _native_color_symbol("t")
+    chain = _native_color_symbol("chain")
+    structure_constant = _native_color_symbol("f")
+    in_slot = _native_color_symbol("in")
+    out_slot = _native_color_symbol("out")
+
+    def decode_generator(match: dict[Expression, Expression]) -> Expression:
+        original = generator(adjoint, left, right).replace_wildcards(match)
+        decoded = _decode_native_color_generator(theory, match[adjoint], match[left], match[right], groups)
+        return original if decoded is None else decoded
+
+    def decode_generator_chain(match: dict[Expression, Expression]) -> Expression:
+        original = chain(left, right, generator(adjoint, in_slot, out_slot)).replace_wildcards(match)
+        decoded = _decode_native_color_generator(theory, match[adjoint], match[left], match[right], groups)
+        return original if decoded is None else decoded
+
+    def decode_structure_constant(match: dict[Expression, Expression]) -> Expression:
+        original = structure_constant(first, second, third).replace_wildcards(match)
+        decoded = _decode_native_color_structure_constant(
+            theory,
+            match[first],
+            match[second],
+            match[third],
+            groups,
+        )
+        return original if decoded is None else decoded
+
+    return expr.replace_multiple(
+        [
+            Replacement(generator(adjoint, left, right), decode_generator, rhs_cache_size=0),
+            Replacement(
+                chain(left, right, generator(adjoint, in_slot, out_slot)),
+                decode_generator_chain,
+                rhs_cache_size=0,
+            ),
+            Replacement(structure_constant(first, second, third), decode_structure_constant, rhs_cache_size=0),
+        ],
+        repeat=True,
+    ).expand()
+
+
+def _decode_native_color_generator(
+    theory: Any,
+    adjoint: Expression,
+    left: Expression,
+    right: Expression,
+    groups: tuple[str, ...],
+) -> Expression | None:
+    adjoint_slot = _decode_native_color_slot(adjoint)
+    left_slot = _decode_native_color_slot(left)
+    right_slot = _decode_native_color_slot(right)
+    if adjoint_slot is None or left_slot is None or right_slot is None:
+        return None
+    if adjoint_slot.kind != "adj" or left_slot.kind != "fund" or right_slot.kind != "fund":
+        return None
+    if left_slot.dual == right_slot.dual or left_slot.dimension != right_slot.dimension:
+        return None
+    group = _native_color_generator_group(theory, adjoint_slot, left_slot, right_slot, groups)
+    if group is None:
+        return None
+    generator_name = f"gen_{group}_fund"
+    if generator_name not in theory.cg_tensors:
+        return None
+    group_symbol = theory.symbol(group, role=SymbolRole.GROUP)
+    adjoint_representation = group_symbol(s.adj)
+    fund = group_symbol(s.fund)
+    adjoint_index = theory.index(adjoint_slot.label, adjoint_representation)
+    if left_slot.dual:
+        output_index = theory.index(right_slot.label, fund)
+        input_index = theory.index(left_slot.label, s.Bar(fund))
+    else:
+        output_index = theory.index(left_slot.label, fund)
+        input_index = theory.index(right_slot.label, s.Bar(fund))
+    return theory.cg_tensor_handle(generator_name)(adjoint_index, output_index, input_index)
+
+
+def _decode_native_color_structure_constant(
+    theory: Any,
+    first: Expression,
+    second: Expression,
+    third: Expression,
+    groups: tuple[str, ...],
+) -> Expression | None:
+    slots = tuple(_decode_native_color_slot(index) for index in (first, second, third))
+    if any(slot is None or slot.kind != "adj" for slot in slots):
+        return None
+    adjoint_slots = tuple(slot for slot in slots if slot is not None)
+    group = _native_color_adjoint_group(theory, adjoint_slots, groups)
+    if group is None:
+        return None
+    fstruct_name = f"fStruct_{group}"
+    if fstruct_name not in theory.cg_tensors:
+        return None
+    sign, canonical_slots = _canonicalize_antisymmetric_color_slots(adjoint_slots)
+    group_symbol = theory.symbol(group, role=SymbolRole.GROUP)
+    adjoint_representation = group_symbol(s.adj)
+    decoded = theory.cg_tensor_handle(fstruct_name)(
+        *(theory.index(slot.label, adjoint_representation) for slot in canonical_slots)
+    )
+    return decoded if sign == 1 else -decoded
+
+
+def _canonicalize_antisymmetric_color_slots(
+    slots: tuple["_NativeColorSlot", ...],
+) -> tuple[int, tuple["_NativeColorSlot", ...]]:
+    order = tuple(sorted(range(len(slots)), key=lambda index: canonical_string(slots[index].label)))
+    inversions = sum(
+        1
+        for left_position, left in enumerate(order)
+        for right in order[left_position + 1 :]
+        if left > right
+    )
+    sign = -1 if inversions % 2 else 1
+    return sign, tuple(slots[index] for index in order)
+
+
+def _native_color_generator_group(
+    theory: Any,
+    adjoint: "_NativeColorSlot",
+    left: "_NativeColorSlot",
+    right: "_NativeColorSlot",
+    groups: tuple[str, ...],
+) -> str | None:
+    candidates = [
+        group
+        for group in groups
+        if _native_color_group_dimension(theory, group, "adj") == adjoint.dimension
+        and _native_color_group_dimension(theory, group, "fund") == left.dimension
+        and _native_color_group_dimension(theory, group, "fund") == right.dimension
+    ]
+    return candidates[0] if len(candidates) == 1 else None
+
+
+def _native_color_adjoint_group(
+    theory: Any,
+    slots: tuple["_NativeColorSlot", ...],
+    groups: tuple[str, ...],
+) -> str | None:
+    dimensions = {slot.dimension for slot in slots}
+    if len(dimensions) != 1:
+        return None
+    dimension = next(iter(dimensions))
+    candidates = [
+        group
+        for group in groups
+        if _native_color_group_dimension(theory, group, "adj") == dimension
+    ]
+    return candidates[0] if len(candidates) == 1 else None
 
 
 def _native_color_metric_group(

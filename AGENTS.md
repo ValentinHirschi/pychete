@@ -243,6 +243,15 @@ Public pychete expressions should keep full `Index(label, representation)`
 metadata on CG-tensor arguments. The spenso adapter is responsible for
 extracting the abstract labels for native `TensorStructure.index(...)`; do not
 strip index metadata earlier just to satisfy backend parsing.
+For HEP-compatible built-in SU(N) CG tensors, route `gen`, `fStruct`, and
+`del` through the spenso/idenso bridge instead of Python tensor logic.
+Compatible `del` tensors lower to native spenso metrics, and the idenso bridge
+must decode simple native metrics, generators, structure constants, and
+single-generator `spenso::chain(...)` results back to registered pychete
+`CG(...)` atoms before public matching output is exposed. Do not let simple
+native `spenso::t`, `spenso::f`, `spenso::g`, or one-generator
+`spenso::chain` forms leak into pychete-facing results when the originating
+theory group is unambiguous.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
