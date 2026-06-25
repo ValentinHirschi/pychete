@@ -18,6 +18,7 @@ from .expr import (
     field_label,
     field_pattern,
     field_strength_derivatives,
+    field_strength_label,
     field_strength_pattern,
     field_strength_with_derivatives,
     field_with_derivatives,
@@ -1117,30 +1118,39 @@ class Theory:
         left_index: Expression,
         right_index: Expression,
     ) -> Expression:
-        """Return ``[D_left, D_right]`` acting on a concrete field atom.
+        """Return ``[D_left, D_right]`` acting on a field-like atom.
 
         The convention matches pychete's first-derivative expansion
-        ``D = partial - I * connection``. Unbarred fields therefore receive
-        ``-I`` times the gauge field-strength insertion, while barred fields
-        receive ``+I`` times the corresponding conjugate insertion. Abelian
-        charges use registered charge/coupling/vector metadata; non-Abelian
-        indices use the registered generator CG tensor and produce a
-        ``FieldStrength`` atom with an adjoint index. This is a structural CDE
-        primitive for later field-strength/basis-reduction matching stages.
+        ``D = partial - I * connection``. Unbarred fields and field strengths
+        therefore receive ``-I`` times the gauge field-strength insertion,
+        while barred payloads receive ``+I`` times the corresponding conjugate
+        insertion. Abelian charged fields use registered
+        charge/coupling/vector metadata, Abelian field-strength bodies lower to
+        zero, and non-Abelian indices use registered generator CG tensors. This
+        is a structural CDE primitive for later field-strength/basis-reduction
+        matching stages.
         """
 
         self._validate_registered_expression(field)
-        conjugate_field = is_bar_field(field)
-        base_field = bar_field_inner(field) if conjugate_field else field
-        if not is_head(base_field, s.Field):
-            raise ValueError(f"Expected a Field or Bar[Field] expression, got {canonical_string(field)}")
-        return self._covariant_derivative_commutator(
-            base_field,
-            left_index,
-            right_index,
-            conjugate_field=conjugate_field,
-            index_counter=count(),
-        )
+        conjugate_field = is_bar_field(field) or is_bar_field_strength(field)
+        base_atom = self._covariant_derivative_commutator_base_atom(field, conjugate_field=conjugate_field)
+        if is_head(base_atom, s.Field):
+            return self._covariant_derivative_commutator(
+                base_atom,
+                left_index,
+                right_index,
+                conjugate_field=conjugate_field,
+                index_counter=count(),
+            )
+        if is_head(base_atom, s.FieldStrength):
+            return self._field_strength_covariant_derivative_commutator(
+                base_atom,
+                left_index,
+                right_index,
+                conjugate_field=conjugate_field,
+                index_counter=count(),
+            )
+        raise ValueError(f"Expected a Field, Bar[Field], FieldStrength, or Bar[FieldStrength], got {canonical_string(field)}")
 
     def _covariant_derivative_commutator(
         self,
@@ -1201,6 +1211,16 @@ class Theory:
                 base_field = bar_field_inner(body) if conjugate_field else body
                 return self._covariant_derivative_commutator(
                     base_field,
+                    left_index,
+                    right_index,
+                    conjugate_field=conjugate_field,
+                    index_counter=index_counter,
+                )
+            if is_head(body, s.FieldStrength) or is_bar_field_strength(body):
+                conjugate_field = is_bar_field_strength(body)
+                base_strength = bar_field_strength_inner(body) if conjugate_field else body
+                return self._field_strength_covariant_derivative_commutator(
+                    base_strength,
                     left_index,
                     right_index,
                     conjugate_field=conjugate_field,
@@ -1487,6 +1507,115 @@ class Theory:
                 * strength
                 * generator(adjoint_index, output_index, input_dual_index)
                 * field_factor
+            )
+        return sum_expr(terms).expand()
+
+    def _field_strength_covariant_derivative_commutator(
+        self,
+        base_strength: Expression,
+        left_index: Expression,
+        right_index: Expression,
+        *,
+        conjugate_field: bool,
+        index_counter: Iterator[int],
+    ) -> Expression:
+        insertion = self._field_strength_adjoint_insertions(
+            base_strength,
+            left_index,
+            right_index,
+            conjugate_field=conjugate_field,
+            index_counter=index_counter,
+        )
+        if bool(insertion == Expression.num(0)):
+            return insertion
+        sign = Expression.I if conjugate_field else -Expression.I
+        return (sign * insertion).expand()
+
+    def _field_strength_adjoint_insertions(
+        self,
+        strength: Expression,
+        left_index: Expression,
+        right_index: Expression,
+        *,
+        conjugate_field: bool,
+        index_counter: Iterator[int],
+    ) -> Expression:
+        definition = self._field_definition_for_label(field_strength_label(strength))
+        type_expr = definition.type_expr
+        if not is_head(type_expr, s.Vector) or len(type_expr) != 1:
+            raise ValueError(f"FieldStrength label {definition.name!r} does not belong to a vector field")
+        group_symbol = type_expr[0]
+        group_name = symbol_data(group_symbol, SymbolDataKey.NAME)
+        if not isinstance(group_name, str):
+            raise ValueError(f"Vector field {definition.name!r} has no registered gauge-group name")
+        group_entry = self.groups.get(group_name)
+        if group_entry is None:
+            raise KeyError(f"Theory {self.name!r} has no group {group_name!r}")
+        group_kind = GroupKind.from_user(str(group_entry.get("kind", GroupKind.GLOBAL.value)))
+        if group_kind is not GroupKind.GAUGE:
+            return Expression.num(0)
+        if bool(group_entry.get("abelian", False)):
+            return Expression.num(0)
+        coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+        vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+        if not isinstance(coupling_name, str) or not isinstance(vector_name, str):
+            raise ValueError(f"Gauge group {group_name!r} is missing coupling/vector symbol data")
+
+        terms: list[Expression] = []
+        strength_indices = list(list_items(strength[2]))
+        for field_index, input_index in enumerate(strength_indices):
+            if not is_head(input_index, s.Index) or len(input_index) != 2:
+                continue
+            try:
+                representation = self.representation_definition(input_index[1])
+            except KeyError:
+                continue
+            if representation.group != group_name:
+                continue
+            generator_name = _builtin_cg_tensor_name("gen", group_name, representation.name)
+            if generator_name not in self.cg_tensors:
+                raise KeyError(
+                    f"Gauge representation {canonical_string(input_index[1])} has no registered generator "
+                    f"CG tensor {generator_name!r}"
+                )
+            generator = self.cg_tensor_handle(generator_name)
+            generator_reps = generator.definition.representation_exprs
+            if len(generator_reps) != 3:
+                raise ValueError(f"Generator CG tensor {generator.name!r} must have rank 3")
+            if not bool(input_index[1] == generator_reps[1]):
+                raise ValueError(
+                    f"Generator insertion currently expects field-strength index representation "
+                    f"{canonical_string(generator_reps[1])}, got {canonical_string(input_index[1])}"
+                )
+            index_number = next(index_counter)
+            output_index = self._covariant_derivative_generated_index(
+                index_number,
+                _COVARIANT_DERIVATIVE_OUTPUT_INDEX_KIND,
+                generator_reps[1],
+                prefix="covariant_commutator",
+            )
+            adjoint_index = self._covariant_derivative_generated_index(
+                index_number,
+                _COVARIANT_DERIVATIVE_ADJOINT_INDEX_KIND,
+                generator_reps[0],
+                prefix="covariant_commutator",
+            )
+            transformed_indices = list(strength_indices)
+            transformed_indices[field_index] = output_index
+            transformed_strength = s.FieldStrength(strength[0], strength[1], list_expr(*transformed_indices), strength[3])
+            strength_factor = s.Bar(transformed_strength) if conjugate_field else transformed_strength
+            input_dual_index = s.Index(input_index[0], generator_reps[2])
+            source_strength = s.FieldStrength(
+                self.fields[vector_name].label,
+                list_expr(left_index, right_index),
+                list_expr(adjoint_index),
+                list_expr(),
+            )
+            terms.append(
+                self.coupling_handle(coupling_name)()
+                * source_strength
+                * generator(adjoint_index, output_index, input_dual_index)
+                * strength_factor
             )
         return sum_expr(terms).expand()
 

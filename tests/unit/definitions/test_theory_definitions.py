@@ -574,7 +574,10 @@ def test_emit_covariant_derivative_commutators_rewrites_field_strength_derivativ
     )
 
     assert_expr_equal(emitted, expected)
-    assert_expr_equal(theory.expand_covariant_derivative_commutators(emitted), expected)
+    assert_expr_equal(
+        theory.expand_covariant_derivative_commutators(emitted),
+        s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(b, c)),
+    )
 
 
 def test_emit_covariant_derivative_commutators_protects_barred_field_strengths_and_prefixes() -> None:
@@ -623,6 +626,84 @@ def test_emit_covariant_derivative_commutators_protects_existing_field_strength_
     )
 
     assert_expr_equal(emitted, expected)
+
+
+def test_expand_covariant_derivative_commutators_lowers_abelian_field_strength_bodies_to_zero() -> None:
+    theory = Theory("abelian_field_strength_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    vector = theory.field_handle("B")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    sigma = theory.index("sigma")
+    strength = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(), s.List())
+
+    assert_expr_equal(theory.covariant_derivative_commutator(strength, mu, nu), Expression.num(0))
+    assert_expr_equal(
+        theory.expand_covariant_derivative_commutators(s.CovariantDerivativeCommutator(mu, nu, strength)),
+        Expression.num(0),
+    )
+
+
+def test_expand_covariant_derivative_commutators_lowers_non_abelian_field_strength_bodies() -> None:
+    theory = Theory("nonabelian_field_strength_commutator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    adj = theory.define_representation("SU2L", "adj")
+    vector = theory.field_handle("W")
+    generator = theory.cg_tensor_handle("gen_SU2L_adj")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    sigma = theory.index("sigma")
+    alpha = theory.index("alpha")
+    input_index = theory.index("A", adj)
+    output_index = theory.index(theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX), adj)
+    adjoint_index = theory.index(theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX), adj)
+    input_dual = theory.index(input_index[0], adj)
+    source_strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(adjoint_index), s.List())
+    transformed_strength = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(output_index), s.List(alpha))
+    strength = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(input_index), s.List(alpha))
+    expected = -Expression.I * theory.coupling_handle("gL")() * source_strength * generator(
+        adjoint_index,
+        output_index,
+        input_dual,
+    ) * transformed_strength
+
+    assert_expr_equal(theory.covariant_derivative_commutator(strength, mu, nu), expected)
+    assert_expr_equal(
+        theory.expand_covariant_derivative_commutators(s.CovariantDerivativeCommutator(mu, nu, strength)),
+        expected,
+    )
+
+
+def test_expand_covariant_derivative_commutators_lowers_barred_non_abelian_field_strength_bodies() -> None:
+    theory = Theory("barred_nonabelian_field_strength_commutator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    adj = theory.define_representation("SU2L", "adj")
+    vector = theory.field_handle("W")
+    generator = theory.cg_tensor_handle("gen_SU2L_adj")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    sigma = theory.index("sigma")
+    input_index = theory.index("A", adj)
+    output_index = theory.index(theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX), adj)
+    adjoint_index = theory.index(theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX), adj)
+    input_dual = theory.index(input_index[0], adj)
+    source_strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(adjoint_index), s.List())
+    transformed_strength = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(output_index), s.List())
+    strength = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(input_index), s.List())
+    expected = Expression.I * theory.coupling_handle("gL")() * source_strength * generator(
+        adjoint_index,
+        output_index,
+        input_dual,
+    ) * s.Bar(transformed_strength)
+
+    assert_expr_equal(theory.covariant_derivative_commutator(s.Bar(strength), mu, nu), expected)
+    assert_expr_equal(
+        theory.expand_covariant_derivative_commutators(s.CovariantDerivativeCommutator(mu, nu, s.Bar(strength))),
+        expected,
+    )
 
 
 def test_covariant_derivative_commutator_builds_non_abelian_field_strength_insertions() -> None:
