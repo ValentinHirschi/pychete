@@ -348,6 +348,30 @@ def test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend
     assert report.reference_stage is None
 
 
+def test_validation_fixture_gap_report_can_project_reference_matching_conditions_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference_fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    reference = reference_fixture.matching_result("matchete_previous")
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        max_trace_order=1,
+        project_reference_matching_conditions=True,
+    )
+    report_obj = report.to_json_obj()
+
+    assert report.candidate_matching_condition_count == 72
+    assert report.reference_matching_condition_count == 72
+    assert len(report.common_matching_condition_names) == 72
+    assert report.missing_reference_matching_condition_count == 0
+    assert report.canonical_equal_common_matching_condition_count == 39
+    assert report.canonical_different_common_matching_condition_count == 33
+    assert report_obj["common_matching_condition_count"] == 72
+    assert report_obj["missing_reference_matching_condition_count"] == 0
+    assert report_obj["canonical_equal_common_matching_condition_count"] == 39
+
+
 def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -> None:
     expected = {
         "VLF_toy_model": {

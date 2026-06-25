@@ -3430,6 +3430,47 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 214 passed,
     1 skipped in 163.10s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Extended the validation gap-report layer from matching-condition presence
+  counts to actual canonical matching-condition expression comparisons:
+  - `MatchingFixtureGapReport` now records canonical-equal and
+    canonical-different shared matching-condition names and JSON counts;
+  - `_gap_report(...)` compares shared matching-condition expressions through
+    the existing `MatchingResult.compare_to(...)` path, so canonical equality
+    remains the primary validation mechanism;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` can now opt into
+    `project_reference_matching_conditions=True`, which parses the reference
+    fixture's canonical matching-condition keys through the registered theory
+    state and uses native Symbolica coefficient projection to populate
+    candidate conditions before comparison;
+  - this keeps default gap reports unchanged, but gives Matchete fixture
+    comparisons a concrete route from the current one-loop preview Lagrangian
+    to the 72 committed SMEFT-style reference condition names;
+  - on the committed `Singlet_Scalar_Extension` fixture with
+    `max_trace_order=1`, opt-in condition projection exposes all 72 reference
+    condition keys on the candidate and currently yields 39 canonical-equal and
+    33 canonical-different matching conditions.
+- Confirmed the optional Mathematica conversion route remains committed under
+  the top-level `scripts/` directory for users with Mathematica, while this
+  validation-comparison slice keeps pychete runtime code and normal pytest
+  fully Matchete- and Mathematica-independent.
+- Final verification for the matching-condition gap-report slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_reference_matching_conditions_without_mathematica
+    -q'` passed: 10 passed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 17
+    passed in 165.74s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 216 passed, 1
+    skipped in 174.51s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

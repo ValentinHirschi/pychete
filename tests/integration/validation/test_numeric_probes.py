@@ -227,3 +227,43 @@ def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     assert report.numeric_probe_different_common_supertrace_count == 0
     assert report_obj["numeric_probe_equal_common_supertrace_names"] == ["probe"]
     assert report_obj["numeric_probe_equal_common_supertrace_count"] == 1
+
+
+def test_fixture_gap_report_compares_common_matching_conditions() -> None:
+    c_equal, c_diff, x = S("condition_gap_equal", "condition_gap_diff", "condition_gap_x")
+    theory = Theory("condition_gap")
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            canonical_string(c_equal): x + 1,
+            canonical_string(c_diff): x,
+            "candidate_only": x,
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            canonical_string(c_equal): x + 1,
+            canonical_string(c_diff): x + 2,
+            "reference_only": x,
+        },
+    )
+
+    report = _gap_report("candidate_fixture", "reference_fixture", candidate, reference)
+    report_obj = report.to_json_obj()
+
+    assert report.common_matching_condition_names == (canonical_string(c_diff), canonical_string(c_equal))
+    assert report.canonical_equal_common_matching_condition_names == (canonical_string(c_equal),)
+    assert report.canonical_different_common_matching_condition_names == (canonical_string(c_diff),)
+    assert report.canonical_equal_common_matching_condition_count == 1
+    assert report.canonical_different_common_matching_condition_count == 1
+    assert report.candidate_only_matching_condition_names == ("candidate_only",)
+    assert report.reference_only_matching_condition_names == ("reference_only",)
+    assert report_obj["canonical_equal_common_matching_condition_names"] == [canonical_string(c_equal)]
+    assert report_obj["canonical_different_common_matching_condition_count"] == 1

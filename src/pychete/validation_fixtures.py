@@ -40,6 +40,8 @@ class MatchingFixtureGapReport:
     common_matching_condition_names: tuple[str, ...]
     candidate_only_matching_condition_names: tuple[str, ...]
     reference_only_matching_condition_names: tuple[str, ...]
+    canonical_equal_common_matching_condition_names: tuple[str, ...]
+    canonical_different_common_matching_condition_names: tuple[str, ...]
     common_expression_names: tuple[str, ...]
 
     @property
@@ -113,6 +115,18 @@ class MatchingFixtureGapReport:
 
         return len(self.reference_only_matching_condition_names)
 
+    @property
+    def canonical_equal_common_matching_condition_count(self) -> int:
+        """Number of shared matching conditions whose expressions are canonically equal."""
+
+        return len(self.canonical_equal_common_matching_condition_names)
+
+    @property
+    def canonical_different_common_matching_condition_count(self) -> int:
+        """Number of shared matching conditions whose expressions still differ."""
+
+        return len(self.canonical_different_common_matching_condition_names)
+
     def to_json_obj(self) -> dict[str, Any]:
         """Return a JSON-serializable representation of this report."""
 
@@ -136,6 +150,8 @@ class MatchingFixtureGapReport:
             "common_matching_condition_count": len(self.common_matching_condition_names),
             "missing_reference_matching_condition_count": self.missing_reference_matching_condition_count,
             "candidate_only_matching_condition_count": len(self.candidate_only_matching_condition_names),
+            "canonical_equal_common_matching_condition_count": self.canonical_equal_common_matching_condition_count,
+            "canonical_different_common_matching_condition_count": self.canonical_different_common_matching_condition_count,
             "common_expression_names": list(self.common_expression_names),
             "candidate_only_supertrace_names": list(self.candidate_only_supertrace_names),
             "reference_only_supertrace_names": list(self.reference_only_supertrace_names),
@@ -145,6 +161,10 @@ class MatchingFixtureGapReport:
             "numeric_probe_different_common_supertrace_names": list(self.numeric_probe_different_common_supertrace_names),
             "candidate_only_matching_condition_names": list(self.candidate_only_matching_condition_names),
             "reference_only_matching_condition_names": list(self.reference_only_matching_condition_names),
+            "canonical_equal_common_matching_condition_names": list(self.canonical_equal_common_matching_condition_names),
+            "canonical_different_common_matching_condition_names": list(
+                self.canonical_different_common_matching_condition_names
+            ),
         }
 
     def _repr_latex_(self) -> str:
@@ -163,7 +183,8 @@ class MatchingFixtureGapReport:
             f"supertraces={self.candidate_supertrace_count}/{self.reference_supertrace_count}, "
             f"canonical_equal_common_supertraces={self.canonical_equal_common_supertrace_count}, "
             f"numeric_probe_equal_common_supertraces={self.numeric_probe_equal_common_supertrace_count}, "
-            f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count})</code>"
+            f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count}, "
+            f"canonical_equal_common_matching_conditions={self.canonical_equal_common_matching_condition_count})</code>"
         )
 
 
@@ -355,6 +376,9 @@ class ValidationFixture:
         tensor_network_function_library: Any | None = None,
         tensor_network_n_steps: int | None = None,
         tensor_network_mode: Any | None = None,
+        project_reference_matching_conditions: bool = False,
+        matching_condition_projection_source: str = "on_shell_eft_lagrangian",
+        matching_condition_projection_drop_zero: bool = False,
     ) -> MatchingFixtureGapReport:
         """Report current one-loop preview coverage against a reference result."""
 
@@ -385,6 +409,12 @@ class ValidationFixture:
             tensor_network_n_steps=tensor_network_n_steps,
             tensor_network_mode=tensor_network_mode,
         )
+        if project_reference_matching_conditions:
+            candidate = candidate.with_projected_matching_conditions(
+                _reference_matching_condition_targets(reference),
+                source=matching_condition_projection_source,
+                drop_zero=matching_condition_projection_drop_zero,
+            )
         return _gap_report(
             self.name,
             reference_name,
@@ -482,6 +512,13 @@ def _tensor_network_component_source(
     return None
 
 
+def _reference_matching_condition_targets(reference: MatchingResult) -> dict[str, Expression]:
+    return {
+        name: reference.theory._parse_registered_expression(name)
+        for name in reference.matching_conditions
+    }
+
+
 def _gap_report(
     candidate_fixture: str,
     reference_name: str,
@@ -508,6 +545,11 @@ def _gap_report(
     )
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
+    common_conditions = candidate_conditions & reference_conditions
+    compared_conditions = candidate.compare_to(
+        reference,
+        names=_sorted_names(common_conditions),
+    )
     candidate_names = set(candidate.expression_names())
     reference_names = set(reference.expression_names())
     return MatchingFixtureGapReport(
@@ -541,6 +583,12 @@ def _gap_report(
         common_matching_condition_names=_sorted_names(candidate_conditions & reference_conditions),
         candidate_only_matching_condition_names=_sorted_names(candidate_conditions - reference_conditions),
         reference_only_matching_condition_names=_sorted_names(reference_conditions - candidate_conditions),
+        canonical_equal_common_matching_condition_names=tuple(
+            item.name for item in compared_conditions.expressions if item.canonical_equal
+        ),
+        canonical_different_common_matching_condition_names=tuple(
+            item.name for item in compared_conditions.expressions if not item.canonical_equal
+        ),
         common_expression_names=_sorted_names(candidate_names & reference_names),
     )
 
