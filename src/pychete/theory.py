@@ -9,10 +9,13 @@ from typing import TYPE_CHECKING, Any, Iterable, Iterator, Mapping
 from symbolica import Expression, Replacement, S
 
 from .expr import (
+    bar_field_inner,
     bar_field_pattern,
+    field_label,
     field_pattern,
     field_with_derivatives,
     is_head,
+    is_bar_field,
     list_expr,
     list_items,
     matching_subexpressions,
@@ -988,7 +991,9 @@ class Theory:
             if group_symbol is None:
                 continue
             group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
-            if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+            if group_kind is not GroupKind.GAUGE or not bool(
+                symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)
+            ):
                 continue
             if len(charge) != 1:
                 raise ValueError(f"Gauge charge {canonical_string(charge)} must carry exactly one charge value")
@@ -1089,6 +1094,184 @@ class Theory:
             * field_factor
         )
 
+    def covariant_derivative_commutator(
+        self,
+        field: Expression,
+        left_index: Expression,
+        right_index: Expression,
+    ) -> Expression:
+        """Return ``[D_left, D_right]`` acting on a concrete field atom.
+
+        The convention matches pychete's first-derivative expansion
+        ``D = partial - I * connection``. Unbarred fields therefore receive
+        ``-I`` times the gauge field-strength insertion, while barred fields
+        receive ``+I`` times the corresponding conjugate insertion. Abelian
+        charges use registered charge/coupling/vector metadata; non-Abelian
+        indices use the registered generator CG tensor and produce a
+        ``FieldStrength`` atom with an adjoint index. This is a structural CDE
+        primitive for later field-strength/basis-reduction matching stages.
+        """
+
+        self._validate_registered_expression(field)
+        conjugate_field = is_bar_field(field)
+        base_field = bar_field_inner(field) if conjugate_field else field
+        if not is_head(base_field, s.Field):
+            raise ValueError(f"Expected a Field or Bar[Field] expression, got {canonical_string(field)}")
+        definition = self._field_definition_for_label(field_label(base_field))
+        insertion = (
+            self._abelian_field_strength_insertions(
+                definition,
+                base_field,
+                left_index,
+                right_index,
+                conjugate_field=conjugate_field,
+            )
+            + self._non_abelian_field_strength_insertions(
+                base_field,
+                left_index,
+                right_index,
+                conjugate_field=conjugate_field,
+            )
+        )
+        if bool(insertion == Expression.num(0)):
+            return insertion
+        sign = Expression.I if conjugate_field else -Expression.I
+        return (sign * insertion).expand()
+
+    def _field_definition_for_label(self, label: Expression) -> FieldDefinition:
+        name = symbol_data(label, SymbolDataKey.NAME)
+        if isinstance(name, str) and name in self.fields and bool(self.fields[name].label == label):
+            return self.fields[name]
+        label_name = symbol_data(label, SymbolDataKey.LABEL)
+        if isinstance(label_name, str) and label_name in self.fields and bool(self.fields[label_name].label == label):
+            return self.fields[label_name]
+        key = canonical_string(label)
+        for definition in self.fields.values():
+            if canonical_string(definition.label) == key:
+                return definition
+        raise KeyError(f"Theory {self.name!r} has no field label {key!r}")
+
+    def _abelian_field_strength_insertions(
+        self,
+        definition: FieldDefinition,
+        field: Expression,
+        left_index: Expression,
+        right_index: Expression,
+        *,
+        conjugate_field: bool,
+    ) -> Expression:
+        field_factor = s.Bar(field) if conjugate_field else field
+        terms: list[Expression] = []
+        for charge in definition.charge_exprs:
+            group_symbol = self._group_symbol_for_charge(charge)
+            if group_symbol is None:
+                continue
+            group_kind = GroupKind.from_user(
+                str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+            )
+            if group_kind is not GroupKind.GAUGE or not bool(
+                symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)
+            ):
+                continue
+            if len(charge) != 1:
+                raise ValueError(f"Gauge charge {canonical_string(charge)} must carry exactly one charge value")
+            coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+            vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+            if not isinstance(coupling_name, str) or not isinstance(vector_name, str):
+                raise ValueError(f"Gauge group {canonical_string(group_symbol)} is missing coupling/vector metadata")
+            if coupling_name not in self.couplings:
+                raise KeyError(
+                    f"Gauge group {canonical_string(group_symbol)} references unknown coupling {coupling_name!r}"
+                )
+            if vector_name not in self.fields:
+                raise KeyError(
+                    f"Gauge group {canonical_string(group_symbol)} references unknown vector field {vector_name!r}"
+                )
+            strength = s.FieldStrength(
+                self.fields[vector_name].label,
+                list_expr(left_index, right_index),
+                list_expr(),
+                list_expr(),
+            )
+            terms.append(charge[0] * self.coupling_handle(coupling_name)() * strength * field_factor)
+        return sum_expr(terms).expand()
+
+    def _non_abelian_field_strength_insertions(
+        self,
+        field: Expression,
+        left_index: Expression,
+        right_index: Expression,
+        *,
+        conjugate_field: bool,
+    ) -> Expression:
+        terms: list[Expression] = []
+        index_counter = count()
+        field_indices = list(list_items(field[2]))
+        for field_index, input_index in enumerate(field_indices):
+            if not is_head(input_index, s.Index) or len(input_index) != 2:
+                continue
+            try:
+                representation = self.representation_definition(input_index[1])
+            except KeyError:
+                continue
+            group_entry = self.groups.get(representation.group)
+            if group_entry is None:
+                continue
+            group_kind = GroupKind.from_user(str(group_entry.get("kind", GroupKind.GLOBAL.value)))
+            if group_kind is not GroupKind.GAUGE or bool(group_entry.get("abelian", False)):
+                continue
+            group_symbol = self.symbol(representation.group, role=SymbolRole.GROUP)
+            coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+            vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+            if not isinstance(coupling_name, str) or not isinstance(vector_name, str):
+                raise ValueError(f"Gauge group {representation.group!r} is missing coupling/vector symbol data")
+            generator_name = _builtin_cg_tensor_name("gen", representation.group, representation.name)
+            if generator_name not in self.cg_tensors:
+                raise KeyError(
+                    f"Gauge representation {canonical_string(input_index[1])} has no registered generator "
+                    f"CG tensor {generator_name!r}"
+                )
+            generator = self.cg_tensor_handle(generator_name)
+            generator_reps = generator.definition.representation_exprs
+            if len(generator_reps) != 3:
+                raise ValueError(f"Generator CG tensor {generator.name!r} must have rank 3")
+            if not bool(input_index[1] == generator_reps[1]):
+                raise ValueError(
+                    f"Generator insertion currently expects field index representation "
+                    f"{canonical_string(generator_reps[1])}, got {canonical_string(input_index[1])}"
+                )
+            index_number = next(index_counter)
+            output_index = self._covariant_derivative_generated_index(
+                index_number,
+                _COVARIANT_DERIVATIVE_OUTPUT_INDEX_KIND,
+                generator_reps[1],
+                prefix="covariant_commutator",
+            )
+            adjoint_index = self._covariant_derivative_generated_index(
+                index_number,
+                _COVARIANT_DERIVATIVE_ADJOINT_INDEX_KIND,
+                generator_reps[0],
+                prefix="covariant_commutator",
+            )
+            transformed_indices = list(field_indices)
+            transformed_indices[field_index] = output_index
+            transformed_field = s.Field(field[0], field[1], list_expr(*transformed_indices), field[3])
+            field_factor = s.Bar(transformed_field) if conjugate_field else transformed_field
+            input_dual_index = s.Index(input_index[0], generator_reps[2])
+            strength = s.FieldStrength(
+                self.fields[vector_name].label,
+                list_expr(left_index, right_index),
+                list_expr(adjoint_index),
+                list_expr(),
+            )
+            terms.append(
+                self.coupling_handle(coupling_name)()
+                * strength
+                * generator(adjoint_index, output_index, input_dual_index)
+                * field_factor
+            )
+        return sum_expr(terms).expand()
+
     def _non_abelian_gauge_index_slots(self, definition: FieldDefinition) -> tuple[int, ...]:
         slots: list[int] = []
         for slot, representation_expr in enumerate(definition.indices):
@@ -1104,12 +1287,19 @@ class Theory:
                 slots.append(slot)
         return tuple(slots)
 
-    def _covariant_derivative_generated_index(self, number: int, kind: int, representation: Expression) -> Expression:
+    def _covariant_derivative_generated_index(
+        self,
+        number: int,
+        kind: int,
+        representation: Expression,
+        *,
+        prefix: str = "covariant_derivative",
+    ) -> Expression:
         label = self.symbol(
-            f"covariant_derivative_{number}_{kind}",
+            f"{prefix}_{number}_{kind}",
             role=SymbolRole.INDEX,
             data={
-                SymbolDataKey.NAME.value: f"covariant_derivative_{number}_{kind}",
+                SymbolDataKey.NAME.value: f"{prefix}_{number}_{kind}",
             },
         )
         return self.index(label, representation)

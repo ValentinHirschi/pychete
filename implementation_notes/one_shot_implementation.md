@@ -425,6 +425,46 @@
   on-shell/IBP basis reduction before the gauge and Higgs-derivative Wilson
   gaps can close.
 
+## Current Covariant-Commutator Field-Strength Slice
+
+- Added `Theory.covariant_derivative_commutator(field, left_index,
+  right_index)` as the first explicit field-strength CDE primitive. It returns
+  `[D_left, D_right]` acting on a concrete `Field(...)` or `Bar(Field(...))`
+  atom using the existing pychete convention `D = partial - I * connection`.
+  Unbarred fields receive `-I` times the gauge field-strength insertion;
+  barred fields receive `+I` times the conjugate insertion.
+- The primitive builds Abelian terms from registered Symbolica charge,
+  coupling, and vector-field symbol data, and builds non-Abelian terms from
+  registered representation metadata, generated adjoint/output indices, the
+  registered `gen_<group>_<rep>` CG tensor, and a `FieldStrength(...)` atom
+  carrying the adjoint index. Python is only used at the metadata boundary;
+  no symbolic tree walking or handwritten simplification is introduced.
+- Extended the generated-index helper with a `prefix` argument so commutator
+  indices use a distinct deterministic `covariant_commutator_*` namespace and
+  cannot accidentally collide with the existing first-derivative expansion
+  indices in the same expression.
+- Added focused tests for Abelian charged fields, barred-field sign
+  conventions, non-Abelian SU(2) generator/field-strength insertions, and
+  public `Theory` method docstring coverage.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_theory_definitions.py -k "commutator or non_abelian_gauge_generator or expand_non_abelian" -q`
+  passed with 6 tests and 28 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_public_api.py -q`
+  passed with 5 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_theory_definitions.py tests/unit/definitions/test_public_api.py -q`
+  passed with 39 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "non_abelian or field_strength or expands_abelian" -q`
+  passed with 5 tests and 50 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_theory_definitions.py tests/unit/definitions/test_public_api.py tests/integration/matching/test_fluctuation_operator.py -k "commutator or non_abelian_gauge_generator or expand_non_abelian or non_abelian or field_strength or expands_abelian" -q`
+  passed with 11 tests and 83 deselected; `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` and `git diff --check` also passed.
+- This is not yet wired into the one-loop CDE expansion, so it does not claim
+  to change the Singlet/E_VLL/S1S3LQs frontier. The next CDE slice should use
+  this primitive to turn anti-symmetrized derivative products or commutator
+  structures in generated supertraces into `FieldStrength(...)` operators,
+  then simplify the resulting CG/field-strength tensors with the idenso/spenso
+  adapters already in place.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -454,7 +494,8 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Implement covariant-derivative expansion far enough to generate and reduce
+- Wire the new covariant-derivative commutator primitive into the CDE path so
+  anti-symmetrized derivative products can generate and reduce
   field-strength/commutator structures needed by gauge Wilsons such as
   `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs

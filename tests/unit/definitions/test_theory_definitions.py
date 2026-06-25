@@ -422,6 +422,72 @@ def test_non_abelian_gauge_generator_insertion_rejects_non_gauge_representations
         raise AssertionError("global representations must not produce gauge-generator insertions")
 
 
+def test_covariant_derivative_commutator_builds_abelian_field_strength_insertions() -> None:
+    theory = Theory("abelian_commutator")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", S("qY"))],
+        mass=0,
+    )
+    coupling = theory.coupling_handle("gY")
+    vector = theory.field_handle("B")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
+
+    assert_expr_equal(
+        theory.covariant_derivative_commutator(phi(), mu, nu),
+        -Expression.I * S("qY") * coupling() * strength * phi(),
+    )
+    assert_expr_equal(
+        theory.covariant_derivative_commutator(s.Bar(phi()), mu, nu),
+        Expression.I * S("qY") * coupling() * strength * s.Bar(phi()),
+    )
+
+
+def test_covariant_derivative_commutator_builds_non_abelian_field_strength_insertions() -> None:
+    theory = Theory("nonabelian_commutator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], mass=0)
+
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    input_index = theory.index("i", fund)
+    output_index = theory.index(theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX), fund)
+    adjoint_index = theory.index(theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX), adj)
+    input_dual = theory.index(input_index[0], s.Bar(fund))
+    strength = s.FieldStrength(
+        theory.field_handle("W").label,
+        s.List(mu, nu),
+        s.List(adjoint_index),
+        s.List(),
+    )
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    expected_insertion = (
+        theory.coupling_handle("gL")()
+        * strength
+        * generator(adjoint_index, output_index, input_dual)
+        * higgs(output_index)
+    )
+
+    assert_expr_equal(
+        theory.covariant_derivative_commutator(higgs(input_index), mu, nu),
+        -Expression.I * expected_insertion,
+    )
+    assert_expr_equal(
+        theory.covariant_derivative_commutator(s.Bar(higgs(input_index)), mu, nu),
+        Expression.I
+        * theory.coupling_handle("gL")()
+        * strength
+        * generator(adjoint_index, output_index, input_dual)
+        * s.Bar(higgs(output_index)),
+    )
+
+
 def test_expand_non_abelian_covariant_derivatives_uses_symbolica_replacements() -> None:
     theory = Theory("expand_nonabelian_covariant_derivatives")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
