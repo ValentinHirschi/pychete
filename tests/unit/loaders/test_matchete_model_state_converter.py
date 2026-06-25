@@ -5,7 +5,7 @@ import json
 from pathlib import Path
 from types import ModuleType
 
-from pychete.symbols import canonical_string
+from pychete.symbols import SymbolDataKey, canonical_string, s
 from pychete.validation_fixtures import load_validation_fixture
 
 
@@ -51,6 +51,26 @@ def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: 
                 "diagonal_coupling": [],
                 "thermal_power_counting": 1,
                 "unitary": False,
+            },
+            {
+                "name_input_form": "A",
+                "indices_input_form": ["Flavor", "Flavor"],
+                "eft_order": 0,
+                "self_conjugate_input_form": "False",
+                "symmetries_input_form": "<|{1, 2} -> 1, {2, 1} -> -1|>",
+                "diagonal_coupling": [False, False],
+                "thermal_power_counting": 1,
+                "unitary": False,
+            },
+            {
+                "name_input_form": "S",
+                "indices_input_form": ["Flavor", "Flavor"],
+                "eft_order": 0,
+                "self_conjugate_input_form": "False",
+                "symmetries_input_form": "Association[{1, 2} -> 1, {2, 1} -> 1]",
+                "diagonal_coupling": [False, False],
+                "thermal_power_counting": 1,
+                "unitary": False,
             }
         ],
         "fields": [
@@ -81,9 +101,20 @@ def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: 
     theory = fixture.theory()
 
     assert sorted(theory.fields) == ["A", "phi"]
-    assert sorted(theory.couplings) == ["g", "m"]
+    assert sorted(theory.couplings) == ["A", "S", "g", "m"]
     assert theory.groups["U1x"]["field"] == "A"
     assert canonical_string(fixture.expression("lagrangian")).count("field_phi") == 1
+    antisymmetric = theory.coupling_handle("A").definition
+    symmetric = theory.coupling_handle("S").definition
+    assert [canonical_string(expr) for expr in antisymmetric.symmetry_exprs] == [
+        canonical_string(s.AntisymmetricPermutation(2, 1))
+    ]
+    assert [canonical_string(expr) for expr in symmetric.symmetry_exprs] == [
+        canonical_string(s.SymmetricPermutation(2, 1))
+    ]
+    assert antisymmetric.label.get_symbol_data(SymbolDataKey.SYMMETRIES.value) == [
+        s.AntisymmetricPermutation(2, 1)
+    ]
 
 
 def test_matchete_model_state_exporter_documents_loaded_state_contract() -> None:

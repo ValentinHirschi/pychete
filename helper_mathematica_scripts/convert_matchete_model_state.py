@@ -21,6 +21,8 @@ from pychete.loaders.mathematica import (
     _parse_int,
     _parse_representation_name,
     _preprocess_names,
+    _split_top_level,
+    _strip_comments,
 )
 from pychete.state import PycheteState
 from pychete.symbols import SymbolRole, s
@@ -124,16 +126,91 @@ def _parse_self_conjugate(raw: str) -> bool | tuple[int, ...]:
     return _parse_coupling_self_conjugate(value)
 
 
+def _split_rule(text: str) -> tuple[str, str]:
+    square = curly = paren = assoc = 0
+    in_string = False
+    i = 0
+    while i < len(text):
+        if not in_string and text.startswith("<|", i):
+            assoc += 1
+            i += 2
+            continue
+        if not in_string and text.startswith("|>", i):
+            assoc -= 1
+            i += 2
+            continue
+        char = text[i]
+        if char == '"' and (i == 0 or text[i - 1] != "\\"):
+            in_string = not in_string
+            i += 1
+            continue
+        if in_string:
+            i += 1
+            continue
+        if char == "[":
+            square += 1
+        elif char == "]":
+            square -= 1
+        elif char == "{":
+            curly += 1
+        elif char == "}":
+            curly -= 1
+        elif char == "(":
+            paren += 1
+        elif char == ")":
+            paren -= 1
+        elif text.startswith("->", i) and square == 0 and curly == 0 and paren == 0 and assoc == 0:
+            return text[:i].strip(), text[i + 2 :].strip()
+        i += 1
+    raise ValueError(f"Expected a top-level Wolfram rule in: {text[:120]}")
+
+
+def _parse_permutation_key(raw: str) -> tuple[int, ...]:
+    value = _preprocess_names(raw).strip()
+    if value.startswith("{") and value.endswith("}"):
+        return tuple(_parse_int(part) for part in _split_top_level(value[1:-1], ","))
+    if value.startswith("List[") and value.endswith("]"):
+        return tuple(_parse_int(part) for part in _split_top_level(value[5:-1], ","))
+    raise ValueError(f"Unsupported Matchete symmetry permutation key: {raw}")
+
+
+def _parse_internal_symmetry_association(raw: str) -> tuple[Expression, ...]:
+    value = _strip_comments(_preprocess_names(raw)).strip()
+    if value.startswith("<|") and value.endswith("|>"):
+        body = value[2:-2].strip()
+    elif value.startswith("Association[") and value.endswith("]"):
+        body = value[len("Association[") : -1].strip()
+    else:
+        raise ValueError(f"Unsupported Matchete internal symmetry association: {raw}")
+    if not body:
+        return ()
+
+    symmetries: list[Expression] = []
+    for part in _split_top_level(body, ","):
+        key_raw, sign_raw = _split_rule(part)
+        permutation = _parse_permutation_key(key_raw)
+        if permutation == tuple(range(1, len(permutation) + 1)):
+            continue
+        sign = _parse_int(sign_raw)
+        if sign == 1:
+            symmetries.append(s.SymmetricPermutation(*permutation))
+        elif sign == -1:
+            symmetries.append(s.AntisymmetricPermutation(*permutation))
+        else:
+            raise ValueError(f"Unsupported Matchete symmetry sign {sign_raw!r} for permutation {permutation}")
+    return tuple(symmetries)
+
+
 def _parse_symmetries(raw: str, theory: Theory, warnings: list[str], coupling_name: str) -> tuple[Expression, ...]:
     value = _preprocess_names(raw).strip()
     if value in {"{}", "<||>", "Association[]"}:
         return ()
     if value.startswith("<|") or value.startswith("Association["):
-        warnings.append(
-            f"Skipped internal Matchete symmetry association for coupling {coupling_name}; "
-            "future converter work should map it to explicit pychete symmetry expressions."
-        )
-        return ()
+        try:
+            return _parse_internal_symmetry_association(value)
+        except ValueError as exc:
+            warnings.append(f"Skipped internal Matchete symmetry association for coupling {coupling_name}: {exc}")
+            return ()
     return tuple(_eval_expression_list(value, theory))
 
 

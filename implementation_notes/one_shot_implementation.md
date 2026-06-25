@@ -3123,6 +3123,40 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 204 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Extended the loaded-Matchete-model converter to preserve internal coupling
+  symmetry associations:
+  - inspected Matchete's live `GetCouplings[...][Symmetries]` output for
+    synthetic symmetric and antisymmetric couplings; the exported internal
+    shape is a signed permutation association such as
+    `<|{1, 2} -> 1, {2, 1} -> -1|>`;
+  - `helper_mathematica_scripts/convert_matchete_model_state.py` now parses
+    both `<|...|>` and `Association[...]` forms and converts each non-identity
+    signed permutation into explicit pychete metadata expressions:
+    `s.SymmetricPermutation(...)` for sign `+1` and
+    `s.AntisymmetricPermutation(...)` for sign `-1`;
+  - unsupported association entries now produce a targeted warning rather than
+    dropping all internal symmetry metadata silently;
+  - added a converter fixture test that round-trips symmetric and
+    antisymmetric Matchete internal associations through pychete state
+    serialization and verifies the resulting coupling symbol data.
+- Verification for the internal coupling-symmetry converter slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_matchete_model_state_converter.py -q'` passed:
+    3 passed.
+- Final verification for the internal coupling-symmetry converter slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/loaders/test_matchete_model_state_converter.py
+    tests/integration/models/test_model_loaders.py -q'` passed: 16 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 204 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -3131,10 +3165,11 @@ discoveries, dependency patches, blockers, and remaining work.
   cover both raw/vakint and public finite/MS preview gap reports, but final
   Matchete equivalence is still incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
-  initial contract, especially full internal coupling-symmetry association
-  mapping, complete CG tensor lowering, richer vector/zero-mode metadata, and
-  generated fixtures for complicated Matchete models that exceed the direct
-  Python loader's documented subset.
+  initial contract, especially complete CG tensor lowering, richer
+  vector/zero-mode metadata, and generated fixtures for complicated Matchete
+  models that exceed the direct Python loader's documented subset. Internal
+  coupling-symmetry associations are now preserved as explicit signed
+  pychete permutation metadata.
 - Extend the new paired-derivative momentum lowering beyond scalar contracted
   derivative pairs into open derivative slots, vector/gauge Lorentz structures,
   full propagator expansion beyond the new scalar operator-derived denominator,
