@@ -20,6 +20,7 @@ from .expr import (
     is_zero,
     list_expr,
     list_items,
+    product_expr,
     sum_expr,
 )
 from .functional import derive_eom, partial_functional_derivative
@@ -2813,12 +2814,18 @@ def _lower_differential_operators_to_momentum(
         derivatives = list_items(match[s.FieldDerivativesWildcard])
         power = _contracted_derivative_pair_power(derivatives)
         if power is None:
-            return matched
+            return _open_derivative_momentum_product(derivatives)
         if power == 0:
             return Expression.num(1)
         return (-momentum_squared) ** power
 
     return expr.replace(pattern, lower_operator).expand()
+
+
+def _open_derivative_momentum_product(derivatives: tuple[Expression, ...]) -> Expression:
+    if not derivatives:
+        return Expression.num(1)
+    return product_expr(Expression.I * s.LoopMomentum(index) for index in derivatives)
 
 
 def _momentum_entry_propagator_denominator(

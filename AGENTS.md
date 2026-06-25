@@ -102,6 +102,12 @@ with Symbolica patterns, encode them as temporary Symbolica variables with
 `Replacement` and `Expression.replace_multiple`, then use native Symbolica
 operations such as `Expression.derivative` or a formal variation extracted with
 `Expression.series` and `Expression.coefficient`.
+Momentum lowering must keep derivative information symbolic rather than
+dropping it. Contracted derivative pairs lower to `LoopMomentumSquared`; open
+Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator
+factors. Keep this lowering implemented as Symbolica replacement rules over
+`DifferentialOperator(...)`, then hand tensor numerator reduction to vakint
+where applicable.
 
 Internal pychete categories must not be stringly typed. Use explicit enum or
 Symbolica constants such as `FieldMassKind`, `BuiltinIndexType`, and the

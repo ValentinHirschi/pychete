@@ -145,9 +145,10 @@ Latest verified baseline before this compact rollover:
   Final Matchete equivalence is still incomplete.
 - Extend the loaded-model-state exporter/converter for richer vector/zero-mode
   metadata and complicated Matchete models outside the direct loader subset.
-- Extend paired-derivative momentum lowering beyond scalar contracted pairs
-  into open derivative slots, vector/gauge Lorentz structures, and fuller
-  propagator expansion.
+- Extend momentum lowering beyond scalar contracted pairs and the current open
+  derivative `LoopMomentum(index)` numerators into vector/gauge Lorentz
+  structures, contracted tensor numerator reduction, and fuller propagator
+  expansion.
 - Extend `FluctuationBasis` metadata into backend-evaluated vector Lorentz
   traces, real/complex coefficient placement, and SMEFT basis classifications.
 - Extend spenso/idenso lowering for remaining tensor contractions, generators,
@@ -284,5 +285,36 @@ Latest verified baseline before this compact rollover:
   - fluctuation-operator integration plus raw/internal-MS gap-report smoke
     coverage passed: 41 passed in 66.35s;
   - full pytest suite passed: 277 passed, 1 skipped in 304.04s. The skip is
+    the existing GammaLoop API import check because GammaLoop was not requested
+    in the current dependency manifest.
+
+## Current Slice: Open Derivative Momentum Numerators
+
+- Added a central `pychete::LoopMomentum(index)` Symbolica head, exposed through
+  `s.LoopMomentum`, with custom print support in Symbolica, LaTeX,
+  Mathematica, Sympy, and Typst display modes.
+- Extended `DifferentialOperator(...)` lowering so contracted adjacent
+  derivative pairs still lower directly to `LoopMomentumSquared`, while open
+  derivative slots now lower to explicit products of `I*LoopMomentum(index)`.
+  This turns fermion kinetic entries such as
+  `-I Gamma(mu) DifferentialOperator({mu})` into the explicit numerator
+  `Gamma(mu) LoopMomentum(mu)` instead of leaving an opaque differential
+  operator in momentum-space entries.
+- Added focused tests for:
+  - `LoopMomentum(index)` printing across display modes;
+  - fermion momentum entries lowering open first derivatives;
+  - two distinct open derivative slots lowering to a rank-two loop-momentum
+    numerator.
+- Updated `AGENTS.md` to preserve the convention that open Lorentz derivative
+  slots become explicit `LoopMomentum(index)` factors and tensor numerator
+  reduction should be delegated to native backends where applicable.
+- Verification in this slice so far:
+  - targeted print/open-momentum tests passed: 3 passed in 0.14s;
+  - full fluctuation-operator integration file passed: 40 passed in 1.27s;
+  - pretty-printing unit tests passed: 10 passed in 0.29s;
+  - `mypy` passed with no issues in 31 source files;
+  - default preview and raw/internal-MS validation smoke checks passed:
+    3 passed in 121.33s;
+  - full pytest suite passed: 278 passed, 1 skipped in 293.51s. The skip is
     the existing GammaLoop API import check because GammaLoop was not requested
     in the current dependency manifest.

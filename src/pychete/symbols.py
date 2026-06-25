@@ -261,6 +261,17 @@ def _print_propagator_denominator(expr: Expression, mode: PrintMode, kwargs: dic
     return _call("prop_den", args, mode)
 
 
+def _print_loop_momentum(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if len(args) == 1:
+        if mode is PrintMode.Latex:
+            return rf"q_{{{args[0]}}}"
+        if mode is PrintMode.Typst:
+            return f"q_{args[0]}"
+        return _subscript("q", args, mode)
+    return _call("LoopMomentum" if mode is PrintMode.Mathematica else "q", args, mode)
+
+
 def _print_supertrace_kernel(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
     args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
     if mode is PrintMode.Latex:
@@ -318,6 +329,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "CG": lambda: _call("CG", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "EOM": lambda: _print_eom(expr, mode, kwargs),
         "HeavyFieldOrder": lambda: _call("HFO", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "LoopMomentum": lambda: _print_loop_momentum(expr, mode, kwargs),
         "PropagatorDenominator": lambda: _print_propagator_denominator(expr, mode, kwargs),
         "SupertraceKernel": lambda: _print_supertrace_kernel(expr, mode, kwargs),
         "DifferentialOperator": lambda: _print_differential_operator(expr, mode, kwargs),
@@ -525,6 +537,7 @@ class SymbolStore:
         "EOM",
         "HeavyFieldOrder",
         "FreeLag",
+        "LoopMomentum",
         "LoopMomentumSquared",
         "PropagatorDenominator",
         "SupertraceKernel",
@@ -669,6 +682,10 @@ class SymbolStore:
     @cached_property
     def FreeLag(self) -> Expression:
         return self.head("FreeLag")
+
+    @cached_property
+    def LoopMomentum(self) -> Expression:
+        return self.head("LoopMomentum")
 
     @cached_property
     def LoopMomentumSquared(self) -> Expression:

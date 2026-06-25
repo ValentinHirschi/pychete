@@ -23,6 +23,7 @@ from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals as vacuum_integrals_backend
 from pychete.backends import vakint as vakint_backend
+from pychete.matching import _lower_differential_operators_to_momentum
 
 from tests.conftest import assert_expr_equal
 
@@ -229,6 +230,21 @@ def test_fluctuation_operator_linearizes_noncommutative_fermion_chains_without_f
         operator.differential_entry(heavy, s.Bar(heavy())),
         -mass - Expression.I * s.Gamma(mu) * s.DifferentialOperator(s.List(mu)),
     )
+    assert_expr_equal(
+        operator.momentum_entry(heavy, s.Bar(heavy())),
+        s.Gamma(mu) * s.LoopMomentum(mu) - mass,
+    )
+
+
+def test_open_differential_operators_lower_to_loop_momentum_numerators() -> None:
+    theory = Theory("open_derivative_lowering")
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    operator = s.DifferentialOperator(s.List(mu, nu))
+
+    lowered = _lower_differential_operators_to_momentum(operator)
+
+    assert_expr_equal(lowered, -s.LoopMomentum(mu) * s.LoopMomentum(nu))
 
 
 def test_fluctuation_operator_differential_entries_keep_indexed_yukawa_modes() -> None:

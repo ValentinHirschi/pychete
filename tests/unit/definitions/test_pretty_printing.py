@@ -88,7 +88,13 @@ def test_heavy_scalar_lagrangian_prints_cleanly_in_all_symbolica_modes() -> None
 def test_supertrace_denominator_heads_print_cleanly_in_all_symbolica_modes() -> None:
     denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(2))
     kernel = s.SupertraceKernel(Expression.num(3), s.List(s.List(denominator)))
+    momentum = s.LoopMomentum(s.dummy_index(0))
 
+    assert _format_lagrangian(momentum, PrintMode.Symbolica) == "q[d0]"
+    assert _format_lagrangian(momentum, PrintMode.Latex) == "q_{d0}"
+    assert _format_lagrangian(momentum, PrintMode.Mathematica) == "q[d0]"
+    assert _format_lagrangian(momentum, PrintMode.Sympy) == "q[d0]"
+    assert _format_lagrangian(momentum, PrintMode.Typst) == "q_d0"
     assert _format_lagrangian(denominator, PrintMode.Symbolica) == "prop_den(q2, 2)"
     assert _format_lagrangian(denominator, PrintMode.Latex) == r"\mathcal{D}\left(q^2, 2\right)"
     assert _format_lagrangian(denominator, PrintMode.Mathematica) == "PropagatorDenominator[q2, 2]"
