@@ -239,6 +239,44 @@ def test_matchete_loader_lowers_builtin_cg_labels_to_registered_tensors() -> Non
     assert len(theory.cg_tensors["eps_SU3c"].representation_exprs) == 3
 
 
+def test_matchete_loader_expands_module_local_cg_helper_functions(tmp_path: Path) -> None:
+    model = tmp_path / "local_cg_helpers.m"
+    model.write_text(
+        "\n".join(
+            [
+                "DefineGaugeGroup[SU2L, SU@2, gL, W];",
+                "Module[{i,j,J,tau},",
+                "  tau[Jadj_, ifund_, jfund_] := 2 CG[gen[SU2L[fund]], {Jadj, ifund, jfund}];",
+                "  tau[J,i,j]",
+                "];",
+            ]
+        ),
+        encoding="utf-8",
+    )
+
+    theory, expressions = load_matchete_model(model, theory_name="loader_local_cg_helpers")
+    lagrangian = canonical_string(expressions["lagrangian"])
+
+    assert "external_tau" not in lagrangian
+    assert "loader_local_cg_helpers::cg_tensor_gen_SU2L_fund" in lagrangian
+    assert lagrangian.startswith("2*pychete::CG(")
+    assert theory.cg_tensors["gen_SU2L_fund"].source_text == "builtin:gen"
+
+
+def test_s1s3_model_lagrangian_expands_local_cg_helpers() -> None:
+    theory, expressions = load_matchete_model(Path("assets/models/S1S3LQs.m"))
+    lagrangian = canonical_string(expressions["lagrangian"])
+
+    assert "external_tauSU2L" not in lagrangian
+    assert "external_epsilonSU2L" not in lagrangian
+    assert "external_fSU2L" not in lagrangian
+    assert "S1S3LQs::cg_tensor_gen_SU2L_fund" in lagrangian
+    assert "S1S3LQs::cg_tensor_eps_SU2L" in lagrangian
+    assert "S1S3LQs::cg_tensor_fStruct_SU2L" in lagrangian
+    assert lagrangian.count("pychete::CG(") >= 5
+    theory._validate_registered_expression(expressions["lagrangian"])
+
+
 def test_sm_model_metadata_loads_without_lagrangian_parsing() -> None:
     theory, expressions = load_matchete_model(Path("assets/models/SM.m"), include_lagrangian=False)
 

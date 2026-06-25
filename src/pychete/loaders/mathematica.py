@@ -18,8 +18,10 @@ full Wolfram syntax support.
 from __future__ import annotations
 
 import re
+from dataclasses import dataclass
 from math import factorial
 from pathlib import Path
+from typing import TypeAlias
 
 from symbolica import Expression
 from symbolica.core import AtomType, ParseMode
@@ -38,6 +40,15 @@ _NCM_CHAIN_RE = re.compile(
     r"\s*\*\*\s*"
     r"([A-Za-z][A-Za-z0-9_]*\[\])"
 )
+
+
+@dataclass(frozen=True)
+class _LocalFunction:
+    parameters: tuple[str, ...]
+    body: str
+
+
+_ModuleEnv: TypeAlias = dict[str, Expression | _LocalFunction]
 
 
 def _strip_comments(text: str) -> str:
@@ -198,6 +209,13 @@ def _parse_int_list(raw: str) -> tuple[int, ...]:
     return (_parse_int(value),)
 
 
+def _parse_pattern_name(raw: str) -> str:
+    value = _preprocess_names(raw).strip()
+    if value.endswith("_"):
+        value = value[:-1]
+    return _clean_name(value)
+
+
 def _parse_coupling_self_conjugate(raw: str) -> CouplingSelfConjugate:
     value = _preprocess_names(raw).strip()
     if value.startswith("{") and value.endswith("}"):
@@ -298,6 +316,17 @@ def _parse_representation_name(raw: str) -> tuple[str, str]:
     if apply_match:
         return _clean_name(apply_match.group(1)), _clean_name(apply_match.group(2))
     raise NotImplementedError(f"Unsupported representation name: {raw}")
+
+
+def _parse_module_function_definition(statement: str) -> tuple[str, _LocalFunction] | None:
+    if ":=" not in statement:
+        return None
+    lhs, body = statement.split(":=", 1)
+    try:
+        head, raw_args = _parse_call(lhs.strip())
+    except NotImplementedError:
+        return None
+    return _clean_name(head), _LocalFunction(tuple(_parse_pattern_name(arg) for arg in raw_args), body.strip())
 
 
 def _rewrite_prefix_apply(expr: str, head: str) -> str:
@@ -441,13 +470,13 @@ def _is_parsed_head(expr: Expression, name: str) -> bool:
     return expr.get_type() is AtomType.Fn and _plain_name(expr) == name
 
 
-def _matchete_list_items(expr: Expression, theory: Theory, env: dict[str, Expression]) -> tuple[Expression, ...]:
+def _matchete_list_items(expr: Expression, theory: Theory, env: _ModuleEnv) -> tuple[Expression, ...]:
     if not _is_parsed_head(expr, "List"):
         raise ValueError(f"Expected Mathematica List expression, got {expr.format_plain()}")
     return tuple(_convert_expression(expr[i], theory, env) for i in range(len(expr)))
 
 
-def _matchete_field_type(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+def _matchete_field_type(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
     if expr.get_type() is AtomType.Var:
         name = _plain_name(expr)
         if name == "Scalar":
@@ -472,7 +501,7 @@ def _matchete_registered_label(expr: Expression, theory: Theory, registry: str) 
     return theory.symbol(name, role=SymbolRole.EXTERNAL)
 
 
-def _matchete_index_label(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+def _matchete_index_label(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
     if expr.get_type() is AtomType.Var:
         name = _plain_name(expr)
         dummy = re.fullmatch(r"d\$\$(\d+)", name)
@@ -482,7 +511,7 @@ def _matchete_index_label(expr: Expression, theory: Theory, env: dict[str, Expre
     return _convert_expression(expr, theory, env)
 
 
-def _matchete_projector(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+def _matchete_projector(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
     if len(expr) != 1:
         raise NotImplementedError(f"Unsupported Proj expression: {expr.format_plain()}")
     value = _convert_expression(expr[0], theory, env)
@@ -502,7 +531,7 @@ def _matchete_group_name(expr: Expression, theory: Theory) -> str:
     raise NotImplementedError(f"Unsupported CG group label: {expr.format_plain()}")
 
 
-def _matchete_builtin_cg_label(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression | None:
+def _matchete_builtin_cg_label(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression | None:
     if expr.get_type() is not AtomType.Fn:
         return None
     name = _plain_name(expr)
@@ -516,7 +545,7 @@ def _matchete_builtin_cg_label(expr: Expression, theory: Theory, env: dict[str, 
     return None
 
 
-def _matchete_cg(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+def _matchete_cg(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
     if len(expr) != 2:
         raise NotImplementedError(f"Unsupported CG expression: {expr.format_plain()}")
     label = _matchete_builtin_cg_label(expr[0], theory, env)
@@ -532,14 +561,17 @@ def _plain_name(expr: Expression) -> str:
     return expr.get_name().split("::")[-1]
 
 
-def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Expression]) -> Expression:
+def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
     kind = expr.get_type()
     if kind is AtomType.Num:
         return expr
     if kind is AtomType.Var:
         name = _plain_name(expr)
         if name in env:
-            return env[name]
+            value = env[name]
+            if isinstance(value, _LocalFunction):
+                raise ValueError(f"Local function {name} was used without arguments")
+            return value
         if name == "PR":
             return s.PR
         if name == "PL":
@@ -571,6 +603,17 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
         return _convert_expression(expr[0], theory, env) ** _convert_expression(expr[1], theory, env)
     if kind is AtomType.Fn:
         name = _plain_name(expr)
+        local_value = env.get(name)
+        if isinstance(local_value, _LocalFunction):
+            local_function = local_value
+            if len(expr) != len(local_function.parameters):
+                raise NotImplementedError(
+                    f"Local function {name} expects {len(local_function.parameters)} arguments, got {len(expr)}"
+                )
+            call_env: _ModuleEnv = dict(env)
+            for parameter, argument in zip(local_function.parameters, args(expr), strict=True):
+                call_env[parameter] = _convert_expression(argument, theory, env)
+            return _eval_expression(local_function.body, theory, call_env)
         if name == "List":
             return list_expr(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name == "Bar":
@@ -655,7 +698,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: dict[str, Express
     raise NotImplementedError(f"Unsupported parsed expression: {expr.format_plain()}")
 
 
-def _eval_expression(text: str, theory: Theory, env: dict[str, Expression]) -> Expression:
+def _eval_expression(text: str, theory: Theory, env: _ModuleEnv) -> Expression:
     normalized = _normalize_expression(text)
     parsed = Expression.parse(normalized, mode=ParseMode.Mathematica)
     return _convert_expression(parsed, theory, env).expand()
@@ -679,12 +722,17 @@ def _eval_expression_list(text: str, theory: Theory) -> list[Expression]:
 def _eval_module(args_raw: list[str], theory: Theory) -> Expression:
     if len(args_raw) != 2:
         raise NotImplementedError("Only Module[{locals}, body] is supported")
-    env: dict[str, Expression] = {}
+    env: _ModuleEnv = {}
     body = args_raw[1]
     statements = _split_top_level(body, ";")
     result = Expression.num(0)
     for statement in statements:
         if ":=" in statement:
+            definition = _parse_module_function_definition(statement)
+            if definition is None:
+                continue
+            name, local_function = definition
+            env[name] = local_function
             continue
         if "=" in statement:
             name, value = statement.split("=", 1)

@@ -3238,6 +3238,44 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 208 passed,
     1 skipped in 148.01s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Expanded the supported Mathematica model-loader subset for local CG helper
+  functions used by the default S1/S3 leptoquark model:
+  - inspected the current parsed `S1S3LQs` Lagrangian and found opaque
+    `external_tauSU2L`, `external_epsilonSU2L`, and `external_fSU2L` helper
+    heads coming from local `Module` definitions such as
+    `tauSU2L[J_, i_, j_] := 2 CG[gen[SU2L[fund]], {...}]`;
+  - added a parser-boundary `_LocalFunction` environment for simple
+    Mathematica `SetDelayed` function definitions inside `Module`, binding
+    actual call arguments to the stored pattern parameters and evaluating the
+    original body through the existing pychete/Symbolica conversion path;
+  - retained the previous conservative behavior for unsupported delayed
+    assignments by skipping non-call `:=` statements rather than growing the
+    direct Python loader toward full Wolfram syntax;
+  - the direct `S1S3LQs.m` asset now parses those helpers into registered
+    `CG(...)` atoms: 5 `gen_SU2L_fund`, 4 `eps_SU2L`, and 1
+    `fStruct_SU2L` occurrences in the canonical Lagrangian, with no remaining
+    local helper external heads;
+  - added focused tests for a synthetic local CG helper and for the real
+    `S1S3LQs` model asset.
+- Verification for the local CG helper expansion slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/models/test_model_loaders.py -q'` passed: 16 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+- Final verification for the local CG helper expansion slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/models/test_model_loaders.py -q'` passed: 16 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 210 passed,
+    1 skipped in 147.70s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -3291,9 +3329,11 @@ discoveries, dependency patches, blockers, and remaining work.
   with Matchete's saved `DiracProduct[...]` expressions.
 - Add full SM/CG Lagrangian expression parsing to the model loader or replace
   direct source parsing for those expressions with generated pychete-owned state
-  fixtures.
-- Lower S1/S3 local CG helper heads and other tensor contractions through the
-  new spenso/idenso adapter layer.
+  fixtures. The direct loader now expands the local S1/S3 CG helper definitions
+  used by the default `S1S3LQs.m` asset into registered `CG(...)` atoms, but
+  broader Wolfram helper syntax should still use the optional Mathematica
+  exporter route.
+- Lower remaining tensor contractions through the spenso/idenso adapter layer.
 - Expand the converter/fixture path to additional mappable Matchete validation
   assets beyond the default matching targets.
 - Apply the selective evaluator-probe gap-report plumbing to concrete Matchete
