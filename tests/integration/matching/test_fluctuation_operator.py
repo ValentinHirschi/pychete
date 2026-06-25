@@ -1101,6 +1101,52 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
             stage=VakintIntegralStage.EVALUATED,
             engine=evaluated_power_engine,
         )
+    expected_power_type_internal = vacuum_integrals_backend.evaluate_one_loop_vakint_expression(
+        expected_power_type_vakint_sum,
+        combine_terms=True,
+    )
+    internal_power_result = setup.power_type_internal_matching_result(
+        tensor_reduce=False,
+        combine_terms=True,
+    )
+    expected_power_type_pole = vakint_backend.pole_part(expected_power_type_internal)
+    expected_power_type_finite = vakint_backend.finite_part(expected_power_type_internal)
+    assert internal_power_result.metadata["stage"] == "power_type_internal_integral_result"
+    assert internal_power_result.metadata["integral_backend"] == "pychete_internal"
+    assert internal_power_result.metadata["tensor_reduce"] is False
+    assert internal_power_result.metadata["combine_terms"] is True
+    assert_expr_equal(internal_power_result.off_shell_eft_lagrangian, expected_power_type_internal)
+    assert_expr_equal(internal_power_result.on_shell_eft_lagrangian, expected_power_type_internal)
+    assert_expr_equal(
+        internal_power_result.expression("power_type_internal_integral_sum"),
+        expected_power_type_internal,
+    )
+    assert_expr_equal(
+        internal_power_result.expression("power_type_internal_integral_pole_part"),
+        expected_power_type_pole,
+    )
+    assert_expr_equal(
+        internal_power_result.expression("power_type_internal_integral_finite_part"),
+        expected_power_type_finite,
+    )
+    internal_power_subtracted = setup.power_type_internal_minimal_subtraction_result(
+        tensor_reduce=False,
+        combine_terms=True,
+    )
+    assert internal_power_subtracted.metadata["stage"] == "power_type_internal_minimal_subtraction_result"
+    assert internal_power_subtracted.metadata["subtraction_scheme"] == "minimal_subtraction_preview"
+    assert internal_power_subtracted.metadata["poles_subtracted"] is True
+    assert internal_power_subtracted.metadata["integral_backend"] == "pychete_internal"
+    assert_expr_equal(internal_power_subtracted.off_shell_eft_lagrangian, expected_power_type_finite)
+    assert_expr_equal(internal_power_subtracted.on_shell_eft_lagrangian, expected_power_type_finite)
+    assert_expr_equal(
+        internal_power_subtracted.expression("power_type_internal_integral_ms_counterterm"),
+        -expected_power_type_pole,
+    )
+    assert_expr_equal(
+        internal_power_subtracted.expression("power_type_internal_integral_finite_part"),
+        expected_power_type_finite,
+    )
     with pytest.raises(ValueError, match="vakint integral stage"):
         setup.power_type_vakint_integral_sum(stage="bad-stage")
     assert_expr_equal(

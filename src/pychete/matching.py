@@ -1239,11 +1239,12 @@ class OneLoopSetup:
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
     ) -> Expression:
-        """Evaluate single-scale power-type vacuum integrals with pychete.
+        """Evaluate power-type vacuum integrals with pychete.
 
         Native vakint remains responsible for optional topology-independent
-        tensor reduction. The scalar single-scale massive topology evaluation
-        is then performed by pychete's internal analytic backend. Set
+        tensor reduction. The scalar one-loop topology evaluation, including
+        single-scale, massless, and mixed-mass analytic cases, is then
+        performed by pychete's internal backend. Set
         ``combine_terms`` to route the evaluated expression through
         Symbolica's native ``together()`` common-denominator pass.
         """
@@ -1267,6 +1268,137 @@ class OneLoopSetup:
                 mu_r_squared=mu_r_squared,
                 combine_terms=combine_terms,
             )
+
+    def power_type_internal_matching_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the power-type result evaluated by pychete's internal integral backend."""
+
+        from .backends import vakint
+
+        contributions = self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)
+        numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
+        raw_vakint_sum = self.power_type_vakint_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+        )
+        evaluated = self.power_type_internal_integral_sum(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=evaluated,
+            on_shell_eft_lagrangian=evaluated,
+            fluctuation_operators=self.fluctuation_operator.to_expression_map(),
+            supertraces={
+                **_named_internal_supertraces(
+                    contributions,
+                    include_light=include_light,
+                    tensor_reduce=tensor_reduce,
+                    tensor_reduce_engine=tensor_reduce_engine,
+                    epsilon=epsilon,
+                    mu_r_squared=mu_r_squared,
+                    combine_terms=combine_terms,
+                ),
+                **self.power_type_expression_map(prefix="power_type_supertrace"),
+                "power_type_eft_lagrangian": numerator_sum,
+                "power_type_vakint_integral_sum": raw_vakint_sum,
+                "power_type_internal_integral_sum": evaluated,
+                "power_type_internal_integral_pole_part": pole,
+                "power_type_internal_integral_finite_part": finite,
+            },
+            metadata={
+                "stage": "power_type_internal_integral_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                "power_type_contribution_count": self.power_type_contribution_count,
+                "on_shell_reduced": False,
+                "integral_backend": "pychete_internal",
+                "tensor_reduce": tensor_reduce,
+                "combine_terms": combine_terms,
+                "max_pole_order": max_pole_order,
+            },
+        )
+
+    def power_type_internal_minimal_subtraction_result(
+        self,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the internal-backend finite power-type result after pole subtraction."""
+
+        unrenormalized = self.power_type_internal_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = unrenormalized.expression("power_type_internal_integral_pole_part")
+        finite = unrenormalized.expression("power_type_internal_integral_finite_part")
+        counterterm = (-pole).expand()
+        finite_named_supertraces = _finite_named_supertraces(
+            unrenormalized.supertraces,
+            (
+                contribution.name
+                for contribution in self.power_type_contributions(
+                    heavy_field_dimension=heavy_field_dimension,
+                )
+            ),
+            epsilon=epsilon,
+        )
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            matching_conditions=unrenormalized.matching_conditions,
+            fluctuation_operators=unrenormalized.fluctuation_operators,
+            supertraces={
+                **unrenormalized.supertraces,
+                **finite_named_supertraces,
+                "power_type_internal_integral_ms_counterterm": counterterm,
+            },
+            metadata={
+                **unrenormalized.metadata,
+                "stage": "power_type_internal_minimal_subtraction_result",
+                "complete": False,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "on_shell_reduced": False,
+            },
+        )
 
     def interaction_power_type_vakint_integral_sum(
         self,
@@ -1316,14 +1448,13 @@ class OneLoopSetup:
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
     ) -> Expression:
-        """Evaluate single-scale interaction-power vacuum integrals with pychete.
+        """Evaluate interaction-power vacuum integrals with pychete.
 
         This is the internal analytic counterpart to
         ``interaction_power_type_vakint_integral_sum(stage="evaluated")`` for
-        one-loop scalar topologies that are massive and single-scale after
-        optional vakint tensor reduction. Set ``combine_terms`` to route the
-        evaluated expression through Symbolica's native ``together()``
-        common-denominator pass.
+        one-loop scalar topologies after optional vakint tensor reduction. Set
+        ``combine_terms`` to route the evaluated expression through Symbolica's
+        native ``together()`` common-denominator pass.
         """
 
         _LOGGER.info("assembling interaction-power vakint integral sum for %s", self.theory.name)

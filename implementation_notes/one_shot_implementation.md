@@ -352,3 +352,33 @@
     `pytest tests/integration/validation/test_validation_fixtures.py::test_committed_model_fixtures_store_matching_smeft_wilson_metadata tests/integration/validation/test_validation_fixtures.py::test_committed_matching_fixtures_store_smeft_wilson_metadata tests/unit/loaders/test_matchete_previous_results_converter.py -q`:
     3 passed.
   - `python -m mypy`: success, no issues in 33 source files.
+
+## Current Slice: Power-Type Internal Integral Results
+
+- Reviewed the next one-loop backend frontier before running broad tests. The
+  internal scalar one-loop backend already supports single-scale, massless, and
+  mixed-mass analytic topologies through Symbolica replacement/coefficient
+  primitives, while the intentionally single-scale helper and native vakint
+  evaluation paths still reject unsupported topologies.
+- Added `OneLoopSetup.power_type_internal_matching_result(...)`, mirroring the
+  existing interaction-only internal result path for the full power-type
+  aggregate. It keeps raw vakint topology sums, internally evaluated sums,
+  pole parts, finite parts, named supertraces, and explicit metadata showing
+  `integral_backend="pychete_internal"`.
+- Added `OneLoopSetup.power_type_internal_minimal_subtraction_result(...)` so
+  full power-type previews can subtract poles through the internal analytic
+  backend instead of requiring native vakint evaluation. This is important for
+  mixed heavy/light mass topologies where vakint's analytic single-scale
+  evaluator must not be used.
+- Updated docstrings for internal power-type and interaction-power evaluation
+  to state that pychete's internal one-loop scalar backend covers single-scale,
+  massless, and mixed-mass analytic cases after optional vakint tensor
+  reduction.
+- Targeted validation so far:
+  - exact mixed-mass power-type internal result regression:
+    `pytest tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data -q`:
+    1 passed.
+  - matching marker gate:
+    `pytest -m matching tests/integration/matching -q`: 65 passed.
+  - `python -m mypy`: success, no issues in 33 source files.
+  - `git diff --check`: clean.
