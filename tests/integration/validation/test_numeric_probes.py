@@ -3,7 +3,15 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import MatchingResult, Theory, canonical_string, evaluator_probe_equal
+from pychete import (
+    MatchingResult,
+    NumericProbePlan,
+    Theory,
+    build_numeric_probe_plan,
+    canonical_string,
+    deterministic_probe_samples,
+    evaluator_probe_equal,
+)
 from pychete.validation_fixtures import _gap_report
 
 
@@ -43,6 +51,26 @@ def test_evaluator_probe_equal_validates_samples_match_parameters() -> None:
 
     with pytest.raises(ValueError, match="same length as parameters"):
         evaluator_probe_equal(x + y, y + x, [x, y], [[1.0]])
+
+
+def test_build_numeric_probe_plan_discovers_symbols_with_symbolica() -> None:
+    x, y, z = S("probe_plan_x", "probe_plan_y", "probe_plan_z")
+
+    samples = deterministic_probe_samples([x, z], sample_count=2)
+    plan = build_numeric_probe_plan(
+        [x + y, (x + 1) / (z + 2), z.sin()],
+        exclude_symbols=[y],
+        sample_count=2,
+    )
+
+    assert isinstance(plan, NumericProbePlan)
+    assert tuple(canonical_string(parameter) for parameter in plan.parameters) == (
+        canonical_string(x),
+        canonical_string(z),
+    )
+    assert plan.samples == samples
+    assert plan.parameter_count == 2
+    assert plan.sample_count == 2
 
 
 def test_matching_result_comparison_can_use_evaluator_probe_fallback() -> None:
@@ -298,8 +326,8 @@ def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() 
         "reference_fixture",
         candidate,
         reference,
-        probe_parameters=[x],
-        probe_samples=[[0.0], [0.7], [1.3]],
+        auto_probe_samples=True,
+        probe_sample_count=3,
         probe_matching_condition_names=("probe_condition",),
     )
     report_obj = report.to_json_obj()
@@ -313,3 +341,36 @@ def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() 
     assert report.numeric_probe_different_common_matching_condition_count == 0
     assert report_obj["numeric_probe_equal_common_matching_condition_names"] == ["probe_condition"]
     assert report_obj["numeric_probe_equal_common_matching_condition_count"] == 1
+
+
+def test_fixture_gap_report_auto_probe_requires_unambiguous_inputs() -> None:
+    x = S("fixture_gap_auto_probe_x")
+    theory = Theory("fixture_gap_auto_probe")
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={"condition": x},
+    )
+
+    with pytest.raises(ValueError, match="cannot be combined"):
+        _gap_report(
+            "candidate_fixture",
+            "reference_fixture",
+            result,
+            result,
+            auto_probe_samples=True,
+            probe_parameters=[x],
+            probe_samples=[[2.0]],
+            probe_matching_condition_names=("condition",),
+        )
+
+    with pytest.raises(ValueError, match="requires probe_supertrace_names or probe_matching_condition_names"):
+        _gap_report(
+            "candidate_fixture",
+            "reference_fixture",
+            result,
+            result,
+            auto_probe_samples=True,
+        )

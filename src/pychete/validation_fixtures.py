@@ -13,7 +13,7 @@ from .matching_options import OneLoopIntegralBackend, VakintIntegralStage
 from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
-from .validation import NumericValue
+from .validation import NumericProbePlan, NumericValue, build_numeric_probe_plan
 
 TensorComponent = Expression | int | float | complex
 
@@ -393,6 +393,9 @@ class ValidationFixture:
         probe_samples: Sequence[Sequence[NumericValue]] | None = None,
         probe_supertrace_names: Iterable[str] | None = None,
         probe_matching_condition_names: Iterable[str] | None = None,
+        auto_probe_samples: bool = False,
+        probe_sample_count: int = 3,
+        probe_exclude_symbols: Sequence[Expression] = (),
         probe_absolute_tolerance: float = 1e-9,
         probe_relative_tolerance: float = 1e-9,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
@@ -455,6 +458,9 @@ class ValidationFixture:
             probe_samples=probe_samples,
             probe_supertrace_names=probe_supertrace_names,
             probe_matching_condition_names=probe_matching_condition_names,
+            auto_probe_samples=auto_probe_samples,
+            probe_sample_count=probe_sample_count,
+            probe_exclude_symbols=probe_exclude_symbols,
             probe_absolute_tolerance=probe_absolute_tolerance,
             probe_relative_tolerance=probe_relative_tolerance,
         )
@@ -551,6 +557,28 @@ def _reference_matching_condition_targets(reference: MatchingResult) -> dict[str
     }
 
 
+def _probe_plan_for_names(
+    candidate: MatchingResult,
+    reference: MatchingResult,
+    names: Iterable[str],
+    *,
+    sample_count: int,
+    exclude_symbols: Sequence[Expression],
+) -> NumericProbePlan:
+    expressions: list[Expression] = []
+    for name in names:
+        for result in (candidate, reference):
+            try:
+                expressions.append(result.expression(name))
+            except KeyError:
+                continue
+    return build_numeric_probe_plan(
+        expressions,
+        exclude_symbols=exclude_symbols,
+        sample_count=sample_count,
+    )
+
+
 def _gap_report(
     candidate_fixture: str,
     reference_name: str,
@@ -561,17 +589,46 @@ def _gap_report(
     probe_samples: Sequence[Sequence[NumericValue]] | None = None,
     probe_supertrace_names: Iterable[str] | None = None,
     probe_matching_condition_names: Iterable[str] | None = None,
+    auto_probe_samples: bool = False,
+    probe_sample_count: int = 3,
+    probe_exclude_symbols: Sequence[Expression] = (),
     probe_absolute_tolerance: float = 1e-9,
     probe_relative_tolerance: float = 1e-9,
 ) -> MatchingFixtureGapReport:
+    if auto_probe_samples and (probe_parameters is not None or probe_samples is not None):
+        raise ValueError("auto_probe_samples cannot be combined with explicit probe_parameters/probe_samples")
+    if auto_probe_samples and probe_supertrace_names is None and probe_matching_condition_names is None:
+        raise ValueError("auto_probe_samples requires probe_supertrace_names or probe_matching_condition_names")
+
     candidate_supertraces = set(candidate.supertraces)
     reference_supertraces = set(reference.supertraces)
     common_supertraces = candidate_supertraces & reference_supertraces
+    supertrace_probe_parameters: Sequence[Expression] | None
+    supertrace_probe_samples: Sequence[Sequence[NumericValue]] | None
+    if auto_probe_samples and probe_supertrace_names is not None:
+        supertrace_plan = _probe_plan_for_names(
+            candidate,
+            reference,
+            probe_supertrace_names,
+            sample_count=probe_sample_count,
+            exclude_symbols=probe_exclude_symbols,
+        )
+        supertrace_probe_parameters = supertrace_plan.parameters
+        supertrace_probe_samples = supertrace_plan.samples
+    elif auto_probe_samples:
+        supertrace_probe_parameters = None
+        supertrace_probe_samples = None
+    elif probe_matching_condition_names is not None and probe_supertrace_names is None:
+        supertrace_probe_parameters = None
+        supertrace_probe_samples = None
+    else:
+        supertrace_probe_parameters = probe_parameters
+        supertrace_probe_samples = probe_samples
     compared_supertraces = candidate.compare_to(
         reference,
         names=_sorted_names(common_supertraces),
-        probe_parameters=probe_parameters,
-        probe_samples=probe_samples,
+        probe_parameters=supertrace_probe_parameters,
+        probe_samples=supertrace_probe_samples,
         probe_names=probe_supertrace_names,
         absolute_tolerance=probe_absolute_tolerance,
         relative_tolerance=probe_relative_tolerance,
@@ -579,8 +636,24 @@ def _gap_report(
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
     common_conditions = candidate_conditions & reference_conditions
-    condition_probe_parameters = probe_parameters if probe_matching_condition_names is not None else None
-    condition_probe_samples = probe_samples if probe_matching_condition_names is not None else None
+    condition_probe_parameters: Sequence[Expression] | None
+    condition_probe_samples: Sequence[Sequence[NumericValue]] | None
+    if auto_probe_samples and probe_matching_condition_names is not None:
+        condition_plan = _probe_plan_for_names(
+            candidate,
+            reference,
+            probe_matching_condition_names,
+            sample_count=probe_sample_count,
+            exclude_symbols=probe_exclude_symbols,
+        )
+        condition_probe_parameters = condition_plan.parameters
+        condition_probe_samples = condition_plan.samples
+    elif auto_probe_samples:
+        condition_probe_parameters = None
+        condition_probe_samples = None
+    else:
+        condition_probe_parameters = probe_parameters if probe_matching_condition_names is not None else None
+        condition_probe_samples = probe_samples if probe_matching_condition_names is not None else None
     compared_conditions = candidate.compare_to(
         reference,
         names=_sorted_names(common_conditions),

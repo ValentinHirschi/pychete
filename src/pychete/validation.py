@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
+from html import escape
 from typing import Any, Sequence
 
 from symbolica import Expression
+
+from .symbols import canonical_string, display_string
 
 
 NumericValue = int | float | complex
@@ -16,6 +19,91 @@ class NumericProbeResult:
     equal: bool
     max_abs_difference: float
     differences: tuple[complex, ...]
+
+
+@dataclass(frozen=True)
+class NumericProbePlan:
+    """Deterministic Symbolica evaluator inputs for numerical equivalence probes."""
+
+    parameters: tuple[Expression, ...]
+    samples: tuple[tuple[NumericValue, ...], ...]
+
+    @property
+    def parameter_count(self) -> int:
+        """Number of Symbolica parameters supplied to the evaluator."""
+
+        return len(self.parameters)
+
+    @property
+    def sample_count(self) -> int:
+        """Number of deterministic sample points in this plan."""
+
+        return len(self.samples)
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{NumericProbePlan}}\left({self.parameter_count},\ {self.sample_count}\right)$"
+
+    def _repr_html_(self) -> str:
+        parameters = ", ".join(escape(display_string(parameter)) for parameter in self.parameters)
+        return (
+            f"<code>NumericProbePlan(parameters=[{parameters}], "
+            f"samples={self.sample_count})</code>"
+        )
+
+
+def deterministic_probe_samples(
+    parameters: Sequence[Expression],
+    *,
+    sample_count: int = 3,
+) -> tuple[tuple[NumericValue, ...], ...]:
+    """Return stable nonzero sample points for Symbolica evaluator probes.
+
+    The points are deterministic and positive, avoiding the most common
+    singular sample values such as 0 and 1. They are not a proof of equality;
+    they are intended as a reproducible fallback when canonical Symbolica
+    equality is too strict for a selected validation expression.
+    """
+
+    if sample_count < 1:
+        raise ValueError("sample_count must be positive")
+    parameter_count = len(parameters)
+    return tuple(
+        tuple(
+            float((sample_index + 2) * (parameter_index + 3) + 1) / float(parameter_index + 2)
+            for parameter_index in range(parameter_count)
+        )
+        for sample_index in range(sample_count)
+    )
+
+
+def build_numeric_probe_plan(
+    expressions: Sequence[Expression],
+    *,
+    exclude_symbols: Sequence[Expression] = (),
+    include_function_symbols: bool = False,
+    sample_count: int = 3,
+) -> NumericProbePlan:
+    """Build deterministic evaluator inputs from symbols appearing in expressions.
+
+    Symbol discovery uses native ``Expression.get_all_symbols(...)`` and sample
+    generation is deterministic so fixture comparisons remain reproducible.
+    ``exclude_symbols`` can remove known constants or parameters that should be
+    held fixed outside the probe.
+    """
+
+    excluded = {canonical_string(symbol) for symbol in exclude_symbols}
+    by_name: dict[str, Expression] = {}
+    for expr in expressions:
+        for symbol in expr.get_all_symbols(include_function_symbols=include_function_symbols):
+            name = canonical_string(symbol)
+            if name in excluded:
+                continue
+            by_name.setdefault(name, symbol)
+    parameters = tuple(symbol for _, symbol in sorted(by_name.items()))
+    return NumericProbePlan(
+        parameters=parameters,
+        samples=deterministic_probe_samples(parameters, sample_count=sample_count),
+    )
 
 
 def evaluator_probe_equal(

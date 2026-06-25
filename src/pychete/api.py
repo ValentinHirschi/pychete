@@ -48,7 +48,13 @@ from .theory_metadata import (
     RepresentationReality,
 )
 from .tree_matching import HeavyScalarSolution
-from .validation import NumericProbeResult, evaluator_probe_equal
+from .validation import (
+    NumericProbePlan,
+    NumericProbeResult,
+    build_numeric_probe_plan,
+    deterministic_probe_samples,
+    evaluator_probe_equal,
+)
 
 __all__ = [
     "BuiltinIndexType",
@@ -72,6 +78,7 @@ __all__ = [
     "MatchingExpressionComparison",
     "MatchingResult",
     "MatchingResultComparison",
+    "NumericProbePlan",
     "NumericProbeResult",
     "OneLoopMatchingNotImplementedError",
     "OneLoopIntegralBackend",
@@ -93,6 +100,8 @@ __all__ = [
     "collect_indices",
     "display_string",
     "dummy_indices",
+    "build_numeric_probe_plan",
+    "deterministic_probe_samples",
     "evaluator_probe_equal",
     "evaluate_one_loop_single_scale_vakint_expression",
     "evaluate_one_loop_single_scale_vacuum_integral",

@@ -3500,6 +3500,44 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 217 passed, 1
     skipped in 174.16s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added deterministic Symbolica-backed numeric probe planning for future
+  fixture comparisons:
+  - `NumericProbePlan`, `deterministic_probe_samples(...)`, and
+    `build_numeric_probe_plan(...)` are now public pychete APIs, with
+    parameter discovery delegated to native `Expression.get_all_symbols(...)`;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` and `_gap_report(...)`
+    can opt into `auto_probe_samples=True` for selected
+    `probe_supertrace_names` and/or `probe_matching_condition_names`, building
+    evaluator parameters and deterministic sample rows from the selected
+    candidate/reference expressions;
+  - automatic probe sampling intentionally requires explicit probe-name
+    selectors and refuses explicit `probe_parameters`/`probe_samples` in the
+    same call, preventing broad accidental numerical evaluation of every large
+    Matchete fixture expression.
+- Final verification for the deterministic probe-plan slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 12
+    passed in 0.08s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in 0.02s.
+  - `git diff --check` passed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py
+    tests/unit/definitions/test_public_api.py -q'` passed: 16 passed in 0.06s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 17
+    passed in 167.06s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 219 passed, 1
+    skipped in 172.01s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
