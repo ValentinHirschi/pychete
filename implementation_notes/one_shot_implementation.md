@@ -733,6 +733,41 @@
   dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
   passed.
 
+## Current CDE Supertrace Integration Slice
+
+- Connected the bosonic CDE propagator expansion building block to selected
+  interaction-power supertrace kernels without changing the default one-loop
+  matching path. `SupertraceBlockTrace.bosonic_cde_expansion_terms(...)`
+  expands one ordered trace by splicing each propagator slot's `OpenCD(...)`
+  operands into the non-commutative block-entry chain before optional
+  `act_with_open_covariant_derivatives(...)`.
+- Added `BosonicCDETraceExpansionTerm` as the structured public result object
+  for one expanded term. It carries the numerator, mass-squared slots, and
+  propagator powers separately, exposes a diagnostic `SupertraceKernel(...)`
+  expression, and lowers directly to the existing vakint topology expression
+  with explicit powers.
+- Added selected-trace setup helpers:
+  `OneLoopSetup.interaction_bosonic_cde_kernel_expression_map(...)` and
+  `OneLoopSetup.interaction_bosonic_cde_vakint_integral_expression_map(...)`.
+  Both require an explicit map from trace name to expansion-index sequences,
+  so exploratory CDE work scales with requested traces/orders instead of
+  globally expanding every generated trace.
+- The denominator mass/power alignment follows the ordered closed trace after
+  each block entry. This preserves the open-derivative ordering needed before
+  loop-momentum tensor reduction and still lowers repeated propagators as
+  single vakint props with the accumulated power.
+- Exported `BosonicCDETraceExpansionTerm` through `pychete.api` and package
+  root `pychete`, keeping the new CDE diagnostic surface discoverable.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py -k "interaction_bosonic_cde or
+  public_api" -q` passed with 6 tests and 57 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_cde.py -q` passed with 9 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
+  `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -762,9 +797,11 @@
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where
   Matchete validation requires structured field redefinitions.
-- Integrate the commutator emitter/lowering pair into the generated
-  supertrace/CDE stages that produce the gauge Wilson structures needed by
-  `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current coefficients.
+- Wire the selected CDE supertrace expansion into the full one-loop matching
+  path behind explicit options, then integrate the commutator emitter/lowering
+  pair into the generated CDE stages that produce the gauge Wilson structures
+  needed by `cHB`, `cHW`, `cHWB`, and related fermionic Higgs-current
+  coefficients.
 - Add an on-shell/IBP basis-reduction strategy for derivative-slot Higgs
   operators so generated derivative distributions can project onto Warsaw
   basis targets such as `cH`, `cHBox`, and `cHD`.

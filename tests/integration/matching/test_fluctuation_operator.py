@@ -4,6 +4,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import (
+    BosonicCDETraceExpansionTerm,
     FieldChirality,
     FieldMassKind,
     FieldRole,
@@ -1663,6 +1664,75 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         setup_map["one_loop_setup[interaction_power_type_vakint_integral_sum]"],
         expected_interaction_vakint,
     )
+
+
+def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint() -> None:
+    theory = Theory("one_loop_setup_interaction_bosonic_cde")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    trace = next(trace for trace in setup.interaction_power_type_traces() if trace.name == "hScalar-lScalar")
+    mu = theory.lorentz_index("mu")
+    expansion = {"hScalar-lScalar": ((mu,), ())}
+    first_entry = -y() * light()
+    second_entry = -y() * light()
+    numerator = -2 * Expression.I * s.LoopMomentum(mu) * s.NCM(
+        first_entry,
+        s.OpenCD(s.List(mu)),
+        second_entry,
+    )
+    expected_kernel = s.SupertraceKernel(
+        numerator,
+        s.List(
+            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2) ** 2),
+            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)),
+        ),
+    )
+    expected_integral = vakint_backend.one_loop_vacuum_integral(
+        numerator,
+        (light_mass**2, heavy_mass**2),
+        powers=(2, 1),
+    )
+
+    terms = trace.bosonic_cde_expansion_terms(expansion["hScalar-lScalar"])
+    kernels = setup.interaction_bosonic_cde_kernel_expression_map(expansion)
+    integrals = setup.interaction_bosonic_cde_vakint_integral_expression_map(expansion)
+    acted_integrals = setup.interaction_bosonic_cde_vakint_integral_expression_map(
+        expansion,
+        act_open_derivatives=True,
+    )
+
+    assert len(terms) == 1
+    assert isinstance(terms[0], BosonicCDETraceExpansionTerm)
+    assert tuple(kernels) == ("interaction_bosonic_cde_kernel[hScalar-lScalar,0]",)
+    assert tuple(integrals) == ("interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]",)
+    assert_expr_equal(terms[0].kernel_expression(), expected_kernel)
+    assert_expr_equal(kernels["interaction_bosonic_cde_kernel[hScalar-lScalar,0]"], expected_kernel)
+    assert_expr_equal(integrals["interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]"], expected_integral)
+
+    acted_numerator = -2 * Expression.I * s.LoopMomentum(mu) * s.NCM(
+        first_entry,
+        -y() * light(derivatives=[mu]),
+    )
+    expected_acted_integral = vakint_backend.one_loop_vacuum_integral(
+        acted_numerator,
+        (light_mass**2, heavy_mass**2),
+        powers=(2, 1),
+    )
+    assert_expr_equal(
+        acted_integrals["interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]"],
+        expected_acted_integral,
+    )
+    with pytest.raises(ValueError, match="one entry per trace block"):
+        trace.bosonic_cde_expansion_terms(((mu,),))
+    with pytest.raises(KeyError, match="missing"):
+        setup.interaction_bosonic_cde_kernel_expression_map({"missing": ((),)})
 
 
 def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients() -> None:

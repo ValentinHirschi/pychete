@@ -8,6 +8,7 @@ from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeAlias
 
 from symbolica import Expression, Matrix, Replacement
 
+from .cde import act_with_open_covariant_derivatives, bosonic_covariant_propagator_expansion_terms
 from .eft import series_eft
 from .expr import (
     bar_field_pattern,
@@ -630,11 +631,106 @@ class SupertraceBlockTrace:
         )
         return replace(self, expression=spenso.tensor_network_result_scalar(network))
 
+    def bosonic_cde_expansion_terms(
+        self,
+        expansion_indices: Sequence[Sequence[Expression]],
+        *,
+        act_open_derivatives: bool = False,
+    ) -> tuple[BosonicCDETraceExpansionTerm, ...]:
+        """Return CDE-expanded bosonic propagator terms for this ordered trace.
+
+        ``expansion_indices`` contains one Lorentz-index sequence per
+        propagator slot after each block in the closed trace. The returned
+        terms preserve ordered block entries, splice in the corresponding
+        ``OpenCD`` operands, and keep topology powers explicit for the existing
+        vakint/internal integral backends.
+        """
+
+        if len(expansion_indices) != len(self.blocks):
+            raise ValueError("expansion_indices must contain one entry per trace block")
+        propagator_expansions = tuple(
+            bosonic_covariant_propagator_expansion_terms(indices)
+            for indices in expansion_indices
+        )
+        terms: list[BosonicCDETraceExpansionTerm] = []
+        for entry_path in _supertrace_block_entry_paths(self.blocks):
+            for choices in product(*propagator_expansions):
+                prefactor = Expression.num(entry_path.sign)
+                loop_numerator = Expression.num(1)
+                operands: list[Expression] = []
+                masses: list[Expression] = []
+                powers: list[int] = []
+                for entry, next_mode, expansion in zip(
+                    entry_path.entries,
+                    entry_path.next_modes,
+                    choices,
+                    strict=True,
+                ):
+                    prefactor *= expansion.prefactor
+                    loop_numerator *= expansion.loop_momentum_numerator
+                    operands.append(entry)
+                    operands.extend(expansion.open_cd_operands)
+                    masses.append(_fluctuation_mass_squared(next_mode))
+                    powers.append(expansion.denominator_power)
+                numerator = (prefactor * loop_numerator * _ncm_chain(*operands)).expand()
+                if act_open_derivatives:
+                    numerator = act_with_open_covariant_derivatives(numerator)
+                if is_zero(numerator):
+                    continue
+                terms.append(
+                    BosonicCDETraceExpansionTerm(
+                        theory=self.theory,
+                        trace_name=self.name,
+                        numerator=numerator,
+                        mass_squareds=tuple(masses),
+                        propagator_powers=tuple(powers),
+                    )
+                )
+        return tuple(terms)
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{SupertraceBlockTrace}}\left({escape(self.name)},\ {self.order}\right)$"
 
     def _repr_html_(self) -> str:
         return f"<code>SupertraceBlockTrace({escape(self.name)} order={self.order})</code>"
+
+
+@dataclass(frozen=True)
+class BosonicCDETraceExpansionTerm:
+    """One CDE-expanded supertrace-kernel term with explicit topology powers."""
+
+    theory: Theory
+    trace_name: str
+    numerator: Expression
+    mass_squareds: tuple[Expression, ...]
+    propagator_powers: tuple[int, ...]
+
+    def kernel_expression(self, *, loop_momentum_squared: Expression | None = None) -> Expression:
+        """Return this term as a pychete ``SupertraceKernel`` expression."""
+
+        momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+        denominators = tuple(
+            s.PropagatorDenominator(momentum_squared, mass_squared) ** power
+            for mass_squared, power in zip(self.mass_squareds, self.propagator_powers, strict=True)
+        )
+        return s.SupertraceKernel(self.numerator, list_expr(*(list_expr(denominator) for denominator in denominators)))
+
+    def vakint_integral_expression(self) -> Expression:
+        """Lower this term to the existing one-loop vakint topology representation."""
+
+        from .backends import vakint
+
+        return vakint.one_loop_vacuum_integral(
+            self.numerator,
+            self.mass_squareds,
+            powers=self.propagator_powers,
+        )
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{BosonicCDETraceExpansionTerm}}\left({escape(self.trace_name)}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>BosonicCDETraceExpansionTerm({escape(self.trace_name)} powers={self.propagator_powers})</code>"
 
 
 @dataclass(frozen=True)
@@ -971,6 +1067,74 @@ class OneLoopSetup:
             require_registered_mass=require_registered_mass,
         ):
             entries.update(trace.to_expression_map(prefix=prefix))
+        return entries
+
+    def interaction_bosonic_cde_kernel_expression_map(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        prefix: str = "interaction_bosonic_cde_kernel",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+    ) -> dict[str, Expression]:
+        """Return selected interaction traces after bosonic CDE propagator expansion.
+
+        The default one-loop matching path remains unchanged. This method
+        exposes the next CDE integration stage for tests and diagnostics by
+        expanding only the requested trace names with explicitly supplied
+        expansion-index sequences.
+        """
+
+        traces = {
+            trace.name: trace
+            for trace in self.interaction_power_type_traces(
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
+        }
+        entries: dict[str, Expression] = {}
+        for trace_name, expansion_indices in expansion_indices_by_trace.items():
+            if trace_name not in traces:
+                raise KeyError(f"One-loop setup has no interaction trace {trace_name!r}")
+            terms = traces[trace_name].bosonic_cde_expansion_terms(
+                expansion_indices,
+                act_open_derivatives=act_open_derivatives,
+            )
+            for index, term in enumerate(terms):
+                entries[f"{prefix}[{trace_name},{index}]"] = term.kernel_expression(
+                    loop_momentum_squared=loop_momentum_squared,
+                )
+        return entries
+
+    def interaction_bosonic_cde_vakint_integral_expression_map(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        prefix: str = "interaction_bosonic_cde_vakint_integral",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+    ) -> dict[str, Expression]:
+        """Return selected CDE-expanded interaction traces as vakint topologies."""
+
+        traces = {
+            trace.name: trace
+            for trace in self.interaction_power_type_traces(
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
+        }
+        entries: dict[str, Expression] = {}
+        for trace_name, expansion_indices in expansion_indices_by_trace.items():
+            if trace_name not in traces:
+                raise KeyError(f"One-loop setup has no interaction trace {trace_name!r}")
+            terms = traces[trace_name].bosonic_cde_expansion_terms(
+                expansion_indices,
+                act_open_derivatives=act_open_derivatives,
+            )
+            for index, term in enumerate(terms):
+                entries[f"{prefix}[{trace_name},{index}]"] = term.vakint_integral_expression()
         return entries
 
     def operator_propagator_denominator_chain(
@@ -3637,6 +3801,53 @@ def _cyclic_sector_key(sectors: tuple[str, ...]) -> tuple[str, ...]:
         return ()
     rotations = tuple(sectors[index:] + sectors[:index] for index in range(len(sectors)))
     return min(rotations)
+
+
+@dataclass(frozen=True)
+class _SupertraceBlockEntryPath:
+    sign: int
+    entries: tuple[Expression, ...]
+    next_modes: tuple[FluctuationMode, ...]
+
+
+def _supertrace_block_entry_paths(blocks: tuple[FluctuationOperatorBlock, ...]) -> tuple[_SupertraceBlockEntryPath, ...]:
+    if not blocks:
+        return ()
+    index_ranges = tuple(range(len(block.rows)) for block in blocks)
+    paths: list[_SupertraceBlockEntryPath] = []
+    for row_indices in product(*index_ranges):
+        entries: list[Expression] = []
+        next_modes: list[FluctuationMode] = []
+        valid = True
+        for block_index, block in enumerate(blocks):
+            row_index = row_indices[block_index]
+            column_index = row_indices[(block_index + 1) % len(blocks)]
+            if column_index >= len(block.columns):
+                valid = False
+                break
+            entries.append(block.matrix[row_index][column_index])
+            next_modes.append(block.columns[column_index])
+        if not valid:
+            continue
+        paths.append(
+            _SupertraceBlockEntryPath(
+                sign=blocks[0].rows[row_indices[0]].supertrace_sign,
+                entries=tuple(entries),
+                next_modes=tuple(next_modes),
+            )
+        )
+    return tuple(paths)
+
+
+def _ncm_chain(*operands: Expression) -> Expression:
+    kept = tuple(operand for operand in operands if not is_zero(operand) and not bool(operand == Expression.num(1)))
+    if len(kept) != len(operands) and any(is_zero(operand) for operand in operands):
+        return Expression.num(0)
+    if not kept:
+        return Expression.num(1)
+    if len(kept) == 1:
+        return kept[0]
+    return s.NCM(*kept)
 
 
 def _supertrace_block_product(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:

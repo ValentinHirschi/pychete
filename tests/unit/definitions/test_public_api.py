@@ -157,6 +157,8 @@ def test_public_api_methods_have_docstrings() -> None:
             "interaction_power_type_vakint_finite_part",
             "interaction_power_type_vakint_integral_sum",
             "interaction_power_type_vakint_pole_part",
+            "interaction_bosonic_cde_kernel_expression_map",
+            "interaction_bosonic_cde_vakint_integral_expression_map",
             "interaction_supertrace_expression_map",
             "interaction_supertrace_plan",
             "max_trace_order",
@@ -264,6 +266,7 @@ def test_public_api_methods_have_docstrings() -> None:
         ],
         pychete.SupertraceBlockTrace: [
             "block_sectors",
+            "bosonic_cde_expansion_terms",
             "canonicalize_integrals",
             "cyclic_sector_key",
             "evaluate_integrals",
@@ -275,6 +278,10 @@ def test_public_api_methods_have_docstrings() -> None:
             "simplify_index_algebra",
             "tensor_reduce_integrals",
             "to_expression_map",
+            "vakint_integral_expression",
+        ],
+        pychete.BosonicCDETraceExpansionTerm: [
+            "kernel_expression",
             "vakint_integral_expression",
         ],
     }
