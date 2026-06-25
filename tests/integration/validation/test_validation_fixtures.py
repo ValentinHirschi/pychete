@@ -262,10 +262,10 @@ def test_committed_default_matching_fixtures_load_structured_results_without_mat
 
 def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathematica() -> None:
     expected = {
-        "VLF_toy_model": {"kernels": 25, "contributions": 11, "supertraces": 47},
-        "Singlet_Scalar_Extension": {"kernels": 25, "contributions": 11, "supertraces": 47},
-        "E_VLL": {"kernels": 25, "contributions": 11, "supertraces": 47},
-        "S1S3LQs": {"kernels": 25, "contributions": 11, "supertraces": 47},
+        "VLF_toy_model": {"kernels": 45, "contributions": 18, "supertraces": 75},
+        "Singlet_Scalar_Extension": {"kernels": 45, "contributions": 18, "supertraces": 75},
+        "E_VLL": {"kernels": 45, "contributions": 18, "supertraces": 75},
+        "S1S3LQs": {"kernels": 45, "contributions": 18, "supertraces": 75},
     }
 
     for model, counts in expected.items():
@@ -779,13 +779,16 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
             "reference_supertraces": 13,
             "reference_max_order": 6,
             "conditions": 0,
-            "candidate_supertraces": 47,
+            "candidate_supertraces": 75,
             "common": {
                 "hFermion-lFermion",
                 "hFermion-lFermion-lScalar",
+                "hFermion-lFermion-lVector",
                 "hFermion-lScalar",
                 "hFermion-lScalar-lFermion",
                 "hFermion-lScalar-lScalar",
+                "hFermion-lVector",
+                "hFermion-lVector-lFermion",
             },
             "canonical_equal": set(),
         },
@@ -793,7 +796,7 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
             "reference_supertraces": 24,
             "reference_max_order": 6,
             "conditions": 72,
-            "candidate_supertraces": 47,
+            "candidate_supertraces": 75,
             "common": {
                 "hScalar",
                 "hScalar-hScalar",
@@ -808,14 +811,19 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
             "reference_supertraces": 50,
             "reference_max_order": 6,
             "conditions": 72,
-            "candidate_supertraces": 47,
+            "candidate_supertraces": 75,
             "common": {
                 "hFermion-lFermion",
                 "hFermion-lFermion-lFermion",
                 "hFermion-lFermion-lScalar",
+                "hFermion-lFermion-lVector",
                 "hFermion-lScalar",
                 "hFermion-lScalar-lFermion",
                 "hFermion-lScalar-lScalar",
+                "hFermion-lScalar-lVector",
+                "hFermion-lVector",
+                "hFermion-lVector-lFermion",
+                "hFermion-lVector-lScalar",
             },
             "canonical_equal": {
                 "hFermion-lFermion-lFermion",
@@ -825,19 +833,31 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
             "reference_supertraces": 27,
             "reference_max_order": 5,
             "conditions": 72,
-            "candidate_supertraces": 47,
+            "candidate_supertraces": 75,
             "common": {
                 "hScalar",
                 "hScalar-hScalar",
                 "hScalar-hScalar-hScalar",
                 "hScalar-hScalar-lFermion",
+                "hScalar-hScalar-lVector",
                 "hScalar-lFermion",
                 "hScalar-lFermion-lFermion",
                 "hScalar-lFermion-lScalar",
+                "hScalar-lFermion-lVector",
                 "hScalar-lScalar",
                 "hScalar-lScalar-lFermion",
+                "hScalar-lScalar-lVector",
+                "hScalar-lVector",
+                "hScalar-lVector-lFermion",
+                "hScalar-lVector-lScalar",
+                "hScalar-lVector-lVector",
             },
-            "canonical_equal": set(),
+            "canonical_equal": {
+                "hScalar-hScalar-lVector",
+                "hScalar-lScalar-lVector",
+                "hScalar-lVector-lScalar",
+                "hScalar-lVector-lVector",
+            },
         },
     }
 
@@ -1048,9 +1068,12 @@ def test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
             "common": {
                 "hFermion-lFermion",
                 "hFermion-lFermion-lScalar",
+                "hFermion-lFermion-lVector",
                 "hFermion-lScalar",
                 "hFermion-lScalar-lFermion",
                 "hFermion-lScalar-lScalar",
+                "hFermion-lVector",
+                "hFermion-lVector-lFermion",
             },
             "canonical_equal": set(),
         },
@@ -1074,9 +1097,14 @@ def test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
                 "hFermion-lFermion",
                 "hFermion-lFermion-lFermion",
                 "hFermion-lFermion-lScalar",
+                "hFermion-lFermion-lVector",
                 "hFermion-lScalar",
                 "hFermion-lScalar-lFermion",
                 "hFermion-lScalar-lScalar",
+                "hFermion-lScalar-lVector",
+                "hFermion-lVector",
+                "hFermion-lVector-lFermion",
+                "hFermion-lVector-lScalar",
             },
             "canonical_equal": {
                 "hFermion-lFermion-lFermion",
@@ -1102,7 +1130,7 @@ def test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
         assert report.complete is False
         assert report.candidate_stage == "interaction_power_type_internal_minimal_subtraction_result"
         assert report.reference_stage is None
-        assert report.candidate_supertrace_count == 50
+        assert report.candidate_supertrace_count == 78
         assert report.reference_supertrace_count == expected_counts["reference_supertraces"]
         assert set(report.common_supertrace_names) == expected_counts["common"]
         assert set(report.canonical_equal_common_supertrace_names) == expected_counts["canonical_equal"]
@@ -1124,7 +1152,7 @@ def test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
             "off_shell_eft_lagrangian",
             "on_shell_eft_lagrangian",
         }
-        assert report_obj["candidate_supertrace_count"] == 50
+        assert report_obj["candidate_supertrace_count"] == 78
         assert report_obj["numeric_probe_equal_common_supertrace_count"] == 0
 
 

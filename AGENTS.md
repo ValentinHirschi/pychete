@@ -136,6 +136,11 @@ kinetic entries. The propagator metadata should expose the scalar denominator
 `free_inverse_entry(...)` subtracts the original Dirac kinetic expression from
 interaction blocks. Do not replace fermion free inverses by scalar
 `LoopMomentumSquared - m^2` expressions inside the interaction matrix.
+Fluctuation-basis discovery must treat registered `FieldStrength(label, ...)`
+atoms as occurrences of the owning vector field. Use `field_strength_pattern`
+with the field-label tag/data supplied by `Theory.symbol`; do not parse label
+names or require an explicit `Field(label, ...)` atom in free gauge-field
+terms.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
@@ -146,8 +151,11 @@ edge/momentum/mass signatures into a single `vakint::prop(...)` with the summed
 power. Use `pychete.backends.vakint.collect_identical_propagators(...)` rather
 than relying on repeated duplicate prop factors. This applies to all integer
 propagator powers, including powered prop factors and numerator-induced
-negative massless powers. Before pychete's internal analytic integral
-evaluation, convert remaining scalar native vakint factors
+negative massless powers. Internal analytic evaluators must normalize topologies
+again before extracting mass/power data, so direct user-supplied `vakint::topo`
+expressions and native vakint outputs follow the same convention. Before
+pychete's internal analytic integral evaluation, convert remaining scalar
+native vakint factors
 `vakint::k(loop_id, index)^(2*n)` into negative powers of the massless
 propagator with
 `pychete.backends.vacuum_integrals.absorb_vakint_scalar_loop_momentum_numerators(...)`.

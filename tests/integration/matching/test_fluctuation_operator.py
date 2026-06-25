@@ -480,6 +480,21 @@ def test_fluctuation_modes_expose_spin_lorentz_and_reality_conventions() -> None
     assert ghost_mode.statistics is FluctuationStatistics.FERMIONIC
 
 
+def test_fluctuation_basis_discovers_vector_modes_from_field_strength_atoms() -> None:
+    theory = Theory("fluctuation_basis_field_strength_vector")
+    theory.define_gauge_group("U1X", s.U1, "gX", "X")
+    vector = theory.field_handle("X")
+    lagrangian = theory.free_lag(vector)
+
+    basis = theory.fluctuation_basis(lagrangian)
+    mode = basis.mode_for(vector)
+
+    assert len(basis.entries) == 1
+    assert_expr_equal(basis.entries[0], vector())
+    assert mode.statistics is FluctuationStatistics.BOSONIC
+    assert mode.supertrace_category == "lVector"
+
+
 def test_fluctuation_basis_skips_background_fields_and_grades_ghosts_as_fermionic() -> None:
     theory = Theory("fluctuation_field_roles")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

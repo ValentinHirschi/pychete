@@ -14,6 +14,7 @@ from .expr import (
     bar_field_inner,
     field_label,
     field_pattern,
+    field_strength_pattern,
     field_with_derivatives,
     is_bar_field,
     is_head,
@@ -3020,7 +3021,20 @@ def _discover_fluctuation_basis(lagrangian: Expression) -> tuple[Expression, ...
     for pattern in (bar_field_pattern(), field_pattern()):
         for match in lagrangian.match(pattern, cond):
             _add_discovered_fluctuation(entries, pattern.replace_wildcards(match))
+    strength_pattern = field_strength_pattern()
+    for match in lagrangian.match(strength_pattern, s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)):
+        _add_discovered_fluctuation(entries, _field_strength_fluctuation_field(match))
     return tuple(entries[key] for key in sorted(entries))
+
+
+def _field_strength_fluctuation_field(match: dict[Expression, Expression]) -> Expression:
+    label = match[s.FieldStrengthLabelWildcard]
+    return s.Field(
+        label,
+        field_type_from_label(label),
+        match[s.FieldStrengthIndicesWildcard],
+        s.List(),
+    )
 
 
 def _add_discovered_fluctuation(entries: dict[str, Expression], expr: Expression) -> None:

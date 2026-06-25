@@ -217,6 +217,20 @@ def test_vakint_collect_identical_propagators_handles_powered_factors_and_zero_p
     )
 
 
+def test_vakint_collect_identical_propagators_accumulates_arbitrary_powered_signatures() -> None:
+    mass = S("M") ** 2
+    first = vakint.propagator(1, mass, power=2)
+    inverse_duplicate = vakint.propagator(7, mass, power=3)
+    final_duplicate = vakint.propagator(9, mass, power=5)
+    distinct_momentum = vakint.propagator(2, mass, loop_id=2, power=11)
+    topology = vakint.symbol("topo")(first**4 * inverse_duplicate**-2 * final_duplicate * distinct_momentum)
+    expected = vakint.symbol("topo")(
+        vakint.propagator(1, mass, power=7) * vakint.propagator(2, mass, loop_id=2, power=11)
+    )
+
+    assert canonical_string(vakint.collect_identical_propagators(topology)) == canonical_string(expected)
+
+
 def test_vakint_adapters_collect_identical_propagators_before_engine_call() -> None:
     engine = FakeVakintEngine()
     mass = S("M") ** 2

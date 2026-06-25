@@ -466,6 +466,7 @@ def evaluate_one_loop_single_scale_vakint_expression(
     """
 
     _LOGGER.info("evaluating single-scale one-loop vakint expression with pychete analytic backend")
+    expr = vakint.collect_identical_propagators(expr)
     pattern = _topology_pattern()
     for match in expr.match(pattern):
         _single_scale_topology_data(pattern.replace_wildcards(match))
@@ -1022,6 +1023,7 @@ def _topology_data(topology_expr: Expression) -> tuple[tuple[tuple[Expression, i
 
 
 def _topology_mass_powers(topology_expr: Expression) -> tuple[tuple[Expression, int], ...]:
+    topology_expr = vakint.collect_identical_propagators(topology_expr)
     pattern = _propagator_pattern()
     mass_wildcard = _propagator_mass_pattern()
     power_wildcard = _propagator_power_pattern()

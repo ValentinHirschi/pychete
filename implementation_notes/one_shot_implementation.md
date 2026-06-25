@@ -562,3 +562,45 @@ Latest verified baseline before this compact rollover:
   - full pytest passed: 298 passed, 1 skipped in 308.46s. The skipped test was
     the GammaLoop API import check because the dependency manifest indicates
     GammaLoop was not requested for this local dependency build.
+
+## Current Slice: Vakint Propagator-Power Collection
+
+- User clarified that vakint topologies must collect every propagator with an
+  identical edge/momentum/mass signature into one `vakint::prop(...)` carrying
+  the summed power, not only repeated square cases.
+- Confirmed that `pychete.backends.vakint.collect_identical_propagators(...)`
+  correctly handles powered prop factors, inverse powered duplicates, and
+  different prop ids, but found that the direct single-scale analytic evaluator
+  could read an uncollected `prop(..., p)^n` as power `p` instead of `n * p`.
+- Changed `evaluate_one_loop_single_scale_vakint_expression(...)` to normalize
+  topologies with `collect_identical_propagators(...)` before validation and
+  evaluation. Also made `_topology_mass_powers(...)` defensively normalize
+  direct topology inputs before extracting mass/power data.
+- Added tests that:
+  - collect arbitrary integer powered duplicates such as `prop(...,2)^4`,
+    `prop(...,3)^-2`, and another matching prop into one corrected power;
+  - preserve a same-mass propagator with a distinct loop-momentum signature;
+  - verify the internal single-scale evaluator now treats powered duplicate
+    propagators as the collected power.
+- Updated `AGENTS.md` to state that evaluator boundaries must normalize vakint
+  topologies before reading mass/power data.
+- Also completed a small pending fluctuation-basis follow-up: registered
+  `FieldStrength(label, ...)` atoms in free vector Lagrangians now count as
+  occurrences of the owning vector field, using Symbolica pattern matching and
+  the field-label tag/data rather than string parsing. Added a regression test
+  that `theory.free_lag(vector)` yields the vector fluctuation mode even when
+  the Lagrangian contains only field-strength atoms.
+- Verification in this slice so far:
+  - focused vakint/vacuum-integral backend tests passed:
+    61 passed in 3.71s.
+  - focused field-strength fluctuation-basis regression passed:
+    1 passed in 0.11s;
+  - broader backend/matching/default gap-report gate passed:
+    107 passed in 94.01s;
+  - `mypy` passed with no issues in 32 source files;
+  - `git diff --check` passed;
+  - validation fixture file passed after vector-preview snapshot updates:
+    30 passed in 363.46s;
+  - full pytest passed: 301 passed, 1 skipped in 372.27s. The skipped test was
+    the GammaLoop API import check because the dependency manifest indicates
+    GammaLoop was not requested for this local dependency build.

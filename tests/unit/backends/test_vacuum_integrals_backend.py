@@ -349,6 +349,21 @@ def test_internal_single_scale_vakint_expression_combines_equal_mass_powers() ->
     assert_expr_equal(vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(expression), expected)
 
 
+def test_internal_single_scale_vakint_expression_collects_powered_duplicate_props() -> None:
+    mass_squared = S("muvsq")
+    numerator = S("num")
+    first = vakint.propagator(1, mass_squared, power=2)
+    duplicate = vakint.propagator(8, mass_squared, power=1)
+    expression = numerator * vakint.symbol("topo")(first**3 * duplicate**2)
+    expected = vacuum_integrals.evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared(
+        numerator,
+        mass_squared,
+        power=8,
+    )
+
+    assert_expr_equal(vacuum_integrals.evaluate_one_loop_single_scale_vakint_expression(expression), expected)
+
+
 def test_internal_vakint_expression_evaluates_two_mass_scalar_topology() -> None:
     m1 = S("M1")
     m2 = S("M2")
