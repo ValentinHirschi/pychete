@@ -362,57 +362,67 @@ def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
     """
 
     context = _DecodeContext(theory)
-    return expr.replace_multiple(
+    namespace_replacements = (
+        Replacement(
+            _vakint_bar_pattern(),
+            lambda match: context.decode_bar(match[_wild("bar_body")]),
+        ),
+        Replacement(
+            _vakint_index_pattern(),
+            lambda match: context.decode_index(
+                match[_wild("index_label")],
+                match[_wild("index_representation")],
+            ),
+        ),
+        Replacement(
+            _vakint_coupling_pattern(),
+            lambda match: context.decode_coupling(
+                match[_wild("coupling_label")],
+                match[_wild("coupling_indices")],
+                match[_wild("coupling_order")],
+            ),
+        ),
+        Replacement(
+            _vakint_field_pattern(),
+            lambda match: context.decode_field(
+                match[_wild("field_label")],
+                match[_wild("field_type")],
+                match[_wild("field_indices")],
+                match[_wild("field_derivatives")],
+            ),
+        ),
+        Replacement(
+            _vakint_field_strength_pattern(),
+            lambda match: context.decode_field_strength(
+                match[_wild("field_strength_label")],
+                match[_wild("field_strength_lorentz")],
+                match[_wild("field_strength_indices")],
+                match[_wild("field_strength_derivatives")],
+            ),
+        ),
+        Replacement(
+            _vakint_metric_pattern(),
+            lambda match: context.decode_metric(
+                match[_wild("metric_left")],
+                match[_wild("metric_right")],
+            ),
+        ),
+        Replacement(
+            _vakint_cg_pattern(),
+            lambda match: context.decode_cg(
+                match[_wild("cg_label")],
+                match[_wild("cg_indices")],
+            ),
+        ),
+    )
+    decoded = expr.replace_multiple(namespace_replacements)
+    return decoded.replace_multiple(
         (
             Replacement(
-                _vakint_bar_pattern(),
-                lambda match: context.decode_bar(match[_wild("bar_body")]),
-            ),
-            Replacement(
-                _vakint_index_pattern(),
-                lambda match: context.decode_index(
-                    match[_wild("index_label")],
-                    match[_wild("index_representation")],
-                ),
-            ),
-            Replacement(
-                _vakint_coupling_pattern(),
-                lambda match: context.decode_coupling(
-                    match[_wild("coupling_label")],
-                    match[_wild("coupling_indices")],
-                    match[_wild("coupling_order")],
-                ),
-            ),
-            Replacement(
-                _vakint_field_pattern(),
-                lambda match: context.decode_field(
-                    match[_wild("field_label")],
-                    match[_wild("field_type")],
-                    match[_wild("field_indices")],
-                    match[_wild("field_derivatives")],
-                ),
-            ),
-            Replacement(
-                _vakint_field_strength_pattern(),
-                lambda match: context.decode_field_strength(
-                    match[_wild("field_strength_label")],
-                    match[_wild("field_strength_lorentz")],
-                    match[_wild("field_strength_indices")],
-                    match[_wild("field_strength_derivatives")],
-                ),
-            ),
-            Replacement(
-                _vakint_metric_pattern(),
-                lambda match: context.decode_metric(
-                    match[_wild("metric_left")],
-                    match[_wild("metric_right")],
-                ),
-            ),
-            Replacement(
-                _vakint_cg_pattern(),
-                lambda match: context.decode_cg(
-                    match[_wild("cg_label")],
-                    match[_wild("cg_indices")],
+                _vakint_cd_pattern(),
+                lambda match: context.decode_cd(
+                    match[_wild("cd_indices")],
+                    match[_wild("cd_body")],
                 ),
             ),
         )
@@ -495,6 +505,14 @@ class _DecodeContext:
             list_expr(*self.decode_sequence(indices)),
         )
 
+    def decode_cd(self, indices: Expression, body: Expression) -> Expression:
+        index_expr = (
+            list_expr(*self.decode_sequence(indices))
+            if _is_bare_vakint_symbol(indices, "List") or is_head(indices, symbol("List")) or is_head(indices, s.List)
+            else self.decode_payload(indices)
+        )
+        return s.CD(index_expr, self.decode_payload(body))
+
     def decode_sequence(self, expr: Expression) -> tuple[Expression, ...]:
         if _is_bare_vakint_symbol(expr, "List"):
             return ()
@@ -529,6 +547,8 @@ class _DecodeContext:
             return self.decode_metric(expr[0], expr[1])
         if is_head(expr, symbol("CG")) and len(expr) == 2:
             return self.decode_cg(expr[0], expr[1])
+        if is_head(expr, symbol("CD")) and len(expr) == 2:
+            return self.decode_cd(expr[0], expr[1])
         if is_head(expr, symbol("Vector")) and len(expr) == 1:
             return s.Vector(self.decode_payload(expr[0]))
         if is_head(expr, symbol("Ghost")) and len(expr) == 1:
@@ -658,6 +678,11 @@ def _vakint_metric_pattern() -> Expression:
 @cache
 def _vakint_cg_pattern() -> Expression:
     return symbol("CG")(_wild("cg_label"), _wild("cg_indices"))
+
+
+@cache
+def _vakint_cd_pattern() -> Expression:
+    return symbol("CD")(_wild("cd_indices"), _wild("cd_body"))
 
 
 @cache

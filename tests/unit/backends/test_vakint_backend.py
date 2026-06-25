@@ -327,6 +327,34 @@ def test_vakint_decodes_native_metric_and_cg_wrappers() -> None:
     assert canonical_string(decoded) == canonical_string(s.Metric(mu, nu) * gen(a, i, j))
 
 
+def test_vakint_decodes_native_covariant_derivative_wrappers() -> None:
+    theory = Theory("vakint_decode_cd")
+    theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=(fund,))
+    mu = s.Index(vakint.symbol("mu"), s.Lorentz)
+    i = s.Index(vakint.symbol("i"), fund)
+    native = vakint.symbol("CD")(
+        vakint.symbol("List")(
+            vakint.symbol("Index")(vakint.symbol("mu"), vakint.symbol("Lorentz")),
+        ),
+        vakint.symbol("Field")(
+            vakint.symbol("H"),
+            vakint.symbol("Scalar"),
+            vakint.symbol("List")(
+                vakint.symbol("Index")(vakint.symbol("i"), vakint.symbol("SU2L")(vakint.symbol("fund"))),
+            ),
+            vakint.symbol("List"),
+        ),
+    )
+
+    decoded = vakint.decode_pychete_namespace(theory, native)
+
+    assert "vakint::CD" not in canonical_string(decoded)
+    assert "vakint::List" not in canonical_string(decoded)
+    assert canonical_string(decoded) == canonical_string(s.CD(s.List(mu), higgs(i)))
+
+
 def test_vakint_tensor_reduction_decodes_metric_and_cg_wrappers() -> None:
     theory = Theory("vakint_decode_reduced_metric_cg")
     theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")

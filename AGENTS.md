@@ -269,8 +269,12 @@ expression with `pychete.backends.vakint.decode_pychete_namespace(...)` before
 projection, simplification, or user-facing output. This must convert recognized
 `vakint::g(...)` metric wrappers and registered `vakint::CG(...)` tensor
 wrappers back to theory-owned pychete `Metric(...)` and `CG(...)` heads through
-Symbolica replacement rules. Do not let native vakint tensor wrappers leak into
-matching-condition projection or public EFT Lagrangians.
+Symbolica replacement rules. It must also decode native `vakint::CD(...)`
+wrappers into pychete `CD(...)` after nested vakint namespace heads in their
+bodies have been decoded, so derivative normalization and projection see the
+standard pychete derivative operator. Do not let native vakint tensor or
+derivative wrappers leak into matching-condition projection or public EFT
+Lagrangians.
 Vakint topology expressions must collect propagators with identical
 edge/momentum/mass signatures into a single `vakint::prop(...)` with the summed
 power. Use `pychete.backends.vakint.collect_identical_propagators(...)` rather

@@ -2014,6 +2014,48 @@ def test_public_bosonic_cde_simplifies_metric_traced_field_strengths() -> None:
     assert "vakint::CG" not in rendered
 
 
+def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_decode_order_four_cd")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    vector = theory.field_handle("W")
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        + theory.free_lag(vector)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            max_trace_order=1,
+            bosonic_cde_trace_names=("hScalar",),
+            bosonic_cde_max_total_order=4,
+            bosonic_cde_max_slot_order=4,
+            bosonic_cde_act_open_derivatives=True,
+            bosonic_cde_emit_covariant_derivative_commutators=True,
+            bosonic_cde_emit_covariant_derivative_commutator_passes=4,
+            bosonic_cde_expand_covariant_derivative_commutators=True,
+            tensor_reduce=True,
+            combine_terms=False,
+            truncate_eft_result=False,
+        ),
+    )
+    rendered = canonical_string(result.on_shell_eft_lagrangian)
+
+    assert result.metadata["field_strength_metric_simplified"] is True
+    assert "vakint::CD" not in rendered
+    assert "vakint::List" not in rendered
+    assert "pychete::CD" in rendered
+    assert "pychete::FieldStrength" in rendered
+
+
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:
     theory = Theory("one_loop_setup_interaction_bosonic_cde_commutator")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")

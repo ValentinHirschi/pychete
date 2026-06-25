@@ -157,6 +157,33 @@
     passed.
   - `git diff --check` passed.
 
+## Current Vakint Covariant-Derivative Decode Slice
+
+- Probed the small heavy-scalar/Higgs/SU(2) CDE path at total derivative order
+  4. After tensor reduction and field-strength metric cleanup, the public
+  result still contained `vakint::CD(...)` wrappers around products with nested
+  vakint namespace heads. That blocks pychete's existing
+  `expand_cd_operators(...)` and matching-condition projection normalizers,
+  which deliberately operate on the central `CD(...)` head.
+- Extended `pychete.backends.vakint.decode_pychete_namespace(...)` with a
+  two-phase decode. The first phase decodes ordinary nested vakint heads such
+  as `Field`, `FieldStrength`, `Coupling`, `Index`, `CG`, and `g`; the second
+  phase wraps already-decoded derivative bodies as pychete `CD(...)`. This
+  avoids returning `CD(...)` nodes whose bodies still contain native vakint
+  namespace payloads.
+- Added a direct vakint backend unit test for `vakint::CD(vakint::List(...),
+  vakint::Field(...))` and an integration regression for public order-4 CDE
+  matching. The public order-4 CDE result now has pychete `CD(...)` and
+  `FieldStrength(...)` structures without `vakint::CD` or `vakint::List`.
+- Validation for this slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_vakint_backend.py -q'`
+    passed with 30 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "vakint_tensors or metric_traced_field_strengths or order_four_covariant_derivatives" -q'`
+    passed with 3 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
