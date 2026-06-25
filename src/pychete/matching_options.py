@@ -84,7 +84,9 @@ class OneLoopMatchOptions:
     reductions are expressed as native Symbolica replacement rules, either
     supplied directly through ``on_shell_replacements`` or generated from
     ``on_shell_eom_lagrangian`` by matching derivative field targets in the
-    evaluated one-loop result.
+    evaluated one-loop result. Final off/on-shell result stages are truncated
+    to the requested inclusive EFT order by default before matching-condition
+    projection.
     """
 
     max_trace_order: int = 2
@@ -111,6 +113,7 @@ class OneLoopMatchOptions:
     on_shell_eom_min_derivative_order: int = 2
     on_shell_eom_strict: bool = False
     on_shell_replacement_repeat: bool = False
+    truncate_eft_result: bool = True
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True
     evaluate_tensor_networks: bool = False

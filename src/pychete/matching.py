@@ -3814,6 +3814,20 @@ def match_one_loop(
                 "on_shell_eom_strict": options.on_shell_eom_strict,
             },
         )
+    if options.truncate_eft_result:
+        result = result.with_eft_truncation(
+            eft_order,
+            heavy_field_dimension=options.heavy_field_dimension,
+        )
+    else:
+        result = replace(
+            result,
+            metadata={
+                **result.metadata,
+                "eft_result_truncated": False,
+                "eft_result_truncation_order": eft_order,
+            },
+        )
     if matching_condition_targets is None:
         _log_one_loop_result(result)
         return result

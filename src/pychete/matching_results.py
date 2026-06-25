@@ -7,6 +7,7 @@ from typing import TYPE_CHECKING
 
 from symbolica import Expression, Replacement
 
+from .eft import series_eft
 from .expr import as_int, coupling_pattern, list_items
 from .matching_options import (
     OneLoopNormalization,
@@ -395,6 +396,67 @@ class MatchingResult:
                 "on_shell_reduction_source": source,
                 "on_shell_reduction_replacement_count": len(replacement_rules),
                 "on_shell_reduction_repeat": repeat,
+            },
+        )
+
+    def with_eft_truncation(
+        self,
+        eft_order: int,
+        *,
+        heavy_field_dimension: bool = False,
+        expand: bool = True,
+    ) -> MatchingResult:
+        """Return a result with off/on-shell EFT Lagrangians truncated by EFT order.
+
+        Truncation is delegated to ``series_eft(...)``, which uses Symbolica
+        replacement rules, marker coefficients, and coefficient extraction for
+        the actual order selection. The original off/on-shell expressions are
+        preserved as named stages for diagnostics.
+        """
+
+        truncated_off_shell = series_eft(
+            self.off_shell_eft_lagrangian,
+            self.theory,
+            eft_order=eft_order,
+            heavy_field_dimension=heavy_field_dimension,
+        )
+        truncated_on_shell = series_eft(
+            self.on_shell_eft_lagrangian,
+            self.theory,
+            eft_order=eft_order,
+            heavy_field_dimension=heavy_field_dimension,
+        )
+        if expand:
+            truncated_off_shell = truncated_off_shell.expand()
+            truncated_on_shell = truncated_on_shell.expand()
+        truncated_matching_conditions = {
+            name: series_eft(
+                expression,
+                self.theory,
+                eft_order=eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            ).expand()
+            for name, expression in self.matching_conditions.items()
+        }
+        previous_stage = self.metadata.get("stage")
+        return replace(
+            self,
+            off_shell_eft_lagrangian=truncated_off_shell,
+            on_shell_eft_lagrangian=truncated_on_shell,
+            matching_conditions=truncated_matching_conditions,
+            supertraces={
+                **self.supertraces,
+                "off_shell_eft_lagrangian_before_eft_truncation": self.off_shell_eft_lagrangian,
+                "on_shell_eft_lagrangian_before_eft_truncation": self.on_shell_eft_lagrangian,
+                "off_shell_eft_lagrangian_after_eft_truncation": truncated_off_shell,
+                "on_shell_eft_lagrangian_after_eft_truncation": truncated_on_shell,
+            },
+            metadata={
+                **self.metadata,
+                "eft_result_truncated": True,
+                "eft_result_truncation_order": eft_order,
+                "eft_result_truncation_heavy_field_dimension": heavy_field_dimension,
+                "eft_result_untruncated_stage": previous_stage if isinstance(previous_stage, str) else None,
             },
         )
 

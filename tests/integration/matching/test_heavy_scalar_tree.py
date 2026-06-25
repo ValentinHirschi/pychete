@@ -241,6 +241,63 @@ def test_one_loop_match_generates_eom_replacements_before_condition_projection()
     assert_expr_equal(result.matching_conditions["c_phi"], source())
 
 
+def test_one_loop_match_truncates_eft_result_before_condition_projection() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    coefficient = theory.define_coupling("c", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    low = coefficient() * phi() ** 4
+    high = coefficient() * phi() ** 8
+    engine = FakePoleVakintEngine(low + high)
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=engine,
+        ),
+        matching_condition_targets={
+            "low": low,
+            "high": high,
+        },
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["eft_result_truncated"] is True
+    assert result.metadata["eft_result_truncation_order"] == 6
+    assert result.metadata["stage"] == "interaction_power_type_vakint_result"
+    assert_expr_equal(result.expression("on_shell_eft_lagrangian_before_eft_truncation"), low + high)
+    assert_expr_equal(result.on_shell_eft_lagrangian, low)
+    assert_expr_equal(result.matching_conditions["low"], Expression.num(1))
+    assert_expr_equal(result.matching_conditions["high"], Expression.num(0))
+
+    opt_out_engine = FakePoleVakintEngine(low + high)
+    untruncated = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=opt_out_engine,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={
+            "low": low,
+            "high": high,
+        },
+    )
+
+    assert isinstance(untruncated, MatchingResult)
+    assert untruncated.metadata["eft_result_truncated"] is False
+    assert_expr_equal(untruncated.on_shell_eft_lagrangian, low + high)
+    assert_expr_equal(untruncated.matching_conditions["high"], Expression.num(1))
+
+
 def test_one_loop_match_options_select_backend_and_trace_order() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()
     lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2

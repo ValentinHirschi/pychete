@@ -379,6 +379,33 @@ def test_matching_result_applies_theory_eom_replacement_before_projection() -> N
     assert_expr_equal(reduced.matching_conditions["c_phi"], source())
 
 
+def test_matching_result_truncates_eft_lagrangians_with_symbolica_series() -> None:
+    theory = Theory("result_eft_truncation")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    low = phi() ** 4
+    high = phi() ** 8
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=low + high,
+        on_shell_eft_lagrangian=low + high,
+        matching_conditions={"raw": low + high},
+        metadata={"stage": "raw_stage"},
+    )
+
+    truncated = result.with_eft_truncation(6)
+
+    assert truncated.metadata["stage"] == "raw_stage"
+    assert truncated.metadata["eft_result_truncated"] is True
+    assert truncated.metadata["eft_result_truncation_order"] == 6
+    assert truncated.metadata["eft_result_untruncated_stage"] == "raw_stage"
+    assert_expr_equal(truncated.off_shell_eft_lagrangian, low)
+    assert_expr_equal(truncated.on_shell_eft_lagrangian, low)
+    assert_expr_equal(truncated.matching_conditions["raw"], low)
+    assert_expr_equal(truncated.expression("off_shell_eft_lagrangian_before_eft_truncation"), low + high)
+    assert_expr_equal(truncated.expression("on_shell_eft_lagrangian_after_eft_truncation"), low)
+
+
 def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     x = S("fixture_gap_probe_x")
     theory = Theory("fixture_gap_probe")

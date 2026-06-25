@@ -473,3 +473,38 @@
   - `pytest tests/unit/functional/test_scalar_eom.py tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_generates_eom_replacements_before_condition_projection tests/integration/validation/test_numeric_probes.py::test_matching_result_applies_theory_eom_replacement_before_projection tests/unit/definitions/test_public_api.py -q`:
     21 passed.
   - `python -m mypy`: success, no issues in 33 source files.
+
+## Current Slice: Final EFT Truncation Before One-Loop Projection
+
+- Added an explicit result-stage EFT truncation pass so backend evaluation,
+  loop-normalization, manual on-shell replacements, and generated EOM
+  reductions are followed by one final inclusive `eft_order` selection before
+  matching-condition projection.
+- Added `MatchingResult.with_eft_truncation(...)`. It delegates the actual
+  order selection to the existing Symbolica-backed `series_eft(...)` helper,
+  preserves pre/post off-shell and on-shell stages in `supertraces`, and records
+  `eft_result_truncated`, `eft_result_truncation_order`, and
+  `eft_result_untruncated_stage` metadata while keeping the backend `stage`
+  label stable for existing diagnostics.
+- Added `OneLoopMatchOptions.truncate_eft_result`, defaulting to `True`.
+  `match_one_loop(...)` applies this pass after optional explicit/EOM
+  on-shell reduction and before condition projection. Setting
+  `truncate_eft_result=False` preserves the raw evaluated expression and records
+  that no final truncation was performed.
+- The implementation reuses Symbolica marker replacement/coefficient
+  extraction through `series_eft(...)`; no new Python-side order walker or
+  term classifier was introduced.
+- Added regressions covering:
+  - result-level truncation of off-shell/on-shell stages and matching
+    conditions while preserving diagnostic before/after stages;
+  - a one-loop public `Theory.match(...)` path where an evaluated backend emits
+    both dimension-six and dimension-eight terms, and projection sees only the
+    dimension-six term by default;
+  - the opt-out path where the dimension-eight term remains projectable.
+- Targeted validation for this slice:
+  - focused EFT/result/API gate:
+    `pytest tests/unit/eft/test_eft_counting.py tests/integration/validation/test_numeric_probes.py::test_matching_result_truncates_eft_lagrangians_with_symbolica_series tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_truncates_eft_result_before_condition_projection tests/unit/definitions/test_public_api.py -q`:
+    13 passed.
+  - broader affected matching gate:
+    `pytest -m matching tests/integration/matching -q`: 68 passed.
+  - `python -m mypy`: success, no issues in 33 source files.
