@@ -29,6 +29,8 @@ from .validation import (
 
 TensorComponent = Expression | int | float | complex
 TraceOrderInput = int | Literal["reference"]
+ProbeNamePreset = Literal["common", "canonical_different", "wilson", "canonical_different_wilson"]
+ProbeNameSelection = Iterable[str] | ProbeNamePreset
 _SUPERTRACE_CATEGORY_WORDS = {
     "hScalar",
     "lScalar",
@@ -41,6 +43,8 @@ _SUPERTRACE_CATEGORY_WORDS = {
     "hAntiGhost",
     "lAntiGhost",
 }
+_PROBE_NAME_PRESETS = {"common", "canonical_different", "wilson", "canonical_different_wilson"}
+_WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
 
 
 @dataclass(frozen=True)
@@ -624,8 +628,8 @@ class ValidationFixture:
         require_registered_mass: bool = True,
         probe_parameters: Sequence[Expression] | None = None,
         probe_samples: Sequence[Sequence[NumericValue]] | None = None,
-        probe_supertrace_names: Iterable[str] | None = None,
-        probe_matching_condition_names: Iterable[str] | None = None,
+        probe_supertrace_names: ProbeNameSelection | None = None,
+        probe_matching_condition_names: ProbeNameSelection | None = None,
         auto_probe_samples: bool = False,
         probe_sample_count: int = 3,
         probe_exclude_symbols: Sequence[Expression] = (),
@@ -657,6 +661,11 @@ class ValidationFixture:
 
         Set ``max_trace_order="reference"`` to generate traces up to the
         largest supertrace word order present in the reference fixture.
+        ``probe_supertrace_names`` and ``probe_matching_condition_names`` may
+        be explicit name iterables, ``"common"``, or ``"canonical_different"``.
+        Matching-condition probes additionally accept ``"wilson"`` and
+        ``"canonical_different_wilson"`` to focus evaluator probes on SMEFT
+        Wilson-coefficient targets identified from Symbolica symbol metadata.
         """
 
         resolved_max_trace_order = _resolve_max_trace_order(max_trace_order, reference)
@@ -938,6 +947,44 @@ def _probe_plan_for_names(
     )
 
 
+def _canonical_different_names(comparison: Any) -> tuple[str, ...]:
+    return tuple(item.name for item in comparison.expressions if not item.canonical_equal)
+
+
+def _probe_name_selection(
+    selection: ProbeNameSelection | None,
+    *,
+    common_names: Iterable[str],
+    canonical_different_names: Iterable[str],
+    reference_wilson_names: Iterable[str] = (),
+    allow_wilson: bool = False,
+) -> tuple[str, ...] | None:
+    if selection is None:
+        return None
+    if isinstance(selection, str):
+        if selection not in _PROBE_NAME_PRESETS:
+            raise ValueError(
+                "Unknown probe-name preset "
+                f"{selection!r}; pass a tuple/list when selecting one literal expression name"
+            )
+        if selection in _WILSON_PROBE_NAME_PRESETS and not allow_wilson:
+            raise ValueError("Wilson probe-name presets are only valid for matching conditions")
+        common = set(common_names)
+        canonical_different = set(canonical_different_names)
+        if selection == "common":
+            return _sorted_names(common)
+        if selection == "canonical_different":
+            return _sorted_names(canonical_different)
+        if selection == "wilson":
+            return tuple(name for name in reference_wilson_names if name in common)
+        return tuple(
+            name
+            for name in reference_wilson_names
+            if name in common and name in canonical_different
+        )
+    return tuple(selection)
+
+
 def _gap_report(
     candidate_fixture: str,
     reference_name: str,
@@ -946,8 +993,8 @@ def _gap_report(
     *,
     probe_parameters: Sequence[Expression] | None = None,
     probe_samples: Sequence[Sequence[NumericValue]] | None = None,
-    probe_supertrace_names: Iterable[str] | None = None,
-    probe_matching_condition_names: Iterable[str] | None = None,
+    probe_supertrace_names: ProbeNameSelection | None = None,
+    probe_matching_condition_names: ProbeNameSelection | None = None,
     auto_probe_samples: bool = False,
     probe_sample_count: int = 3,
     probe_exclude_symbols: Sequence[Expression] = (),
@@ -964,13 +1011,29 @@ def _gap_report(
     candidate_supertraces = set(candidate.supertraces)
     reference_supertraces = set(reference.supertraces)
     common_supertraces = candidate_supertraces & reference_supertraces
+    base_compared_supertraces = candidate.compare_to(
+        reference,
+        names=_sorted_names(common_supertraces),
+        expression_transform=comparison_expression_transform,
+    )
+    selected_supertrace_probe_names = _probe_name_selection(
+        probe_supertrace_names,
+        common_names=common_supertraces,
+        canonical_different_names=_canonical_different_names(base_compared_supertraces),
+    )
+    if (
+        not auto_probe_samples
+        and probe_supertrace_names is not None
+        and (probe_parameters is None or probe_samples is None)
+    ):
+        raise ValueError("probe_supertrace_names requires probe_parameters/probe_samples or auto_probe_samples=True")
     supertrace_probe_parameters: Sequence[Expression] | None
     supertrace_probe_samples: Sequence[Sequence[NumericValue]] | None
-    if auto_probe_samples and probe_supertrace_names is not None:
+    if auto_probe_samples and selected_supertrace_probe_names:
         supertrace_plan = _probe_plan_for_names(
             candidate,
             reference,
-            probe_supertrace_names,
+            selected_supertrace_probe_names,
             sample_count=probe_sample_count,
             exclude_symbols=probe_exclude_symbols,
             parameter_mode=probe_parameter_mode,
@@ -987,27 +1050,50 @@ def _gap_report(
     else:
         supertrace_probe_parameters = probe_parameters
         supertrace_probe_samples = probe_samples
-    compared_supertraces = candidate.compare_to(
-        reference,
-        names=_sorted_names(common_supertraces),
-        probe_parameters=supertrace_probe_parameters,
-        probe_samples=supertrace_probe_samples,
-        probe_names=probe_supertrace_names,
-        absolute_tolerance=probe_absolute_tolerance,
-        relative_tolerance=probe_relative_tolerance,
-        expression_transform=comparison_expression_transform,
-    )
+    if supertrace_probe_parameters is not None and supertrace_probe_samples is not None:
+        compared_supertraces = candidate.compare_to(
+            reference,
+            names=_sorted_names(common_supertraces),
+            probe_parameters=supertrace_probe_parameters,
+            probe_samples=supertrace_probe_samples,
+            probe_names=selected_supertrace_probe_names,
+            absolute_tolerance=probe_absolute_tolerance,
+            relative_tolerance=probe_relative_tolerance,
+            expression_transform=comparison_expression_transform,
+        )
+    else:
+        compared_supertraces = base_compared_supertraces
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
     common_conditions = candidate_conditions & reference_conditions
     reference_wilson_conditions = _reference_wilson_matching_condition_names(reference)
+    base_compared_conditions = candidate.compare_to(
+        reference,
+        names=_sorted_names(common_conditions),
+        expression_transform=comparison_expression_transform,
+    )
+    selected_condition_probe_names = _probe_name_selection(
+        probe_matching_condition_names,
+        common_names=common_conditions,
+        canonical_different_names=_canonical_different_names(base_compared_conditions),
+        reference_wilson_names=reference_wilson_conditions,
+        allow_wilson=True,
+    )
+    if (
+        not auto_probe_samples
+        and probe_matching_condition_names is not None
+        and (probe_parameters is None or probe_samples is None)
+    ):
+        raise ValueError(
+            "probe_matching_condition_names requires probe_parameters/probe_samples or auto_probe_samples=True"
+        )
     condition_probe_parameters: Sequence[Expression] | None
     condition_probe_samples: Sequence[Sequence[NumericValue]] | None
-    if auto_probe_samples and probe_matching_condition_names is not None:
+    if auto_probe_samples and selected_condition_probe_names:
         condition_plan = _probe_plan_for_names(
             candidate,
             reference,
-            probe_matching_condition_names,
+            selected_condition_probe_names,
             sample_count=probe_sample_count,
             exclude_symbols=probe_exclude_symbols,
             parameter_mode=probe_parameter_mode,
@@ -1019,18 +1105,21 @@ def _gap_report(
         condition_probe_parameters = None
         condition_probe_samples = None
     else:
-        condition_probe_parameters = probe_parameters if probe_matching_condition_names is not None else None
-        condition_probe_samples = probe_samples if probe_matching_condition_names is not None else None
-    compared_conditions = candidate.compare_to(
-        reference,
-        names=_sorted_names(common_conditions),
-        probe_parameters=condition_probe_parameters,
-        probe_samples=condition_probe_samples,
-        probe_names=probe_matching_condition_names,
-        absolute_tolerance=probe_absolute_tolerance,
-        relative_tolerance=probe_relative_tolerance,
-        expression_transform=comparison_expression_transform,
-    )
+        condition_probe_parameters = probe_parameters if selected_condition_probe_names is not None else None
+        condition_probe_samples = probe_samples if selected_condition_probe_names is not None else None
+    if condition_probe_parameters is not None and condition_probe_samples is not None:
+        compared_conditions = candidate.compare_to(
+            reference,
+            names=_sorted_names(common_conditions),
+            probe_parameters=condition_probe_parameters,
+            probe_samples=condition_probe_samples,
+            probe_names=selected_condition_probe_names,
+            absolute_tolerance=probe_absolute_tolerance,
+            relative_tolerance=probe_relative_tolerance,
+            expression_transform=comparison_expression_transform,
+        )
+    else:
+        compared_conditions = base_compared_conditions
     candidate_names = set(candidate.expression_names())
     reference_names = set(reference.expression_names())
     return MatchingFixtureGapReport(

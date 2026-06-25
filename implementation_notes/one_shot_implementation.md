@@ -4622,6 +4622,50 @@ discoveries, dependency patches, blockers, and remaining work.
   `AGENTS.md`, `scripts/README.md`, and the copied one-shot plan text to make
   `scripts/` the user-facing optional route; `helper_mathematica_scripts/`
   remains only supporting implementation code for those convenience scripts.
+- Added selectable numeric-probe presets for validation gap reports:
+  - re-inspected the local Symbolica stubs for
+    `Expression.get_all_symbols`, `Expression.get_all_indeterminates`,
+    `Expression.evaluator_multiple`, `Expression.matches`, and
+    `Expression.coefficient` before touching comparison code;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` and the internal
+    `_gap_report(...)` path now accept `probe_supertrace_names` and
+    `probe_matching_condition_names` presets `"common"` and
+    `"canonical_different"`;
+  - matching-condition probes additionally accept `"wilson"` and
+    `"canonical_different_wilson"`, selecting Wilson targets through the
+    existing structured matching-condition target metadata backed by Symbolica
+    tags and symbol data;
+  - `_gap_report(...)` first performs canonical Symbolica comparisons, derives
+    preset probe names from that evidence, and only then builds deterministic
+    Symbolica evaluator probe plans for the selected names;
+  - unknown string probe names now fail loudly with guidance to pass an
+    explicit tuple/list for literal expression names, avoiding accidental
+    character-by-character probing from Python string iteration;
+  - added a committed Matchete fixture test proving the Singlet Scalar default
+    comparison can probe every canonical-different Wilson target by preset
+    without requiring Mathematica.
+- Verification for the probe-preset slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_can_probe_canonical_different_supertraces_by_preset
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_can_probe_wilson_matching_conditions_by_preset
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_rejects_unknown_probe_name_preset_strings
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_auto_probe_requires_unambiguous_inputs
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_condition_probe_can_select_canonical_different_wilson_targets
+    -q'` passed: 5 passed in 15.68s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 50
+    passed in 270.20s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 271 passed,
+    1 skipped in 276.30s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -4686,9 +4730,10 @@ discoveries, dependency patches, blockers, and remaining work.
 - Expand the converter/fixture path to additional mappable Matchete validation
   assets beyond the default matching targets.
 - Apply the selective evaluator-probe gap-report plumbing to concrete Matchete
-  fixture comparisons once suitable deterministic sample points and per-name
-  probe eligibility are available for each model's free parameters and
-  singularity constraints.
+  fixture comparisons beyond the new `"canonical_different_wilson"` preset
+  smoke test, especially once suitable deterministic sample points and
+  per-name probe eligibility are available for each model's free parameters
+  and singularity constraints.
 - Extend field metadata further for representation reality and SMEFT basis data.
 - Extend theory metadata further for representation reality, CG tensors, and
   SMEFT basis data.

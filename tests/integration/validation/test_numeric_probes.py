@@ -341,6 +341,46 @@ def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     assert report_obj["different_after_probe_common_supertrace_count"] == 1
 
 
+def test_fixture_gap_report_can_probe_canonical_different_supertraces_by_preset() -> None:
+    x = S("fixture_gap_probe_preset_x")
+    theory = Theory("fixture_gap_probe_preset")
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            "already_equal": x,
+            "probe": x.sin() ** 2 + x.cos() ** 2,
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            "already_equal": x,
+            "probe": Expression.num(1),
+        },
+    )
+
+    report = _gap_report(
+        "candidate_fixture",
+        "reference_fixture",
+        candidate,
+        reference,
+        auto_probe_samples=True,
+        probe_supertrace_names="canonical_different",
+    )
+
+    assert report.canonical_equal_common_supertrace_names == ("already_equal",)
+    assert report.canonical_different_common_supertrace_names == ("probe",)
+    assert report.numeric_probe_equal_common_supertrace_names == ("probe",)
+    assert report.accepted_common_supertrace_names == ("already_equal", "probe")
+    assert report.different_after_probe_common_supertrace_names == ()
+
+
 def test_fixture_gap_report_records_supertrace_word_orders() -> None:
     theory = Theory("fixture_gap_supertrace_order")
     candidate = MatchingResult(
@@ -465,6 +505,84 @@ def test_fixture_gap_report_records_wilson_matching_condition_frontier() -> None
     assert report_obj["accepted_common_wilson_matching_condition_count"] == 1
 
 
+def test_fixture_gap_report_can_probe_wilson_matching_conditions_by_preset() -> None:
+    x = S("condition_gap_wilson_probe_x")
+    theory = Theory("condition_gap_wilson_probe")
+    wilson = theory.define_wilson_coefficient("cH", basis="SMEFT")
+    coupling = theory.define_coupling("g")
+    wilson_name = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
+    coupling_name = canonical_string(coupling())
+    trig_identity = x.sin() ** 2 + x.cos() ** 2
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            wilson_name: trig_identity,
+            coupling_name: trig_identity,
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            wilson_name: Expression.num(1),
+            coupling_name: Expression.num(1),
+        },
+    )
+
+    report = _gap_report(
+        "candidate_fixture",
+        "reference_fixture",
+        candidate,
+        reference,
+        auto_probe_samples=True,
+        probe_matching_condition_names="canonical_different_wilson",
+    )
+
+    assert report.common_matching_condition_names == (coupling_name, wilson_name)
+    assert report.reference_wilson_matching_condition_names == (wilson_name,)
+    assert report.numeric_probe_equal_common_matching_condition_names == (wilson_name,)
+    assert report.accepted_common_wilson_matching_condition_names == (wilson_name,)
+    assert report.accepted_common_matching_condition_names == (wilson_name,)
+    assert report.different_after_probe_common_matching_condition_names == (coupling_name,)
+
+
+def test_fixture_gap_report_rejects_unknown_probe_name_preset_strings() -> None:
+    x = S("fixture_gap_bad_probe_preset_x")
+    theory = Theory("fixture_gap_bad_probe_preset")
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"literal_name": x},
+    )
+
+    with pytest.raises(ValueError, match="tuple/list"):
+        _gap_report(
+            "candidate_fixture",
+            "reference_fixture",
+            result,
+            result,
+            auto_probe_samples=True,
+            probe_supertrace_names="literal_name",
+        )
+
+    with pytest.raises(ValueError, match="only valid for matching conditions"):
+        _gap_report(
+            "candidate_fixture",
+            "reference_fixture",
+            result,
+            result,
+            auto_probe_samples=True,
+            probe_supertrace_names="wilson",
+        )
+
+
 def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() -> None:
     x = S("fixture_gap_condition_probe_x")
     theory = Theory("fixture_gap_condition_probe")
@@ -584,4 +702,13 @@ def test_fixture_gap_report_auto_probe_requires_unambiguous_inputs() -> None:
             result,
             result,
             auto_probe_samples=True,
+        )
+
+    with pytest.raises(ValueError, match="requires probe_parameters/probe_samples"):
+        _gap_report(
+            "candidate_fixture",
+            "reference_fixture",
+            result,
+            result,
+            probe_matching_condition_names="common",
         )
