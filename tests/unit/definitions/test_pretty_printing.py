@@ -9,6 +9,7 @@ import textwrap
 from symbolica import Expression, PrintMode
 
 from pychete import FieldMassKind, MatchingResult, PycheteState, Theory, canonical_string, collect_indices, load_state, s
+from pychete.backends import vacuum_integrals
 from pychete.matching import HeavyScalarSolution
 
 
@@ -104,6 +105,18 @@ def test_loop_hbar_symbol_prints_cleanly_in_all_symbolica_modes() -> None:
     assert _format_lagrangian(s.HBar, PrintMode.Typst) == "hbar"
 
 
+def test_loop_function_prints_cleanly_in_all_symbolica_modes() -> None:
+    loop_function = vacuum_integrals.loop_function((Expression.symbol("M1"), Expression.symbol("M2")), (1, 2, -1))
+
+    assert _format_lagrangian(loop_function, PrintMode.Symbolica) == "LF({M1, M2}, {1, 2, -1})"
+    assert _format_lagrangian(loop_function, PrintMode.Latex) == (
+        r"\mathrm{LF}_{{1, 2, -1}}\left({M1, M2}\right)"
+    )
+    assert _format_lagrangian(loop_function, PrintMode.Mathematica) == "LF[{M1, M2}, {1, 2, -1}]"
+    assert _format_lagrangian(loop_function, PrintMode.Sympy) == "LF({M1, M2}, {1, 2, -1})"
+    assert _format_lagrangian(loop_function, PrintMode.Typst) == 'LF({"M1", "M2"}, {1, 2, -1})'
+
+
 def test_capitalized_greek_field_names_use_short_internal_labels() -> None:
     theory = Theory("greek_case")
     capital_phi = theory.define_field("Phi", s.Scalar, self_conjugate=True, mass=0)
@@ -183,6 +196,9 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.FieldStrengthLorentzWildcard,
         s.FieldStrengthIndicesWildcard,
         s.FieldStrengthDerivativesWildcard,
+        vacuum_integrals.loop_function((Expression.symbol("M1"), Expression.symbol("M2")), (1, 1, 0)),
+        s.LoopFunctionMassesWildcard,
+        s.LoopFunctionPowersWildcard,
         s.EFTExpansionParameter,
         s.CDVariationParameter,
         s.FunctionalVariationParameter,

@@ -10,6 +10,7 @@ from pychete.validation_fixtures import load_validation_fixture
 def test_parse_matchete_internal_heads_into_pychete_heads() -> None:
     theory = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json")).theory()
     mu = theory.dummy_index(1)
+    mass = theory.coupling_handle("M")()
 
     assert canonical_string(parse_matchete_expression(r"Coupling[y, {}, 0]", theory)) == canonical_string(
         theory.coupling_handle("y")()
@@ -18,6 +19,9 @@ def test_parse_matchete_internal_heads_into_pychete_heads() -> None:
     assert canonical_string(
         parse_matchete_expression(r"Field[\[Phi], Scalar, {}, {Index[d$$1, Lorentz]}]", theory)
     ) == canonical_string(theory.field_handle("phi")(derivatives=[mu]))
+    assert canonical_string(parse_matchete_expression(r"LF[{Coupling[M, {}, 0]}, {2, -1}]", theory)) == canonical_string(
+        s.LoopFunction(s.List(mass), s.List(2, -1))
+    )
 
 
 def test_parse_matchete_dirac_chain_and_log_expression() -> None:

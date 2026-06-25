@@ -279,6 +279,16 @@ def _print_differential_operator(expr: Expression, mode: PrintMode, kwargs: dict
     return _call("Dop", args, mode)
 
 
+def _print_loop_function(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    masses = _format_child(expr[0], mode, kwargs) if len(expr) > 0 else "{}"
+    powers = _format_child(expr[1], mode, kwargs) if len(expr) > 1 else "{}"
+    if mode is PrintMode.Latex:
+        return rf"\mathrm{{LF}}_{{{powers}}}\left({masses}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"LF[{masses}, {powers}]"
+    return f"LF({masses}, {powers})"
+
+
 def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | None:
     if _is_canonical_print(kwargs):
         return None
@@ -311,6 +321,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "PropagatorDenominator": lambda: _print_propagator_denominator(expr, mode, kwargs),
         "SupertraceKernel": lambda: _print_supertrace_kernel(expr, mode, kwargs),
         "DifferentialOperator": lambda: _print_differential_operator(expr, mode, kwargs),
+        "LoopFunction": lambda: _print_loop_function(expr, mode, kwargs),
         "Vector": lambda: _call("Vector", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "SU": lambda: _call("SU", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "U1": lambda: _call("U1", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -338,6 +349,8 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
         "loop_momentum_squared": "q2",
+        "loop_function_masses_": "loop_function_masses_",
+        "loop_function_powers_": "loop_function_powers_",
         "hbar": "hbar",
     },
     "Sympy": {
@@ -357,6 +370,8 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
         "loop_momentum_squared": "q2",
+        "loop_function_masses_": "loop_function_masses_",
+        "loop_function_powers_": "loop_function_powers_",
         "hbar": "hbar",
     },
     "Mathematica": {
@@ -376,6 +391,8 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "etaCD",
         "functional_variation_parameter": "etaFD",
         "loop_momentum_squared": "q2",
+        "loop_function_masses_": "loopFunctionMasses_",
+        "loop_function_powers_": "loopFunctionPowers_",
         "hbar": r"\[HBar]",
     },
     "Latex": {
@@ -395,6 +412,8 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": r"\eta_{\mathrm{CD}}",
         "functional_variation_parameter": r"\eta_{\mathrm{FD}}",
         "loop_momentum_squared": r"q^2",
+        "loop_function_masses_": r"\mathrm{lfmasses\_}",
+        "loop_function_powers_": r"\mathrm{lfpowers\_}",
         "hbar": r"\hbar",
     },
     "Typst": {
@@ -414,6 +433,8 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "cd_variation_parameter": "eta_CD",
         "functional_variation_parameter": "eta_FD",
         "loop_momentum_squared": "q^2",
+        "loop_function_masses_": "loop_function_masses_",
+        "loop_function_powers_": "loop_function_powers_",
         "hbar": "hbar",
     },
 }
@@ -506,6 +527,7 @@ class SymbolStore:
         "PropagatorDenominator",
         "SupertraceKernel",
         "DifferentialOperator",
+        "LoopFunction",
         "SymmetricIndices",
         "AntisymmetricIndices",
         "SymmetricPermutation",
@@ -542,6 +564,8 @@ class SymbolStore:
         "FieldStrengthLorentzWildcard",
         "FieldStrengthIndicesWildcard",
         "FieldStrengthDerivativesWildcard",
+        "LoopFunctionMassesWildcard",
+        "LoopFunctionPowersWildcard",
         "EFTExpansionParameter",
         "CDVariationParameter",
         "FunctionalVariationParameter",
@@ -663,6 +687,10 @@ class SymbolStore:
     @cached_property
     def DifferentialOperator(self) -> Expression:
         return self.head("DifferentialOperator")
+
+    @cached_property
+    def LoopFunction(self) -> Expression:
+        return self.head("LoopFunction")
 
     @cached_property
     def SymmetricIndices(self) -> Expression:
@@ -807,6 +835,14 @@ class SymbolStore:
     @cached_property
     def FieldStrengthDerivativesWildcard(self) -> Expression:
         return self.head("field_strength_derivatives_")
+
+    @cached_property
+    def LoopFunctionMassesWildcard(self) -> Expression:
+        return self.head("loop_function_masses_")
+
+    @cached_property
+    def LoopFunctionPowersWildcard(self) -> Expression:
+        return self.head("loop_function_powers_")
 
     @cached_property
     def EFTExpansionParameter(self) -> Expression:

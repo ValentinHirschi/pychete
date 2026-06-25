@@ -2,10 +2,13 @@ from __future__ import annotations
 
 from .eft import operator_dimension, series_eft
 from .backends.vacuum_integrals import (
+    evaluate_loop_functions,
     evaluate_one_loop_single_scale_vakint_expression,
     evaluate_one_loop_single_scale_vacuum_integral,
     evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared,
     evaluate_one_loop_vakint_expression,
+    loop_function,
+    loop_function_to_vakint_integral,
 )
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
@@ -105,10 +108,13 @@ __all__ = [
     "build_numeric_probe_plan",
     "deterministic_probe_samples",
     "evaluator_probe_equal",
+    "evaluate_loop_functions",
     "evaluate_one_loop_single_scale_vakint_expression",
     "evaluate_one_loop_single_scale_vacuum_integral",
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
     "evaluate_one_loop_vakint_expression",
+    "loop_function",
+    "loop_function_to_vakint_integral",
     "load_state",
     "latex_string",
     "open_indices",

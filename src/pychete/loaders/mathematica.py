@@ -663,6 +663,13 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
             return _matchete_projector(expr, theory, env)
         if name == "CG":
             return _matchete_cg(expr, theory, env)
+        if name == "LF":
+            if len(expr) != 2:
+                raise NotImplementedError(f"Unsupported LF expression: {expr.format_plain()}")
+            return s.LoopFunction(
+                list_expr(*_matchete_list_items(expr[0], theory, env)),
+                list_expr(*_matchete_list_items(expr[1], theory, env)),
+            )
         if name == "log":
             if len(expr) != 1:
                 raise NotImplementedError(f"Unsupported Log expression: {expr.format_plain()}")

@@ -4,6 +4,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete.backends import vakint, vacuum_integrals
+from pychete.symbols import s
 from tests.conftest import assert_expr_equal
 
 
@@ -15,6 +16,50 @@ def _loop_function_topology(masses: tuple[Expression, ...], powers: tuple[int, .
         mass_squareds += (Expression.num(0),)
         prop_powers += (alpha,)
     return vakint.one_loop_vacuum_integral(Expression.num(1), mass_squareds, powers=prop_powers)
+
+
+def _expected_loop_function_value(masses: tuple[Expression, ...], powers: tuple[int, ...]) -> Expression:
+    topology_value = vacuum_integrals.evaluate_one_loop_vakint_expression(_loop_function_topology(masses, powers))
+    return vakint.finite_part((topology_value / vacuum_integrals.imaginary_unit_symbol()).expand())
+
+
+def test_loop_function_placeholder_lowers_to_vakint_topology() -> None:
+    m1 = S("M1")
+    m2 = S("M2")
+    loop_function = vacuum_integrals.loop_function((m1, m2), (1, 2, -1))
+    expected = _loop_function_topology((m1, m2), (1, 2, -1))
+
+    assert_expr_equal(vacuum_integrals.loop_function_to_vakint_integral(loop_function), expected)
+
+
+def test_evaluate_loop_functions_uses_internal_finite_loop_function_convention() -> None:
+    m1 = S("M1")
+    m2 = S("M2")
+    numerator = S("num")
+    loop_function = vacuum_integrals.loop_function((m1, m2), (1, 1, 0))
+    expression = numerator * loop_function
+    expected = numerator * _expected_loop_function_value((m1, m2), (1, 1, 0))
+
+    assert_expr_equal(vacuum_integrals.evaluate_loop_functions(expression), expected)
+
+
+def test_evaluate_loop_functions_handles_massless_power_after_tensor_reduction() -> None:
+    mass = S("M")
+    loop_function = vacuum_integrals.loop_function((mass,), (2, -2))
+    expected = _expected_loop_function_value((mass,), (2, -2))
+
+    assert_expr_equal(vacuum_integrals.evaluate_loop_functions(loop_function), expected)
+
+
+def test_loop_function_validation_rejects_invalid_power_data() -> None:
+    mass = S("M")
+
+    with pytest.raises(ValueError, match="one massive power"):
+        vacuum_integrals.loop_function((mass,), (1,))
+    with pytest.raises(ValueError, match="powers must be integers"):
+        vacuum_integrals.evaluate_loop_functions(s.LoopFunction(s.List(mass), s.List(S("n"), Expression.num(0))))
+    with pytest.raises(ValueError, match="nonnegative"):
+        vacuum_integrals.loop_function_to_vakint_integral(vacuum_integrals.loop_function((mass,), (-1, 0)))
 
 
 def test_internal_single_scale_tadpoles_match_vakint_finite_order_evaluation() -> None:
