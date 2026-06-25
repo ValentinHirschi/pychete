@@ -378,6 +378,36 @@
     passed.
   - `git diff --check` passed.
 
+### Registered Wilson IBP Projection Follow-Up
+
+- Started by probing a broader order-4/order-6 CDE source for the small
+  heavy-scalar/Higgs/SU(2)xU(1) regression, but the broad probe was too slow
+  for the slice and was stopped. The slice was narrowed to a projection
+  improvement that directly affects the known `cHBox` frontier.
+- Updated `MatchingResult.project_matching_conditions(...)` so registered
+  Wilson-coefficient targets with stored operator metadata use target-local
+  scalar-bilinear IBP aliases automatically. Raw expression targets remain
+  exact by default and still require `normalize_ibp_scalar_bilinears=True`.
+- Tightened alias canonicalization: whenever any IBP alias exists, the source,
+  projection target, and alias expressions are sent through the same
+  Symbolica-native tensor-index canonicalization path before wildcard-index
+  projection fallback. This keeps the latest `canonize_tensors(...)` index
+  alignment behavior active for automatically generated registered-Wilson
+  aliases too.
+- Added a focused `cHBox` regression using the registered SMEFT Wilson target
+  from the Singlet validation fixture. The same source still projects zero
+  against the raw Warsaw operator target by default, while the registered
+  Wilson target now projects the expected coefficient through its stored
+  operator metadata.
+- Focused validation for this follow-up:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_uses_registered_wilson_ibp_aliases tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_handles_indexed_smeft_hbox_ibp_alias tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd -q'`
+    passed with 3 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 37 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

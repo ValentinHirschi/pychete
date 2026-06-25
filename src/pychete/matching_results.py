@@ -276,8 +276,12 @@ class MatchingResult:
         ``A * CD([mu, mu], B)``. Exact coefficient extraction is still tried
         first; if it vanishes, pychete extracts the coefficient of the native
         Symbolica-normalized alias ``CD(mu, A) * CD(mu, B)`` with the
-        corresponding minus sign. This is intentionally limited to projection
-        onto known targets rather than a global IBP simplifier.
+        corresponding minus sign. Registered Wilson-coefficient targets with
+        stored operator metadata use these target-local aliases automatically,
+        because the operator metadata is already a basis-level projection
+        instruction. Raw expression targets still require the explicit flag.
+        This is intentionally limited to projection onto known targets rather
+        than a global IBP simplifier.
         """
 
         expr = self.expression(source)
@@ -286,8 +290,12 @@ class MatchingResult:
         structured_targets = matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets))
         projection_expressions = tuple(target.projection_expression for target in structured_targets)
         ibp_projection_aliases = tuple(
-            _ibp_scalar_bilinear_projection_aliases(target) if normalize_ibp_scalar_bilinears else ()
-            for target in projection_expressions
+            _ibp_scalar_bilinear_projection_aliases_for_target(
+                target,
+                projection_expression,
+                normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
+            )
+            for target, projection_expression in zip(structured_targets, projection_expressions, strict=True)
         )
         if normalize_derivative_operators:
             expr = expand_cd_operators(expr)
@@ -298,15 +306,14 @@ class MatchingResult:
             )
         if canonize_indices:
             expr, projection_expressions = _canonize_matching_projection_indices(expr, projection_expressions)
-            if normalize_ibp_scalar_bilinears:
-                flat_aliases = tuple(alias for aliases in ibp_projection_aliases for alias, _weight in aliases)
-                if flat_aliases:
-                    _canon_expr, canon_flat_aliases = _canonize_matching_projection_indices(expr, flat_aliases)
-                    alias_iter = iter(canon_flat_aliases)
-                    ibp_projection_aliases = tuple(
-                        tuple((next(alias_iter), weight) for _alias, weight in aliases)
-                        for aliases in ibp_projection_aliases
-                    )
+            flat_aliases = tuple(alias for aliases in ibp_projection_aliases for alias, _weight in aliases)
+            if flat_aliases:
+                _canon_expr, canon_flat_aliases = _canonize_matching_projection_indices(expr, flat_aliases)
+                alias_iter = iter(canon_flat_aliases)
+                ibp_projection_aliases = tuple(
+                    tuple((next(alias_iter), weight) for _alias, weight in aliases)
+                    for aliases in ibp_projection_aliases
+                )
         conditions: dict[str, Expression] = {}
         coefficient_extractor = _ProjectionCoefficientExtractor(
             expr,
@@ -824,6 +831,21 @@ def _matching_projection_coefficient(
         if not is_zero(alias)
     )
     return sum_expr(alias_contributions).expand()
+
+
+def _ibp_scalar_bilinear_projection_aliases_for_target(
+    target: MatchingConditionTarget,
+    projection_expression: Expression,
+    *,
+    normalize_ibp_scalar_bilinears: bool,
+) -> tuple[tuple[Expression, Expression], ...]:
+    if normalize_ibp_scalar_bilinears or _uses_registered_wilson_operator_aliases(target):
+        return _ibp_scalar_bilinear_projection_aliases(projection_expression)
+    return ()
+
+
+def _uses_registered_wilson_operator_aliases(target: MatchingConditionTarget) -> bool:
+    return target.is_wilson_coefficient and target.operator is not None
 
 
 def _is_composite_projection_target(target: Expression) -> bool:

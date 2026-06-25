@@ -140,6 +140,13 @@ For matching-condition extraction from large one-loop expressions, prefer
 target coefficient first with native `Expression.coefficient(...)`, then
 applies `series_eft(...)` to only `coefficient * target`, preserving total
 EFT-order semantics without forcing global expansion of the full result.
+Registered Wilson-coefficient projection targets with stored operator metadata
+are allowed to use target-local integration-by-parts projection aliases
+automatically, because the stored operator is already a basis-level projection
+instruction. Raw expression targets must remain exact unless
+`normalize_ibp_scalar_bilinears=True` is requested. When aliases are present,
+canonicalize the source, target, and alias expressions through Symbolica's
+`Expression.canonize_tensors(...)` path before any wildcard-index fallback.
 
 Before adding or modifying symbolic code, explicitly inspect the Python stubs
 and source listed below. Prefer native primitives even when a Python loop seems

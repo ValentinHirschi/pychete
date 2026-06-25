@@ -616,6 +616,37 @@ def test_matching_result_projection_handles_indexed_smeft_hbox_ibp_alias() -> No
     assert_expr_equal(projected["cHBox"], coefficient)
 
 
+def test_matching_result_projection_uses_registered_wilson_ibp_aliases() -> None:
+    coefficient = S("condition_projection_registered_hbox_ibp_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    definition = theory.externals["cHBox"]
+    wilson_target = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    raw_target = smeft_warsaw_operator(theory, "cHBox")
+    assert raw_target is not None
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_registered_hbox_i"), fund)
+    j = theory.index(theory.symbol("projection_registered_hbox_j"), fund)
+    mu = theory.dummy_index(0)
+    left_bilinear = s.Bar(higgs(i)) * higgs(i)
+    right_bilinear = s.Bar(higgs(j)) * higgs(j)
+    source_operator = -(
+        expand_cd_operators(s.CD(mu, left_bilinear)) * expand_cd_operators(s.CD(mu, right_bilinear))
+    ).expand()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    raw = result.project_matching_conditions({"cHBox": raw_target})
+    registered = result.project_matching_conditions([wilson_target])
+
+    assert_expr_equal(raw["cHBox"], Expression.num(0))
+    assert_expr_equal(registered[canonical_string(wilson_target)], coefficient)
+
+
 def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd() -> None:
     coefficient = S("condition_projection_chd_current_coefficient")
     theory = _singlet_scalar_extension_theory()
