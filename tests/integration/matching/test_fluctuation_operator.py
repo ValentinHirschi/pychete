@@ -495,6 +495,71 @@ def test_fluctuation_basis_discovers_vector_modes_from_field_strength_atoms() ->
     assert mode.supertrace_category == "lVector"
 
 
+def test_fluctuation_operator_recognizes_free_vector_field_strength_kinetic_term() -> None:
+    theory = Theory("fluctuation_operator_field_strength_vector")
+    theory.define_gauge_group("U1X", s.U1, "gX", "X")
+    vector = theory.field_handle("X")
+    mu = theory.dummy_index(0)
+    lagrangian = theory.free_lag(vector)
+
+    operator = theory.fluctuation_operator(lagrangian)
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(0))
+
+    assert_expr_equal(operator.entry(vector, vector), Expression.num(0))
+    assert_expr_equal(operator.differential_entry(vector, vector), -s.DifferentialOperator(s.List(mu, mu)))
+    assert_expr_equal(operator.momentum_entry(vector, vector), s.LoopMomentumSquared)
+    assert_expr_equal(operator.propagator_denominator_entry(vector, vector), denominator)
+    assert_expr_equal(operator.propagator_denominator_for_mode(vector), denominator)
+    assert_expr_equal(operator.free_inverse_entry(vector, vector), s.LoopMomentumSquared)
+    assert_expr_equal(operator.interaction_entry(vector, vector), Expression.num(0))
+
+
+def test_fluctuation_operator_keeps_vector_kinetic_interactions_after_free_subtraction() -> None:
+    theory = Theory("fluctuation_operator_vector_kinetic_interaction")
+    theory.define_gauge_group("U1X", s.U1, "gX", "X")
+    vector = theory.field_handle("X")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    c = theory.define_coupling("c", self_conjugate=True)
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
+    lagrangian = theory.free_lag(vector) - c() * heavy() * strength**2
+
+    operator = theory.fluctuation_operator(lagrangian, [vector])
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(0))
+
+    assert_expr_equal(
+        operator.differential_entry(vector, vector),
+        (-1 - 4 * c() * heavy()) * s.DifferentialOperator(s.List(mu, mu)),
+    )
+    assert_expr_equal(operator.momentum_entry(vector, vector), (1 + 4 * c() * heavy()) * s.LoopMomentumSquared)
+    assert operator.propagator_denominator_entry(vector, vector) is None
+    assert_expr_equal(operator.propagator_denominator_for_mode(vector), denominator)
+    assert_expr_equal(operator.free_inverse_entry(vector, vector), s.LoopMomentumSquared)
+    assert_expr_equal(operator.interaction_entry(vector, vector), 4 * c() * heavy() * s.LoopMomentumSquared)
+
+
+def test_one_loop_setup_builds_operator_derived_vector_propagator_insertions() -> None:
+    theory = Theory("one_loop_setup_vector_operator_denominators")
+    theory.define_gauge_group("U1X", s.U1, "gX", "X")
+    vector = theory.field_handle("X")
+    lagrangian = theory.free_lag(vector)
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=1, include_light_only=True)
+    trace = next(trace for trace in setup.block_traces if trace.name == "lVector")
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(0))
+
+    assert setup.operator_propagator_denominator_chain(trace) == ((denominator,),)
+    assert setup.operator_propagator_mass_squared_chain(trace) == ((Expression.num(0),),)
+    assert_expr_equal(
+        setup.operator_propagator_expression(trace),
+        s.SupertraceKernel(trace.expression, s.List(s.List(denominator))),
+    )
+    assert_expr_equal(
+        setup.operator_vakint_integral_expression(trace),
+        vakint_backend.one_loop_vacuum_integral(trace.expression, (Expression.num(0),)),
+    )
+
+
 def test_fluctuation_basis_skips_background_fields_and_grades_ghosts_as_fermionic() -> None:
     theory = Theory("fluctuation_field_roles")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

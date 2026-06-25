@@ -604,3 +604,50 @@ Latest verified baseline before this compact rollover:
   - full pytest passed: 301 passed, 1 skipped in 372.27s. The skipped test was
     the GammaLoop API import check because the dependency manifest indicates
     GammaLoop was not requested for this local dependency build.
+
+## Current Slice: Batched Vector Kinetic Support And Test Grouping
+
+- User asked to stop running the full test suite too often. Updated the active
+  workflow: plan larger coherent implementation chunks, use focused tests while
+  building, then grouped targeted gates (`backend`, `matching`, `validation`,
+  `not slow`), and reserve full pytest for larger milestones rather than every
+  small local patch.
+- Added pytest marker grouping through `tests/conftest.py` and marker
+  declarations in `pyproject.toml`. Test groups are assigned by path:
+  - `backend` for `tests/unit/backends`;
+  - `matching` for `tests/integration/matching`;
+  - `validation` and `slow` for `tests/integration/validation`.
+- Selected vector/gauge free-kinetic support as the next larger matching chunk.
+  The previous slice discovered vector modes from `FieldStrength(...)`, but
+  the fluctuation operator for `theory.free_lag(vector)` still had zero
+  differential/momentum entries and no denominator metadata.
+- Implemented field-strength kinetic extraction in the fluctuation operator:
+  canonical `FieldStrength(label, ...)^2` terms are matched with Symbolica
+  patterns, their coefficients are read with native `Expression.coefficient`,
+  and they contribute vector differential terms that lower to
+  `LoopMomentumSquared`.
+- Generalized registered free-inverse extraction so field-dependent kinetic
+  interactions do not block propagator subtraction. The free inverse is now
+  recognized from the field-independent part of the momentum coefficient and
+  mass term, obtained with Symbolica replacements over tagged `Field(...)`,
+  `Bar(Field(...))`, and `FieldStrength(...)` atoms. Field-dependent kinetic
+  terms remain in the interaction operator.
+- Added focused matching tests for:
+  - free vector field-strength kinetic terms producing `LoopMomentumSquared`
+    denominator metadata;
+  - vector kinetic interactions remaining after canonical free-propagator
+    subtraction;
+  - operator-derived vector propagator insertion in `one_loop_setup`.
+- Verification in this slice so far:
+  - focused vector kinetic tests passed: 3 passed in 0.21s;
+  - marker collection checks passed for `matching`, `validation`, and
+    `backend` groups;
+  - grouped matching integration gate passed: 60 passed in 2.61s;
+  - grouped backend gate passed: 95 passed in 5.59s;
+  - `mypy` passed with no issues in 32 source files;
+  - `git diff --check` passed;
+  - broader non-slow gate passed: 254 passed, 1 skipped, 50 deselected in
+    8.72s. The skipped test was the GammaLoop API import check because the
+    dependency manifest indicates GammaLoop was not requested for this local
+    dependency build. The 50 deselected tests are the deliberately slow
+    validation group under the new batching policy.

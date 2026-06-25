@@ -34,6 +34,22 @@ To run it directly:
 dependencies/.venv/bin/python -m mypy
 ```
 
+Prefer grouped targeted tests during implementation slices, and reserve the
+full suite for larger green milestones:
+
+```sh
+dependencies/.venv/bin/python -m pytest -m backend tests/unit/backends
+dependencies/.venv/bin/python -m pytest -m matching tests/integration/matching
+dependencies/.venv/bin/python -m pytest -m validation tests/integration/validation
+dependencies/.venv/bin/python -m pytest -m "not slow" tests
+```
+
+When a slice touches the slow validation fixtures, batch related work first and
+then run the validation group once. Do not pay for the full suite after every
+small local fix; use focused tests while building the slice, then a broader
+targeted gate, and only then a full-suite gate when the milestone is large
+enough to justify it.
+
 Always use the managed virtual environment for pychete development and tests.
 Do not use the ambient system Python when importing Symbolica, idenso, spenso,
 or vakint.
@@ -141,6 +157,14 @@ atoms as occurrences of the owning vector field. Use `field_strength_pattern`
 with the field-label tag/data supplied by `Theory.symbol`; do not parse label
 names or require an explicit `Field(label, ...)` atom in free gauge-field
 terms.
+Vector free-kinetic extraction must also treat canonical field-strength
+quadratics as vector inverse-propagator data. Use Symbolica matching and
+`Expression.coefficient` on `FieldStrength(label, ...)^2` terms, then lower the
+result to differential/momentum operators through the same fluctuation-operator
+path as scalar and fermion fields. When kinetic interactions are present,
+extract the registered free inverse from the field-independent part of the
+momentum entry and leave field-dependent kinetic terms in the interaction
+operator.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

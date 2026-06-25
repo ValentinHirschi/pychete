@@ -166,3 +166,8 @@ discoveries, dependency patches, blockers, and remaining work.
 - In vakint topology handling, collect propagators with identical signatures
   into a single propagator with the corrected summed power. This must be done
   consistently for arbitrary integer powers, not only square numerator cases.
+- Strengthen the workflow further: spend more time planning and implementing
+  larger coherent chunks before running broad validation. Group tests so
+  backend, matching, validation, and non-slow subsets can be run independently;
+  use small focused tests while building a chunk, then targeted grouped gates,
+  and reserve full pytest for larger milestones rather than every local fix.

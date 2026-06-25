@@ -8,6 +8,12 @@ requires-python = ">=3.11"
 pythonpath = ["src"]
 testpaths = ["tests"]
 addopts = "-ra"
+markers = [
+    "backend: backend adapter and analytic backend tests",
+    "matching: one-loop matching and fluctuation-operator integration tests",
+    "validation: committed fixture and gap-report validation tests",
+    "slow: tests that are intentionally slower and should be batched before full-suite gates",
+]
 
 [tool.mypy]
 python_version = "3.11"

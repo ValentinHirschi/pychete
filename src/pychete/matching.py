@@ -2418,10 +2418,15 @@ class FluctuationOperator:
                     column,
                     loop_momentum_squared=loop_momentum_squared,
                 )
-                if _has_unit_linear_momentum_part(entry, loop_momentum_squared=loop_momentum_squared):
+                expected_mass_squared = _fluctuation_mass_squared(self.mode_for(column))
+                if _has_registered_free_inverse_part(
+                    entry,
+                    expected_mass_squared,
+                    loop_momentum_squared=loop_momentum_squared,
+                ):
                     return s.PropagatorDenominator(
                         s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared,
-                        _fluctuation_mass_squared(self.mode_for(column)),
+                        expected_mass_squared,
                     )
         return None
 
@@ -2830,7 +2835,46 @@ def _fluctuation_differential_entry(
         coefficient = partial_functional_derivative(eom, target)
         if not is_zero(coefficient):
             terms.append(_differential_operator_term(coefficient, derivatives))
+    terms.extend(_field_strength_differential_terms(theory, lagrangian, row, column))
     return sum_expr(terms).expand()
+
+
+def _field_strength_differential_terms(
+    theory: Theory,
+    lagrangian: Expression,
+    row: Expression,
+    column: Expression,
+) -> tuple[Expression, ...]:
+    row_base = bar_field_inner(row) if is_bar_field(row) else row
+    column_base = bar_field_inner(column) if is_bar_field(column) else column
+    if not _same_field_label(row_base, column_base):
+        return ()
+    label = field_label(row_base)
+    field_type = field_type_from_label(label)
+    if not (bool(field_type == s.Vector) or is_head(field_type, s.Vector)):
+        return ()
+    row_indices = list_items(row_base[2])
+    pattern = field_strength_pattern(label)
+    seen: set[str] = set()
+    terms: list[Expression] = []
+    for match in lagrangian.match(pattern):
+        strength = pattern.replace_wildcards(match)
+        key = canonical_string(strength)
+        if key in seen:
+            continue
+        seen.add(key)
+        if not _same_expression_sequence(row_indices, list_items(match[s.FieldStrengthIndicesWildcard])):
+            continue
+        if list_items(match[s.FieldStrengthDerivativesWildcard]):
+            continue
+        lorentz_indices = list_items(match[s.FieldStrengthLorentzWildcard])
+        if len(lorentz_indices) != 2:
+            continue
+        coefficient = lagrangian.coefficient(strength**2).expand()
+        if is_zero(coefficient):
+            continue
+        terms.append(4 * coefficient * s.DifferentialOperator(list_expr(lorentz_indices[0], lorentz_indices[0])))
+    return tuple(terms)
 
 
 def _field_derivative_sets_in_expression(
@@ -2971,19 +3015,36 @@ def _has_unsupported_momentum_powers(expr: Expression, momentum_squared: Express
     return False
 
 
-def _has_unit_linear_momentum_part(
+def _has_registered_free_inverse_part(
     expr: Expression,
+    expected_mass_squared: Expression,
     *,
     loop_momentum_squared: Expression | None = None,
 ) -> bool:
     momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+    if _has_unsupported_momentum_powers(expr, momentum_squared):
+        return False
     momentum_coefficient = _coefficient_of_momentum_power(expr, momentum_squared, 1)
     if momentum_coefficient is None:
         return False
-    return bool(momentum_coefficient == Expression.num(1)) and not _has_unsupported_momentum_powers(
-        expr,
-        momentum_squared,
-    )
+    free_momentum_coefficient = _field_independent_part(momentum_coefficient)
+    if not bool(free_momentum_coefficient == Expression.num(1)):
+        return False
+    constant = _coefficient_of_momentum_power(expr, momentum_squared, 0)
+    free_constant = Expression.num(0) if constant is None else _field_independent_part(constant)
+    return is_zero((free_constant + expected_mass_squared).expand())
+
+
+def _field_independent_part(expr: Expression) -> Expression:
+    field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    field_strength_label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    return expr.replace_multiple(
+        (
+            Replacement(bar_field_pattern(), Expression.num(0), field_label_is_tagged),
+            Replacement(field_pattern(), Expression.num(0), field_label_is_tagged),
+            Replacement(field_strength_pattern(), Expression.num(0), field_strength_label_is_tagged),
+        )
+    ).expand()
 
 
 def _contracted_derivative_pair_power(derivatives: tuple[Expression, ...]) -> int | None:
@@ -2993,6 +3054,10 @@ def _contracted_derivative_pair_power(derivatives: tuple[Expression, ...]) -> in
         if not bool(left == right):
             return None
     return len(derivatives) // 2
+
+
+def _same_expression_sequence(left: tuple[Expression, ...], right: tuple[Expression, ...]) -> bool:
+    return len(left) == len(right) and all(bool(left_item == right_item) for left_item, right_item in zip(left, right))
 
 
 def _same_field_label(left: Expression, right: Expression) -> bool:
