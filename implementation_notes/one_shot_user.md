@@ -13,10 +13,10 @@ Very important: use Symbolica as much as possible and periodically rescan the
 Symbolica Python stub files so the native API stays in context.
 
 Normal pychete tests must be Mathematica-independent. pytest must never require
-Mathematica, `wolframscript`, or a runnable Matchete installation. Development
-helper Wolfram scripts may load the read-only Matchete checkout to generate
-committed pychete-owned fixtures, but runtime code and tests must load only
-those fixtures.
+Mathematica, `wolframscript`, or a runnable Matchete installation. Optional
+top-level `scripts/` Wolfram conversion entry points may load the read-only
+Matchete checkout to generate committed pychete-owned fixtures for users who
+have Mathematica, but runtime code and tests must load only those fixtures.
 
 Keep the approved implementation plan copied into both
 `implementation_notes/one_shot_user.md` and
@@ -34,9 +34,10 @@ discoveries, dependency patches, blockers, and remaining work.
 - Build a Pythonic pychete implementation of Matchete-style one-loop matching,
   prioritizing the default SMEFT UV matching models first, then all Matchete
   validation tests that map cleanly to pychete's architecture.
-- Normal pytest must be Mathematica-independent. Development-only Wolfram
-  scripts may load Matchete to generate serialized pychete fixtures under the
-  repo, but tests load only those committed fixtures.
+- Normal pytest must be Mathematica-independent. Optional top-level `scripts/`
+  Wolfram conversion entry points may load Matchete to generate serialized
+  pychete fixtures under the repo for users who have Mathematica, but tests
+  load only those committed fixtures.
 - Use Symbolica as the symbolic engine, idenso/spenso for gamma, colour,
   metric, and tensor algebra. Use pychete's own Matchete-style analytic backend
   for one-loop vacuum integral evaluation after tensor reduction, including
@@ -48,19 +49,18 @@ discoveries, dependency patches, blockers, and remaining work.
 
 ## Key Changes
 
-- Add `helper_mathematica_scripts/` with Wolfram scripts that load Matchete and
-  export model definitions, validation expected outputs, supertraces, matching
-  conditions, and selected unit-test fixtures into pychete-owned serialized
-  assets. Keep optional top-level `scripts/` wrappers checked in for users who
-  have Mathematica and want a convenient export/convert entry point, while
-  keeping the maintained helper implementation and all normal pytest/runtime
-  paths Matchete- and Mathematica-independent.
+- Keep optional top-level `scripts/` Wolfram conversion entry points checked in
+  for users who have Mathematica and want a convenient export/convert route for
+  model definitions, validation expected outputs, supertraces, matching
+  conditions, and selected unit-test fixtures. Supporting implementation code
+  may live under `helper_mathematica_scripts/`, but all normal pytest/runtime
+  paths must remain Matchete- and Mathematica-independent.
 - Treat the direct Python Mathematica loader as a documented supported-subset
   loader for simple declarative model assets and saved-result snippets only.
-  For complicated Mathematica models, use Wolfram/Matchete helper scripts to
-  load the model, extract Matchete's parsed internal data, and emit equivalent
-  pychete serialized state or Python fixture files that can be committed and
-  used by tests and users.
+  For complicated Mathematica models, use the optional top-level
+  Wolfram/Matchete scripts to load the model, extract Matchete's parsed
+  internal data, and emit equivalent pychete serialized state or Python fixture
+  files that can be committed and used by tests and users.
 - Add committed fixture assets for Matchete-independent pytest validation;
   never require `wolframscript` in normal tests.
 - Extend pychete metadata with gauge groups, representations, CG tensors,
@@ -142,9 +142,9 @@ discoveries, dependency patches, blockers, and remaining work.
   pychete-owned fixtures are the normal validation/user artifacts.
 - Keep both the loaded-model-state conversion route and the previous
   matching-result conversion route discoverable under the top-level `scripts/`
-  directory. The maintained implementation can still live under
-  `helper_mathematica_scripts/`, but the user-facing convenience wrappers
-  should stay committed with pychete.
+  directory. Supporting implementation code can still live under
+  `helper_mathematica_scripts/`, but the user-facing convenience entry points
+  must stay committed with pychete.
 - Continue treating the top-level Mathematica conversion scripts as optional
   convenience tooling only. It is acceptable to improve those scripts so users
   with Mathematica can generate pychete-owned fixtures, but runtime pychete and

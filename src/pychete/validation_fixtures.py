@@ -5,7 +5,7 @@ from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from html import escape
 from pathlib import Path
-from typing import Any
+from typing import Any, Literal
 
 from symbolica import Expression
 
@@ -28,6 +28,19 @@ from .validation import (
 )
 
 TensorComponent = Expression | int | float | complex
+TraceOrderInput = int | Literal["reference"]
+_SUPERTRACE_CATEGORY_WORDS = {
+    "hScalar",
+    "lScalar",
+    "hFermion",
+    "lFermion",
+    "hVector",
+    "lVector",
+    "hGhost",
+    "lGhost",
+    "hAntiGhost",
+    "lAntiGhost",
+}
 
 
 @dataclass(frozen=True)
@@ -40,6 +53,8 @@ class MatchingFixtureGapReport:
     reference_stage: str | None
     candidate_supertrace_names: tuple[str, ...]
     reference_supertrace_names: tuple[str, ...]
+    candidate_max_supertrace_order: int
+    reference_max_supertrace_order: int
     common_supertrace_names: tuple[str, ...]
     candidate_only_supertrace_names: tuple[str, ...]
     reference_only_supertrace_names: tuple[str, ...]
@@ -81,6 +96,12 @@ class MatchingFixtureGapReport:
         """Number of supertrace expressions exposed by the reference fixture."""
 
         return len(self.reference_supertrace_names)
+
+    @property
+    def max_supertrace_order_gap(self) -> int:
+        """Difference between reference and candidate maximum supertrace word order."""
+
+        return self.reference_max_supertrace_order - self.candidate_max_supertrace_order
 
     @property
     def missing_reference_supertrace_count(self) -> int:
@@ -276,6 +297,9 @@ class MatchingFixtureGapReport:
             "complete": self.complete,
             "candidate_supertrace_count": self.candidate_supertrace_count,
             "reference_supertrace_count": self.reference_supertrace_count,
+            "candidate_max_supertrace_order": self.candidate_max_supertrace_order,
+            "reference_max_supertrace_order": self.reference_max_supertrace_order,
+            "max_supertrace_order_gap": self.max_supertrace_order_gap,
             "common_supertrace_count": len(self.common_supertrace_names),
             "missing_reference_supertrace_count": self.missing_reference_supertrace_count,
             "candidate_only_supertrace_count": len(self.candidate_only_supertrace_names),
@@ -361,6 +385,7 @@ class MatchingFixtureGapReport:
             f"<code>MatchingFixtureGapReport({escape(self.candidate_fixture)} vs "
             f"{escape(self.reference_name)}: {status}, "
             f"supertraces={self.candidate_supertrace_count}/{self.reference_supertrace_count}, "
+            f"max_order={self.candidate_max_supertrace_order}/{self.reference_max_supertrace_order}, "
             f"accepted_common_supertraces={self.accepted_common_supertrace_count}, "
             f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count}, "
             f"accepted_common_matching_conditions={self.accepted_common_matching_condition_count}, "
@@ -581,7 +606,7 @@ class ValidationFixture:
         reference_name: str = "reference",
         lagrangian: str = "lagrangian",
         eft_order: int = 6,
-        max_trace_order: int = 2,
+        max_trace_order: TraceOrderInput = 2,
         include_light_only: bool = False,
         heavy_field_dimension: bool = False,
         include_light: bool = True,
@@ -628,8 +653,13 @@ class ValidationFixture:
         evaluate_loop_functions_for_comparison: bool = False,
         comparison_combine_terms: bool = True,
     ) -> MatchingFixtureGapReport:
-        """Report current one-loop preview coverage against a reference result."""
+        """Report current one-loop preview coverage against a reference result.
 
+        Set ``max_trace_order="reference"`` to generate traces up to the
+        largest supertrace word order present in the reference fixture.
+        """
+
+        resolved_max_trace_order = _resolve_max_trace_order(max_trace_order, reference)
         projected_targets = (
             _reference_matching_condition_targets(reference)
             if project_reference_matching_conditions
@@ -641,7 +671,7 @@ class ValidationFixture:
                 eft_order=eft_order,
                 loop_order=1,
                 one_loop_options=OneLoopMatchOptions(
-                    max_trace_order=max_trace_order,
+                    max_trace_order=resolved_max_trace_order,
                     include_light_only=include_light_only,
                     heavy_field_dimension=heavy_field_dimension,
                     include_light=include_light,
@@ -694,7 +724,7 @@ class ValidationFixture:
             candidate = self.one_loop_preview(
                 lagrangian=lagrangian,
                 eft_order=eft_order,
-                max_trace_order=max_trace_order,
+                max_trace_order=resolved_max_trace_order,
                 include_light_only=include_light_only,
                 heavy_field_dimension=heavy_field_dimension,
                 include_light=include_light,
@@ -804,6 +834,25 @@ def load_validation_fixture(path: str | Path) -> ValidationFixture:
 
 def _sorted_names(names: Iterable[str]) -> tuple[str, ...]:
     return tuple(sorted(names))
+
+
+def _resolve_max_trace_order(max_trace_order: TraceOrderInput, reference: MatchingResult) -> int:
+    if max_trace_order == "reference":
+        return max(1, _max_supertrace_order(reference.supertraces))
+    if not isinstance(max_trace_order, int):
+        raise ValueError("max_trace_order must be an integer or 'reference'")
+    return max_trace_order
+
+
+def _max_supertrace_order(names: Iterable[str]) -> int:
+    return max((_supertrace_word_order(name) for name in names), default=0)
+
+
+def _supertrace_word_order(name: str) -> int:
+    parts = name.split("-")
+    if all(part in _SUPERTRACE_CATEGORY_WORDS for part in parts):
+        return len(parts)
+    return 0
 
 
 def _accepted_names(
@@ -991,6 +1040,8 @@ def _gap_report(
         reference_stage=_metadata_stage(reference),
         candidate_supertrace_names=_sorted_names(candidate_supertraces),
         reference_supertrace_names=_sorted_names(reference_supertraces),
+        candidate_max_supertrace_order=_max_supertrace_order(candidate_supertraces),
+        reference_max_supertrace_order=_max_supertrace_order(reference_supertraces),
         common_supertrace_names=_sorted_names(common_supertraces),
         candidate_only_supertrace_names=_sorted_names(candidate_supertraces - reference_supertraces),
         reference_only_supertrace_names=_sorted_names(reference_supertraces - candidate_supertraces),

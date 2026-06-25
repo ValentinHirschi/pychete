@@ -13,10 +13,10 @@ Very important: use Symbolica as much as possible and periodically rescan the
 Symbolica Python stub files so the native API stays in context.
 
 Normal pychete tests must be Mathematica-independent. pytest must never require
-Mathematica, `wolframscript`, or a runnable Matchete installation. Development
-helper Wolfram scripts may load the read-only Matchete checkout to generate
-committed pychete-owned fixtures, but runtime code and tests must load only
-those fixtures.
+Mathematica, `wolframscript`, or a runnable Matchete installation. Optional
+top-level `scripts/` Wolfram conversion entry points may load the read-only
+Matchete checkout to generate committed pychete-owned fixtures for users who
+have Mathematica, but runtime code and tests must load only those fixtures.
 
 Keep the approved implementation plan copied into both
 `implementation_notes/one_shot_user.md` and
@@ -34,9 +34,10 @@ discoveries, dependency patches, blockers, and remaining work.
 - Build a Pythonic pychete implementation of Matchete-style one-loop matching,
   prioritizing the default SMEFT UV matching models first, then all Matchete
   validation tests that map cleanly to pychete's architecture.
-- Normal pytest must be Mathematica-independent. Development-only Wolfram
-  scripts may load Matchete to generate serialized pychete fixtures under the
-  repo, but tests load only those committed fixtures.
+- Normal pytest must be Mathematica-independent. Optional top-level `scripts/`
+  Wolfram conversion entry points may load Matchete to generate serialized
+  pychete fixtures under the repo for users who have Mathematica, but tests
+  load only those committed fixtures.
 - Use Symbolica as the symbolic engine, idenso/spenso for gamma, colour,
   metric, and tensor algebra. Use pychete's own Matchete-style analytic backend
   for one-loop vacuum integral evaluation after tensor reduction, including
@@ -48,19 +49,18 @@ discoveries, dependency patches, blockers, and remaining work.
 
 ## Key Changes
 
-- Add `helper_mathematica_scripts/` with Wolfram scripts that load Matchete and
-  export model definitions, validation expected outputs, supertraces, matching
-  conditions, and selected unit-test fixtures into pychete-owned serialized
-  assets. Keep optional top-level `scripts/` wrappers checked in for users who
-  have Mathematica and want a convenient export/convert entry point, while
-  keeping the maintained helper implementation and all normal pytest/runtime
-  paths Matchete- and Mathematica-independent.
+- Keep optional top-level `scripts/` Wolfram conversion entry points checked in
+  for users who have Mathematica and want a convenient export/convert route for
+  model definitions, validation expected outputs, supertraces, matching
+  conditions, and selected unit-test fixtures. Supporting implementation code
+  may live under `helper_mathematica_scripts/`, but all normal pytest/runtime
+  paths must remain Matchete- and Mathematica-independent.
 - Treat the direct Python Mathematica loader as a documented supported-subset
   loader for simple declarative model assets and saved-result snippets only.
-  For complicated Mathematica models, use Wolfram/Matchete helper scripts to
-  load the model, extract Matchete's parsed internal data, and emit equivalent
-  pychete serialized state or Python fixture files that can be committed and
-  used by tests and users.
+  For complicated Mathematica models, use the optional top-level
+  Wolfram/Matchete scripts to load the model, extract Matchete's parsed
+  internal data, and emit equivalent pychete serialized state or Python fixture
+  files that can be committed and used by tests and users.
 - Add committed fixture assets for Matchete-independent pytest validation;
   never require `wolframscript` in normal tests.
 - Extend pychete metadata with gauge groups, representations, CG tensors,
@@ -4567,6 +4567,61 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 265 passed,
     1 skipped in 267.04s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added reference-order supertrace coverage metadata for validation gap
+  reports:
+  - `MatchingFixtureGapReport` now records candidate and reference maximum
+    supertrace word order, plus the order gap, and includes those values in
+    JSON and notebook HTML output;
+  - `ValidationFixture.one_loop_preview_gap_report(...)` now accepts
+    `max_trace_order="reference"`, resolving the requested trace depth from
+    the largest Matchete-style `h*/l*` supertrace word in the reference result;
+  - the word-order parser only counts known supertrace category words such as
+    `hScalar`, `lFermion`, and `lVector`, so aggregate diagnostic stage names
+    do not contaminate the reference-order metric;
+  - the cheap default fixture frontier remains pinned at `max_trace_order=3`,
+    while the saved Matchete references now explicitly report maximum order
+    `6` for `VLF_toy_model`, `Singlet_Scalar_Extension`, and `E_VLL`, and
+    maximum order `5` for `S1S3LQs`;
+  - a manual feasibility scan with `max_trace_order=6` showed the existing
+    generator can reach more of the saved reference surface, at the cost of
+    `966` kernels and `188` interaction-power contributions per default model:
+    common supertrace counts became `9/13` for `VLF_toy_model`, `15/24` for
+    `Singlet_Scalar_Extension`, `28/50` for `E_VLL`, and `14/27` for
+    `S1S3LQs`, with accepted common counts `0`, `0`, `12`, and `3`
+    respectively. This confirms higher-order trace generation is viable but
+    too expensive for default quick tests.
+- Verification for the reference-order reporting slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_records_supertrace_word_orders
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_use_reference_trace_order
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    -q'` passed: 3 passed in 37.80s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_conditions_through_public_match_api
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_condition_probe_accepts_fixture_function_indeterminates
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
+    -q'` passed: 22 passed in 146.39s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 267 passed,
+    1 skipped in 261.33s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
+- Reconfirmed the latest user-facing Mathematica conversion requirement:
+  optional conversion entry points must stay committed and discoverable under
+  the top-level `scripts/` directory for users with Mathematica, while pychete
+  runtime code, normal pytest, and committed fixture consumption remain fully
+  independent of Mathematica, `wolframscript`, and Matchete. Updated
+  `AGENTS.md`, `scripts/README.md`, and the copied one-shot plan text to make
+  `scripts/` the user-facing optional route; `helper_mathematica_scripts/`
+  remains only supporting implementation code for those convenience scripts.
 
 ## Remaining Work
 
@@ -4574,8 +4629,9 @@ discoveries, dependency patches, blockers, and remaining work.
   acceptance targets for the pychete one-loop matching engine; current tests
   cover both raw/vakint and public finite/MS preview gap reports, and projected
   matching-condition reports now include registered model-coupling identity
-  values plus explicit SMEFT Wilson-target acceptance counts. Final Matchete
-  equivalence is still incomplete.
+  values, explicit SMEFT Wilson-target acceptance counts, and explicit
+  reference supertrace order gaps. Final Matchete equivalence is still
+  incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
   initial contract, especially richer vector/zero-mode metadata and
   complicated Matchete models that exceed the direct Python loader's documented

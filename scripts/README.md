@@ -56,5 +56,6 @@ PYTHONPATH=src dependencies/.venv/bin/python scripts/convert_matchete_previous_r
 
 The committed fixtures under `assets/validation/pychete/` are the artifacts
 used by pychete tests and users who do not have Mathematica. These scripts are
-optional convenience wrappers over `helper_mathematica_scripts/`; pychete does
-not depend on Mathematica or Matchete at runtime.
+optional convenience entry points; some delegate to helper implementations
+under `helper_mathematica_scripts/`, but pychete does not depend on
+Mathematica or Matchete at runtime.

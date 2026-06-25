@@ -341,6 +341,41 @@ def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
     assert report_obj["different_after_probe_common_supertrace_count"] == 1
 
 
+def test_fixture_gap_report_records_supertrace_word_orders() -> None:
+    theory = Theory("fixture_gap_supertrace_order")
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            "hScalar": Expression.num(0),
+            "hScalar-lScalar": Expression.num(0),
+            "aggregate_stage": Expression.num(0),
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            "hScalar": Expression.num(0),
+            "hScalar-lScalar-lVector": Expression.num(0),
+        },
+    )
+
+    report = _gap_report("candidate_fixture", "reference_fixture", candidate, reference)
+    report_obj = report.to_json_obj()
+
+    assert report.candidate_max_supertrace_order == 2
+    assert report.reference_max_supertrace_order == 3
+    assert report.max_supertrace_order_gap == 1
+    assert report_obj["candidate_max_supertrace_order"] == 2
+    assert report_obj["reference_max_supertrace_order"] == 3
+    assert report_obj["max_supertrace_order_gap"] == 1
+
+
 def test_fixture_gap_report_compares_common_matching_conditions() -> None:
     c_equal, c_diff, x = S("condition_gap_equal", "condition_gap_diff", "condition_gap_x")
     theory = Theory("condition_gap")

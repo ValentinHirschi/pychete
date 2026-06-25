@@ -415,13 +415,13 @@ as `ParentModel`, `ParameterDefault`, `DefineFlavorIndex`,
 `DefineField`, and `DefineCoupling`.
 
 Do not grow this Python loader into a general Wolfram Language parser. For
-complicated Mathematica models, add or update development-only Wolfram scripts
-under `helper_mathematica_scripts/` that load Matchete itself, read Matchete's
-already-parsed internal data, and emit pychete-owned serialized state or
-Python fixture files. Those emitted files may be committed under `assets/` and
-used by tests and users. Normal pytest must continue to consume only committed
-pychete fixtures and must not require `wolframscript`, Mathematica, or a
-runnable Matchete checkout.
+complicated Mathematica models, add or update optional Wolfram conversion
+entry points under the top-level `scripts/` directory that load Matchete
+itself, read Matchete's already-parsed internal data, and emit pychete-owned
+serialized state or Python fixture files. Those emitted files may be committed
+under `assets/` and used by tests and users. Normal pytest must continue to
+consume only committed pychete fixtures and must not require `wolframscript`,
+Mathematica, or a runnable Matchete checkout.
 
 Keep optional user-facing entry points for this route under the top-level
 `scripts/` directory, including `scripts/export_matchete_model_state.wls`,
@@ -431,9 +431,9 @@ Keep optional user-facing entry points for this route under the top-level
 `scripts/convert_matchete_previous_results.py`. These scripts are convenience
 wrappers for users who already have Mathematica and Matchete available; they
 must not be imported by pychete runtime code, required by pytest, or treated as
-the canonical validation path. The maintained implementation may live under
+the canonical validation path. Supporting implementation code may live under
 `helper_mathematica_scripts/`, but the discoverable user convenience route
-should remain checked into `scripts/`.
+must remain checked into `scripts/`.
 
 ## Symbolica Expression Policy
 

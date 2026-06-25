@@ -690,10 +690,46 @@ def test_default_matching_condition_probe_accepts_fixture_function_indeterminate
     )
 
 
+def test_validation_fixture_gap_report_can_use_reference_trace_order(monkeypatch: pytest.MonkeyPatch) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    theory = fixture.theory()
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            "hScalar": Expression.num(0),
+            "hScalar-lScalar-lVector-lScalar": Expression.num(0),
+        },
+    )
+    requested_orders: list[int] = []
+
+    def fake_one_loop_preview(self: object, **kwargs: object) -> MatchingResult:
+        requested_orders.append(int(kwargs["max_trace_order"]))
+        return MatchingResult(
+            theory=theory,
+            uv_lagrangian=Expression.num(0),
+            off_shell_eft_lagrangian=Expression.num(0),
+            on_shell_eft_lagrangian=Expression.num(0),
+            supertraces={"hScalar": Expression.num(0)},
+        )
+
+    monkeypatch.setattr(type(fixture), "one_loop_preview", fake_one_loop_preview)
+
+    report = fixture.one_loop_preview_gap_report(reference, max_trace_order="reference")
+
+    assert requested_orders == [4]
+    assert report.candidate_max_supertrace_order == 1
+    assert report.reference_max_supertrace_order == 4
+    assert report.max_supertrace_order_gap == 3
+
+
 def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -> None:
     expected = {
         "VLF_toy_model": {
             "reference_supertraces": 13,
+            "reference_max_order": 6,
             "conditions": 0,
             "candidate_supertraces": 47,
             "common": {
@@ -707,6 +743,7 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         },
         "Singlet_Scalar_Extension": {
             "reference_supertraces": 24,
+            "reference_max_order": 6,
             "conditions": 72,
             "candidate_supertraces": 47,
             "common": {
@@ -721,6 +758,7 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         },
         "E_VLL": {
             "reference_supertraces": 50,
+            "reference_max_order": 6,
             "conditions": 72,
             "candidate_supertraces": 47,
             "common": {
@@ -739,6 +777,7 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         },
         "S1S3LQs": {
             "reference_supertraces": 27,
+            "reference_max_order": 5,
             "conditions": 72,
             "candidate_supertraces": 47,
             "common": {
@@ -777,6 +816,9 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         assert report.reference_stage is None
         assert report.candidate_supertrace_count == expected_counts["candidate_supertraces"]
         assert report.reference_supertrace_count == expected_counts["reference_supertraces"]
+        assert report.candidate_max_supertrace_order == 3
+        assert report.reference_max_supertrace_order == expected_counts["reference_max_order"]
+        assert report.max_supertrace_order_gap == expected_counts["reference_max_order"] - 3
         assert set(report.common_supertrace_names) == expected_counts["common"]
         assert set(report.canonical_equal_common_supertrace_names) == expected_counts["canonical_equal"]
         assert set(report.canonical_different_common_supertrace_names) == (
@@ -802,6 +844,9 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
             "on_shell_eft_lagrangian",
         }
         assert report_obj["complete"] is False
+        assert report_obj["candidate_max_supertrace_order"] == 3
+        assert report_obj["reference_max_supertrace_order"] == expected_counts["reference_max_order"]
+        assert report_obj["max_supertrace_order_gap"] == expected_counts["reference_max_order"] - 3
         assert report_obj["common_supertrace_count"] == len(expected_counts["common"])
         assert report_obj["canonical_equal_common_supertrace_count"] == len(expected_counts["canonical_equal"])
         assert report_obj["canonical_different_common_supertrace_count"] == (
