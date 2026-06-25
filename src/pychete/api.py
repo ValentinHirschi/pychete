@@ -16,6 +16,7 @@ from .backends.vacuum_integrals import (
     reduce_loop_function_ibp,
     reduce_loop_functions_first_power,
     reduce_loop_functions_ibp,
+    simplify_loop_functions,
 )
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
@@ -137,4 +138,5 @@ __all__ = [
     "relabel_dummy_indices",
     "s",
     "series_eft",
+    "simplify_loop_functions",
 ]

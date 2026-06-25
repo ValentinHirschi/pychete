@@ -6,7 +6,7 @@ from typing import TypeAlias
 
 from symbolica import Expression, Replacement, S
 
-from ..expr import as_int, is_head, list_expr, list_items, pow_parts, product_expr, sum_expr
+from ..expr import as_int, is_head, list_expr, list_items, pow_parts, product_expr, sum_expr, terms
 from ..symbols import canonical_string, s
 from . import vakint
 
@@ -273,6 +273,61 @@ def reduce_loop_functions_ibp(
     )
 
 
+def simplify_loop_functions(
+    expr: Expression,
+    *,
+    epsilon: Expression | None = None,
+    max_pole_order: int = 1,
+    combine_terms: bool = False,
+) -> Expression:
+    """Simplify finite ``LoopFunction`` sums with Matchete-style IBP trials.
+
+    This is pychete's sum-level counterpart of Matchete's
+    ``SimplifyMassFunction``. Loop functions are first put in a common
+    mass-sorted form, then each distinct mass tuple is optimized by trying each
+    mass as the first propagator in the first-power IBP rule. A trial is kept
+    only when the expanded term count for that mass-function group does not
+    grow. The symbolic rule application and epsilon-finite extraction are
+    delegated to Symbolica replacement and coefficient primitives; Python only
+    chooses among the finite set of candidate target masses.
+    """
+
+    current_terms = list(terms(_order_loop_functions_by_mass(expr).expand()))
+    regulator = epsilon_symbol() if epsilon is None else epsilon
+    for mass_tuple in _loop_function_mass_types(sum_expr(current_terms)):
+        if len(mass_tuple) < 2:
+            continue
+        keep_terms: list[Expression] = []
+        group_terms: list[Expression] = []
+        for term in current_terms:
+            if _contains_loop_function_masses(term, mass_tuple):
+                group_terms.append(term)
+            else:
+                keep_terms.append(term)
+        if len(group_terms) < 2:
+            continue
+        target_count = len(group_terms)
+        accepted_terms = group_terms
+        for target_index in range(len(mass_tuple)):
+            candidate = _simplify_loop_function_group(
+                group_terms,
+                mass_tuple,
+                target_index=target_index,
+                epsilon=regulator,
+                max_pole_order=max_pole_order,
+            )
+            candidate_terms = list(terms(candidate.expand()))
+            if len(candidate_terms) > target_count:
+                continue
+            target_count = len(candidate_terms)
+            accepted_terms = candidate_terms
+        current_terms = keep_terms + accepted_terms
+    return _finish_evaluated_expression(
+        _order_loop_functions_by_mass(sum_expr(current_terms)).expand(),
+        combine_terms=combine_terms,
+    )
+
+
 def loop_function_to_vakint_integral(expr: Expression) -> Expression:
     """Lower one pychete ``LoopFunction`` atom to an equivalent scalar topology."""
 
@@ -496,6 +551,29 @@ def _loop_function_data(expr: Expression) -> tuple[tuple[Expression, ...], tuple
     return masses, tuple(powers)
 
 
+def _order_loop_functions_by_mass(expr: Expression) -> Expression:
+    pattern = _loop_function_pattern()
+    for match in expr.match(pattern):
+        _loop_function_data(pattern.replace_wildcards(match))
+
+    def order_match(match: dict[Expression, Expression]) -> Expression:
+        return _order_loop_function_by_mass(pattern.replace_wildcards(match))
+
+    return expr.replace(pattern, order_match)
+
+
+def _order_loop_function_by_mass(expr: Expression) -> Expression:
+    masses, powers = _loop_function_data(expr)
+    alpha = powers[-1]
+    mass_powers = _mass_ordered_powers(zip(masses, powers[:-1], strict=True))
+    if not mass_powers:
+        return Expression.num(0)
+    return loop_function(
+        tuple(mass for mass, _power in mass_powers),
+        (*tuple(power for _mass, power in mass_powers), alpha),
+    )
+
+
 def _canonized_mass_powers(
     items: Iterable[tuple[Expression, int]],
 ) -> tuple[tuple[Expression, int], ...]:
@@ -517,6 +595,22 @@ def _canonized_mass_powers(
     )
 
 
+def _mass_ordered_powers(
+    items: Iterable[tuple[Expression, int]],
+) -> tuple[tuple[Expression, int], ...]:
+    combined: list[tuple[Expression, int]] = []
+    for mass, power in items:
+        if power == 0:
+            continue
+        for index, (existing_mass, existing_power) in enumerate(combined):
+            if bool(mass == existing_mass):
+                combined[index] = (existing_mass, existing_power + power)
+                break
+        else:
+            combined.append((mass, power))
+    return tuple(sorted(combined, key=lambda item: canonical_string(item[0])))
+
+
 def _swap_loop_function_masses(expr: Expression, first_index: int, second_index: int) -> Expression:
     masses, powers = _loop_function_data(expr)
     if first_index == second_index:
@@ -526,6 +620,85 @@ def _swap_loop_function_masses(expr: Expression, first_index: int, second_index:
     mass_list[first_index], mass_list[second_index] = mass_list[second_index], mass_list[first_index]
     power_list[first_index], power_list[second_index] = power_list[second_index], power_list[first_index]
     return loop_function(tuple(mass_list), tuple(power_list))
+
+
+def _loop_function_mass_types(expr: Expression) -> tuple[tuple[Expression, ...], ...]:
+    pattern = _loop_function_pattern()
+    mass_types: list[tuple[Expression, ...]] = []
+    for match in expr.match(pattern):
+        masses, _powers = _loop_function_data(pattern.replace_wildcards(match))
+        if any(_same_mass_tuple(masses, known) for known in mass_types):
+            continue
+        mass_types.append(masses)
+    return tuple(sorted(mass_types, key=lambda masses: (-len(masses), tuple(canonical_string(m) for m in masses))))
+
+
+def _same_mass_tuple(left: tuple[Expression, ...], right: tuple[Expression, ...]) -> bool:
+    return len(left) == len(right) and all(bool(a == b) for a, b in zip(left, right, strict=True))
+
+
+def _contains_loop_function_masses(expr: Expression, masses: tuple[Expression, ...]) -> bool:
+    pattern = s.LoopFunction(list_expr(*masses), s.LoopFunctionPowersWildcard)
+    return any(True for _match in expr.match(pattern))
+
+
+def _simplify_loop_function_group(
+    group_terms: list[Expression],
+    mass_tuple: tuple[Expression, ...],
+    *,
+    target_index: int,
+    epsilon: Expression,
+    max_pole_order: int,
+) -> Expression:
+    permuted = sum_expr(
+        _swap_loop_functions_with_masses(term, mass_tuple, target_index=target_index)
+        for term in group_terms
+    )
+    reduced = _apply_first_power_ibp_until_fixed(permuted, epsilon=epsilon)
+    return _finite_loop_function_expression(
+        reduced,
+        epsilon=epsilon,
+        max_pole_order=max_pole_order,
+    ).expand()
+
+
+def _swap_loop_functions_with_masses(
+    expr: Expression,
+    masses: tuple[Expression, ...],
+    *,
+    target_index: int,
+) -> Expression:
+    pattern = s.LoopFunction(list_expr(*masses), s.LoopFunctionPowersWildcard)
+
+    def swap_match(match: dict[Expression, Expression]) -> Expression:
+        return _swap_loop_function_masses(
+            pattern.replace_wildcards(match),
+            target_index,
+            0,
+        )
+
+    return expr.replace(pattern, swap_match)
+
+
+def _apply_first_power_ibp_until_fixed(
+    expr: Expression,
+    *,
+    epsilon: Expression,
+    max_steps: int = 100,
+) -> Expression:
+    current = expr
+    pattern = _loop_function_pattern()
+    for _step in range(max_steps):
+        if not _has_reducible_first_loop_function_power(current):
+            return current
+        current = current.replace(
+            pattern,
+            lambda match: _reduce_first_power_match(
+                pattern.replace_wildcards(match),
+                epsilon=epsilon,
+            ),
+        ).expand()
+    raise RuntimeError("LoopFunction sum simplification did not converge")
 
 
 def _has_reducible_first_loop_function_power(expr: Expression) -> bool:
@@ -864,4 +1037,5 @@ __all__ = [
     "reduce_loop_function_ibp",
     "reduce_loop_functions_first_power",
     "reduce_loop_functions_ibp",
+    "simplify_loop_functions",
 ]

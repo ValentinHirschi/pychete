@@ -180,6 +180,69 @@ def test_reduce_loop_functions_ibp_replaces_atoms_expression_wide() -> None:
     )
 
 
+def test_simplify_loop_functions_matches_matchete_simple_sum_cases() -> None:
+    m1 = S("M1")
+    m3 = S("M3")
+    expression_1 = (
+        vacuum_integrals.loop_function((m1, m3), (1, 1, 1))
+        + vacuum_integrals.loop_function((m1, m3), (2, 1, 0))
+        - vacuum_integrals.loop_function((m3, m1), (2, 1, 0))
+    )
+    expected_1 = 2 * vacuum_integrals.loop_function((m1, m3), (2, 1, 0))
+    expression_2 = (
+        vacuum_integrals.loop_function((m1, m3), (1, 1, 1))
+        - vacuum_integrals.loop_function((m1, m3), (2, 1, 0))
+        + vacuum_integrals.loop_function((m3, m1), (2, 1, 0))
+    )
+    expected_2 = 2 * vacuum_integrals.loop_function((m1, m3), (1, 2, 0))
+
+    assert_expr_equal(vacuum_integrals.simplify_loop_functions(expression_1), expected_1)
+    assert_expr_equal(vacuum_integrals.simplify_loop_functions(expression_2), expected_2)
+
+
+def test_simplify_loop_functions_matches_matchete_full_reduction_case() -> None:
+    md = S("Md")
+    mq = S("Mq")
+    expression = (
+        vacuum_integrals.loop_function((md, mq), (2, 2, 0))
+        + vacuum_integrals.loop_function((md, mq), (3, 1, 0))
+        - vacuum_integrals.loop_function((md, mq), (3, 2, -1))
+        - vacuum_integrals.loop_function((md, mq), (4, 1, -1))
+        + vacuum_integrals.loop_function((mq, md), (3, 1, 0))
+        - vacuum_integrals.loop_function((mq, md), (3, 2, -1))
+        - vacuum_integrals.loop_function((mq, md), (4, 1, -1))
+    )
+    expected = Expression.num(1) / (96 * Expression.PI**2 * md**2 * mq**2)
+
+    assert_expr_equal(vacuum_integrals.simplify_loop_functions(expression, combine_terms=True), expected)
+
+
+def test_simplify_loop_functions_matches_matchete_partial_reduction_case() -> None:
+    mq = S("Mq")
+    mu = S("Mu")
+    expression = (
+        -vacuum_integrals.loop_function((mq, mu), (2, 2, 0))
+        - vacuum_integrals.loop_function((mq, mu), (3, 1, 0))
+        + vacuum_integrals.loop_function((mq, mu), (3, 2, -1))
+        + vacuum_integrals.loop_function((mq, mu), (4, 1, -1))
+        + vacuum_integrals.loop_function((mu, mq), (3, 1, 0))
+        + vacuum_integrals.loop_function((mu, mq), (3, 2, -1))
+        - 3 * vacuum_integrals.loop_function((mu, mq), (4, 1, -1))
+        + 2 * vacuum_integrals.loop_function((mu, mq), (5, 1, -2))
+    )
+    expected = -2 * vacuum_integrals.loop_function((mq, mu), (4, 1, -1)) + 2 * vacuum_integrals.loop_function(
+        (mq, mu),
+        (5, 1, -2),
+    )
+    simplified = vacuum_integrals.simplify_loop_functions(expression)
+
+    assert_expr_equal(simplified, expected)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_loop_functions(expression - simplified, combine_terms=True),
+        Expression.num(0),
+    )
+
+
 def test_evaluate_loop_functions_uses_internal_finite_loop_function_convention() -> None:
     m1 = S("M1")
     m2 = S("M2")

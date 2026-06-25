@@ -4182,6 +4182,41 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 250 passed, 1
     skipped in 251.77s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added a sum-level finite loop-function simplifier:
+  - exposed `simplify_loop_functions(...)` through `pychete.api` and the
+    package root;
+  - the simplifier mirrors Matchete's `SimplifyMassFunction` strategy for
+    finite `LoopFunction` sums: it orders loop-function masses into common
+    mass-function groups, tries each mass as the first propagator in the
+    first-power IBP rule, applies the Symbolica replacement-rule transform to
+    the whole grouped sum, extracts the epsilon-finite coefficient once for
+    the candidate group, and keeps only candidates whose expanded term count
+    does not grow;
+  - Python orchestration is limited to candidate grouping and term-count
+    selection, while the symbolic work remains in Symbolica pattern matching,
+    callable `Expression.replace(...)`, expansion, and coefficient extraction;
+  - tests now port the Matchete `LoopIntegration.wl` `SimplifyMassFunction`
+    simple-sum, full-reduction, and partial-reduction examples into pychete's
+    finite LF normalization. The full two-mass example collapses to
+    `1/(96*pi^2*Md^2*Mq^2)`, matching Matchete's `1/(6*Md^2*Mq^2)` after
+    pychete's explicit `1/(16*pi^2)` loop normalization.
+- Verification for the sum-level loop-function simplifier:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py -q'` passed: 33
+    passed in 3.05s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 253 passed, 1
+    skipped in 251.29s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -4218,11 +4253,11 @@ discoveries, dependency patches, blockers, and remaining work.
   Matchete fixtures and known native backend topologies.
 - Extend the pychete-owned analytic vacuum-integral backend beyond the covered
   scalar one-loop zero/mixed/single-scale and finite two-mass
-  `LoopIntegration.wl` cases into broader loop-function behavior: fuller
-  LF-style simplification/IBP reduction beyond the new finite `LoopFunction`
-  placeholder and evaluator, higher numerator structures after tensor
-  reduction, and near-degenerate expansion policies. Native vakint remains
-  available for topology-independent tensor reduction and supported
+  `LoopIntegration.wl` cases into broader loop-function behavior: higher
+  numerator structures after tensor reduction, near-degenerate expansion
+  policies, and validation of the new sum-level LF simplifier on full matching
+  fixtures beyond the ported `SimplifyMassFunction` unit cases. Native vakint
+  remains available for topology-independent tensor reduction and supported
   single-scale massive analytic evaluation cross-checks.
 - Extend the new endpoint-aware Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`
