@@ -430,6 +430,116 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         assert report_obj["missing_reference_matching_condition_count"] == expected_counts["conditions"]
 
 
+def test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage() -> None:
+    expected = {
+        "VLF_toy_model": {
+            "reference_supertraces": 13,
+            "conditions": 0,
+            "common": {
+                "hFermion-lFermion",
+                "hFermion-lFermion-lScalar",
+                "hFermion-lScalar",
+                "hFermion-lScalar-lFermion",
+                "hFermion-lScalar-lScalar",
+            },
+            "canonical_equal": set(),
+        },
+        "Singlet_Scalar_Extension": {
+            "reference_supertraces": 24,
+            "conditions": 72,
+            "common": {
+                "hScalar",
+                "hScalar-hScalar",
+                "hScalar-hScalar-hScalar",
+                "hScalar-hScalar-lScalar",
+                "hScalar-lScalar",
+                "hScalar-lScalar-lScalar",
+            },
+            "canonical_equal": set(),
+        },
+        "E_VLL": {
+            "reference_supertraces": 50,
+            "conditions": 72,
+            "common": {
+                "hFermion-lFermion",
+                "hFermion-lFermion-lFermion",
+                "hFermion-lFermion-lScalar",
+                "hFermion-lScalar",
+                "hFermion-lScalar-lFermion",
+                "hFermion-lScalar-lScalar",
+            },
+            "canonical_equal": {
+                "hFermion-lFermion-lFermion",
+                "hFermion-lFermion-lScalar",
+                "hFermion-lScalar-lFermion",
+            },
+        },
+        "S1S3LQs": {
+            "reference_supertraces": 27,
+            "conditions": 72,
+            "common": {
+                "hScalar",
+                "hScalar-hScalar",
+                "hScalar-hScalar-hScalar",
+                "hScalar-hScalar-lFermion",
+                "hScalar-lFermion",
+                "hScalar-lFermion-lFermion",
+                "hScalar-lFermion-lScalar",
+                "hScalar-lScalar",
+                "hScalar-lScalar-lFermion",
+            },
+            "canonical_equal": {
+                "hScalar-lFermion-lScalar",
+                "hScalar-lScalar",
+                "hScalar-lScalar-lFermion",
+            },
+        },
+    }
+
+    for model, expected_counts in expected.items():
+        model_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))
+        reference_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.matching_fixture.json"))
+        reference = reference_fixture.matching_result("matchete_previous")
+
+        report = model_fixture.one_loop_preview_gap_report(
+            reference,
+            reference_name=f"{model}.matchete_previous",
+            max_trace_order=3,
+            integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+            internal_tensor_reduce=False,
+            internal_combine_terms=True,
+        )
+        report_obj = report.to_json_obj()
+
+        assert report.complete is False
+        assert report.candidate_stage == "interaction_power_type_internal_minimal_subtraction_result"
+        assert report.reference_stage is None
+        assert report.candidate_supertrace_count == 50
+        assert report.reference_supertrace_count == expected_counts["reference_supertraces"]
+        assert set(report.common_supertrace_names) == expected_counts["common"]
+        assert set(report.canonical_equal_common_supertrace_names) == expected_counts["canonical_equal"]
+        assert set(report.canonical_different_common_supertrace_names) == (
+            expected_counts["common"] - expected_counts["canonical_equal"]
+        )
+        assert report.numeric_probe_equal_common_supertrace_count == 0
+        assert report.numeric_probe_different_common_supertrace_count == 0
+        assert "interaction_power_type_internal_integral_sum" in report.candidate_only_supertrace_names
+        assert "interaction_power_type_internal_integral_ms_counterterm" in report.candidate_only_supertrace_names
+        assert report.missing_reference_supertrace_count == (
+            expected_counts["reference_supertraces"] - len(expected_counts["common"])
+        )
+        assert report.candidate_matching_condition_count == 0
+        assert report.reference_matching_condition_count == expected_counts["conditions"]
+        assert report.missing_reference_matching_condition_count == expected_counts["conditions"]
+        assert set(report.common_expression_names) == expected_counts["common"] | {
+            "uv_lagrangian",
+            "off_shell_eft_lagrangian",
+            "on_shell_eft_lagrangian",
+        }
+        assert report_obj["candidate_supertrace_count"] == 50
+        assert report_obj["numeric_probe_equal_common_supertrace_count"] == 0
+
+
 def test_matching_result_comparison_reports_canonical_differences() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.matching_fixture.json"))
     reference = fixture.matching_result("matchete_previous")

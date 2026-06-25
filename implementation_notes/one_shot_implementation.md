@@ -2993,11 +2993,50 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 198 passed,
     1 skipped. The skip is the existing GammaLoop API import check because
     GammaLoop was not requested in the current dependency manifest.
+- Added four-target fixture coverage for the current public finite/MS preview:
+  - added an integration test that builds
+    `integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION`
+    gap reports for `VLF_toy_model`, `Singlet_Scalar_Extension`, `E_VLL`, and
+    `S1S3LQs` at `max_trace_order=3` using only committed pychete fixtures;
+  - each report now tracks the same public stage as
+    `Theory.match(..., loop_order=1)`,
+    `interaction_power_type_internal_minimal_subtraction_result`, with
+    `internal_tensor_reduce=False` and `internal_combine_terms=True`;
+  - the observed candidate supertrace surface is 50 names for each default
+    target, including `interaction_power_type_internal_integral_sum` and
+    `interaction_power_type_internal_integral_ms_counterterm`; common
+    Matchete-style supertrace names remain the same as the raw/vakint preview
+    frontier;
+  - canonical agreement remains unchanged at this stage: E_VLL has the same
+    three equal shared fermion-chain names as before, S1S3LQs has the same
+    three equal shared scalar/fermion names as before, and VLF plus the singlet
+    scalar extension still have zero canonically equal shared supertraces.
+- Verification for the four-target internal-MS fixture coverage so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
+    -q'` passed: 1 passed.
+- Final verification for the four-target internal-MS fixture coverage:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
+    -q'` passed: 2 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 199 passed,
+    1 skipped. The skip is the existing GammaLoop API import check because
+    GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
-- Use the four committed default Matchete matching fixtures as acceptance
-  targets for the pychete one-loop matching engine.
+- Continue using the four committed default Matchete matching fixtures as
+  acceptance targets for the pychete one-loop matching engine; current tests
+  cover both raw/vakint and public finite/MS preview gap reports, but final
+  Matchete equivalence is still incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
   initial contract, especially full internal coupling-symmetry association
   mapping, complete CG tensor lowering, richer vector/zero-mode metadata, and
