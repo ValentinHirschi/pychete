@@ -13,6 +13,7 @@ class OneLoopIntegralBackend(StrEnum):
     """Integral backend used for one-loop matching preview results."""
 
     VAKINT = "vakint"
+    VAKINT_MINIMAL_SUBTRACTION = "vakint_minimal_subtraction"
     INTERNAL = "internal"
     INTERNAL_MINIMAL_SUBTRACTION = "internal_minimal_subtraction"
 
@@ -24,8 +25,9 @@ class OneLoopIntegralBackend(StrEnum):
             return cls(value)
         except ValueError as exc:
             raise ValueError(
-                "one-loop integral backend must be 'vakint', 'internal', "
-                "or 'internal_minimal_subtraction'"
+                "one-loop integral backend must be 'vakint', "
+                "'vakint_minimal_subtraction', 'internal', or "
+                "'internal_minimal_subtraction'"
             ) from exc
 
 

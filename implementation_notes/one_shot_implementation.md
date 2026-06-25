@@ -3840,6 +3840,52 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 229 passed, 1
     skipped in 247.22s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Exposed the existing vakint minimal-subtraction preview as a public one-loop
+  backend selector:
+  - added `OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION` so users can
+    request the existing
+    `OneLoopSetup.interaction_power_type_minimal_subtraction_result(...)`
+    through `Theory.match(..., loop_order=1, one_loop_options=...)` and through
+    `ValidationFixture.one_loop_preview(...)`;
+  - kept loop-normalization options restricted to the raw/evaluated vakint
+    preview backend for now, because the minimal-subtraction backend already
+    returns the finite part after subtracting poles and needs a separate
+    convention decision before accepting extra scaling;
+  - confirmed this slice uses the existing vakint backend helpers
+    `pole_part(...)` and `finite_part(...)`, which rely on native Symbolica
+    `Expression.coefficient_list(...)` over the epsilon regulator instead of a
+    Python Laurent parser;
+  - added Mathematica-independent tests proving public `Theory.match(...)` can
+    select the vakint minimal-subtraction backend with a caller-provided engine
+    and proving committed validation fixtures can use the same backend without
+    invoking Mathematica;
+  - rechecked the latest user-facing Mathematica conversion requirement:
+    top-level `scripts/` wrappers, including
+    `scripts/convert_matchete_model_state.wls`, remain tracked as optional
+    convenience entry points for users with Mathematica/Matchete, while runtime
+    pychete and pytest continue to consume committed pychete-owned fixtures and
+    remain completely Matchete- and Mathematica-independent.
+- Final verification for the public vakint minimal-subtraction backend slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py -q'` passed: 13
+    passed in 0.32s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_vakint_minimal_subtraction_backend_without_mathematica
+    -q'` passed: 1 passed in 0.14s;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 231 passed, 1
+    skipped in 249.01s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

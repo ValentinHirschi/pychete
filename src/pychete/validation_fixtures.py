@@ -416,7 +416,7 @@ class ValidationFixture:
         selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
         normalization_label = one_loop_normalization_label(normalization)
         if selected_backend is not OneLoopIntegralBackend.VAKINT and normalization_label != OneLoopNormalization.PREVIEW.value:
-            raise ValueError("one-loop normalization currently applies only to the vakint backend")
+            raise ValueError("one-loop normalization currently applies only to the vakint preview backend")
         if selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_power_type_internal_matching_result(
                 heavy_field_dimension=heavy_field_dimension,
@@ -433,6 +433,16 @@ class ValidationFixture:
                 tensor_reduce_engine=vakint_engine,
                 combine_terms=internal_combine_terms,
                 max_pole_order=internal_max_pole_order,
+            )
+        elif selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION:
+            result = setup.interaction_power_type_minimal_subtraction_result(
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
+                vakint_engine=vakint_engine,
+                max_pole_order=internal_max_pole_order,
+                named_supertrace_stage=named_supertrace_stage,
+                named_supertrace_short_form=named_supertrace_short_form,
+                named_supertrace_engine=named_supertrace_engine,
             )
         elif normalization_label != OneLoopNormalization.PREVIEW.value:
             result = setup.interaction_power_type_normalized_matching_result(

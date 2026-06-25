@@ -14,6 +14,7 @@ from pychete import (
     one_loop_normalization_factor,
 )
 from pychete.backends import spenso as spenso_backend
+from pychete.backends import vakint as vakint_backend
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState
@@ -29,6 +30,16 @@ class FakeNamedVakintEngine:
     def to_canonical(self, expr: Expression, short_form: bool | None = None) -> Expression:
         self.calls.append(("to_canonical", expr, short_form))
         return S("fixture_canonical")(expr)
+
+
+class FakePoleVakintEngine:
+    def __init__(self, evaluated: Expression) -> None:
+        self.evaluated = evaluated
+        self.calls: list[Expression] = []
+
+    def evaluate(self, expr: Expression) -> Expression:
+        self.calls.append(expr)
+        return self.evaluated
 
 
 class FakeTensorNetwork:
@@ -414,6 +425,29 @@ def test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend
     assert report.candidate_stage == "interaction_power_type_internal_minimal_subtraction_result"
     assert "interaction_power_type_internal_integral_ms_counterterm" in report.candidate_supertrace_names
     assert report.reference_stage is None
+
+
+def test_validation_fixture_preview_can_use_vakint_minimal_subtraction_backend_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    eps = vakint_backend.epsilon_symbol()
+    engine = FakePoleVakintEngine(S("pole") / eps + S("finite"))
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION,
+        vakint_engine=engine,
+        internal_max_pole_order=1,
+    )
+
+    assert engine.calls
+    assert preview.metadata["stage"] == "interaction_power_type_minimal_subtraction_result"
+    assert preview.metadata["subtraction_scheme"] == "minimal_subtraction_preview"
+    assert preview.metadata["poles_subtracted"] is True
+    assert preview.metadata["fixture"] == fixture.name
+    assert preview.metadata["fixture_kind"] == fixture.kind
+    assert_expr_equal(preview.off_shell_eft_lagrangian, S("finite"))
+    assert_expr_equal(preview.on_shell_eft_lagrangian, S("finite"))
+    assert "interaction_power_type_vakint_ms_counterterm" in preview.expression_names()
 
 
 def test_default_matching_target_projected_matching_condition_frontier_without_mathematica() -> None:
