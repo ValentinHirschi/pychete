@@ -158,13 +158,17 @@ with the field-label tag/data supplied by `Theory.symbol`; do not parse label
 names or require an explicit `Field(label, ...)` atom in free gauge-field
 terms.
 Vector free-kinetic extraction must also treat canonical field-strength
-quadratics as vector inverse-propagator data. Use Symbolica matching and
-`Expression.coefficient` on `FieldStrength(label, ...)^2` terms, then lower the
-result to differential/momentum operators through the same fluctuation-operator
-path as scalar and fermion fields. When kinetic interactions are present,
-extract the registered free inverse from the field-independent part of the
-momentum entry and leave field-dependent kinetic terms in the interaction
-operator.
+quadratics and field-strength bilinears as vector inverse-propagator data. Use
+Symbolica matching and `Expression.coefficient` on
+`FieldStrength(label, ...)^2` and `FieldStrength(label_a, ...) *
+FieldStrength(label_b, ...)` terms, then lower the result to
+differential/momentum operators through the same fluctuation-operator path as
+scalar and fermion fields. Massive vector `free_lag(...)` terms follow the
+current scalarized component convention and must produce
+`LoopMomentumSquared - M^2` denominator metadata. When kinetic interactions are
+present, extract the registered free inverse from the field-independent part of
+the momentum entry and leave field-dependent or off-diagonal kinetic terms in
+the interaction operator.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

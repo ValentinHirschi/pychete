@@ -962,6 +962,9 @@ class Theory:
                 nu = self.dummy_index(1)
                 strength = s.FieldStrength(definition.label, list_expr(mu, nu), list_expr(), list_expr())
                 out = out - strength**2 / 4
+                mass = self.mass_expr(definition)
+                if mass is not None:
+                    out = out - mass**2 * field_expr**2 / 2
             elif bool(type_expr == s.Fermion):
                 mass = self.mass_expr(definition)
                 dirac = Expression.I * s.NCM(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))

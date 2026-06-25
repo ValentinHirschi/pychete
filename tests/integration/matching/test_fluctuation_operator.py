@@ -539,6 +539,52 @@ def test_fluctuation_operator_keeps_vector_kinetic_interactions_after_free_subtr
     assert_expr_equal(operator.interaction_entry(vector, vector), 4 * c() * heavy() * s.LoopMomentumSquared)
 
 
+def test_fluctuation_operator_extracts_vector_field_strength_kinetic_mixing() -> None:
+    theory = Theory("fluctuation_operator_vector_kinetic_mixing")
+    theory.define_gauge_group("U1X", s.U1, "gX", "X")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "Y")
+    x_vector = theory.field_handle("X")
+    y_vector = theory.field_handle("Y")
+    chi = theory.define_coupling("chi", self_conjugate=True)
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    x_strength = s.FieldStrength(x_vector.label, s.List(mu, nu), s.List(), s.List())
+    y_strength = s.FieldStrength(y_vector.label, s.List(mu, nu), s.List(), s.List())
+    lagrangian = theory.free_lag(x_vector, y_vector) - chi() * x_strength * y_strength / 2
+
+    operator = theory.fluctuation_operator(lagrangian, [x_vector, y_vector])
+
+    assert_expr_equal(operator.differential_entry(x_vector, y_vector), -chi() * s.DifferentialOperator(s.List(mu, mu)))
+    assert_expr_equal(operator.differential_entry(y_vector, x_vector), -chi() * s.DifferentialOperator(s.List(mu, mu)))
+    assert_expr_equal(operator.momentum_entry(x_vector, y_vector), chi() * s.LoopMomentumSquared)
+    assert_expr_equal(operator.momentum_entry(y_vector, x_vector), chi() * s.LoopMomentumSquared)
+    assert operator.propagator_denominator_entry(x_vector, y_vector) is None
+    assert_expr_equal(operator.free_inverse_entry(x_vector, y_vector), Expression.num(0))
+    assert_expr_equal(operator.interaction_entry(x_vector, y_vector), chi() * s.LoopMomentumSquared)
+    assert_expr_equal(operator.interaction_entry(y_vector, x_vector), chi() * s.LoopMomentumSquared)
+
+
+def test_fluctuation_operator_recognizes_massive_vector_free_denominator() -> None:
+    theory = Theory("fluctuation_operator_massive_vector")
+    group = theory.define_global_group("GV", s.U1)
+    vector = theory.define_field("V", s.Vector(group), self_conjugate=True, mass=(FieldMassKind.HEAVY, "MV"))
+    mass = theory.mass_expr(vector.definition)
+    assert mass is not None
+    mu = theory.dummy_index(0)
+    lagrangian = theory.free_lag(vector)
+
+    operator = theory.fluctuation_operator(lagrangian)
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, mass**2)
+
+    assert_expr_equal(operator.entry(vector, vector), -mass**2)
+    assert_expr_equal(operator.differential_entry(vector, vector), -mass**2 - s.DifferentialOperator(s.List(mu, mu)))
+    assert_expr_equal(operator.momentum_entry(vector, vector), s.LoopMomentumSquared - mass**2)
+    assert_expr_equal(operator.propagator_denominator_entry(vector, vector), denominator)
+    assert_expr_equal(operator.propagator_denominator_for_mode(vector), denominator)
+    assert_expr_equal(operator.free_inverse_entry(vector, vector), s.LoopMomentumSquared - mass**2)
+    assert_expr_equal(operator.interaction_entry(vector, vector), Expression.num(0))
+
+
 def test_one_loop_setup_builds_operator_derived_vector_propagator_insertions() -> None:
     theory = Theory("one_loop_setup_vector_operator_denominators")
     theory.define_gauge_group("U1X", s.U1, "gX", "X")
@@ -557,6 +603,25 @@ def test_one_loop_setup_builds_operator_derived_vector_propagator_insertions() -
     assert_expr_equal(
         setup.operator_vakint_integral_expression(trace),
         vakint_backend.one_loop_vacuum_integral(trace.expression, (Expression.num(0),)),
+    )
+
+
+def test_one_loop_setup_builds_operator_derived_massive_vector_propagator_insertions() -> None:
+    theory = Theory("one_loop_setup_massive_vector_operator_denominators")
+    group = theory.define_global_group("GV", s.U1)
+    vector = theory.define_field("V", s.Vector(group), self_conjugate=True, mass=(FieldMassKind.HEAVY, "MV"))
+    mass = theory.mass_expr(vector.definition)
+    assert mass is not None
+    lagrangian = theory.free_lag(vector)
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=1)
+    trace = next(trace for trace in setup.block_traces if trace.name == "hVector")
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, mass**2)
+
+    assert setup.operator_propagator_denominator_chain(trace) == ((denominator,),)
+    assert setup.operator_propagator_mass_squared_chain(trace) == ((mass**2,),)
+    assert_expr_equal(
+        setup.operator_vakint_integral_expression(trace),
+        vakint_backend.one_loop_vacuum_integral(trace.expression, (mass**2,)),
     )
 
 

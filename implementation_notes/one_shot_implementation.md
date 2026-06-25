@@ -651,3 +651,39 @@ Latest verified baseline before this compact rollover:
     dependency manifest indicates GammaLoop was not requested for this local
     dependency build. The 50 deselected tests are the deliberately slow
     validation group under the new batching policy.
+
+## Current Slice: Vector Kinetic Mixing And Massive Vector Denominators
+
+- Continued the broader vector/gauge chunk rather than switching back to tiny
+  fixes. Probed current behavior and found:
+  - `-chi/2 * FieldStrength(X) * FieldStrength(Y)` produced zero off-diagonal
+    vector fluctuation-operator entries;
+  - manually defined massive vector fields omitted their mass term from
+    `free_lag(...)`, so their momentum entries stayed massless and registered
+    denominator extraction failed.
+- Extended vector field-strength kinetic extraction from same-label
+  `FieldStrength(label)^2` terms to cross-label bilinears
+  `FieldStrength(label_a) * FieldStrength(label_b)`. The implementation still
+  uses Symbolica pattern matching and native `Expression.coefficient(...)`,
+  with diagonal and off-diagonal multiplicities handled in one pair-based
+  extraction path.
+- Added massive vector free terms in `Theory.free_lag(...)` using the current
+  scalarized vector-component convention, so massive vectors now produce
+  `LoopMomentumSquared - M^2` denominator metadata.
+- Added focused tests for:
+  - off-diagonal U(1) field-strength kinetic mixing entries and interaction
+    subtraction;
+  - massive vector differential/momentum/free-inverse/denominator extraction;
+  - operator-derived massive vector propagator insertion in `one_loop_setup`.
+- Verification in this slice so far:
+  - focused kinetic-mixing and massive-vector tests passed:
+    3 passed in 0.20s.
+  - grouped matching integration gate passed: 63 passed in 2.43s;
+  - grouped backend gate passed: 95 passed in 5.52s;
+  - `mypy` passed with no issues in 32 source files;
+  - `git diff --check` passed;
+  - broader non-slow gate passed: 257 passed, 1 skipped, 50 deselected in
+    7.09s. The skipped test was the GammaLoop API import check because the
+    dependency manifest indicates GammaLoop was not requested for this local
+    dependency build. The 50 deselected tests are the deliberately slow
+    validation group under the batching policy.

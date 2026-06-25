@@ -2847,34 +2847,66 @@ def _field_strength_differential_terms(
 ) -> tuple[Expression, ...]:
     row_base = bar_field_inner(row) if is_bar_field(row) else row
     column_base = bar_field_inner(column) if is_bar_field(column) else column
-    if not _same_field_label(row_base, column_base):
+    row_label = field_label(row_base)
+    column_label = field_label(column_base)
+    if not _is_vector_field_label(row_label) or not _is_vector_field_label(column_label):
         return ()
-    label = field_label(row_base)
+    row_strengths = _matching_field_strength_atoms(lagrangian, row_label, list_items(row_base[2]))
+    column_strengths = _matching_field_strength_atoms(lagrangian, column_label, list_items(column_base[2]))
+    terms: list[Expression] = []
+    for row_strength, row_lorentz in row_strengths:
+        for column_strength, column_lorentz in column_strengths:
+            if not _same_expression_sequence(row_lorentz, column_lorentz):
+                continue
+            coefficient = _field_strength_bilinear_coefficient(lagrangian, row_strength, column_strength)
+            if is_zero(coefficient):
+                continue
+            multiplicity = 4 if bool(row_strength == column_strength) else 2
+            terms.append(
+                multiplicity
+                * coefficient
+                * s.DifferentialOperator(list_expr(row_lorentz[0], row_lorentz[0]))
+            )
+    return tuple(terms)
+
+
+def _is_vector_field_label(label: Expression) -> bool:
     field_type = field_type_from_label(label)
-    if not (bool(field_type == s.Vector) or is_head(field_type, s.Vector)):
-        return ()
-    row_indices = list_items(row_base[2])
+    return bool(field_type == s.Vector) or is_head(field_type, s.Vector)
+
+
+def _matching_field_strength_atoms(
+    lagrangian: Expression,
+    label: Expression,
+    gauge_indices: tuple[Expression, ...],
+) -> tuple[tuple[Expression, tuple[Expression, ...]], ...]:
     pattern = field_strength_pattern(label)
     seen: set[str] = set()
-    terms: list[Expression] = []
+    strengths: list[tuple[Expression, tuple[Expression, ...]]] = []
     for match in lagrangian.match(pattern):
         strength = pattern.replace_wildcards(match)
         key = canonical_string(strength)
         if key in seen:
             continue
         seen.add(key)
-        if not _same_expression_sequence(row_indices, list_items(match[s.FieldStrengthIndicesWildcard])):
+        if not _same_expression_sequence(gauge_indices, list_items(match[s.FieldStrengthIndicesWildcard])):
             continue
         if list_items(match[s.FieldStrengthDerivativesWildcard]):
             continue
         lorentz_indices = list_items(match[s.FieldStrengthLorentzWildcard])
         if len(lorentz_indices) != 2:
             continue
-        coefficient = lagrangian.coefficient(strength**2).expand()
-        if is_zero(coefficient):
-            continue
-        terms.append(4 * coefficient * s.DifferentialOperator(list_expr(lorentz_indices[0], lorentz_indices[0])))
-    return tuple(terms)
+        strengths.append((strength, lorentz_indices))
+    return tuple(strengths)
+
+
+def _field_strength_bilinear_coefficient(
+    lagrangian: Expression,
+    left: Expression,
+    right: Expression,
+) -> Expression:
+    product = left**2 if bool(left == right) else left * right
+    return lagrangian.coefficient(product).expand()
 
 
 def _field_derivative_sets_in_expression(
