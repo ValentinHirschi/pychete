@@ -470,6 +470,7 @@ def test_one_loop_match_option_simplifies_pychete_color_algebra(monkeypatch: pyt
         }
     ]
     assert result.metadata["pychete_color_algebra_simplified"] is True
+    assert result.metadata["native_color_wrappers_decoded"] is True
 
 
 def test_one_loop_match_options_apply_vakint_normalization() -> None:

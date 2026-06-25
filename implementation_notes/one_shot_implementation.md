@@ -184,6 +184,55 @@
     passed.
   - `git diff --check` passed.
 
+## Current Native Colour Chain Decode Slice
+
+- Probed the order-4 CDE colour/basis frontier after `vakint::CD` decoding.
+  Registered Wilson projections for `cHW`, `cHBox`, `cHD`, and `cH` remained
+  zero even though the public source now contains pychete `FieldStrength(...)`
+  and `CD(...)` atoms. A direct result-level
+  `simplify_pychete_color_algebra(...)` attempt was not viable: the existing
+  bridge could hang on native `spenso::chain(...)` wrappers produced by
+  idenso/spenso for generator products multiplied by pychete field-strength
+  payloads.
+- Bounded probes showed that native idenso/spenso stages were not the slow
+  part: `simplify_color(...)` and `simplify_metrics(...)` returned quickly.
+  The hang started in pychete's decode layer because `_decode_native_color_tensors`
+  used repeating Symbolica replacements while returning the original expression
+  for an undecodable multi-generator native chain.
+- Updated `pychete.backends.idenso` so native colour metric and tensor decoders
+  use non-repeating decode-only replacements. Added bounded decoding for
+  native `spenso::chain(left, right, t(...), ...)` generator products up to the
+  same kind of fixed arity cap used elsewhere in the backend adapters. Decoded
+  multi-generator chains become ordered products of registered pychete
+  `CG(gen_..._fund, ...)` atoms with generated theory-owned internal index
+  labels; this is representation decoding only, not a handwritten SU(N)
+  simplification rule.
+- Added `decode_native_color_wrappers(...)` as a decode-only public backend
+  helper for post-result matching expressions. Full native
+  `simplify_pychete_color_algebra(...)` remains available for controlled
+  colour-bearing kernels/subexpressions, but public post-result CDE cleanup now
+  decodes already-native colour wrappers without running idenso's global colour
+  simplifier across generated pychete CDE/Lorentz structures. This avoids the
+  native `d1` abstract-index conversion failure seen in result-level probes.
+- Added unit coverage for the previously hanging shape:
+  `Bar(H) H gen(A) gen(B) FieldStrength(A) FieldStrength(B)`. The simplified
+  expression now returns immediately, preserves the pychete field-strength
+  payload, emits two registered pychete generator CG atoms, and leaks no
+  `spenso::` wrappers.
+- Updated `AGENTS.md` to require native generator-chain wrappers to decode back
+  to pychete CG products before public matching output is exposed, while still
+  forbidding handwritten Python SU(N) identities.
+- Validation for this slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py -q'`
+    passed with 26 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_option_simplifies_pychete_color_algebra -q'`
+    passed with 1 test.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "vakint_tensors or metric_traced_field_strengths or order_four_covariant_derivatives" -q'`
+    passed with 3 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -212,8 +261,8 @@
   reductions before expecting gauge Wilson structures such as `cHB`, `cHW`,
   `cHWB`, `cHBox`, `cHD`, and fermionic Higgs-current coefficients to move.
 - Extend idenso/spenso-backed group algebra beyond the current simple
-  generator, Fierz, metric, and structure-constant cases as fixture probes
-  expose missing contractions.
+  generator, Fierz, metric, structure-constant, and native generator-chain
+  decode cases as fixture probes expose missing contractions.
 - Continue improving fermionic/Dirac NCM simplification through idenso-backed
   paths and Symbolica replacement rules. Conservative all-commutative scalar
   CDE `NCM(...)` scalarization is covered; arbitrary fermion/projector chains

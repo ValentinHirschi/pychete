@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Callable
 from dataclasses import dataclass
 from functools import cache
+from itertools import count
 from typing import Any
 
 from symbolica import Expression, Replacement
@@ -15,6 +16,7 @@ from ..symbols import SymbolRole, canonical_string, expression_from_canonical, s
 _MAX_NATIVE_PROJECTOR_POWER = 16
 _MAX_NATIVE_DIRAC_WORD_ARITY = 8
 _MAX_NCM_POWER_EXPANSION_TOTAL_ARITY = 16
+_MAX_NATIVE_COLOR_CHAIN_ARITY = 16
 
 
 def native_module():
@@ -95,24 +97,49 @@ def simplify_pychete_color_algebra(
     pychete stores generators and structure constants as theory-owned
     ``CG(label, indices)`` atoms. This adapter lowers compatible built-in
     SU(N) fundamental/adjoint tensors to spenso's native HEP tensor heads,
-    delegates the algebra to idenso's Rust-backed ``simplify_color`` and
-    ``simplify_metrics`` routines, then decodes simple native metrics back to
-    registered pychete delta CG tensors when the originating group is
-    unambiguous.
+    delegates the algebra to idenso's Rust-backed ``simplify_color`` routine,
+    then decodes simple native metrics and tensor chains back to registered
+    pychete CG tensors when the originating group is unambiguous.
     """
 
     from . import spenso
 
     normalized = _replace_adjoint_generators_with_structure_constants(theory, expr)
-    lowered = spenso.lower_native_hep_cg_tensors_to_spenso(theory, normalized)
-    simplified = simplify_metrics(simplify_color(lowered).expand()).expand()
     groups = _cg_groups_in_expression(theory, normalized)
+    if not groups:
+        return normalized.expand()
+    lowered = spenso.lower_native_hep_cg_tensors_to_spenso(theory, normalized)
+    simplified = simplify_color(lowered).expand()
     if substitute_group_constants:
         simplified = _substitute_native_color_constants(theory, simplified, groups)
     if decode_metrics:
         simplified = _decode_native_color_metrics(theory, simplified, groups)
     simplified = _decode_native_color_tensors(theory, simplified, groups)
     return simplified.expand()
+
+
+def decode_native_color_wrappers(
+    theory: Any,
+    expr: Expression,
+    *,
+    decode_metrics: bool = True,
+    substitute_group_constants: bool = True,
+) -> Expression:
+    """Decode native spenso/idenso colour wrappers into pychete CG tensors.
+
+    This is intentionally decode-only: it does not call native idenso
+    simplifiers over the full expression. Use it for public matching results
+    that may contain generated pychete CDE/Lorentz structures alongside native
+    colour wrappers.
+    """
+
+    groups = tuple(theory.groups)
+    decoded = expr
+    if substitute_group_constants:
+        decoded = _substitute_native_color_constants(theory, decoded, groups)
+    if decode_metrics:
+        decoded = _decode_native_color_metrics(theory, decoded, groups)
+    return _decode_native_color_tensors(theory, decoded, groups).expand()
 
 
 def simplify_gamma(expr: Expression) -> Expression:
@@ -807,7 +834,7 @@ def _decode_native_color_metrics(theory: Any, expr: Expression, groups: tuple[st
         decoded = _decode_native_color_metric(theory, match[left], match[right], groups)
         return original if decoded is None else decoded
 
-    return expr.replace_multiple([Replacement(pattern, decode)], repeat=True).expand()
+    return expr.replace_multiple([Replacement(pattern, decode, rhs_cache_size=0)]).expand()
 
 
 def _decode_native_color_metric(
@@ -859,18 +886,10 @@ def _decode_native_color_tensors(theory: Any, expr: Expression, groups: tuple[st
     second = s.head("native_color_tensor_second_")
     third = s.head("native_color_tensor_third_")
     generator = _native_color_symbol("t")
-    chain = _native_color_symbol("chain")
     structure_constant = _native_color_symbol("f")
-    in_slot = _native_color_symbol("in")
-    out_slot = _native_color_symbol("out")
 
     def decode_generator(match: dict[Expression, Expression]) -> Expression:
         original = generator(adjoint, left, right).replace_wildcards(match)
-        decoded = _decode_native_color_generator(theory, match[adjoint], match[left], match[right], groups)
-        return original if decoded is None else decoded
-
-    def decode_generator_chain(match: dict[Expression, Expression]) -> Expression:
-        original = chain(left, right, generator(adjoint, in_slot, out_slot)).replace_wildcards(match)
         decoded = _decode_native_color_generator(theory, match[adjoint], match[left], match[right], groups)
         return original if decoded is None else decoded
 
@@ -885,18 +904,97 @@ def _decode_native_color_tensors(theory: Any, expr: Expression, groups: tuple[st
         )
         return original if decoded is None else decoded
 
-    return expr.replace_multiple(
+    decoded_chains = _decode_native_color_chains(theory, expr, groups)
+    return decoded_chains.replace_multiple(
         [
             Replacement(generator(adjoint, left, right), decode_generator, rhs_cache_size=0),
-            Replacement(
-                chain(left, right, generator(adjoint, in_slot, out_slot)),
-                decode_generator_chain,
-                rhs_cache_size=0,
-            ),
             Replacement(structure_constant(first, second, third), decode_structure_constant, rhs_cache_size=0),
-        ],
-        repeat=True,
+        ]
     ).expand()
+
+
+def _decode_native_color_chains(theory: Any, expr: Expression, groups: tuple[str, ...]) -> Expression:
+    chain = _native_color_symbol("chain")
+    generator = _native_color_symbol("t")
+    in_slot = _native_color_symbol("in")
+    out_slot = _native_color_symbol("out")
+    left = s.head("native_color_chain_left_")
+    right = s.head("native_color_chain_right_")
+    occurrence = count()
+    replacements: list[Replacement] = []
+
+    for arity in range(1, _MAX_NATIVE_COLOR_CHAIN_ARITY + 1):
+        adjoints = tuple(s.head(f"native_color_chain_adjoint_{arity}_{i}_") for i in range(arity))
+        pattern = chain(left, right, *(generator(adjoint, in_slot, out_slot) for adjoint in adjoints))
+
+        def decode(
+            match: dict[Expression, Expression],
+            *,
+            adjoints: tuple[Expression, ...] = adjoints,
+            pattern: Expression = pattern,
+        ) -> Expression:
+            original = pattern.replace_wildcards(match)
+            decoded = _decode_native_color_chain(
+                theory,
+                match[left],
+                match[right],
+                tuple(match[adjoint] for adjoint in adjoints),
+                groups,
+                occurrence=next(occurrence),
+            )
+            return original if decoded is None else decoded
+
+        replacements.append(Replacement(pattern, decode, rhs_cache_size=0))
+    return expr.replace_multiple(replacements).expand()
+
+
+def _decode_native_color_chain(
+    theory: Any,
+    left: Expression,
+    right: Expression,
+    adjoints: tuple[Expression, ...],
+    groups: tuple[str, ...],
+    *,
+    occurrence: int,
+) -> Expression | None:
+    if len(adjoints) == 1:
+        return _decode_native_color_generator(theory, adjoints[0], left, right, groups)
+    left_slot = _decode_native_color_slot(left)
+    right_slot = _decode_native_color_slot(right)
+    adjoint_slots = tuple(_decode_native_color_slot(adjoint) for adjoint in adjoints)
+    if left_slot is None or right_slot is None or any(slot is None for slot in adjoint_slots):
+        return None
+    concrete_adjoint_slots = tuple(slot for slot in adjoint_slots if slot is not None)
+    if left_slot.kind != "fund" or right_slot.kind != "fund" or left_slot.dual or not right_slot.dual:
+        return None
+    if any(slot.kind != "adj" for slot in concrete_adjoint_slots):
+        return None
+    group = _native_color_chain_group(theory, left_slot, right_slot, concrete_adjoint_slots, groups)
+    if group is None:
+        return None
+    generator_name = f"gen_{group}_fund"
+    if generator_name not in theory.cg_tensors:
+        return None
+    group_symbol = theory.symbol(group, role=SymbolRole.GROUP)
+    adjoint_representation = group_symbol(s.adj)
+    fund = group_symbol(s.fund)
+    generator_handle = theory.cg_tensor_handle(generator_name)
+    internal = tuple(
+        theory.index(
+            theory.symbol(f"native_color_chain_{occurrence}_{i}", role=SymbolRole.INDEX),
+            fund,
+        )
+        for i in range(len(concrete_adjoint_slots) - 1)
+    )
+    outputs = (theory.index(left_slot.label, fund), *internal)
+    inputs = (
+        *(theory.index(index[0], s.Bar(fund)) for index in internal),
+        theory.index(right_slot.label, s.Bar(fund)),
+    )
+    return product_expr(
+        generator_handle(theory.index(slot.label, adjoint_representation), output, input_)
+        for slot, output, input_ in zip(concrete_adjoint_slots, outputs, inputs, strict=True)
+    )
 
 
 def _decode_native_color_generator(
@@ -1024,6 +1122,24 @@ def _native_color_metric_group(
     return candidates[0] if len(candidates) == 1 else None
 
 
+def _native_color_chain_group(
+    theory: Any,
+    left: "_NativeColorSlot",
+    right: "_NativeColorSlot",
+    adjoints: tuple["_NativeColorSlot", ...],
+    groups: tuple[str, ...],
+) -> str | None:
+    if left.dimension != right.dimension:
+        return None
+    candidates = [
+        group
+        for group in groups
+        if _native_color_group_dimension(theory, group, "fund") == left.dimension
+        and all(_native_color_group_dimension(theory, group, "adj") == adjoint.dimension for adjoint in adjoints)
+    ]
+    return candidates[0] if len(candidates) == 1 else None
+
+
 @dataclass(frozen=True)
 class _NativeColorSlot:
     kind: str
@@ -1125,6 +1241,7 @@ def _pychete_dirac_word(dirac_factors: tuple[Expression, ...]) -> Expression:
 __all__ = [
     "cook_function",
     "cook_indices",
+    "decode_native_color_wrappers",
     "dirac_adjoint",
     "expand_bis",
     "expand_color",

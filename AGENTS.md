@@ -254,11 +254,13 @@ For HEP-compatible built-in SU(N) CG tensors, route `gen`, `fStruct`, and
 `del` through the spenso/idenso bridge instead of Python tensor logic.
 Compatible `del` tensors lower to native spenso metrics, and the idenso bridge
 must decode simple native metrics, generators, structure constants, and
-single-generator `spenso::chain(...)` results back to registered pychete
-`CG(...)` atoms before public matching output is exposed. Do not let simple
-native `spenso::t`, `spenso::f`, `spenso::g`, or one-generator
-`spenso::chain` forms leak into pychete-facing results when the originating
-theory group is unambiguous.
+native generator `spenso::chain(...)` products back to registered pychete
+`CG(...)` atoms before public matching output is exposed. Multi-generator
+chains should decode to ordered products of registered generator CG tensors
+with generated theory-owned internal index labels; do not replace them with
+handwritten SU(N) identities in Python. Do not let simple native `spenso::t`,
+`spenso::f`, `spenso::g`, or decodable `spenso::chain` forms leak into
+pychete-facing results when the originating theory group is unambiguous.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
@@ -415,13 +417,22 @@ For symbolic colour/group simplification of registered pychete CG tensors, use
 `pychete.group_algebra.simplify_pychete_color(...)` or the low-level
 `pychete.backends.idenso.simplify_pychete_color_algebra(...)`. This bridge must
 lower only spenso-native HEP-compatible `gen` and `fStruct` tensors, delegate
-the SU(N) algebra to idenso's native `simplify_color`/`simplify_metrics`, and
-decode simple native metrics back to registered pychete `del[...]` CG tensors.
+the SU(N) algebra to idenso's native `simplify_color`, use native
+`simplify_metrics` only on controlled pure-native metric inputs, and decode
+simple native metrics and native generator chains back to registered pychete
+`CG(...)` tensors.
 Do not lower every registered CG tensor to a generic spenso tensor when calling
 idenso; unrelated pychete `del`, `eps`, `dSym`, and model-specific CG tensors
 must stay in pychete representation unless a backend-native simplification
 explicitly handles them. Public one-loop matching can opt into this bridge with
 `OneLoopMatchOptions.simplify_pychete_color_algebra=True`.
+For public post-result CDE expressions containing generated pychete derivative
+and Lorentz structures, do not run the global native colour simplifier over the
+whole expression. Use `pychete.backends.idenso.decode_native_color_wrappers(...)`
+to decode already-native `spenso::g`, `spenso::t`, `spenso::f`, and
+`spenso::chain` wrappers back to pychete `CG(...)` atoms, and apply full native
+colour simplification only to controlled colour-bearing kernels or isolated
+subexpressions.
 
 Every reusable pychete built-in symbol must be created through the central
 `SymbolStore` so it receives pychete's custom Symbolica print callback. Human

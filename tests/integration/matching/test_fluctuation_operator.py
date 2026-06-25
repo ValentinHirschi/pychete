@@ -2045,13 +2045,16 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
             tensor_reduce=True,
             combine_terms=False,
             truncate_eft_result=False,
+            simplify_pychete_color_algebra=True,
         ),
     )
     rendered = canonical_string(result.on_shell_eft_lagrangian)
 
     assert result.metadata["field_strength_metric_simplified"] is True
+    assert result.metadata["native_color_wrappers_decoded"] is True
     assert "vakint::CD" not in rendered
     assert "vakint::List" not in rendered
+    assert "spenso::" not in rendered
     assert "pychete::CD" in rendered
     assert "pychete::FieldStrength" in rendered
 

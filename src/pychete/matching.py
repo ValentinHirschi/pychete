@@ -5445,6 +5445,8 @@ def match_one_loop(
         },
     )
     result = _simplify_result_field_strength_metrics(result)
+    if options.simplify_pychete_color_algebra:
+        result = _decode_result_native_color_wrappers(theory, result)
     if options.substitute_heavy_scalar_solutions:
         solution_lagrangian = (
             options.heavy_scalar_solution_lagrangian
@@ -5576,6 +5578,32 @@ def _simplify_result_field_strength_metrics(result: MatchingResult) -> MatchingR
         metadata={
             **result.metadata,
             "field_strength_metric_simplified": True,
+        },
+    )
+
+
+def _decode_result_native_color_wrappers(theory: Theory, result: MatchingResult) -> MatchingResult:
+    from .backends import idenso as idenso_backend
+
+    decoded_off_shell = idenso_backend.decode_native_color_wrappers(theory, result.off_shell_eft_lagrangian)
+    decoded_on_shell = idenso_backend.decode_native_color_wrappers(theory, result.on_shell_eft_lagrangian)
+    decoded_matching_conditions = {
+        name: idenso_backend.decode_native_color_wrappers(theory, expression)
+        for name, expression in result.matching_conditions.items()
+    }
+    decoded_supertraces = {
+        name: idenso_backend.decode_native_color_wrappers(theory, expression)
+        for name, expression in result.supertraces.items()
+    }
+    return replace(
+        result,
+        off_shell_eft_lagrangian=decoded_off_shell,
+        on_shell_eft_lagrangian=decoded_on_shell,
+        matching_conditions=decoded_matching_conditions,
+        supertraces=decoded_supertraces,
+        metadata={
+            **result.metadata,
+            "native_color_wrappers_decoded": True,
         },
     )
 

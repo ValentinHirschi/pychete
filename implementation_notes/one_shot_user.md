@@ -209,3 +209,6 @@ discoveries, dependency patches, blockers, and remaining work.
   symbolic matching paths prefer algorithms that avoid unnecessary global
   expansion, support target-selective projection/simplification, and delegate
   expensive algebra to native Symbolica/idenso/spenso/vakint primitives.
+- After the current continuation slice, provide a brief user-facing summary of
+  the main technical blockers still preventing full one-loop matching parity
+  with Matchete's integration tests.

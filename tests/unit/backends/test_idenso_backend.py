@@ -248,6 +248,42 @@ def test_idenso_bridge_simplifies_pychete_su2_fierz_contraction() -> None:
     assert "spenso::" not in canonical_string(simplified)
 
 
+def test_idenso_bridge_decodes_native_generator_chain_with_pychete_payload() -> None:
+    theory = Theory("idenso_color_su2_generator_chain_payload")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    k = theory.index("k", fund)
+    k_dual = theory.index("k", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    field_strength_a = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_a), s.List())
+    field_strength_b = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_b), s.List())
+    expr = (
+        s.Bar(higgs(j))
+        * higgs(i)
+        * generator(adj_a, i, k_dual)
+        * generator(adj_b, k, j_dual)
+        * field_strength_a
+        * field_strength_b
+    )
+
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+    simplified_text = canonical_string(simplified)
+
+    assert "spenso::" not in simplified_text
+    assert simplified_text.count("cg_tensor_gen_SU2L_fund") == 2
+    assert simplified_text.count("FieldStrength") == 2
+    assert "index_native_color_chain_" in simplified_text
+
+
 def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
     mu = s.Index(s.dummy_index(0), s.Lorentz)
     nu = s.Index(s.dummy_index(1), s.Lorentz)
