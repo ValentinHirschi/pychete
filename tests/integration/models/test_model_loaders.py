@@ -376,6 +376,30 @@ def test_default_parent_model_child_lagrangians_parse_with_parent_metadata() -> 
         theory._validate_registered_expression(expressions["lagrangian"])
 
 
+def test_default_parent_model_child_lagrangians_can_include_supported_parent_lagrangian() -> None:
+    expected_child_fields = {
+        "Singlet_Scalar_Extension": "phi",
+        "E_VLL": "EE",
+        "S1S3LQs": "S1",
+    }
+
+    for name, child_field in expected_child_fields.items():
+        theory, expressions = load_matchete_model(
+            Path(f"assets/models/{name}.m"),
+            include_parent_lagrangian=True,
+        )
+        parent_lagrangian = canonical_string(expressions["parent_lagrangian"])
+        combined_lagrangian = canonical_string(expressions["lagrangian"])
+
+        assert sorted(expressions) == ["lagrangian", "parent_lagrangian"]
+        assert f"{name}::field_q" in parent_lagrangian
+        assert f"{name}::field_{child_field}" not in parent_lagrangian
+        assert f"{name}::field_q" in combined_lagrangian
+        assert f"{name}::field_{child_field}" in combined_lagrangian
+        theory._validate_registered_expression(expressions["parent_lagrangian"])
+        theory._validate_registered_expression(expressions["lagrangian"])
+
+
 def test_default_loaded_model_fixtures_store_sparse_cg_components_for_spenso() -> None:
     expected_components = {"tFundf_SU2L": 36, "tFundf_SU3c": 576}
     for name in ("Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):

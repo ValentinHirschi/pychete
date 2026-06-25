@@ -80,8 +80,8 @@
 - The Mathematica model loader now uses `FreeLagConvention.MATCHETE` for
   parsed `FreeLag[...]`. VLF Python and Mathematica assets intentionally share
   theory metadata but use distinct free-Lagrangian expression conventions.
-- Last pushed green milestone: `e54615a Make free Lagrangian conventions
-  explicit`.
+- Last pushed green milestone: `3bf2ccc Improve loader parity and targeted
+  test grouping`.
 - Last broader non-slow gate at that milestone:
   `263 passed, 1 skipped, 50 deselected`; the skip was the expected GammaLoop
   manifest skip for a local dependency build without GammaLoop requested.
@@ -145,3 +145,21 @@
     collected 95 selected tests and deselected 221.
   - `python -m mypy`: success, no issues in 32 source files.
   - `git diff --check`: clean.
+
+## Current Slice: Opt-In Parent Lagrangian Loading
+
+- The direct supported-subset Mathematica loader can parse `assets/models/SM.m`
+  including its Lagrangian after the recent `PlusHc`, `DiracProduct`, and
+  module-local index improvements.
+- Added an explicit `include_parent_lagrangian=True` option to
+  `load_matchete_model(...)`. Parent-model declarations still always load
+  metadata, and the default remains to skip parent Lagrangian expressions so
+  the direct loader stays a conservative supported-subset loader. When the
+  option is enabled, supported parent Lagrangians are parsed first and stored
+  as `expressions["parent_lagrangian"]`; `expressions["lagrangian"]` contains
+  parent plus child terms.
+- Added regression coverage for `Singlet_Scalar_Extension`, `E_VLL`, and
+  `S1S3LQs`, confirming the opt-in path includes SM parent fields and the
+  child heavy fields while preserving registered expression validation.
+- Targeted validation so far:
+  - `pytest -m loaders tests/unit/loaders tests/integration/models`: 26 passed.

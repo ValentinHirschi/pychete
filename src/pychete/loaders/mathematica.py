@@ -852,6 +852,7 @@ def _load_matchete_model_into(
     expressions: dict[str, Expression],
     *,
     include_lagrangian: bool,
+    include_parent_lagrangian: bool,
     parameters: dict[str, int],
     visited: set[Path],
 ) -> None:
@@ -873,7 +874,8 @@ def _load_matchete_model_into(
                 parent_path,
                 theory,
                 expressions,
-                include_lagrangian=False,
+                include_lagrangian=include_lagrangian and include_parent_lagrangian,
+                include_parent_lagrangian=include_parent_lagrangian,
                 parameters=parameters,
                 visited=visited,
             )
@@ -976,6 +978,7 @@ def load_matchete_model(
     *,
     theory_name: str | None = None,
     include_lagrangian: bool = True,
+    include_parent_lagrangian: bool = False,
 ) -> tuple[Theory, dict[str, Expression]]:
     """Load the supported Matchete model subset into a pychete theory.
 
@@ -985,9 +988,10 @@ def load_matchete_model(
     exported into pychete-owned fixtures before normal tests or users consume
     them.
 
-    Set ``include_lagrangian=False`` to load only model metadata. This is used
-    for parent-model validation assets whose full Lagrangian syntax is broader
-    than the current direct Wolfram-subset parser.
+    Set ``include_lagrangian=False`` to load only model metadata. Parent-model
+    declarations always load metadata. Set ``include_parent_lagrangian=True``
+    to also parse supported parent Lagrangian expressions before adding the
+    child model expression.
     """
 
     model_path = Path(path)
@@ -998,6 +1002,7 @@ def load_matchete_model(
         theory,
         expressions,
         include_lagrangian=include_lagrangian,
+        include_parent_lagrangian=include_parent_lagrangian,
         parameters={},
         visited=set(),
     )
