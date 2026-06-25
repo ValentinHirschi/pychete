@@ -120,6 +120,10 @@
   `OneLoopSetup.simplify_index_algebra(...)`, and public
   `OneLoopMatchOptions.simplify_pychete_color_algebra=True` can now opt into
   this bridge.
+- Threaded `simplify_pychete_color_algebra` through validation fixture preview
+  and gap-report helpers, including the public `Theory.match(...)` gap-report
+  path. This keeps fixture probing on the same API surface as ordinary
+  one-loop matching.
 - This slice still does not complete non-Abelian group-algebra simplification:
   expanded CG tensors can now lower through spenso and simple generator,
   Fierz, and structure-constant contractions can simplify through idenso, but
@@ -134,6 +138,16 @@
   idenso/native-HEP/pychete-colour tests, selected one-loop option tests, and
   public API tests pass locally; `python -m mypy` and `git diff --check` also
   pass.
+- Targeted projected-condition probe with public match API, max trace order 1,
+  internal minimal subtraction, registered/reference projection, and
+  `simplify_pychete_color_algebra=True` shows unchanged counts versus the
+  previous frontier:
+  - `Singlet_Scalar_Extension`: 72/72 projected targets, 42 accepted, 30
+    different; 39/64 Wilson targets accepted.
+  - `E_VLL`: 72/72 projected targets, 27 accepted, 45 different; 25/64 Wilson
+    targets accepted.
+  - `S1S3LQs`: 72/72 projected targets, 12 accepted, 60 different; 12/64
+    Wilson targets accepted.
 
 ## Current Validation Frontier
 

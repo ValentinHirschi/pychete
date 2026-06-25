@@ -12,6 +12,7 @@ from pychete import (
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
     OneLoopNormalization,
+    OneLoopSetup,
     SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
     Theory,
     ValidationFixture,
@@ -367,6 +368,33 @@ def test_validation_fixture_preview_can_evaluate_tensor_networks_with_stored_cg_
     assert len(calls) == preview.metadata["supertrace_kernel_count"]
     assert all(type(library).__name__ == "TensorLibrary" for _expr, library in calls)
     assert all("pychete::CG" not in canonical_string(expr) for expr, _library in calls)
+
+
+def test_validation_fixture_preview_can_simplify_pychete_color_algebra(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/S1S3LQs.model_fixture.json"))
+    calls: list[dict[str, object]] = []
+
+    def fake_simplify_index_algebra(self: OneLoopSetup, **kwargs: object) -> OneLoopSetup:
+        calls.append(kwargs)
+        return self
+
+    monkeypatch.setattr(OneLoopSetup, "simplify_index_algebra", fake_simplify_index_algebra)
+
+    preview = fixture.one_loop_preview(max_trace_order=1, simplify_pychete_color_algebra=True)
+
+    assert calls == [
+        {
+            "expand": False,
+            "gamma": False,
+            "color": False,
+            "pychete_color": True,
+            "metrics": False,
+            "dots": False,
+        }
+    ]
+    assert preview.metadata["pychete_color_algebra_simplified"] is True
 
 
 def test_public_one_loop_match_can_evaluate_fixture_tensor_networks_with_stored_cg_components(
@@ -748,6 +776,41 @@ def test_validation_fixture_gap_report_can_project_conditions_through_public_mat
     assert "pychete::Coupling(Singlet_Scalar_Extension::external_cHB,pychete::List(),0)" in (
         report.different_after_probe_common_matching_condition_names
     )
+
+
+def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    reference = MatchingResult(
+        theory=fixture.theory(),
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+    )
+    captured: dict[str, object] = {}
+
+    def fake_match(self: Theory, *_args: object, **kwargs: object) -> MatchingResult:
+        captured.update(kwargs)
+        return MatchingResult(
+            theory=self,
+            uv_lagrangian=Expression.num(0),
+            off_shell_eft_lagrangian=Expression.num(0),
+            on_shell_eft_lagrangian=Expression.num(0),
+        )
+
+    monkeypatch.setattr(Theory, "match", fake_match)
+
+    fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="public_match_forwarding",
+        use_public_match_api=True,
+        simplify_pychete_color_algebra=True,
+    )
+
+    options = captured["one_loop_options"]
+    assert isinstance(options, OneLoopMatchOptions)
+    assert options.simplify_pychete_color_algebra is True
 
 
 def test_validation_fixture_gap_report_projects_registered_wilsons_before_reference_targets(
@@ -1145,12 +1208,14 @@ def test_validation_fixture_gap_report_forwards_internal_scale_controls(
         mu_r_squared=mu,
         loop_momentum_squared=momentum,
         require_registered_mass=False,
+        simplify_pychete_color_algebra=True,
     )
 
     assert captured["epsilon"] is eps
     assert captured["mu_r_squared"] is mu
     assert captured["loop_momentum_squared"] is momentum
     assert captured["require_registered_mass"] is False
+    assert captured["simplify_pychete_color_algebra"] is True
 
 
 def test_validation_fixture_gap_report_can_simplify_loop_functions_for_comparison(
