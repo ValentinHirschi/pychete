@@ -402,6 +402,37 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
         )
 
 
+def test_default_matching_condition_probe_accepts_fixture_function_indeterminates() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference_fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    reference = reference_fixture.matching_result("matchete_previous")
+    base_report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        max_trace_order=1,
+        project_reference_matching_conditions=True,
+    )
+    probe_name = base_report.canonical_different_common_matching_condition_names[0]
+
+    probed_report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        max_trace_order=1,
+        project_reference_matching_conditions=True,
+        auto_probe_samples=True,
+        probe_parameter_mode="indeterminates",
+        probe_sample_count=1,
+        probe_matching_condition_names=(probe_name,),
+    )
+
+    assert probed_report.numeric_probe_equal_common_matching_condition_names == ()
+    assert probed_report.numeric_probe_different_common_matching_condition_names == (probe_name,)
+    assert probed_report.accepted_common_matching_condition_count == base_report.accepted_common_matching_condition_count
+    assert probed_report.different_after_probe_common_matching_condition_count == (
+        base_report.different_after_probe_common_matching_condition_count
+    )
+
+
 def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -> None:
     expected = {
         "VLF_toy_model": {

@@ -3613,6 +3613,12 @@ discoveries, dependency patches, blockers, and remaining work.
   - `ValidationFixture.one_loop_preview_gap_report(...)` and `_gap_report(...)`
     thread this through as `probe_parameter_mode`, and focused tests cover the
     custom-function path.
+- Added a real default-fixture regression that probes the first unresolved
+  `Singlet_Scalar_Extension` matching condition with
+  `probe_parameter_mode="indeterminates"`. This confirms the automatic
+  Symbolica evaluator path works on committed Matchete-derived expressions
+  containing pychete `Coupling(...)` applications and stored logarithms, not
+  only on synthetic function atoms.
 - Development probe of the first five canonical-different projected matching
   conditions in each of `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`
   with `probe_parameter_mode="indeterminates"` produced no additional
@@ -3623,6 +3629,10 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest
     tests/integration/validation/test_numeric_probes.py -q'` passed: 13
     passed in 0.08s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_condition_probe_accepts_fixture_function_indeterminates
+    -q'` passed: 1 passed in 15.43s.
   - `git diff --check` passed.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
     dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
@@ -3634,14 +3644,31 @@ discoveries, dependency patches, blockers, and remaining work.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
     dependencies/.venv/bin/python -m pytest
     tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in 0.02s.
+  - After the final import-format cleanup, `git diff --check` and `bash -lc
+    'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m
+    mypy'` passed again, and `bash -lc 'source "$HOME/.bashrc" &&
+    PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py
+    tests/unit/definitions/test_public_api.py -q'` passed: 17 passed in
+    0.07s.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
     dependencies/.venv/bin/python -m pytest
     tests/integration/validation/test_validation_fixtures.py -q'` passed: 17
     passed in 199.55s.
+  - After adding the real default-fixture regression, `bash -lc 'source
+    "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 18
+    passed in 210.73s.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
-    dependencies/.venv/bin/python -m pytest tests -q'` passed: 220 passed, 1
-    skipped in 207.24s. The skip is the existing GammaLoop API import check
+    dependencies/.venv/bin/python -m pytest tests -q'` passed finally on the
+    current tree: 220 passed, 1 skipped in 201.51s. The skip is the existing
+    GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+  - After adding the real default-fixture regression, `bash -lc 'source
+    "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+    tests -q'` passed: 221 passed, 1 skipped in 217.42s. The skip is the
+    existing GammaLoop API import check because GammaLoop was not requested in
+    the current dependency manifest.
 
 ## Remaining Work
 
