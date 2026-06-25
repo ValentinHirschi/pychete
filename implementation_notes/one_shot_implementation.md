@@ -4527,6 +4527,46 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 264 passed,
     1 skipped in 259.83s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added Wilson-specific matching-condition frontier metrics to validation gap
+  reports:
+  - `MatchingFixtureGapReport` now records
+    `reference_wilson_matching_condition_names` and derives common, accepted,
+    and still-different Wilson target names/counts from the existing canonical
+    and numeric-probe comparison results;
+  - `to_json_obj()` now includes Wilson-specific count and name fields, and
+    `_repr_html_()` includes the accepted Wilson frontier, so notebooks and
+    CI summaries can distinguish generic matching-condition progress from the
+    actual SMEFT Wilson-coefficient acceptance frontier;
+  - the Wilson classification is sourced from `MatchingResult` target metadata,
+    which itself is backed by Symbolica tag-restricted matching and symbol
+    data, rather than by inspecting condition-name strings;
+  - the current default projected matching-condition frontier is now tracked as
+    `64` Wilson targets for each SMEFT fixture, with accepted Wilson counts of
+    `39/64` for `Singlet_Scalar_Extension`, `25/64` for `E_VLL`, and `12/64`
+    for `S1S3LQs`; `VLF_toy_model` has no saved matching conditions.
+- Verification for the Wilson frontier reporting slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_records_wilson_matching_condition_frontier
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica
+    -q'` passed: 2 passed in 36.86s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_conditions_through_public_match_api
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_condition_probe_accepts_fixture_function_indeterminates
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
+    -q'` passed: 21 passed in 144.30s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 265 passed,
+    1 skipped in 267.04s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -4534,7 +4574,8 @@ discoveries, dependency patches, blockers, and remaining work.
   acceptance targets for the pychete one-loop matching engine; current tests
   cover both raw/vakint and public finite/MS preview gap reports, and projected
   matching-condition reports now include registered model-coupling identity
-  values. Final Matchete equivalence is still incomplete.
+  values plus explicit SMEFT Wilson-target acceptance counts. Final Matchete
+  equivalence is still incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
   initial contract, especially richer vector/zero-mode metadata and
   complicated Matchete models that exceed the direct Python loader's documented

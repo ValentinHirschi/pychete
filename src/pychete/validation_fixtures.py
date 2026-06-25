@@ -57,6 +57,7 @@ class MatchingFixtureGapReport:
     numeric_probe_equal_common_matching_condition_names: tuple[str, ...]
     numeric_probe_different_common_matching_condition_names: tuple[str, ...]
     common_expression_names: tuple[str, ...]
+    reference_wilson_matching_condition_names: tuple[str, ...]
 
     @property
     def complete(self) -> bool:
@@ -203,6 +204,51 @@ class MatchingFixtureGapReport:
         return len(self.accepted_common_matching_condition_names)
 
     @property
+    def reference_wilson_matching_condition_count(self) -> int:
+        """Number of reference matching conditions targeting Wilson coefficients."""
+
+        return len(self.reference_wilson_matching_condition_names)
+
+    @property
+    def common_wilson_matching_condition_names(self) -> tuple[str, ...]:
+        """Shared matching-condition names whose reference target is a Wilson coefficient."""
+
+        common = set(self.common_matching_condition_names)
+        return tuple(name for name in self.reference_wilson_matching_condition_names if name in common)
+
+    @property
+    def common_wilson_matching_condition_count(self) -> int:
+        """Number of shared Wilson-coefficient matching-condition targets."""
+
+        return len(self.common_wilson_matching_condition_names)
+
+    @property
+    def accepted_common_wilson_matching_condition_names(self) -> tuple[str, ...]:
+        """Wilson matching conditions accepted by canonical equality or probes."""
+
+        accepted = set(self.accepted_common_matching_condition_names)
+        return tuple(name for name in self.common_wilson_matching_condition_names if name in accepted)
+
+    @property
+    def accepted_common_wilson_matching_condition_count(self) -> int:
+        """Number of accepted shared Wilson-coefficient matching conditions."""
+
+        return len(self.accepted_common_wilson_matching_condition_names)
+
+    @property
+    def different_after_probe_common_wilson_matching_condition_names(self) -> tuple[str, ...]:
+        """Wilson matching conditions still different after enabled probe fallbacks."""
+
+        accepted = set(self.accepted_common_wilson_matching_condition_names)
+        return tuple(name for name in self.common_wilson_matching_condition_names if name not in accepted)
+
+    @property
+    def different_after_probe_common_wilson_matching_condition_count(self) -> int:
+        """Number of Wilson matching conditions still different after enabled probes."""
+
+        return len(self.different_after_probe_common_wilson_matching_condition_names)
+
+    @property
     def different_after_probe_common_matching_condition_names(self) -> tuple[str, ...]:
         """Shared matching conditions still different after enabled probe fallbacks."""
 
@@ -255,6 +301,12 @@ class MatchingFixtureGapReport:
                 self.numeric_probe_different_common_matching_condition_count
             ),
             "accepted_common_matching_condition_count": self.accepted_common_matching_condition_count,
+            "reference_wilson_matching_condition_count": self.reference_wilson_matching_condition_count,
+            "common_wilson_matching_condition_count": self.common_wilson_matching_condition_count,
+            "accepted_common_wilson_matching_condition_count": self.accepted_common_wilson_matching_condition_count,
+            "different_after_probe_common_wilson_matching_condition_count": (
+                self.different_after_probe_common_wilson_matching_condition_count
+            ),
             "different_after_probe_common_matching_condition_count": (
                 self.different_after_probe_common_matching_condition_count
             ),
@@ -282,6 +334,14 @@ class MatchingFixtureGapReport:
                 self.numeric_probe_different_common_matching_condition_names
             ),
             "accepted_common_matching_condition_names": list(self.accepted_common_matching_condition_names),
+            "reference_wilson_matching_condition_names": list(self.reference_wilson_matching_condition_names),
+            "common_wilson_matching_condition_names": list(self.common_wilson_matching_condition_names),
+            "accepted_common_wilson_matching_condition_names": list(
+                self.accepted_common_wilson_matching_condition_names
+            ),
+            "different_after_probe_common_wilson_matching_condition_names": list(
+                self.different_after_probe_common_wilson_matching_condition_names
+            ),
             "different_after_probe_common_matching_condition_names": list(
                 self.different_after_probe_common_matching_condition_names
             ),
@@ -303,7 +363,9 @@ class MatchingFixtureGapReport:
             f"supertraces={self.candidate_supertrace_count}/{self.reference_supertrace_count}, "
             f"accepted_common_supertraces={self.accepted_common_supertrace_count}, "
             f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count}, "
-            f"accepted_common_matching_conditions={self.accepted_common_matching_condition_count})</code>"
+            f"accepted_common_matching_conditions={self.accepted_common_matching_condition_count}, "
+            f"accepted_common_wilson={self.accepted_common_wilson_matching_condition_count}/"
+            f"{self.common_wilson_matching_condition_count})</code>"
         )
 
 
@@ -791,6 +853,14 @@ def _reference_matching_condition_targets(reference: MatchingResult) -> dict[str
     }
 
 
+def _reference_wilson_matching_condition_names(reference: MatchingResult) -> tuple[str, ...]:
+    return _sorted_names(
+        target.name
+        for target in reference.matching_condition_targets()
+        if target.is_wilson_coefficient
+    )
+
+
 def _probe_plan_for_names(
     candidate: MatchingResult,
     reference: MatchingResult,
@@ -881,6 +951,7 @@ def _gap_report(
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
     common_conditions = candidate_conditions & reference_conditions
+    reference_wilson_conditions = _reference_wilson_matching_condition_names(reference)
     condition_probe_parameters: Sequence[Expression] | None
     condition_probe_samples: Sequence[Sequence[NumericValue]] | None
     if auto_probe_samples and probe_matching_condition_names is not None:
@@ -961,6 +1032,7 @@ def _gap_report(
             if item.numeric_probe is not None and not item.numeric_probe.equal
         ),
         common_expression_names=_sorted_names(candidate_names & reference_names),
+        reference_wilson_matching_condition_names=reference_wilson_conditions,
     )
 
 

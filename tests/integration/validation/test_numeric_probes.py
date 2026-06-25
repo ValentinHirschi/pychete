@@ -11,6 +11,7 @@ from pychete import (
     canonical_string,
     deterministic_probe_samples,
     evaluator_probe_equal,
+    s,
 )
 from pychete.backends import vacuum_integrals
 from pychete.validation_fixtures import _gap_report
@@ -384,6 +385,49 @@ def test_fixture_gap_report_compares_common_matching_conditions() -> None:
     assert report_obj["canonical_different_common_matching_condition_count"] == 1
     assert report_obj["accepted_common_matching_condition_names"] == [canonical_string(c_equal)]
     assert report_obj["different_after_probe_common_matching_condition_count"] == 1
+
+
+def test_fixture_gap_report_records_wilson_matching_condition_frontier() -> None:
+    x = S("condition_gap_wilson_x")
+    theory = Theory("condition_gap_wilson")
+    wilson = theory.define_wilson_coefficient("cH", basis="SMEFT")
+    coupling = theory.define_coupling("g")
+    wilson_name = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
+    coupling_name = canonical_string(coupling())
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            wilson_name: x,
+            coupling_name: x,
+        },
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={
+            wilson_name: x,
+            coupling_name: x + 1,
+        },
+    )
+
+    report = _gap_report("candidate_fixture", "reference_fixture", candidate, reference)
+    report_obj = report.to_json_obj()
+
+    assert report.reference_wilson_matching_condition_names == (wilson_name,)
+    assert report.common_wilson_matching_condition_names == (wilson_name,)
+    assert report.accepted_common_wilson_matching_condition_names == (wilson_name,)
+    assert report.different_after_probe_common_wilson_matching_condition_names == ()
+    assert report.reference_wilson_matching_condition_count == 1
+    assert report.common_wilson_matching_condition_count == 1
+    assert report.accepted_common_wilson_matching_condition_count == 1
+    assert report.different_after_probe_common_wilson_matching_condition_count == 0
+    assert report_obj["reference_wilson_matching_condition_names"] == [wilson_name]
+    assert report_obj["accepted_common_wilson_matching_condition_count"] == 1
 
 
 def test_fixture_gap_report_records_evaluator_probe_equal_matching_conditions() -> None:

@@ -554,21 +554,33 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
             "conditions": 0,
             "accepted": 0,
             "different_after_probe": 0,
+            "wilson": 0,
+            "accepted_wilson": 0,
+            "different_wilson": 0,
         },
         "Singlet_Scalar_Extension": {
             "conditions": 72,
             "accepted": 42,
             "different_after_probe": 30,
+            "wilson": 64,
+            "accepted_wilson": 39,
+            "different_wilson": 25,
         },
         "E_VLL": {
             "conditions": 72,
             "accepted": 27,
             "different_after_probe": 45,
+            "wilson": 64,
+            "accepted_wilson": 25,
+            "different_wilson": 39,
         },
         "S1S3LQs": {
             "conditions": 72,
             "accepted": 12,
             "different_after_probe": 60,
+            "wilson": 64,
+            "accepted_wilson": 12,
+            "different_wilson": 52,
         },
     }
 
@@ -593,12 +605,26 @@ def test_default_matching_target_projected_matching_condition_frontier_without_m
         assert report.canonical_equal_common_matching_condition_count == expected_counts["accepted"]
         assert report.numeric_probe_equal_common_matching_condition_count == 0
         assert report.different_after_probe_common_matching_condition_count == expected_counts["different_after_probe"]
+        assert report.reference_wilson_matching_condition_count == expected_counts["wilson"]
+        assert report.common_wilson_matching_condition_count == expected_counts["wilson"]
+        assert report.accepted_common_wilson_matching_condition_count == expected_counts["accepted_wilson"]
+        assert (
+            report.different_after_probe_common_wilson_matching_condition_count
+            == expected_counts["different_wilson"]
+        )
         assert report_obj["common_matching_condition_count"] == expected_counts["conditions"]
         assert report_obj["missing_reference_matching_condition_count"] == 0
         assert report_obj["accepted_common_matching_condition_count"] == expected_counts["accepted"]
+        assert report_obj["reference_wilson_matching_condition_count"] == expected_counts["wilson"]
+        assert report_obj["common_wilson_matching_condition_count"] == expected_counts["wilson"]
+        assert report_obj["accepted_common_wilson_matching_condition_count"] == expected_counts["accepted_wilson"]
         assert (
             report_obj["different_after_probe_common_matching_condition_count"]
             == expected_counts["different_after_probe"]
+        )
+        assert (
+            report_obj["different_after_probe_common_wilson_matching_condition_count"]
+            == expected_counts["different_wilson"]
         )
 
 
