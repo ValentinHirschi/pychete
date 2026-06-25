@@ -46,6 +46,31 @@ def test_idenso_pipeline_is_native_noop_for_plain_symbol() -> None:
     assert _same(idenso.simplify_index_algebra(x, dots=True), x)
 
 
+def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+    nu = s.Index(s.dummy_index(1), s.Lorentz)
+    rho = s.Index(s.dummy_index(2), s.Lorentz)
+    expr = s.Metric(mu, nu) * s.LoopMomentum(mu) * s.LoopMomentum(nu)
+    delta_expr = s.Delta(mu, nu) * s.LoopMomentum(mu) * s.LoopMomentum(rho)
+
+    assert _same(idenso.simplify_pychete_loop_momentum_metrics(expr), s.LoopMomentumSquared)
+    assert _same(
+        idenso.simplify_pychete_loop_momentum_metrics(delta_expr),
+        s.LoopMomentum(nu) * s.LoopMomentum(rho),
+    )
+
+
+def test_idenso_pipeline_contracts_pychete_loop_momentum_metrics() -> None:
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+    nu = s.Index(s.dummy_index(1), s.Lorentz)
+    expr = S("x") * s.Metric(mu, nu) * s.LoopMomentum(mu) * s.LoopMomentum(nu)
+
+    assert _same(
+        idenso.simplify_index_algebra(expr, expand=False, gamma=False, color=False, dots=False),
+        S("x") * s.LoopMomentumSquared,
+    )
+
+
 def test_idenso_pipeline_simplifies_pychete_projectors_through_native_bridge() -> None:
     expr = s.PR**3 + s.PL**2 + s.PR * s.PL + S("x") * s.PL * s.PR
 

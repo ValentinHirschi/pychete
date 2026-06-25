@@ -142,6 +142,12 @@ def simplify_metrics(expr: Expression) -> Expression:
     return native_module().simplify_metrics(expr)
 
 
+def simplify_pychete_loop_momentum_metrics(expr: Expression) -> Expression:
+    """Simplify pychete metric/delta contractions of loop-momentum factors."""
+
+    return expr.replace_multiple(_loop_momentum_metric_replacements(), repeat=True).expand()
+
+
 def to_dots(expr: Expression) -> Expression:
     """Delegate contracted-vector dot-product conversion to idenso."""
 
@@ -181,10 +187,29 @@ def simplify_index_algebra(
     if color:
         result = simplify_color(result)
     if metrics:
+        result = simplify_pychete_loop_momentum_metrics(result)
         result = simplify_metrics(result)
+        result = simplify_pychete_loop_momentum_metrics(result)
     if dots:
         result = to_dots(result)
     return simplify_pychete_dirac_algebra(result)
+
+
+@cache
+def _loop_momentum_metric_replacements() -> tuple[Replacement, ...]:
+    first = s.head("loop_momentum_metric_first_")
+    second = s.head("loop_momentum_metric_second_")
+    metric_heads = (s.Metric, s.Delta)
+    replacements: list[Replacement] = [Replacement(s.LoopMomentum(first) * s.LoopMomentum(first), s.LoopMomentumSquared)]
+    for metric_head in metric_heads:
+        metric = metric_head(first, second)
+        replacements.extend(
+            (
+                Replacement(metric * s.LoopMomentum(first), s.LoopMomentum(second)),
+                Replacement(metric * s.LoopMomentum(second), s.LoopMomentum(first)),
+            )
+        )
+    return tuple(replacements)
 
 
 def _projector_power_replacement(
@@ -578,6 +603,7 @@ __all__ = [
     "simplify_pychete_dirac_algebra",
     "simplify_pychete_open_dirac_chains",
     "simplify_pychete_dirac_projectors",
+    "simplify_pychete_loop_momentum_metrics",
     "to_dots",
     "wrap_dummies",
     "wrap_indices",

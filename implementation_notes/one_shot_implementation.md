@@ -146,9 +146,9 @@ Latest verified baseline before this compact rollover:
 - Extend the loaded-model-state exporter/converter for richer vector/zero-mode
   metadata and complicated Matchete models outside the direct loader subset.
 - Extend momentum lowering beyond scalar contracted pairs and the current open
-  derivative `LoopMomentum(index)` numerators into vector/gauge Lorentz
-  structures, contracted tensor numerator reduction, and fuller propagator
-  expansion.
+  derivative `LoopMomentum(index)` numerators plus metric/delta loop-momentum
+  contractions into vector/gauge Lorentz structures, higher-rank tensor
+  numerator reduction, and fuller propagator expansion.
 - Extend `FluctuationBasis` metadata into backend-evaluated vector Lorentz
   traces, real/complex coefficient placement, and SMEFT basis classifications.
 - Extend spenso/idenso lowering for remaining tensor contractions, generators,
@@ -316,5 +316,37 @@ Latest verified baseline before this compact rollover:
   - default preview and raw/internal-MS validation smoke checks passed:
     3 passed in 121.33s;
   - full pytest suite passed: 278 passed, 1 skipped in 293.51s. The skip is
+    the existing GammaLoop API import check because GammaLoop was not requested
+    in the current dependency manifest.
+
+## Current Slice: Loop-Momentum Metric Contractions
+
+- Added a pychete-specific idenso bridge for metric and Kronecker-delta
+  contractions of explicit loop-momentum numerator factors. The new
+  `simplify_pychete_loop_momentum_metrics(...)` adapter uses Symbolica
+  `Replacement` rules to contract:
+  - `Metric(mu, nu) * LoopMomentum(mu) -> LoopMomentum(nu)`;
+  - `Delta(mu, nu) * LoopMomentum(mu) -> LoopMomentum(nu)`;
+  - `LoopMomentum(mu) * LoopMomentum(mu) -> LoopMomentumSquared`.
+- Integrated the bridge into `simplify_index_algebra(..., metrics=True)` before
+  and after the native idenso metric simplifier. This keeps the pychete
+  `LoopMomentum(index)` head in the public expression representation while
+  still routing index-algebra cleanup through the idenso backend adapter.
+- Added focused backend tests for direct loop-momentum metric/delta contraction
+  and for the full `simplify_index_algebra` path.
+- Added an integration test through `SupertraceBlockTrace.simplify_index_algebra`
+  showing generated kernels with `Metric(mu, nu) * LoopMomentum(mu) *
+  LoopMomentum(nu)` reduce to `LoopMomentumSquared`.
+- Updated `AGENTS.md` to record the convention that pychete loop-momentum
+  metric contractions must go through the idenso adapter before vacuum-integral
+  evaluation.
+- Verification in this slice so far:
+  - targeted idenso loop-momentum contraction tests passed: 3 passed in 0.14s;
+  - `mypy` passed with no issues in 31 source files;
+  - full idenso backend plus fluctuation-operator integration files passed:
+    53 passed in 1.26s;
+  - default preview and raw/internal-MS validation smoke checks passed:
+    3 passed in 123.31s;
+  - full pytest suite passed: 281 passed, 1 skipped in 290.74s. The skip is
     the existing GammaLoop API import check because GammaLoop was not requested
     in the current dependency manifest.

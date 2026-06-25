@@ -108,6 +108,11 @@ Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator
 factors. Keep this lowering implemented as Symbolica replacement rules over
 `DifferentialOperator(...)`, then hand tensor numerator reduction to vakint
 where applicable.
+Metric and Kronecker-delta contractions involving pychete loop momenta must go
+through the idenso adapter. Use `simplify_pychete_loop_momentum_metrics(...)`
+or `simplify_index_algebra(..., metrics=True)` so expressions like
+`Metric(mu, nu) * LoopMomentum(mu) * LoopMomentum(nu)` reduce to
+`LoopMomentumSquared` before vacuum-integral evaluation.
 
 Internal pychete categories must not be stringly typed. Use explicit enum or
 Symbolica constants such as `FieldMassKind`, `BuiltinIndexType`, and the

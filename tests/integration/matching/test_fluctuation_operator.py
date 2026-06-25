@@ -1361,6 +1361,23 @@ def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch:
         assert_expr_equal(simplified_trace.expression, original.expression + 1)
 
 
+def test_supertrace_block_trace_contracts_loop_momentum_metrics_through_idenso_bridge() -> None:
+    theory = Theory("one_loop_setup_loop_momentum_metrics")
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+    nu = s.Index(s.dummy_index(1), s.Lorentz)
+    trace = SupertraceBlockTrace(
+        theory=theory,
+        name="metric_q_q",
+        blocks=(),
+        modes=(),
+        expression=S("x") * s.Metric(mu, nu) * s.LoopMomentum(mu) * s.LoopMomentum(nu),
+    )
+
+    simplified = trace.simplify_index_algebra(expand=False, gamma=False, color=False, dots=False)
+
+    assert_expr_equal(simplified.expression, S("x") * s.LoopMomentumSquared)
+
+
 def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> None:
     theory = Theory("one_loop_setup_vlf_projectors")
     heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
