@@ -764,7 +764,7 @@ def _negative_power_normalized_target(target: Expression) -> tuple[Expression, E
 
 
 def _wildcard_index_projection_coefficient(source: Expression, target: Expression) -> Expression | None:
-    pattern = _index_wildcard_projection_pattern(target)
+    pattern = _canonized_index_wildcard_projection_pattern(source, target)
     if pattern is None:
         return None
     marker = Expression.symbol("pychete::matching_projection_target")
@@ -772,11 +772,29 @@ def _wildcard_index_projection_coefficient(source: Expression, target: Expressio
     return rewritten.coefficient(marker).expand()
 
 
-def _index_wildcard_projection_pattern(target: Expression) -> Expression | None:
+def _canonized_index_wildcard_projection_pattern(source: Expression, target: Expression) -> Expression | None:
+    index_specs = _matching_projection_index_specs(source, (target,))
+    if not index_specs:
+        return None
+    try:
+        canon_target, external_indices, dummy_indices = target.canonize_tensors(index_specs)
+    except ValueError:
+        return _index_wildcard_projection_pattern(
+            target,
+            tuple(matching_subexpressions(target, index_pattern())),
+        )
+    canonical_indices = tuple(index for index, _group in (*external_indices, *dummy_indices))
+    return _index_wildcard_projection_pattern(canon_target, canonical_indices)
+
+
+def _index_wildcard_projection_pattern(
+    target: Expression,
+    indices: Sequence[Expression],
+) -> Expression | None:
     wildcard_labels: dict[str, Expression] = {}
     seen_indices: set[str] = set()
     pattern = target
-    for index in matching_subexpressions(target, index_pattern()):
+    for index in indices:
         label_key = canonical_string(index[0])
         if label_key not in wildcard_labels:
             wildcard_labels[label_key] = s.head(f"matching_projection_index_{len(wildcard_labels)}_")

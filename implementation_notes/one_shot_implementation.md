@@ -335,16 +335,41 @@
   active.
 - Extended `MatchingResult` coefficient extraction in two generic ways:
   numeric prefactors in target monomials are factored out before projection,
-  and the final indexed-target fallback builds a Symbolica wildcard pattern for
-  target index labels before replacing matched monomials by a temporary marker
-  and extracting its coefficient. This covers conjugate-representation label
-  pairs such as the `cHWB` generator slot without a Python tree matcher.
+  and the final indexed-target fallback now asks Symbolica
+  `Expression.canonize_tensors(...)` for the canonical target expression plus
+  returned external/dummy index lists before replacing those canonical target
+  indices by linked wildcards. Matched monomials are replaced by a temporary
+  marker and its coefficient is extracted natively. This covers
+  conjugate-representation label pairs such as the `cHWB` generator slot
+  without a Python tree matcher or a separate pychete dummy-index canonicalizer.
 - Updated the order-4 public CDE regression to include both `SU2L` and `U1Y`,
   register `cHW`, `cHB`, and `cHWB`, and assert all three projected Wilson
   conditions are nonzero.
 - Validation for this slice so far:
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_numeric_prefactor_normalized_targets tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_alpha_equivalent_conjugate_representation_indices tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_canonicalizes_mixed_su2_u1_field_strength_generator_bilinear tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_decodes_order_four_covariant_derivatives -q'`
     passed with 4 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 64 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "order_four_covariant_derivatives or metric_traced_field_strengths or vakint_tensors" -q'`
+    passed with 3 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
+### Canonical Tensor-Index Follow-Up
+
+- After the green mixed-field-strength commit, tightened the indexed-target
+  fallback to explicitly use Symbolica's `canonize_tensors` return values. The
+  previous implementation already ran after projection-source/target
+  canonicalization, but it built wildcards from every target index by scanning
+  the expression. The refined path now builds its pattern from the canonical
+  target and the canonical external/dummy index lists returned by Symbolica,
+  falling back to the scan only when native tensor canonicalization raises.
+- Focused validation for the follow-up:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_alpha_equivalent_conjugate_representation_indices tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_alpha_equivalent_index_contractions tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_numeric_prefactor_normalized_targets -q'`
+    passed with 4 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_decodes_order_four_covariant_derivatives -q'`
+    passed with 1 test.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_idenso_backend.py tests/integration/validation/test_numeric_probes.py -q'`
     passed with 64 tests.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "order_four_covariant_derivatives or metric_traced_field_strengths or vakint_tensors" -q'`

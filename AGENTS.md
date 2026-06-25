@@ -279,10 +279,13 @@ the surrounding Symbolica coefficient; the helper is only an index-orientation
 normalization over registered theory metadata.
 When projecting indexed targets with conjugate-representation label pairs, use
 the `MatchingResult` projection path rather than direct ad hoc coefficient
-calls. Its final fallback builds a Symbolica pattern by replacing target index
-labels with linked wildcards and then extracts the temporary marker
-coefficient natively, which covers CG targets such as `cHWB` where
-`Index(label, rep)` and `Index(label, Bar(rep))` must alpha-match together.
+calls. Its final fallback must use Symbolica's `Expression.canonize_tensors`
+return values: first get the canonical target expression together with the
+returned canonical external and dummy index lists, then replace those
+canonical target indices by linked wildcards and extract the temporary marker
+coefficient natively. This covers CG targets such as `cHWB`, where
+`Index(label, rep)` and `Index(label, Bar(rep))` must alpha-match together,
+without inventing a separate Python-side dummy-index canonicalizer.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
