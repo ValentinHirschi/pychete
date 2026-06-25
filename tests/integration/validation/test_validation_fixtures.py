@@ -403,6 +403,31 @@ def test_validation_fixture_preview_can_use_internal_integral_backend_without_ma
     preview.validate()
 
 
+def test_validation_fixture_preview_accepts_custom_internal_series_symbols_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    eps = S("fixture_custom_eps")
+    mu = S("fixture_custom_mubar2")
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL,
+        internal_tensor_reduce=False,
+        internal_combine_terms=True,
+        epsilon=eps,
+        mu_r_squared=mu,
+    )
+    evaluated = canonical_string(preview.expression("interaction_power_type_internal_integral_sum"))
+    pole = canonical_string(preview.expression("interaction_power_type_internal_integral_pole_part"))
+    finite = canonical_string(preview.expression("interaction_power_type_internal_integral_finite_part"))
+
+    assert "fixture_custom_eps" in evaluated
+    assert "fixture_custom_mubar2" in evaluated
+    assert "fixture_custom_eps" in pole
+    assert "fixture_custom_mubar2" not in pole
+    assert "fixture_custom_eps" not in finite
+    assert "fixture_custom_mubar2" in finite
+
+
 def test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend_without_mathematica() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
     reference_fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.matching_fixture.json"))
@@ -738,6 +763,42 @@ def test_validation_fixture_gap_report_can_evaluate_loop_functions_for_compariso
     assert raw_report.canonical_different_common_supertrace_names == ("loop",)
     assert transformed_report.canonical_equal_common_supertrace_names == ("loop",)
     assert transformed_report.canonical_different_common_supertrace_names == ()
+
+
+def test_validation_fixture_gap_report_forwards_internal_scale_controls(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    theory = fixture.theory()
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+    )
+    captured: dict[str, object] = {}
+    eps = S("fixture_gap_report_eps")
+    mu = S("fixture_gap_report_mubar2")
+    momentum = S("fixture_gap_report_q2")
+
+    def fake_preview(self: object, **kwargs: object) -> MatchingResult:
+        captured.update(kwargs)
+        return candidate
+
+    monkeypatch.setattr(type(fixture), "one_loop_preview", fake_preview)
+    fixture.one_loop_preview_gap_report(
+        candidate,
+        reference_name="scale_reference",
+        epsilon=eps,
+        mu_r_squared=mu,
+        loop_momentum_squared=momentum,
+        require_registered_mass=False,
+    )
+
+    assert captured["epsilon"] is eps
+    assert captured["mu_r_squared"] is mu
+    assert captured["loop_momentum_squared"] is momentum
+    assert captured["require_registered_mass"] is False
 
 
 def test_validation_fixture_gap_report_can_simplify_loop_functions_for_comparison(

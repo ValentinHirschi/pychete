@@ -4249,6 +4249,41 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 254 passed, 1
     skipped in 253.98s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Checked the new LF simplification comparison flag against the four real
+  default Matchete fixture reports. It does not currently change accepted
+  supertrace or matching-condition counts for `VLF_toy_model`,
+  `Singlet_Scalar_Extension`, `E_VLL`, or `S1S3LQs`, so it remains available as
+  a comparison tool but is not wired into the default frontier assertions yet.
+- Added validation fixture parity with public one-loop scale/regulator options:
+  - `ValidationFixture.one_loop_preview(...)` and
+    `one_loop_preview_gap_report(...)` now accept `epsilon`,
+    `mu_r_squared`, `loop_momentum_squared`, and `require_registered_mass`,
+    matching the controls already available through `OneLoopMatchOptions`;
+  - the fixture path passes these controls through to the corresponding
+    interaction-power backend calls, including pychete's internal analytic
+    integral evaluator and the vakint preview/minimal-subtraction routes;
+  - this lets Matchete fixture comparisons request a Matchete-style
+    renormalization scale symbol such as a model-owned `mubar2` when using the
+    internal analytic backend, instead of being locked to the default
+    `vakint::mursq` placeholder.
+- Verification for the validation fixture scale-control slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_accepts_custom_internal_series_symbols_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_internal_scale_controls
+    -q'` passed: 2 passed in 8.90s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 26
+    passed in 255.46s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 256 passed, 1
+    skipped in 263.32s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
