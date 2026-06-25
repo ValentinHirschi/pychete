@@ -3301,6 +3301,19 @@ def match_one_loop(
         max_trace_order=options.max_trace_order,
         include_light_only=options.include_light_only,
     )
+    tensor_network_cg_component_source: str | None = None
+    if options.evaluate_tensor_networks:
+        tensor_network_cg_component_source = _one_loop_tensor_network_component_source(theory, options)
+        setup = setup.evaluate_tensor_networks(
+            library=options.tensor_network_library,
+            cg_components_by_name=options.tensor_network_cg_components_by_name,
+            builtin_cg_components=options.tensor_network_builtin_cg_components,
+            native_hep_cg_builtins=options.tensor_network_native_hep_cg_builtins,
+            symbolic_cg_components=options.tensor_network_symbolic_cg_components,
+            function_library=options.tensor_network_function_library,
+            n_steps=options.tensor_network_n_steps,
+            mode=options.tensor_network_mode,
+        )
     selected_backend = OneLoopIntegralBackend.from_user(options.integral_backend)
     if selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_power_type_internal_matching_result(
@@ -3343,6 +3356,15 @@ def match_one_loop(
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
         )
+    result = replace(
+        result,
+        metadata={
+            **result.metadata,
+            "tensor_networks_evaluated": options.evaluate_tensor_networks,
+            "tensor_network_cg_component_source": tensor_network_cg_component_source,
+            "tensor_network_native_hep_cg_builtins": options.tensor_network_native_hep_cg_builtins,
+        },
+    )
     if matching_condition_targets is None:
         return result
     return result.with_projected_matching_conditions(
@@ -3350,3 +3372,21 @@ def match_one_loop(
         source=matching_condition_source,
         drop_zero=matching_condition_drop_zero,
     )
+
+
+def _one_loop_tensor_network_component_source(theory: Theory, options: OneLoopMatchOptions) -> str | None:
+    if options.tensor_network_cg_components_by_name is not None:
+        return "explicit"
+    if options.tensor_network_builtin_cg_components:
+        return "builtin"
+    if options.tensor_network_symbolic_cg_components:
+        return "symbolic"
+    from .backends import spenso
+
+    if spenso.has_stored_cg_tensor_components(theory):
+        return "stored"
+    if options.tensor_network_native_hep_cg_builtins:
+        return "native_hep"
+    if options.tensor_network_library is not None:
+        return "library"
+    return None

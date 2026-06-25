@@ -506,8 +506,6 @@ class ValidationFixture:
             else None
         )
         if use_public_match_api:
-            if evaluate_tensor_networks:
-                raise ValueError("use_public_match_api does not support fixture-local tensor-network evaluation")
             matched = self.theory().match(
                 self.expression(lagrangian),
                 eft_order=eft_order,
@@ -528,6 +526,15 @@ class ValidationFixture:
                     tensor_reduce_engine=vakint_engine,
                     combine_terms=internal_combine_terms,
                     max_pole_order=internal_max_pole_order,
+                    evaluate_tensor_networks=evaluate_tensor_networks,
+                    tensor_network_library=tensor_network_library,
+                    tensor_network_cg_components_by_name=tensor_network_cg_components_by_name,
+                    tensor_network_builtin_cg_components=tensor_network_builtin_cg_components,
+                    tensor_network_native_hep_cg_builtins=tensor_network_native_hep_cg_builtins,
+                    tensor_network_symbolic_cg_components=tensor_network_symbolic_cg_components,
+                    tensor_network_function_library=tensor_network_function_library,
+                    tensor_network_n_steps=tensor_network_n_steps,
+                    tensor_network_mode=tensor_network_mode,
                 ),
                 matching_condition_targets=projected_targets,
                 matching_condition_source=matching_condition_projection_source,
@@ -542,9 +549,6 @@ class ValidationFixture:
                     "fixture": self.name,
                     "fixture_kind": self.kind,
                     "lagrangian_expression": lagrangian,
-                    "tensor_networks_evaluated": False,
-                    "tensor_network_cg_component_source": None,
-                    "tensor_network_native_hep_cg_builtins": False,
                     "fixture_preview_source": "public_match_api",
                 },
             )

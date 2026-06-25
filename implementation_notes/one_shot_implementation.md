@@ -3748,6 +3748,52 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 225 passed, 1
     skipped in 226.54s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Promoted spenso tensor-network evaluation to the public one-loop match path:
+  - extended `OneLoopMatchOptions` with the existing tensor-network controls:
+    `evaluate_tensor_networks`, explicit CG component mappings, builtin/native
+    HEP/symbolic CG component modes, tensor-network library, function library,
+    step count, and execution mode;
+  - `match_one_loop(...)` now applies
+    `OneLoopSetup.evaluate_tensor_networks(...)` before backend integral
+    evaluation when requested, preserving the native spenso route through
+    pychete's `backends.spenso.evaluate_pychete_tensor_network(...)` adapter;
+  - public one-loop `MatchingResult.metadata` now records
+    `tensor_networks_evaluated`, `tensor_network_cg_component_source`, and
+    `tensor_network_native_hep_cg_builtins`, matching the fixture preview
+    metadata conventions;
+  - `ValidationFixture.one_loop_preview_gap_report(...,
+    use_public_match_api=True, evaluate_tensor_networks=True)` now routes the
+    same tensor-network options through `Theory.match(...)` instead of
+    rejecting that combination;
+  - added Mathematica-independent tests proving public `Theory.match` can
+    route generated kernels through spenso, forward library/function/step/mode
+    options, and automatically use stored sparse CG tensor components from the
+    committed `S1S3LQs` fixture.
+- Final verification for the public tensor-network one-loop options slice:
+  - inspected the spenso Python stubs for native `TensorLibrary.register`,
+    `TensorLibrary.hep_lib`, `TensorLibrary.hep_lib_atom`,
+    `TensorNetwork.execute`, and `TensorNetwork.result_scalar`;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py -q'` passed: 11
+    passed in 0.28s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_public_one_loop_match_can_evaluate_fixture_tensor_networks_with_stored_cg_components
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_project_conditions_through_public_match_api
+    -q'` passed: 2 passed in 32.22s;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 227 passed, 1
+    skipped in 252.05s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

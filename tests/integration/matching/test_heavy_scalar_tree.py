@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import pytest
-from symbolica import Expression
+from symbolica import Expression, S
 
 from pychete import (
     FieldMassKind,
@@ -12,8 +12,14 @@ from pychete import (
     canonical_string,
     s,
 )
+from pychete.backends import spenso as spenso_backend
 
 from tests.conftest import assert_expr_equal
+
+
+class FakeTensorNetwork:
+    def __init__(self, expr: Expression) -> None:
+        self.expr = expr
 
 
 def _heavy_scalar_theory() -> tuple[Theory, object, object, object]:
@@ -148,6 +154,53 @@ def test_one_loop_match_options_select_backend_and_trace_order() -> None:
     assert result.metadata["integral_backend"] == "pychete_internal"
     assert result.metadata["tensor_reduce"] is False
     assert result.metadata["combine_terms"] is True
+
+
+def test_one_loop_match_options_route_public_match_through_spenso(monkeypatch: pytest.MonkeyPatch) -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    calls: list[tuple[Expression, object | None, object | None, int | None, object | None]] = []
+
+    def fake_evaluate_tensor_network(
+        expr: Expression,
+        *,
+        library: object | None = None,
+        function_library: object | None = None,
+        n_steps: int | None = None,
+        mode: object | None = None,
+    ) -> FakeTensorNetwork:
+        calls.append((expr, library, function_library, n_steps, mode))
+        return FakeTensorNetwork(expr)
+
+    def fake_tensor_network_result_scalar(network: FakeTensorNetwork) -> Expression:
+        return S("tensor")(network.expr)
+
+    monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
+    monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            tensor_reduce=False,
+            evaluate_tensor_networks=True,
+            tensor_network_library="library",
+            tensor_network_function_library="functions",
+            tensor_network_n_steps=5,
+            tensor_network_mode="mode",
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert calls
+    assert calls[0][1:] == ("library", "functions", 5, "mode")
+    assert len(calls) == result.metadata["supertrace_kernel_count"]
+    assert result.metadata["tensor_networks_evaluated"] is True
+    assert result.metadata["tensor_network_cg_component_source"] == "library"
+    assert result.metadata["tensor_network_native_hep_cg_builtins"] is False
 
 
 def test_tree_match_rejects_matching_condition_targets() -> None:
