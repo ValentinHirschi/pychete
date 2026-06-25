@@ -45,6 +45,12 @@ class FakeKernelVakintEngine:
         return S("evaluated")(expr)
 
 
+class FakeScalarLoopMomentumVakintEngine(FakeKernelVakintEngine):
+    def tensor_reduce(self, expr: Expression) -> Expression:
+        self.calls.append(("tensor_reduce", expr, None))
+        return vakint_backend.loop_momentum(1, S("mu")) ** 2 * expr
+
+
 class FakeTensorNetwork:
     def __init__(self, expr: Expression) -> None:
         self.expr = expr
@@ -1324,6 +1330,21 @@ def test_one_loop_setup_can_evaluate_single_scale_integrals_internally() -> None
         vacuum_integrals_backend.evaluate_one_loop_single_scale_vakint_expression(S("reduced")(raw_interaction)),
     )
     assert tensor_reduce_engine.calls == [("tensor_reduce", raw_interaction, None)]
+
+
+def test_one_loop_internal_integral_evaluation_absorbs_tensor_reduced_scalar_loop_momentum() -> None:
+    theory = Theory("one_loop_setup_internal_scalar_loop_momentum")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) - y() * heavy() ** 3 / 6
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    raw_interaction = setup.interaction_power_type_vakint_integral_sum()
+    tensor_reduce_engine = FakeScalarLoopMomentumVakintEngine()
+
+    result = setup.interaction_power_type_internal_integral_sum(tensor_reduce_engine=tensor_reduce_engine)
+
+    assert tensor_reduce_engine.calls == [("tensor_reduce", raw_interaction, None)]
+    assert "vakint::k(" not in canonical_string(result)
 
 
 def test_one_loop_setup_simplifies_generated_kernels_through_idenso(monkeypatch: pytest.MonkeyPatch) -> None:

@@ -5,9 +5,9 @@ from typing import Any, Mapping, Sequence
 
 from symbolica import Expression, Replacement, S
 
-from ..expr import is_head, product_expr, sum_expr
+from ..expr import as_int, factors, is_head, pow_parts, product_expr, sum_expr
 from ..logging import get_logger, progress
-from ..symbols import s
+from ..symbols import canonical_string, s
 from .common import import_backend
 
 _LOGGER = get_logger("backends.vakint")
@@ -102,7 +102,24 @@ def propagator(
 def topology(propagators: Sequence[Expression]) -> Expression:
     """Build a vakint ``topo`` expression from propagator factors."""
 
-    return symbol("topo")(product_expr(propagators))
+    return collect_identical_propagators(symbol("topo")(product_expr(propagators)))
+
+
+def collect_identical_propagators(expr: Expression) -> Expression:
+    """Collect identical vakint propagator signatures inside all topologies.
+
+    Propagators with the same edge, momentum, and mass-squared signature are
+    represented as a single ``vakint::prop`` whose power is the sum of all
+    matching powers. Powered propagator factors are handled generically, so
+    ``prop(..., p)^n`` contributes ``n * p`` to the collected power.
+    """
+
+    pattern = _topology_pattern()
+
+    def collect_match(match: dict[Expression, Expression]) -> Expression:
+        return _collect_topology_propagators(pattern.replace_wildcards(match))
+
+    return expr.replace(pattern, collect_match)
 
 
 def one_loop_vacuum_topology(
@@ -151,6 +168,59 @@ def _combine_equal_mass_powers(
         else:
             combined.append((mass_squared, power))
     return tuple(combined)
+
+
+def _collect_topology_propagators(topology_expr: Expression) -> Expression:
+    if not is_head(topology_expr, symbol("topo")) or len(topology_expr) != 1:
+        return topology_expr
+    collected: dict[tuple[str, str, str], tuple[Expression, Expression, Expression, Expression, int]] = {}
+    passthrough: list[Expression] = []
+    for factor in factors(topology_expr[0]):
+        data = _propagator_factor_data(factor)
+        if data is None:
+            passthrough.append(factor)
+            continue
+        prop_id, edge_expr, momentum_expr, mass_squared, power = data
+        signature = (
+            canonical_string(edge_expr),
+            canonical_string(momentum_expr),
+            canonical_string(mass_squared),
+        )
+        if signature in collected:
+            existing_id, existing_edge, existing_momentum, existing_mass, existing_power = collected[signature]
+            collected[signature] = (
+                existing_id,
+                existing_edge,
+                existing_momentum,
+                existing_mass,
+                existing_power + power,
+            )
+        else:
+            collected[signature] = (prop_id, edge_expr, momentum_expr, mass_squared, power)
+    collected_props = tuple(
+        symbol("prop")(prop_id, edge_expr, momentum_expr, mass_squared, power)
+        for prop_id, edge_expr, momentum_expr, mass_squared, power in collected.values()
+        if power
+    )
+    return symbol("topo")(product_expr((*passthrough, *collected_props)))
+
+
+def _propagator_factor_data(factor: Expression) -> tuple[Expression, Expression, Expression, Expression, int] | None:
+    power_multiplier = 1
+    base = factor
+    parts = pow_parts(factor)
+    if parts is not None:
+        base, exponent = parts
+        n = as_int(exponent)
+        if n is None:
+            return None
+        power_multiplier = n
+    if not is_head(base, symbol("prop")) or len(base) != 5:
+        return None
+    power = as_int(base[4])
+    if power is None:
+        return None
+    return base[0], base[1], base[2], base[3], power * power_multiplier
 
 
 def new_alphaloop_method() -> Any:
@@ -246,7 +316,7 @@ def to_canonical(
 ) -> Expression:
     """Canonicalize a vakint integral expression with native vakint."""
 
-    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
+    integral_expression = _prepare_integral_expression(integral_expression)
     _raise_for_native_analytic_integral_scope(integral_expression)
     _LOGGER.debug("canonicalizing vakint expression with native engine")
     return _engine(engine).to_canonical(integral_expression, short_form)
@@ -259,7 +329,7 @@ def tensor_reduce(integral_expression: Expression, *, engine: Any | None = None)
     analytic handling of zero-mass or mixed-mass vacuum-integral topologies.
     """
 
-    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
+    integral_expression = _prepare_integral_expression(integral_expression)
     _LOGGER.debug("tensor-reducing vakint expression with native engine")
     return _engine(engine).tensor_reduce(integral_expression)
 
@@ -267,7 +337,7 @@ def tensor_reduce(integral_expression: Expression, *, engine: Any | None = None)
 def evaluate_integral(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Evaluate only the integral factor of a vakint expression."""
 
-    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
+    integral_expression = _prepare_integral_expression(integral_expression)
     _raise_for_native_analytic_integral_scope(integral_expression)
     _LOGGER.debug("evaluating vakint integral factor with native engine")
     return _engine(engine).evaluate_integral(integral_expression)
@@ -276,7 +346,7 @@ def evaluate_integral(integral_expression: Expression, *, engine: Any | None = N
 def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
     """Run vakint's complete tensor reduction and integral evaluation."""
 
-    integral_expression = lower_pychete_loop_momentum_numerators(integral_expression)
+    integral_expression = _prepare_integral_expression(integral_expression)
     _raise_for_native_analytic_integral_scope(integral_expression)
     _LOGGER.debug("evaluating vakint expression with native engine")
     return _engine(engine).evaluate(integral_expression)
@@ -285,6 +355,10 @@ def evaluate(integral_expression: Expression, *, engine: Any | None = None) -> E
 @cache
 def _pychete_loop_momentum_pattern() -> Expression:
     return s.LoopMomentum(s.LoopMomentumIndexWildcard)
+
+
+def _prepare_integral_expression(integral_expression: Expression) -> Expression:
+    return collect_identical_propagators(lower_pychete_loop_momentum_numerators(integral_expression))
 
 
 def _raise_for_native_analytic_integral_scope(integral_expression: Expression) -> None:
@@ -380,6 +454,7 @@ def finite_part(expr: Expression, *, epsilon: Expression | None = None) -> Expre
 
 __all__ = [
     "create_engine",
+    "collect_identical_propagators",
     "default_engine",
     "edge",
     "epsilon_coefficient",

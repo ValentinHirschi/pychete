@@ -501,12 +501,15 @@ def evaluate_one_loop_vakint_expression(
     nonzero masses are combined, and multiscale topologies are reduced to
     derivatives of single-scale massive integrals with respect to mass-squared
     variables. Tensor numerators should be reduced before this scalar
-    evaluation stage. When ``combine_terms`` is set, the evaluated result is
-    passed through Symbolica's native ``Expression.together()`` to expose
+    evaluation stage; remaining scalar native vakint products
+    ``k(loop, index)^(2 n)`` are absorbed as negative massless propagator
+    powers. When ``combine_terms`` is set, the evaluated result is passed
+    through Symbolica's native ``Expression.together()`` to expose
     cancellations across finite sums of loop functions.
     """
 
     _LOGGER.info("evaluating one-loop vakint expression with pychete analytic backend")
+    expr = absorb_vakint_scalar_loop_momentum_numerators(expr)
     pattern = _topology_pattern()
     for match in expr.match(pattern):
         _topology_data(pattern.replace_wildcards(match))
@@ -525,6 +528,37 @@ def evaluate_one_loop_vakint_expression(
         expr.replace(pattern, evaluate_topology).expand(),
         combine_terms=combine_terms,
     )
+
+
+def absorb_vakint_scalar_loop_momentum_numerators(expr: Expression) -> Expression:
+    """Convert native vakint scalar loop-momentum products to topology powers.
+
+    Native vakint tensor reduction can leave scalar numerator factors such as
+    ``vakint::k(1, i)^2`` multiplying a ``vakint::topo(...)``. pychete's
+    analytic one-loop evaluator already represents powers of ``k^2`` as
+    negative powers of the massless ``1/k^2`` propagator. This helper bridges
+    those two conventions with a Symbolica wildcard replacement.
+    """
+
+    pattern = _scalar_loop_momentum_topology_pattern()
+
+    def absorb_match(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        exponent = as_int(match[_scalar_loop_momentum_power_pattern()])
+        if exponent is None or exponent % 2:
+            return matched
+        massless_power = -exponent // 2
+        if massless_power == 0:
+            return _topology_pattern().replace_wildcards(match)
+        return vakint.symbol("topo")(
+            match[_topology_factors_pattern()]
+            * _absorbed_scalar_loop_momentum_propagator(
+                match[_scalar_loop_momentum_loop_pattern()],
+                massless_power,
+            )
+        )
+
+    return vakint.collect_identical_propagators(expr.expand().replace(pattern, absorb_match, repeat=True))
 
 
 def _finish_evaluated_expression(expr: Expression, *, combine_terms: bool) -> Expression:
@@ -1002,7 +1036,47 @@ def _topology_mass_powers(topology_expr: Expression) -> tuple[tuple[Expression, 
 
 
 def _topology_pattern() -> Expression:
-    return vakint.symbol("topo")(S("pychete_vakint_topology_factors_"))
+    return vakint.symbol("topo")(_topology_factors_pattern())
+
+
+def _topology_factors_pattern() -> Expression:
+    return S("pychete_vakint_topology_factors_")
+
+
+def _scalar_loop_momentum_topology_pattern() -> Expression:
+    return (
+        vakint.symbol("k")(
+            _scalar_loop_momentum_loop_pattern(),
+            _scalar_loop_momentum_index_pattern(),
+        )
+        ** _scalar_loop_momentum_power_pattern()
+        * _topology_pattern()
+    )
+
+
+def _scalar_loop_momentum_loop_pattern() -> Expression:
+    return S("pychete_vakint_loop_momentum_loop_")
+
+
+def _scalar_loop_momentum_index_pattern() -> Expression:
+    return S("pychete_vakint_loop_momentum_index_")
+
+
+def _scalar_loop_momentum_power_pattern() -> Expression:
+    return S("pychete_vakint_loop_momentum_power_")
+
+
+def _absorbed_scalar_loop_momentum_propagator(
+    loop_id: Expression,
+    power: int,
+) -> Expression:
+    return vakint.symbol("prop")(
+        0,
+        vakint.edge(),
+        vakint.symbol("k")(loop_id),
+        Expression.num(0),
+        power,
+    )
 
 
 def _propagator_pattern() -> Expression:
@@ -1026,6 +1100,7 @@ def _propagator_power_pattern() -> Expression:
 __all__ = [
     "canonize_loop_function",
     "canonize_loop_functions",
+    "absorb_vakint_scalar_loop_momentum_numerators",
     "epsilon_symbol",
     "evaluate_loop_functions",
     "evaluate_one_loop_single_scale_vakint_expression",

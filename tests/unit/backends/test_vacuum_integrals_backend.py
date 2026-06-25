@@ -422,6 +422,59 @@ def test_internal_vakint_expression_matches_matchete_massive_with_momentum_numer
     assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), expected)
 
 
+def test_absorb_vakint_scalar_loop_momentum_numerators_lowers_to_massless_power() -> None:
+    mass = S("m")
+    coeff = S("c")
+    index = S("mu")
+    expression = coeff * vakint.loop_momentum(1, index) ** 2 * vakint.one_loop_vacuum_topology((mass**2,))
+    expected = coeff * vakint.one_loop_vacuum_integral(
+        Expression.num(1),
+        (mass**2, Expression.num(0)),
+        powers=(1, -1),
+    )
+
+    absorbed = vacuum_integrals.absorb_vakint_scalar_loop_momentum_numerators(expression)
+
+    assert "vakint::k(1,python::mu)^2" not in canonical_string(absorbed)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_one_loop_vakint_expression(absorbed),
+        vacuum_integrals.evaluate_one_loop_vakint_expression(expected),
+    )
+
+
+def test_absorb_vakint_scalar_loop_momentum_numerators_handles_multiple_factors() -> None:
+    mass = S("m")
+    expression = (
+        vakint.loop_momentum(1, S("mu")) ** 2
+        * vakint.loop_momentum(1, S("nu")) ** 2
+        * vakint.one_loop_vacuum_topology((mass**2,))
+    )
+    expected = vakint.one_loop_vacuum_integral(
+        Expression.num(1),
+        (mass**2, Expression.num(0)),
+        powers=(1, -2),
+    )
+
+    absorbed = vacuum_integrals.absorb_vakint_scalar_loop_momentum_numerators(expression)
+
+    assert "vakint::k(1,python::mu)^2" not in canonical_string(absorbed)
+    assert "vakint::k(1,python::nu)^2" not in canonical_string(absorbed)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_one_loop_vakint_expression(absorbed),
+        vacuum_integrals.evaluate_one_loop_vakint_expression(expected),
+    )
+
+
+def test_internal_vakint_expression_absorbs_tensor_reduced_scalar_loop_momentum() -> None:
+    mass = S("m")
+    expression = vakint.loop_momentum(1, S("mu")) ** 2 * vakint.one_loop_vacuum_topology((mass**2,))
+    expected = vacuum_integrals.evaluate_one_loop_vakint_expression(
+        vakint.one_loop_vacuum_integral(Expression.num(1), (mass**2, Expression.num(0)), powers=(1, -1))
+    )
+
+    assert_expr_equal(vacuum_integrals.evaluate_one_loop_vakint_expression(expression), expected)
+
+
 def test_internal_vakint_expression_combines_matchete_mass_function_full_reduction_case() -> None:
     md = S("Md")
     mq = S("Mq")
@@ -506,7 +559,7 @@ def test_internal_vakint_expression_matches_matchete_mass_function_partial_reduc
         ),
         (
             vakint.one_loop_vacuum_integral(S("num"), (S("M") ** 2,), powers=(0,)),
-            "positive integers",
+            "at least one propagator",
         ),
     ],
 )

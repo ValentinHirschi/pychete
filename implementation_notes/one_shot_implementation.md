@@ -424,3 +424,56 @@ Latest verified baseline before this compact rollover:
   Future implementation slices should batch more related one-shot matching
   features before paying the full-suite validation cost, while still using
   targeted tests and focused smoke checks during the slice.
+
+## Current Slice: Scalar Loop-Momentum Numerator Absorption
+
+- Added general vakint topology propagator collection in
+  `pychete.backends.vakint.collect_identical_propagators(...)`. It rewrites
+  duplicate `vakint::prop(...)` factors with identical edge/momentum/mass
+  signatures into one propagator whose power is the sum of all matching powers.
+  Powered propagator factors contribute multiplicatively to that sum, so this
+  works for arbitrary integer prop powers rather than only square numerator
+  cases.
+- Integrated propagator collection into `vakint.topology(...)`, so standard
+  topology construction now canonicalizes duplicate signatures at creation.
+- Added
+  `pychete.backends.vacuum_integrals.absorb_vakint_scalar_loop_momentum_numerators(...)`.
+  It expands the expression enough to expose terms of the form
+  `vakint::k(loop_id, index)^(2*n) * vakint::topo(...)`, replaces those scalar
+  loop-momentum numerator powers by negative massless-propagator powers, and
+  then runs the general identical-propagator collection step.
+- `evaluate_one_loop_vakint_expression(...)` now calls this absorber before
+  validating/evaluating topologies. This lets pychete's internal analytic
+  integral backend consume scalar loop-momentum powers left by native vakint
+  tensor reduction instead of leaving residual `vakint::k(...)` numerators in
+  evaluated results.
+- Exported the absorber through `pychete.api` and package-root `pychete`.
+- Added focused tests for:
+  - duplicate vakint propagator signature collection;
+  - powered propagator factor collection;
+  - zero total power cancellation;
+  - direct vakint adapter calls collecting duplicate propagators before
+    handing expressions to native engines;
+  - scalar `vakint::k(...)^2` absorption into negative massless powers;
+  - multiple scalar numerator factors;
+  - the one-loop setup internal-integral path with a fake tensor reducer that
+    returns a scalar native vakint numerator.
+- Updated `AGENTS.md` and `one_shot_user.md` with the propagator-collection
+  convention and the user's instruction to batch larger future slices before
+  full-suite validation.
+- Verification in this slice so far:
+  - focused vakint/vacuum-integral backend tests passed: 58 passed in 3.90s;
+  - targeted one-loop setup scalar numerator absorption regression passed:
+    2 passed in 0.07s;
+  - combined focused backend plus integration regression passed twice, most
+    recently after direct vakint adapter collection was added: 60 passed in
+    4.32s;
+  - `mypy` passed with no issues in 32 source files;
+  - full fluctuation-operator integration plus targeted internal-MS/public API
+    validation checks passed: 44 passed in 13.19s;
+  - default one-loop target raw/internal-MS gap-report tests passed:
+    2 passed in 73.55s;
+  - `git diff --check` passed;
+  - full pytest passed: 296 passed, 1 skipped in 283.44s. The skipped test was
+    the GammaLoop API import check because the dependency manifest indicates
+    GammaLoop was not requested for this local dependency build.

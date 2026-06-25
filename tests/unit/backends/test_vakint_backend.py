@@ -189,6 +189,47 @@ def test_vakint_one_loop_vacuum_topology_combines_equal_mass_powers() -> None:
     assert canonical_string(integral) == canonical_string(S("numerator") * expected_topology)
 
 
+def test_vakint_collect_identical_propagators_sums_matching_signature_powers() -> None:
+    mass = S("M") ** 2
+    first = vakint.propagator(1, mass, power=3)
+    duplicate = vakint.propagator(99, mass, power=-1)
+    distinct = vakint.propagator(2, S("N") ** 2, power=4)
+    topology = vakint.symbol("topo")(first * duplicate * distinct)
+    expected = vakint.symbol("topo")(
+        vakint.propagator(1, mass, power=2) * vakint.propagator(2, S("N") ** 2, power=4)
+    )
+
+    assert canonical_string(vakint.collect_identical_propagators(topology)) == canonical_string(expected)
+
+
+def test_vakint_collect_identical_propagators_handles_powered_factors_and_zero_power() -> None:
+    mass = S("M") ** 2
+    first = vakint.propagator(1, mass, power=2)
+    inverse = vakint.propagator(2, mass, power=-6)
+    powered_topology = vakint.symbol("topo")(first**3)
+    canceled_topology = vakint.symbol("topo")(first**3 * inverse)
+
+    assert canonical_string(vakint.collect_identical_propagators(powered_topology)) == canonical_string(
+        vakint.symbol("topo")(vakint.propagator(1, mass, power=6))
+    )
+    assert canonical_string(vakint.collect_identical_propagators(canceled_topology)) == canonical_string(
+        vakint.symbol("topo")(Expression.num(1))
+    )
+
+
+def test_vakint_adapters_collect_identical_propagators_before_engine_call() -> None:
+    engine = FakeVakintEngine()
+    mass = S("M") ** 2
+    first = vakint.propagator(1, mass, power=1)
+    duplicate = vakint.propagator(9, mass, power=2)
+    expr = S("num") * vakint.symbol("topo")(first * duplicate)
+    expected = S("num") * vakint.symbol("topo")(vakint.propagator(1, mass, power=3))
+
+    vakint.tensor_reduce(expr, engine=engine)
+
+    assert canonical_string(engine.calls[0][1][0]) == canonical_string(expected)
+
+
 def test_vakint_adapters_delegate_numerical_operations_to_engine() -> None:
     engine = FakeVakintEngine()
     expr = S("series")

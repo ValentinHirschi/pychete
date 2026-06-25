@@ -2,6 +2,7 @@ from __future__ import annotations
 
 from .eft import operator_dimension, series_eft
 from .backends.vacuum_integrals import (
+    absorb_vakint_scalar_loop_momentum_numerators,
     canonize_loop_function,
     canonize_loop_functions,
     evaluate_loop_functions,
@@ -86,6 +87,7 @@ from .validation_fixtures import (
 
 __all__ = [
     "BuiltinIndexType",
+    "absorb_vakint_scalar_loop_momentum_numerators",
     "CGTensorDefinition",
     "CGTensorHandle",
     "CouplingHandle",

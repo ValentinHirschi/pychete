@@ -159,3 +159,10 @@ discoveries, dependency patches, blockers, and remaining work.
   convenience route. This does not soften the independence rule: pychete
   itself, normal pytest, and committed validation fixtures must remain fully
   Matchete- and Mathematica-independent.
+- Because full pytest is becoming slow, batch larger related implementation
+  slices before paying the full-suite validation cost. Use targeted tests and
+  focused smoke checks during the slice, then run full verification before
+  committing and pushing a green milestone.
+- In vakint topology handling, collect propagators with identical signatures
+  into a single propagator with the corrected summed power. This must be done
+  consistently for arbitrary integer powers, not only square numerator cases.

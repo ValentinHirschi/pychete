@@ -131,6 +131,16 @@ with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
 `LoopMomentumSquared` to native `vakint::k(loop_id, 1)^2`, matching the
 vakint tensor-reduction API.
+Vakint topology expressions must collect propagators with identical
+edge/momentum/mass signatures into a single `vakint::prop(...)` with the summed
+power. Use `pychete.backends.vakint.collect_identical_propagators(...)` rather
+than relying on repeated duplicate prop factors. This applies to all integer
+propagator powers, including powered prop factors and numerator-induced
+negative massless powers. Before pychete's internal analytic integral
+evaluation, convert remaining scalar native vakint factors
+`vakint::k(loop_id, index)^(2*n)` into negative powers of the massless
+propagator with
+`pychete.backends.vacuum_integrals.absorb_vakint_scalar_loop_momentum_numerators(...)`.
 Metric and Kronecker-delta contractions involving pychete loop momenta must go
 through the idenso adapter. Use `simplify_pychete_loop_momentum_metrics(...)`
 or `simplify_index_algebra(..., metrics=True)` so expressions like
