@@ -1411,6 +1411,7 @@ def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> N
 
     result = setup.interaction_power_type_matching_result()
     numerator = result.expression("interaction_power_type_supertrace[hFermion-lFermion,eft_numerator]")
+    open_chain_numerator = result.expression("interaction_power_type_supertrace[hFermion-lScalar,eft_numerator]")
 
     assert "pychete::eft_order_parameter" not in canonical_string(numerator)
     assert "pychete::PR^2" not in canonical_string(numerator)
@@ -1418,6 +1419,17 @@ def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> N
     assert_expr_equal(
         numerator,
         (s.PR * scalar() ** 2 * y() ** 2 + s.PL * scalar() ** 2 * s.Bar(y()) ** 2) / 2,
+    )
+    assert "pychete::NCM(" in canonical_string(open_chain_numerator)
+    assert canonical_string(s.NCM(s.Bar(light()), s.PR) ** 2) not in canonical_string(open_chain_numerator)
+    assert canonical_string(s.NCM(s.PL, light()) ** 2) not in canonical_string(open_chain_numerator)
+    assert_expr_equal(
+        open_chain_numerator,
+        (
+            y() ** 2 * s.NCM(s.Bar(light()), s.PR, s.Bar(light()), s.PR)
+            + s.Bar(y()) ** 2 * s.NCM(s.PL, light(), s.PL, light())
+        )
+        / 2,
     )
 
 

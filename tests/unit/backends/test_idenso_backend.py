@@ -126,6 +126,26 @@ def test_idenso_bridge_simplifies_pychete_dirac_products_inside_ncm() -> None:
     )
 
 
+def test_idenso_bridge_expands_bounded_ncm_powers_before_dirac_simplification() -> None:
+    left = S("left")
+    right = S("right")
+    x = S("x")
+    symbolic_power = S("n")
+
+    assert _same(
+        idenso.expand_pychete_ncm_powers(s.NCM(left, s.PR) ** 2),
+        s.NCM(left, s.PR, left, s.PR),
+    )
+    assert _same(
+        idenso.simplify_pychete_dirac_algebra(x * s.NCM(left, s.PR) ** 2),
+        x * s.NCM(left, s.PR, left, s.PR),
+    )
+    assert _same(
+        idenso.expand_pychete_ncm_powers(s.NCM(left, s.PR, right) ** symbolic_power),
+        s.NCM(left, s.PR, right) ** symbolic_power,
+    )
+
+
 def test_idenso_bridge_simplifies_registered_open_fermion_chains_through_native_gamma() -> None:
     theory = Theory("idenso_open_fermion_chain")
     left = theory.define_field("psi", s.Fermion)

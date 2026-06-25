@@ -188,6 +188,15 @@ EFT marker extraction, or NCM coefficient selection. Do not allow EFT markers
 or formal variation parameters to remain hidden inside tagged linear wrappers;
 pull them outside with native `coefficient_list(...)`/`replace_multiple(...)`
 logic before selecting operator dimensions or supertrace terms.
+Generated fermion traces must not leave powers such as `NCM(...)^2` in symbolic
+numerators. Before Dirac/idenso simplification and vakint lowering, use the
+central idenso adapter path, which first applies
+`pychete.backends.idenso.expand_pychete_ncm_powers(...)` to bounded positive
+integer powers of `NCM` and then delegates compact Dirac/projector words to the
+native idenso gamma simplifier. Do not try to reconstruct the ordering of
+arbitrary products of distinct `NCM` factors after Symbolica has seen them as
+commutative multiplication; only expand powers where the repeated
+noncommutative order is unambiguous.
 Matching-condition Wilson coefficients must be registered through
 `Theory.define_wilson_coefficient(...)` before any expression containing that
 symbol is parsed. Symbolica symbol data is fixed at creation time, so converters

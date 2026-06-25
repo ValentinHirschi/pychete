@@ -477,3 +477,45 @@ Latest verified baseline before this compact rollover:
   - full pytest passed: 296 passed, 1 skipped in 283.44s. The skipped test was
     the GammaLoop API import check because the dependency manifest indicates
     GammaLoop was not requested for this local dependency build.
+
+## Current Slice: Bounded NCM Power Expansion
+
+- Found another generated-fermion-trace artifact while inspecting VLF-style
+  traces: open noncommutative chains such as `NCM(Bar(psi), PR)^2` and
+  `NCM(PL, psi)^2` survived as commutative powers in the interaction-power
+  numerator. This is not a valid final representation for fermion-chain
+  algebra and blocks later idenso/Dirac simplification from seeing the explicit
+  noncommutative operand order.
+- Added `pychete.backends.idenso.expand_pychete_ncm_powers(...)`. It is a
+  bounded Symbolica replacement-rule pass over `NCM(...)^n` for positive
+  integer powers with unambiguous repeated order. Symbolic, non-positive, or
+  oversized powers are left unchanged.
+- Integrated this pass at the start of
+  `simplify_pychete_dirac_algebra(...)`, before projector and Dirac-product
+  lowering to native idenso. This keeps generated trace simplification in the
+  existing idenso adapter instead of adding ad hoc matching-pipeline logic.
+- Deliberately did not attempt to recover ordering for arbitrary products of
+  distinct `NCM` factors after Symbolica has represented them as commutative
+  multiplication. That remains a broader representation/design issue; this
+  slice only handles powers where the repeated order is clear.
+- Updated `AGENTS.md` with the new convention so future fermion-trace work uses
+  the central idenso adapter and does not leave `NCM(...)^n` artifacts in
+  numerators.
+- Added unit coverage for direct NCM-power expansion, symbolic-power fallback,
+  and the full `simplify_pychete_dirac_algebra(...)` path.
+- Extended the VLF-style projector integration test to assert that generated
+  `hFermion-lScalar` EFT numerators contain explicit `NCM` chains rather than
+  the previous `NCM(...)^2` powers.
+- Verification in this slice so far:
+  - idenso backend tests passed: 13 passed in 0.10s;
+  - focused VLF/projector and mixed-NCM tests passed with the idenso backend
+    file: 15 passed in 0.31s;
+  - broader fluctuation-operator plus default raw/internal-MS fixture gap-report
+    coverage passed: 44 passed in 78.11s;
+  - `mypy` passed with no issues in 32 source files;
+  - repeated targeted idenso/fluctuation/default gap-report gate passed:
+    57 passed in 75.95s;
+  - `git diff --check` passed;
+  - full pytest passed: 297 passed, 1 skipped in 322.15s. The skipped test was
+    the GammaLoop API import check because the dependency manifest indicates
+    GammaLoop was not requested for this local dependency build.

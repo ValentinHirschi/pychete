@@ -12,6 +12,7 @@ from ..symbols import SymbolRole, s
 
 _MAX_NATIVE_PROJECTOR_POWER = 16
 _MAX_NATIVE_DIRAC_WORD_ARITY = 8
+_MAX_NCM_POWER_EXPANSION_TOTAL_ARITY = 16
 
 
 def native_module():
@@ -116,12 +117,26 @@ def simplify_pychete_dirac_projectors(expr: Expression) -> Expression:
 def simplify_pychete_dirac_algebra(expr: Expression) -> Expression:
     """Simplify compact pychete Dirac words by delegating to native idenso."""
 
-    out = simplify_pychete_dirac_projectors(expr)
+    out = expand_pychete_ncm_powers(expr)
+    out = simplify_pychete_dirac_projectors(out)
     out = out.replace_multiple(_dirac_product_replacements())
     out = out.replace_multiple(_ncm_dirac_word_replacements())
     out = simplify_pychete_open_dirac_chains(out)
     out = out.replace_multiple(_mixed_ncm_dirac_subword_replacements())
     return simplify_pychete_dirac_projectors(out).expand()
+
+
+def expand_pychete_ncm_powers(expr: Expression) -> Expression:
+    """Expand bounded positive integer powers of pychete ``NCM`` chains.
+
+    Symbolica multiplication is commutative, while pychete encodes
+    noncommutative chains explicitly with the ``NCM`` head. Generated matrix
+    products can still produce powers such as ``NCM(a, b)^2``. Expand those
+    powers to ``NCM(a, b, a, b)`` before Dirac/idenso simplification. Symbolic,
+    non-positive, or oversized powers are left unchanged.
+    """
+
+    return expr.replace_multiple(_ncm_power_replacements()).expand()
 
 
 def simplify_pychete_open_dirac_chains(expr: Expression) -> Expression:
@@ -260,6 +275,22 @@ def _mixed_ncm_dirac_subword_replacements() -> tuple[Replacement, ...]:
 
 
 @cache
+def _ncm_power_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
+        wildcards = _dirac_word_wildcards("ncm_power", arity)
+        pattern = s.NCM(*wildcards) ** s.PowExponentWildcard
+        replacements.append(
+            Replacement(
+                pattern,
+                _ncm_power_replacement(pattern, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+@cache
 def _open_fermion_ncm_dirac_chain_replacements() -> tuple[Replacement, ...]:
     replacements: list[Replacement] = []
     for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
@@ -330,6 +361,25 @@ def _open_fermion_ncm_dirac_chain_replacement(
         )
 
     return replace_open_chain
+
+
+def _ncm_power_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_power(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        exponent = as_int(match[s.PowExponentWildcard])
+        if (
+            exponent is None
+            or exponent <= 0
+            or exponent * len(wildcards) > _MAX_NCM_POWER_EXPANSION_TOTAL_ARITY
+        ):
+            return matched
+        operands = tuple(match[wildcard] for wildcard in wildcards)
+        return s.NCM(*(operands * exponent))
+
+    return replace_power
 
 
 def _dirac_word_replacement(
@@ -600,6 +650,7 @@ __all__ = [
     "simplify_gamma",
     "simplify_index_algebra",
     "simplify_metrics",
+    "expand_pychete_ncm_powers",
     "simplify_pychete_dirac_algebra",
     "simplify_pychete_open_dirac_chains",
     "simplify_pychete_dirac_projectors",
