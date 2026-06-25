@@ -2087,6 +2087,46 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
         assert not bool(result.matching_conditions[target].expand() == Expression.num(0))
 
 
+def test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_projects_chd")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    wilson = define_smeft_wilson_coefficient(theory, "cHD")
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            max_trace_order=2,
+            bosonic_cde_trace_names=("hScalar-hScalar",),
+            bosonic_cde_max_total_order=2,
+            bosonic_cde_max_slot_order=2,
+            bosonic_cde_act_open_derivatives=True,
+            tensor_reduce=True,
+            combine_terms=False,
+            truncate_eft_result=False,
+        ),
+    )
+    target = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
+
+    assert result.metadata["interaction_bosonic_cde_internal_termwise_evaluation"] is True
+    assert result.metadata["matching_conditions_projected"] is True
+    assert set(result.matching_conditions) == {target}
+    assert not bool(result.matching_conditions[target].expand() == Expression.num(0))
+
+
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:
     theory = Theory("one_loop_setup_interaction_bosonic_cde_commutator")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")

@@ -1458,7 +1458,7 @@ class OneLoopSetup:
 
         from .backends import vakint, vacuum_integrals
 
-        raw = self.interaction_bosonic_cde_vakint_integral_sum(
+        terms = self.interaction_bosonic_cde_expansion_terms(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -1467,17 +1467,26 @@ class OneLoopSetup:
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         )
-        if tensor_reduce:
-            with progress("tensor-reducing CDE-expanded interaction integrals", logger=_LOGGER):
-                raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
-            raw = vakint.decode_pychete_namespace(self.theory, raw)
-        with progress("evaluating CDE-expanded scalar vacuum integrals", logger=_LOGGER):
-            return vacuum_integrals.evaluate_one_loop_vakint_expression(
-                raw,
-                epsilon=epsilon,
-                mu_r_squared=mu_r_squared,
-                combine_terms=combine_terms,
-            )
+        evaluated_terms: list[Expression] = []
+        with progress(
+            f"evaluating {len(terms)} CDE-expanded scalar vacuum integrals termwise",
+            logger=_LOGGER,
+        ):
+            for term in terms:
+                raw = term.vakint_integral_expression()
+                if tensor_reduce:
+                    raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+                    raw = vakint.decode_pychete_namespace(self.theory, raw)
+                evaluated_terms.append(
+                    vacuum_integrals.evaluate_one_loop_vakint_expression(
+                        raw,
+                        epsilon=epsilon,
+                        mu_r_squared=mu_r_squared,
+                        combine_terms=False,
+                    )
+                )
+        evaluated = sum_expr(evaluated_terms).expand()
+        return evaluated.together() if combine_terms else evaluated
 
     def operator_propagator_denominator_chain(
         self,
@@ -2346,6 +2355,7 @@ class OneLoopSetup:
                 "on_shell_reduced": False,
                 "integral_backend": "pychete_internal",
                 "tensor_reduce": tensor_reduce,
+                "interaction_bosonic_cde_internal_termwise_evaluation": True,
                 "combine_terms": combine_terms,
                 "uses_interaction_operator": True,
                 "uses_bosonic_cde_expansion": True,

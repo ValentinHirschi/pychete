@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
 from html import escape
@@ -15,6 +16,8 @@ from .expr import (
     cd_pattern,
     coupling_pattern,
     factors,
+    field_pattern,
+    field_strength_pattern,
     index_pattern,
     is_head,
     is_zero,
@@ -692,13 +695,18 @@ class _ProjectionCoefficientExtractor:
     source: Expression
     collected_source: Expression | None = None
     factored_source: Expression | None = None
+    filtered_sources: dict[
+        tuple[tuple[tuple[str, str, int], ...], ...],
+        Expression,
+    ] = field(default_factory=dict)
     wildcard_index_projection: bool = True
 
     def coefficient(self, target: Expression) -> Expression:
-        coefficient = self.source.coefficient(target).expand()
+        source = self._filtered_source(target)
+        coefficient = source.coefficient(target).expand()
         if not is_zero(coefficient) or not _is_composite_projection_target(target):
             return coefficient
-        collected = self._collected_source()
+        collected = self._collected_source(source)
         coefficient = collected.coefficient(target).expand()
         if not is_zero(coefficient):
             return coefficient
@@ -706,7 +714,7 @@ class _ProjectionCoefficientExtractor:
         coefficient = collected.coefficient(factored_target).expand()
         if not is_zero(coefficient):
             return coefficient
-        factored = self._factored_source()
+        factored = self._factored_source(source)
         coefficient = factored.coefficient(target).expand()
         if not is_zero(coefficient):
             return coefficient
@@ -730,15 +738,109 @@ class _ProjectionCoefficientExtractor:
         coefficient = self.coefficient(normalized_target)
         return (coefficient * denominator).expand()
 
-    def _collected_source(self) -> Expression:
-        if self.collected_source is None:
-            self.collected_source = self.source.collect_factors()
-        return self.collected_source
+    def _filtered_source(self, target: Expression) -> Expression:
+        if not _is_composite_projection_target(target):
+            return self.source
+        requirements = _projection_atom_requirement_groups(target)
+        if not requirements:
+            return self.source
+        try:
+            return self.filtered_sources[requirements]
+        except KeyError:
+            filtered = sum_expr(
+                term
+                for term in terms(self.source)
+                if _term_satisfies_projection_atom_requirements(term, requirements)
+            ).expand()
+            self.filtered_sources[requirements] = filtered
+            return filtered
 
-    def _factored_source(self) -> Expression:
-        if self.factored_source is None:
-            self.factored_source = self.source.factor()
-        return self.factored_source
+    def _collected_source(self, source: Expression) -> Expression:
+        if source is self.source:
+            if self.collected_source is None:
+                self.collected_source = self.source.collect_factors()
+            return self.collected_source
+        return source.collect_factors()
+
+    def _factored_source(self, source: Expression) -> Expression:
+        if source is self.source:
+            if self.factored_source is None:
+                self.factored_source = self.source.factor()
+            return self.factored_source
+        return source.factor()
+
+
+def _projection_atom_requirement_groups(target: Expression) -> tuple[tuple[tuple[str, str, int], ...], ...]:
+    return tuple(
+        group
+        for group in (_projection_atom_requirement_group(term) for term in terms(target))
+        if group
+    )
+
+
+def _projection_atom_requirement_group(target: Expression) -> tuple[tuple[str, str, int], ...]:
+    counts = _projection_atom_counts(target)
+    indexed_field_labels = _indexed_projection_field_labels(target)
+    powered_field_labels = _powered_projection_field_labels(target)
+    requirements: list[tuple[str, str, int]] = []
+    for (kind, label), count in sorted(counts.items()):
+        if kind != "field" or label not in powered_field_labels:
+            required_count = count
+        else:
+            cap = 3 if label in indexed_field_labels else 2
+            required_count = min(count, cap)
+        requirements.append((kind, label, required_count))
+    return tuple(requirements)
+
+
+def _indexed_projection_field_labels(target: Expression) -> set[str]:
+    indexed_labels: set[str] = set()
+    field_pat = field_pattern()
+    for match in target.match(field_pat):
+        indices = match[s.FieldIndicesWildcard]
+        if is_head(indices, s.List) and len(indices):
+            indexed_labels.add(canonical_string(match[s.FieldLabelWildcard]))
+    return indexed_labels
+
+
+def _powered_projection_field_labels(target: Expression) -> set[str]:
+    powered_labels: set[str] = set()
+    power_pat = s.PowBaseWildcard ** s.PowExponentWildcard
+    field_pat = field_pattern()
+    for match in target.match(power_pat):
+        base = match[s.PowBaseWildcard]
+        for field_match in base.match(field_pat):
+            powered_labels.add(canonical_string(field_match[s.FieldLabelWildcard]))
+    return powered_labels
+
+
+def _term_satisfies_projection_atom_requirements(
+    term: Expression,
+    requirements: Sequence[tuple[tuple[str, str, int], ...]],
+) -> bool:
+    counts = _projection_atom_counts(term)
+    return any(_counts_satisfy_projection_atom_requirement_group(counts, group) for group in requirements)
+
+
+def _counts_satisfy_projection_atom_requirement_group(
+    counts: Counter[tuple[str, str]],
+    group: Sequence[tuple[str, str, int]],
+) -> bool:
+    allowed_atoms = {(kind, label) for kind, label, _required_count in group}
+    return all(counts[(kind, label)] >= required_count for kind, label, required_count in group) and all(
+        atom in allowed_atoms for atom in counts
+    )
+
+
+def _projection_atom_counts(expr: Expression) -> Counter[tuple[str, str]]:
+    counts: Counter[tuple[str, str]] = Counter()
+    field_pat = field_pattern()
+    for match in expr.match(field_pat):
+        counts[("field", canonical_string(match[s.FieldLabelWildcard]))] += 1
+    strength_pat = field_strength_pattern()
+    for match in expr.match(strength_pat):
+        counts[("field_strength", canonical_string(match[s.FieldStrengthLabelWildcard]))] += 1
+    return counts
 
 
 def _numeric_factor_normalized_target(target: Expression) -> tuple[Expression, Expression] | None:

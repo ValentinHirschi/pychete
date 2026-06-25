@@ -408,6 +408,53 @@
     passed.
   - `git diff --check` passed.
 
+### Termwise CDE Evaluation And Target-Filtered Projection
+
+- Probed the next Higgs-sector CDE frontier after the `cHW/cHB/cHWB` and
+  registered-IBP projection slices. The one-insertion `hScalar` CDE source
+  contains two-Higgs derivative terms and field-strength structures, but it
+  cannot project quartic Higgs derivative Warsaw targets. The relevant source
+  for those terms is the two-insertion `hScalar-hScalar` trace at total CDE
+  derivative order 2.
+- A public `hScalar-hScalar` CDE run with tensor reduction and registered
+  Wilson projection initially hung. Lower-level inspection showed CDE term
+  generation was fast and the generated numerators contained the expected
+  quartic Higgs derivative structures. Tensor-reducing/evaluating the five
+  generated CDE terms independently returned quickly, while tensor-reducing
+  the monolithic summed topology did not.
+- Updated `OneLoopSetup.interaction_bosonic_cde_internal_integral_sum(...)` to
+  use generated `BosonicCDETraceExpansionTerm` objects as the backend boundary:
+  build each term's topology, optionally tensor-reduce it with vakint, decode
+  pychete namespaces, evaluate the scalar vacuum topology with pychete's
+  analytic backend, and only then sum all evaluated terms. Public result
+  metadata now records
+  `interaction_bosonic_cde_internal_termwise_evaluation=True`.
+- The next hotspot was registered Wilson projection on large composite targets.
+  Added a conservative source prefilter inside `_ProjectionCoefficientExtractor`
+  before native `Expression.coefficient(...)`: for each additive target term,
+  collect registered field and field-strength label requirements with
+  Symbolica patterns, keep source terms whose dynamical-label content can match
+  that target term, reject terms with extra field/field-strength labels, and
+  then delegate coefficient extraction to Symbolica. The filter is conservative
+  around powered field monomials, where pattern multiplicities do not directly
+  encode powers.
+- Added a public CDE regression for the two-insertion heavy-scalar/Higgs trace.
+  With `hScalar-hScalar`, total CDE order 2, tensor reduction, internal
+  analytic integral evaluation, and registered Wilson projection, pychete now
+  projects a nonzero `cHD` coefficient from the small model in about one
+  second. `cHBox` and `cH` remain zero in that focused source and are still part
+  of the broader Higgs-sector reduction frontier.
+- Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator -q'`
+    passed with 1 test.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "order_four_covariant_derivatives or two_insertion_higgs_derivative_operator or bosonic_cde_internal_tensor_reduction or metric_traced_field_strengths" -q'`
+    passed with 4 tests and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 37 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -421,11 +468,13 @@
     Wilson targets accepted.
 - Raising the Singlet trace order from 1 to 3 and enabling opt-in Abelian
   covariant-derivative expansion did not move the frontier.
-- Focused order-4 CDE now produces nonzero projected `cHW`, `cHB`, and `cHWB`
-  coefficients for the small heavy-scalar/Higgs/SU(2)xU(1) regression. The
-  default fixture frontier above has not yet been rerun after this slice;
-  rerun targeted fixture probes after the next feature slice materially changes
-  basis/on-shell reduction or generated sources.
+- Focused CDE regressions now produce nonzero projected `cHW`, `cHB`, `cHWB`,
+  and `cHD` coefficients for small heavy-scalar/Higgs models. The field-strength
+  targets come from the one-insertion order-4 `hScalar` source; `cHD` comes from
+  the two-insertion order-2 `hScalar-hScalar` source. The default fixture
+  frontier above has not yet been rerun after these slices; rerun targeted
+  fixture probes after the next feature slice materially changes basis/on-shell
+  reduction or generated sources.
 
 ## Current Remaining Work
 
@@ -433,9 +482,9 @@
   use the cyclic derivative/field-strength CDE output together with the
   interaction-power remainder, then add the needed EOM/IBP/Warsaw-basis
   reductions for remaining gauge/Higgs Wilson structures such as `cHBox`,
-  `cHD`, `cH`, and fermionic Higgs-current coefficients. `cHW`, `cHB`, and
-  `cHWB` now have focused nonzero order-4 CDE projections, but default fixture
-  parity has not yet been remeasured.
+  `cH`, and fermionic Higgs-current coefficients. `cHW`, `cHB`, `cHWB`, and
+  `cHD` now have focused nonzero CDE projections, but default fixture parity
+  has not yet been remeasured.
 - Extend idenso/spenso-backed group algebra beyond the current simple
   generator, Fierz, metric, structure-constant, and native generator-chain
   decode cases as fixture probes expose missing contractions.

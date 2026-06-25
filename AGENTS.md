@@ -140,6 +140,13 @@ For matching-condition extraction from large one-loop expressions, prefer
 target coefficient first with native `Expression.coefficient(...)`, then
 applies `series_eft(...)` to only `coefficient * target`, preserving total
 EFT-order semantics without forcing global expansion of the full result.
+Before calling native `Expression.coefficient(...)` on large composite
+matching targets, prefilter candidate source terms with Symbolica pattern
+matches over registered field and field-strength labels. The filter must be
+conservative: keep all terms whose field/field-strength label content can
+match one additive target term, reject terms with extra dynamical labels, and
+then delegate the actual coefficient extraction to Symbolica. Do not replace
+this with string filtering or a Python symbolic matcher.
 Registered Wilson-coefficient projection targets with stored operator metadata
 are allowed to use target-local integration-by-parts projection aliases
 automatically, because the stored operator is already a basis-level projection
@@ -298,6 +305,12 @@ with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
 `LoopMomentumSquared` to native `vakint::k(loop_id, 1)^2`, matching the
 vakint tensor-reduction API.
+For CDE-generated internal analytic evaluation, reduce and evaluate each
+generated `BosonicCDETraceExpansionTerm` independently before summing the
+result. Do not first build one monolithic CDE topology sum and then ask vakint
+to tensor-reduce the whole expression; multi-insertion traces such as
+`hScalar-hScalar` scale much better when the backend boundary is the generated
+CDE term.
 After native vakint tensor reduction or analytic evaluation, decode any public
 expression with `pychete.backends.vakint.decode_pychete_namespace(...)` before
 projection, simplification, or user-facing output. This must convert recognized
