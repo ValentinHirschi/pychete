@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterable
 
 from symbolica import Expression, Replacement
 from symbolica.core import AtomType
@@ -14,11 +14,13 @@ from .expr import (
     field_pattern,
     field_label,
     field_type,
+    field_derivatives,
     field_with_derivatives,
     is_bar_field,
     is_head,
     is_zero,
     list_items,
+    matching_subexpressions,
     product_expr,
     sum_expr,
     terms,
@@ -420,6 +422,111 @@ def eom_replacement_rule(
             f"contains {canonical_string(solve_for)} after coefficient extraction"
         )
     return Replacement(solve_for, (-remainder / coefficient).expand())
+
+
+def eom_replacement_rules_for_expression(
+    theory: Theory,
+    lagrangian: Expression,
+    expression: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    eft_order: int = 6,
+    variation: FieldVariation | str = FieldVariation.AUTO,
+    min_derivative_order: int = 2,
+    strict: bool = False,
+) -> tuple[Replacement, ...]:
+    """Build EOM replacement rules for derivative field atoms in ``expression``.
+
+    Candidate targets are collected with Symbolica pattern matching over
+    registered ``Field`` / ``Bar(Field)`` atoms. Each target is isolated through
+    :func:`eom_replacement_rule`, so the returned rules remain native
+    Symbolica ``Replacement`` objects suitable for ``replace_multiple``.
+    """
+
+    if min_derivative_order < 0:
+        raise ValueError("min_derivative_order must be non-negative")
+    theory._validate_registered_expression(expression)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    rules: list[Replacement] = []
+    failures: list[str] = []
+    for target in _eom_rule_targets(
+        expression,
+        allowed_labels=allowed_labels,
+        min_derivative_order=min_derivative_order,
+    ):
+        field = _eom_rule_base_field(target)
+        try:
+            rules.append(
+                eom_replacement_rule(
+                    theory,
+                    lagrangian,
+                    field,
+                    solve_for=target,
+                    eft_order=eft_order,
+                    variation=variation,
+                )
+            )
+        except ValueError as exc:
+            if strict:
+                failures.append(str(exc))
+    if failures:
+        raise ValueError("; ".join(failures))
+    return tuple(rules)
+
+
+def _eom_rule_allowed_field_labels(
+    theory: Theory,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,
+) -> set[str] | None:
+    if fields is None:
+        return None
+    return {canonical_string(_field_label_from_user(theory, field)) for field in fields}
+
+
+def _field_label_from_user(theory: Theory, field: FieldHandle | FieldDefinition | str | Expression) -> Expression:
+    if isinstance(field, str):
+        return theory.fields[field].label
+    if isinstance(field, FieldHandle):
+        return field.definition.label
+    if isinstance(field, FieldDefinition):
+        return field.label
+    base = bar_field_inner(field) if is_bar_field(field) else field
+    if not is_head(base, s.Field):
+        raise ValueError(f"EOM replacement field filter must be a Field expression, got {canonical_string(field)}")
+    return field_label(base)
+
+
+def _eom_rule_targets(
+    expression: Expression,
+    *,
+    allowed_labels: set[str] | None,
+    min_derivative_order: int,
+) -> tuple[Expression, ...]:
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    raw_targets = [
+        *matching_subexpressions(expression, bar_field_pattern(), label_is_registered_field),
+        *matching_subexpressions(expression, field_pattern(), label_is_registered_field),
+    ]
+    kept: dict[str, Expression] = {}
+    for target in raw_targets:
+        base = bar_field_inner(target) if is_bar_field(target) else target
+        if allowed_labels is not None and canonical_string(field_label(base)) not in allowed_labels:
+            continue
+        if len(field_derivatives(base)) < min_derivative_order:
+            continue
+        kept.setdefault(canonical_string(target), target)
+    return tuple(
+        sorted(
+            kept.values(),
+            key=lambda target: (0 if is_bar_field(target) else 1, canonical_string(target)),
+        )
+    )
+
+
+def _eom_rule_base_field(target: Expression) -> Expression:
+    if is_bar_field(target):
+        return s.Bar(field_with_derivatives(bar_field_inner(target), ()))
+    return field_with_derivatives(target, ())
 
 
 def eom_expression(theory: Theory, lagrangian: Expression, field: FieldHandle | FieldDefinition | str, *, eft_order: int = 6) -> Expression:

@@ -10,6 +10,7 @@ from pychete import (
     OneLoopMatchOptions,
     OneLoopNormalization,
     Theory,
+    VakintIntegralStage,
     canonical_string,
     one_loop_normalization_factor,
     s,
@@ -202,6 +203,42 @@ def test_one_loop_match_applies_on_shell_reduction_before_condition_projection()
     assert_expr_equal(result.on_shell_eft_lagrangian, Expression.num(0))
     assert_expr_equal(result.expression("on_shell_eft_lagrangian_after_reduction"), Expression.num(0))
     assert_expr_equal(result.matching_conditions["g2_phi2"], Expression.num(0))
+
+
+def test_one_loop_match_generates_eom_replacements_before_condition_projection() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    source = theory.define_coupling("J", self_conjugate=True)
+    coefficient = theory.define_coupling("c", self_conjugate=True)
+    mu = theory.dummy_index(0)
+    derivative_target = phi(derivatives=[mu, mu])
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    eom_lagrangian = theory.free_lag(phi) + source() * phi()
+    engine = FakePoleVakintEngine(coefficient() * phi() * derivative_target)
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=engine,
+            on_shell_eom_lagrangian=eom_lagrangian,
+            on_shell_eom_fields=[phi],
+            on_shell_eom_strict=True,
+        ),
+        matching_condition_targets={"c_phi": coefficient() * phi()},
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["on_shell_reduced"] is True
+    assert result.metadata["on_shell_eom_reduction_requested"] is True
+    assert result.metadata["on_shell_eom_reduction_rule_count"] == 1
+    assert result.metadata["matching_conditions_projected"] is True
+    assert_expr_equal(result.off_shell_eft_lagrangian, coefficient() * phi() * derivative_target)
+    assert_expr_equal(result.on_shell_eft_lagrangian, coefficient() * phi() * source())
+    assert_expr_equal(result.matching_conditions["c_phi"], source())
 
 
 def test_one_loop_match_options_select_backend_and_trace_order() -> None:

@@ -440,3 +440,36 @@
   - `pytest tests/unit/functional/test_scalar_eom.py tests/integration/validation/test_numeric_probes.py::test_matching_result_applies_theory_eom_replacement_before_projection tests/unit/definitions/test_public_api.py -q`:
     19 passed.
   - `python -m mypy`: success, no issues in 33 source files.
+
+## Current Slice: Automatic EOM Rule Generation For One-Loop On-Shell Reduction
+
+- Extended the previous exact EOM replacement helper into a Symbolica-match
+  driven rule-generation path. `Theory.eom_replacement_rules_for_expression(...)`
+  now scans a source expression for registered `Field(...)` and `Bar(Field(...))`
+  derivative atoms using `matching_subexpressions(...)` with field-tag
+  restrictions, filters by optional field handles and derivative order, and
+  isolates each candidate through the existing native
+  `Expression.coefficient(...)` EOM helper.
+- Added `OneLoopMatchOptions.on_shell_eom_lagrangian`,
+  `on_shell_eom_fields`, `on_shell_eom_min_derivative_order`, and
+  `on_shell_eom_strict`. When supplied, `match_one_loop(...)` generates EOM
+  replacement rules from the evaluated on-shell expression and applies them
+  with `MatchingResult.with_on_shell_reduction(...)` before matching-condition
+  projection. This gives the one-loop pipeline a first automatic EOM reduction
+  path while preserving explicit manual `on_shell_replacements`.
+- The implementation remains Symbolica-first: target discovery uses Symbolica
+  pattern matching over tagged field heads, isolation uses Symbolica
+  coefficient extraction, and reduction uses `Expression.replace_multiple(...)`.
+  Python only orchestrates candidate ordering, filtering, and metadata.
+- Added regressions covering:
+  - automatic collection of derivative targets from an expression with a field
+    filter and strict isolation;
+  - public docstring coverage for
+    `Theory.eom_replacement_rules_for_expression`;
+  - a `Theory.match(..., loop_order=1)` path where an evaluated one-loop
+    backend emits a box term, `on_shell_eom_lagrangian` generates the rule, and
+    matching-condition projection sees the reduced expression.
+- Targeted validation for this slice:
+  - `pytest tests/unit/functional/test_scalar_eom.py tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_generates_eom_replacements_before_condition_projection tests/integration/validation/test_numeric_probes.py::test_matching_result_applies_theory_eom_replacement_before_projection tests/unit/definitions/test_public_api.py -q`:
+    21 passed.
+  - `python -m mypy`: success, no issues in 33 source files.

@@ -56,6 +56,31 @@ def test_eom_replacement_rule_rejects_absent_targets() -> None:
         theory.eom_replacement_rule(lagrangian, phi, solve_for=chi(derivatives=[mu, mu]))
 
 
+def test_eom_replacement_rules_for_expression_collects_derivative_targets_with_symbolica_match() -> None:
+    theory = Theory("phi4_eom_rules_for_expr")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    chi = theory.define_field("chi", s.Scalar, self_conjugate=True, mass=0)
+    source = theory.define_coupling("J", self_conjugate=True)
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+
+    lagrangian = theory.free_lag(phi, chi) + source() * phi()
+    target = phi(derivatives=[mu, mu])
+    ignored = chi(derivatives=[nu, nu])
+    expression = phi() * target + chi() * ignored
+
+    rules = theory.eom_replacement_rules_for_expression(
+        lagrangian,
+        expression,
+        fields=[phi],
+        min_derivative_order=2,
+        strict=True,
+    )
+
+    assert len(rules) == 1
+    assert_expr_equal(expression.replace_multiple(rules), phi() * (source() - theory.coupling_handle("m")() ** 2 * phi()) + chi() * ignored)
+
+
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:
     theory = Theory("cd_product_power")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

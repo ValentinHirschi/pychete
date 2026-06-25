@@ -24,7 +24,7 @@ from .expr import (
     product_expr,
     sum_expr,
 )
-from .functional import derive_eom, partial_functional_derivative
+from .functional import derive_eom, eom_replacement_rules_for_expression, partial_functional_derivative
 from .logging import get_logger, progress
 from .matching_options import (
     OneLoopIntegralBackend,
@@ -3788,6 +3788,31 @@ def match_one_loop(
         result = result.with_on_shell_reduction(
             options.on_shell_replacements,
             repeat=options.on_shell_replacement_repeat,
+        )
+    if options.on_shell_eom_lagrangian is not None:
+        eom_rules = eom_replacement_rules_for_expression(
+            theory,
+            options.on_shell_eom_lagrangian,
+            result.on_shell_eft_lagrangian,
+            fields=options.on_shell_eom_fields,
+            eft_order=eft_order,
+            min_derivative_order=options.on_shell_eom_min_derivative_order,
+            strict=options.on_shell_eom_strict,
+        )
+        if eom_rules:
+            result = result.with_on_shell_reduction(
+                eom_rules,
+                repeat=options.on_shell_replacement_repeat,
+            )
+        result = replace(
+            result,
+            metadata={
+                **result.metadata,
+                "on_shell_eom_reduction_requested": True,
+                "on_shell_eom_reduction_rule_count": len(eom_rules),
+                "on_shell_eom_min_derivative_order": options.on_shell_eom_min_derivative_order,
+                "on_shell_eom_strict": options.on_shell_eom_strict,
+            },
         )
     if matching_condition_targets is None:
         _log_one_loop_result(result)

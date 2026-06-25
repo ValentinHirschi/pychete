@@ -1141,6 +1141,39 @@ class Theory:
             variation=variation,
         )
 
+    def eom_replacement_rules_for_expression(
+        self,
+        lagrangian: Expression,
+        expression: Expression,
+        *,
+        fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+        eft_order: int = 6,
+        variation: FieldVariation | str = FieldVariation.AUTO,
+        min_derivative_order: int = 2,
+        strict: bool = False,
+    ) -> tuple[Replacement, ...]:
+        """Return EOM replacement rules for derivative fields in an expression.
+
+        Derivative targets are discovered with Symbolica pattern matching over
+        registered ``Field`` and ``Bar(Field)`` atoms. Each target is then
+        isolated from the corresponding Euler-Lagrange equation with native
+        Symbolica coefficient extraction. By default targets that cannot be
+        isolated are skipped; set ``strict=True`` to raise instead.
+        """
+
+        from .functional import eom_replacement_rules_for_expression
+
+        return eom_replacement_rules_for_expression(
+            self,
+            lagrangian,
+            expression,
+            fields=fields,
+            eft_order=eft_order,
+            variation=variation,
+            min_derivative_order=min_derivative_order,
+            strict=strict,
+        )
+
     def solve_heavy_scalar_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyScalarSolution]:
         """Solve heavy scalar equations of motion order by order.
 

@@ -72,6 +72,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "free_lag",
             "derive_eom",
             "eom_replacement_rule",
+            "eom_replacement_rules_for_expression",
             "solve_heavy_scalar_eoms",
             "fluctuation_basis",
             "fluctuation_operator",

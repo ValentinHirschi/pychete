@@ -80,7 +80,11 @@ class OneLoopMatchOptions:
     The defaults preserve pychete's current public one-loop preview: an
     interaction-power internal minimal-subtraction result, no native vakint
     tensor reduction, and a native Symbolica ``together()`` combine pass after
-    pychete's analytic one-loop integral evaluation.
+    pychete's analytic one-loop integral evaluation. Optional on-shell
+    reductions are expressed as native Symbolica replacement rules, either
+    supplied directly through ``on_shell_replacements`` or generated from
+    ``on_shell_eom_lagrangian`` by matching derivative field targets in the
+    evaluated one-loop result.
     """
 
     max_trace_order: int = 2
@@ -102,6 +106,10 @@ class OneLoopMatchOptions:
     epsilon: Expression | None = None
     mu_r_squared: Expression | None = None
     on_shell_replacements: OnShellReplacementInput = None
+    on_shell_eom_lagrangian: Expression | None = None
+    on_shell_eom_fields: Sequence[Any] | None = None
+    on_shell_eom_min_derivative_order: int = 2
+    on_shell_eom_strict: bool = False
     on_shell_replacement_repeat: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True
