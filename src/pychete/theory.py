@@ -3,7 +3,7 @@ from __future__ import annotations
 import json
 from html import escape
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable
+from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 from symbolica import Expression, S
 
@@ -911,23 +911,45 @@ class Theory:
             include_light_only=include_light_only,
         )
 
-    def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int = 0) -> Expression | MatchingResult:
+    def match(
+        self,
+        lagrangian: Expression,
+        *,
+        eft_order: int = 6,
+        loop_order: int = 0,
+        matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | None = None,
+        matching_condition_source: str = "on_shell_eft_lagrangian",
+        matching_condition_drop_zero: bool = False,
+    ) -> Expression | MatchingResult:
         """Match a Lagrangian through the requested loop order.
 
         ``loop_order=0`` preserves pychete's existing tree-level heavy-scalar
         matching behavior and returns an expression. ``loop_order=1`` returns
         the current internal-analytic, minimal-subtraction one-loop
         ``MatchingResult`` and keeps ``metadata["complete"]`` false until the
-        full Matchete-level engine is implemented.
+        full Matchete-level engine is implemented. If
+        ``matching_condition_targets`` is supplied for ``loop_order=1``, the
+        returned result projects those matching conditions from
+        ``matching_condition_source`` using native Symbolica coefficient
+        extraction.
         """
 
         from .matching import match_one_loop
         from .tree_matching import match_tree
 
         if loop_order == 0:
+            if matching_condition_targets is not None:
+                raise ValueError("matching_condition_targets requires loop_order=1")
             return match_tree(self, lagrangian, eft_order=eft_order)
         if loop_order == 1:
-            return match_one_loop(self, lagrangian, eft_order=eft_order)
+            return match_one_loop(
+                self,
+                lagrangian,
+                eft_order=eft_order,
+                matching_condition_targets=matching_condition_targets,
+                matching_condition_source=matching_condition_source,
+                matching_condition_drop_zero=matching_condition_drop_zero,
+            )
         raise ValueError("loop_order must be 0 or 1")
 
     def _repr_latex_(self) -> str:

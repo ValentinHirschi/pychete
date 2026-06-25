@@ -3269,22 +3269,39 @@ def _block_matrix(block: FluctuationOperatorBlock) -> Matrix:
     return Matrix.from_nested(block.matrix)
 
 
-def match_one_loop(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> MatchingResult:
+def match_one_loop(
+    theory: Theory,
+    lagrangian: Expression,
+    *,
+    eft_order: int = 6,
+    matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | None = None,
+    matching_condition_source: str = "on_shell_eft_lagrangian",
+    matching_condition_drop_zero: bool = False,
+) -> MatchingResult:
     """Run the current internal-analytic one-loop matching pipeline.
 
     This returns an explicitly incomplete minimal-subtraction preview built
     from the interaction-only fluctuation operator and pychete's internal
     analytic scalar vacuum-integral backend. The result metadata carries
     ``complete=False`` until the remaining Matchete-level matching stages are
-    implemented and validated.
+    implemented and validated. Requested matching conditions are projected from
+    the selected result expression stage with native Symbolica coefficient
+    extraction.
     """
 
     theory._validate_registered_expression(lagrangian)
-    return one_loop_setup(
+    result = one_loop_setup(
         theory,
         lagrangian,
         eft_order=eft_order,
     ).interaction_power_type_internal_minimal_subtraction_result(
         tensor_reduce=False,
         combine_terms=True,
+    )
+    if matching_condition_targets is None:
+        return result
+    return result.with_projected_matching_conditions(
+        matching_condition_targets,
+        source=matching_condition_source,
+        drop_zero=matching_condition_drop_zero,
     )

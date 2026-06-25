@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import pytest
 from symbolica import Expression
 
 from pychete import FieldMassKind, MatchingResult, Theory, canonical_string, s
@@ -88,6 +89,41 @@ def test_one_loop_match_request_returns_incomplete_internal_minimal_subtraction_
         result.expression("interaction_power_type_internal_integral_finite_part"),
     )
     result.validate()
+
+
+def test_one_loop_match_can_project_requested_matching_conditions() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    unused = theory.define_coupling("unused", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    target = g() ** 2 * phi() ** 2
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        matching_condition_targets={
+            "g2_phi2": target,
+            "unused": unused(),
+        },
+        matching_condition_drop_zero=True,
+    )
+
+    assert isinstance(result, MatchingResult)
+    expected = result.on_shell_eft_lagrangian.coefficient(target).expand()
+    assert set(result.matching_conditions) == {"g2_phi2"}
+    assert_expr_equal(result.matching_conditions["g2_phi2"], expected)
+    assert canonical_string(expected) != "0"
+    assert result.metadata["matching_conditions_projected"] is True
+    assert result.metadata["matching_condition_projection_source"] == "on_shell_eft_lagrangian"
+    assert result.metadata["matching_condition_projection_count"] == 1
+
+
+def test_tree_match_rejects_matching_condition_targets() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+
+    with pytest.raises(ValueError, match="loop_order=1"):
+        theory.match(lagrangian, matching_condition_targets={"phi": phi()})
 
 
 def test_one_theory_can_match_two_lagrangians_without_cross_talk() -> None:
