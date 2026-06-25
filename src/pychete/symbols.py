@@ -539,6 +539,7 @@ class SymbolStore:
         "FreeLag",
         "LoopMomentum",
         "LoopMomentumSquared",
+        "FermionSlashMomentumMarker",
         "PropagatorDenominator",
         "SupertraceKernel",
         "DifferentialOperator",
@@ -691,6 +692,10 @@ class SymbolStore:
     @cached_property
     def LoopMomentumSquared(self) -> Expression:
         return self.head("loop_momentum_squared")
+
+    @cached_property
+    def FermionSlashMomentumMarker(self) -> Expression:
+        return self.head("fermion_slash_momentum_marker")
 
     @cached_property
     def HBar(self) -> Expression:

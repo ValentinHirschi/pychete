@@ -519,3 +519,46 @@ Latest verified baseline before this compact rollover:
   - full pytest passed: 297 passed, 1 skipped in 322.15s. The skipped test was
     the GammaLoop API import check because the dependency manifest indicates
     GammaLoop was not requested for this local dependency build.
+
+## Current Slice: Fermion Free-Inverse Recognition
+
+- Found that generated fermion kinetic entries such as
+  `Gamma(mu) * LoopMomentum(mu) - M` were not recognized as free inverse
+  propagators. As a result, heavy/light fermion modes had no operator-derived
+  denominator metadata and the Dirac kinetic expression could remain in
+  interaction blocks.
+- Added Symbolica replacement-rule recognition for fermion slash-momentum
+  entries. The matcher marks `Gamma(index) * LoopMomentum(index)` and
+  `DiracProduct(Gamma(index)) * LoopMomentum(index)` with the central
+  `FermionSlashMomentumMarker`, then uses native `coefficient_list(...)`
+  extraction to accept only linear `slash(q) +/- m` forms.
+- `propagator_denominator_entry(...)` now recognizes fermion kinetic entries
+  and returns scalar topology metadata
+  `PropagatorDenominator(LoopMomentumSquared, m^2)` while still validating
+  against registered field mass data when requested.
+- `free_inverse_entry(...)` now subtracts the original fermion Dirac kinetic
+  expression from interaction blocks instead of replacing it with a scalar
+  denominator inverse. This keeps the interaction matrix free of free kinetic
+  pieces without losing the scalar mass-squared slot needed for vacuum
+  topologies.
+- Added the reusable `FermionSlashMomentumMarker` symbol to the central
+  `SymbolStore`.
+- Added integration coverage for:
+  - direct heavy and light fermion denominator recognition;
+  - fermion free-inverse subtraction to zero in pure kinetic blocks;
+  - operator-derived denominator chains for `hFermion-lFermion` traces,
+    including both conjugate heavy and light fermion modes.
+- Updated `AGENTS.md` with the convention that fermion free inverse recognition
+  must separate Dirac kinetic structure from scalar topology denominator data.
+- Verification in this slice so far:
+  - focused fermion/scalar operator denominator tests passed:
+    3 passed in 0.34s;
+  - full fluctuation-operator plus default raw/internal-MS fixture gap-report
+    coverage passed: 45 passed in 70.10s;
+  - `mypy` passed with no issues in 32 source files;
+  - repeated targeted fluctuation/default gap-report gate passed:
+    45 passed in 73.54s;
+  - `git diff --check` passed;
+  - full pytest passed: 298 passed, 1 skipped in 308.46s. The skipped test was
+    the GammaLoop API import check because the dependency manifest indicates
+    GammaLoop was not requested for this local dependency build.

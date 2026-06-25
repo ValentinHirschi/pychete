@@ -126,6 +126,16 @@ Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator
 factors. Keep this lowering implemented as Symbolica replacement rules over
 `DifferentialOperator(...)`, then hand tensor numerator reduction to vakint
 where applicable.
+Fermion free inverse recognition must keep Dirac structure separate from scalar
+propagator topology data. Use Symbolica replacement rules to mark
+`Gamma(index) * LoopMomentum(index)` or
+`DiracProduct(Gamma(index)) * LoopMomentum(index)`, then native
+`coefficient_list(...)` extraction to recognize linear `slash(q) +/- m`
+kinetic entries. The propagator metadata should expose the scalar denominator
+`PropagatorDenominator(LoopMomentumSquared, m^2)`, while
+`free_inverse_entry(...)` subtracts the original Dirac kinetic expression from
+interaction blocks. Do not replace fermion free inverses by scalar
+`LoopMomentumSquared - m^2` expressions inside the interaction matrix.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

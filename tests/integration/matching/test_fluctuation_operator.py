@@ -240,6 +240,19 @@ def test_fluctuation_operator_linearizes_noncommutative_fermion_chains_without_f
         operator.momentum_entry(heavy, s.Bar(heavy())),
         s.Gamma(mu) * s.LoopMomentum(mu) - mass,
     )
+    heavy_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, mass**2)
+    light_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(0))
+    assert_expr_equal(operator.propagator_denominator_entry(heavy, s.Bar(heavy())), heavy_denominator)
+    assert_expr_equal(operator.propagator_denominator_entry(s.Bar(heavy()), heavy()), heavy_denominator)
+    assert_expr_equal(operator.propagator_denominator_for_mode(heavy()), heavy_denominator)
+    assert_expr_equal(operator.propagator_denominator_entry(light, s.Bar(light())), light_denominator)
+    assert_expr_equal(operator.propagator_denominator_for_mode(light()), light_denominator)
+    assert_expr_equal(
+        operator.free_inverse_entry(heavy, s.Bar(heavy())),
+        operator.momentum_entry(heavy, s.Bar(heavy())),
+    )
+    assert_expr_equal(operator.interaction_entry(heavy, s.Bar(heavy())), Expression.num(0))
+    assert_expr_equal(operator.interaction_entry(s.Bar(heavy()), heavy()), Expression.num(0))
 
 
 def test_open_differential_operators_lower_to_loop_momentum_numerators() -> None:
@@ -953,6 +966,37 @@ def test_one_loop_setup_builds_operator_derived_propagator_insertions() -> None:
     setup_map = setup.to_expression_map()
     assert any(key.startswith("one_loop_setup.supertrace_operator_propagator_kernel[") for key in setup_map)
     assert any(key.startswith("one_loop_setup.operator_vakint_integral[") for key in setup_map)
+
+
+def test_one_loop_setup_builds_operator_derived_fermion_propagator_insertions() -> None:
+    theory = Theory("one_loop_setup_operator_fermion_denominators")
+    heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("psi", s.Fermion, mass=0)
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    y = theory.define_coupling("y")
+    heavy_mass = theory.mass_expr(heavy.definition)
+    assert heavy_mass is not None
+    interaction = -y() * scalar() * s.NCM(s.Bar(light()), s.PR, heavy())
+    lagrangian = theory.free_lag(heavy, light, scalar) + interaction + s.Bar(interaction)
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    trace = next(trace for trace in setup.block_traces if trace.name == "hFermion-lFermion")
+    heavy_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)
+    light_denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(0))
+    expected_chain = ((heavy_denominator, heavy_denominator), (light_denominator, light_denominator))
+    expected_mass_chain = ((heavy_mass**2, heavy_mass**2), (Expression.num(0), Expression.num(0)))
+
+    assert setup.operator_propagator_denominator_chain(trace) == expected_chain
+    assert setup.operator_propagator_mass_squared_chain(trace) == expected_mass_chain
+    assert_expr_equal(
+        setup.operator_propagator_expression(trace),
+        s.SupertraceKernel(
+            trace.expression,
+            s.List(
+                s.List(heavy_denominator, heavy_denominator),
+                s.List(light_denominator, light_denominator),
+            ),
+        ),
+    )
 
 
 def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:

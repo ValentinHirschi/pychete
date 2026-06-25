@@ -6,7 +6,7 @@ from html import escape
 from itertools import product
 from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeAlias
 
-from symbolica import Expression, Matrix
+from symbolica import Expression, Matrix, Replacement
 
 from .eft import series_eft
 from .expr import (
@@ -2362,14 +2362,21 @@ class FluctuationOperator:
 
         row_expr = _fluctuation_basis_expression(self.theory, row)
         column_expr = _fluctuation_basis_expression(self.theory, column)
-        denominator = _momentum_entry_propagator_denominator(
-            self.momentum_entry(
-                row_expr,
-                column_expr,
-                loop_momentum_squared=loop_momentum_squared,
-            ),
+        row_mode = self.mode_for(row_expr)
+        momentum_entry = self.momentum_entry(
+            row_expr,
+            column_expr,
             loop_momentum_squared=loop_momentum_squared,
         )
+        denominator = _momentum_entry_propagator_denominator(
+            momentum_entry,
+            loop_momentum_squared=loop_momentum_squared,
+        )
+        if denominator is None and row_mode.statistics is FluctuationStatistics.FERMIONIC:
+            denominator = _fermion_momentum_entry_propagator_denominator(
+                momentum_entry,
+                loop_momentum_squared=loop_momentum_squared,
+            )
         if denominator is None or not require_registered_mass:
             return denominator
         if not _same_field_label(row_expr, column_expr):
@@ -2456,6 +2463,19 @@ class FluctuationOperator:
         row_mode = self.mode_for(row_expr)
         if canonical_string(column_expr) not in _free_inverse_column_keys(row_mode):
             return Expression.num(0)
+        momentum_entry = self.momentum_entry(
+            row_expr,
+            column_expr,
+            loop_momentum_squared=loop_momentum_squared,
+        )
+        if row_mode.statistics is FluctuationStatistics.FERMIONIC:
+            denominator = self.propagator_denominator_entry(
+                row_expr,
+                column_expr,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+            )
+            return Expression.num(0) if denominator is None else momentum_entry
         denominator = self.propagator_denominator_for_mode(
             row_expr,
             loop_momentum_squared=loop_momentum_squared,
@@ -2875,6 +2895,34 @@ def _momentum_entry_propagator_denominator(
     constant = _coefficient_of_momentum_power(expr, momentum_squared, 0)
     mass_squared = Expression.num(0) if constant is None else (-constant).expand()
     return s.PropagatorDenominator(momentum_squared, mass_squared)
+
+
+def _fermion_momentum_entry_propagator_denominator(
+    expr: Expression,
+    *,
+    loop_momentum_squared: Expression | None = None,
+) -> Expression | None:
+    momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+    marker = s.FermionSlashMomentumMarker
+    marked = expr.replace_multiple(_fermion_slash_momentum_replacements(marker)).expand()
+    momentum_coefficient = _coefficient_of_momentum_power(marked, marker, 1)
+    if momentum_coefficient is None:
+        return None
+    if not (bool(momentum_coefficient == Expression.num(1)) or bool(momentum_coefficient == -Expression.num(1))):
+        return None
+    if _has_unsupported_momentum_powers(marked, marker):
+        return None
+    constant = _coefficient_of_momentum_power(marked, marker, 0)
+    mass = Expression.num(0) if constant is None else constant.expand()
+    return s.PropagatorDenominator(momentum_squared, (mass**2).expand())
+
+
+def _fermion_slash_momentum_replacements(marker: Expression) -> tuple[Replacement, ...]:
+    index = s.LoopMomentumIndexWildcard
+    return (
+        Replacement(s.Gamma(index) * s.LoopMomentum(index), marker),
+        Replacement(s.DiracProduct(s.Gamma(index)) * s.LoopMomentum(index), marker),
+    )
 
 
 def _propagator_denominator_mass_squared(denominator: Expression) -> Expression:
