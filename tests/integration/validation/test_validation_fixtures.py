@@ -740,6 +740,51 @@ def test_validation_fixture_gap_report_can_evaluate_loop_functions_for_compariso
     assert transformed_report.canonical_different_common_supertrace_names == ()
 
 
+def test_validation_fixture_gap_report_can_simplify_loop_functions_for_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    m1 = S("fixture_gap_report_lf_m1")
+    m3 = S("fixture_gap_report_lf_m3")
+    loop_sum = (
+        vacuum_integrals.loop_function((m1, m3), (1, 1, 1))
+        + vacuum_integrals.loop_function((m1, m3), (2, 1, 0))
+        - vacuum_integrals.loop_function((m3, m1), (2, 1, 0))
+    )
+    simplified = 2 * vacuum_integrals.loop_function((m1, m3), (2, 1, 0))
+    candidate = MatchingResult(
+        theory=fixture.theory(),
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"loop_sum": loop_sum},
+    )
+    reference = MatchingResult(
+        theory=fixture.theory(),
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"loop_sum": simplified},
+    )
+
+    def fake_preview(self: object, **_kwargs: object) -> MatchingResult:
+        return candidate
+
+    monkeypatch.setattr(type(fixture), "one_loop_preview", fake_preview)
+
+    raw_report = fixture.one_loop_preview_gap_report(reference, reference_name="loop_sum_reference")
+    simplified_report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="loop_sum_reference",
+        simplify_loop_functions_for_comparison=True,
+    )
+
+    assert raw_report.canonical_equal_common_supertrace_names == ()
+    assert raw_report.canonical_different_common_supertrace_names == ("loop_sum",)
+    assert simplified_report.canonical_equal_common_supertrace_names == ("loop_sum",)
+    assert simplified_report.canonical_different_common_supertrace_names == ()
+
+
 def test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage() -> None:
     expected = {
         "VLF_toy_model": {

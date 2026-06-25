@@ -4217,6 +4217,38 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 253 passed, 1
     skipped in 251.29s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added loop-function simplification to validation comparison policy:
+  - `ValidationFixture.one_loop_preview_gap_report(...)` now accepts
+    `simplify_loop_functions_for_comparison=True`, composing the existing
+    comparison transform so finite `LoopFunction` sums can be simplified before
+    canonical comparison without forcing full analytic evaluation;
+  - the existing `evaluate_loop_functions_for_comparison=True` flag still works
+    and, when both flags are enabled, runs after simplification so future
+    Matchete fixture reports can choose either LF-form canonicalization or
+    fully evaluated finite expressions;
+  - the transform delegates to `vacuum_integrals.simplify_loop_functions(...)`
+    and `vacuum_integrals.evaluate_loop_functions(...)`, both of which use
+    Symbolica matching/replacement/coefficient primitives. The fixture layer
+    only composes comparison policy.
+- Verification for the validation comparison simplification slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_simplify_loop_functions_for_comparison
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_evaluate_loop_functions_for_comparison
+    -q'` passed: 2 passed in 0.08s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py
+    tests/integration/validation/test_numeric_probes.py -q'` passed: 39
+    passed in 249.40s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 254 passed, 1
+    skipped in 253.98s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -4255,9 +4287,9 @@ discoveries, dependency patches, blockers, and remaining work.
   scalar one-loop zero/mixed/single-scale and finite two-mass
   `LoopIntegration.wl` cases into broader loop-function behavior: higher
   numerator structures after tensor reduction, near-degenerate expansion
-  policies, and validation of the new sum-level LF simplifier on full matching
-  fixtures beyond the ported `SimplifyMassFunction` unit cases. Native vakint
-  remains available for topology-independent tensor reduction and supported
+  policies, and use of the new validation comparison LF simplifier on real
+  default matching fixture gaps where applicable. Native vakint remains
+  available for topology-independent tensor reduction and supported
   single-scale massive analytic evaluation cross-checks.
 - Extend the new endpoint-aware Dirac bridge into full pychete field-endpoint
   open-chain lowering. Current VLF previews no longer contain `der(...)`

@@ -532,6 +532,7 @@ class ValidationFixture:
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_drop_zero: bool = False,
         use_public_match_api: bool = False,
+        simplify_loop_functions_for_comparison: bool = False,
         evaluate_loop_functions_for_comparison: bool = False,
         comparison_combine_terms: bool = True,
     ) -> MatchingFixtureGapReport:
@@ -641,6 +642,7 @@ class ValidationFixture:
             probe_absolute_tolerance=probe_absolute_tolerance,
             probe_relative_tolerance=probe_relative_tolerance,
             comparison_expression_transform=_comparison_expression_transform(
+                simplify_loop_functions_for_comparison=simplify_loop_functions_for_comparison,
                 evaluate_loop_functions_for_comparison=evaluate_loop_functions_for_comparison,
                 comparison_combine_terms=comparison_combine_terms,
             ),
@@ -922,16 +924,28 @@ def _gap_report(
 
 def _comparison_expression_transform(
     *,
+    simplify_loop_functions_for_comparison: bool = False,
     evaluate_loop_functions_for_comparison: bool,
     comparison_combine_terms: bool,
 ) -> Callable[[Expression], Expression] | None:
-    if not evaluate_loop_functions_for_comparison:
+    if not simplify_loop_functions_for_comparison and not evaluate_loop_functions_for_comparison:
         return None
 
     from .backends import vacuum_integrals
 
     def transform(expr: Expression) -> Expression:
-        return vacuum_integrals.evaluate_loop_functions(expr, combine_terms=comparison_combine_terms)
+        transformed = expr
+        if simplify_loop_functions_for_comparison:
+            transformed = vacuum_integrals.simplify_loop_functions(
+                transformed,
+                combine_terms=comparison_combine_terms,
+            )
+        if evaluate_loop_functions_for_comparison:
+            transformed = vacuum_integrals.evaluate_loop_functions(
+                transformed,
+                combine_terms=comparison_combine_terms,
+            )
+        return transformed
 
     return transform
 
