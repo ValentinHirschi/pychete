@@ -172,6 +172,13 @@ Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator
 factors. Keep this lowering implemented as Symbolica replacement rules over
 `DifferentialOperator(...)`, then hand tensor numerator reduction to vakint
 where applicable.
+Public bosonic CDE matching requests must replace only the selected
+interaction-supertrace families by their CDE-expanded aggregate and must keep
+all unselected interaction-power trace families in the one-loop source. Use the
+`interaction_bosonic_cde_hybrid_*` setup methods for public `Theory.match(...)`
+and validation-fixture preview paths. The lower-level
+`interaction_bosonic_cde_*` methods intentionally remain pure selected-CDE
+diagnostics for inspecting generated kernels, terms, and backend expressions.
 Fermion free inverse recognition must keep Dirac structure separate from scalar
 propagator topology data. Use Symbolica replacement rules to mark
 `Gamma(index) * LoopMomentum(index)` or

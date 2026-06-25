@@ -115,9 +115,11 @@ class OneLoopMatchOptions:
     that trace. For generated plans, set ``bosonic_cde_max_total_order`` and
     optionally ``bosonic_cde_trace_names``/``bosonic_cde_max_slot_order``; the
     one-loop setup will enumerate all trace-slot derivative-order allocations
-    up to that bound. When explicit or generated CDE expansion is supplied,
-    backend selection and later on-shell/EFT post-processing use the
-    CDE-expanded aggregate instead of the older interaction-power aggregate.
+    up to that bound. When explicit or generated CDE expansion is supplied to
+    the public matcher, the selected trace families are replaced by their
+    CDE-expanded aggregate while unselected interaction-power traces remain in
+    the one-loop source. The lower-level ``interaction_bosonic_cde_*`` setup
+    methods still expose pure selected-CDE diagnostics.
     ``bosonic_cde_emit_covariant_derivative_commutators`` and
     ``bosonic_cde_expand_covariant_derivative_commutators`` apply the existing
     Symbolica replacement-rule commutator emitter/lowerer to CDE numerators

@@ -1770,7 +1770,9 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
         ),
     )
     assert isinstance(matched, MatchingResult)
-    assert matched.metadata["stage"] == "interaction_bosonic_cde_vakint_result"
+    assert matched.metadata["stage"] == "interaction_bosonic_cde_hybrid_vakint_result"
+    assert matched.metadata["interaction_bosonic_cde_hybrid"] is True
+    assert matched.metadata["uses_interaction_power_remainder"] is True
     assert matched.metadata["bosonic_cde_expansion_enabled"] is True
     assert matched.metadata["bosonic_cde_act_open_derivatives"] is True
     assert_expr_equal(matched.off_shell_eft_lagrangian, expected_acted_integral)
@@ -1815,6 +1817,7 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
     assert isinstance(planned_match, MatchingResult)
     assert planned_match.metadata["bosonic_cde_expansion_enabled"] is True
     assert planned_match.metadata["bosonic_cde_expansion_planned"] is True
+    assert planned_match.metadata["interaction_bosonic_cde_hybrid"] is True
     assert planned_match.metadata["interaction_bosonic_cde_trace_count"] == 1
     assert planned_match.metadata["interaction_bosonic_cde_plan_entry_count"] == 3
     assert planned_match.metadata["interaction_bosonic_cde_term_count"] == 3
@@ -1848,15 +1851,54 @@ def test_public_bosonic_cde_matching_projects_scalar_ncm_chains() -> None:
     )
 
     assert isinstance(result, MatchingResult)
-    assert result.metadata["stage"] == "interaction_bosonic_cde_internal_integral_result"
+    assert result.metadata["stage"] == "interaction_bosonic_cde_hybrid_internal_integral_result"
+    assert result.metadata["interaction_bosonic_cde_hybrid"] is True
     assert result.metadata["matching_conditions_projected"] is True
     assert result.metadata["matching_condition_projection_expand_source"] is False
     assert "pychete::NCM(" not in canonical_string(result.off_shell_eft_lagrangian)
     assert canonical_string(result.matching_conditions["phi2"]) != "0"
-    assert_expr_equal(
-        result.matching_conditions["phi2"],
-        result.off_shell_eft_lagrangian.collect_factors().coefficient(light() ** 2).expand(),
+    expected_phi2 = result.off_shell_eft_lagrangian.collect_factors().coefficient(light() ** 2).expand()
+    assert (result.matching_conditions["phi2"] - expected_phi2).together().format_plain() == "0"
+
+
+def test_public_bosonic_cde_matching_preserves_unselected_interaction_traces() -> None:
+    theory = Theory("one_loop_setup_interaction_bosonic_cde_hybrid")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(light)
+        - kappa() * heavy() ** 3 / 6
+        - y() * heavy() * light() ** 2 / 2
     )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    expansion = {"hScalar-lScalar": ((), ())}
+    selected_trace_names = ("hScalar-lScalar",)
+    remainder = setup.interaction_power_type_vakint_integral_sum(exclude_trace_names=selected_trace_names)
+    cde_replacement = setup.interaction_bosonic_cde_vakint_integral_sum(expansion)
+
+    assert canonical_string(remainder) != "0"
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            bosonic_cde_expansion_indices_by_trace=expansion,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["stage"] == "interaction_bosonic_cde_hybrid_vakint_result"
+    assert result.metadata["interaction_bosonic_cde_replaced_trace_names"] == ",".join(selected_trace_names)
+    assert result.metadata["interaction_power_type_remainder_contribution_count"] == (
+        setup.interaction_power_type_contribution_count - 1
+    )
+    assert "hScalar-lScalar" not in result.supertraces
+    assert "interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]" in result.supertraces
+    assert_expr_equal(result.off_shell_eft_lagrangian, (remainder + cde_replacement).expand())
 
 
 def test_single_block_bosonic_cde_acts_open_derivatives_cyclically() -> None:

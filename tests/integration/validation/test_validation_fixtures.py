@@ -563,7 +563,7 @@ def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathem
         eft_order=6,
         max_trace_order=2,
     )
-    expected = setup.interaction_bosonic_cde_matching_result(
+    expected = setup.interaction_bosonic_cde_hybrid_matching_result(
         expansion,
         act_open_derivatives=True,
     )
@@ -575,8 +575,9 @@ def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathem
         bosonic_cde_act_open_derivatives=True,
     )
 
-    assert preview.metadata["stage"] == "interaction_bosonic_cde_vakint_result"
+    assert preview.metadata["stage"] == "interaction_bosonic_cde_hybrid_vakint_result"
     assert preview.metadata["fixture"] == fixture.name
+    assert preview.metadata["interaction_bosonic_cde_hybrid"] is True
     assert preview.metadata["bosonic_cde_expansion_enabled"] is True
     assert preview.metadata["bosonic_cde_act_open_derivatives"] is True
     assert_expr_equal(preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
@@ -586,7 +587,7 @@ def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathem
         trace_names=("hScalar-lScalar",),
         max_total_order=0,
     )
-    expected_generated = setup.interaction_bosonic_cde_matching_result(generated_plan)
+    expected_generated = setup.interaction_bosonic_cde_hybrid_matching_result(generated_plan)
     generated_preview = fixture.one_loop_preview(
         max_trace_order=2,
         integral_backend=OneLoopIntegralBackend.VAKINT,
@@ -595,6 +596,7 @@ def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathem
     )
     assert generated_preview.metadata["bosonic_cde_expansion_enabled"] is True
     assert generated_preview.metadata["bosonic_cde_expansion_planned"] is True
+    assert generated_preview.metadata["interaction_bosonic_cde_hybrid"] is True
     assert generated_preview.metadata["interaction_bosonic_cde_plan_entry_count"] == 1
     assert_expr_equal(generated_preview.off_shell_eft_lagrangian, expected_generated.off_shell_eft_lagrangian)
     generated_preview.validate()

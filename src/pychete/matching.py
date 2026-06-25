@@ -1663,9 +1663,11 @@ class OneLoopSetup:
         heavy_field_dimension: bool = False,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
     ) -> tuple[PowerTypeSupertraceContribution, ...]:
         """Return EFT-truncated interaction-power contribution objects."""
 
+        excluded = set(exclude_trace_names)
         return tuple(
             PowerTypeSupertraceContribution(
                 theory=self.theory,
@@ -1677,6 +1679,7 @@ class OneLoopSetup:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
             )
+            if trace.name not in excluded
         )
 
     def power_type_expression_map(self, *, prefix: str = "power_type_supertrace") -> dict[str, Expression]:
@@ -1694,6 +1697,7 @@ class OneLoopSetup:
         heavy_field_dimension: bool = False,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
     ) -> dict[str, Expression]:
         """Return deterministic expressions for interaction-power contributions."""
 
@@ -1702,6 +1706,7 @@ class OneLoopSetup:
             heavy_field_dimension=heavy_field_dimension,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=exclude_trace_names,
         ):
             entries.update(contribution.to_expression_map(prefix=prefix))
         return entries
@@ -1720,6 +1725,7 @@ class OneLoopSetup:
         heavy_field_dimension: bool = False,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
     ) -> Expression:
         """Return the summed interaction-power off-shell contribution."""
 
@@ -1729,6 +1735,7 @@ class OneLoopSetup:
                 heavy_field_dimension=heavy_field_dimension,
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
+                exclude_trace_names=exclude_trace_names,
             )
         ).expand()
 
@@ -1941,6 +1948,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         short_form: bool | None = None,
         engine: Any | None = None,
@@ -1953,6 +1961,7 @@ class OneLoopSetup:
                 heavy_field_dimension=heavy_field_dimension,
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
+                exclude_trace_names=exclude_trace_names,
             )
         ).expand()
         selected = VakintIntegralStage.from_user(stage)
@@ -1979,6 +1988,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
         epsilon: Expression | None = None,
@@ -2000,6 +2010,7 @@ class OneLoopSetup:
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=exclude_trace_names,
         )
         if tensor_reduce:
             from .backends import vakint
@@ -2025,6 +2036,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
         short_form: bool | None = None,
         engine: Any | None = None,
@@ -2039,6 +2051,7 @@ class OneLoopSetup:
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=exclude_trace_names,
             stage=stage,
             short_form=short_form,
             engine=engine,
@@ -2052,6 +2065,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
         short_form: bool | None = None,
         engine: Any | None = None,
@@ -2067,6 +2081,7 @@ class OneLoopSetup:
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=exclude_trace_names,
             stage=stage,
             short_form=short_form,
             engine=engine,
@@ -2080,6 +2095,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         stage: VakintIntegralStage | str = VakintIntegralStage.EVALUATED,
         short_form: bool | None = None,
         engine: Any | None = None,
@@ -2094,6 +2110,7 @@ class OneLoopSetup:
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=exclude_trace_names,
             stage=stage,
             short_form=short_form,
             engine=engine,
@@ -2512,6 +2529,306 @@ class OneLoopSetup:
             },
         )
 
+    def interaction_bosonic_cde_hybrid_matching_result(
+        self,
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return interaction-power traces with selected traces replaced by CDE output."""
+
+        selected_trace_names = _cde_expansion_trace_names(expansion_indices_by_trace)
+        interaction_remainder = self.interaction_power_type_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            exclude_trace_names=selected_trace_names,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        cde_result = self.interaction_bosonic_cde_matching_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        result = _combine_bosonic_cde_hybrid_results(
+            interaction_remainder,
+            cde_result,
+            stage="interaction_bosonic_cde_hybrid_vakint_result",
+            selected_trace_names=selected_trace_names,
+            aggregate_expression_names=(
+                "interaction_bosonic_cde_hybrid_vakint_integral_sum",
+                f"interaction_bosonic_cde_hybrid_vakint_integral_sum[{VakintIntegralStage.from_user(vakint_stage).value}]",
+            ),
+        )
+        if VakintIntegralStage.from_user(vakint_stage) is VakintIntegralStage.EVALUATED:
+            from .backends import vakint
+
+            result = replace(
+                result,
+                supertraces={
+                    **result.supertraces,
+                    "interaction_bosonic_cde_hybrid_vakint_pole_part": vakint.pole_part(
+                        result.off_shell_eft_lagrangian,
+                        max_pole_order=max_pole_order,
+                        epsilon=epsilon,
+                    ),
+                    "interaction_bosonic_cde_hybrid_vakint_finite_part": vakint.finite_part(
+                        result.off_shell_eft_lagrangian,
+                        epsilon=epsilon,
+                    ),
+                },
+            )
+        return result
+
+    def interaction_bosonic_cde_hybrid_internal_matching_result(
+        self,
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the hybrid CDE/interaction result evaluated internally."""
+
+        from .backends import vakint
+
+        selected_trace_names = _cde_expansion_trace_names(expansion_indices_by_trace)
+        interaction_remainder = self.interaction_power_type_internal_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            exclude_trace_names=selected_trace_names,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        cde_result = self.interaction_bosonic_cde_internal_matching_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        result = _combine_bosonic_cde_hybrid_results(
+            interaction_remainder,
+            cde_result,
+            stage="interaction_bosonic_cde_hybrid_internal_integral_result",
+            selected_trace_names=selected_trace_names,
+            aggregate_expression_names=("interaction_bosonic_cde_hybrid_internal_integral_sum",),
+        )
+        return replace(
+            result,
+            supertraces={
+                **result.supertraces,
+                "interaction_bosonic_cde_hybrid_internal_integral_pole_part": vakint.pole_part(
+                    result.off_shell_eft_lagrangian,
+                    max_pole_order=max_pole_order,
+                    epsilon=epsilon,
+                ),
+                "interaction_bosonic_cde_hybrid_internal_integral_finite_part": vakint.finite_part(
+                    result.off_shell_eft_lagrangian,
+                    epsilon=epsilon,
+                ),
+            },
+        )
+
+    def interaction_bosonic_cde_hybrid_internal_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the hybrid internal result after minimal-subtraction pole removal."""
+
+        unrenormalized = self.interaction_bosonic_cde_hybrid_internal_matching_result(
+            expansion_indices_by_trace,
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = unrenormalized.expression("interaction_bosonic_cde_hybrid_internal_integral_pole_part")
+        finite = unrenormalized.expression("interaction_bosonic_cde_hybrid_internal_integral_finite_part")
+        counterterm = (-pole).expand()
+        return replace(
+            unrenormalized,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            supertraces={
+                **unrenormalized.supertraces,
+                "interaction_bosonic_cde_hybrid_internal_integral_ms_counterterm": counterterm,
+            },
+            metadata={
+                **unrenormalized.metadata,
+                "stage": "interaction_bosonic_cde_hybrid_internal_minimal_subtraction_result",
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "on_shell_reduced": False,
+            },
+        )
+
+    def interaction_bosonic_cde_hybrid_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: BosonicCDEExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        act_open_derivatives: bool = False,
+        emit_covariant_derivative_commutators: bool = False,
+        emit_covariant_derivative_commutator_passes: int = 1,
+        expand_covariant_derivative_commutators: bool = False,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the finite native-vakint hybrid result after pole subtraction."""
+
+        from .backends import vakint
+
+        selected_trace_names = _cde_expansion_trace_names(expansion_indices_by_trace)
+        interaction_remainder = self.interaction_power_type_minimal_subtraction_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            exclude_trace_names=selected_trace_names,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        cde_result = self.interaction_bosonic_cde_minimal_subtraction_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        result = _combine_bosonic_cde_hybrid_results(
+            interaction_remainder,
+            cde_result,
+            stage="interaction_bosonic_cde_hybrid_minimal_subtraction_result",
+            selected_trace_names=selected_trace_names,
+            aggregate_expression_names=("interaction_bosonic_cde_hybrid_vakint_finite_part",),
+        )
+        pole = vakint.pole_part(
+            (
+                interaction_remainder.expression("interaction_power_type_vakint_integral_sum[evaluated]")
+                + cde_result.expression("interaction_bosonic_cde_vakint_integral_sum[evaluated]")
+            ).expand(),
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+        )
+        return replace(
+            result,
+            supertraces={
+                **result.supertraces,
+                "interaction_bosonic_cde_hybrid_vakint_pole_part": pole,
+                "interaction_bosonic_cde_hybrid_vakint_ms_counterterm": (-pole).expand(),
+            },
+            metadata={
+                **result.metadata,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+            },
+        )
+
     def interaction_power_type_matching_result(
         self,
         *,
@@ -2519,6 +2836,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
@@ -2530,10 +2848,12 @@ class OneLoopSetup:
     ) -> MatchingResult:
         """Return the current interaction-power one-loop preview result."""
 
+        excluded_trace_names = tuple(exclude_trace_names)
         contributions = self.interaction_power_type_contributions(
             heavy_field_dimension=heavy_field_dimension,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
         )
         numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
         selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
@@ -2542,6 +2862,7 @@ class OneLoopSetup:
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
             stage=selected_vakint_stage,
             short_form=vakint_short_form,
             engine=vakint_engine,
@@ -2560,6 +2881,7 @@ class OneLoopSetup:
                 heavy_field_dimension=heavy_field_dimension,
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
+                exclude_trace_names=excluded_trace_names,
             ),
             "interaction_power_type_eft_lagrangian": numerator_sum,
             "interaction_power_type_vakint_integral_sum": vakint_sum,
@@ -2592,7 +2914,8 @@ class OneLoopSetup:
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 "power_type_contribution_count": self.power_type_contribution_count,
-                "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "interaction_power_type_contribution_count": len(contributions),
+                "interaction_power_type_excluded_trace_names": ",".join(excluded_trace_names),
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
                 "named_supertrace_stage": selected_named_stage.value,
@@ -2607,6 +2930,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
         max_pole_order: int = 1,
@@ -2618,10 +2942,12 @@ class OneLoopSetup:
 
         from .backends import vakint
 
+        excluded_trace_names = tuple(exclude_trace_names)
         contributions = self.interaction_power_type_contributions(
             heavy_field_dimension=heavy_field_dimension,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
         )
         numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
         raw_vakint_sum = self.interaction_power_type_vakint_integral_sum(
@@ -2629,12 +2955,14 @@ class OneLoopSetup:
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
         )
         evaluated = self.interaction_power_type_internal_integral_sum(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
             epsilon=epsilon,
@@ -2667,6 +2995,7 @@ class OneLoopSetup:
                     heavy_field_dimension=heavy_field_dimension,
                     loop_momentum_squared=loop_momentum_squared,
                     require_registered_mass=require_registered_mass,
+                    exclude_trace_names=excluded_trace_names,
                 ),
                 "interaction_power_type_eft_lagrangian": numerator_sum,
                 "interaction_power_type_vakint_integral_sum": raw_vakint_sum,
@@ -2682,7 +3011,8 @@ class OneLoopSetup:
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 "power_type_contribution_count": self.power_type_contribution_count,
-                "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "interaction_power_type_contribution_count": len(contributions),
+                "interaction_power_type_excluded_trace_names": ",".join(excluded_trace_names),
                 "on_shell_reduced": False,
                 "integral_backend": "pychete_internal",
                 "tensor_reduce": tensor_reduce,
@@ -2699,6 +3029,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
         max_pole_order: int = 1,
@@ -2715,11 +3046,13 @@ class OneLoopSetup:
         EFT Lagrangian preview.
         """
 
+        excluded_trace_names = tuple(exclude_trace_names)
         unrenormalized = self.interaction_power_type_internal_matching_result(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
             max_pole_order=max_pole_order,
@@ -2738,6 +3071,7 @@ class OneLoopSetup:
                     heavy_field_dimension=heavy_field_dimension,
                     loop_momentum_squared=loop_momentum_squared,
                     require_registered_mass=require_registered_mass,
+                    exclude_trace_names=excluded_trace_names,
                 )
             ),
             epsilon=epsilon,
@@ -2771,6 +3105,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         vakint_short_form: bool | None = None,
         vakint_engine: Any | None = None,
@@ -2783,11 +3118,13 @@ class OneLoopSetup:
     ) -> MatchingResult:
         """Return an interaction-power result with an explicit loop factor applied."""
 
+        excluded_trace_names = tuple(exclude_trace_names)
         unnormalized = self.interaction_power_type_matching_result(
             heavy_field_dimension=heavy_field_dimension,
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
             vakint_stage=vakint_stage,
             vakint_short_form=vakint_short_form,
             vakint_engine=vakint_engine,
@@ -2810,6 +3147,7 @@ class OneLoopSetup:
         include_light: bool = True,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        exclude_trace_names: Iterable[str] = (),
         vakint_engine: Any | None = None,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
@@ -2821,10 +3159,12 @@ class OneLoopSetup:
 
         from .backends import vakint
 
+        excluded_trace_names = tuple(exclude_trace_names)
         contributions = self.interaction_power_type_contributions(
             heavy_field_dimension=heavy_field_dimension,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
         )
         numerator_sum = sum_expr(contribution.eft_numerator_expression for contribution in contributions).expand()
         evaluated = self.interaction_power_type_vakint_integral_sum(
@@ -2832,6 +3172,7 @@ class OneLoopSetup:
             include_light=include_light,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            exclude_trace_names=excluded_trace_names,
             stage=VakintIntegralStage.EVALUATED,
             engine=vakint_engine,
         )
@@ -2861,6 +3202,7 @@ class OneLoopSetup:
                     heavy_field_dimension=heavy_field_dimension,
                     loop_momentum_squared=loop_momentum_squared,
                     require_registered_mass=require_registered_mass,
+                    exclude_trace_names=excluded_trace_names,
                 ),
                 "interaction_power_type_eft_lagrangian": numerator_sum,
                 "interaction_power_type_vakint_integral_sum": evaluated,
@@ -2877,7 +3219,8 @@ class OneLoopSetup:
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 "power_type_contribution_count": self.power_type_contribution_count,
-                "interaction_power_type_contribution_count": self.interaction_power_type_contribution_count,
+                "interaction_power_type_contribution_count": len(contributions),
+                "interaction_power_type_excluded_trace_names": ",".join(excluded_trace_names),
                 "on_shell_reduced": False,
                 "vakint_stage": VakintIntegralStage.EVALUATED.value,
                 "named_supertrace_stage": selected_named_stage.value,
@@ -4425,6 +4768,62 @@ def _cde_expansion_request_metadata(expansion_request: BosonicCDEExpansionReques
     }
 
 
+def _cde_expansion_trace_names(expansion_request: BosonicCDEExpansionRequest) -> tuple[str, ...]:
+    if isinstance(expansion_request, BosonicCDEExpansionPlan):
+        return expansion_request.trace_names
+    return tuple(expansion_request)
+
+
+def _combine_bosonic_cde_hybrid_results(
+    interaction_remainder: MatchingResult,
+    cde_result: MatchingResult,
+    *,
+    stage: str,
+    selected_trace_names: tuple[str, ...],
+    aggregate_expression_names: Iterable[str],
+) -> MatchingResult:
+    off_shell = (interaction_remainder.off_shell_eft_lagrangian + cde_result.off_shell_eft_lagrangian).expand()
+    on_shell = (interaction_remainder.on_shell_eft_lagrangian + cde_result.on_shell_eft_lagrangian).expand()
+    aggregate_supertraces = {name: off_shell for name in aggregate_expression_names}
+    return MatchingResult(
+        theory=cde_result.theory,
+        uv_lagrangian=cde_result.uv_lagrangian,
+        off_shell_eft_lagrangian=off_shell,
+        on_shell_eft_lagrangian=on_shell,
+        matching_conditions={
+            **interaction_remainder.matching_conditions,
+            **cde_result.matching_conditions,
+        },
+        fluctuation_operators={
+            **interaction_remainder.fluctuation_operators,
+            **cde_result.fluctuation_operators,
+        },
+        supertraces={
+            **interaction_remainder.supertraces,
+            **cde_result.supertraces,
+            **aggregate_supertraces,
+        },
+        metadata={
+            **interaction_remainder.metadata,
+            **cde_result.metadata,
+            "stage": stage,
+            "complete": False,
+            "on_shell_reduced": False,
+            "uses_interaction_operator": True,
+            "uses_bosonic_cde_expansion": True,
+            "uses_interaction_power_remainder": True,
+            "interaction_bosonic_cde_hybrid": True,
+            "interaction_bosonic_cde_replaced_trace_names": ",".join(selected_trace_names),
+            "interaction_bosonic_cde_replaced_trace_count": len(selected_trace_names),
+            "interaction_power_type_component_stage": interaction_remainder.metadata.get("stage"),
+            "interaction_bosonic_cde_component_stage": cde_result.metadata.get("stage"),
+            "interaction_power_type_remainder_contribution_count": interaction_remainder.metadata.get(
+                "interaction_power_type_contribution_count"
+            ),
+        },
+    )
+
+
 def _flatten_expression_slots(slots: Iterable[Iterable[Expression]]) -> tuple[Expression, ...]:
     return tuple(item for slot in slots for item in slot)
 
@@ -4854,8 +5253,10 @@ def match_one_loop(
             require_registered_mass=options.require_registered_mass,
         )
     if cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
-        result = setup.interaction_bosonic_cde_internal_matching_result(
+        result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(
             cde_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,
@@ -4873,8 +5274,10 @@ def match_one_loop(
         cde_expansion_indices_by_trace is not None
         and selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
     ):
-        result = setup.interaction_bosonic_cde_internal_minimal_subtraction_result(
+        result = setup.interaction_bosonic_cde_hybrid_internal_minimal_subtraction_result(
             cde_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,
@@ -4892,8 +5295,10 @@ def match_one_loop(
         cde_expansion_indices_by_trace is not None
         and selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION
     ):
-        result = setup.interaction_bosonic_cde_minimal_subtraction_result(
+        result = setup.interaction_bosonic_cde_hybrid_minimal_subtraction_result(
             cde_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,
@@ -4908,8 +5313,10 @@ def match_one_loop(
             named_supertrace_engine=options.named_supertrace_engine,
         )
     elif cde_expansion_indices_by_trace is not None:
-        result = setup.interaction_bosonic_cde_matching_result(
+        result = setup.interaction_bosonic_cde_hybrid_matching_result(
             cde_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             act_open_derivatives=options.bosonic_cde_act_open_derivatives,

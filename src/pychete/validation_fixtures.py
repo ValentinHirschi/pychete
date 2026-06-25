@@ -723,8 +723,10 @@ class ValidationFixture:
                 require_registered_mass=require_registered_mass,
             )
         if bosonic_cde_expansion_request is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
-            result = setup.interaction_bosonic_cde_internal_matching_result(
+            result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(
                 bosonic_cde_expansion_request,
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
@@ -741,8 +743,10 @@ class ValidationFixture:
             bosonic_cde_expansion_request is not None
             and selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
         ):
-            result = setup.interaction_bosonic_cde_internal_minimal_subtraction_result(
+            result = setup.interaction_bosonic_cde_hybrid_internal_minimal_subtraction_result(
                 bosonic_cde_expansion_request,
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
@@ -760,8 +764,10 @@ class ValidationFixture:
             bosonic_cde_expansion_request is not None
             and selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION
         ):
-            result = setup.interaction_bosonic_cde_minimal_subtraction_result(
+            result = setup.interaction_bosonic_cde_hybrid_minimal_subtraction_result(
                 bosonic_cde_expansion_request,
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
@@ -776,8 +782,10 @@ class ValidationFixture:
                 named_supertrace_engine=named_supertrace_engine,
             )
         elif bosonic_cde_expansion_request is not None:
-            result = setup.interaction_bosonic_cde_matching_result(
+            result = setup.interaction_bosonic_cde_hybrid_matching_result(
                 bosonic_cde_expansion_request,
+                heavy_field_dimension=heavy_field_dimension,
+                include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 act_open_derivatives=bosonic_cde_act_open_derivatives,
