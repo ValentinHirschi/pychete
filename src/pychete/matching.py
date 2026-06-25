@@ -3863,7 +3863,7 @@ def match_one_loop(
         )
         theory._validate_registered_expression(solution_lagrangian)
         solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
-        replacement_rules = heavy_scalar_solution_replacements(solutions)
+        replacement_rules = heavy_scalar_solution_replacements(solutions, fresh_dummy_indices=True)
         if replacement_rules:
             _LOGGER.info(
                 "substituting %d heavy scalar solution(s) in one-loop result for %s",
@@ -3885,6 +3885,7 @@ def match_one_loop(
                     "option" if options.heavy_scalar_solution_lagrangian is not None else "matching_lagrangian"
                 ),
                 "heavy_scalar_solution_expand": options.heavy_scalar_solution_expand,
+                "heavy_scalar_solution_fresh_dummy_indices": True,
             },
         )
     else:
@@ -3897,6 +3898,7 @@ def match_one_loop(
                 "heavy_scalar_solution_rule_count": 0,
                 "heavy_scalar_solution_source": "disabled",
                 "heavy_scalar_solution_expand": False,
+                "heavy_scalar_solution_fresh_dummy_indices": False,
             },
         )
     if options.on_shell_replacements is not None:

@@ -2,12 +2,15 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from html import escape
+from itertools import count
+from typing import Callable
 
 from symbolica import Expression, Replacement
 
 from .eft import series_eft
-from .expr import bar_field_pattern, field_pattern, is_zero, list_items
+from .expr import as_int, bar_field_pattern, field_pattern, is_zero, list_items, product_expr
 from .functional import apply_cd, derive_eom
+from .indices import relabel_dummy_indices
 from .symbols import display_string, latex_string, s
 from .theory import Theory
 from .theory_metadata import FieldDefinition, FieldVariation
@@ -126,21 +129,106 @@ def _replace_heavy_fields(expr: Expression, solutions: dict[str, HeavyScalarSolu
     return expr.replace_multiple(replacements).expand() if replacements else expr.expand()
 
 
-def heavy_scalar_solution_replacements(solutions: dict[str, HeavyScalarSolution]) -> tuple[Replacement, ...]:
+def heavy_scalar_solution_replacements(
+    solutions: dict[str, HeavyScalarSolution],
+    *,
+    fresh_dummy_indices: bool = False,
+) -> tuple[Replacement, ...]:
     """Return Symbolica replacement rules for solved heavy scalar fields."""
 
     replacements: list[Replacement] = []
+    fresh_counter = count()
     for solution in solutions.values():
         label = solution.field.label
+        field_pat = field_pattern(label)
+        bar_field_pat = bar_field_pattern(label)
 
-        def bar_solution(match: dict[Expression, Expression], solution: HeavyScalarSolution = solution) -> Expression:
-            return apply_cd(list_items(match[s.FieldDerivativesWildcard]), solution.inclusive_conjugate)
+        def fresh_solution_expr(expr: Expression) -> Expression:
+            if not fresh_dummy_indices:
+                return expr
+            return relabel_dummy_indices(expr, start=100_000 + 1_000 * next(fresh_counter))
 
-        def field_solution(match: dict[Expression, Expression], solution: HeavyScalarSolution = solution) -> Expression:
-            return apply_cd(list_items(match[s.FieldDerivativesWildcard]), solution.inclusive)
+        def solution_expr(
+            match: dict[Expression, Expression],
+            *,
+            solution: HeavyScalarSolution,
+            conjugate: bool,
+            fresh_solution_expr: Callable[[Expression], Expression] = fresh_solution_expr,
+        ) -> Expression:
+            expr = solution.inclusive_conjugate if conjugate else solution.inclusive
+            return apply_cd(list_items(match[s.FieldDerivativesWildcard]), fresh_solution_expr(expr))
 
-        replacements.append(Replacement(bar_field_pattern(label), bar_solution))
-        replacements.append(Replacement(field_pattern(label), field_solution))
+        def power_solution(
+            match: dict[Expression, Expression],
+            *,
+            solution: HeavyScalarSolution,
+            conjugate: bool,
+            pattern: Expression,
+            solution_expr: Callable[..., Expression] = solution_expr,
+        ) -> Expression:
+            exponent = as_int(match[s.PowExponentWildcard])
+            if exponent is None or exponent <= 0:
+                return (pattern ** s.PowExponentWildcard).replace_wildcards(match)
+            return product_expr(
+                solution_expr(match, solution=solution, conjugate=conjugate)
+                for _ in range(exponent)
+            )
+
+        def bar_solution(
+            match: dict[Expression, Expression],
+            solution: HeavyScalarSolution = solution,
+            solution_expr: Callable[..., Expression] = solution_expr,
+        ) -> Expression:
+            return solution_expr(match, solution=solution, conjugate=True)
+
+        def field_solution(
+            match: dict[Expression, Expression],
+            solution: HeavyScalarSolution = solution,
+            solution_expr: Callable[..., Expression] = solution_expr,
+        ) -> Expression:
+            return solution_expr(match, solution=solution, conjugate=False)
+
+        if fresh_dummy_indices:
+            def bar_power_solution(
+                match: dict[Expression, Expression],
+                solution: HeavyScalarSolution = solution,
+                pattern: Expression = bar_field_pat,
+                power_solution: Callable[..., Expression] = power_solution,
+            ) -> Expression:
+                return power_solution(
+                    match,
+                    solution=solution,
+                    conjugate=True,
+                    pattern=pattern,
+                )
+
+            def field_power_solution(
+                match: dict[Expression, Expression],
+                solution: HeavyScalarSolution = solution,
+                pattern: Expression = field_pat,
+                power_solution: Callable[..., Expression] = power_solution,
+            ) -> Expression:
+                return power_solution(
+                    match,
+                    solution=solution,
+                    conjugate=False,
+                    pattern=pattern,
+                )
+
+            replacements.append(
+                Replacement(
+                    bar_field_pat ** s.PowExponentWildcard,
+                    bar_power_solution,
+                )
+            )
+            replacements.append(
+                Replacement(
+                    field_pat ** s.PowExponentWildcard,
+                    field_power_solution,
+                )
+            )
+        replacements.append(Replacement(bar_field_pat, bar_solution))
+        replacements.append(Replacement(field_pat, field_solution))
     return tuple(replacements)
 
 

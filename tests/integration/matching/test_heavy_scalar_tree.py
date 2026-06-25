@@ -17,6 +17,8 @@ from pychete import (
     s,
 )
 from pychete.backends import spenso as spenso_backend
+from pychete.expr import index_pattern
+from pychete.tree_matching import HeavyScalarSolution, heavy_scalar_solution_replacements
 
 from tests.conftest import assert_expr_equal
 
@@ -205,14 +207,40 @@ def test_one_loop_match_substitutes_heavy_scalar_solution_before_projection() ->
     assert isinstance(reduced, MatchingResult)
     assert raw.metadata["heavy_scalar_solutions_substituted"] is False
     assert raw.metadata["heavy_scalar_solution_source"] == "disabled"
+    assert raw.metadata["heavy_scalar_solution_fresh_dummy_indices"] is False
     assert reduced.metadata["heavy_scalar_solutions_substituted"] is True
     assert reduced.metadata["heavy_scalar_solution_count"] == 1
-    assert reduced.metadata["heavy_scalar_solution_rule_count"] == 2
+    assert reduced.metadata["heavy_scalar_solution_rule_count"] == 4
     assert reduced.metadata["heavy_scalar_solution_source"] == "matching_lagrangian"
     assert reduced.metadata["heavy_scalar_solution_expand"] is False
+    assert reduced.metadata["heavy_scalar_solution_fresh_dummy_indices"] is True
     assert heavy_atom in canonical_string(raw.on_shell_eft_lagrangian)
     assert heavy_atom in canonical_string(reduced.expression("on_shell_eft_lagrangian_before_reduction"))
     assert heavy_atom not in canonical_string(reduced.on_shell_eft_lagrangian)
+
+
+def test_heavy_scalar_solution_power_rules_use_fresh_dummy_indices() -> None:
+    theory = Theory("heavy_scalar_fresh_dummies")
+    theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=(fund,))
+    index = theory.dummy_index(1, fund)
+    solution = HeavyScalarSolution(
+        field=heavy.definition,
+        orders={1: higgs(index) * s.Bar(higgs(index))},
+    )
+    rules = heavy_scalar_solution_replacements({"S": solution}, fresh_dummy_indices=True)
+    replaced = (heavy() ** 2).replace_multiple(rules).expand()
+    index_pat = index_pattern()
+    counts: dict[str, int] = {}
+
+    for match in replaced.match(index_pat):
+        key = canonical_string(index_pat.replace_wildcards(match))
+        counts[key] = counts.get(key, 0) + 1
+
+    assert len(counts) == 2
+    assert set(counts.values()) == {2}
 
 
 def test_one_loop_match_applies_on_shell_reduction_before_condition_projection() -> None:

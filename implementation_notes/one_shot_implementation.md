@@ -344,6 +344,46 @@
   slice should normalize those generated operator products at their source,
   preserving the physical pairings, before relying on tensor canonicalization.
 
+## Current Fresh Heavy-Scalar Dummy Slice
+
+- Implemented fresh dummy-index relabeling for one-loop heavy-scalar solution
+  substitution. `heavy_scalar_solution_replacements(...)` now has an opt-in
+  `fresh_dummy_indices` mode, and the public one-loop path enables it when
+  `substitute_heavy_scalar_solutions=True`.
+- Added power-aware Symbolica replacement rules for heavy scalar fields and
+  conjugates. This avoids the old `S^2 -> replacement^2` shape where the same
+  Higgs dummy contraction was squared and a single dummy label appeared four
+  times in one product. In fresh mode each substituted occurrence receives its
+  own deterministic dummy-label range.
+- The implementation keeps performance in view: Symbolica still performs the
+  matching/replacement work, and Python only relabels the compact solution
+  expression for each matched heavy-field occurrence. This is deliberately
+  narrower than a whole-expression Python tree rewrite.
+- Metadata now records `heavy_scalar_solution_fresh_dummy_indices`. The reduced
+  one-loop path reports four heavy-scalar replacement rules because it includes
+  both atom and positive-integer-power rules for fields and conjugates.
+- Added regression coverage proving that replacing `S^2` by a solution with a
+  dummy Higgs contraction yields two distinct contracted-index pairs rather
+  than one over-used dummy label.
+- Validation for this slice:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py -k "fresh_dummy or substitutes_heavy_scalar" -q`
+  passed with 2 tests and 17 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py tests/integration/validation/test_numeric_probes.py tests/integration/validation/test_validation_fixtures.py -k "fresh_dummy or substitutes_heavy_scalar or project or forwards_pychete_color" -q`
+  passed with 16 tests and 64 deselected; `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
+  passed.
+- A targeted Singlet Scalar Extension diagnostic with public one-loop matching,
+  internal minimal subtraction, trace order 1, no tensor reduction, combined
+  terms, and heavy-scalar substitution reports
+  `bad_term_count_sampled=0`, `heavy_scalar_solution_rule_count=4`, and
+  `heavy_scalar_solution_fresh_dummy_indices=True`. The previous sampled
+  over-contracted dummy-index pathology is fixed.
+- The projected validation frontier did not move during the diagnostic pass:
+  Singlet remains at 42/72 accepted matching conditions and 39/64 accepted
+  Wilson targets. The next gaps are therefore not just alpha-renaming; they
+  remain in operator-shape, derivative, group-algebra, and basis/on-shell
+  reduction features.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -378,12 +418,6 @@
   avoidable expression growth. Candidate directions: apply heavy-field
   replacement before expansion where possible, project smaller target groups,
   and use Symbolica collection/coefficient primitives on less-expanded stages.
-- Normalize generated products from heavy-scalar substitution so repeated
-  contracted factors receive distinct dummy labels before projection. The
-  current projection canonicalizer can handle alpha-equivalent valid tensor
-  terms, but it deliberately preserves invalid terms where one dummy index
-  appears more than twice because splitting those occurrences requires
-  source-aware pairing.
 - Use the new `matching_condition_expand_source=False` and
   `matching_condition_truncate_eft=True` controls, together with
   `heavy_scalar_solution_expand=False`, in targeted order-3 Singlet probes

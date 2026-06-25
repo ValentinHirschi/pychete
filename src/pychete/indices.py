@@ -75,17 +75,21 @@ def dummy_indices(expr: Expression) -> tuple[IndexInfo, ...]:
     return tuple(info for info in collect_indices(expr) if counts[info.expr] > 1)
 
 
-def relabel_dummy_indices(expr: Expression, *, prefix: str = "d") -> Expression:
+def relabel_dummy_indices(expr: Expression, *, prefix: str = "d", start: int = 0) -> Expression:
     """Alpha-rename repeated indices deterministically.
 
     With the default ``prefix="d"``, labels are generated as
-    ``s.dummy_index(0)``, ``s.dummy_index(1)``, and so on. Other prefixes build
-    plain Symbolica symbols such as ``S("i0")`` and let Symbolica report
-    invalid names.
+    ``s.dummy_index(start)``, ``s.dummy_index(start + 1)``, and so on. Other
+    prefixes build plain Symbolica symbols such as ``S("i0")`` and let
+    Symbolica report invalid names.
     """
 
     replacements: list[tuple[Expression, Expression]] = []
-    for i, info in enumerate(sorted(dummy_indices(expr), key=lambda item: (canonical_string(item.representation), canonical_string(item.expr)))):
-        new_label = s.dummy_index(i) if prefix == "d" else S(f"{prefix}{i}")
+    sorted_dummies = sorted(
+        dummy_indices(expr),
+        key=lambda item: (canonical_string(item.representation), canonical_string(item.expr)),
+    )
+    for i, info in enumerate(sorted_dummies):
+        new_label = s.dummy_index(start + i) if prefix == "d" else S(f"{prefix}{start + i}")
         replacements.append((info.expr, s.Index(new_label, info.representation)))
     return expr.replace_multiple([Replacement(old, new) for old, new in replacements])
