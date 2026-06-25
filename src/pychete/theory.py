@@ -973,7 +973,7 @@ class Theory:
     def derive_eom(
         self,
         lagrangian: Expression,
-        field: FieldHandle | FieldDefinition | str,
+        field: FieldHandle | FieldDefinition | str | Expression,
         *,
         eft_order: int = 6,
         variation: FieldVariation | str = FieldVariation.AUTO,
@@ -982,7 +982,9 @@ class Theory:
 
         ``lagrangian`` must be a Symbolica expression using symbols registered
         on this theory. ``variation`` controls whether the field, its conjugate,
-        or the automatic default is varied.
+        or the automatic default is varied. Passing an exact ``Field`` or
+        ``Bar(Field)`` expression keeps its concrete index structure in the
+        variation target.
         """
 
         from .functional import derive_eom

@@ -167,16 +167,43 @@ Latest verified baseline before this compact rollover:
 
 ## Current Slice After Rollover
 
-- Preserved the original large log as
-  `implementation_notes/one_shot_implementation_part_A.md`.
-- Replaced `implementation_notes/one_shot_implementation.md` with this compact
-  working summary.
-- Current uncommitted code slice keeps normalized `[unnormalized]` raw
-  supertrace aliases inspectable on `MatchingResult` while excluding them from
-  fixture gap-report supertrace coverage counts.
+- Restored exact indexed fluctuation-mode support in the Euler-Lagrange
+  differential matrix. `derive_eom(...)` now accepts an exact `Field` or
+  `Bar(Field)` expression and uses a Symbolica pattern that fixes the field
+  label, type, and concrete index list while matching only the derivative-slot
+  wildcard. This keeps indexed modes such as the E_VLL `l[i,a]` and `H[i]`
+  entries from collapsing to the label-only `definition.expr()` target.
+- Updated `_fluctuation_differential_entry(...)` to derive the EOM from the
+  exact row fluctuation mode rather than from the field definition. The
+  algebraic Hessian already had these indexed heavy-light Yukawa entries; this
+  makes the momentum/differential interaction matrix expose them too.
+- Added a regression test with an indexed light fermion and indexed complex
+  scalar coupled to a heavy fermion. It checks both `differential_entry` and
+  `interaction_entry` for the light-to-heavy and conjugate light-to-heavy NCM
+  Yukawa directions.
+- E_VLL now produces nonzero `hFermion-lFermion` and `hFermion-lScalar`
+  interaction-power numerators from the restored light-to-heavy blocks.
+- Gap-report expectations were updated because several previously accepted
+  common traces were accepted only as zero/zero matches. With exact indexed
+  light-side interactions retained, those traces are now honest
+  canonical-different gaps:
+  - E_VLL raw/internal-MS canonical-equal common traces are now only
+    `hFermion-lFermion-lFermion`.
+  - S1S3LQs raw canonical-equal common traces are now empty.
+- S1S3LQs remains covered by the raw order-three fixture gap report. Its
+  internal-minimal-subtraction order-three report became too expensive after
+  exact indexed light-side interactions were retained, so the internal-MS smoke
+  coverage currently tracks VLF, Singlet, and E_VLL until stronger expression
+  filtering/reduction is implemented.
 - Verification in this slice:
-  - focused alias-filter tests passed: 2 passed in 1.12s;
+  - focused indexed/NCM fluctuation tests passed;
+  - default raw order-three gap-report coverage passed;
+  - narrowed internal-MS gap-report coverage for VLF, Singlet, and E_VLL
+    passed;
+  - selected numeric-probe and validation slice passed: 25 passed in 107.75s;
+  - broader functional/fluctuation tests passed: 47 passed in 1.04s;
   - `mypy` passed with no issues in 30 source files;
   - `git diff --check` passed;
-  - default raw/vakint and internal-MS four-model gap-report coverage tests
-    passed: 2 passed in 101.16s.
+  - full pytest suite passed: 273 passed, 1 skipped in 276.10s. The skip is
+    the existing GammaLoop API import check because GammaLoop was not requested
+    in the current dependency manifest.

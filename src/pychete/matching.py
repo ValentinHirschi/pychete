@@ -2757,10 +2757,8 @@ def _fluctuation_differential_entry(
     row: Expression,
     column: Expression,
 ) -> Expression:
-    row_base = bar_field_inner(row) if is_bar_field(row) else row
-    row_definition = _field_definition_from_label(theory, field_label(row_base))
     row_variation = FieldVariation.BAR if is_bar_field(row) else FieldVariation.FIELD
-    eom = derive_eom(theory, lagrangian, row_definition, variation=row_variation)
+    eom = derive_eom(theory, lagrangian, row, variation=row_variation)
 
     column_base = bar_field_inner(column) if is_bar_field(column) else column
     column_barred = is_bar_field(column)

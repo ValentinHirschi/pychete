@@ -7,11 +7,13 @@ from symbolica.core import AtomType
 
 from .expr import (
     args,
+    bar_field_inner,
     bar_field_pattern,
     cd_pattern,
     factors,
     field_pattern,
     field_label,
+    field_type,
     field_with_derivatives,
     is_bar_field,
     is_head,
@@ -248,34 +250,75 @@ def _field_derivative_sets(lagrangian: Expression, label: Expression, *, barred:
     return {list_items(match[s.FieldDerivativesWildcard]) for match in lagrangian.match(pattern)}
 
 
+def _field_derivative_sets_for_base(
+    lagrangian: Expression,
+    base: Expression,
+    *,
+    barred: bool,
+) -> set[tuple[Expression, ...]]:
+    pattern = _field_pattern_like(base)
+    if barred:
+        pattern = s.Bar(pattern)
+    return {list_items(match[s.FieldDerivativesWildcard]) for match in lagrangian.match(pattern)}
+
+
+def _field_pattern_like(base: Expression) -> Expression:
+    return s.Field(field_label(base), field_type(base), base[2], s.FieldDerivativesWildcard)
+
+
 def derive_eom(
     theory: Theory,
     lagrangian: Expression,
-    field: FieldHandle | FieldDefinition | str,
+    field: FieldHandle | FieldDefinition | str | Expression,
     *,
     eft_order: int = 6,
     variation: FieldVariation | str = FieldVariation.AUTO,
 ) -> Expression:
     theory._validate_registered_expression(lagrangian)
-    if isinstance(field, str):
-        definition = theory.fields[field]
-    elif isinstance(field, FieldHandle):
-        definition = field.definition
+    if isinstance(field, Expression):
+        base = bar_field_inner(field) if is_bar_field(field) else field
+        if not is_head(base, s.Field):
+            raise ValueError(f"Euler-Lagrange variation target must be a Field expression, got {canonical_string(field)}")
+        definition: FieldDefinition | None = None
+        exact_base: Expression | None = base
+        exact_barred = is_bar_field(field)
     else:
-        definition = field
+        if isinstance(field, str):
+            definition = theory.fields[field]
+        elif isinstance(field, FieldHandle):
+            definition = field.definition
+        else:
+            definition = field
+        exact_base = None
+        exact_barred = False
 
     variation_mode = FieldVariation.from_user(variation)
     if variation_mode is FieldVariation.AUTO:
-        variation_mode = FieldVariation.FIELD if definition.is_self_conjugate else FieldVariation.BAR
+        if exact_base is not None:
+            variation_mode = FieldVariation.BAR if exact_barred else FieldVariation.FIELD
+        elif definition is not None:
+            variation_mode = FieldVariation.FIELD if definition.is_self_conjugate else FieldVariation.BAR
 
     if variation_mode is FieldVariation.BAR:
-        derivative_sets = _field_derivative_sets(lagrangian, definition.label, barred=True)
+        if exact_base is None:
+            assert definition is not None
+            derivative_sets = _field_derivative_sets(lagrangian, definition.label, barred=True)
+        else:
+            derivative_sets = _field_derivative_sets_for_base(lagrangian, exact_base, barred=True)
     else:
-        derivative_sets = _field_derivative_sets(lagrangian, definition.label, barred=False)
+        if exact_base is None:
+            assert definition is not None
+            derivative_sets = _field_derivative_sets(lagrangian, definition.label, barred=False)
+        else:
+            derivative_sets = _field_derivative_sets_for_base(lagrangian, exact_base, barred=False)
     derivative_sets.add(())
 
     residual = Expression.num(0)
-    base = definition.expr()
+    if exact_base is None:
+        assert definition is not None
+        base = definition.expr()
+    else:
+        base = exact_base
     for derivatives in sorted(derivative_sets, key=lambda d: (len(d), tuple(canonical_string(x) for x in d))):
         target = field_with_derivatives(base, derivatives)
         if variation_mode is FieldVariation.BAR:

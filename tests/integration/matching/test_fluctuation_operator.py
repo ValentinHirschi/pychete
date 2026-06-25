@@ -231,6 +231,33 @@ def test_fluctuation_operator_linearizes_noncommutative_fermion_chains_without_f
     )
 
 
+def test_fluctuation_operator_differential_entries_keep_indexed_yukawa_modes() -> None:
+    theory = Theory("fluctuation_indexed_yukawa_modes")
+    flavor = theory.define_index_type("Flavor", dimension=2)
+    i = theory.dummy_index(0, flavor.symbol)
+    heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("psi", s.Fermion, indices=[flavor.symbol], mass=0)
+    scalar = theory.define_field("phi", s.Scalar, indices=[flavor.symbol], self_conjugate=False, mass=0)
+    y = theory.define_coupling("y", indices=[flavor.symbol])
+    heavy_field = heavy()
+    light_i = light(i)
+    scalar_i = scalar(i)
+    interaction = -y(i) * scalar_i * s.NCM(s.Bar(light_i), s.PR, heavy_field)
+    lagrangian = interaction + s.Bar(interaction)
+    basis = (s.Bar(heavy_field), heavy_field, s.Bar(light_i), light_i, s.Bar(scalar_i), scalar_i)
+
+    operator = theory.fluctuation_operator(lagrangian, basis)
+    light_to_heavy = -y(i) * scalar_i * s.PR
+    conjugate_light_to_heavy = -s.Bar(y(i)) * s.Bar(scalar_i) * s.PL
+
+    assert_expr_equal(operator.entry(s.Bar(light_i), heavy_field), light_to_heavy)
+    assert_expr_equal(operator.differential_entry(s.Bar(light_i), heavy_field), light_to_heavy)
+    assert_expr_equal(operator.interaction_entry(s.Bar(light_i), heavy_field), light_to_heavy)
+    assert_expr_equal(operator.entry(light_i, s.Bar(heavy_field)), conjugate_light_to_heavy)
+    assert_expr_equal(operator.differential_entry(light_i, s.Bar(heavy_field)), conjugate_light_to_heavy)
+    assert_expr_equal(operator.interaction_entry(light_i, s.Bar(heavy_field)), conjugate_light_to_heavy)
+
+
 def test_fluctuation_operator_rejects_duplicate_basis_entries() -> None:
     theory = Theory("fluctuation_duplicate_basis")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True)
