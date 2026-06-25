@@ -239,6 +239,12 @@ def stored_cg_tensor_components(
     return components
 
 
+def has_stored_cg_tensor_components(theory: Theory) -> bool:
+    """Return whether at least one registered CG tensor stores dense components."""
+
+    return any(stored_cg_tensor_components(theory, definition) is not None for definition in theory.cg_tensors.values())
+
+
 def _symbolic_cg_components(theory: Theory, definition: CGTensorDefinition, count: int) -> tuple[Expression, ...]:
     return tuple(
         theory.symbol(
@@ -328,7 +334,7 @@ def cg_tensor_library_to_spenso(
 ) -> Any:
     """Register pychete CG tensors in a native spenso ``TensorLibrary``."""
 
-    has_stored_components = any(definition.tensor_expr is not None for definition in theory.cg_tensors.values())
+    has_stored_components = has_stored_cg_tensor_components(theory)
     if components_by_name is None and not builtin_components and not symbolic_components and not has_stored_components:
         raise ValueError(
             "CG tensor library construction requires components_by_name, "
@@ -480,7 +486,12 @@ def evaluate_pychete_tensor_network(
 
     if native_hep_cg_builtins and library is None:
         library = hep_tensor_library(atom=True)
-    if cg_components_by_name is not None or builtin_cg_components or symbolic_cg_components:
+    if (
+        cg_components_by_name is not None
+        or builtin_cg_components
+        or symbolic_cg_components
+        or (library is None and has_stored_cg_tensor_components(theory))
+    ):
         library = cg_tensor_library_to_spenso(
             theory,
             library=library,

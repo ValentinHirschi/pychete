@@ -1455,6 +1455,54 @@ def test_supertrace_block_trace_lowers_registered_cg_tensors_before_spenso(monke
     assert_expr_equal(evaluated.expression, S("tensor")(calls[0][0]))
 
 
+def test_supertrace_block_trace_auto_uses_stored_cg_tensor_components(monkeypatch: pytest.MonkeyPatch) -> None:
+    theory = Theory("supertrace_spenso_stored_cg")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    fund = theory.define_representation("SU2F", "fund")
+    custom = theory.define_cg_tensor(
+        "custom_eps",
+        (fund, fund),
+        tensor=spenso_backend.cg_tensor_component_expression(
+            (2, 2),
+            (Expression.num(0), S("a"), -S("a"), Expression.num(0)),
+        ),
+        source="unit-test",
+    )
+    trace = SupertraceBlockTrace(
+        theory=theory,
+        name="stored_cg_kernel",
+        blocks=(),
+        modes=(),
+        expression=custom(S("i"), S("j")),
+    )
+    calls: list[tuple[Expression, object | None]] = []
+
+    def fake_evaluate_tensor_network(
+        expr: Expression,
+        *,
+        library: object | None = None,
+        function_library: object | None = None,
+        n_steps: int | None = None,
+        mode: object | None = None,
+    ) -> FakeTensorNetwork:
+        calls.append((expr, library))
+        return FakeTensorNetwork(expr)
+
+    def fake_tensor_network_result_scalar(network: FakeTensorNetwork) -> Expression:
+        return S("tensor")(network.expr)
+
+    monkeypatch.setattr(spenso_backend, "evaluate_tensor_network", fake_evaluate_tensor_network)
+    monkeypatch.setattr(spenso_backend, "tensor_network_result_scalar", fake_tensor_network_result_scalar)
+
+    evaluated = trace.evaluate_tensor_network()
+
+    assert len(calls) == 1
+    assert "pychete::CG" not in canonical_string(calls[0][0])
+    assert type(calls[0][1]).__name__ == "TensorLibrary"
+    assert evaluated.name == trace.name
+    assert_expr_equal(evaluated.expression, S("tensor")(calls[0][0]))
+
+
 def test_supertrace_block_trace_can_use_native_hep_spenso_builtins(monkeypatch: pytest.MonkeyPatch) -> None:
     theory = Theory("supertrace_spenso_hep")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")

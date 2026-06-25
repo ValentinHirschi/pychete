@@ -243,6 +243,35 @@ def test_spenso_backend_uses_stored_cg_tensor_component_metadata() -> None:
     assert len(registered) == 4
 
 
+def test_spenso_backend_auto_registers_stored_cg_components_for_tensor_network(monkeypatch) -> None:
+    theory = Theory("spenso_bridge_auto_stored_library")
+    theory.define_global_group("SU2F", s.SU(Expression.num(2)))
+    fund = theory.define_representation("SU2F", "fund")
+    custom = theory.define_cg_tensor(
+        "custom_eps",
+        (fund, fund),
+        tensor=spenso.cg_tensor_component_expression((2, 2), (Expression.num(0), S("a"), -S("a"), Expression.num(0))),
+        source="unit-test",
+    )
+    calls: list[object | None] = []
+
+    class FakeNetwork:
+        def __init__(self, lowered: Expression) -> None:
+            self.lowered = lowered
+
+    def fake_evaluate_tensor_network(lowered: Expression, **kwargs) -> FakeNetwork:
+        calls.append(kwargs["library"])
+        return FakeNetwork(lowered)
+
+    monkeypatch.setattr(spenso, "evaluate_tensor_network", fake_evaluate_tensor_network)
+
+    network = spenso.evaluate_pychete_tensor_network(theory, custom(S("i"), S("j")))
+
+    assert isinstance(network, FakeNetwork)
+    assert spenso.has_stored_cg_tensor_components(theory) is True
+    assert type(calls[0]).__name__ == "TensorLibrary"
+
+
 def test_spenso_backend_can_build_symbolic_cg_tensor_library() -> None:
     theory = Theory("spenso_bridge_symbolic_library")
     theory.define_global_group("SU2F", s.SU(Expression.num(2)))

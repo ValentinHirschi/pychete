@@ -3276,6 +3276,45 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 210 passed,
     1 skipped in 147.70s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Extended the spenso tensor-network path to use stored CG tensor components
+  automatically:
+  - `pychete.backends.spenso.has_stored_cg_tensor_components(...)` now reports
+    whether a theory has decodable dense CG component metadata;
+  - `evaluate_pychete_tensor_network(...)` now builds a native
+    `TensorLibrary` from stored CG component metadata when the caller has not
+    supplied another library or component strategy, so committed model fixtures
+    with stored `tFundf_*` payloads can route directly through spenso without
+    requiring explicit `cg_components_by_name`, `builtin_cg_components=True`,
+    or `symbolic_cg_components=True`;
+  - explicit component maps, built-in component registration, native HEP
+    builtins, and symbolic component fallback remain opt-in paths;
+  - added backend and `SupertraceBlockTrace.evaluate_tensor_network(...)`
+    regressions using a custom stored finite SU(2) CG tensor to prove the
+    automatic path is driven by stored metadata, not by built-in epsilon
+    special cases.
+- Verification for the stored-CG automatic spenso library slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_spenso_backend.py
+    tests/integration/matching/test_fluctuation_operator.py -q'` passed:
+    59 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files.
+- Final verification for the stored-CG automatic spenso library slice:
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_spenso_backend.py
+    tests/integration/matching/test_fluctuation_operator.py -q'` passed:
+    59 passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 212 passed,
+    1 skipped in 145.35s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
