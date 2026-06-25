@@ -4,6 +4,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import MatchingResult, Theory, evaluator_probe_equal
+from pychete.validation_fixtures import _gap_report
 
 
 def test_evaluator_probe_equal_accepts_symbolically_equivalent_expressions() -> None:
@@ -85,3 +86,42 @@ def test_matching_result_comparison_requires_complete_probe_inputs() -> None:
 
     with pytest.raises(ValueError, match="provided together"):
         result.compare_to(result, probe_parameters=[])
+
+
+def test_fixture_gap_report_records_evaluator_probe_equal_supertraces() -> None:
+    x = S("fixture_gap_probe_x")
+    theory = Theory("fixture_gap_probe")
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"probe": x.sin() ** 2 + x.cos() ** 2},
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"probe": Expression.num(1)},
+    )
+
+    report = _gap_report(
+        "candidate_fixture",
+        "reference_fixture",
+        candidate,
+        reference,
+        probe_parameters=[x],
+        probe_samples=[[0.0], [0.7], [1.3]],
+    )
+    report_obj = report.to_json_obj()
+
+    assert report.common_supertrace_names == ("probe",)
+    assert report.canonical_equal_common_supertrace_names == ()
+    assert report.canonical_different_common_supertrace_names == ("probe",)
+    assert report.numeric_probe_equal_common_supertrace_names == ("probe",)
+    assert report.numeric_probe_different_common_supertrace_names == ()
+    assert report.numeric_probe_equal_common_supertrace_count == 1
+    assert report.numeric_probe_different_common_supertrace_count == 0
+    assert report_obj["numeric_probe_equal_common_supertrace_names"] == ["probe"]
+    assert report_obj["numeric_probe_equal_common_supertrace_count"] == 1

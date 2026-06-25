@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-from collections.abc import Iterable
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass, field
 from html import escape
 from pathlib import Path
@@ -13,6 +13,7 @@ from .matching_options import OneLoopIntegralBackend, VakintIntegralStage
 from .matching_results import MatchingResult
 from .state import PycheteState
 from .theory import Theory
+from .validation import NumericValue
 
 
 @dataclass(frozen=True)
@@ -30,6 +31,8 @@ class MatchingFixtureGapReport:
     reference_only_supertrace_names: tuple[str, ...]
     canonical_equal_common_supertrace_names: tuple[str, ...]
     canonical_different_common_supertrace_names: tuple[str, ...]
+    numeric_probe_equal_common_supertrace_names: tuple[str, ...]
+    numeric_probe_different_common_supertrace_names: tuple[str, ...]
     candidate_matching_condition_names: tuple[str, ...]
     reference_matching_condition_names: tuple[str, ...]
     common_matching_condition_names: tuple[str, ...]
@@ -79,6 +82,18 @@ class MatchingFixtureGapReport:
         return len(self.canonical_different_common_supertrace_names)
 
     @property
+    def numeric_probe_equal_common_supertrace_count(self) -> int:
+        """Number of canonical-different shared supertraces accepted by numeric probes."""
+
+        return len(self.numeric_probe_equal_common_supertrace_names)
+
+    @property
+    def numeric_probe_different_common_supertrace_count(self) -> int:
+        """Number of numeric-probed shared supertraces that remain different."""
+
+        return len(self.numeric_probe_different_common_supertrace_names)
+
+    @property
     def candidate_matching_condition_count(self) -> int:
         """Number of matching conditions exposed by the candidate."""
 
@@ -112,6 +127,8 @@ class MatchingFixtureGapReport:
             "candidate_only_supertrace_count": len(self.candidate_only_supertrace_names),
             "canonical_equal_common_supertrace_count": self.canonical_equal_common_supertrace_count,
             "canonical_different_common_supertrace_count": self.canonical_different_common_supertrace_count,
+            "numeric_probe_equal_common_supertrace_count": self.numeric_probe_equal_common_supertrace_count,
+            "numeric_probe_different_common_supertrace_count": self.numeric_probe_different_common_supertrace_count,
             "candidate_matching_condition_count": self.candidate_matching_condition_count,
             "reference_matching_condition_count": self.reference_matching_condition_count,
             "common_matching_condition_count": len(self.common_matching_condition_names),
@@ -122,6 +139,8 @@ class MatchingFixtureGapReport:
             "reference_only_supertrace_names": list(self.reference_only_supertrace_names),
             "canonical_equal_common_supertrace_names": list(self.canonical_equal_common_supertrace_names),
             "canonical_different_common_supertrace_names": list(self.canonical_different_common_supertrace_names),
+            "numeric_probe_equal_common_supertrace_names": list(self.numeric_probe_equal_common_supertrace_names),
+            "numeric_probe_different_common_supertrace_names": list(self.numeric_probe_different_common_supertrace_names),
             "candidate_only_matching_condition_names": list(self.candidate_only_matching_condition_names),
             "reference_only_matching_condition_names": list(self.reference_only_matching_condition_names),
         }
@@ -141,6 +160,7 @@ class MatchingFixtureGapReport:
             f"{escape(self.reference_name)}: {status}, "
             f"supertraces={self.candidate_supertrace_count}/{self.reference_supertrace_count}, "
             f"canonical_equal_common_supertraces={self.canonical_equal_common_supertrace_count}, "
+            f"numeric_probe_equal_common_supertraces={self.numeric_probe_equal_common_supertrace_count}, "
             f"matching_conditions={self.candidate_matching_condition_count}/{self.reference_matching_condition_count})</code>"
         )
 
@@ -284,6 +304,10 @@ class ValidationFixture:
         internal_tensor_reduce: bool = True,
         internal_combine_terms: bool = False,
         internal_max_pole_order: int = 1,
+        probe_parameters: Sequence[Expression] | None = None,
+        probe_samples: Sequence[Sequence[NumericValue]] | None = None,
+        probe_absolute_tolerance: float = 1e-9,
+        probe_relative_tolerance: float = 1e-9,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
@@ -308,7 +332,16 @@ class ValidationFixture:
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
         )
-        return _gap_report(self.name, reference_name, candidate, reference)
+        return _gap_report(
+            self.name,
+            reference_name,
+            candidate,
+            reference,
+            probe_parameters=probe_parameters,
+            probe_samples=probe_samples,
+            probe_absolute_tolerance=probe_absolute_tolerance,
+            probe_relative_tolerance=probe_relative_tolerance,
+        )
 
     @classmethod
     def from_json_obj(cls, obj: dict[str, Any]) -> ValidationFixture:
@@ -374,11 +407,23 @@ def _gap_report(
     reference_name: str,
     candidate: MatchingResult,
     reference: MatchingResult,
+    *,
+    probe_parameters: Sequence[Expression] | None = None,
+    probe_samples: Sequence[Sequence[NumericValue]] | None = None,
+    probe_absolute_tolerance: float = 1e-9,
+    probe_relative_tolerance: float = 1e-9,
 ) -> MatchingFixtureGapReport:
     candidate_supertraces = set(candidate.supertraces)
     reference_supertraces = set(reference.supertraces)
     common_supertraces = candidate_supertraces & reference_supertraces
-    compared_supertraces = candidate.compare_to(reference, names=_sorted_names(common_supertraces))
+    compared_supertraces = candidate.compare_to(
+        reference,
+        names=_sorted_names(common_supertraces),
+        probe_parameters=probe_parameters,
+        probe_samples=probe_samples,
+        absolute_tolerance=probe_absolute_tolerance,
+        relative_tolerance=probe_relative_tolerance,
+    )
     candidate_conditions = set(candidate.matching_conditions)
     reference_conditions = set(reference.matching_conditions)
     candidate_names = set(candidate.expression_names())
@@ -398,6 +443,16 @@ def _gap_report(
         ),
         canonical_different_common_supertrace_names=tuple(
             item.name for item in compared_supertraces.expressions if not item.canonical_equal
+        ),
+        numeric_probe_equal_common_supertrace_names=tuple(
+            item.name
+            for item in compared_supertraces.expressions
+            if not item.canonical_equal and item.numeric_probe is not None and item.numeric_probe.equal
+        ),
+        numeric_probe_different_common_supertrace_names=tuple(
+            item.name
+            for item in compared_supertraces.expressions
+            if item.numeric_probe is not None and not item.numeric_probe.equal
         ),
         candidate_matching_condition_names=_sorted_names(candidate_conditions),
         reference_matching_condition_names=_sorted_names(reference_conditions),
