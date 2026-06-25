@@ -499,7 +499,7 @@ def _matchete_registered_label(expr: Expression, theory: Theory, registry: str) 
         return theory.fields[name].label
     if registry == "coupling" and name in theory.couplings:
         return theory.couplings[name].label
-    return theory.symbol(name, role=SymbolRole.EXTERNAL)
+    return theory.define_external(name).label
 
 
 def _matchete_index_label(expr: Expression, theory: Theory, env: _ModuleEnv) -> Expression:
@@ -595,7 +595,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
             return theory.coupling_handle(name)()
         if name in theory.cg_tensors:
             return theory.cg_tensor_handle(name)()
-        return theory.symbol(name, role=SymbolRole.EXTERNAL)
+        return theory.define_external(name)()
     if kind is AtomType.Add:
         return sum_expr(_convert_expression(child, theory, env) for child in args(expr))
     if kind is AtomType.Mul:
@@ -704,7 +704,7 @@ def _convert_expression(expr: Expression, theory: Theory, env: _ModuleEnv) -> Ex
             return theory.field_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
         if name in theory.couplings:
             return theory.coupling_handle(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
-        return theory.symbol(name, role=SymbolRole.EXTERNAL)(*(_convert_expression(child, theory, env) for child in args(expr)))
+        return theory.define_external(name)(*(_convert_expression(child, theory, env) for child in args(expr)))
     raise NotImplementedError(f"Unsupported parsed expression: {expr.format_plain()}")
 
 

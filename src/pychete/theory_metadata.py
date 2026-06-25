@@ -945,6 +945,31 @@ class FieldDefinition:
         }
 
 
+@dataclass(frozen=True)
+class ExternalDefinition:
+    """Registered metadata for an external symbol imported from input data."""
+
+    name: str
+    label: Expression
+
+    def expr(self, *args: Expression) -> Expression:
+        """Build this external symbol as an atom or function call."""
+
+        return self.label(*args) if args else self.label
+
+    def _repr_latex_(self) -> str:
+        return f"${latex_string(self.expr())}$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>{escape(display_string(self.expr()))}</code>"
+
+    def to_json(self) -> dict[str, Any]:
+        return {
+            "name": self.name,
+            "label": canonical_string(self.label),
+        }
+
+
 class FieldHandle:
     """Callable handle for constructing expressions of a registered field."""
 
@@ -1038,6 +1063,37 @@ class CGTensorHandle:
         return self.definition._repr_html_()
 
 
+class ExternalHandle:
+    """Callable handle for constructing a registered external symbol."""
+
+    def __init__(self, theory: Theory, definition: ExternalDefinition) -> None:
+        self.theory = theory
+        self.definition = definition
+
+    @property
+    def label(self) -> Expression:
+        """Symbolica label used internally for this external symbol."""
+
+        return self.definition.label
+
+    @property
+    def name(self) -> str:
+        """User-facing external-symbol name."""
+
+        return self.definition.name
+
+    def __call__(self, *args: Expression) -> Expression:
+        """Build this external symbol as an atom or function call."""
+
+        return self.definition.expr(*args)
+
+    def _repr_latex_(self) -> str:
+        return self.definition._repr_latex_()
+
+    def _repr_html_(self) -> str:
+        return self.definition._repr_html_()
+
+
 __all__ = [
     "BuiltinIndexType",
     "CGTensorDefinition",
@@ -1046,6 +1102,8 @@ __all__ = [
     "CouplingHandle",
     "CouplingSelfConjugate",
     "DynkinInput",
+    "ExternalDefinition",
+    "ExternalHandle",
     "FieldChirality",
     "FieldDefinition",
     "FieldHandle",

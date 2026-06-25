@@ -4377,6 +4377,47 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 257 passed, 1
     skipped in 261.76s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added a structured external-symbol registry for Matchete/Wilson labels:
+  - introduced public `ExternalDefinition` and `ExternalHandle`, exported
+    through `pychete.api` and package-root `pychete`;
+  - added `Theory.define_external(...)` and `Theory.external_handle(...)`,
+    with external labels stored in `theory.externals`, tagged with Symbolica's
+    `external` role, and serialized under the theory JSON `externals` section;
+  - kept backward compatibility with direct low-level
+    `Theory.symbol(..., role=SymbolRole.EXTERNAL)` calls by auto-registering
+    such symbols in `theory.externals`, but updated the Matchete parser to use
+    the structural `define_external(...)` route for unknown atoms, unknown
+    function heads, and unknown `Field[...]` / `Coupling[...]` labels;
+  - updated `AGENTS.md` so future parser/converter work uses
+    `Theory.define_external(...)` for imported Wilson-condition labels rather
+    than scattering direct external-symbol calls;
+  - rechecked the latest user decision that optional Mathematica conversion
+    scripts, especially `scripts/convert_matchete_model_state.wls`, remain
+    checked into top-level `scripts/` as user convenience tooling only, while
+    runtime pychete and normal pytest remain Matchete- and
+    Mathematica-independent.
+- Verification for the external-symbol registry slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py::test_external_symbols_are_registered_with_symbol_data_and_survive_json_restore
+    tests/integration/models/test_model_loaders.py::test_matchete_expression_parser_registers_unknown_external_symbols
+    tests/unit/definitions/test_public_api.py -q'` passed: 6 passed in
+    0.13s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_theory_definitions.py
+    tests/integration/models/test_model_loaders.py
+    tests/unit/loaders/test_matchete_model_state_converter.py
+    tests/unit/definitions/test_public_api.py -q'` passed: 44 passed in
+    0.25s;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 259 passed, 1
+    skipped in 261.79s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

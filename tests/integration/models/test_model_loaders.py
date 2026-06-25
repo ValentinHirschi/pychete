@@ -239,6 +239,18 @@ def test_matchete_loader_lowers_builtin_cg_labels_to_registered_tensors() -> Non
     assert len(theory.cg_tensors["eps_SU3c"].representation_exprs) == 3
 
 
+def test_matchete_expression_parser_registers_unknown_external_symbols() -> None:
+    theory = Theory("loader_externals")
+    expression = parse_matchete_expression("cHB + F[1] + Coupling[cHW, {}, 0]", theory)
+
+    assert sorted(theory.externals) == ["F", "cHB", "cHW"]
+    assert theory.external_handle("cHB").label.get_symbol_data(SymbolDataKey.ROLE.value) == SymbolRole.EXTERNAL.value
+    assert theory.external_handle("cHW").label.get_symbol_data(SymbolDataKey.NAME.value) == "cHW"
+    assert "loader_externals::external_F(1)" in canonical_string(expression)
+    assert "pychete::Coupling(loader_externals::external_cHW,pychete::List(),0)" in canonical_string(expression)
+    theory._validate_registered_expression(expression)
+
+
 def test_matchete_loader_expands_module_local_cg_helper_functions(tmp_path: Path) -> None:
     model = tmp_path / "local_cg_helpers.m"
     model.write_text(

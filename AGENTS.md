@@ -129,6 +129,14 @@ over these symbols must use native Symbolica restrictions such as
 `Expression.get_symbol_data` where applicable. Do not enumerate all fields,
 couplings, or indices in Python when a tag-restricted Symbolica pattern can
 select the relevant expressions directly.
+Imported names that are not registered fields, couplings, groups,
+representations, or CG tensors must be registered through
+`Theory.define_external(...)` and accessed through `Theory.external_handle(...)`.
+This is the structural route for Matchete-derived Wilson-condition labels and
+helper symbols: it preserves `external` Symbolica tags, symbol data, JSON
+round-trips, and Jupyter-friendly metadata objects. Do not scatter direct
+`Theory.symbol(..., role=SymbolRole.EXTERNAL)` calls in parsers or converters
+unless you are maintaining the low-level registry primitive itself.
 
 Group representation labels must be registered through
 `Theory.define_representation(...)`. Model-specific labels such as Matchete's

@@ -397,6 +397,32 @@ def test_numeric_coefficients_use_symbolica_arithmetic_not_symbol_store() -> Non
     assert not hasattr(s, "twenty_fourth")
 
 
+def test_external_symbols_are_registered_with_symbol_data_and_survive_json_restore() -> None:
+    theory = Theory("external_defs")
+    external = theory.define_external("cHB")
+    argument = S("x")
+    expression = s.Coupling(external.label, s.List(), 0) + external(argument)
+
+    assert sorted(theory.externals) == ["cHB"]
+    assert theory.external_handle("cHB").label == external.label
+    assert external.label.get_symbol_data(SymbolDataKey.ROLE.value) == SymbolRole.EXTERNAL.value
+    assert external.label.get_symbol_data(SymbolDataKey.NAME.value) == "cHB"
+    assert "external" in _local_tags(external.label)
+
+    theory._validate_registered_expression(expression)
+    payload = json.loads(theory.to_json())
+    assert payload["externals"]["cHB"]["label"] == canonical_string(external.label)
+
+    restored = Theory.from_json_obj(payload)
+    restored_external = restored.external_handle("cHB")
+    restored_expression = restored._parse_registered_expression(canonical_string(expression))
+
+    assert sorted(restored.externals) == ["cHB"]
+    assert canonical_string(restored_external.label) == canonical_string(external.label)
+    assert restored_external.label.get_symbol_data(SymbolDataKey.ROLE.value) == SymbolRole.EXTERNAL.value
+    assert canonical_string(restored_expression) == canonical_string(expression)
+
+
 def test_symbol_collectors_require_role_tags_on_user_labels_except_indices() -> None:
     theory = Theory("tagged_collectors")
     phi = theory.define_field("phi", s.Scalar, mass=0)

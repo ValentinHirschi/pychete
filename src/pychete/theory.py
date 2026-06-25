@@ -28,6 +28,8 @@ from .theory_metadata import (
     CouplingHandle,
     CouplingSelfConjugate,
     DynkinInput,
+    ExternalDefinition,
+    ExternalHandle,
     FieldChirality,
     FieldDefinition,
     FieldHandle,
@@ -113,6 +115,7 @@ class Theory:
         self.representation_labels: dict[str, Expression] = {}
         self.representations: dict[str, RepresentationDefinition] = {}
         self.cg_tensors: dict[str, CGTensorDefinition] = {}
+        self.externals: dict[str, ExternalDefinition] = {}
         self.define_index_type(BuiltinIndexType.LORENTZ)
 
     def symbol(
@@ -135,6 +138,8 @@ class Theory:
                 SymbolDataKey.ROLE.value: role_name,
                 SymbolDataKey.LABEL.value: name,
             }
+            if role_name == SymbolRole.EXTERNAL.value:
+                symbol_data_payload[SymbolDataKey.NAME.value] = name
             if data:
                 symbol_data_payload.update(data)
             self._symbols[key] = s.user(
@@ -143,6 +148,8 @@ class Theory:
                 tags=symbol_tags,
                 data=symbol_data_payload,
             )
+        if role_name == SymbolRole.EXTERNAL.value and name not in self.externals:
+            self.externals[name] = ExternalDefinition(name=name, label=self._symbols[key])
         return self._symbols[key]
 
     def symbol_manifest(self) -> list[dict[str, Any]]:
@@ -512,6 +519,31 @@ class Theory:
         """Return the callable handle for a registered CG tensor."""
 
         return CGTensorHandle(self, self.cg_tensors[name])
+
+    def external_handle(self, name: str) -> ExternalHandle:
+        """Return the callable handle for a registered external symbol."""
+
+        return ExternalHandle(self, self.externals[name])
+
+    def define_external(self, name: str) -> ExternalHandle:
+        """Register or return an external symbol owned by this theory.
+
+        External symbols represent imported names that are intentionally not
+        pychete fields, couplings, groups, representations, or CG tensors. The
+        primary use is Matchete-derived Wilson-condition labels and helper
+        symbols that must still round-trip with Symbolica tags and symbol data.
+        """
+
+        if name in self.externals:
+            return ExternalHandle(self, self.externals[name])
+        label = self.symbol(
+            name,
+            role=SymbolRole.EXTERNAL,
+            data={SymbolDataKey.NAME.value: name},
+        )
+        definition = ExternalDefinition(name=name, label=label)
+        self.externals[name] = definition
+        return ExternalHandle(self, definition)
 
     def define_cg_tensor(
         self,
@@ -981,6 +1013,7 @@ class Theory:
             "groups": self.groups,
             "representations": {name: value.to_json() for name, value in sorted(self.representations.items())},
             "cg_tensors": {name: value.to_json() for name, value in sorted(self.cg_tensors.items())},
+            "externals": {name: value.to_json() for name, value in sorted(self.externals.items())},
             "fields": {name: value.to_json() for name, value in sorted(self.fields.items())},
             "couplings": {name: value.to_json() for name, value in sorted(self.couplings.items())},
         }
@@ -1105,4 +1138,6 @@ class Theory:
                 self_conjugate=bool(data.get("self_conjugate", False)),
                 mass=mass,
             )
+        for name in obj.get("externals", {}):
+            theory.define_external(str(name))
         return theory
