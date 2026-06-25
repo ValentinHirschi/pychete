@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, Any, Iterable, Mapping
 
 from symbolica import Expression, S
 
-from .expr import is_head, list_expr
+from .expr import is_head, list_expr, sum_expr
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
@@ -929,6 +929,42 @@ class Theory:
 
         return field_def.mass_expr()
 
+    def _group_symbol_for_charge(self, charge: Expression) -> Expression | None:
+        for group_name in self.groups:
+            group_symbol = self.symbol(group_name, role=SymbolRole.GROUP)
+            if is_head(charge, group_symbol):
+                return group_symbol
+        return None
+
+    def _abelian_gauge_connection(self, definition: FieldDefinition) -> Expression:
+        """Return the scalarized Abelian gauge connection for ``definition``.
+
+        The current matching implementation represents vector components as a
+        scalarized field atom. Non-Abelian covariant derivatives therefore stay
+        delegated to the upcoming idenso/spenso-backed group-algebra slice.
+        """
+
+        terms: list[Expression] = []
+        for charge in definition.charge_exprs:
+            group_symbol = self._group_symbol_for_charge(charge)
+            if group_symbol is None:
+                continue
+            group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
+            if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+                continue
+            if len(charge) != 1:
+                raise ValueError(f"Gauge charge {canonical_string(charge)} must carry exactly one charge value")
+            coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+            field_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+            if not isinstance(coupling_name, str) or not isinstance(field_name, str):
+                raise ValueError(f"Gauge group {canonical_string(group_symbol)} is missing coupling/vector metadata")
+            if coupling_name not in self.couplings:
+                raise KeyError(f"Gauge group {canonical_string(group_symbol)} references unknown coupling {coupling_name!r}")
+            if field_name not in self.fields:
+                raise KeyError(f"Gauge group {canonical_string(group_symbol)} references unknown vector field {field_name!r}")
+            terms.append(charge[0] * self.coupling_handle(coupling_name)() * self.field_handle(field_name)())
+        return sum_expr(terms).expand()
+
     def free_lag(self, *field_names_or_handles: str | FieldHandle) -> Expression:
         """Build the free Lagrangian for registered fields.
 
@@ -949,14 +985,27 @@ class Theory:
             is_self_conjugate = definition.is_self_conjugate
             if bool(type_expr == s.Scalar):
                 mass = self.mass_expr(definition)
+                connection = self._abelian_gauge_connection(definition)
                 if is_self_conjugate:
+                    if not bool(connection == Expression.num(0)):
+                        raise ValueError("self-conjugate scalar fields cannot carry Abelian gauge charges in free_lag")
                     kinetic = handle(derivatives=[mu]) ** 2 / 2
                     if mass is not None:
                         kinetic = kinetic - mass**2 * field_expr**2 / 2
                 else:
-                    kinetic = s.Bar(handle(derivatives=[mu])) * handle(derivatives=[mu])
+                    derived_field = handle(derivatives=[mu])
+                    barred_derived_field = s.Bar(derived_field)
+                    barred_field = s.Bar(field_expr)
+                    kinetic = barred_derived_field * derived_field
+                    if not bool(connection == Expression.num(0)):
+                        kinetic = (
+                            kinetic
+                            + Expression.I * connection * barred_field * derived_field
+                            - Expression.I * connection * barred_derived_field * field_expr
+                            + connection**2 * barred_field * field_expr
+                        )
                     if mass is not None:
-                        kinetic = kinetic - mass**2 * s.Bar(field_expr) * field_expr
+                        kinetic = kinetic - mass**2 * barred_field * field_expr
                 out = out + kinetic
             elif is_head(type_expr, s.Vector):
                 nu = self.dummy_index(1)
@@ -967,7 +1016,10 @@ class Theory:
                     out = out - mass**2 * field_expr**2 / 2
             elif bool(type_expr == s.Fermion):
                 mass = self.mass_expr(definition)
+                connection = self._abelian_gauge_connection(definition)
                 dirac = Expression.I * s.NCM(s.Bar(field_expr), s.Gamma(mu), handle(derivatives=[mu]))
+                if not bool(connection == Expression.num(0)):
+                    dirac = dirac + connection * s.NCM(s.Bar(field_expr), s.Gamma(mu), field_expr)
                 if mass is not None:
                     dirac = dirac - mass * s.NCM(s.Bar(field_expr), field_expr)
                 out = out + dirac

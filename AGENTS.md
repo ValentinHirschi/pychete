@@ -169,6 +169,14 @@ current scalarized component convention and must produce
 present, extract the registered free inverse from the field-independent part of
 the momentum entry and leave field-dependent or off-diagonal kinetic terms in
 the interaction operator.
+Abelian gauge charges in `Theory.free_lag(...)` must be resolved from the
+registered group symbol data (`GROUP_KIND`, `GROUP_ABELIAN`, `GROUP_COUPLING`,
+and `GROUP_FIELD`) rather than parallel Python lookup tables. In the current
+scalarized vector convention, complex scalar and fermion free Lagrangians build
+one combined Abelian connection from all gauged U(1) charges before expanding
+the kinetic/current term. Global U(1) charges remain metadata only, and
+non-Abelian covariant terms must wait for the idenso/spenso-backed group
+algebra path rather than ad hoc Python expansion.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

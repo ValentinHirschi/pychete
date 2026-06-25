@@ -21,6 +21,7 @@ from pychete import (
     s,
 )
 from pychete.expr import cg_tensor_pattern, coupling_pattern, field_pattern, matching_subexpressions
+from tests.conftest import assert_expr_equal
 
 
 def _local_tags(label: Expression) -> set[str]:
@@ -92,6 +93,85 @@ def test_field_symbol_data_stores_charges_and_chirality() -> None:
     assert [canonical_string(charge_expr) for charge_expr in restored_field.definition.charge_exprs] == [canonical_string(charge)]
     assert restored.groups == theory.groups
     assert canonical_string(restored.group_charge("U1Y", S("qY"))) == canonical_string(charge)
+
+
+def test_free_lag_uses_abelian_charge_symbol_data_for_complex_scalar_kinetic() -> None:
+    theory = Theory("charged_scalar_free")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    theory.define_gauge_group("U1X", s.U1, "gX", "X")
+    theory.define_global_group("U1Global", s.U1)
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[
+            theory.group_charge("U1Y", 2),
+            theory.group_charge("U1X", -3),
+            theory.group_charge("U1Global", 11),
+        ],
+        self_conjugate=False,
+        mass=(FieldMassKind.LIGHT, "m"),
+    )
+    g_y = theory.coupling_handle("gY")
+    g_x = theory.coupling_handle("gX")
+    b_field = theory.field_handle("B")
+    x_field = theory.field_handle("X")
+    mass = theory.coupling_handle("m")
+    mu = theory.dummy_index(0)
+    field = phi()
+    derived_field = phi(derivatives=[mu])
+    connection = 2 * g_y() * b_field() - 3 * g_x() * x_field()
+    expected = (
+        s.Bar(derived_field) * derived_field
+        + Expression.I * connection * s.Bar(field) * derived_field
+        - Expression.I * connection * s.Bar(derived_field) * field
+        + connection**2 * s.Bar(field) * field
+        - mass() ** 2 * s.Bar(field) * field
+    )
+
+    assert_expr_equal(theory.free_lag(phi), expected)
+
+
+def test_free_lag_uses_abelian_charge_symbol_data_for_fermion_current() -> None:
+    theory = Theory("charged_fermion_free")
+    theory.define_gauge_group("U1e", s.U1, "e", "A")
+    psi = theory.define_field(
+        "psi",
+        s.Fermion,
+        charges=[theory.group_charge("U1e", S("q"))],
+        mass=(FieldMassKind.LIGHT, "m"),
+    )
+    coupling = theory.coupling_handle("e")
+    vector = theory.field_handle("A")
+    mass = theory.coupling_handle("m")
+    mu = theory.dummy_index(0)
+    field = psi()
+    connection = S("q") * coupling() * vector()
+    expected = (
+        Expression.I * s.NCM(s.Bar(field), s.Gamma(mu), psi(derivatives=[mu]))
+        + connection * s.NCM(s.Bar(field), s.Gamma(mu), field)
+        - mass() * s.NCM(s.Bar(field), field)
+    )
+
+    assert_expr_equal(theory.free_lag(psi), expected)
+
+
+def test_free_lag_rejects_abelian_charged_self_conjugate_scalars() -> None:
+    theory = Theory("charged_real_scalar_free")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=True,
+        mass=0,
+    )
+
+    try:
+        theory.free_lag(phi)
+    except ValueError as exc:
+        assert "self-conjugate scalar fields cannot carry Abelian gauge charges" in str(exc)
+    else:
+        raise AssertionError("charged self-conjugate scalar free_lag did not fail")
 
 
 def test_matching_condition_targets_expose_symbolica_role_metadata() -> None:

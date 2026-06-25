@@ -156,6 +156,28 @@ def test_fluctuation_operator_differential_entries_handle_barred_complex_scalars
     )
 
 
+def test_charged_scalar_free_lag_generates_gauge_interactions() -> None:
+    theory = Theory("fluctuation_charged_scalar_free")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=(FieldMassKind.LIGHT, "m"),
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    lagrangian = theory.free_lag(phi, vector)
+
+    operator = theory.fluctuation_operator(lagrangian, [s.Bar(phi()), phi(), vector()])
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, Expression.num(0))
+
+    assert_expr_equal(operator.free_inverse_entry(vector, vector), s.LoopMomentumSquared)
+    assert_expr_equal(operator.propagator_denominator_for_mode(vector()), denominator)
+    assert_expr_equal(operator.interaction_entry(vector, vector), 2 * coupling() ** 2 * phi() * s.Bar(phi()))
+
+
 def test_fluctuation_operator_denominator_extraction_rejects_interaction_masses() -> None:
     theory = Theory("fluctuation_denominator_interaction")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

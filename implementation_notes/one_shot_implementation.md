@@ -687,3 +687,48 @@ Latest verified baseline before this compact rollover:
     dependency manifest indicates GammaLoop was not requested for this local
     dependency build. The 50 deselected tests are the deliberately slow
     validation group under the batching policy.
+
+## Current Slice: Abelian Charge-Aware Free Lagrangians
+
+- Continuing the larger vector/gauge implementation batch instead of paying
+  broad validation after each small edit. This slice addresses another gap in
+  the same area: field charges were stored in Symbolica symbol data, but
+  `Theory.free_lag(...)` ignored them.
+- Implemented scalarized Abelian gauge connections for `free_lag(...)`:
+  - each stored charge expression is resolved through the registered group
+    symbol and its Symbolica data (`GROUP_KIND`, `GROUP_ABELIAN`,
+    `GROUP_COUPLING`, `GROUP_FIELD`);
+  - all gauged U(1) contributions are summed into one connection before the
+    complex-scalar kinetic term is expanded, so cross terms between U(1)
+    vectors are preserved;
+  - global U(1) charges remain metadata only;
+  - self-conjugate scalar fields with gauged Abelian charges fail explicitly
+    because this scalarized convention cannot represent a charged real scalar;
+  - fermion free Lagrangians now include the Abelian gauge-current term from
+    the same connection.
+- Added `AGENTS.md` guidance so future covariant/free-Lagrangian work keeps
+  resolving charge behavior through Symbolica symbol data and leaves
+  non-Abelian covariant derivatives to the idenso/spenso-backed group-algebra
+  route rather than ad hoc Python expansion.
+- Added focused unit tests for:
+  - complex scalar free Lagrangians with two gauged U(1) charges and one global
+    U(1) charge;
+  - fermion gauge-current terms from U(1) charge metadata;
+  - explicit rejection of self-conjugate charged scalar `free_lag(...)`.
+- Added a focused matching integration test showing that a charged scalar
+  `free_lag(...)` contributes the expected vector-vector interaction while the
+  vector free inverse and denominator remain the registered massless gauge
+  ones.
+- Verification in this slice:
+  - focused charged-free-Lagrangian definition tests passed:
+    3 passed, 22 deselected in 0.02s;
+  - focused charged-scalar matching integration test passed:
+    1 passed, 75 deselected in 0.26s;
+  - grouped definitions + matching gate passed:
+    122 passed in 1.98s;
+  - `mypy` passed with no issues in 32 source files;
+  - `git diff --check` passed;
+  - broader non-slow gate passed: 261 passed, 1 skipped, 50 deselected in
+    6.22s. The skipped test was the GammaLoop API import check because the
+    dependency manifest indicates GammaLoop was not requested for this local
+    dependency build.
