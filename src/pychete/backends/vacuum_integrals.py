@@ -198,6 +198,81 @@ def reduce_loop_functions_first_power(
     )
 
 
+def reduce_loop_function_ibp(
+    expr: Expression,
+    *,
+    target_mass_index: int = 0,
+    epsilon: Expression | None = None,
+    max_pole_order: int = 1,
+    max_steps: int = 100,
+) -> Expression:
+    """Reduce one ``LoopFunction`` atom with pychete's focused IBP rules.
+
+    This extends ``reduce_loop_function_first_power(...)`` with Matchete's two
+    massless-propagator relations for first-power loop functions. It is still a
+    local atom reducer, not the full Matchete ``SimplifyMassFunction`` optimizer
+    across sums.
+    """
+
+    loop_expr = canonize_loop_function(expr)
+    if bool(loop_expr == Expression.num(0)):
+        return Expression.num(0)
+    masses, _powers = _loop_function_data(loop_expr)
+    if not 0 <= target_mass_index < len(masses):
+        raise ValueError("target_mass_index is out of range for LoopFunction masses")
+    current = _swap_loop_function_masses(loop_expr, target_mass_index, 0)
+    pattern = _loop_function_pattern()
+    regulator = epsilon_symbol() if epsilon is None else epsilon
+    for _step in range(max_steps):
+        if not _has_reducible_ibp_loop_function(current):
+            break
+        current = current.replace(
+            pattern,
+            lambda match: _reduce_ibp_match(
+                pattern.replace_wildcards(match),
+                epsilon=regulator,
+            ),
+        ).expand()
+    else:
+        raise RuntimeError("LoopFunction IBP reduction did not converge")
+    return canonize_loop_functions(
+        _finite_loop_function_expression(
+            current,
+            epsilon=regulator,
+            max_pole_order=max_pole_order,
+        ),
+        combine_terms=True,
+    )
+
+
+def reduce_loop_functions_ibp(
+    expr: Expression,
+    *,
+    target_mass_index: int = 0,
+    epsilon: Expression | None = None,
+    max_pole_order: int = 1,
+    combine_terms: bool = False,
+) -> Expression:
+    """Apply focused ``LoopFunction`` IBP reduction to every matching atom."""
+
+    pattern = _loop_function_pattern()
+    for match in expr.match(pattern):
+        _loop_function_data(pattern.replace_wildcards(match))
+
+    def reduce_match(match: dict[Expression, Expression]) -> Expression:
+        return reduce_loop_function_ibp(
+            pattern.replace_wildcards(match),
+            target_mass_index=target_mass_index,
+            epsilon=epsilon,
+            max_pole_order=max_pole_order,
+        )
+
+    return _finish_evaluated_expression(
+        expr.replace(pattern, reduce_match).expand(),
+        combine_terms=combine_terms,
+    )
+
+
 def loop_function_to_vakint_integral(expr: Expression) -> Expression:
     """Lower one pychete ``LoopFunction`` atom to an equivalent scalar topology."""
 
@@ -466,6 +541,31 @@ def _first_loop_function_power_is_reducible(expr: Expression) -> bool:
     return len(masses) >= 2 and powers[0] > 1
 
 
+def _has_reducible_ibp_loop_function(expr: Expression) -> bool:
+    pattern = _loop_function_pattern()
+    return any(
+        _loop_function_ibp_is_reducible(pattern.replace_wildcards(match))
+        for match in expr.match(pattern)
+    )
+
+
+def _loop_function_ibp_is_reducible(expr: Expression) -> bool:
+    return _first_loop_function_power_is_reducible(expr) or _massless_power_is_reducible(expr)
+
+
+def _massless_power_is_reducible(expr: Expression) -> bool:
+    masses, powers = _loop_function_data(expr)
+    return bool(masses) and powers[0] == 1 and powers[-1] != 0
+
+
+def _reduce_ibp_match(expr: Expression, *, epsilon: Expression) -> Expression:
+    if _first_loop_function_power_is_reducible(expr):
+        return _reduce_first_power_match(expr, epsilon=epsilon)
+    if _massless_power_is_reducible(expr):
+        return _reduce_massless_power_match(expr)
+    return expr
+
+
 def _reduce_first_power_match(expr: Expression, *, epsilon: Expression) -> Expression:
     if not _first_loop_function_power_is_reducible(expr):
         return expr
@@ -491,6 +591,25 @@ def _reduce_first_power_match(expr: Expression, *, epsilon: Expression) -> Expre
             * loop_function(masses, tuple(new_powers))
         )
     return sum_expr(terms)
+
+
+def _reduce_massless_power_match(expr: Expression) -> Expression:
+    if not _massless_power_is_reducible(expr):
+        return expr
+    masses, powers = _loop_function_data(expr)
+    first_mass = masses[0]
+    mid = powers[1:-1]
+    last = powers[-1]
+    reduced_masses = masses[1:]
+    if last > 0:
+        return (
+            -loop_function(reduced_masses, (*mid, last)) / first_mass**2
+            + loop_function(masses, (1, *mid, last - 1)) / first_mass**2
+        )
+    return (
+        loop_function(reduced_masses, (*mid, last + 1))
+        + first_mass**2 * loop_function(masses, (1, *mid, last + 1))
+    )
 
 
 def _finite_loop_function_expression(
@@ -742,5 +861,7 @@ __all__ = [
     "loop_function_to_vakint_integral",
     "mu_r_squared_symbol",
     "reduce_loop_function_first_power",
+    "reduce_loop_function_ibp",
     "reduce_loop_functions_first_power",
+    "reduce_loop_functions_ibp",
 ]

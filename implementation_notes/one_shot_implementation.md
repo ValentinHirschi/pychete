@@ -4137,6 +4137,51 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 247 passed, 1
     skipped in 253.59s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Extended the focused loop-function IBP reducer with Matchete's massless
+  propagator relations:
+  - exposed `reduce_loop_function_ibp(...)` and
+    `reduce_loop_functions_ibp(...)` through `pychete.api` and the package
+    root;
+  - the new reducer keeps the previous first-power IBP rule and adds the two
+    `lfFullReductionRules` massless-propagator relations used once the first
+    massive power is one: the positive-massless-power rule that lowers the
+    final massless power and drops the first massive scale, and the
+    negative-massless-power rule that raises the final massless power while
+    generating the corresponding lower-mass and massive-scale terms;
+  - expression-wide reduction still delegates to Symbolica wildcard matching
+    and callable `Expression.replace(...)` over `s.LoopFunction(...)` atoms,
+    followed by the same full-loop pole insertion and native epsilon-finite
+    coefficient extraction used in the first-power slice;
+  - this remains intentionally narrower than Matchete's full
+    `SimplifyMassFunction` optimizer across sums, but it now covers all three
+    local `lfFullReductionRules` needed by an atom-level LF reduction path;
+  - tests cover positive and negative massless-power identities and
+    expression-wide replacement. The positive-massless-power equality check
+    explicitly normalizes the `log(a^2) -> 2 log(a)` branch convention with a
+    Symbolica replacement before asserting evaluated equality.
+- Verification for the extended loop-function IBP reducer so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_reduce_loop_function_ibp_applies_positive_massless_power_relation
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_reduce_loop_function_ibp_applies_negative_massless_power_relation
+    tests/unit/backends/test_vacuum_integrals_backend.py::test_reduce_loop_functions_ibp_replaces_atoms_expression_wide
+    -q'` passed: 3 passed in 0.03s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/backends/test_vacuum_integrals_backend.py -q'` passed: 30
+    passed in 2.98s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py -q'` passed: 4 passed in
+    0.02s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 250 passed, 1
+    skipped in 251.77s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

@@ -132,6 +132,54 @@ def test_reduce_loop_function_first_power_leaves_already_reduced_atoms_unchanged
     assert_expr_equal(vacuum_integrals.reduce_loop_function_first_power(loop_function), loop_function)
 
 
+def test_reduce_loop_function_ibp_applies_positive_massless_power_relation() -> None:
+    a = S("a")
+    b = S("b")
+    loop_function = vacuum_integrals.loop_function((a, b), (1, 1, 1))
+    reduced = vacuum_integrals.reduce_loop_function_ibp(loop_function)
+    expected = (
+        vacuum_integrals.loop_function((a, b), (1, 1, 0)) / a**2
+        - vacuum_integrals.loop_function((b,), (1, 0)) / (a**2 * b**2)
+    )
+
+    assert_expr_equal(reduced, expected)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_loop_functions(loop_function - reduced, combine_terms=True).replace(
+            (a**2).log(),
+            2 * a.log(),
+        ),
+        Expression.num(0),
+    )
+
+
+def test_reduce_loop_function_ibp_applies_negative_massless_power_relation() -> None:
+    a = S("a")
+    b = S("b")
+    loop_function = vacuum_integrals.loop_function((a, b), (1, 1, -1))
+    reduced = vacuum_integrals.reduce_loop_function_ibp(loop_function)
+    expected = vacuum_integrals.loop_function((b,), (1, 0)) + a**2 * vacuum_integrals.loop_function((a, b), (1, 1, 0))
+
+    assert_expr_equal(reduced, expected)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_loop_functions(loop_function - reduced, combine_terms=True),
+        Expression.num(0),
+    )
+
+
+def test_reduce_loop_functions_ibp_replaces_atoms_expression_wide() -> None:
+    a = S("a")
+    b = S("b")
+    coefficient = S("coeff")
+    expression = coefficient * vacuum_integrals.loop_function((a, b), (2, 1, 1))
+    reduced = vacuum_integrals.reduce_loop_functions_ibp(expression)
+
+    assert canonical_string(reduced) != canonical_string(expression)
+    assert_expr_equal(
+        vacuum_integrals.evaluate_loop_functions(expression - reduced, combine_terms=True),
+        Expression.num(0),
+    )
+
+
 def test_evaluate_loop_functions_uses_internal_finite_loop_function_convention() -> None:
     m1 = S("M1")
     m2 = S("M2")

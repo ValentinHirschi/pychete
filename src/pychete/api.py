@@ -13,7 +13,9 @@ from .backends.vacuum_integrals import (
     loop_function_pole_part,
     loop_function_to_vakint_integral,
     reduce_loop_function_first_power,
+    reduce_loop_function_ibp,
     reduce_loop_functions_first_power,
+    reduce_loop_functions_ibp,
 )
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import (
@@ -129,7 +131,9 @@ __all__ = [
     "operator_dimension",
     "one_loop_normalization_factor",
     "reduce_loop_function_first_power",
+    "reduce_loop_function_ibp",
     "reduce_loop_functions_first_power",
+    "reduce_loop_functions_ibp",
     "relabel_dummy_indices",
     "s",
     "series_eft",
