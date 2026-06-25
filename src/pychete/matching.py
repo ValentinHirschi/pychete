@@ -29,7 +29,6 @@ from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
     VakintIntegralStage,
-    one_loop_normalization_factor,
     one_loop_normalization_label,
 )
 from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
@@ -1691,38 +1690,10 @@ class OneLoopSetup:
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
         )
-        factor = one_loop_normalization_factor(normalization)
-        normalized_off_shell = (factor * unnormalized.off_shell_eft_lagrangian).expand()
-        normalized_on_shell = (factor * unnormalized.on_shell_eft_lagrangian).expand()
-        supertraces = dict(unnormalized.supertraces)
-        supertraces["interaction_power_type_loop_normalization_factor"] = factor
-        supertraces["interaction_power_type_vakint_integral_sum_unnormalized"] = unnormalized.expression(
-            "interaction_power_type_vakint_integral_sum"
-        )
-        supertraces["interaction_power_type_normalized_eft_lagrangian"] = normalized_off_shell
-        if "interaction_power_type_vakint_pole_part" in unnormalized.supertraces:
-            supertraces["interaction_power_type_normalized_vakint_pole_part"] = (
-                factor * unnormalized.expression("interaction_power_type_vakint_pole_part")
-            ).expand()
-        if "interaction_power_type_vakint_finite_part" in unnormalized.supertraces:
-            supertraces["interaction_power_type_normalized_vakint_finite_part"] = (
-                factor * unnormalized.expression("interaction_power_type_vakint_finite_part")
-            ).expand()
-        return MatchingResult(
-            theory=self.theory,
-            uv_lagrangian=self.uv_lagrangian,
-            off_shell_eft_lagrangian=normalized_off_shell,
-            on_shell_eft_lagrangian=normalized_on_shell,
-            matching_conditions=unnormalized.matching_conditions,
-            fluctuation_operators=unnormalized.fluctuation_operators,
-            supertraces=supertraces,
-            metadata={
-                **unnormalized.metadata,
-                "stage": "interaction_power_type_normalized_vakint_result",
-                "loop_normalization": one_loop_normalization_label(normalization),
-                "loop_normalization_applied": True,
-                "complete": False,
-            },
+        return unnormalized.with_loop_normalization(
+            normalization,
+            stage="interaction_power_type_normalized_vakint_result",
+            unnormalized_expression_name="interaction_power_type_vakint_integral_sum",
         )
 
     def interaction_power_type_minimal_subtraction_result(
@@ -3316,8 +3287,6 @@ def match_one_loop(
         )
     selected_backend = OneLoopIntegralBackend.from_user(options.integral_backend)
     normalization_label = one_loop_normalization_label(options.normalization)
-    if selected_backend is not OneLoopIntegralBackend.VAKINT and normalization_label != OneLoopNormalization.PREVIEW.value:
-        raise ValueError("one-loop normalization currently applies only to the vakint preview backend")
     if selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_power_type_internal_matching_result(
             heavy_field_dimension=options.heavy_field_dimension,
@@ -3388,6 +3357,11 @@ def match_one_loop(
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
         )
+    if (
+        normalization_label != OneLoopNormalization.PREVIEW.value
+        and result.metadata.get("loop_normalization_applied") is not True
+    ):
+        result = result.with_loop_normalization(options.normalization)
     result = replace(
         result,
         metadata={

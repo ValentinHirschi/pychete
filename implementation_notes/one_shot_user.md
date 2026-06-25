@@ -154,3 +154,8 @@ discoveries, dependency patches, blockers, and remaining work.
   invoke pychete's fixture converter. This is a convenience wrapper only; the
   committed fixtures remain the canonical pychete inputs for users/tests
   without Mathematica.
+- Keep the converter Mathematica scripts pushed with pychete in the top-level
+  `scripts/` directory because users with Mathematica may appreciate the
+  convenience route. This does not soften the independence rule: pychete
+  itself, normal pytest, and committed validation fixtures must remain fully
+  Matchete- and Mathematica-independent.

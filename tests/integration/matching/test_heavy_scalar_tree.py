@@ -251,16 +251,49 @@ def test_one_loop_match_options_apply_vakint_normalization() -> None:
     )
     assert_expr_equal(normalized.off_shell_eft_lagrangian, factor * raw.off_shell_eft_lagrangian)
 
-    with pytest.raises(ValueError, match="vakint preview backend"):
-        theory.match(
-            lagrangian,
-            eft_order=6,
-            loop_order=1,
-            one_loop_options=OneLoopMatchOptions(
-                integral_backend=OneLoopIntegralBackend.INTERNAL,
-                normalization=OneLoopNormalization.MATCHETE_HBAR,
-            ),
-        )
+    custom_factor = S("custom_internal_loop_factor")
+    raw_internal = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+        ),
+    )
+    normalized_internal = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            normalization=custom_factor,
+        ),
+    )
+
+    assert isinstance(raw_internal, MatchingResult)
+    assert isinstance(normalized_internal, MatchingResult)
+    assert normalized_internal.metadata["stage"] == "normalized_interaction_power_type_internal_integral_result"
+    assert normalized_internal.metadata["unnormalized_stage"] == raw_internal.metadata["stage"]
+    assert normalized_internal.metadata["loop_normalization"] == "custom"
+    assert normalized_internal.metadata["loop_normalization_applied"] is True
+    assert_expr_equal(
+        normalized_internal.expression("interaction_power_type_loop_normalization_factor"),
+        custom_factor,
+    )
+    assert_expr_equal(
+        normalized_internal.expression("interaction_power_type_unnormalized_eft_lagrangian"),
+        raw_internal.off_shell_eft_lagrangian,
+    )
+    assert_expr_equal(
+        normalized_internal.expression("interaction_power_type_normalized_internal_integral_finite_part"),
+        custom_factor * raw_internal.expression("interaction_power_type_internal_integral_finite_part"),
+    )
+    assert_expr_equal(
+        normalized_internal.off_shell_eft_lagrangian,
+        custom_factor * raw_internal.off_shell_eft_lagrangian,
+    )
 
 
 def test_one_loop_match_options_select_vakint_minimal_subtraction_backend() -> None:

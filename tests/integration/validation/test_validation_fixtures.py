@@ -359,6 +359,37 @@ def test_validation_fixture_preview_can_apply_vakint_normalization_without_mathe
     assert_expr_equal(normalized.on_shell_eft_lagrangian, factor * raw.on_shell_eft_lagrangian)
 
 
+def test_validation_fixture_preview_can_apply_internal_normalization_without_mathematica() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    factor = S("fixture_internal_loop_factor")
+    raw = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+    )
+    normalized = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+        normalization=factor,
+    )
+
+    assert normalized.metadata["stage"] == "normalized_interaction_power_type_internal_minimal_subtraction_result"
+    assert normalized.metadata["unnormalized_stage"] == raw.metadata["stage"]
+    assert normalized.metadata["loop_normalization"] == "custom"
+    assert normalized.metadata["loop_normalization_applied"] is True
+    assert normalized.metadata["fixture"] == fixture.name
+    assert normalized.metadata["fixture_kind"] == fixture.kind
+    assert_expr_equal(normalized.expression("interaction_power_type_loop_normalization_factor"), factor)
+    assert_expr_equal(
+        normalized.expression("interaction_power_type_unnormalized_eft_lagrangian"),
+        raw.off_shell_eft_lagrangian,
+    )
+    assert_expr_equal(
+        normalized.expression("interaction_power_type_normalized_internal_integral_finite_part"),
+        factor * raw.expression("interaction_power_type_internal_integral_finite_part"),
+    )
+    assert_expr_equal(normalized.on_shell_eft_lagrangian, factor * raw.on_shell_eft_lagrangian)
+
+
 def test_validation_fixture_preview_can_stage_named_supertraces_with_vakint_engine() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     raw_preview = fixture.one_loop_preview(max_trace_order=1)

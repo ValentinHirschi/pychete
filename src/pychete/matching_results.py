@@ -7,11 +7,29 @@ from typing import TYPE_CHECKING
 
 from symbolica import Expression
 
+from .matching_options import (
+    OneLoopNormalization,
+    OneLoopNormalizationInput,
+    one_loop_normalization_factor,
+    one_loop_normalization_label,
+)
 from .symbols import canonical_string
 from .validation import NumericProbeResult, NumericValue, evaluator_probe_equal
 
 if TYPE_CHECKING:
     from .theory import Theory
+
+
+_DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES = {
+    "interaction_power_type_vakint_pole_part": "interaction_power_type_normalized_vakint_pole_part",
+    "interaction_power_type_vakint_finite_part": "interaction_power_type_normalized_vakint_finite_part",
+    "interaction_power_type_internal_integral_pole_part": (
+        "interaction_power_type_normalized_internal_integral_pole_part"
+    ),
+    "interaction_power_type_internal_integral_finite_part": (
+        "interaction_power_type_normalized_internal_integral_finite_part"
+    ),
+}
 
 
 @dataclass(frozen=True)
@@ -181,6 +199,69 @@ class MatchingResult:
                 "matching_conditions_projected": True,
                 "matching_condition_projection_source": source,
                 "matching_condition_projection_count": len(projected),
+            },
+        )
+
+    def with_loop_normalization(
+        self,
+        normalization: OneLoopNormalizationInput,
+        *,
+        stage: str | None = None,
+        unnormalized_expression_name: str | None = None,
+        unnormalized_expression_alias: str | None = None,
+        normalized_supertrace_sources: Mapping[str, str] | None = None,
+    ) -> MatchingResult:
+        """Return a one-loop result scaled by a convention-normalization factor.
+
+        Normalization is a convention layer on top of the backend result. The
+        backend still computes the unnormalized EFT preview; this method records
+        that expression, scales the off/on-shell Lagrangians and any existing
+        matching-condition coefficients, and stores the factor as a Symbolica
+        expression stage for inspection.
+        """
+
+        normalization_label = one_loop_normalization_label(normalization)
+        if normalization_label == OneLoopNormalization.PREVIEW.value:
+            return self
+        factor = one_loop_normalization_factor(normalization)
+        normalized_off_shell = (factor * self.off_shell_eft_lagrangian).expand()
+        normalized_on_shell = (factor * self.on_shell_eft_lagrangian).expand()
+        normalized_matching_conditions = {
+            name: (factor * expression).expand() for name, expression in self.matching_conditions.items()
+        }
+        supertraces = dict(self.supertraces)
+        supertraces["interaction_power_type_loop_normalization_factor"] = factor
+        supertraces["interaction_power_type_unnormalized_eft_lagrangian"] = self.off_shell_eft_lagrangian
+        supertraces["interaction_power_type_normalized_eft_lagrangian"] = normalized_off_shell
+        if unnormalized_expression_name is not None:
+            alias = unnormalized_expression_alias or f"{unnormalized_expression_name}_unnormalized"
+            supertraces[alias] = self.expression(unnormalized_expression_name)
+        stage_sources = _DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES
+        if normalized_supertrace_sources is not None:
+            stage_sources = {**stage_sources, **normalized_supertrace_sources}
+        for source_name, target_name in stage_sources.items():
+            if source_name in self.supertraces:
+                supertraces[target_name] = (factor * self.supertraces[source_name]).expand()
+        previous_stage = self.metadata.get("stage")
+        normalized_stage = stage
+        if normalized_stage is None:
+            if isinstance(previous_stage, str):
+                normalized_stage = f"normalized_{previous_stage}"
+            else:
+                normalized_stage = "normalized_one_loop_result"
+        return replace(
+            self,
+            off_shell_eft_lagrangian=normalized_off_shell,
+            on_shell_eft_lagrangian=normalized_on_shell,
+            matching_conditions=normalized_matching_conditions,
+            supertraces=supertraces,
+            metadata={
+                **self.metadata,
+                "stage": normalized_stage,
+                "unnormalized_stage": previous_stage if isinstance(previous_stage, str) else None,
+                "loop_normalization": normalization_label,
+                "loop_normalization_applied": True,
+                "complete": False,
             },
         )
 

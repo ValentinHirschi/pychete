@@ -4284,6 +4284,50 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 256 passed, 1
     skipped in 263.32s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added backend-independent one-loop normalization plumbing:
+  - `MatchingResult.with_loop_normalization(...)` now applies any non-preview
+    loop-normalization convention as a result-level Symbolica expression
+    transform, scaling off-shell/on-shell EFT Lagrangians and any already
+    stored matching-condition coefficients while retaining the unnormalized
+    result for inspection;
+  - the existing vakint-normalized preview route delegates to that shared
+    helper but keeps the prior `interaction_power_type_normalized_vakint_result`
+    stage and `interaction_power_type_vakint_integral_sum_unnormalized` stage
+    name for compatibility;
+  - public `Theory.match(..., loop_order=1)` and
+    `ValidationFixture.one_loop_preview(...)` now allow custom or Matchete-style
+    normalization factors with the pychete internal and internal
+    minimal-subtraction analytic backends, not only the raw vakint preview;
+  - normalized results expose `interaction_power_type_loop_normalization_factor`,
+    `interaction_power_type_unnormalized_eft_lagrangian`, and
+    `interaction_power_type_normalized_eft_lagrangian`; known vakint and
+    internal pole/finite supertrace stages are also normalized under explicit
+    stage names.
+- Recorded the latest user decision on optional Mathematica conversion helpers:
+  keep the discoverable user-facing Mathematica wrappers under top-level
+  `scripts/` and pushed with pychete, while maintaining the hard boundary that
+  runtime pychete code and normal pytest remain independent of Mathematica,
+  `wolframscript`, and Matchete.
+- Verification for the backend-independent normalization slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_options_apply_vakint_normalization
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_vakint_normalization_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_internal_normalization_without_mathematica
+    -q'` passed: 3 passed in 0.96s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_heavy_scalar_tree.py
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 40
+    passed in 257.56s.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 257 passed, 1
+    skipped in 261.02s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

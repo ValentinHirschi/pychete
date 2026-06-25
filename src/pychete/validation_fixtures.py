@@ -419,8 +419,6 @@ class ValidationFixture:
             )
         selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
         normalization_label = one_loop_normalization_label(normalization)
-        if selected_backend is not OneLoopIntegralBackend.VAKINT and normalization_label != OneLoopNormalization.PREVIEW.value:
-            raise ValueError("one-loop normalization currently applies only to the vakint preview backend")
         if selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_power_type_internal_matching_result(
                 heavy_field_dimension=heavy_field_dimension,
@@ -490,6 +488,11 @@ class ValidationFixture:
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
             )
+        if (
+            normalization_label != OneLoopNormalization.PREVIEW.value
+            and result.metadata.get("loop_normalization_applied") is not True
+        ):
+            result = result.with_loop_normalization(normalization)
         return MatchingResult(
             theory=result.theory,
             uv_lagrangian=result.uv_lagrangian,
