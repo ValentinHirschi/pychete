@@ -1040,6 +1040,7 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     assert internal_subtracted.metadata["combine_terms"] is True
     assert_expr_equal(internal_subtracted.off_shell_eft_lagrangian, expected_internal_finite)
     assert_expr_equal(internal_subtracted.on_shell_eft_lagrangian, expected_internal_finite)
+    assert_expr_equal(internal_subtracted.expression("hScalar-lScalar"), expected_internal_finite)
     assert_expr_equal(
         internal_subtracted.expression("interaction_power_type_internal_integral_sum"),
         expected_internal,

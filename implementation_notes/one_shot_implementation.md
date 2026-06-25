@@ -4721,6 +4721,46 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 272 passed,
     1 skipped in 278.96s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Corrected named internal minimal-subtraction supertrace staging:
+  - inspected raw, internal, and internal-MS named traces for the default
+    committed fixtures and confirmed that internal-MS aggregate Lagrangians were
+    finite, while named per-supertrace entries still came from the
+    unrenormalized internal expression;
+  - `OneLoopSetup.interaction_power_type_internal_minimal_subtraction_result()`
+    now replaces named contribution entries such as `hScalar-lScalar` with
+    their native `vakint.finite_part(...)`, keeping the aggregate
+    `interaction_power_type_internal_integral_sum`,
+    `interaction_power_type_internal_integral_pole_part`,
+    `interaction_power_type_internal_integral_finite_part`, and
+    `interaction_power_type_internal_integral_ms_counterterm` stages intact for
+    inspection;
+  - added focused matching coverage proving a named internal-MS trace equals
+    the finite part, and manually checked a Singlet Scalar fixture named trace
+    no longer contains `vakint::ε`.
+- Verification for the named internal-MS staging slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces
+    -q'` passed: 1 passed in 0.20s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend_without_mathematica
+    -q'` passed: 2 passed in 48.90s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/matching/test_fluctuation_operator.py
+    tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend_without_mathematica
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_internal_ms_one_loop_coverage
+    -q'` passed: 40 passed in 49.61s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 272 passed,
+    1 skipped in 290.21s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 

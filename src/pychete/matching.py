@@ -1636,6 +1636,18 @@ class OneLoopSetup:
         pole = unrenormalized.expression("interaction_power_type_internal_integral_pole_part")
         finite = unrenormalized.expression("interaction_power_type_internal_integral_finite_part")
         counterterm = (-pole).expand()
+        finite_named_supertraces = _finite_named_supertraces(
+            unrenormalized.supertraces,
+            (
+                contribution.name
+                for contribution in self.interaction_power_type_contributions(
+                    heavy_field_dimension=heavy_field_dimension,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+            ),
+            epsilon=epsilon,
+        )
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -1645,6 +1657,7 @@ class OneLoopSetup:
             fluctuation_operators=unrenormalized.fluctuation_operators,
             supertraces={
                 **unrenormalized.supertraces,
+                **finite_named_supertraces,
                 "interaction_power_type_internal_integral_ms_counterterm": counterterm,
             },
             metadata={
@@ -3027,6 +3040,21 @@ def _named_internal_supertraces(
             combine_terms=combine_terms,
         )
     return out
+
+
+def _finite_named_supertraces(
+    supertraces: Mapping[str, Expression],
+    names: Iterable[str],
+    *,
+    epsilon: Expression | None = None,
+) -> dict[str, Expression]:
+    from .backends import vakint
+
+    return {
+        name: vakint.finite_part(supertraces[name], epsilon=epsilon)
+        for name in names
+        if name in supertraces
+    }
 
 
 def _vakint_expression_at_stage(
