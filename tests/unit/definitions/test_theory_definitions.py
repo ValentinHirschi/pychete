@@ -433,10 +433,10 @@ def test_expand_non_abelian_covariant_derivatives_uses_symbolica_replacements() 
     input_index = theory.index("i", fund)
     field = higgs(input_index)
     derived = higgs(input_index, derivatives=[mu])
-    bar_output = theory.index(s.CovariantDerivativeIndex(Expression.num(0), Expression.num(0)), fund)
-    bar_adjoint = theory.index(s.CovariantDerivativeIndex(Expression.num(0), Expression.num(1)), adj)
-    output = theory.index(s.CovariantDerivativeIndex(Expression.num(1), Expression.num(0)), fund)
-    adjoint = theory.index(s.CovariantDerivativeIndex(Expression.num(1), Expression.num(1)), adj)
+    bar_output = theory.index(theory.symbol("covariant_derivative_0_0", role=SymbolRole.INDEX), fund)
+    bar_adjoint = theory.index(theory.symbol("covariant_derivative_0_1", role=SymbolRole.INDEX), adj)
+    output = theory.index(theory.symbol("covariant_derivative_1_0", role=SymbolRole.INDEX), fund)
+    adjoint = theory.index(theory.symbol("covariant_derivative_1_1", role=SymbolRole.INDEX), adj)
     bar_insertion = theory.non_abelian_gauge_generator_insertion(
         derived,
         0,

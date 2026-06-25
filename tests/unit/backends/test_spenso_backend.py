@@ -153,6 +153,26 @@ def test_spenso_backend_lowers_cg_atoms_with_native_hep_builtins() -> None:
     assert "pychete::CG" not in lowered_text
 
 
+def test_spenso_backend_lowers_generated_non_abelian_derivative_cg_tensors() -> None:
+    theory = Theory("spenso_bridge_generated_nonabelian_cd")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    fund = theory.define_representation("SU3c", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], mass=0)
+    mu = theory.dummy_index(0)
+    index = theory.index("i", fund)
+    expanded = theory.expand_non_abelian_covariant_derivatives(
+        s.Bar(higgs(index, derivatives=[mu])) * higgs(index, derivatives=[mu])
+    )
+
+    lowered = spenso.lower_cg_tensors_to_spenso(theory, expanded, native_hep_builtins=True)
+    lowered_text = canonical_string(lowered)
+
+    assert "pychete::CG" not in lowered_text
+    assert "spenso::t(" in lowered_text
+    assert "spenso_bridge_generated_nonabelian_cd::index_covariant_derivative_0_1" in lowered_text
+    assert "spenso_bridge_generated_nonabelian_cd::index_covariant_derivative_1_1" in lowered_text
+
+
 def test_spenso_backend_evaluates_pychete_tensor_network_after_cg_lowering(monkeypatch) -> None:
     theory = Theory("spenso_bridge_eval")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")

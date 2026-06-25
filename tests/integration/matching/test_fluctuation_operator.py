@@ -283,7 +283,7 @@ def test_one_loop_match_option_expands_non_abelian_covariant_derivatives_before_
     assert result.metadata["non_abelian_covariant_derivatives_expanded"] is True
     expanded = canonical_string(captured["lagrangian"])
     assert "cg_tensor_gen_SU2L_fund" in expanded
-    assert "covariant_derivative_index" in expanded
+    assert "index_covariant_derivative" in expanded
 
 
 def test_charged_fermion_free_lag_subtracts_only_registered_free_inverse() -> None:

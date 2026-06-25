@@ -94,17 +94,22 @@
 - Added `Theory.expand_non_abelian_covariant_derivatives(...)` and
   `OneLoopMatchOptions.expand_non_abelian_covariant_derivatives` as an opt-in
   Symbolica replacement pass for first-derivative fields with registered
-  non-Abelian gauge representation indices. The pass generates dedicated
-  `CovariantDerivativeIndex(...)` labels for the new output and adjoint indices
-  and routes each `g * V * CG(gen) * field` term through the centralized
-  generator insertion helper.
+  non-Abelian gauge representation indices. The pass generates theory-owned
+  plain `SymbolRole.INDEX` labels for the new output and adjoint indices and
+  routes each `g * V * CG(gen) * field` term through the centralized generator
+  insertion helper.
+- Updated the spenso adapter so registered pychete `CG(..., List(Index(...)))`
+  atoms lower by extracting pychete index labels before calling native
+  `TensorStructure.index(..., cook_indices=True)`. This fixes the generated
+  non-Abelian covariant-derivative CG tensors and also closes an older gap for
+  loader-produced CG tensors that carry full pychete `Index(...)` arguments.
 - This slice still does not complete non-Abelian group-algebra simplification:
-  expanded CG tensors must next be lowered/simplified through spenso/idenso in
-  supertraces, and broader validation should wait until that contraction path is
-  materially improved.
-- Validation so far: definitions/public-API tests pass with 37 tests, and the
+  expanded CG tensors can now lower through spenso, but broader supertrace
+  simplification/contraction and fixture validation remain to be improved.
+- Validation so far: definitions/public-API tests pass with 37 tests, the
   focused one-loop covariant-derivative option tests pass with 2 selected
-  integration tests.
+  integration tests, and focused spenso lowering tests pass with 8 selected
+  backend tests.
 
 ## Current Validation Frontier
 

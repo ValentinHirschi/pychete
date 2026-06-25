@@ -227,6 +227,10 @@ Do not duplicate the `g * V * CG(gen) * field` expression shape manually in new
 code. After such expansion, simplify/contract the generated CG tensors through
 the spenso/idenso-backed group-algebra path rather than Python-side tensor
 logic.
+Public pychete expressions should keep full `Index(label, representation)`
+metadata on CG-tensor arguments. The spenso adapter is responsible for
+extracting the abstract labels for native `TensorStructure.index(...)`; do not
+strip index metadata earlier just to satisfy backend parsing.
 Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and

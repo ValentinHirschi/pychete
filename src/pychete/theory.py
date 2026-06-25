@@ -1105,7 +1105,14 @@ class Theory:
         return tuple(slots)
 
     def _covariant_derivative_generated_index(self, number: int, kind: int, representation: Expression) -> Expression:
-        return self.index(s.CovariantDerivativeIndex(Expression.num(number), Expression.num(kind)), representation)
+        label = self.symbol(
+            f"covariant_derivative_{number}_{kind}",
+            role=SymbolRole.INDEX,
+            data={
+                SymbolDataKey.NAME.value: f"covariant_derivative_{number}_{kind}",
+            },
+        )
+        return self.index(label, representation)
 
     def _non_abelian_gauge_generator_insertions(
         self,

@@ -169,7 +169,11 @@ def indexed_cg_tensor_to_spenso(theory: Theory, expr: Expression, *, native_hep_
     structure = native_hep_cg_tensor_structure_to_spenso(theory, expr[0]) if native_hep_builtins else None
     if structure is None:
         structure = cg_tensor_structure_to_spenso(theory, expr[0])
-    return structure.index(*(args(expr[1])))
+    return structure.index(*_cg_index_labels(expr), cook_indices=True)
+
+
+def _cg_index_labels(expr: Expression) -> tuple[Expression, ...]:
+    return tuple(index[0] if is_head(index, s.Index) and len(index) == 2 else index for index in args(expr[1]))
 
 
 def _cg_tensor_dimensions(theory: Theory, definition: CGTensorDefinition) -> tuple[int, ...]:
