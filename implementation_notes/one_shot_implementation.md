@@ -594,6 +594,13 @@
   matching gauge-group index. For adjoint gauge field strengths this uses the
   existing `gen_<group>_adj` metadata, leaving later spenso/idenso passes free
   to simplify the generated adjoint-generator algebra.
+- Extended the idenso pychete-colour bridge with a native pre-normalization
+  step for registered adjoint generators:
+  `gen_<group>_adj(...) -> -I fStruct_<group>(...)`, matching Matchete's
+  `CG[gen[group[adj]], indices] := -I CG[fStruct[group], indices]` identity.
+  This lets field-strength commutator output flow through the existing native
+  `fStruct` simplification and round-trip decoding path instead of preserving
+  generic adjoint-generator CG tensors.
 - Performance note: the emitter now checks for both tagged field and tagged
   field-strength matches before building temporary protection replacements, and
   it does not force expression expansion.
@@ -610,6 +617,13 @@
   `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/integration/matching/test_fluctuation_operator.py -k
   "covariant_derivative_commutators" -q` with 2 tests and 55 deselected;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/backends/test_idenso_backend.py tests/unit/backends/test_spenso_backend.py -q`
+  with 46 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "covariant_derivative_commutators or pychete_color" -q` with 3 tests and 54
+  deselected;
   `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed; and
   `git diff --check` passed.
 

@@ -9,7 +9,7 @@ from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .common import import_backend
-from ..expr import args, as_int, cg_tensor_pattern, factors, is_head, product_expr, sum_expr
+from ..expr import args, as_int, cg_tensor_pattern, factors, is_head, list_items, product_expr, sum_expr
 from ..symbols import SymbolRole, canonical_string, expression_from_canonical, s
 
 _MAX_NATIVE_PROJECTOR_POWER = 16
@@ -103,9 +103,10 @@ def simplify_pychete_color_algebra(
 
     from . import spenso
 
-    lowered = spenso.lower_native_hep_cg_tensors_to_spenso(theory, expr)
+    normalized = _replace_adjoint_generators_with_structure_constants(theory, expr)
+    lowered = spenso.lower_native_hep_cg_tensors_to_spenso(theory, normalized)
     simplified = simplify_metrics(simplify_color(lowered).expand()).expand()
-    groups = _cg_groups_in_expression(theory, expr)
+    groups = _cg_groups_in_expression(theory, normalized)
     if substitute_group_constants:
         simplified = _substitute_native_color_constants(theory, simplified, groups)
     if decode_metrics:
@@ -639,6 +640,37 @@ def _cg_tensor_definition_for_label(theory: Any, label: Expression) -> Any | Non
         if canonical_string(definition.label) == label_text:
             return definition
     return None
+
+
+def _replace_adjoint_generators_with_structure_constants(theory: Any, expr: Expression) -> Expression:
+    pattern = cg_tensor_pattern()
+
+    def replace(match: dict[Expression, Expression]) -> Expression:
+        atom = pattern.replace_wildcards(match)
+        definition = _cg_tensor_definition_for_label(theory, atom[0])
+        if definition is None or definition.source_text != "builtin:gen":
+            return atom
+        if len(definition.representation_exprs) != 3:
+            return atom
+        representations = tuple(theory.representation_definition(rep) for rep in definition.representation_exprs)
+        group = representations[0].group
+        if not all(representation.group == group and representation.name == "adj" for representation in representations):
+            return atom
+        fstruct_name = f"fStruct_{group}"
+        if fstruct_name not in theory.cg_tensors:
+            return atom
+        return -Expression.I * theory.cg_tensor_handle(fstruct_name)(*list_items(atom[1]))
+
+    return expr.replace_multiple(
+        [
+            Replacement(
+                pattern,
+                replace,
+                s.CGTensorLabelWildcard.req_tag(SymbolRole.CG_TENSOR.value),
+                rhs_cache_size=0,
+            )
+        ]
+    ).expand()
 
 
 def _substitute_native_color_constants(theory: Any, expr: Expression, groups: tuple[str, ...]) -> Expression:

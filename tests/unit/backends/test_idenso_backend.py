@@ -6,7 +6,7 @@ from symbolica.community import idenso as native_idenso
 from pychete import Theory
 from pychete.backends import idenso
 from pychete.group_algebra import simplify_color, simplify_gamma, simplify_metrics, simplify_pychete_color
-from pychete.symbols import canonical_string, s
+from pychete.symbols import SymbolRole, canonical_string, s
 
 
 def _same(lhs, rhs) -> bool:
@@ -129,6 +129,54 @@ def test_idenso_bridge_decodes_uncontracted_pychete_structure_constant() -> None
     simplified = idenso.simplify_pychete_color_algebra(theory, expr)
 
     assert _same(simplified, expr)
+    assert "spenso::" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_rewrites_pychete_adjoint_generator_to_structure_constant() -> None:
+    theory = Theory("idenso_color_su2_adjoint_generator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_adj")
+    fstruct = theory.cg_tensor_handle("fStruct_SU2L")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    adj_c = theory.index("C", adj)
+    expr = generator(adj_a, adj_b, adj_c)
+    expected = -Expression.I * fstruct(adj_a, adj_b, adj_c)
+
+    simplified = idenso.simplify_pychete_color_algebra(theory, expr)
+
+    assert _same(simplified, expected)
+    assert "gen_SU2L_adj" not in canonical_string(simplified)
+    assert "spenso::" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_simplifies_field_strength_commutator_adjoint_generator() -> None:
+    theory = Theory("idenso_color_field_strength_commutator")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    adj = theory.define_representation("SU2L", "adj")
+    vector = theory.field_handle("W")
+    fstruct = theory.cg_tensor_handle("fStruct_SU2L")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    sigma = theory.index("sigma")
+    source_index = theory.index("A", adj)
+    body = s.FieldStrength(vector.label, s.List(rho, sigma), s.List(source_index), s.List())
+
+    commutator = theory.covariant_derivative_commutator(body, mu, nu)
+    simplified = idenso.simplify_pychete_color_algebra(theory, commutator)
+    transformed_index = theory.index(theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX), adj)
+    adjoint_index = theory.index(theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX), adj)
+    expected = (
+        theory.coupling_handle("gL")()
+        * s.FieldStrength(vector.label, s.List(mu, nu), s.List(adjoint_index), s.List())
+        * fstruct(transformed_index, adjoint_index, source_index)
+        * s.FieldStrength(vector.label, s.List(rho, sigma), s.List(transformed_index), s.List())
+    )
+
+    assert _same(simplified, expected)
+    assert "gen_SU2L_adj" not in canonical_string(simplified)
     assert "spenso::" not in canonical_string(simplified)
 
 
