@@ -237,6 +237,55 @@ def test_one_loop_match_option_expands_abelian_covariant_derivatives_before_setu
     )
 
 
+def test_one_loop_match_option_expands_non_abelian_covariant_derivatives_before_setup(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("match_expand_nonabelian_covariant_derivatives")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], mass=0)
+    mu = theory.dummy_index(0)
+    index = theory.index("i", fund)
+    captured: dict[str, Expression] = {}
+
+    class FakeSetup:
+        def interaction_power_type_internal_matching_result(self, **_kwargs: object) -> MatchingResult:
+            return MatchingResult(
+                theory=theory,
+                uv_lagrangian=captured["lagrangian"],
+                off_shell_eft_lagrangian=captured["lagrangian"],
+                on_shell_eft_lagrangian=captured["lagrangian"],
+                metadata={"stage": "fake_internal"},
+            )
+
+    def fake_one_loop_setup(
+        _theory: Theory,
+        lagrangian: Expression,
+        **_kwargs: object,
+    ) -> FakeSetup:
+        captured["lagrangian"] = lagrangian
+        return FakeSetup()
+
+    monkeypatch.setattr(matching_module, "one_loop_setup", fake_one_loop_setup)
+
+    derived = higgs(index, derivatives=[mu])
+    result = theory.match(
+        s.Bar(derived) * derived,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            expand_non_abelian_covariant_derivatives=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["non_abelian_covariant_derivatives_expanded"] is True
+    expanded = canonical_string(captured["lagrangian"])
+    assert "cg_tensor_gen_SU2L_fund" in expanded
+    assert "covariant_derivative_index" in expanded
+
+
 def test_charged_fermion_free_lag_subtracts_only_registered_free_inverse() -> None:
     theory = Theory("fluctuation_charged_fermion_free")
     theory.define_gauge_group("U1e", s.U1, "e", "A")

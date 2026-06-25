@@ -422,6 +422,57 @@ def test_non_abelian_gauge_generator_insertion_rejects_non_gauge_representations
         raise AssertionError("global representations must not produce gauge-generator insertions")
 
 
+def test_expand_non_abelian_covariant_derivatives_uses_symbolica_replacements() -> None:
+    theory = Theory("expand_nonabelian_covariant_derivatives")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], mass=0)
+
+    mu = theory.dummy_index(0)
+    input_index = theory.index("i", fund)
+    field = higgs(input_index)
+    derived = higgs(input_index, derivatives=[mu])
+    bar_output = theory.index(s.CovariantDerivativeIndex(Expression.num(0), Expression.num(0)), fund)
+    bar_adjoint = theory.index(s.CovariantDerivativeIndex(Expression.num(0), Expression.num(1)), adj)
+    output = theory.index(s.CovariantDerivativeIndex(Expression.num(1), Expression.num(0)), fund)
+    adjoint = theory.index(s.CovariantDerivativeIndex(Expression.num(1), Expression.num(1)), adj)
+    bar_insertion = theory.non_abelian_gauge_generator_insertion(
+        derived,
+        0,
+        output_index=bar_output,
+        adjoint_index=bar_adjoint,
+        lorentz_index=mu,
+        conjugate_field=True,
+    )
+    insertion = theory.non_abelian_gauge_generator_insertion(
+        derived,
+        0,
+        output_index=output,
+        adjoint_index=adjoint,
+        lorentz_index=mu,
+    )
+    implicit = s.Bar(derived) * derived + s.Bar(field) * field
+    expected = ((s.Bar(derived) + Expression.I * bar_insertion) * (derived - Expression.I * insertion) + s.Bar(field) * field).expand()
+
+    assert_expr_equal(theory.expand_non_abelian_covariant_derivatives(implicit), expected)
+
+
+def test_expand_non_abelian_covariant_derivatives_leaves_abelian_charges_implicit() -> None:
+    theory = Theory("expand_nonabelian_leaves_abelian")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        mass=0,
+    )
+
+    expr = s.Bar(phi(derivatives=[theory.dummy_index(0)])) * phi(derivatives=[theory.dummy_index(0)])
+
+    assert_expr_equal(theory.expand_non_abelian_covariant_derivatives(expr), expr)
+
+
 def test_cg_tensors_store_symbolica_metadata_and_survive_json_restore() -> None:
     theory = Theory("cg_metadata")
     su2 = theory.define_global_group("SU2F", s.SU(Expression.num(2)))

@@ -91,12 +91,20 @@
   field index in a registered non-Abelian gauge representation, preserving field
   derivative slots and using the registered generator CG tensor, gauge coupling,
   vector field, and representation symbol data.
-- This slice intentionally does not yet expand full non-Abelian covariant
-  derivatives. It centralizes the CG/gauge-vector construction so the later
-  replacement pass can use one tested Symbolica expression builder instead of
-  scattered ad hoc generator construction.
-- Validation so far: `tests/unit/definitions/test_theory_definitions.py` and
-  `tests/unit/definitions/test_public_api.py` pass with 35 tests.
+- Added `Theory.expand_non_abelian_covariant_derivatives(...)` and
+  `OneLoopMatchOptions.expand_non_abelian_covariant_derivatives` as an opt-in
+  Symbolica replacement pass for first-derivative fields with registered
+  non-Abelian gauge representation indices. The pass generates dedicated
+  `CovariantDerivativeIndex(...)` labels for the new output and adjoint indices
+  and routes each `g * V * CG(gen) * field` term through the centralized
+  generator insertion helper.
+- This slice still does not complete non-Abelian group-algebra simplification:
+  expanded CG tensors must next be lowered/simplified through spenso/idenso in
+  supertraces, and broader validation should wait until that contraction path is
+  materially improved.
+- Validation so far: definitions/public-API tests pass with 37 tests, and the
+  focused one-loop covariant-derivative option tests pass with 2 selected
+  integration tests.
 
 ## Current Validation Frontier
 
@@ -119,9 +127,9 @@
 ## Current Remaining Work
 
 - Implement the broader covariant-derivative/group-algebra feature family:
-  complete non-Abelian gauge-connection expansion on top of
-  `Theory.non_abelian_gauge_generator_insertion(...)`, then idenso/spenso-backed
-  simplification/contraction for gauge interactions in supertraces.
+  idenso/spenso-backed simplification/contraction for the CG tensors generated
+  by `Theory.expand_non_abelian_covariant_derivatives(...)`, then use targeted
+  fixture probes to determine which projected Wilson gaps move.
 - Continue improving Dirac/NCM simplification in generated supertraces through
   idenso-backed paths and Symbolica replacement rules.
 - Extend EOM/on-shell reduction beyond exact linear target isolation where

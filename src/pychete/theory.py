@@ -1,9 +1,10 @@
 from __future__ import annotations
 
 import json
+from itertools import count
 from html import escape
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, Mapping
 
 from symbolica import Expression, Replacement, S
 
@@ -108,6 +109,9 @@ from .theory_metadata import (
     representation_group_from_label,
     representation_reality_from_label,
 )
+
+_COVARIANT_DERIVATIVE_OUTPUT_INDEX_KIND = 0
+_COVARIANT_DERIVATIVE_ADJOINT_INDEX_KIND = 1
 
 
 class Theory:
@@ -1007,6 +1011,7 @@ class Theory:
         output_index: Expression,
         adjoint_index: Expression,
         lorentz_index: Expression | None = None,
+        conjugate_field: bool = False,
     ) -> Expression:
         """Build the non-Abelian ``g V T`` insertion for one indexed field.
 
@@ -1014,9 +1019,10 @@ class Theory:
         ``field_index`` slot transforms in a registered non-Abelian gauge
         representation. The returned expression is
         ``g * V(..., adjoint_index) * CG(gen, adjoint, output, input_dual)
-        * field(output)``, with the field derivative slots preserved. The
-        conventional covariant-derivative sign and factor of ``I`` are left to
-        the caller.
+        * field(output)`` or its barred-field analogue when
+        ``conjugate_field=True``, with the field derivative slots preserved.
+        The conventional covariant-derivative sign and factor of ``I`` are
+        left to the caller.
         """
 
         self._validate_registered_expression(field)
@@ -1074,13 +1080,149 @@ class Theory:
         indices[field_index] = output_index
         input_dual_index = s.Index(input_index[0], generator_reps[2])
         transformed_field = s.Field(field[0], field[1], list_expr(*indices), field[3])
+        field_factor = s.Bar(transformed_field) if conjugate_field else transformed_field
         vector_indices = (adjoint_index,) if lorentz_index is None else (lorentz_index, adjoint_index)
         return (
             self.coupling_handle(coupling_name)()
             * self.field_handle(vector_name)(*vector_indices)
             * generator(adjoint_index, output_index, input_dual_index)
-            * transformed_field
+            * field_factor
         )
+
+    def _non_abelian_gauge_index_slots(self, definition: FieldDefinition) -> tuple[int, ...]:
+        slots: list[int] = []
+        for slot, representation_expr in enumerate(definition.indices):
+            try:
+                representation = self.representation_definition(representation_expr)
+            except KeyError:
+                continue
+            group_entry = self.groups.get(representation.group)
+            if group_entry is None:
+                continue
+            group_kind = GroupKind.from_user(str(group_entry.get("kind", GroupKind.GLOBAL.value)))
+            if group_kind is GroupKind.GAUGE and not bool(group_entry.get("abelian", False)):
+                slots.append(slot)
+        return tuple(slots)
+
+    def _covariant_derivative_generated_index(self, number: int, kind: int, representation: Expression) -> Expression:
+        return self.index(s.CovariantDerivativeIndex(Expression.num(number), Expression.num(kind)), representation)
+
+    def _non_abelian_gauge_generator_insertions(
+        self,
+        field: Expression,
+        *,
+        conjugate_field: bool,
+        index_counter: Iterator[int],
+    ) -> Expression:
+        derivatives = list_items(field[3])
+        if len(derivatives) != 1:
+            return Expression.num(0)
+        derivative = derivatives[0]
+        terms: list[Expression] = []
+        for field_index, input_index in enumerate(list_items(field[2])):
+            if not is_head(input_index, s.Index) or len(input_index) != 2:
+                continue
+            try:
+                representation = self.representation_definition(input_index[1])
+            except KeyError:
+                continue
+            group_entry = self.groups.get(representation.group)
+            if group_entry is None:
+                continue
+            group_kind = GroupKind.from_user(str(group_entry.get("kind", GroupKind.GLOBAL.value)))
+            if group_kind is not GroupKind.GAUGE or bool(group_entry.get("abelian", False)):
+                continue
+            generator_name = _builtin_cg_tensor_name("gen", representation.group, representation.name)
+            if generator_name not in self.cg_tensors:
+                raise KeyError(
+                    f"Gauge representation {canonical_string(input_index[1])} has no registered generator "
+                    f"CG tensor {generator_name!r}"
+                )
+            generator_reps = self.cg_tensors[generator_name].representation_exprs
+            index_number = next(index_counter)
+            output_index = self._covariant_derivative_generated_index(
+                index_number,
+                _COVARIANT_DERIVATIVE_OUTPUT_INDEX_KIND,
+                generator_reps[1],
+            )
+            adjoint_index = self._covariant_derivative_generated_index(
+                index_number,
+                _COVARIANT_DERIVATIVE_ADJOINT_INDEX_KIND,
+                generator_reps[0],
+            )
+            terms.append(
+                self.non_abelian_gauge_generator_insertion(
+                    field,
+                    field_index,
+                    output_index=output_index,
+                    adjoint_index=adjoint_index,
+                    lorentz_index=derivative,
+                    conjugate_field=conjugate_field,
+                )
+            )
+        return sum_expr(terms).expand()
+
+    def expand_non_abelian_covariant_derivatives(self, expr: Expression) -> Expression:
+        """Expand first-order non-Abelian covariant derivatives in ``expr``.
+
+        The expansion is expressed with native Symbolica replacement rules over
+        registered ``Field`` atoms. Each first-derivative slot of a field that
+        carries a registered non-Abelian gauge representation is rewritten with
+        generator insertions built by
+        :meth:`non_abelian_gauge_generator_insertion`. Abelian charges are left
+        to :meth:`expand_abelian_covariant_derivatives`.
+        """
+
+        self._validate_registered_expression(expr)
+        index_counter = count()
+        protect_bar_replacements: list[Replacement] = []
+        restore_bar_replacements: list[Replacement] = []
+        field_replacements: list[Replacement] = []
+        for definition in self.fields.values():
+            if not self._non_abelian_gauge_index_slots(definition):
+                continue
+            field_pat = field_pattern(definition.label)
+            bar_pat = bar_field_pattern(definition.label)
+
+            def field_replacement(
+                match: dict[Expression, Expression],
+                pattern: Expression = field_pat,
+            ) -> Expression:
+                atom = pattern.replace_wildcards(match)
+                insertion = self._non_abelian_gauge_generator_insertions(
+                    atom,
+                    conjugate_field=False,
+                    index_counter=index_counter,
+                )
+                if bool(insertion == Expression.num(0)):
+                    return atom
+                return atom - Expression.I * insertion
+
+            for atom in matching_subexpressions(expr, bar_pat):
+                if len(list_items(atom[0][3])) != 1:
+                    continue
+                insertion = self._non_abelian_gauge_generator_insertions(
+                    atom[0],
+                    conjugate_field=True,
+                    index_counter=index_counter,
+                )
+                if bool(insertion == Expression.num(0)):
+                    continue
+                key = s.CovariantDerivativeProtectedBar(Expression.num(len(restore_bar_replacements)))
+                protect_bar_replacements.append(Replacement(atom, key))
+                restore_bar_replacements.append(Replacement(key, atom + Expression.I * insertion))
+
+            field_replacements.append(Replacement(field_pat, field_replacement, rhs_cache_size=0))
+        if not protect_bar_replacements and not field_replacements:
+            return expr
+        out = expr
+        if protect_bar_replacements:
+            out = out.replace_multiple(protect_bar_replacements)
+        if field_replacements:
+            out = out.replace_multiple(field_replacements)
+        if restore_bar_replacements:
+            out = out.replace_multiple(restore_bar_replacements)
+        return out.expand()
 
     def expand_abelian_covariant_derivatives(self, expr: Expression) -> Expression:
         """Expand first-order Abelian covariant derivatives in ``expr``.

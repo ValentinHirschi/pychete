@@ -633,6 +633,7 @@ class ValidationFixture:
         tensor_network_n_steps: int | None = None,
         tensor_network_mode: Any | None = None,
         expand_abelian_covariant_derivatives: bool = False,
+        expand_non_abelian_covariant_derivatives: bool = False,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
 
@@ -653,6 +654,8 @@ class ValidationFixture:
         lagrangian_expr = self.expression(lagrangian)
         if expand_abelian_covariant_derivatives:
             lagrangian_expr = theory.expand_abelian_covariant_derivatives(lagrangian_expr)
+        if expand_non_abelian_covariant_derivatives:
+            lagrangian_expr = theory.expand_non_abelian_covariant_derivatives(lagrangian_expr)
         setup = theory.one_loop_setup(
             lagrangian_expr,
             eft_order=eft_order,
@@ -770,6 +773,7 @@ class ValidationFixture:
                 "tensor_network_cg_component_source": tensor_network_cg_component_source,
                 "tensor_network_native_hep_cg_builtins": tensor_network_native_hep_cg_builtins,
                 "abelian_covariant_derivatives_expanded": expand_abelian_covariant_derivatives,
+                "non_abelian_covariant_derivatives_expanded": expand_non_abelian_covariant_derivatives,
             },
         )
         _LOGGER.info(
@@ -825,6 +829,7 @@ class ValidationFixture:
         tensor_network_n_steps: int | None = None,
         tensor_network_mode: Any | None = None,
         expand_abelian_covariant_derivatives: bool = False,
+        expand_non_abelian_covariant_derivatives: bool = False,
         project_reference_matching_conditions: bool = False,
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_drop_zero: bool = False,
@@ -889,6 +894,7 @@ class ValidationFixture:
                     tensor_network_n_steps=tensor_network_n_steps,
                     tensor_network_mode=tensor_network_mode,
                     expand_abelian_covariant_derivatives=expand_abelian_covariant_derivatives,
+                    expand_non_abelian_covariant_derivatives=expand_non_abelian_covariant_derivatives,
                 ),
                 matching_condition_targets=projected_targets,
                 matching_condition_source=matching_condition_projection_source,
@@ -942,6 +948,7 @@ class ValidationFixture:
                 tensor_network_n_steps=tensor_network_n_steps,
                 tensor_network_mode=tensor_network_mode,
                 expand_abelian_covariant_derivatives=expand_abelian_covariant_derivatives,
+                expand_non_abelian_covariant_derivatives=expand_non_abelian_covariant_derivatives,
             )
         if project_reference_matching_conditions and not use_public_match_api:
             candidate = candidate.with_projected_matching_conditions(
