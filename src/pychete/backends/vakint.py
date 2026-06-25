@@ -401,6 +401,20 @@ def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
                     match[_wild("field_strength_derivatives")],
                 ),
             ),
+            Replacement(
+                _vakint_metric_pattern(),
+                lambda match: context.decode_metric(
+                    match[_wild("metric_left")],
+                    match[_wild("metric_right")],
+                ),
+            ),
+            Replacement(
+                _vakint_cg_pattern(),
+                lambda match: context.decode_cg(
+                    match[_wild("cg_label")],
+                    match[_wild("cg_indices")],
+                ),
+            ),
         )
     )
 
@@ -412,6 +426,7 @@ class _DecodeContext:
         self.couplings_by_safe_name = _registry_safe_name_map(theory.couplings)
         self.externals_by_safe_name = _registry_safe_name_map(theory.externals)
         self.groups_by_safe_name = _registry_safe_name_map(theory.groups)
+        self.cg_tensors_by_safe_name = _registry_safe_name_map(theory.cg_tensors)
 
     def decode_bar(self, body: Expression) -> Expression:
         return s.Bar(self.decode_payload(body))
@@ -467,6 +482,19 @@ class _DecodeContext:
     def decode_index(self, label: Expression, representation: Expression) -> Expression:
         return s.Index(self.decode_index_label(label), self.decode_payload(representation))
 
+    def decode_metric(self, left: Expression, right: Expression) -> Expression:
+        return s.Metric(self.decode_payload(left), self.decode_payload(right))
+
+    def decode_cg(self, label: Expression, indices: Expression) -> Expression:
+        name = _vakint_local_name(label)
+        cg_name = self._registered_name(name, self.theory.cg_tensors, self.cg_tensors_by_safe_name)
+        if cg_name is None:
+            return symbol("CG")(label, indices)
+        return s.CG(
+            self.theory.cg_tensor_handle(cg_name).label,
+            list_expr(*self.decode_sequence(indices)),
+        )
+
     def decode_sequence(self, expr: Expression) -> tuple[Expression, ...]:
         if _is_bare_vakint_symbol(expr, "List"):
             return ()
@@ -497,6 +525,10 @@ class _DecodeContext:
             return self.decode_field(expr[0], expr[1], expr[2], expr[3])
         if is_head(expr, symbol("FieldStrength")) and len(expr) == 4:
             return self.decode_field_strength(expr[0], expr[1], expr[2], expr[3])
+        if is_head(expr, symbol("g")) and len(expr) == 2:
+            return self.decode_metric(expr[0], expr[1])
+        if is_head(expr, symbol("CG")) and len(expr) == 2:
+            return self.decode_cg(expr[0], expr[1])
         if is_head(expr, symbol("Vector")) and len(expr) == 1:
             return s.Vector(self.decode_payload(expr[0]))
         if is_head(expr, symbol("Ghost")) and len(expr) == 1:
@@ -616,6 +648,16 @@ def _vakint_field_strength_pattern() -> Expression:
         _wild("field_strength_indices"),
         _wild("field_strength_derivatives"),
     )
+
+
+@cache
+def _vakint_metric_pattern() -> Expression:
+    return symbol("g")(_wild("metric_left"), _wild("metric_right"))
+
+
+@cache
+def _vakint_cg_pattern() -> Expression:
+    return symbol("CG")(_wild("cg_label"), _wild("cg_indices"))
 
 
 @cache

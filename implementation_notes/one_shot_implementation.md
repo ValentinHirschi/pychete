@@ -95,6 +95,35 @@
   - `git diff --check` passed before note rotation; rerun after this note edit
     before committing.
 
+## Current Vakint Tensor Decode Slice
+
+- Diagnosed the next CDE/basis obstacle after the hybrid-source fix: native
+  vakint tensor reduction can preserve pychete fields and field strengths but
+  return metric and Clebsch-Gordan structures as `vakint::g(...)` and
+  `vakint::CG(...)`. Those native wrappers are backend implementation details;
+  if they survive into public EFT expressions, pychete's projection,
+  idenso/spenso simplification, and registered-SMEFT target matching do not see
+  ordinary `Metric(...)` and `CG(...)` heads.
+- Extended `pychete.backends.vakint.decode_pychete_namespace(...)` with
+  Symbolica replacement rules for recognized native metric and CG wrappers.
+  Registered CG tensor labels are resolved through theory-owned names and safe
+  names, then rebuilt as central pychete `CG(...)` atoms with decoded index
+  metadata. Unknown CG wrappers are intentionally left in the vakint namespace
+  rather than guessed.
+- Added focused unit coverage for direct wrapper decoding and for a tensor
+  reduction path that produces native metric/CG wrappers. Added an integration
+  regression showing the internal CDE tensor-reduction path now emits public
+  pychete `Metric(...)`, `CG(...)`, and `FieldStrength(...)` structures without
+  leaking `vakint::g` or `vakint::CG`.
+- Validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/backends/test_vakint_backend.py -q'`
+    passed with 29 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "vakint_tensors or bosonic_cde_internal_tensor_reduction" -q'`
+    passed with 1 test and 62 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

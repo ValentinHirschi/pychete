@@ -294,6 +294,71 @@ def test_vakint_tensor_reduction_round_trips_indexed_pychete_fields() -> None:
     assert canonical_string(decoded) == canonical_string(expr)
 
 
+def test_vakint_decodes_native_metric_and_cg_wrappers() -> None:
+    theory = Theory("vakint_decode_metric_cg")
+    theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
+    theory.define_representation("SU2L", "fund")
+    gen = theory.cg_tensor_handle("gen_SU2L_fund")
+    adj, fund, barred_fund = theory.cg_tensors["gen_SU2L_fund"].representation_exprs
+    mu = s.Index(vakint.symbol("mu"), s.Lorentz)
+    nu = s.Index(vakint.symbol("nu"), s.Lorentz)
+    a = s.Index(vakint.symbol("A"), adj)
+    i = s.Index(vakint.symbol("i"), fund)
+    j = s.Index(vakint.symbol("j"), barred_fund)
+    native = vakint.symbol("g")(
+        vakint.symbol("Index")(vakint.symbol("mu"), vakint.symbol("Lorentz")),
+        vakint.symbol("Index")(vakint.symbol("nu"), vakint.symbol("Lorentz")),
+    ) * vakint.symbol("CG")(
+        vakint.symbol("gen_SU2L_fund"),
+        vakint.symbol("List")(
+            vakint.symbol("Index")(vakint.symbol("A"), vakint.symbol("SU2L")(vakint.symbol("adj"))),
+            vakint.symbol("Index")(vakint.symbol("i"), vakint.symbol("SU2L")(vakint.symbol("fund"))),
+            vakint.symbol("Index")(
+                vakint.symbol("j"),
+                vakint.symbol("Bar")(vakint.symbol("SU2L")(vakint.symbol("fund"))),
+            ),
+        ),
+    )
+
+    decoded = vakint.decode_pychete_namespace(theory, native)
+
+    assert "vakint::g" not in canonical_string(decoded)
+    assert "vakint::CG" not in canonical_string(decoded)
+    assert canonical_string(decoded) == canonical_string(s.Metric(mu, nu) * gen(a, i, j))
+
+
+def test_vakint_tensor_reduction_decodes_metric_and_cg_wrappers() -> None:
+    theory = Theory("vakint_decode_reduced_metric_cg")
+    theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=(fund,))
+    kappa = theory.define_coupling("kappa")
+    adj = theory.cg_tensors["gen_SU2L_fund"].representation_exprs[0]
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    a = theory.index("A", adj)
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    mass = S("M") ** 2
+    numerator = (
+        kappa()
+        * s.LoopMomentum(mu)
+        * s.LoopMomentum(nu)
+        * higgs(i)
+        * s.Bar(higgs(j))
+        * theory.cg_tensor_handle("gen_SU2L_fund")(a, i, j)
+    )
+    reduced = vakint.tensor_reduce(vakint.one_loop_vacuum_integral(numerator, (mass,)))
+    decoded = vakint.decode_pychete_namespace(theory, reduced)
+
+    assert "vakint::g" in canonical_string(reduced)
+    assert "vakint::CG" in canonical_string(reduced)
+    assert "vakint::g" not in canonical_string(decoded)
+    assert "vakint::CG" not in canonical_string(decoded)
+    assert "pychete::Metric" in canonical_string(decoded)
+    assert "pychete::CG" in canonical_string(decoded)
+
+
 def test_vakint_adapters_delegate_numerical_operations_to_engine() -> None:
     engine = FakeVakintEngine()
     expr = S("series")

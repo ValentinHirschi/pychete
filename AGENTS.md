@@ -264,6 +264,13 @@ with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
 `LoopMomentumSquared` to native `vakint::k(loop_id, 1)^2`, matching the
 vakint tensor-reduction API.
+After native vakint tensor reduction or analytic evaluation, decode any public
+expression with `pychete.backends.vakint.decode_pychete_namespace(...)` before
+projection, simplification, or user-facing output. This must convert recognized
+`vakint::g(...)` metric wrappers and registered `vakint::CG(...)` tensor
+wrappers back to theory-owned pychete `Metric(...)` and `CG(...)` heads through
+Symbolica replacement rules. Do not let native vakint tensor wrappers leak into
+matching-condition projection or public EFT Lagrangians.
 Vakint topology expressions must collect propagators with identical
 edge/momentum/mass signatures into a single `vakint::prop(...)` with the summed
 power. Use `pychete.backends.vakint.collect_identical_propagators(...)` rather

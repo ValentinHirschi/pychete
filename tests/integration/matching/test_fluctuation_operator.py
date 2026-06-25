@@ -1938,6 +1938,49 @@ def test_single_block_bosonic_cde_acts_open_derivatives_cyclically() -> None:
     assert any("cg_tensor_gen_SU2L_fund" in canonical_string(term.numerator) for term in lowered_terms)
 
 
+def test_bosonic_cde_internal_tensor_reduction_decodes_native_vakint_tensors() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_decode_vakint_tensors")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    vector = theory.field_handle("W")
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        + theory.free_lag(vector)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            max_trace_order=1,
+            bosonic_cde_expansion_indices_by_trace={
+                "hScalar": ((theory.index("b"), theory.index("c")),),
+            },
+            bosonic_cde_act_open_derivatives=True,
+            bosonic_cde_emit_covariant_derivative_commutators=True,
+            bosonic_cde_emit_covariant_derivative_commutator_passes=2,
+            bosonic_cde_expand_covariant_derivative_commutators=True,
+            tensor_reduce=True,
+            combine_terms=False,
+            truncate_eft_result=False,
+        ),
+    )
+    rendered = canonical_string(result.off_shell_eft_lagrangian)
+
+    assert result.metadata["stage"] == "interaction_bosonic_cde_hybrid_internal_integral_result"
+    assert "vakint::g" not in rendered
+    assert "vakint::CG" not in rendered
+    assert "pychete::Metric" in rendered
+    assert "pychete::CG" in rendered
+    assert "pychete::FieldStrength" in rendered
+
+
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:
     theory = Theory("one_loop_setup_interaction_bosonic_cde_commutator")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")
