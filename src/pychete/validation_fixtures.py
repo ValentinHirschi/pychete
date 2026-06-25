@@ -48,6 +48,107 @@ _WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
 
 
 @dataclass(frozen=True)
+class SupertraceOrderCoverage:
+    """Per-word-order coverage diagnostics for Matchete-style supertrace names."""
+
+    order: int
+    candidate_names: tuple[str, ...]
+    reference_names: tuple[str, ...]
+    common_names: tuple[str, ...]
+    candidate_only_names: tuple[str, ...]
+    reference_only_names: tuple[str, ...]
+    canonical_equal_common_names: tuple[str, ...]
+    accepted_common_names: tuple[str, ...]
+    different_after_probe_common_names: tuple[str, ...]
+
+    @property
+    def candidate_count(self) -> int:
+        """Number of candidate supertraces at this word order."""
+
+        return len(self.candidate_names)
+
+    @property
+    def reference_count(self) -> int:
+        """Number of reference supertraces at this word order."""
+
+        return len(self.reference_names)
+
+    @property
+    def common_count(self) -> int:
+        """Number of shared supertrace names at this word order."""
+
+        return len(self.common_names)
+
+    @property
+    def candidate_only_count(self) -> int:
+        """Number of candidate-only supertrace names at this word order."""
+
+        return len(self.candidate_only_names)
+
+    @property
+    def missing_reference_count(self) -> int:
+        """Number of reference-only supertrace names at this word order."""
+
+        return len(self.reference_only_names)
+
+    @property
+    def canonical_equal_common_count(self) -> int:
+        """Number of shared supertraces canonically equal at this word order."""
+
+        return len(self.canonical_equal_common_names)
+
+    @property
+    def accepted_common_count(self) -> int:
+        """Number of shared supertraces accepted by canonical equality or probes."""
+
+        return len(self.accepted_common_names)
+
+    @property
+    def different_after_probe_common_count(self) -> int:
+        """Number of shared supertraces still different after enabled probes."""
+
+        return len(self.different_after_probe_common_names)
+
+    def to_json_obj(self) -> dict[str, Any]:
+        """Return this order diagnostic as a JSON-serializable object."""
+
+        return {
+            "order": self.order,
+            "candidate_count": self.candidate_count,
+            "reference_count": self.reference_count,
+            "common_count": self.common_count,
+            "candidate_only_count": self.candidate_only_count,
+            "missing_reference_count": self.missing_reference_count,
+            "canonical_equal_common_count": self.canonical_equal_common_count,
+            "accepted_common_count": self.accepted_common_count,
+            "different_after_probe_common_count": self.different_after_probe_common_count,
+            "candidate_names": list(self.candidate_names),
+            "reference_names": list(self.reference_names),
+            "common_names": list(self.common_names),
+            "candidate_only_names": list(self.candidate_only_names),
+            "reference_only_names": list(self.reference_only_names),
+            "canonical_equal_common_names": list(self.canonical_equal_common_names),
+            "accepted_common_names": list(self.accepted_common_names),
+            "different_after_probe_common_names": list(self.different_after_probe_common_names),
+        }
+
+    def _repr_latex_(self) -> str:
+        return (
+            rf"$\mathrm{{SupertraceOrderCoverage}}\left({self.order},\ "
+            rf"{self.candidate_count}/{self.reference_count},\ "
+            rf"{self.accepted_common_count}\ \mathrm{{accepted}}\right)$"
+        )
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>SupertraceOrderCoverage(order={self.order}, "
+            f"supertraces={self.candidate_count}/{self.reference_count}, "
+            f"accepted={self.accepted_common_count}, "
+            f"missing={self.missing_reference_count})</code>"
+        )
+
+
+@dataclass(frozen=True)
 class MatchingFixtureGapReport:
     """Coverage report comparing a current pychete candidate to a fixture result."""
 
@@ -106,6 +207,12 @@ class MatchingFixtureGapReport:
         """Difference between reference and candidate maximum supertrace word order."""
 
         return self.reference_max_supertrace_order - self.candidate_max_supertrace_order
+
+    @property
+    def supertrace_order_coverage(self) -> tuple[SupertraceOrderCoverage, ...]:
+        """Per-order coverage diagnostics for Matchete-style supertrace words."""
+
+        return _supertrace_order_coverage(self)
 
     @property
     def missing_reference_supertrace_count(self) -> int:
@@ -304,6 +411,9 @@ class MatchingFixtureGapReport:
             "candidate_max_supertrace_order": self.candidate_max_supertrace_order,
             "reference_max_supertrace_order": self.reference_max_supertrace_order,
             "max_supertrace_order_gap": self.max_supertrace_order_gap,
+            "supertrace_order_coverage": [
+                coverage.to_json_obj() for coverage in self.supertrace_order_coverage
+            ],
             "common_supertrace_count": len(self.common_supertrace_names),
             "missing_reference_supertrace_count": self.missing_reference_supertrace_count,
             "candidate_only_supertrace_count": len(self.candidate_only_supertrace_names),
@@ -855,6 +965,40 @@ def _resolve_max_trace_order(max_trace_order: TraceOrderInput, reference: Matchi
 
 def _max_supertrace_order(names: Iterable[str]) -> int:
     return max((_supertrace_word_order(name) for name in names), default=0)
+
+
+def _names_at_supertrace_order(names: Iterable[str], order: int) -> tuple[str, ...]:
+    return _sorted_names(name for name in names if _supertrace_word_order(name) == order)
+
+
+def _supertrace_order_coverage(report: MatchingFixtureGapReport) -> tuple[SupertraceOrderCoverage, ...]:
+    orders = sorted(
+        {
+            _supertrace_word_order(name)
+            for name in (*report.candidate_supertrace_names, *report.reference_supertrace_names)
+            if _supertrace_word_order(name) > 0
+        }
+    )
+    return tuple(
+        SupertraceOrderCoverage(
+            order=order,
+            candidate_names=_names_at_supertrace_order(report.candidate_supertrace_names, order),
+            reference_names=_names_at_supertrace_order(report.reference_supertrace_names, order),
+            common_names=_names_at_supertrace_order(report.common_supertrace_names, order),
+            candidate_only_names=_names_at_supertrace_order(report.candidate_only_supertrace_names, order),
+            reference_only_names=_names_at_supertrace_order(report.reference_only_supertrace_names, order),
+            canonical_equal_common_names=_names_at_supertrace_order(
+                report.canonical_equal_common_supertrace_names,
+                order,
+            ),
+            accepted_common_names=_names_at_supertrace_order(report.accepted_common_supertrace_names, order),
+            different_after_probe_common_names=_names_at_supertrace_order(
+                report.different_after_probe_common_supertrace_names,
+                order,
+            ),
+        )
+        for order in orders
+    )
 
 
 def _supertrace_word_order(name: str) -> int:

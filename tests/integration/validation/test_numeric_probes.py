@@ -407,10 +407,25 @@ def test_fixture_gap_report_records_supertrace_word_orders() -> None:
 
     report = _gap_report("candidate_fixture", "reference_fixture", candidate, reference)
     report_obj = report.to_json_obj()
+    coverage_by_order = {coverage.order: coverage for coverage in report.supertrace_order_coverage}
+    json_coverage_by_order = {entry["order"]: entry for entry in report_obj["supertrace_order_coverage"]}
 
     assert report.candidate_max_supertrace_order == 2
     assert report.reference_max_supertrace_order == 3
     assert report.max_supertrace_order_gap == 1
+    assert tuple(coverage_by_order) == (1, 2, 3)
+    assert coverage_by_order[1].candidate_count == 1
+    assert coverage_by_order[1].reference_count == 1
+    assert coverage_by_order[1].accepted_common_count == 1
+    assert coverage_by_order[2].candidate_count == 1
+    assert coverage_by_order[2].reference_count == 0
+    assert coverage_by_order[2].candidate_only_names == ("hScalar-lScalar",)
+    assert coverage_by_order[3].candidate_count == 0
+    assert coverage_by_order[3].reference_count == 1
+    assert coverage_by_order[3].missing_reference_count == 1
+    assert coverage_by_order[3].reference_only_names == ("hScalar-lScalar-lVector",)
+    assert json_coverage_by_order[3]["missing_reference_count"] == 1
+    assert json_coverage_by_order[3]["reference_only_names"] == ["hScalar-lScalar-lVector"]
     assert report_obj["candidate_max_supertrace_order"] == 2
     assert report_obj["reference_max_supertrace_order"] == 3
     assert report_obj["max_supertrace_order_gap"] == 1

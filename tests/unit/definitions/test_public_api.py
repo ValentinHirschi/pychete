@@ -16,16 +16,21 @@ def test_lagrangian_manipulations_are_theory_methods_not_top_level_exports() -> 
     assert "derive_eom" not in pychete.__all__
     assert "match_tree" not in pychete.__all__
     assert "solve_heavy_scalar_eoms" not in pychete.__all__
-    assert "load_validation_fixture" not in pychete.__all__
     assert not hasattr(pychete, "derive_eom")
     assert not hasattr(pychete, "match_tree")
     assert not hasattr(pychete, "solve_heavy_scalar_eoms")
-    assert not hasattr(pychete, "load_validation_fixture")
 
     assert callable(pychete.Theory.derive_eom)
     assert callable(pychete.Theory.solve_heavy_scalar_eoms)
     assert callable(pychete.Theory.one_loop_setup)
     assert callable(pychete.Theory.match)
+
+
+def test_validation_fixture_diagnostics_are_public_api() -> None:
+    assert pychete.load_validation_fixture is api.load_validation_fixture
+    assert pychete.ValidationFixture is api.ValidationFixture
+    assert pychete.MatchingFixtureGapReport is api.MatchingFixtureGapReport
+    assert pychete.SupertraceOrderCoverage is api.SupertraceOrderCoverage
 
 
 def test_public_api_exports_have_docstrings() -> None:
@@ -103,6 +108,23 @@ def test_public_api_methods_have_docstrings() -> None:
         ],
         pychete.MatchingResultComparison: [
             "assert_equal",
+        ],
+        pychete.MatchingFixtureGapReport: [
+            "to_json_obj",
+            "supertrace_order_coverage",
+        ],
+        pychete.SupertraceOrderCoverage: [
+            "to_json_obj",
+        ],
+        pychete.ValidationFixture: [
+            "expression",
+            "from_json",
+            "from_json_obj",
+            "matching_result",
+            "one_loop_preview",
+            "one_loop_preview_gap_report",
+            "read_json",
+            "theory",
         ],
         pychete.OneLoopSetup: [
             "canonicalize_vakint_integral_expression_map",

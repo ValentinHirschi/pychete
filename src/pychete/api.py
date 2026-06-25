@@ -76,6 +76,12 @@ from .validation import (
     deterministic_probe_samples,
     evaluator_probe_equal,
 )
+from .validation_fixtures import (
+    MatchingFixtureGapReport,
+    SupertraceOrderCoverage,
+    ValidationFixture,
+    load_validation_fixture,
+)
 
 __all__ = [
     "BuiltinIndexType",
@@ -103,6 +109,7 @@ __all__ = [
     "MatchingConditionTarget",
     "MatchingResult",
     "MatchingResultComparison",
+    "MatchingFixtureGapReport",
     "NumericProbePlan",
     "NumericProbeResult",
     "OneLoopMatchingNotImplementedError",
@@ -116,11 +123,13 @@ __all__ = [
     "RepresentationDefinition",
     "RepresentationReality",
     "StateExpression",
+    "SupertraceOrderCoverage",
     "SupertraceBlockTrace",
     "SupertracePlan",
     "SymbolDataKey",
     "SymbolRole",
     "Theory",
+    "ValidationFixture",
     "VakintIntegralStage",
     "canonical_string",
     "canonize_loop_function",
@@ -139,6 +148,7 @@ __all__ = [
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",
+    "load_validation_fixture",
     "load_state",
     "latex_string",
     "open_indices",

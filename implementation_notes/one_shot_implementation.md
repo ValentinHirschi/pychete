@@ -4666,6 +4666,61 @@ discoveries, dependency patches, blockers, and remaining work.
     dependencies/.venv/bin/python -m pytest tests -q'` passed: 271 passed,
     1 skipped in 276.30s. The skip is the existing GammaLoop API import check
     because GammaLoop was not requested in the current dependency manifest.
+- Added per-order Matchete supertrace coverage diagnostics:
+  - introduced public `SupertraceOrderCoverage` and exported
+    `ValidationFixture`, `MatchingFixtureGapReport`,
+    `SupertraceOrderCoverage`, and `load_validation_fixture` through
+    `pychete.api` and the package root so the validation fixture surface is
+    discoverable;
+  - `MatchingFixtureGapReport.supertrace_order_coverage` now groups
+    Matchete-style `h*/l*` supertrace words by trace order and reports
+    candidate, reference, common, candidate-only, reference-only, canonical
+    equal, accepted, and still-different names/counts per order;
+  - `MatchingFixtureGapReport.to_json_obj()` now includes the order coverage
+    table, and `SupertraceOrderCoverage` implements Jupyter-friendly
+    `_repr_html_` and `_repr_latex_`;
+  - aggregate diagnostic supertrace names still have order `0` and are
+    excluded from the Matchete word-order coverage table, matching the existing
+    max-order metric.
+- Current cheap `max_trace_order=3` default fixture order frontier:
+  - `VLF_toy_model`: order 2 has `3/3` candidate/reference and `2` common,
+    order 3 has `7/5` and `3` common, while missing reference counts are
+    order 2: `1`, order 3: `2`, order 4: `4`, order 6: `1`;
+  - `Singlet_Scalar_Extension`: orders 1-3 have all saved reference names
+    present but not yet accepted, while missing reference counts are order 4:
+    `6`, order 5: `9`, order 6: `3`;
+  - `E_VLL`: order 3 has `7/8` candidate/reference, `4` common, and `3`
+    accepted, while missing reference counts are order 2: `1`, order 3: `4`,
+    order 4: `18`, order 5: `17`, order 6: `4`;
+  - `S1S3LQs`: order 2 has `3/4`, `3` common, and `1` accepted; order 3 has
+    `7/11`, `5` common, and `2` accepted; missing reference counts are
+    order 2: `1`, order 3: `6`, order 4: `10`, order 5: `1`.
+- Verification for the per-order supertrace coverage slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_records_supertrace_word_orders
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    -q'` passed: 2 passed in 38.53s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py
+    tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_records_supertrace_word_orders
+    tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_gap_reports_track_current_one_loop_coverage
+    -q'` passed: 7 passed in 38.77s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m mypy'` passed: no issues found in 29
+    source files;
+  - `git diff --check` passed;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest
+    tests/unit/definitions/test_public_api.py
+    tests/integration/validation/test_numeric_probes.py
+    tests/integration/validation/test_validation_fixtures.py -q'` passed: 55
+    passed in 277.03s;
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src
+    dependencies/.venv/bin/python -m pytest tests -q'` passed: 272 passed,
+    1 skipped in 278.96s. The skip is the existing GammaLoop API import check
+    because GammaLoop was not requested in the current dependency manifest.
 
 ## Remaining Work
 
@@ -4674,8 +4729,8 @@ discoveries, dependency patches, blockers, and remaining work.
   cover both raw/vakint and public finite/MS preview gap reports, and projected
   matching-condition reports now include registered model-coupling identity
   values, explicit SMEFT Wilson-target acceptance counts, and explicit
-  reference supertrace order gaps. Final Matchete equivalence is still
-  incomplete.
+  reference supertrace order gaps with per-order coverage tables. Final
+  Matchete equivalence is still incomplete.
 - Extend the new loaded-model-state exporter/converter beyond the current
   initial contract, especially richer vector/zero-mode metadata and
   complicated Matchete models that exceed the direct Python loader's documented

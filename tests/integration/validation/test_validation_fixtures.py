@@ -849,6 +849,9 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
             max_trace_order=3,
         )
         report_obj = report.to_json_obj()
+        order_coverage = {coverage.order: coverage for coverage in report.supertrace_order_coverage}
+        json_order_coverage = {entry["order"]: entry for entry in report_obj["supertrace_order_coverage"]}
+        highest_reference_order = expected_counts["reference_max_order"]
 
         assert report.complete is False
         assert report.candidate_stage == "interaction_power_type_vakint_result"
@@ -858,6 +861,18 @@ def test_default_matching_target_gap_reports_track_current_one_loop_coverage() -
         assert report.candidate_max_supertrace_order == 3
         assert report.reference_max_supertrace_order == expected_counts["reference_max_order"]
         assert report.max_supertrace_order_gap == expected_counts["reference_max_order"] - 3
+        assert highest_reference_order in order_coverage
+        assert order_coverage[highest_reference_order].candidate_count == 0
+        assert order_coverage[highest_reference_order].common_count == 0
+        assert order_coverage[highest_reference_order].reference_count > 0
+        assert order_coverage[highest_reference_order].missing_reference_count == (
+            order_coverage[highest_reference_order].reference_count
+        )
+        assert order_coverage[highest_reference_order].accepted_common_count == 0
+        assert json_order_coverage[highest_reference_order]["candidate_count"] == 0
+        assert json_order_coverage[highest_reference_order]["missing_reference_count"] == (
+            json_order_coverage[highest_reference_order]["reference_count"]
+        )
         assert set(report.common_supertrace_names) == expected_counts["common"]
         assert set(report.canonical_equal_common_supertrace_names) == expected_counts["canonical_equal"]
         assert set(report.canonical_different_common_supertrace_names) == (
