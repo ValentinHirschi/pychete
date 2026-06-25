@@ -700,6 +700,39 @@
   deselected; `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/functional -q` passed with 22 tests.
 
+## Current Bosonic CDE Propagator Expansion Slice
+
+- Added `BosonicCovariantPropagatorExpansionTerm` and
+  `bosonic_covariant_propagator_expansion_terms(...)` in `pychete.cde`. This
+  mirrors the numerator/operator part of Matchete's `PropBosonExpand` for
+  `[(q + P)^2 - M^2]^-1`: loop-momentum numerators and open covariant
+  derivative operands are generated, while the scalar propagator denominator
+  power is stored separately for the existing vakint/internal topology
+  machinery.
+- The expansion terms keep `open_cd_operands` split from the commutative
+  prefactor and loop-momentum numerator. Callers can splice these operands into
+  a larger non-commutative supertrace chain before calling
+  `act_with_open_covariant_derivatives(...)`, which is necessary for Wilson
+  line/X-term action and later field-strength generation.
+- Performance note: symbolic work remains in Symbolica expressions and the
+  open-CD action pass. Python only performs finite expansion-order
+  combinatorics around Matchete's integer-set/variable-partition bookkeeping;
+  reusable bounded replacement rules and integer compositions are cached.
+- This is still an internal CDE building block, not the default one-loop path.
+  The next slice should connect these expansion terms to interaction-power
+  supertrace kernels so propagator expansion can happen before loop-momentum
+  tensor reduction.
+- Validation for this slice so far:
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_cde.py -q` passed with 9 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional -q` passed with 26 tests;
+  `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_pretty_printing.py -k "supertrace_denominator"
+  -q` passed with 1 test and 9 deselected; `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
+  passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

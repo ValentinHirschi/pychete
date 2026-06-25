@@ -4,7 +4,11 @@ import pytest
 from symbolica import Expression
 
 from pychete import Theory, s
-from pychete.cde import act_with_open_covariant_derivatives, open_covariant_derivative
+from pychete.cde import (
+    act_with_open_covariant_derivatives,
+    bosonic_covariant_propagator_expansion_terms,
+    open_covariant_derivative,
+)
 
 from tests.conftest import assert_expr_equal
 
@@ -56,3 +60,67 @@ def test_open_covariant_derivative_rejects_invalid_bounds() -> None:
         act_with_open_covariant_derivatives(Expression.num(1), max_chain_arity=0)
     with pytest.raises(ValueError, match="max_passes"):
         act_with_open_covariant_derivatives(Expression.num(1), max_passes=-1)
+
+
+def test_bosonic_covariant_propagator_expansion_order_zero_is_scalar_propagator() -> None:
+    terms = bosonic_covariant_propagator_expansion_terms(())
+
+    assert len(terms) == 1
+    assert terms[0].denominator_power == 1
+    assert_expr_equal(terms[0].numerator, Expression.num(1))
+
+
+def test_bosonic_covariant_propagator_expansion_order_two_matches_open_cd_structure() -> None:
+    theory = Theory("bosonic_prop_order_two")
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+
+    terms = bosonic_covariant_propagator_expansion_terms((mu, nu))
+
+    assert [term.denominator_power for term in terms] == [3, 2]
+    assert_expr_equal(
+        terms[0].numerator,
+        -4 * s.LoopMomentum(mu) * s.LoopMomentum(nu) * s.NCM(open_covariant_derivative(mu), open_covariant_derivative(nu)),
+    )
+    assert_expr_equal(
+        terms[1].numerator,
+        s.NCM(open_covariant_derivative(mu), open_covariant_derivative(mu)),
+    )
+
+
+def test_bosonic_covariant_propagator_expansion_terms_splice_into_open_cd_chain() -> None:
+    theory = Theory("bosonic_prop_splice")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.lorentz_index("mu")
+    term = bosonic_covariant_propagator_expansion_terms((mu,))[0]
+
+    acted = act_with_open_covariant_derivatives(term.chain_with(phi()))
+
+    assert term.denominator_power == 2
+    assert_expr_equal(acted, -2 * Expression.I * s.LoopMomentum(mu) * phi(derivatives=[mu]))
+
+
+def test_bosonic_covariant_propagator_expansion_interleaves_pair_open_cds() -> None:
+    theory = Theory("bosonic_prop_order_three")
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    rho = theory.lorentz_index("rho")
+
+    terms = bosonic_covariant_propagator_expansion_terms((mu, nu, rho))
+    denominator_three_terms = [term for term in terms if term.denominator_power == 3]
+
+    assert len(denominator_three_terms) == 2
+    assert_expr_equal(
+        denominator_three_terms[0].numerator,
+        -2
+        * Expression.I
+        * s.LoopMomentum(mu)
+        * s.NCM(open_covariant_derivative(mu), open_covariant_derivative(nu), open_covariant_derivative(nu)),
+    )
+    assert_expr_equal(
+        denominator_three_terms[1].numerator,
+        -2
+        * Expression.I
+        * s.LoopMomentum(mu)
+        * s.NCM(open_covariant_derivative(nu), open_covariant_derivative(nu), open_covariant_derivative(mu)),
+    )
