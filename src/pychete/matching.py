@@ -2378,12 +2378,35 @@ class FluctuationOperator:
                 momentum_entry,
                 loop_momentum_squared=loop_momentum_squared,
             )
+        if denominator is None and row_mode.statistics is FluctuationStatistics.FERMIONIC:
+            free_part = _fermion_registered_free_inverse_part(
+                momentum_entry,
+                loop_momentum_squared=loop_momentum_squared,
+            )
+            if free_part is not None:
+                denominator = _fermion_momentum_entry_propagator_denominator(
+                    free_part,
+                    loop_momentum_squared=loop_momentum_squared,
+                )
         if denominator is None or not require_registered_mass:
             return denominator
         if not _same_field_label(row_expr, column_expr):
             return None
         expected_mass_squared = _fluctuation_mass_squared(self.mode_for(column_expr))
-        return denominator if is_zero((denominator[1] - expected_mass_squared).expand()) else None
+        if is_zero((denominator[1] - expected_mass_squared).expand()):
+            return denominator
+        if row_mode.statistics is FluctuationStatistics.FERMIONIC:
+            free_part = _fermion_registered_free_inverse_part(
+                momentum_entry,
+                expected_mass_squared=expected_mass_squared,
+                loop_momentum_squared=loop_momentum_squared,
+            )
+            if free_part is not None:
+                return s.PropagatorDenominator(
+                    s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared,
+                    expected_mass_squared,
+                )
+        return None
 
     def propagator_denominator_for_mode(
         self,
@@ -2475,13 +2498,17 @@ class FluctuationOperator:
             loop_momentum_squared=loop_momentum_squared,
         )
         if row_mode.statistics is FluctuationStatistics.FERMIONIC:
-            denominator = self.propagator_denominator_entry(
-                row_expr,
-                column_expr,
-                loop_momentum_squared=loop_momentum_squared,
-                require_registered_mass=require_registered_mass,
+            expected_mass_squared = (
+                _fluctuation_mass_squared(self.mode_for(column_expr))
+                if require_registered_mass
+                else None
             )
-            return Expression.num(0) if denominator is None else momentum_entry
+            free_part = _fermion_registered_free_inverse_part(
+                momentum_entry,
+                expected_mass_squared=expected_mass_squared,
+                loop_momentum_squared=loop_momentum_squared,
+            )
+            return Expression.num(0) if free_part is None else free_part
         denominator = self.propagator_denominator_for_mode(
             row_expr,
             loop_momentum_squared=loop_momentum_squared,
@@ -3000,6 +3027,24 @@ def _fermion_slash_momentum_replacements(marker: Expression) -> tuple[Replacemen
         Replacement(s.Gamma(index) * s.LoopMomentum(index), marker),
         Replacement(s.DiracProduct(s.Gamma(index)) * s.LoopMomentum(index), marker),
     )
+
+
+def _fermion_registered_free_inverse_part(
+    expr: Expression,
+    *,
+    expected_mass_squared: Expression | None = None,
+    loop_momentum_squared: Expression | None = None,
+) -> Expression | None:
+    free_part = _field_independent_part(expr)
+    denominator = _fermion_momentum_entry_propagator_denominator(
+        free_part,
+        loop_momentum_squared=loop_momentum_squared,
+    )
+    if denominator is None:
+        return None
+    if expected_mass_squared is not None and not is_zero((denominator[1] - expected_mass_squared).expand()):
+        return None
+    return free_part.expand()
 
 
 def _propagator_denominator_mass_squared(denominator: Expression) -> Expression:

@@ -152,6 +152,12 @@ kinetic entries. The propagator metadata should expose the scalar denominator
 `free_inverse_entry(...)` subtracts the original Dirac kinetic expression from
 interaction blocks. Do not replace fermion free inverses by scalar
 `LoopMomentumSquared - m^2` expressions inside the interaction matrix.
+When a fermion kinetic entry also contains field-dependent gamma-current
+pieces, such as Abelian gauge-current terms from `free_lag(...)`, recognize the
+registered free inverse from the field-independent slash/mass part using
+Symbolica replacement rules over tagged fields. The current term must remain in
+`interaction_entry(...)`; do not fold vector- or scalar-dependent gamma terms
+into the fermion mass slot.
 Fluctuation-basis discovery must treat registered `FieldStrength(label, ...)`
 atoms as occurrences of the owning vector field. Use `field_strength_pattern`
 with the field-label tag/data supplied by `Theory.symbol`; do not parse label

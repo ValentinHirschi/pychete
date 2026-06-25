@@ -178,6 +178,36 @@ def test_charged_scalar_free_lag_generates_gauge_interactions() -> None:
     assert_expr_equal(operator.interaction_entry(vector, vector), 2 * coupling() ** 2 * phi() * s.Bar(phi()))
 
 
+def test_charged_fermion_free_lag_subtracts_only_registered_free_inverse() -> None:
+    theory = Theory("fluctuation_charged_fermion_free")
+    theory.define_gauge_group("U1e", s.U1, "e", "A")
+    psi = theory.define_field(
+        "psi",
+        s.Fermion,
+        charges=[theory.group_charge("U1e", 1)],
+        mass=(FieldMassKind.HEAVY, "M"),
+    )
+    vector = theory.field_handle("A")
+    coupling = theory.coupling_handle("e")
+    mass = theory.mass_expr(psi.definition)
+    assert mass is not None
+    mu = theory.dummy_index(0)
+    lagrangian = theory.free_lag(psi, vector)
+    barred_psi = s.Bar(psi())
+
+    operator = theory.fluctuation_operator(lagrangian, [barred_psi, psi(), vector()])
+    denominator = s.PropagatorDenominator(s.LoopMomentumSquared, mass**2)
+    current = coupling() * vector() * s.Gamma(mu)
+
+    assert_expr_equal(operator.propagator_denominator_entry(barred_psi, psi()), denominator)
+    assert_expr_equal(operator.propagator_denominator_entry(psi(), barred_psi), denominator)
+    assert_expr_equal(operator.propagator_denominator_for_mode(psi()), denominator)
+    assert_expr_equal(operator.free_inverse_entry(barred_psi, psi()), -mass - s.Gamma(mu) * s.LoopMomentum(mu))
+    assert_expr_equal(operator.free_inverse_entry(psi(), barred_psi), -mass + s.Gamma(mu) * s.LoopMomentum(mu))
+    assert_expr_equal(operator.interaction_entry(barred_psi, psi()), current)
+    assert_expr_equal(operator.interaction_entry(psi(), barred_psi), current)
+
+
 def test_fluctuation_operator_denominator_extraction_rejects_interaction_masses() -> None:
     theory = Theory("fluctuation_denominator_interaction")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

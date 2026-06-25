@@ -732,3 +732,41 @@ Latest verified baseline before this compact rollover:
     6.22s. The skipped test was the GammaLoop API import check because the
     dependency manifest indicates GammaLoop was not requested for this local
     dependency build.
+
+## Current Slice: Charged Fermion Free-Inverse Subtraction
+
+- Continued the same larger vector/gauge implementation batch. After adding
+  Abelian current terms to fermion `free_lag(...)`, a live VLF-style probe
+  showed that diagonal fermion interaction entries still included the
+  field-independent slash/mass free inverse whenever the same entry also
+  contained an `A * e * Gamma(...)` current term.
+- Root cause: direct fermion denominator recognition accepted the full
+  vector-dependent constant term as the candidate mass slot, rejected it
+  against the registered mass, and never retried on the field-independent
+  slash/mass part.
+- Implemented a Symbolica replacement-rule fallback for fermion free inverses:
+  tagged `Field(...)`, `Bar(Field(...))`, and `FieldStrength(...)` atoms are
+  removed through the existing field-independent projection, then the native
+  slash-momentum recognition is applied to the remaining Dirac kinetic part.
+  `free_inverse_entry(...)` now subtracts only that registered free inverse,
+  leaving Abelian gauge-current terms in `interaction_entry(...)`.
+- Added `AGENTS.md` guidance that field-dependent gamma-current terms must not
+  be folded into the fermion mass slot.
+- Added focused matching coverage for charged massive fermions:
+  - `propagator_denominator_entry(...)` and
+    `propagator_denominator_for_mode(...)` recognize the registered
+    denominator despite the vector current;
+  - both fermion/barred-fermion orientations subtract only the slash/mass free
+    inverse;
+  - the diagonal interaction entries retain only the Abelian gauge current.
+- Verification in this slice so far:
+  - focused charged-fermion free-inverse test passed:
+    1 passed, 51 deselected in 0.05s.
+  - grouped matching integration gate passed:
+    65 passed in 1.53s;
+  - `mypy` passed with no issues in 32 source files;
+  - `git diff --check` passed;
+  - broader non-slow gate passed: 262 passed, 1 skipped, 50 deselected in
+    5.66s. The skipped test was the GammaLoop API import check because the
+    dependency manifest indicates GammaLoop was not requested for this local
+    dependency build.
