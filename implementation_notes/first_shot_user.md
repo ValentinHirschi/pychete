@@ -115,3 +115,18 @@
 > HeavyFermionSolution = HeavyFieldSolution
 >
 > My suspicion is that we can unify a lot (but not all) of the machinery for determining the heavy field solutions. EVentually we'll also add vectors, so might as well unify now
+
+> Some formatting changes for the latex output:
+> - covariant derivatives always act on the single field to their immediate right; no parenthesis is needed
+> - bars belong only on the field and shouldn't be displayed as a single bar across both fields and derivatives
+> - Closed ncm chains should be enclosed in a parenthesis to set it a part from ordinary product factors.
+
+> Much better. Three additional things:
+> - A (derivative of a field)-to-some-power should get parenthesis around derivative and field before the power. E.g. the scalar kinetic term would be (D_\mu \phi)^2.
+> - If a field has neighboring derivative indices sharing the label, it should be displayed as D^2 \phi rather than D_\mu D_\mu \phi.
+> - Order products such that all prefactors (numerics and couplings) appear before, fields, ncm, field-strength tensors etc. In other words, coefficient should come before the operator.
+
+> There's something wrong in the ordering here:
+> We need the numerical prefactors, including sign, to appear first.
+
+> Actually, also having the big fraction with a mass in the denominator, isn't so good either. That should be part of the coefficient in front of the operator. The operator part should never appear as part of a fraction, even as a numerator.

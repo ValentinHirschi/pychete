@@ -522,6 +522,74 @@
   collected 79 tests with 78 passing and 1 expected skip for the optional
   GammaLoop API.
 
+### LaTeX spinor and derivative formatting
+
+- Updated the central Symbolica print callback for pychete derivatives so
+  LaTeX covariant derivatives print as prefix operators on the immediate field,
+  e.g. `D_{\mu}\phi`, instead of wrapping the field argument in
+  `\left(...\right)`.
+- Added LaTeX-specific barred-field printing that keeps the bar on the field
+  symbol and leaves derivative operators outside it. Both derivative-indexed
+  fields and explicit `CD[mu, Bar[field]]`/`Bar[CD[mu, field]]` forms now
+  display as `D_{\mu}\bar{\psi}`.
+- Added a lightweight LaTeX endpoint check for NCM/DiracProduct printing:
+  chains beginning with a barred fermion endpoint and ending with a fermion
+  endpoint now print inside `\left(...\right)` so closed bilinears stand apart
+  from surrounding commutative factors.
+- Added focused pretty-printing regression coverage for derivative formatting,
+  barred derivative fields, parenthesized closed NCM chains, and unparenthesized
+  open spin chains.
+- Verification passed:
+  `source "$HOME/.bashrc"; PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests`
+  collected 80 tests with 79 passing and 1 expected skip for the optional
+  GammaLoop API.
+
+### Expression-aware LaTeX formatting
+
+- Inspected Symbolica's Python custom print callback plumbing and confirmed it
+  passes ordinary print options plus `level`/`bracket_level`, but not the
+  internal `in_exp_base` flag needed for a callback to know it is being printed
+  as the base of a power.
+- Kept the existing atom-level callbacks for direct Symbolica formatting, and
+  added a pychete-aware recursive LaTeX formatter behind `latex_string(...)`
+  and `display_string(..., PrintMode.Latex)`.
+- The new LaTeX formatter handles the expression contexts that native symbol
+  callbacks cannot see:
+  - derivative fields raised to powers now print as
+    `\left(D_{\mu}\phi\right)^{2}`;
+  - neighboring equal derivative labels collapse to `D^{2}\phi`;
+  - products put numerical coefficients and coupling prefactors before the
+    operator factors, e.g. `\lambda \phi^{4}` and
+    `y \phi^{2}(\bar{\psi}\gamma^{\mu}\psi)`.
+- Updated the pretty-printing tests to use `latex_string` for expression-level
+  LaTeX snapshots while still keeping direct `Expression.format` checks for the
+  simpler atom-level callbacks.
+- Updated `examples/lagrangian_printout.py` and the notebook `as_latex` helper
+  to call `latex_string(...)` so examples use the same pychete-aware LaTeX path.
+- Verification passed:
+  `source "$HOME/.bashrc"; PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests`
+  collected 81 tests with 80 passing and 1 expected skip for the optional
+  GammaLoop API.
+
+### Coefficient-only LaTeX fractions
+
+- Refined the pychete LaTeX product formatter so fractions are used only for
+  coefficient material: signed numerical factors plus coupling/mass prefactors.
+  Field factors, NCM chains, field strengths, and other operator factors are
+  kept outside the fraction even when the coefficient contains inverse powers
+  such as `M^{-2}`.
+- Extended numerical coefficient parsing to recognize Symbolica's pure
+  imaginary rational spellings such as `-1𝑖/2` and `-1/2𝑖`, so the sign and
+  imaginary unit stay in the leading coefficient block.
+- Added regression coverage for mass-suppressed spinor terms, e.g.
+  `-\frac{\mathrm{i}}{2 M^{2}} \bar{y} y \phi^{2}
+  (\bar{\psi}\gamma^{\mu}P_L\psi)`, ensuring the operator never appears in
+  the numerator of a big fraction.
+- Verification passed:
+  `source "$HOME/.bashrc"; PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests`
+  collected 82 tests with 81 passing and 1 expected skip for the optional
+  GammaLoop API.
+
 ### Projector representation audit
 
 - Traced current uses of `s.PL`, `s.PR`, and `s.Proj`.

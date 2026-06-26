@@ -8,7 +8,7 @@ import textwrap
 
 from symbolica import Expression, PrintMode
 
-from pychete import FieldMassKind, PycheteState, Theory, canonical_string, collect_indices, load_state, s
+from pychete import FieldMassKind, PycheteState, Theory, bar_expr, canonical_string, collect_indices, latex_string, load_state, ncm_expr, s
 from pychete.matching import HeavyFieldSolution
 
 
@@ -41,6 +41,8 @@ def _heavy_scalar_theory() -> tuple[Theory, Expression]:
 
 
 def _format_lagrangian(lagrangian: Expression, mode: PrintMode) -> str:
+    if mode is PrintMode.Latex:
+        return latex_string(lagrangian)
     return lagrangian.format(mode=mode, **FORMAT_OPTIONS)
 
 
@@ -51,7 +53,7 @@ def test_phi4_lagrangian_prints_cleanly_in_all_symbolica_modes() -> None:
         "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d0](phi)^2"
     )
     assert _format_lagrangian(lagrangian, PrintMode.Latex) == (
-        r"-\frac{1}{2} \phi^{2} m^{2}-\frac{1}{24} \phi^{4} \lambda+\frac{1}{2} D_{d0}\left(\phi\right)^{2}"
+        r"-\frac{1}{2} m^{2} \phi^{2}-\frac{1}{24} \lambda \phi^{4}+\frac{1}{2} \left(D_{d0}\phi\right)^{2}"
     )
     assert _format_lagrangian(lagrangian, PrintMode.Mathematica) == (
         r"-1/2*\[Phi]^2*m^2-1/24*\[Phi]^4*\[Lambda]+1/2*CD[{d0}, \[Phi]]^2"
@@ -71,7 +73,7 @@ def test_heavy_scalar_lagrangian_prints_cleanly_in_all_symbolica_modes() -> None
         "-1/2*S*phi^2*g-1/2*S^2*M^2+1/2*D[d0](S)^2+1/2*D[d0](phi)^2"
     )
     assert _format_lagrangian(lagrangian, PrintMode.Latex) == (
-        r"-\frac{1}{2} S \phi^{2} g-\frac{1}{2} S^{2} M^{2}+\frac{1}{2} D_{d0}\left(S\right)^{2}+\frac{1}{2} D_{d0}\left(\phi\right)^{2}"
+        r"-\frac{1}{2} g S \phi^{2}-\frac{1}{2} M^{2} S^{2}+\frac{1}{2} \left(D_{d0}S\right)^{2}+\frac{1}{2} \left(D_{d0}\phi\right)^{2}"
     )
     assert _format_lagrangian(lagrangian, PrintMode.Mathematica) == (
         r"-1/2*S*\[Phi]^2*g-1/2*S^2*M^2+1/2*CD[{d0}, S]^2+1/2*CD[{d0}, \[Phi]]^2"
@@ -105,6 +107,65 @@ def test_capitalized_greek_field_names_use_short_internal_labels() -> None:
     assert capital_phi().format(mode=PrintMode.Mathematica, **FORMAT_OPTIONS) == r"\[CapitalPhi]"
     assert capital_psi().format(mode=PrintMode.Mathematica, **FORMAT_OPTIONS) == r"\[CapitalPsi]"
     assert psi().format(mode=PrintMode.Mathematica, **FORMAT_OPTIONS) == r"\[Psi]"
+
+
+def test_latex_spinor_derivatives_and_closed_ncm_chains_are_readable() -> None:
+    theory = Theory("spinor_latex_pretty")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    psi = theory.define_field("psi", s.Fermion, mass=0)
+    mu = theory.lorentz_index("mu")
+
+    assert s.CD(mu, phi()).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\phi"
+    assert s.Bar(psi(derivatives=[mu])).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\bar{\psi}"
+    assert s.CD(mu, s.Bar(psi())).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\bar{\psi}"
+    assert s.Bar(s.CD(mu, psi())).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\bar{\psi}"
+    assert latex_string(s.CD(mu, phi()) ** 2) == r"\left(D_{\mu}\phi\right)^{2}"
+    assert latex_string(s.CD(mu, s.CD(mu, phi()))) == r"D^{2}\phi"
+    assert latex_string(phi(derivatives=[mu, mu])) == r"D^{2}\phi"
+
+    closed_chain = ncm_expr(s.Bar(psi()), s.Gamma(mu), psi())
+    open_chain = ncm_expr(s.Gamma(mu), psi())
+    assert latex_string(closed_chain) == r"\left(\bar{\psi}\,\gamma^{\mu}\,\psi\right)"
+    assert latex_string(phi() ** 2 * closed_chain) == (
+        r"\phi^{2} \left(\bar{\psi}\,\gamma^{\mu}\,\psi\right)"
+    )
+    assert latex_string(open_chain) == r"\gamma^{\mu}\,\psi"
+
+
+def test_latex_products_put_prefactors_before_operators() -> None:
+    theory = Theory("prefactor_latex_pretty")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    psi = theory.define_field("psi", s.Fermion, mass=0)
+    lam = theory.define_coupling("lambda")
+    y = theory.define_coupling("y")
+    mass = theory.define_coupling("M")
+    mu = theory.lorentz_index("mu")
+    closed_chain = ncm_expr(s.Bar(psi()), s.Gamma(mu), psi())
+
+    assert latex_string(phi() ** 4 * lam() / 24) == r"\frac{1}{24} \lambda \phi^{4}"
+    assert latex_string(phi() ** 2 * y() * closed_chain / 3) == (
+        r"\frac{1}{3} y \phi^{2} \left(\bar{\psi}\,\gamma^{\mu}\,\psi\right)"
+    )
+    assert latex_string(-phi() ** 2 * y() * closed_chain / (2 * mass() ** 2)) == (
+        r"-\frac{1}{2 M^{2}} y \phi^{2} \left(\bar{\psi}\,\gamma^{\mu}\,\psi\right)"
+    )
+
+
+def test_latex_imaginary_mass_suppressed_spinor_term_keeps_operator_out_of_fraction() -> None:
+    theory = Theory("imaginary_prefactor_latex_pretty")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    psi = theory.define_field("psi", s.Fermion, mass=0)
+    y = theory.define_coupling("y", self_conjugate=False)
+    mass = theory.define_coupling("M")
+    mu = theory.lorentz_index("mu")
+    closed_chain = ncm_expr(s.Bar(psi()), s.Gamma(mu), s.PL, psi())
+
+    expr = -Expression.I * bar_expr(y()) * y() * phi() ** 2 * closed_chain / (2 * mass() ** 2)
+
+    assert latex_string(expr) == (
+        r"-\frac{\mathrm{i}}{2 M^{2}} \bar{y} y \phi^{2} "
+        r"\left(\bar{\psi}\,\gamma^{\mu}\,P_L\,\psi\right)"
+    )
 
 
 def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
@@ -231,7 +292,7 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
 
         from symbolica import PrintMode
 
-        from pychete import canonical_string, collect_indices, load_state
+        from pychete import canonical_string, collect_indices, latex_string, load_state
 
         format_options = {
             "max_line_length": None,
@@ -252,9 +313,9 @@ def test_saved_state_cold_load_restores_symbol_manifest_before_parsing(tmp_path:
         assert "pychete::Index(pychete::dummy_index(0),pychete::Lorentz)" in canonical_string(lagrangian)
         assert any(canonical_string(info.label) == "pychete::dummy_index(0)" for info in collect_indices(lagrangian))
         symbolica = lagrangian.format(mode=PrintMode.Symbolica, **format_options)
-        latex = lagrangian.format(mode=PrintMode.Latex, **format_options)
+        latex = latex_string(lagrangian)
         assert symbolica == "-1/2*phi^2*m^2-1/24*phi^4*lambda+1/2*D[d0](phi)^2"
-        assert latex == r"-\\frac{1}{2} \\phi^{2} m^{2}-\\frac{1}{24} \\phi^{4} \\lambda+\\frac{1}{2} D_{d0}\\left(\\phi\\right)^{2}"
+        assert latex == r"-\\frac{1}{2} m^{2} \\phi^{2}-\\frac{1}{24} \\lambda \\phi^{4}+\\frac{1}{2} \\left(D_{d0}\\phi\\right)^{2}"
         assert "Field(" not in symbolica
         assert "Coupling(" not in symbolica
         """

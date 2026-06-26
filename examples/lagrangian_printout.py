@@ -8,7 +8,7 @@ sys.path.insert(0, str(PROJECT_ROOT / "src"))
 
 from symbolica import PrintMode
 
-from pychete import FieldMassKind, Theory, s
+from pychete import FieldMassKind, Theory, latex_string, s
 
 
 FORMAT_OPTIONS = {
@@ -38,7 +38,7 @@ def main() -> None:
     print(lagrangian.format(mode=PrintMode.Symbolica, **FORMAT_OPTIONS))
     print()
     print("LaTeX:")
-    print(lagrangian.format(mode=PrintMode.Latex, **FORMAT_OPTIONS))
+    print(latex_string(lagrangian))
 
 
 if __name__ == "__main__":
