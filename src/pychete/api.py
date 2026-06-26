@@ -110,6 +110,7 @@ from .validation_fixtures import (
     ValidationFixture,
     load_validation_fixture,
 )
+from .wilson_lines import expand_wilson_terms, wilson_term_expansion
 
 __all__ = [
     "BuiltinIndexType",
@@ -188,6 +189,7 @@ __all__ = [
     "evaluate_one_loop_single_scale_vacuum_integral",
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
     "evaluate_one_loop_vakint_expression",
+    "expand_wilson_terms",
     "get_logger",
     "hermitian_conjugate",
     "infer_coupling_mass_dimensions",
@@ -215,4 +217,5 @@ __all__ = [
     "simplify_loop_functions",
     "simplify_pychete_color",
     "tensor_index_specs",
+    "wilson_term_expansion",
 ]

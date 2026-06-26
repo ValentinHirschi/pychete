@@ -302,6 +302,18 @@ a Wilson-line placeholder onto an already summed trace and call it equivalent.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
 simplification; do not implement it as a Python tree walker.
+Use `expand_wilson_terms(theory, expr)` as the public Wilson-line expansion
+boundary. Its first supported cases are the coincidence-limit identity
+transporter, the vanishing one-derivative term, and the two-derivative
+field-strength term for scalar/fermion representations. Higher derivative
+`WilsonTerm` atoms and vector-field derivative terms must remain formal until
+Matchete's derivative-sublist/generator-chain expansion has been implemented
+through Symbolica pattern replacements plus idenso/spenso simplification.
+`WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
+`WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
+structural bridge methods; do not wire them into the default one-loop result
+pipeline until their higher-order coverage is validated against committed
+Matchete-independent fixtures.
 Public bosonic CDE matching requests must replace only the selected
 interaction-supertrace families by their CDE-expanded aggregate and must keep
 all unselected interaction-power trace families in the one-loop source. Use the

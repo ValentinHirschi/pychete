@@ -640,6 +640,9 @@ class SymbolStore:
         "FieldStrengthDerivativesWildcard",
         "LoopMomentumIndexWildcard",
         "OpenCDIndicesWildcard",
+        "WilsonTermFieldWildcard",
+        "WilsonTermLinkIndicesWildcard",
+        "WilsonTermDerivativeIndicesWildcard",
         "LoopFunctionMassesWildcard",
         "LoopFunctionPowersWildcard",
         "EFTExpansionParameter",
@@ -967,6 +970,18 @@ class SymbolStore:
     @cached_property
     def OpenCDIndicesWildcard(self) -> Expression:
         return self.head("open_cd_indices_")
+
+    @cached_property
+    def WilsonTermFieldWildcard(self) -> Expression:
+        return self.head("wilson_term_field_")
+
+    @cached_property
+    def WilsonTermLinkIndicesWildcard(self) -> Expression:
+        return self.head("wilson_term_link_indices_")
+
+    @cached_property
+    def WilsonTermDerivativeIndicesWildcard(self) -> Expression:
+        return self.head("wilson_term_derivative_indices_")
 
     @cached_property
     def LoopFunctionMassesWildcard(self) -> Expression:

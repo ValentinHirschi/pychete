@@ -130,6 +130,14 @@ def field_strength_pattern(label: Expr | None = None) -> Expr:
     )
 
 
+def wilson_term_pattern() -> Expr:
+    return s.WilsonTerm(
+        s.WilsonTermFieldWildcard,
+        s.WilsonTermLinkIndicesWildcard,
+        s.WilsonTermDerivativeIndicesWildcard,
+    )
+
+
 MatchCondition: TypeAlias = PatternRestriction | Condition | None
 
 

@@ -307,6 +307,8 @@ def test_public_api_methods_have_docstrings() -> None:
             "order",
             "template_expression",
             "wilson_line_expression",
+            "wilson_term_expanded_kernel_expression",
+            "wilson_term_expanded_template_expression",
             "wilson_term_expression",
         ],
         pychete.BosonicCDETraceExpansionTerm: [

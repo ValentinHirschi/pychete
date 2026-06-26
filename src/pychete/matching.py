@@ -865,6 +865,43 @@ class WilsonLineTracePath:
             list_expr(*(list_expr(denominator) for denominator in denominators)),
         )
 
+    def wilson_term_expanded_template_expression(
+        self,
+        derivative_indices: Sequence[Expression] = (),
+    ) -> Expression:
+        """Return the ordered insertion template after supported Wilson expansion."""
+
+        from .wilson_lines import expand_wilson_terms
+
+        return expand_wilson_terms(
+            self.theory,
+            self.template_expression(
+                use_wilson_term=True,
+                derivative_indices=derivative_indices,
+            ),
+        )
+
+    def wilson_term_expanded_kernel_expression(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+        derivative_indices: Sequence[Expression] = (),
+    ) -> Expression:
+        """Return the path kernel after supported Wilson expansion."""
+
+        from .wilson_lines import expand_wilson_terms
+
+        return expand_wilson_terms(
+            self.theory,
+            self.kernel_expression(
+                loop_momentum_squared=loop_momentum_squared,
+                include_light=include_light,
+                use_wilson_term=True,
+                derivative_indices=derivative_indices,
+            ),
+        )
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{WilsonLineTracePath}}\left({escape(self.trace_name)},\ {self.path_index}\right)$"
 

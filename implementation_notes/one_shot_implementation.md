@@ -151,6 +151,19 @@
   `interaction_wilson_line_kernel_expression_map(...)`. These are structural
   diagnostics and future expansion inputs, not yet a full Wilson-line
   functional-trace evaluator.
+- The current Wilson-term expansion slice adds `expand_wilson_terms(theory,
+  expr)` and `wilson_term_expansion(...)` as the reusable expansion boundary.
+  The supported cases are deliberately low-order and native-pattern based:
+  identity transport for zero derivatives, zero for one derivative, and the
+  two-derivative field-strength insertion for scalar/fermion representations
+  using theory-owned Abelian/non-Abelian gauge metadata. Higher derivative
+  `WilsonTerm` atoms and vector derivative terms remain formal for the next
+  Wilson-line expansion slice.
+- `WilsonLineTracePath` now exposes
+  `wilson_term_expanded_template_expression(...)` and
+  `wilson_term_expanded_kernel_expression(...)`, allowing future matching code
+  to inspect Wilson-term-expanded path numerators/kernels without changing the
+  default power-type or CDE result pipelines.
 - `AGENTS.md` now makes the Matchete-author course correction explicit:
   new core matching work should use ordered Wilson-line path metadata, not a
   CDE-first architecture, and SMEFT Warsaw must remain an optional
@@ -262,6 +275,19 @@
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
   passed.
 - `git diff --check` passed after the Wilson-line structural slice.
+- 30 GiB memory-watch Wilson-term expansion focused gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "wilson" -q`
+  passed with 4 tests selected and 73 deselected, covering identity,
+  one-derivative zero, Abelian two-derivative field-strength insertion,
+  non-Abelian generator/field-strength insertion, and the
+  `WilsonLineTracePath` expansion bridge.
+- 30 GiB memory-watch public API gate after exporting Wilson expansion helpers:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_public_api.py -q`
+  passed with 5 tests.
+- 30 GiB memory-watch typing gate after the Wilson-term expansion slice:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
+- `git diff --check` passed after the Wilson-term expansion slice.
 - `python -m mypy` passed after the validation-report canonization slice.
 - `git diff --check` passed after the validation-report canonization slice.
 - Focused Singlet tree projection regression:

@@ -28,6 +28,7 @@ from pychete import (
     canonical_string,
     define_smeft_wilson_coefficient,
     dummy_indices,
+    expand_wilson_terms,
     one_loop_normalization_factor,
     s,
 )
@@ -1744,6 +1745,82 @@ def test_one_loop_setup_exposes_explicit_wilson_line_trace_paths() -> None:
     assert_expr_equal(expression_map["interaction_wilson_line_kernel[hScalar-lScalar,0]"], kernel)
     setup_map = setup.to_expression_map()
     assert_expr_equal(setup_map["one_loop_setup.interaction_wilson_line_kernel[hScalar-lScalar,0]"], kernel)
+    assert "pychete::WilsonTerm" not in canonical_string(path.wilson_term_expanded_template_expression())
+    assert "pychete::WilsonTerm" not in canonical_string(path.wilson_term_expanded_kernel_expression())
+
+
+def test_expand_wilson_terms_returns_registered_identity_transporter() -> None:
+    theory = Theory("wilson_term_identity")
+    theory.define_gauge_group("SU2L", s.SU(2), "g2", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+
+    identity = expand_wilson_terms(theory, s.WilsonTerm(higgs.label, s.List(left, right), s.List()))
+    expected_identity = s.Delta(theory.index(left, fund), theory.index(right, s.Bar(fund)))
+    one_derivative = expand_wilson_terms(theory, s.WilsonTerm(higgs.label, s.List(left, right), s.List(mu)))
+
+    assert_expr_equal(identity, expected_identity)
+    assert_expr_equal(one_derivative, Expression.num(0))
+
+
+def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:
+    theory = Theory("wilson_term_abelian_two_derivative")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    strength = s.FieldStrength(theory.field_handle("B").label, s.List(mu, nu), s.List(), s.List())
+
+    expanded = expand_wilson_terms(theory, s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu)))
+    conjugate_expanded = expand_wilson_terms(
+        theory,
+        s.WilsonTerm(s.Bar(phi.label), s.List(left, right), s.List(mu, nu)),
+    )
+
+    assert_expr_equal(expanded, -Expression.I * theory.coupling_handle("gY")() * strength)
+    assert_expr_equal(conjugate_expanded, Expression.I * theory.coupling_handle("gY")() * strength)
+
+
+def test_expand_wilson_terms_lowers_non_abelian_two_derivative_term() -> None:
+    theory = Theory("wilson_term_non_abelian_two_derivative")
+    theory.define_gauge_group("SU2L", s.SU(2), "g2", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+
+    expanded = expand_wilson_terms(theory, s.WilsonTerm(higgs.label, s.List(left, right), s.List(mu, nu)))
+
+    output_label = theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX)
+    adjoint_label = theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX)
+    output = theory.index(output_label, fund)
+    adjoint = theory.index(adjoint_label, adj)
+    strength = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adjoint), s.List())
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    expected = (
+        -Expression.I
+        / 2
+        * theory.coupling_handle("g2")()
+        * strength
+        * generator(adjoint, output, theory.index(right, s.Bar(fund)))
+        * s.Delta(theory.index(left, fund), theory.index(output_label, s.Bar(fund)))
+    )
+
+    assert_expr_equal(expanded, expected)
 
 
 def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint() -> None:
