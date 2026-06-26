@@ -13,6 +13,7 @@ from pychete import (
     NumericProbePlan,
     Theory,
     build_numeric_probe_plan,
+    canonize_tensor_indices,
     canonical_string,
     deterministic_probe_samples,
     evaluator_probe_equal,
@@ -20,6 +21,7 @@ from pychete import (
     registered_wilson_matching_condition_targets,
     s,
     smeft_warsaw_operator,
+    tensor_index_specs,
 )
 from pychete.backends import vacuum_integrals
 from pychete.functional import expand_cd_operators
@@ -384,6 +386,55 @@ def test_matching_result_projects_alpha_equivalent_index_contractions() -> None:
     assert projected.metadata["matching_condition_projection_canonize_indices"] is True
     assert_expr_equal(projected.matching_conditions["HbarH"], Expression.num(5))
     assert_expr_equal(uncanonized["HbarH"], Expression.num(0))
+
+
+def test_tensor_canonization_helper_exposes_symbolica_dummy_index_payload() -> None:
+    theory = Theory("condition_projection_canonization_payload")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    target = s.Bar(higgs(i)) * higgs(i)
+    alpha_equivalent = s.Bar(higgs(j)) * higgs(j)
+
+    canonized = canonize_tensor_indices(alpha_equivalent, tensor_index_specs(target, alpha_equivalent))
+
+    assert_expr_equal(canonized.expression, target)
+    assert canonized.external_indices == ()
+    assert len(canonized.dummy_indices) == 1
+    assert_expr_equal(canonized.dummy_indices[0].expr, i)
+    assert_expr_equal(canonized.dummy_indices[0].group, fund)
+
+
+def test_matching_result_comparison_canonizes_alpha_equivalent_dummy_indices() -> None:
+    theory = Theory("condition_comparison_dummy_indices")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    lhs_operator = s.Bar(higgs(i)) * higgs(i)
+    rhs_operator = s.Bar(higgs(j)) * higgs(j)
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=7 * lhs_operator,
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=7 * rhs_operator,
+    )
+
+    canonized = candidate.compare_to(reference, names=["on_shell_eft_lagrangian"])
+    raw = candidate.compare_to(reference, names=["on_shell_eft_lagrangian"], canonize_indices=False)
+
+    assert canonized.equal is True
+    assert canonized.expressions[0].canonical_equal is True
+    assert raw.equal is False
 
 
 def test_matching_result_projects_alpha_equivalent_conjugate_representation_indices() -> None:

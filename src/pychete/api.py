@@ -21,7 +21,16 @@ from .backends.vacuum_integrals import (
     reduce_loop_functions_ibp,
     simplify_loop_functions,
 )
-from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
+from .indices import (
+    TensorCanonicalIndex,
+    TensorCanonization,
+    canonize_tensor_indices,
+    collect_indices,
+    dummy_indices,
+    open_indices,
+    relabel_dummy_indices,
+    tensor_index_specs,
+)
 from .logging import configure_logging, disable_logging, get_logger
 from .matching import (
     BosonicCDEExpansionPlan,
@@ -149,12 +158,15 @@ __all__ = [
     "SupertracePlan",
     "SymbolDataKey",
     "SymbolRole",
+    "TensorCanonicalIndex",
+    "TensorCanonization",
     "Theory",
     "ValidationFixture",
     "VakintIntegralStage",
     "canonical_string",
     "canonize_loop_function",
     "canonize_loop_functions",
+    "canonize_tensor_indices",
     "collect_indices",
     "configure_logging",
     "display_string",
@@ -193,4 +205,5 @@ __all__ = [
     "smeft_warsaw_operator_names",
     "simplify_loop_functions",
     "simplify_pychete_color",
+    "tensor_index_specs",
 ]

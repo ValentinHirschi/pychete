@@ -401,7 +401,13 @@ returns the canonical expression together with the external and ordered dummy
 indices appearing in that canonical expression; use that native output to align
 alpha-equivalent dummy-index contractions before comparing or projecting. Do
 not hand-roll Python dummy-index renaming or rely on raw string equality when
-`canonize_tensors(...)` can make the index structure canonical.
+`canonize_tensors(...)` can make the index structure canonical. In pychete
+code, prefer `tensor_index_specs(...)` to build the grouped pychete
+`Index(...)` specs and `canonize_tensor_indices(...)` to preserve Symbolica's
+returned canonical expression, external-index list, and dummy-index list. Use
+`TensorCanonization.canonical_indices` when building wildcard patterns from the
+canonical form; do not rescan the canonical expression to infer the same index
+mapping.
 Before projection/canonicalization, normalize powers of indexed field atoms
 with Symbolica replacement rules into fresh-index products so shorthand terms
 such as `H[i]^3*Bar(H[i])^3` can project against Warsaw-basis operators written

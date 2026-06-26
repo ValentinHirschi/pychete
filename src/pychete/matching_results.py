@@ -28,6 +28,7 @@ from .expr import (
     sum_expr,
     terms,
 )
+from .indices import canonize_tensor_indices, tensor_index_specs
 from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
@@ -1016,14 +1017,14 @@ def _canonized_index_wildcard_projection_pattern(source: Expression, target: Exp
     if not index_specs:
         return None
     try:
-        canon_target, external_indices, dummy_indices = target.canonize_tensors(index_specs)
+        canonized_target = canonize_tensor_indices(target, index_specs)
     except ValueError:
         return _index_wildcard_projection_pattern(
             target,
             tuple(matching_subexpressions(target, index_pattern())),
         )
-    canonical_indices = tuple(index for index, _group in (*external_indices, *dummy_indices))
-    return _index_wildcard_projection_pattern(canon_target, canonical_indices)
+    canonical_indices = tuple(index.expr for index in canonized_target.canonical_indices)
+    return _index_wildcard_projection_pattern(canonized_target.expression, canonical_indices)
 
 
 def _index_wildcard_projection_pattern(
@@ -1351,7 +1352,7 @@ def _canonize_tensor_terms(
     canonized_terms: list[Expression] = []
     for term in terms(expr):
         try:
-            canonized_terms.append(term.canonize_tensors(index_specs)[0])
+            canonized_terms.append(canonize_tensor_indices(term, index_specs).expression)
         except ValueError:
             # Some generated terms currently reuse the same dummy more than
             # twice. Preserve them rather than aborting projection; a later
@@ -1364,16 +1365,7 @@ def _matching_projection_index_specs(
     source: Expression,
     projection_expressions: Sequence[Expression],
 ) -> tuple[tuple[Expression, Expression], ...]:
-    seen: set[str] = set()
-    specs: list[tuple[Expression, Expression]] = []
-    for expr in (*projection_expressions, source):
-        for index in matching_subexpressions(expr, index_pattern()):
-            key = canonical_string(index)
-            if key in seen:
-                continue
-            seen.add(key)
-            specs.append((index, index[1]))
-    return tuple(specs)
+    return tensor_index_specs(*projection_expressions, source)
 
 
 def _matching_condition_target(name: str, expression: Expression) -> MatchingConditionTarget:

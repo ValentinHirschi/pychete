@@ -704,6 +704,33 @@
     passed.
   - `git diff --check` passed.
 
+## Current Tensor Canonization Helper Slice
+
+- Folded the latest Symbolica `Expression.canonize_tensors(...)` finding into
+  pychete's index API. Added public `tensor_index_specs(...)`,
+  `canonize_tensor_indices(...)`, `TensorCanonicalIndex`, and
+  `TensorCanonization` helpers in `pychete.indices`, re-exported through
+  `pychete.api` and package root. These helpers build grouped pychete
+  `Index(...)` specs and preserve Symbolica's returned canonical expression,
+  external-index list, and ordered dummy-index list.
+- Routed matching-condition projection and result comparison through the new
+  helper so wildcard projection patterns use
+  `TensorCanonization.canonical_indices` from Symbolica's native return value
+  rather than rescanning canonical strings or implementing a Python-side
+  dummy-index canonicalizer.
+- Added focused regressions verifying that the helper exposes the native dummy
+  index payload and that `MatchingResult.compare_to(...)` treats
+  alpha-equivalent dummy-index contractions as canonically equal while raw
+  comparison remains different.
+- Updated `AGENTS.md` to name the helper functions explicitly for future
+  matching and projection work.
+- Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_tensor_canonization_helper_exposes_symbolica_dummy_index_payload tests/integration/validation/test_numeric_probes.py::test_matching_result_comparison_canonizes_alpha_equivalent_dummy_indices tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_alpha_equivalent_index_contractions tests/unit/definitions/test_public_api.py -q'`
+    passed with 8 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
