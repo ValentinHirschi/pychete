@@ -189,9 +189,11 @@ to handle one target or target-local alias family.
 For any equality/projection question where only dummy-index names differ, use
 `Expression.canonize_tensors(...)` with grouped pychete `Index(...)` specs and
 the returned canonical expression, external-index list, and dummy-index list.
-Do not compare raw canonical strings before this normalization, and do not
-write a Python dummy-index canonicalizer when Symbolica can provide the
-canonical replacements.
+Treat that returned payload as the authoritative index-replacement map for
+aligning dummy indices; do not infer the same map by rescanning strings or
+expression trees. Do not compare raw canonical strings before this
+normalization, and do not write a Python dummy-index canonicalizer when
+Symbolica can provide the canonical replacements.
 
 Before adding or modifying symbolic code, explicitly inspect the Python stubs
 and source listed below. Prefer native primitives even when a Python loop seems
@@ -231,6 +233,13 @@ all unselected interaction-power trace families in the one-loop source. Use the
 and validation-fixture preview paths. The lower-level
 `interaction_bosonic_cde_*` methods intentionally remain pure selected-CDE
 diagnostics for inspecting generated kernels, terms, and backend expressions.
+Power-type supertrace prefactors must keep the cyclic-orbit factor after cyclic
+de-duplication. Use `SupertraceBlockTrace.power_type_log_prefactor` for both
+ordinary interaction-power terms and selected bosonic CDE replacement terms.
+Periodic words such as `hScalar-hScalar` and `hScalar-hScalar-hScalar` carry
+`-1/(2*n)`, while full-orbit words such as `hScalar-lScalar` keep effective
+`-1/2`. Do not hard-code a universal `-1/2`, and do not omit the logarithmic
+prefactor in CDE-generated replacement terms.
 Fermion free inverse recognition must keep Dirac structure separate from scalar
 propagator topology data. Use Symbolica replacement rules to mark
 `Gamma(index) * LoopMomentum(index)` or
@@ -414,7 +423,10 @@ code, prefer `tensor_index_specs(...)` to build the grouped pychete
 returned canonical expression, external-index list, and dummy-index list. Use
 `TensorCanonization.canonical_indices` when building wildcard patterns from the
 canonical form; do not rescan the canonical expression to infer the same index
-mapping.
+mapping. When Symbolica exposes canonical index replacements or equivalent
+external/dummy index payloads, keep those payloads attached to comparison and
+projection results so later code can line up dummy indices without another
+Python-side collection pass.
 Before projection/canonicalization, normalize powers of indexed field atoms
 with Symbolica replacement rules into fresh-index products so shorthand terms
 such as `H[i]^3*Bar(H[i])^3` can project against Warsaw-basis operators written

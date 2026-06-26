@@ -1676,6 +1676,22 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     )
 
 
+def test_power_type_prefactor_keeps_periodic_cyclic_trace_factor() -> None:
+    theory = Theory("one_loop_setup_periodic_trace_prefactor")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() ** 2 * light() / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=3)
+    contributions = {contribution.name: contribution for contribution in setup.interaction_power_type_contributions()}
+
+    assert_expr_equal(contributions["hScalar"].prefactor, -Expression.num(1) / 2)
+    assert_expr_equal(contributions["hScalar-hScalar"].prefactor, -Expression.num(1) / 4)
+    assert_expr_equal(contributions["hScalar-hScalar-hScalar"].prefactor, -Expression.num(1) / 6)
+    assert_expr_equal(contributions["hScalar-hScalar"].numerator_expression, -y() ** 2 * light() ** 2 / 4)
+    assert_expr_equal(contributions["hScalar-hScalar-hScalar"].numerator_expression, y() ** 3 * light() ** 3 / 6)
+
+
 def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint() -> None:
     theory = Theory("one_loop_setup_interaction_bosonic_cde")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
@@ -1692,7 +1708,7 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
     expansion = {"hScalar-lScalar": ((mu,), ())}
     first_entry = -y() * light()
     second_entry = -y() * light()
-    numerator = -2 * Expression.I * s.LoopMomentum(mu) * s.NCM(
+    numerator = Expression.I * s.LoopMomentum(mu) * s.NCM(
         first_entry,
         s.OpenCD(s.List(mu)),
         second_entry,
@@ -1730,7 +1746,7 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
     assert_expr_equal(kernels["interaction_bosonic_cde_kernel[hScalar-lScalar,0]"], expected_kernel)
     assert_expr_equal(integrals["interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]"], expected_integral)
 
-    acted_numerator = -4 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
+    acted_numerator = 2 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
     expected_acted_integral = vakint_backend.one_loop_vacuum_integral(
         acted_numerator,
         (light_mass**2, heavy_mass**2),

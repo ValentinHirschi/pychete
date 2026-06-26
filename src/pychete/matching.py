@@ -470,6 +470,23 @@ class SupertraceBlockTrace:
         )
         return _cyclic_sector_key(labels)
 
+    @property
+    def cyclic_path_labels(self) -> tuple[str, ...]:
+        """Return labels used to determine cyclic trace multiplicity."""
+
+        return (
+            self.cyclic_key
+            if self.cyclic_key is not None
+            else tuple(block.row_sector.value for block in self.blocks)
+        )
+
+    @property
+    def power_type_log_prefactor(self) -> Expression:
+        """Return the power-series prefactor after cyclic de-duplication."""
+
+        orbit_size = _cyclic_orbit_size(self.cyclic_path_labels)
+        return Expression.num(-orbit_size) / (2 * Expression.num(self.order))
+
     def propagator_mass_squared_chain(self, *, include_light: bool = True) -> tuple[tuple[Expression, ...], ...]:
         """Return mass-squared slots aligned with the row modes of each block."""
 
@@ -663,7 +680,7 @@ class SupertraceBlockTrace:
         terms: list[BosonicCDETraceExpansionTerm] = []
         for entry_path in _supertrace_block_entry_paths(self.blocks):
             for choices in product(*propagator_expansions):
-                prefactor = Expression.num(entry_path.sign)
+                prefactor = self.power_type_log_prefactor * Expression.num(entry_path.sign)
                 loop_numerator = Expression.num(1)
                 operands: list[Expression] = []
                 masses: list[Expression] = []
@@ -873,7 +890,7 @@ class PowerTypeSupertraceContribution:
     def prefactor(self) -> Expression:
         """Power-type logarithmic prefactor after the grading sign in ``trace``."""
 
-        return -Expression.num(1) / 2
+        return self.trace.power_type_log_prefactor
 
     @property
     def numerator_expression(self) -> Expression:
@@ -5219,6 +5236,12 @@ def _cyclic_sector_key(sectors: tuple[str, ...]) -> tuple[str, ...]:
         return ()
     rotations = tuple(sectors[index:] + sectors[:index] for index in range(len(sectors)))
     return min(rotations)
+
+
+def _cyclic_orbit_size(labels: tuple[str, ...]) -> int:
+    if not labels:
+        return 0
+    return len({labels[index:] + labels[:index] for index in range(len(labels))})
 
 
 @dataclass(frozen=True)

@@ -754,6 +754,46 @@
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_loop_normalization_accepts_external_hbar_symbol tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_operator_derived_propagator_insertions tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_vakint_normalization_without_mathematica tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_resolves_registered_hbar_for_matchete_normalization -q'`
     passed with 4 tests.
 
+## Current Periodic Trace Prefactor Slice
+
+- Found a normalization bug in cyclically de-duplicated power-type supertrace
+  words. Ordinary interaction-power contributions hardcoded `-1/2`, while
+  selected bosonic CDE replacement terms omitted the logarithmic power-series
+  prefactor entirely. This is only harmless for full cyclic-orbit words such
+  as `hScalar-lScalar`; periodic words such as `hScalar-hScalar` and
+  `hScalar-hScalar-hScalar` must instead carry `-1/4` and `-1/6`.
+- Added `SupertraceBlockTrace.cyclic_path_labels` and
+  `SupertraceBlockTrace.power_type_log_prefactor`, using the cyclic orbit size
+  divided by `2 * trace_order`. Both `PowerTypeSupertraceContribution` and
+  selected bosonic CDE expansion terms now use this shared prefactor.
+- Added a regression for a simple heavy/light scalar model verifying
+  `hScalar`, `hScalar-hScalar`, and `hScalar-hScalar-hScalar` prefactors and
+  numerator expressions. Updated the selected `hScalar-lScalar` CDE kernel
+  expectation to include the shared log prefactor.
+- Re-ran the focused Singlet selected `cH` public smoke with tree-level source,
+  internal minimal subtraction, and selected `hScalar-hScalar-hScalar` CDE.
+  The projected condition is now
+  `-A^2*kappa/(2*M^4) + A^3*muphi/(6*M^6) - i*kappa^3/(192*pi^2*M^2)`,
+  showing the periodic trace factor is applied. Remaining disagreement with
+  Matchete is broader matching-content, loop-convention, and basis-reduction
+  work rather than this cyclic prefactor.
+- Folded the latest Symbolica tensor-index canonization reminder into
+  `AGENTS.md`: `Expression.canonize_tensors(...)` returns the canonical
+  expression plus external/dummy index payloads that must be treated as the
+  authoritative dummy-index replacement map for comparisons and projections.
+  Do not rebuild that map with Python tree or string scans.
+- Focused validation for this slice so far:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_interaction_only_fluctuation_traces tests/integration/matching/test_fluctuation_operator.py::test_power_type_prefactor_keeps_periodic_cyclic_trace_factor tests/integration/matching/test_fluctuation_operator.py::test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint -q'`
+    passed with 3 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_projects_three_insertion_higgs_potential_operator -q'`
+    passed with 1 test.
+  - A combined run of the four tests aborted once during native vakint import;
+    the same tests passed when run in focused groups, so this is tracked as a
+    native-extension stability issue rather than a Python assertion failure.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
