@@ -496,6 +496,27 @@ def test_validation_fixture_preview_can_apply_internal_normalization_without_mat
     assert_expr_equal(normalized.on_shell_eft_lagrangian, factor * raw.on_shell_eft_lagrangian)
 
 
+def test_validation_fixture_preview_can_apply_evaluated_matchete_hbar_normalization() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    hbar = S("fixture_evaluated_hbar")
+    raw = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+    )
+    normalized = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+        normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+        hbar=hbar,
+    )
+    factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+
+    assert normalized.metadata["stage"] == "normalized_interaction_power_type_internal_minimal_subtraction_result"
+    assert normalized.metadata["loop_normalization"] == "matchete_evaluated_hbar"
+    assert_expr_equal(normalized.expression("interaction_power_type_loop_normalization_factor"), factor)
+    assert_expr_equal(normalized.on_shell_eft_lagrangian, factor * raw.on_shell_eft_lagrangian)
+
+
 def test_validation_fixture_preview_can_stage_named_supertraces_with_vakint_engine() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     raw_preview = fixture.one_loop_preview(max_trace_order=1)

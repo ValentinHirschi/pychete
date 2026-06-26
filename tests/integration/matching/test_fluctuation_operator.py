@@ -1623,6 +1623,17 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         Expression.I * external_hbar,
     )
     assert_expr_equal(
+        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=external_hbar),
+        -16 * Expression.PI**2 * Expression.I * external_hbar,
+    )
+    assert_expr_equal(
+        (
+            one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=external_hbar)
+            * (-Expression.I / (192 * Expression.PI**2))
+        ).expand(),
+        -external_hbar / 12,
+    )
+    assert_expr_equal(
         one_loop_normalization_factor(OneLoopNormalization.MATCHETE_LOOP_FACTOR),
         Expression.I / (16 * Expression.PI**2),
     )

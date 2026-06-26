@@ -146,7 +146,13 @@ fixtures, pass `OneLoopMatchOptions.hbar` as the registered external `hbar`
 symbol, or let `ValidationFixture.one_loop_preview_gap_report(...)` resolve it
 from the active theory. Do not compare converted Matchete conditions containing
 `external_hbar` against package-level `s.HBar` without an explicit convention
-choice.
+choice. Use `OneLoopNormalization.MATCHETE_HBAR` for raw, unevaluated vakint
+supertrace expressions. Use `OneLoopNormalization.MATCHETE_EVALUATED_HBAR` for
+evaluated internal/vakint finite expressions that already contain the explicit
+`i/(16*pi^2)` factor; this applies the central
+`-16*pi^2*i*hbar` conversion to Matchete's external `hbar` loop-counting
+convention. Do not repair this convention later with Wilson-specific
+projection replacements.
 Before calling native `Expression.coefficient(...)` on large composite
 matching targets, prefilter candidate source terms with Symbolica pattern
 matches over registered field and field-strength labels. The filter must be

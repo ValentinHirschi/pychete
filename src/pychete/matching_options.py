@@ -54,6 +54,7 @@ class OneLoopNormalization(StrEnum):
 
     PREVIEW = "preview"
     MATCHETE_HBAR = "matchete_hbar"
+    MATCHETE_EVALUATED_HBAR = "matchete_evaluated_hbar"
     MATCHETE_LOOP_FACTOR = "matchete_loop_factor"
 
     @classmethod
@@ -64,7 +65,8 @@ class OneLoopNormalization(StrEnum):
             return cls(value)
         except ValueError as exc:
             raise ValueError(
-                "one-loop normalization must be 'preview', 'matchete_hbar', or 'matchete_loop_factor'"
+                "one-loop normalization must be 'preview', 'matchete_hbar', "
+                "'matchete_evaluated_hbar', or 'matchete_loop_factor'"
             ) from exc
 
 
@@ -119,6 +121,10 @@ class OneLoopMatchOptions:
     central ``s.HBar`` symbol; Matchete-derived validation fixtures can pass
     their registered external ``hbar`` symbol to compare against converted
     Matchete conditions without a separate replacement pass.
+    Use ``MATCHETE_EVALUATED_HBAR`` instead when the selected backend has
+    already evaluated one-loop integrals and therefore already contains the
+    explicit ``i/(16*pi^2)`` factor. This maps evaluated internal-backend
+    terms into Matchete's external ``hbar`` loop-counting convention.
     ``bosonic_cde_expansion_indices_by_trace`` enables the current opt-in CDE
     interaction-supertrace path for explicitly selected trace names. The value
     maps each trace name to one Lorentz-index sequence per propagator slot in
@@ -220,6 +226,8 @@ def one_loop_normalization_factor(
         return Expression.num(1)
     if selected is OneLoopNormalization.MATCHETE_HBAR:
         return Expression.I * (s.HBar if hbar is None else hbar)
+    if selected is OneLoopNormalization.MATCHETE_EVALUATED_HBAR:
+        return -16 * Expression.PI**2 * Expression.I * (s.HBar if hbar is None else hbar)
     return Expression.I / (16 * Expression.PI**2)
 
 

@@ -794,6 +794,35 @@
     passed.
   - `git diff --check` passed.
 
+## Current Evaluated Hbar Normalization Slice
+
+- Remeasured the focused Singlet `cH` path after the cyclic prefactor fix. The
+  selected `hScalar-hScalar-hScalar` CDE route now projects the expected tree
+  pieces plus `-i*kappa^3/(192*pi^2*M^2)` in pychete's evaluated internal
+  convention. The Matchete fixture uses the external `hbar` loop-counting
+  convention and contains the corresponding single-scale term as
+  `-hbar*kappa^3/(12*M^2)`, with no explicit `pi`.
+- Added `OneLoopNormalization.MATCHETE_EVALUATED_HBAR` for backend stages that
+  have already evaluated loop integrals and therefore already contain the
+  explicit `i/(16*pi^2)` factor. Its factor is
+  `-16*pi^2*i*hbar`, distinct from raw `MATCHETE_HBAR = i*hbar` for
+  unevaluated vakint supertrace expressions.
+- Updated `AGENTS.md` to forbid Wilson-specific fixes for this convention:
+  raw-vakint and evaluated-internal hbar normalizations must be selected at
+  the loop-normalization layer.
+- Added focused tests for the new factor and for validation-fixture internal
+  minimal-subtraction normalization. This is a convention slice only; it does
+  not by itself supply the larger missing Matchete `cH` log/pole/on-shell
+  source content.
+- Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_operator_derived_propagator_insertions tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_evaluated_matchete_hbar_normalization tests/integration/validation/test_numeric_probes.py::test_matching_result_loop_normalization_accepts_external_hbar_symbol -q'`
+    passed with 3 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+  - Smoke expression:
+    `MATCHETE_EVALUATED_HBAR * (-i/(192*pi^2)) = -hbar/12`.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
