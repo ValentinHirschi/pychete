@@ -814,6 +814,13 @@
   minimal-subtraction normalization. This is a convention slice only; it does
   not by itself supply the larger missing Matchete `cH` log/pole/on-shell
   source content.
+- Post-commit diagnostic: applying `MATCHETE_EVALUATED_HBAR` to the focused
+  Singlet selected `hScalar-hScalar-hScalar` route gives
+  `-hbar*kappa^3/(12*M^2)` plus the existing tree pieces, with no explicit
+  `pi`. This confirms the isolated single-scale CDE term now uses the same
+  loop-counting convention as the Matchete fixture. The diagnostic script
+  exited after printing the candidate because of a final ad hoc term-count
+  print bug, so it is recorded as probe evidence rather than a test gate.
 - Focused validation for this slice:
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_operator_derived_propagator_insertions tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_evaluated_matchete_hbar_normalization tests/integration/validation/test_numeric_probes.py::test_matching_result_loop_normalization_accepts_external_hbar_symbol -q'`
     passed with 3 tests.
