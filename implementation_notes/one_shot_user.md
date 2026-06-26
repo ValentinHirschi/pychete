@@ -32,9 +32,10 @@ preview/gap-report plumbing, selected Wilson-line trace smoke paths,
 internal/vakint single-scale integral cross-checks, projection/canonicalization,
 and partial Singlet-style Wilson projection behavior. The broad remaining
 features are the full explicit Wilson-line trace engine, robust
-non-Abelian/group and Dirac algebra through idenso/spenso, mixed/zero-mass
-analytic vacuum integral coverage, complete converted model fixtures, and
-generic operator-basis projection without Warsaw-specific core assumptions.
+non-Abelian/group and Dirac algebra through idenso/spenso, full default-model
+integration of the internal mixed/zero-mass analytic integral backend,
+complete converted model fixtures, and generic operator-basis projection
+without Warsaw-specific core assumptions.
 
 ## Approved Plan
 
@@ -335,5 +336,13 @@ generic operator-basis projection without Warsaw-specific core assumptions.
   architectural template for pychete. The engine should discover and consume
   operator bases through generic `OperatorBasis`/registry metadata, while
   Warsaw remains optional fixture/convenience data.
+- Latest status check: backend-level vacuum-integral tests already cover
+  single-scale vakint/internal agreement, internal two-mass topologies,
+  massless-plus-massive topologies, scaleless massless topologies, and
+  Matchete-style loop-function simplification cases. These are not yet the
+  same as reproducing a full one-loop Matchete SMEFT integration model.
+- Latest Wilson-line regression added for the conjugate non-Abelian
+  `WilsonTerm(...)` lowering path, locking the generator orientation for barred
+  fields through theory-owned Symbolica group/representation metadata.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

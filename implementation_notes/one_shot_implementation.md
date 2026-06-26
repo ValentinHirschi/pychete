@@ -210,8 +210,26 @@
   Singlet-style Wilson projection. The broad remaining blockers are the full
   explicit Wilson-line trace engine, robust non-Abelian/group and Dirac algebra
   through idenso/spenso for realistic models, mixed/zero-mass analytic vacuum
-  integral coverage, complete converted model fixtures, and generic
-  operator-basis projection without Warsaw-specific engine assumptions.
+  integral backend through the full default-model matching path, complete
+  converted model fixtures, and generic operator-basis projection without
+  Warsaw-specific engine assumptions. Backend-level tests already cover
+  internal two-mass, massless-plus-massive, scaleless massless, and
+  Matchete-style loop-function simplification cases; those are necessary
+  backend pieces, not full model-level Matchete parity.
+- The current conjugate-WilsonTerm regression slice adds focused coverage for
+  barred non-Abelian field Wilson-term lowering. The test verifies that
+  `expand_wilson_terms(...)` uses the conjugate generator orientation
+  `CG(gen, adjoint, input, output_dual)` and the conjugate endpoint
+  transporter generated from theory-owned Symbolica representation metadata.
+  This preserves the earlier structural requirement for barred/conjugate
+  non-Abelian fields without adding Python-side tensor identities.
+- Focused validation for this slice used the 30 GiB watchdog wrapper: the
+  exact regression
+  `test_expand_wilson_terms_lowers_conjugate_non_abelian_two_derivative_term`
+  passed, and
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "expand_wilson_terms or symmetry_vanishing_wilson_terms or wilson_line" -q`
+  passed with `22 passed, 74 deselected`.
 - Focused validation for the direct Wilson-line fixture-filtering slice used
   the 30 GiB watchdog wrapper: `pytest
   tests/integration/validation/test_validation_fixtures.py -k "wilson_line"
