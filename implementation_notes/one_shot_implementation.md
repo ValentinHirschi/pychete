@@ -504,22 +504,54 @@
   coefficient/collect/factor fallbacks. Focused regressions verify one source
   canonicalization when aliases exist and one source-term label scan reused
   across multiple projection targets.
-- The broad substituted Singlet report is still not fast enough to become a
-  committed validation gate. The next performance slice should focus on
-  target-selected projection over substituted expressions, likely by grouping
-  Wilson targets by compatible field-label requirements and projecting only
-  those groups, or by splitting the substituted source into lower-cost stages
-  before canonicalization.
+- Follow-up target-local projection work replaced the remaining global
+  projection canonicalization with an exact-first path plus filtered
+  target-local canonicalization. For each target, pychete first asks native
+  Symbolica `Expression.coefficient(...)` for the raw exact coefficient with
+  wildcard dummy-index fallback disabled. That result is accepted without
+  `canonize_tensors(...)` only if `coefficient * target` exhausts the
+  conservatively filtered target-local source; otherwise the target, its IBP
+  aliases, and only the filtered source subset are canonicalized together with
+  Symbolica `Expression.canonize_tensors(...)`. This keeps exact isolated
+  indexed projections cheap while preserving contributions from
+  alpha-equivalent dummy-index terms. The implementation treats Symbolica's
+  `canonize_tensors(...)` result as the native dummy-index canonicalization
+  authority; no Python dummy-index canonicalizer was added.
+- Added projection regressions for the exact-index fast path and for mixed
+  exact plus alpha-equivalent source terms. The first test fails if tensor
+  canonicalization is called for a source that is exactly `coefficient *
+  target`; the second verifies that exact-first projection does not drop the
+  dummy-renamed contribution.
+- The broad substituted Singlet public-match report with
+  `substitute_heavy_scalar_solutions=True`, global EFT truncation disabled,
+  target-local projection truncation enabled, and reference-condition
+  projection enabled now completes as a smoke probe in about 10.6 seconds.
+  The frontier did not improve yet: it remains `42/72` accepted common
+  matching conditions and `39/64` accepted common Wilson conditions. The next
+  slices should therefore focus less on projection throughput and more on the
+  missing physics/content: full heavy-scalar substitution/on-shell terms,
+  higher CDE trace coverage, basis reduction, and remaining Matchete parity
+  pieces.
 - Focused validation for this follow-up:
-  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_canonizes_source_once_for_ibp_aliases tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_reuses_source_term_atom_counts -q'`
-    passed with 2 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_skips_tensor_canonization_for_exact_index_match tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_adds_exact_and_alpha_equivalent_index_matches tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_canonizes_source_once_for_ibp_aliases tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_reuses_source_term_atom_counts tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_alpha_equivalent_index_contractions tests/integration/validation/test_numeric_probes.py::test_matching_result_projects_alpha_equivalent_conjugate_representation_indices tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd -q'`
+    passed with 7 tests.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -q'`
-    passed with 39 tests.
+    passed with 41 tests.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica -q'`
     passed with 2 tests.
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
     passed.
   - `git diff --check` passed.
+  - Smoke probe only, not yet a committed test gate:
+    `fixture.one_loop_preview_gap_report(... use_public_match_api=True,
+    substitute_heavy_scalar_solutions=True, truncate_eft_result=False,
+    matching_condition_projection_expand_source=False,
+    matching_condition_projection_truncate_eft=True,
+    matching_condition_projection_normalize_ibp_scalar_bilinears=True,
+    project_reference_matching_conditions=True)` for
+    `Singlet_Scalar_Extension` completed in about 10.6 seconds and reported
+    `42/72` accepted common matching conditions and `39/64` accepted common
+    Wilson conditions.
 
 ## Current Validation Frontier
 

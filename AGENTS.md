@@ -157,10 +157,15 @@ are allowed to use target-local integration-by-parts projection aliases
 automatically, because the stored operator is already a basis-level projection
 instruction. Raw expression targets must remain exact unless
 `normalize_ibp_scalar_bilinears=True` is requested. When aliases are present,
-canonicalize the source, target, and alias expressions together through one
-shared Symbolica `Expression.canonize_tensors(...)` index-spec path before any
-wildcard-index fallback. Do not recanonicalize the full source a second time
-just to canonicalize target-local aliases.
+first try native exact `Expression.coefficient(...)` extraction with wildcard
+index fallback disabled. This exact fast path may skip tensor canonicalization
+only when `coefficient * target` exhausts the conservatively filtered
+target-local source; otherwise it would drop alpha-equivalent dummy-index
+terms. If exact extraction does not exhaust that source, canonicalize only the
+filtered target-local source, target, and alias expressions together through
+one shared Symbolica `Expression.canonize_tensors(...)` index-spec path before
+any wildcard-index fallback. Do not canonicalize the full matching source just
+to handle one target or target-local alias family.
 For any equality/projection question where only dummy-index names differ, use
 `Expression.canonize_tensors(...)` with grouped pychete `Index(...)` specs and
 the returned canonical expression, external-index list, and dummy-index list.

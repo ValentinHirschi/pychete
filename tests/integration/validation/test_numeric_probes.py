@@ -659,29 +659,38 @@ def test_matching_result_projection_canonizes_source_once_for_ibp_aliases(
     wilson_target = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
     higgs = theory.field_handle("H")
     fund = theory.fields["H"].indices[0]
+    light = theory.define_field("ProjectionNoise", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
     i = theory.index(theory.symbol("projection_registered_hbox_once_i"), fund)
     j = theory.index(theory.symbol("projection_registered_hbox_once_j"), fund)
+    k = theory.index(theory.symbol("projection_registered_hbox_once_k"), fund)
     mu = theory.dummy_index(0)
     left_bilinear = s.Bar(higgs(i)) * higgs(i)
     right_bilinear = s.Bar(higgs(j)) * higgs(j)
     source_operator = -(
         expand_cd_operators(s.CD(mu, left_bilinear)) * expand_cd_operators(s.CD(mu, right_bilinear))
     ).expand()
+    irrelevant_operator = (
+        S("condition_projection_irrelevant_source_marker") * s.Bar(light(k)) * light(k)
+    )
     result = MatchingResult(
         theory=theory,
         uv_lagrangian=Expression.num(0),
         off_shell_eft_lagrangian=Expression.num(0),
-        on_shell_eft_lagrangian=coefficient * source_operator,
+        on_shell_eft_lagrangian=coefficient * source_operator + irrelevant_operator,
     )
     original_canonize_tensor_terms = matching_results_module._canonize_tensor_terms
     source_canonize_count = 0
+    irrelevant_canonize_count = 0
 
     def counting_canonize_tensor_terms(
         expr: Expression,
         index_specs: Sequence[tuple[Expression, Expression]],
     ) -> Expression:
-        nonlocal source_canonize_count
-        if "condition_projection_single_source_canonize_coefficient" in canonical_string(expr):
+        nonlocal source_canonize_count, irrelevant_canonize_count
+        rendered = canonical_string(expr)
+        if "condition_projection_irrelevant_source_marker" in rendered:
+            irrelevant_canonize_count += 1
+        if "condition_projection_single_source_canonize_coefficient" in rendered:
             source_canonize_count += 1
         return original_canonize_tensor_terms(expr, index_specs)
 
@@ -695,6 +704,64 @@ def test_matching_result_projection_canonizes_source_once_for_ibp_aliases(
 
     assert_expr_equal(registered[canonical_string(wilson_target)], coefficient)
     assert source_canonize_count == 1
+    assert irrelevant_canonize_count == 0
+
+
+def test_matching_result_projection_skips_tensor_canonization_for_exact_index_match(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("condition_projection_exact_index_match")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    target = s.Bar(higgs(i)) * higgs(i)
+    coefficient = S("condition_projection_exact_index_match_coefficient")
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * target,
+    )
+
+    def fail_canonize_tensor_terms(
+        expr: Expression,
+        index_specs: Sequence[tuple[Expression, Expression]],
+    ) -> Expression:
+        raise AssertionError("exact indexed projection should not call tensor canonicalization")
+
+    monkeypatch.setattr(
+        matching_results_module,
+        "_canonize_tensor_terms",
+        fail_canonize_tensor_terms,
+    )
+
+    projected = result.project_matching_conditions({"h2": target}, expand_source=False)
+
+    assert_expr_equal(projected["h2"], coefficient)
+
+
+def test_matching_result_projection_adds_exact_and_alpha_equivalent_index_matches() -> None:
+    theory = Theory("condition_projection_mixed_index_matches")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    target = s.Bar(higgs(i)) * higgs(i)
+    alpha_equivalent_target = s.Bar(higgs(j)) * higgs(j)
+    exact_coefficient = S("condition_projection_exact_index_piece")
+    alpha_coefficient = S("condition_projection_alpha_index_piece")
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=exact_coefficient * target + alpha_coefficient * alpha_equivalent_target,
+    )
+
+    projected = result.project_matching_conditions({"h2": target}, expand_source=False)
+
+    assert_expr_equal(projected["h2"], exact_coefficient + alpha_coefficient)
 
 
 def test_matching_result_projection_reuses_source_term_atom_counts(

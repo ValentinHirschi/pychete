@@ -264,10 +264,16 @@ class MatchingResult:
         intended for loop-correction expressions where unchanged renormalizable
         couplings should still project to themselves, while external Wilson
         coefficients absent from the candidate theory remain zero.
-        ``canonize_indices`` applies Symbolica's native tensor-index
-        canonicalizer to the projection source and target operators before
-        coefficient extraction. This makes alpha-equivalent contracted-index
-        relabelings projectable without a Python-side index matcher.
+        ``canonize_indices`` first tries exact native coefficient extraction
+        on the raw source. If the exact projection exhausts the filtered
+        target-local source, pychete keeps that coefficient and avoids tensor
+        canonicalization. Otherwise, if the projection target contains
+        indices, pychete filters the target-local source subset and applies
+        Symbolica's native tensor-index canonicalizer to that smaller source
+        together with the target and any aliases. This makes alpha-equivalent
+        contracted-index relabelings projectable without a Python-side index
+        matcher while avoiding global tensor canonicalization for isolated
+        exact matches.
         ``normalize_derivative_operators`` expands explicit ``CD(...)``
         wrappers in the source and target operators into pychete's canonical
         field-derivative-slot representation before projection. The rewrite is
@@ -307,19 +313,6 @@ class MatchingResult:
                 tuple((expand_cd_operators(alias), weight) for alias, weight in aliases)
                 for aliases in ibp_projection_aliases
             )
-        if canonize_indices:
-            flat_aliases = tuple(alias for aliases in ibp_projection_aliases for alias, _weight in aliases)
-            expr, projection_expressions, canon_flat_aliases = _canonize_matching_projection_indices_with_aliases(
-                expr,
-                projection_expressions,
-                flat_aliases,
-            )
-            if canon_flat_aliases:
-                alias_iter = iter(canon_flat_aliases)
-                ibp_projection_aliases = tuple(
-                    tuple((next(alias_iter), weight) for _alias, weight in aliases)
-                    for aliases in ibp_projection_aliases
-                )
         conditions: dict[str, Expression] = {}
         coefficient_extractor = _ProjectionCoefficientExtractor(
             expr,
@@ -331,15 +324,38 @@ class MatchingResult:
             ibp_projection_aliases,
             strict=True,
         ):
-            coefficient = _matching_projection_coefficient(
-                coefficient_extractor,
-                projection_expression,
-                ibp_aliases,
-            )
+            target_extractor = coefficient_extractor
+            target_projection_expression = projection_expression
+            target_ibp_aliases = ibp_aliases
+            coefficient: Expression | None = None
+            if canonize_indices:
+                raw_extractor = _without_wildcard_index_projection(coefficient_extractor)
+                raw_coefficient = raw_extractor.coefficient(projection_expression)
+                if not is_zero(raw_coefficient) and _raw_projection_exhausts_filtered_source(
+                    raw_extractor,
+                    projection_expression,
+                    raw_coefficient,
+                    ibp_aliases,
+                ):
+                    coefficient = raw_coefficient
+                else:
+                    target_extractor, target_projection_expression, target_ibp_aliases = (
+                        _target_local_canonized_projection(
+                            coefficient_extractor,
+                            projection_expression,
+                            ibp_aliases,
+                        )
+                    )
+            if coefficient is None:
+                coefficient = _matching_projection_coefficient(
+                    target_extractor,
+                    target_projection_expression,
+                    target_ibp_aliases,
+                )
             if eft_order is not None:
                 coefficient = _truncate_projected_coefficient(
                     coefficient,
-                    projection_expression,
+                    target_projection_expression,
                     self.theory,
                     eft_order=eft_order,
                     heavy_field_dimension=heavy_field_dimension,
@@ -747,6 +763,16 @@ class _ProjectionCoefficientExtractor:
         if not _is_composite_projection_target(target):
             return self.source
         requirements = _projection_atom_requirement_groups(target)
+        return self._filtered_source_for_requirements(requirements)
+
+    def _filtered_source_for_expressions(self, expressions: Sequence[Expression]) -> Expression:
+        requirements = _projection_atom_requirement_groups_for_expressions(expressions)
+        return self._filtered_source_for_requirements(requirements)
+
+    def _filtered_source_for_requirements(
+        self,
+        requirements: tuple[tuple[tuple[str, str, int], ...], ...],
+    ) -> Expression:
         if not requirements:
             return self.source
         try:
@@ -789,12 +815,48 @@ class _ProjectionCoefficientExtractor:
         return source.factor()
 
 
+def _without_wildcard_index_projection(
+    extractor: _ProjectionCoefficientExtractor,
+) -> _ProjectionCoefficientExtractor:
+    return _ProjectionCoefficientExtractor(
+        source=extractor.source,
+        collected_source=extractor.collected_source,
+        factored_source=extractor.factored_source,
+        filtered_sources=extractor.filtered_sources,
+        source_terms=extractor._source_terms(),
+        source_term_atom_counts=extractor._source_term_atom_counts(),
+        wildcard_index_projection=False,
+    )
+
+
+def _raw_projection_exhausts_filtered_source(
+    extractor: _ProjectionCoefficientExtractor,
+    projection_expression: Expression,
+    coefficient: Expression,
+    ibp_aliases: Sequence[tuple[Expression, Expression]],
+) -> bool:
+    alias_expressions = tuple(alias for alias, _weight in ibp_aliases)
+    filtered_source = extractor._filtered_source_for_expressions((projection_expression, *alias_expressions))
+    return is_zero((filtered_source - coefficient * projection_expression).expand())
+
+
 def _projection_atom_requirement_groups(target: Expression) -> tuple[tuple[tuple[str, str, int], ...], ...]:
     return tuple(
         group
         for group in (_projection_atom_requirement_group(term) for term in terms(target))
         if group
     )
+
+
+def _projection_atom_requirement_groups_for_expressions(
+    expressions: Sequence[Expression],
+) -> tuple[tuple[tuple[str, str, int], ...], ...]:
+    groups = (
+        group
+        for expression in expressions
+        for group in _projection_atom_requirement_groups(expression)
+    )
+    return tuple(dict.fromkeys(groups))
 
 
 def _projection_atom_requirement_group(target: Expression) -> tuple[tuple[str, str, int], ...]:
@@ -959,6 +1021,49 @@ def _matching_projection_coefficient(
         if not is_zero(alias)
     )
     return sum_expr(alias_contributions).expand()
+
+
+def _target_local_canonized_projection(
+    source_extractor: _ProjectionCoefficientExtractor,
+    projection_expression: Expression,
+    ibp_aliases: Sequence[tuple[Expression, Expression]],
+) -> tuple[_ProjectionCoefficientExtractor, Expression, tuple[tuple[Expression, Expression], ...]]:
+    alias_expressions = tuple(alias for alias, _weight in ibp_aliases)
+    projection_family = (projection_expression, *alias_expressions)
+    if not _expressions_have_indices(projection_family):
+        return source_extractor, projection_expression, tuple(ibp_aliases)
+    filtered_source = source_extractor._filtered_source_for_expressions(projection_family)
+    canon_source, canon_projection_expressions, canon_alias_expressions = (
+        _canonize_matching_projection_indices_with_aliases(
+            filtered_source,
+            (projection_expression,),
+            alias_expressions,
+        )
+    )
+    canon_projection_expression = canon_projection_expressions[0]
+    canon_ibp_aliases = tuple(
+        (canon_alias, weight)
+        for canon_alias, (_alias, weight) in zip(canon_alias_expressions, ibp_aliases, strict=True)
+    )
+    filtered_sources = {
+        requirements: canon_source
+        for expression in (canon_projection_expression, *canon_alias_expressions)
+        if (requirements := _projection_atom_requirement_groups(expression))
+    }
+    return (
+        _ProjectionCoefficientExtractor(
+            canon_source,
+            filtered_sources=filtered_sources,
+            wildcard_index_projection=True,
+        ),
+        canon_projection_expression,
+        canon_ibp_aliases,
+    )
+
+
+def _expressions_have_indices(expressions: Sequence[Expression]) -> bool:
+    pattern = index_pattern()
+    return any(any(expression.match(pattern)) for expression in expressions)
 
 
 def _ibp_scalar_bilinear_projection_aliases_for_target(
