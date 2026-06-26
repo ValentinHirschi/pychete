@@ -2202,6 +2202,75 @@ def test_public_bosonic_cde_decodes_order_four_covariant_derivatives() -> None:
         assert not bool(result.matching_conditions[target].expand() == Expression.num(0))
 
 
+def test_public_bosonic_cde_can_filter_terms_by_matching_targets() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_filter_targets")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field(
+        "H",
+        s.Scalar,
+        indices=[fund],
+        charges=[theory.group_charge("U1Y", Expression.num(1) / Expression.num(2))],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("W")
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    wilson = define_smeft_wilson_coefficient(theory, "cHW")
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        + theory.free_lag(vector)
+        + theory.free_lag(theory.field_handle("B"))
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
+    common_options = dict(
+        integral_backend=OneLoopIntegralBackend.INTERNAL,
+        max_trace_order=1,
+        bosonic_cde_trace_names=("hScalar",),
+        bosonic_cde_max_total_order=4,
+        bosonic_cde_max_slot_order=4,
+        bosonic_cde_act_open_derivatives=True,
+        bosonic_cde_emit_covariant_derivative_commutators=True,
+        bosonic_cde_emit_covariant_derivative_commutator_passes=4,
+        bosonic_cde_expand_covariant_derivative_commutators=True,
+        tensor_reduce=True,
+        combine_terms=False,
+        truncate_eft_result=False,
+        simplify_pychete_color_algebra=True,
+    )
+    unfiltered = theory.match(
+        lagrangian,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        one_loop_options=OneLoopMatchOptions(**common_options),
+    )
+    filtered = theory.match(
+        lagrangian,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        one_loop_options=OneLoopMatchOptions(
+            **common_options,
+            bosonic_cde_filter_terms_by_matching_targets=True,
+        ),
+    )
+    target = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
+
+    assert unfiltered.metadata["bosonic_cde_terms_filtered_by_matching_targets"] is False
+    assert filtered.metadata["bosonic_cde_terms_filtered_by_matching_targets"] is True
+    assert unfiltered.metadata["interaction_bosonic_cde_term_count"] == 12
+    assert filtered.metadata["interaction_bosonic_cde_term_count"] == 8
+    assert set(filtered.matching_conditions) == {target}
+    assert not bool(filtered.matching_conditions[target].expand() == Expression.num(0))
+
+
 def test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator() -> None:
     theory = Theory("one_loop_setup_bosonic_cde_projects_chd")
     theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")

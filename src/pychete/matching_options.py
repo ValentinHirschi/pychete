@@ -145,6 +145,14 @@ class OneLoopMatchOptions:
     Symbolica replacement-rule commutator emitter/lowerer to CDE numerators
     after optional open-derivative action. This is separate from the pre-setup
     Lagrangian commutator flags above.
+    ``bosonic_cde_filter_terms_by_matching_targets`` is an opt-in performance
+    guard for target-local matching-condition runs. When CDE expansion and
+    matching-condition targets are both supplied, generated CDE terms whose
+    numerator does not contain the field/field-strength atoms required by any
+    requested target are skipped before tensor reduction and integral
+    evaluation. This filter is conservative and uses Symbolica pattern matches;
+    final coefficient extraction still runs through the ordinary projection
+    path.
     """
 
     max_trace_order: int = 2
@@ -191,6 +199,7 @@ class OneLoopMatchOptions:
     bosonic_cde_emit_covariant_derivative_commutators: bool = False
     bosonic_cde_emit_covariant_derivative_commutator_passes: int = 1
     bosonic_cde_expand_covariant_derivative_commutators: bool = False
+    bosonic_cde_filter_terms_by_matching_targets: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True

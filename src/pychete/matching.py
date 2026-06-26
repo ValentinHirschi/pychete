@@ -42,8 +42,13 @@ from .matching_results import (
     TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE,
     TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
     MatchingExpressionComparison,
+    MatchingConditionTargetInput,
     MatchingResult,
     MatchingResultComparison,
+    _projection_atom_counts,
+    _projection_atom_requirement_groups_for_expressions,
+    _resolve_matching_condition_targets,
+    matching_condition_targets as structured_matching_condition_targets,
 )
 from .noncommutative import scalarize_commutative_ncm_chains
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
@@ -73,6 +78,8 @@ from .tree_matching import (
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
 ExpressionMatrix: TypeAlias = tuple[tuple[Expression, ...], ...]
+ProjectionAtomRequirement: TypeAlias = tuple[str, str, int]
+ProjectionAtomRequirementGroups: TypeAlias = tuple[tuple[ProjectionAtomRequirement, ...], ...]
 _LOGGER = get_logger("matching")
 
 
@@ -1343,6 +1350,7 @@ class OneLoopSetup:
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, Expression]:
         """Return selected interaction traces after bosonic CDE propagator expansion.
 
@@ -1361,6 +1369,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         ).items():
             for index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{index}]"] = term.kernel_expression(
@@ -1378,6 +1387,7 @@ class OneLoopSetup:
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, tuple[BosonicCDETraceExpansionTerm, ...]]:
         """Return selected CDE-expanded interaction terms grouped by trace or plan label."""
 
@@ -1393,12 +1403,16 @@ class OneLoopSetup:
             trace_names=tuple(entry.trace_name for entry in plan_entries),
         )
         for entry in plan_entries:
-            grouped[entry.label] = traces[entry.trace_name].bosonic_cde_expansion_terms(
+            terms = traces[entry.trace_name].bosonic_cde_expansion_terms(
                 entry.expansion_indices,
                 act_open_derivatives=act_open_derivatives,
                 emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                 emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            )
+            grouped[entry.label] = _filter_cde_terms_by_projection_requirements(
+                terms,
+                term_atom_requirements,
             )
         return grouped
 
@@ -1412,6 +1426,7 @@ class OneLoopSetup:
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> tuple[BosonicCDETraceExpansionTerm, ...]:
         """Return selected CDE-expanded interaction terms in deterministic order."""
 
@@ -1423,6 +1438,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         return tuple(term for terms in grouped.values() for term in terms)
 
@@ -1437,6 +1453,7 @@ class OneLoopSetup:
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
         expand_covariant_derivative_commutators: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, Expression]:
         """Return selected CDE-expanded interaction traces as vakint topologies."""
 
@@ -1449,6 +1466,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         ).items():
             for index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{index}]"] = term.vakint_integral_expression()
@@ -1467,6 +1485,7 @@ class OneLoopSetup:
         stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         short_form: bool | None = None,
         engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Return the summed selected CDE-expanded interaction topologies."""
 
@@ -1478,6 +1497,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         return _cde_vakint_integral_terms_at_stage(
             tuple(term.vakint_integral_expression() for term in terms),
@@ -1502,6 +1522,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Evaluate selected CDE-expanded interaction integrals with pychete."""
 
@@ -1515,6 +1536,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         evaluated_terms: list[Expression] = []
         with progress(
@@ -2193,6 +2215,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the selected CDE-expanded interaction one-loop result."""
 
@@ -2209,6 +2232,7 @@ class OneLoopSetup:
             stage=selected_vakint_stage,
             short_form=vakint_short_form,
             engine=vakint_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         raw_named_integrals = self.interaction_bosonic_cde_vakint_integral_expression_map(
             expansion_indices_by_trace,
@@ -2218,6 +2242,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         named_integrals = {
             name: _vakint_expression_at_stage(
@@ -2237,6 +2262,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         supertraces = {
             **self.interaction_bosonic_cde_kernel_expression_map(
@@ -2247,6 +2273,7 @@ class OneLoopSetup:
                 emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                 emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                term_atom_requirements=term_atom_requirements,
             ),
             **named_integrals,
             "interaction_bosonic_cde_vakint_integral_sum": vakint_sum,
@@ -2313,6 +2340,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the CDE-expanded interaction result evaluated internally."""
 
@@ -2326,6 +2354,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         raw_vakint_sum = self.interaction_bosonic_cde_vakint_integral_sum(
             expansion_indices_by_trace,
@@ -2335,6 +2364,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         evaluated = self.interaction_bosonic_cde_internal_integral_sum(
             expansion_indices_by_trace,
@@ -2349,6 +2379,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
@@ -2370,6 +2401,7 @@ class OneLoopSetup:
                     emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                     emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                     expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                    term_atom_requirements=term_atom_requirements,
                 ),
                 **self.interaction_bosonic_cde_vakint_integral_expression_map(
                     expansion_indices_by_trace,
@@ -2379,6 +2411,7 @@ class OneLoopSetup:
                     emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                     emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                     expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                    term_atom_requirements=term_atom_requirements,
                 ),
                 "interaction_bosonic_cde_vakint_integral_sum": raw_vakint_sum,
                 "interaction_bosonic_cde_internal_integral_sum": evaluated,
@@ -2429,6 +2462,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the internal CDE result after minimal-subtraction pole removal."""
 
@@ -2446,6 +2480,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_bosonic_cde_internal_integral_pole_part")
         finite = unrenormalized.expression("interaction_bosonic_cde_internal_integral_finite_part")
@@ -2487,6 +2522,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint CDE result after pole subtraction."""
 
@@ -2502,6 +2538,7 @@ class OneLoopSetup:
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             stage=VakintIntegralStage.EVALUATED,
             engine=vakint_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
@@ -2515,6 +2552,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         raw_named_integrals = self.interaction_bosonic_cde_vakint_integral_expression_map(
             expansion_indices_by_trace,
@@ -2524,6 +2562,7 @@ class OneLoopSetup:
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            term_atom_requirements=term_atom_requirements,
         )
         named_integrals = {
             name: _vakint_expression_at_stage(
@@ -2553,6 +2592,7 @@ class OneLoopSetup:
                     emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                     emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                     expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                    term_atom_requirements=term_atom_requirements,
                 ),
                 **named_integrals,
                 "interaction_bosonic_cde_vakint_integral_sum": evaluated,
@@ -2610,6 +2650,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return interaction-power traces with selected traces replaced by CDE output."""
 
@@ -2645,6 +2686,7 @@ class OneLoopSetup:
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         result = _combine_bosonic_cde_hybrid_results(
             interaction_remainder,
@@ -2694,6 +2736,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid CDE/interaction result evaluated internally."""
 
@@ -2727,6 +2770,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         result = _combine_bosonic_cde_hybrid_results(
             interaction_remainder,
@@ -2769,6 +2813,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid internal result after minimal-subtraction pole removal."""
 
@@ -2788,6 +2833,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_bosonic_cde_hybrid_internal_integral_pole_part")
         finite = unrenormalized.expression("interaction_bosonic_cde_hybrid_internal_integral_finite_part")
@@ -2827,6 +2873,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint hybrid result after pole subtraction."""
 
@@ -2860,6 +2907,7 @@ class OneLoopSetup:
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         result = _combine_bosonic_cde_hybrid_results(
             interaction_remainder,
@@ -4911,6 +4959,42 @@ def _cde_expansion_trace_names(expansion_request: BosonicCDEExpansionRequest) ->
     return tuple(expansion_request)
 
 
+def _filter_cde_terms_by_projection_requirements(
+    terms: Sequence[BosonicCDETraceExpansionTerm],
+    requirements: ProjectionAtomRequirementGroups | None,
+) -> tuple[BosonicCDETraceExpansionTerm, ...]:
+    if not requirements:
+        return tuple(terms)
+    return tuple(term for term in terms if _cde_term_matches_projection_requirements(term, requirements))
+
+
+def _cde_term_matches_projection_requirements(
+    term: BosonicCDETraceExpansionTerm,
+    requirements: ProjectionAtomRequirementGroups,
+) -> bool:
+    counts = _projection_atom_counts(term.numerator)
+    for group in requirements:
+        if all(counts[(kind, label)] >= required_count for kind, label, required_count in group):
+            return True
+    return False
+
+
+def _cde_term_atom_requirements_for_targets(
+    theory: Theory,
+    targets: MatchingConditionTargetInput | None,
+) -> ProjectionAtomRequirementGroups | None:
+    if targets is None:
+        return None
+    resolved = _resolve_matching_condition_targets(theory, targets)
+    projection_expressions = tuple(
+        target.projection_expression
+        for target in structured_matching_condition_targets(resolved)
+        if target.projection_expression is not None
+    )
+    requirements = _projection_atom_requirement_groups_for_expressions(projection_expressions)
+    return requirements or None
+
+
 def _combine_bosonic_cde_hybrid_results(
     interaction_remainder: MatchingResult,
     cde_result: MatchingResult,
@@ -5477,6 +5561,11 @@ def match_one_loop(
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
         )
+    cde_term_atom_requirements = (
+        _cde_term_atom_requirements_for_targets(theory, matching_condition_targets)
+        if options.bosonic_cde_filter_terms_by_matching_targets and cde_expansion_indices_by_trace is not None
+        else None
+    )
     if cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(
             cde_expansion_indices_by_trace,
@@ -5494,6 +5583,7 @@ def match_one_loop(
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
+            term_atom_requirements=cde_term_atom_requirements,
         )
     elif (
         cde_expansion_indices_by_trace is not None
@@ -5515,6 +5605,7 @@ def match_one_loop(
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
+            term_atom_requirements=cde_term_atom_requirements,
         )
     elif (
         cde_expansion_indices_by_trace is not None
@@ -5536,6 +5627,7 @@ def match_one_loop(
             named_supertrace_stage=options.named_supertrace_stage,
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
+            term_atom_requirements=cde_term_atom_requirements,
         )
     elif cde_expansion_indices_by_trace is not None:
         result = setup.interaction_bosonic_cde_hybrid_matching_result(
@@ -5556,6 +5648,7 @@ def match_one_loop(
             named_supertrace_stage=options.named_supertrace_stage,
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
+            term_atom_requirements=cde_term_atom_requirements,
         )
     elif selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_power_type_internal_matching_result(
@@ -5698,6 +5791,9 @@ def match_one_loop(
                 else 0
             ),
             "bosonic_cde_commutators_expanded": options.bosonic_cde_expand_covariant_derivative_commutators,
+            "bosonic_cde_terms_filtered_by_matching_targets": (
+                cde_term_atom_requirements is not None
+            ),
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )

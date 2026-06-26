@@ -486,6 +486,11 @@ Validation fixture gap reports must leave `comparison_canonize_indices=True`
 unless a test is explicitly measuring raw non-canonical behavior; otherwise
 alpha-equivalent dummy contractions in common supertraces or matching
 conditions will be reported as false validation gaps.
+Target-local CDE term filters must stay conservative and label-level: use
+Symbolica pattern matches to require the requested field/field-strength atoms,
+but do not try to line up dummy indices inside the filter. Leave
+dummy-index alignment to the existing projection/comparison path based on
+`Expression.canonize_tensors(...)` and its returned canonical index payload.
 Before projection/canonicalization, normalize powers of indexed field atoms
 with Symbolica replacement rules into fresh-index products so shorthand terms
 such as `H[i]^3*Bar(H[i])^3` can project against Warsaw-basis operators written

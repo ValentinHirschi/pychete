@@ -87,6 +87,13 @@
   `include_tree_level_matching=True` created loop-only and tree-level projection
   sources. Those staged sources are carried through on-shell replacement rules
   and EFT truncation.
+- The current CDE/projection performance slice adds an opt-in
+  `OneLoopMatchOptions.bosonic_cde_filter_terms_by_matching_targets` guard. It
+  computes target atom requirements with Symbolica field/field-strength pattern
+  matches and skips generated CDE terms that cannot contain any requested
+  target before tensor reduction/evaluation. The filter deliberately stays
+  label-level and leaves all dummy-index alignment to the existing
+  `Expression.canonize_tensors(...)` projection/comparison path.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -230,6 +237,19 @@
   passed with 4 tests and 50 deselected.
 - `python -m mypy` passed after the staged projection slice.
 - `git diff --check` passed after the staged projection slice.
+- Focused target-local CDE filter regression:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k "filter_terms_by_matching_targets"`
+  passed. In the synthetic `cHW` order-four CDE case, the opt-in filter reduces
+  evaluated generated terms from 12 to 8 while keeping the projected Wilson
+  coefficient nonzero.
+- Focused order-four/filter CDE gate:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k "filter_terms_by_matching_targets or order_four_covariant_derivatives"`
+  passed with 2 tests and 69 deselected.
+- Broader non-heavy-solution CDE gate:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k "bosonic_cde and not heavy_solution"`
+  passed with 12 tests and 59 deselected.
+- `python -m mypy` passed after the target-local CDE filter slice.
+- `git diff --check` passed after the target-local CDE filter slice.
 
 ## Current Validation Frontier
 
@@ -259,17 +279,19 @@
   for routine slice validation. The immediate native vakint/FORM crash class
   from pychete `Index(...)` wrappers in loop-momentum vector slots has a
   focused fix and tests, and native CDE aggregate staging now avoids monolithic
-  selected-CDE tensor-reduction/evaluation calls. Broad default CDE still needs
-  more source filtering and basis reductions before it should be enabled by
-  default.
+  selected-CDE tensor-reduction/evaluation calls. Target-local CDE term
+  filtering now removes obviously irrelevant generated terms for projected
+  Wilson runs, but broad default CDE still needs more source coverage controls
+  and basis reductions before it should be enabled by default.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - CDE source staging and reduction batching for broad Singlet CDE probes,
-    building on backend-safe loop-momentum index lowering and termwise native
-    CDE aggregate staging now in place;
+  - CDE source staging, target-local filtering, and reduction batching for
+    broad Singlet CDE probes, building on backend-safe loop-momentum index
+    lowering, termwise native CDE aggregate staging, and the current
+    target-compatible atom filter;
   - target-local EOM/IBP reductions for Higgs/gauge Wilson structures such as
     `cHBox`, `cHD`, `cHW`, `cHB`, and `cHWB`;
   - source staging for heavy-scalar-substituted Wilson projection so projection
