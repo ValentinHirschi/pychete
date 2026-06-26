@@ -289,6 +289,10 @@ discoveries, dependency patches, blockers, and remaining work.
   odd-rank loop-momentum rule: generated odd-rank loop-vector numerator terms
   vanish before Wilson-term expansion instead of being expanded and only later
   killed by vakint tensor reduction.
+- Generated Wilson-line numerators should also be normalized like Matchete's
+  noncommutative products: flatten nested pychete `NCM(...)` operands, hoist
+  only scalar commutative coefficients, and then delegate projector/gamma-word
+  cleanup to idenso before scalarizing commutative chains.
 - Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
   SMEFT. Basis metadata must be explicit through `OperatorBasis`,
   `define_wilson_coefficient_from_basis(...)`, or thin convenience helpers

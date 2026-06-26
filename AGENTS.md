@@ -375,6 +375,14 @@ adjoint gauge transporter and the Lorentz endpoint metric; Abelian vector
 derivative terms with no gauge charge lower to zero. `WilsonTerm` atoms above
 the requested derivative order must remain formal until their combinatoric
 coverage is explicitly requested and tested.
+Generated Wilson-line numerators must normalize pychete noncommutative chains
+before backend simplification. Use `normalize_ncm_chains(...)` to flatten
+nested `NCM(...)` operands and hoist only commutative scalar coefficients, then
+delegate compact projector/gamma words to
+`idenso.simplify_pychete_dirac_algebra(...)` before scalarizing commutative
+chains. This mirrors Matchete's `NCM`/`DiracProduct` cleanup while keeping the
+actual gamma algebra in the native backend; do not leave generated
+Wilson-line terms with `NCM(..., NCM(...), ...)` nesting that blocks idenso.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

@@ -214,6 +214,32 @@
   odd terms from being expanded only to be killed later by vakint tensor
   reduction, while even-rank survivors still preserve their explicit
   `LoopMomentum(...)` factors for the backend path.
+- The current Wilson-line noncommutative cleanup slice adds
+  `normalize_ncm_chains(...)`, a bounded Symbolica-replacement pass that
+  flattens nested pychete `NCM(...)` operands and hoists only commutative
+  scalar coefficients. Generated Wilson-line numerators now pass through this
+  normalization, then through idenso-backed
+  `simplify_pychete_dirac_algebra(...)`, before final commutative
+  scalarization. This removes Matchete-incompatible nested `NCM(...,
+  NCM(...), ...)` structures from fermion Wilson-line paths and gives native
+  gamma/projector simplification the expected flat word boundary.
+- The same slice fixes manual order-zero `SupertraceBlockTrace` diagnostics:
+  `power_type_log_prefactor` now returns 1 for order-zero traces instead of
+  constructing an infinite prefactor. Generated physical power traces are
+  nonzero order and keep the existing cyclic-orbit prefactor convention.
+- Focused validation for the noncommutative Wilson-line cleanup used the
+  30 GiB watchdog wrapper: `pytest tests/unit/functional/test_noncommutative.py
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "normalize_ncm or nested_fermion_ncm or projector_words_before_vakint or
+  mixed_ncm_dirac" -q` passed with `4 passed, 91 deselected`; the broader
+  affected gate `pytest tests/unit/definitions/test_public_api.py
+  tests/unit/functional/test_noncommutative.py
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k
+  "public_api or noncommutative or wilson_line or
+  projector_words_before_vakint or mixed_ncm_dirac" -q` passed with
+  `22 passed, 119 deselected`; `python -m
+  mypy` reported no issues; and `git diff --check` passed.
 - Focused validation for the odd-rank Wilson-line gather adjustment used the
   30 GiB watchdog wrapper: `pytest
   tests/integration/matching/test_fluctuation_operator.py -k

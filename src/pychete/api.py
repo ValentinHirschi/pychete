@@ -70,6 +70,7 @@ from .matching_results import (
     matching_condition_targets,
     registered_wilson_matching_condition_targets,
 )
+from .noncommutative import normalize_ncm_chains
 from .operator_bases import OperatorBasis, define_wilson_coefficient_from_basis
 from .smeft import (
     SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
@@ -154,6 +155,7 @@ __all__ = [
     "MatchingFixtureGapReport",
     "NumericProbePlan",
     "NumericProbeResult",
+    "normalize_ncm_chains",
     "OneLoopMatchingNotImplementedError",
     "OneLoopIntegralBackend",
     "OneLoopMatchOptions",

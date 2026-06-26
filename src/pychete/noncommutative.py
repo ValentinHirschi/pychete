@@ -8,15 +8,41 @@ from symbolica.core import AtomType
 
 from .expr import (
     bar_field_pattern,
+    factors,
     field_pattern,
     field_type,
     is_head,
+    is_zero,
     matching_subexpressions,
     product_expr,
 )
 from .symbols import s
 
 _MAX_SCALAR_NCM_ARITY = 16
+
+
+def normalize_ncm_chains(expr: Expression, *, max_passes: int = 8) -> Expression:
+    """Flatten nested pychete ``NCM`` chains and hoist scalar coefficients.
+
+    Matchete's noncommutative product flattens nested products before Dirac
+    simplification. pychete keeps ``NCM`` explicit, so generated interaction
+    insertions can produce operands such as ``a*NCM(x, y)`` inside a larger
+    ``NCM`` chain. Symbolica bounded-arity replacement rules find those chains;
+    Python only classifies the matched operands and refuses to hoist factors
+    that are themselves noncommutative.
+    """
+
+    if max_passes < 0:
+        raise ValueError("max_passes must be non-negative")
+    if not _contains_ncm(expr):
+        return expr
+    out = expr
+    for _ in range(max_passes):
+        updated = out.replace_multiple(_normalize_ncm_replacements()).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
 
 
 def scalarize_commutative_ncm_chains(expr: Expression) -> Expression:
@@ -31,7 +57,75 @@ def scalarize_commutative_ncm_chains(expr: Expression) -> Expression:
 
     if not _contains_ncm(expr):
         return expr
-    return expr.replace_multiple(_scalar_ncm_replacements()).expand()
+    return normalize_ncm_chains(expr).replace_multiple(_scalar_ncm_replacements()).expand()
+
+
+@cache
+def _normalize_ncm_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_SCALAR_NCM_ARITY + 1):
+        wildcards = _ncm_operand_wildcards(arity)
+        pattern = s.NCM(*wildcards)
+        replacements.append(
+            Replacement(
+                pattern,
+                _normalize_ncm_replacement(pattern, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _normalize_ncm_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_chain(match: dict[Expression, Expression]) -> Expression:
+        operands = tuple(match[wildcard] for wildcard in wildcards)
+        coefficient = Expression.num(1)
+        flattened: list[Expression] = []
+        changed = False
+        for operand in operands:
+            operand_coefficient, operand_chain, operand_changed = _normalize_ncm_operand(operand)
+            if is_zero(operand_coefficient):
+                return Expression.num(0)
+            coefficient *= operand_coefficient
+            flattened.extend(operand_chain)
+            changed = changed or operand_changed
+        if not changed:
+            return pattern.replace_wildcards(match)
+        if not flattened:
+            return coefficient
+        return coefficient * s.NCM(*flattened)
+
+    return replace_chain
+
+
+def _normalize_ncm_operand(operand: Expression) -> tuple[Expression, tuple[Expression, ...], bool]:
+    if is_zero(operand):
+        return Expression.num(0), (), True
+    if bool(operand == Expression.num(1)):
+        return Expression.num(1), (), True
+    if is_head(operand, s.NCM):
+        return Expression.num(1), tuple(operand[index] for index in range(len(operand))), True
+    ncm_factors: list[Expression] = []
+    scalar_factors: list[Expression] = []
+    for factor in factors(operand):
+        if is_head(factor, s.NCM):
+            ncm_factors.append(factor)
+        else:
+            scalar_factors.append(factor)
+    if not ncm_factors:
+        return Expression.num(1), (operand,), False
+    scalar_coefficient = product_expr(scalar_factors)
+    if not _is_commutative_ncm_operand(scalar_coefficient):
+        return Expression.num(1), (operand,), False
+    flattened = tuple(
+        item
+        for ncm_factor in ncm_factors
+        for item in (ncm_factor[index] for index in range(len(ncm_factor)))
+    )
+    return scalar_coefficient, flattened, True
 
 
 @cache
@@ -118,4 +212,4 @@ def _ncm_operand_wildcards(arity: int) -> tuple[Expression, ...]:
     return tuple(s.head(f"scalar_ncm_operand_{arity}_{index}_") for index in range(arity))
 
 
-__all__ = ["scalarize_commutative_ncm_chains"]
+__all__ = ["normalize_ncm_chains", "scalarize_commutative_ncm_chains"]

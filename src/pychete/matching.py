@@ -50,7 +50,7 @@ from .matching_results import (
     _resolve_matching_condition_targets,
     matching_condition_targets as structured_matching_condition_targets,
 )
-from .noncommutative import scalarize_commutative_ncm_chains
+from .noncommutative import normalize_ncm_chains, scalarize_commutative_ncm_chains
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
 from .theory import Theory
 from .theory_metadata import (
@@ -499,6 +499,8 @@ class SupertraceBlockTrace:
     def power_type_log_prefactor(self) -> Expression:
         """Return the power-series prefactor after cyclic de-duplication."""
 
+        if self.order == 0:
+            return Expression.num(1)
         orbit_size = _cyclic_orbit_size(self.cyclic_path_labels)
         return Expression.num(-orbit_size) / (2 * Expression.num(self.order))
 
@@ -956,7 +958,7 @@ class WilsonLineTracePath:
                 numerator,
                 max_derivative_order=max_wilson_derivative_order,
             )
-            numerator = scalarize_commutative_ncm_chains(numerator)
+            numerator = _postprocess_wilson_line_numerator(numerator)
             if is_zero(numerator):
                 continue
             terms.append(
@@ -6336,6 +6338,14 @@ def _postprocess_bosonic_cde_numerator(
     if expand_covariant_derivative_commutators:
         numerator = theory.expand_covariant_derivative_commutators(numerator)
     return numerator
+
+
+def _postprocess_wilson_line_numerator(numerator: Expression) -> Expression:
+    from .backends import idenso
+
+    normalized = normalize_ncm_chains(numerator)
+    simplified = idenso.simplify_pychete_dirac_algebra(normalized)
+    return scalarize_commutative_ncm_chains(simplified)
 
 
 def _normalize_cde_expansion_indices(

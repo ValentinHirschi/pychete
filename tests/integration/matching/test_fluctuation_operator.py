@@ -3429,6 +3429,32 @@ def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> N
     )
 
 
+def test_wilson_line_expansion_normalizes_nested_fermion_ncm_chains() -> None:
+    theory = Theory("wilson_line_nested_fermion_ncm")
+    heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("psi", s.Fermion, mass=0)
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y")
+    interaction = -y() * scalar() * s.NCM(s.Bar(light()), s.PR, heavy())
+    lagrangian = theory.free_lag(heavy, light, scalar) + interaction + s.Bar(interaction)
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=2)
+
+    terms = setup.interaction_wilson_line_expansion_terms({"hFermion-lScalar": ((), ())})
+    numerators = tuple(term.numerator for term in terms)
+
+    assert len(numerators) == 2
+    assert all("pychete::NCM(" in canonical_string(numerator) for numerator in numerators)
+    assert all("pychete::NCM(pychete::NCM" not in canonical_string(numerator) for numerator in numerators)
+    assert_expr_equal(
+        sum(numerators, Expression.num(0)).expand(),
+        (
+            s.Bar(y()) ** 2 * s.NCM(s.PL, light(), s.PL, light())
+            + y() ** 2 * s.NCM(s.Bar(light()), s.PR, s.Bar(light()), s.PR)
+        )
+        / 2,
+    )
+
+
 def test_power_type_numerator_simplifies_mixed_ncm_dirac_subwords_before_eft_truncation() -> None:
     theory = Theory("power_type_mixed_ncm_dirac")
     mu = theory.dummy_index(0)
