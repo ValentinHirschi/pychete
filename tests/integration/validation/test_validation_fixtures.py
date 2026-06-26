@@ -671,6 +671,24 @@ def test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathem
     assert_expr_equal(preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
     preview.validate()
 
+    generated_plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=0,
+    )
+    expected_generated = setup.interaction_wilson_line_hybrid_matching_result(generated_plan)
+    generated_preview = fixture.one_loop_preview(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        wilson_line_trace_names=("hScalar-lScalar",),
+        wilson_line_max_total_order=0,
+    )
+    assert generated_preview.metadata["wilson_line_expansion_enabled"] is True
+    assert generated_preview.metadata["wilson_line_expansion_planned"] is True
+    assert generated_preview.metadata["interaction_wilson_line_hybrid"] is True
+    assert generated_preview.metadata["interaction_wilson_line_plan_entry_count"] == 1
+    assert_expr_equal(generated_preview.off_shell_eft_lagrangian, expected_generated.off_shell_eft_lagrangian)
+    generated_preview.validate()
+
     with pytest.raises(ValueError, match="mutually exclusive"):
         fixture.one_loop_preview(
             max_trace_order=2,
@@ -1020,6 +1038,10 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
         reference_name="public_match_wilson_line_forwarding",
         use_public_match_api=True,
         wilson_line_expansion_indices_by_trace=expansion,
+        wilson_line_trace_names=("hScalar",),
+        wilson_line_max_total_order=2,
+        wilson_line_max_slot_order=1,
+        wilson_line_index_prefix="forwarded_wilson",
         wilson_line_act_open_derivatives=True,
         wilson_line_max_derivative_order=3,
     )
@@ -1027,6 +1049,10 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     options = captured["one_loop_options"]
     assert isinstance(options, OneLoopMatchOptions)
     assert options.wilson_line_expansion_indices_by_trace == expansion
+    assert options.wilson_line_trace_names == ("hScalar",)
+    assert options.wilson_line_max_total_order == 2
+    assert options.wilson_line_max_slot_order == 1
+    assert options.wilson_line_index_prefix == "forwarded_wilson"
     assert options.wilson_line_act_open_derivatives is True
     assert options.wilson_line_max_derivative_order == 3
     assert options.bosonic_cde_expansion_indices_by_trace is None

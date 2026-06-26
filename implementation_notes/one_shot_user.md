@@ -260,5 +260,9 @@ discoveries, dependency patches, blockers, and remaining work.
   well as core matching: Matchete parity previews and gap reports should expose
   Wilson-line-named controls and prefer them for new frontier checks, while
   keeping CDE controls only for legacy diagnostic coverage.
+- Generated derivative-order trace plans should also be Wilson-line-native:
+  expose and use `wilson_line_trace_names`, `wilson_line_max_total_order`,
+  `wilson_line_max_slot_order`, and `wilson_line_index_prefix` instead of
+  relying on the legacy CDE planner for convenience.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

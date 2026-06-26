@@ -50,6 +50,8 @@ from .matching import (
     PropagatorPlan,
     SupertraceBlockTrace,
     SupertracePlan,
+    WilsonLineExpansionPlan,
+    WilsonLineExpansionPlanEntry,
     WilsonLineTraceExpansionTerm,
     WilsonLineTracePath,
 )
@@ -171,6 +173,8 @@ __all__ = [
     "ValidationFixture",
     "VakintIntegralStage",
     "canonical_string",
+    "WilsonLineExpansionPlan",
+    "WilsonLineExpansionPlanEntry",
     "WilsonLineTracePath",
     "WilsonLineTraceExpansionTerm",
     "canonize_loop_function",

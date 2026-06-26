@@ -18,7 +18,7 @@ from .matching_options import (
     VakintIntegralStage,
     one_loop_normalization_label,
 )
-from .matching import BosonicCDEExpansionPlan
+from .matching import BosonicCDEExpansionPlan, WilsonLineExpansionPlan
 from .matching_results import (
     MatchingConditionTarget,
     MatchingResult,
@@ -652,6 +652,10 @@ class ValidationFixture:
         bosonic_cde_emit_covariant_derivative_commutator_passes: int = 1,
         bosonic_cde_expand_covariant_derivative_commutators: bool = False,
         wilson_line_expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]] | None = None,
+        wilson_line_trace_names: Sequence[str] | None = None,
+        wilson_line_max_total_order: int | None = None,
+        wilson_line_max_slot_order: int | None = None,
+        wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_max_derivative_order: int = 4,
         simplify_pychete_color_algebra: bool = False,
@@ -730,14 +734,25 @@ class ValidationFixture:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
             )
-        if bosonic_cde_expansion_request is not None and wilson_line_expansion_indices_by_trace is not None:
+        wilson_line_expansion_request: Any = wilson_line_expansion_indices_by_trace
+        if wilson_line_expansion_request is None and wilson_line_max_total_order is not None:
+            wilson_line_expansion_request = setup.interaction_wilson_line_expansion_plan(
+                trace_names=wilson_line_trace_names,
+                max_total_order=wilson_line_max_total_order,
+                max_slot_order=wilson_line_max_slot_order,
+                index_prefix=wilson_line_index_prefix,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                include_light_only=include_light_only,
+            )
+        if bosonic_cde_expansion_request is not None and wilson_line_expansion_request is not None:
             raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
         if (
-            wilson_line_expansion_indices_by_trace is not None
+            wilson_line_expansion_request is not None
             and selected_backend is OneLoopIntegralBackend.INTERNAL
         ):
             result = setup.interaction_wilson_line_hybrid_internal_matching_result(
-                wilson_line_expansion_indices_by_trace,
+                wilson_line_expansion_request,
                 heavy_field_dimension=heavy_field_dimension,
                 include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
@@ -752,11 +767,11 @@ class ValidationFixture:
                 combine_terms=internal_combine_terms,
             )
         elif (
-            wilson_line_expansion_indices_by_trace is not None
+            wilson_line_expansion_request is not None
             and selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
         ):
             result = setup.interaction_wilson_line_hybrid_internal_minimal_subtraction_result(
-                wilson_line_expansion_indices_by_trace,
+                wilson_line_expansion_request,
                 heavy_field_dimension=heavy_field_dimension,
                 include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
@@ -772,11 +787,11 @@ class ValidationFixture:
                 mu_r_squared=mu_r_squared,
             )
         elif (
-            wilson_line_expansion_indices_by_trace is not None
+            wilson_line_expansion_request is not None
             and selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION
         ):
             result = setup.interaction_wilson_line_hybrid_minimal_subtraction_result(
-                wilson_line_expansion_indices_by_trace,
+                wilson_line_expansion_request,
                 heavy_field_dimension=heavy_field_dimension,
                 include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
@@ -791,9 +806,9 @@ class ValidationFixture:
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
             )
-        elif wilson_line_expansion_indices_by_trace is not None:
+        elif wilson_line_expansion_request is not None:
             result = setup.interaction_wilson_line_hybrid_matching_result(
-                wilson_line_expansion_indices_by_trace,
+                wilson_line_expansion_request,
                 heavy_field_dimension=heavy_field_dimension,
                 include_light=include_light,
                 loop_momentum_squared=loop_momentum_squared,
@@ -1007,8 +1022,20 @@ class ValidationFixture:
                     else 0
                 ),
                 "bosonic_cde_commutators_expanded": bosonic_cde_expand_covariant_derivative_commutators,
-                "wilson_line_expansion_enabled": wilson_line_expansion_indices_by_trace is not None,
-                "wilson_line_trace_names": ",".join(wilson_line_expansion_indices_by_trace or ()),
+                "wilson_line_expansion_enabled": wilson_line_expansion_request is not None,
+                "wilson_line_expansion_planned": isinstance(wilson_line_expansion_request, WilsonLineExpansionPlan),
+                "wilson_line_trace_names": (
+                    ",".join(wilson_line_trace_names)
+                    if wilson_line_trace_names is not None
+                    else (
+                        ",".join(wilson_line_expansion_request.trace_names)
+                        if isinstance(wilson_line_expansion_request, WilsonLineExpansionPlan)
+                        else ",".join(wilson_line_expansion_indices_by_trace or ())
+                    )
+                ),
+                "wilson_line_max_total_order": wilson_line_max_total_order,
+                "wilson_line_max_slot_order": wilson_line_max_slot_order,
+                "wilson_line_index_prefix": wilson_line_index_prefix,
                 "wilson_line_act_open_derivatives": wilson_line_act_open_derivatives,
                 "wilson_line_max_derivative_order": wilson_line_max_derivative_order,
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
@@ -1083,6 +1110,10 @@ class ValidationFixture:
         bosonic_cde_expand_covariant_derivative_commutators: bool = False,
         bosonic_cde_filter_terms_by_matching_targets: bool = False,
         wilson_line_expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]] | None = None,
+        wilson_line_trace_names: Sequence[str] | None = None,
+        wilson_line_max_total_order: int | None = None,
+        wilson_line_max_slot_order: int | None = None,
+        wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_max_derivative_order: int = 4,
         simplify_pychete_color_algebra: bool = False,
@@ -1130,7 +1161,9 @@ class ValidationFixture:
         Prefer the ``wilson_line_*`` options for current-Matchete-style
         selected trace expansion. They route through the hybrid Wilson-line
         matcher and are mutually exclusive with the legacy ``bosonic_cde_*``
-        expansion options.
+        expansion options. For generated Wilson-line plans, set
+        ``wilson_line_max_total_order`` and optionally
+        ``wilson_line_trace_names``/``wilson_line_max_slot_order``.
         ``matching_condition_projection_names`` restricts projected reference
         matching conditions to a target-local subset. Entries may be canonical
         condition names or external Wilson names such as ``cHW``; the reserved
@@ -1224,6 +1257,10 @@ class ValidationFixture:
                     ),
                     bosonic_cde_filter_terms_by_matching_targets=bosonic_cde_filter_terms_by_matching_targets,
                     wilson_line_expansion_indices_by_trace=wilson_line_expansion_indices_by_trace,
+                    wilson_line_trace_names=wilson_line_trace_names,
+                    wilson_line_max_total_order=wilson_line_max_total_order,
+                    wilson_line_max_slot_order=wilson_line_max_slot_order,
+                    wilson_line_index_prefix=wilson_line_index_prefix,
                     wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
                     wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -1311,6 +1348,10 @@ class ValidationFixture:
                     bosonic_cde_expand_covariant_derivative_commutators
                 ),
                 wilson_line_expansion_indices_by_trace=wilson_line_expansion_indices_by_trace,
+                wilson_line_trace_names=wilson_line_trace_names,
+                wilson_line_max_total_order=wilson_line_max_total_order,
+                wilson_line_max_slot_order=wilson_line_max_slot_order,
+                wilson_line_index_prefix=wilson_line_index_prefix,
                 wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
                 wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,

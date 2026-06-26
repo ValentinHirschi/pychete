@@ -309,19 +309,25 @@ implementation detail, not the conceptual architecture.
 Public one-loop matching can opt into the same selected-trace route with
 `OneLoopMatchOptions.wilson_line_expansion_indices_by_trace`,
 `wilson_line_act_open_derivatives`, and
-`wilson_line_max_derivative_order`. This option is intentionally separate from
-`bosonic_cde_*`; requesting both CDE and Wilson-line expansion in one match is
-an API error until an explicit comparison policy is designed. The public
+`wilson_line_max_derivative_order`. For generated derivative-order plans, use
+the Wilson-line-native `wilson_line_trace_names`,
+`wilson_line_max_total_order`, `wilson_line_max_slot_order`, and
+`wilson_line_index_prefix` controls, or
+`OneLoopSetup.interaction_wilson_line_expansion_plan(...)`. Do not reach for
+`bosonic_cde_max_total_order` just because it is convenient. These options are
+intentionally separate from `bosonic_cde_*`; requesting both CDE and
+Wilson-line expansion in one match is an API error until an explicit comparison
+policy is designed. The public
 `Theory.match(...)` Wilson-line route must be hybrid by default: selected trace
 families are replaced by their Wilson-line-expanded aggregate while all
 unselected interaction-power traces remain in the source. Keep pure selected
 Wilson-line result methods available for diagnostics, not as the default public
 matching route.
 Validation-facing one-loop preview and gap-report helpers must expose the same
-`wilson_line_*` controls as `Theory.match(...)`. New Matchete parity probes
-should prefer these Wilson-line controls over legacy `bosonic_cde_*` controls
-unless the purpose of the test is explicitly to preserve or compare the old
-CDE route.
+`wilson_line_*` controls as `Theory.match(...)`, including generated
+Wilson-line plans. New Matchete parity probes should prefer these Wilson-line
+controls over legacy `bosonic_cde_*` controls unless the purpose of the test is
+explicitly to preserve or compare the old CDE route.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
 simplification; do not implement it as a Python tree walker. Open covariant

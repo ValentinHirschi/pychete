@@ -176,6 +176,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "interaction_bosonic_cde_vakint_integral_expression_map",
             "interaction_bosonic_cde_vakint_integral_sum",
             "interaction_wilson_line_expansion_kernel_expression_map",
+            "interaction_wilson_line_expansion_plan",
             "interaction_wilson_line_expansion_terms",
             "interaction_wilson_line_expansion_terms_by_trace",
             "interaction_wilson_line_expansion_vakint_integral_expression_map",
@@ -329,6 +330,15 @@ def test_public_api_methods_have_docstrings() -> None:
         pychete.WilsonLineTraceExpansionTerm: [
             "kernel_expression",
             "vakint_integral_expression",
+        ],
+        pychete.WilsonLineExpansionPlanEntry: [
+            "as_explicit_map",
+        ],
+        pychete.WilsonLineExpansionPlan: [
+            "by_trace",
+            "entry_count",
+            "explicit_maps",
+            "trace_count",
         ],
         pychete.BosonicCDETraceExpansionTerm: [
             "kernel_expression",

@@ -1158,10 +1158,98 @@ class BosonicCDEExpansionPlan:
         )
 
 
+@dataclass(frozen=True)
+class WilsonLineExpansionPlanEntry:
+    """One generated Wilson-line expansion request for a selected interaction trace."""
+
+    trace_name: str
+    expansion_indices: tuple[tuple[Expression, ...], ...]
+    total_order: int
+    slot_orders: tuple[int, ...]
+    label: str
+
+    def as_explicit_map(self) -> dict[str, tuple[tuple[Expression, ...], ...]]:
+        """Return this entry as a single-trace explicit expansion map."""
+
+        return {self.trace_name: self.expansion_indices}
+
+    def _repr_latex_(self) -> str:
+        orders = ",".join(str(order) for order in self.slot_orders)
+        return rf"$\mathrm{{WilsonLineExpansionPlanEntry}}\left({escape(self.trace_name)},\ [{orders}]\right)$"
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>WilsonLineExpansionPlanEntry({escape(self.trace_name)} "
+            f"orders={self.slot_orders} total={self.total_order})</code>"
+        )
+
+
+@dataclass(frozen=True)
+class WilsonLineExpansionPlan:
+    """Generated Wilson-line expansion plan for selected interaction traces."""
+
+    theory: Theory
+    entries: tuple[WilsonLineExpansionPlanEntry, ...]
+    trace_names: tuple[str, ...]
+    max_total_order: int
+    max_slot_order: int | None = None
+
+    @property
+    def entry_count(self) -> int:
+        """Number of generated trace-slot expansion entries."""
+
+        return len(self.entries)
+
+    @property
+    def trace_count(self) -> int:
+        """Number of selected trace families represented by the plan."""
+
+        return len(self.trace_names)
+
+    def by_trace(self) -> dict[str, tuple[WilsonLineExpansionPlanEntry, ...]]:
+        """Return generated entries grouped by source trace name."""
+
+        grouped: dict[str, list[WilsonLineExpansionPlanEntry]] = {trace_name: [] for trace_name in self.trace_names}
+        for entry in self.entries:
+            grouped.setdefault(entry.trace_name, []).append(entry)
+        return {trace_name: tuple(entries) for trace_name, entries in grouped.items()}
+
+    def explicit_maps(self) -> tuple[dict[str, tuple[tuple[Expression, ...], ...]], ...]:
+        """Return one-entry expansion maps for each generated plan entry."""
+
+        return tuple(entry.as_explicit_map() for entry in self.entries)
+
+    def __iter__(self) -> Iterator[WilsonLineExpansionPlanEntry]:
+        """Iterate over generated plan entries in deterministic evaluation order."""
+
+        return iter(self.entries)
+
+    def __len__(self) -> int:
+        """Return ``entry_count`` for convenient notebook inspection."""
+
+        return self.entry_count
+
+    def _repr_latex_(self) -> str:
+        max_slot = r"\infty" if self.max_slot_order is None else str(self.max_slot_order)
+        return (
+            rf"$\mathrm{{WilsonLineExpansionPlan}}\left({self.trace_count}\ \mathrm{{traces}},\ "
+            rf"{self.entry_count}\ \mathrm{{entries}},\ N={self.max_total_order},\ n_\max={max_slot}\right)$"
+        )
+
+    def _repr_html_(self) -> str:
+        max_slot = "unbounded" if self.max_slot_order is None else str(self.max_slot_order)
+        return (
+            f"<code>WilsonLineExpansionPlan(traces={self.trace_count} entries={self.entry_count} "
+            f"max_total_order={self.max_total_order} max_slot_order={max_slot})</code>"
+        )
+
+
 BosonicCDEExpansionRequest: TypeAlias = (
     Mapping[str, Sequence[Sequence[Expression]]] | BosonicCDEExpansionPlan
 )
-WilsonLineExpansionRequest: TypeAlias = Mapping[str, Sequence[Sequence[Expression]]]
+WilsonLineExpansionRequest: TypeAlias = (
+    Mapping[str, Sequence[Sequence[Expression]]] | WilsonLineExpansionPlan
+)
 
 
 @dataclass(frozen=True)
@@ -1572,16 +1660,32 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         include_light_only: bool = False,
+        trace_names: Sequence[str] | None = None,
     ) -> tuple[WilsonLineTracePath, ...]:
         """Return entry-level interaction traces with explicit Wilson lines."""
 
-        traces = _cyclically_unique_traces(
-            self.interaction_block_traces(
-                loop_momentum_squared=loop_momentum_squared,
-                require_registered_mass=require_registered_mass,
-                include_light_only=include_light_only,
+        if trace_names is None:
+            traces = _cyclically_unique_traces(
+                self.interaction_block_traces(
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                    include_light_only=include_light_only,
+                )
             )
-        )
+        else:
+            traces = tuple(
+                self.fluctuation_operator.interaction_category_trace(
+                    _category_path_from_trace_name(name),
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+                for name in _selected_power_type_trace_names(
+                    self.fluctuation_operator.modes,
+                    max_trace_order=self.max_trace_order,
+                    trace_names=tuple(dict.fromkeys(trace_names)),
+                    include_light_only=include_light_only,
+                )
+            )
         return tuple(
             path
             for trace in traces
@@ -1594,6 +1698,7 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
         include_light_only: bool = False,
+        trace_names: Sequence[str] | None = None,
     ) -> dict[str, tuple[WilsonLineTracePath, ...]]:
         """Return Wilson-line interaction paths grouped by trace name."""
 
@@ -1602,9 +1707,103 @@ class OneLoopSetup:
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             include_light_only=include_light_only,
+            trace_names=trace_names,
         ):
             grouped.setdefault(path.trace_name, []).append(path)
         return {trace_name: tuple(paths) for trace_name, paths in grouped.items()}
+
+    def interaction_wilson_line_expansion_plan(
+        self,
+        *,
+        trace_names: Sequence[str] | None = None,
+        max_total_order: int,
+        max_slot_order: int | None = None,
+        index_prefix: str = "wilson_line",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+    ) -> WilsonLineExpansionPlan:
+        """Generate deterministic Wilson-line derivative-order entries for selected traces."""
+
+        if max_total_order < 0:
+            raise ValueError("max_total_order must be non-negative")
+        if max_slot_order is not None and max_slot_order < 0:
+            raise ValueError("max_slot_order must be non-negative")
+        selected_trace_names = None if trace_names is None else tuple(dict.fromkeys(trace_names))
+        paths_by_trace = self.interaction_wilson_line_trace_paths_by_trace(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            trace_names=selected_trace_names,
+        )
+        selected_trace_names = tuple(paths_by_trace) if selected_trace_names is None else selected_trace_names
+        entries: list[WilsonLineExpansionPlanEntry] = []
+        for trace_name in selected_trace_names:
+            if trace_name not in paths_by_trace:
+                raise KeyError(f"One-loop setup has no Wilson-line interaction trace {trace_name!r}")
+            slot_count = paths_by_trace[trace_name][0].order
+            for total_order in range(max_total_order + 1):
+                for slot_orders in _cde_slot_order_allocations(
+                    total_order,
+                    slot_count,
+                    max_slot_order=max_slot_order,
+                ):
+                    entry_index = len(entries)
+                    label = _wilson_line_plan_entry_label(trace_name, entry_index, slot_orders)
+                    entries.append(
+                        WilsonLineExpansionPlanEntry(
+                            trace_name=trace_name,
+                            expansion_indices=_wilson_line_plan_expansion_indices(
+                                self.theory,
+                                trace_name=trace_name,
+                                entry_index=entry_index,
+                                slot_orders=slot_orders,
+                                index_prefix=index_prefix,
+                            ),
+                            total_order=total_order,
+                            slot_orders=slot_orders,
+                            label=label,
+                        )
+                    )
+        return WilsonLineExpansionPlan(
+            theory=self.theory,
+            entries=tuple(entries),
+            trace_names=selected_trace_names,
+            max_total_order=max_total_order,
+            max_slot_order=max_slot_order,
+        )
+
+    def _interaction_wilson_line_plan_entries(
+        self,
+        expansion_request: WilsonLineExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+    ) -> tuple[WilsonLineExpansionPlanEntry, ...]:
+        if isinstance(expansion_request, WilsonLineExpansionPlan):
+            entries = expansion_request.entries
+        else:
+            entries = tuple(
+                WilsonLineExpansionPlanEntry(
+                    trace_name=trace_name,
+                    expansion_indices=_normalize_cde_expansion_indices(expansion_indices),
+                    total_order=sum(len(indices) for indices in expansion_indices),
+                    slot_orders=tuple(len(indices) for indices in expansion_indices),
+                    label=trace_name,
+                )
+                for trace_name, expansion_indices in expansion_request.items()
+            )
+        paths_by_trace = self.interaction_wilson_line_trace_paths_by_trace(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            trace_names=tuple(entry.trace_name for entry in entries),
+        )
+        missing = tuple(entry.trace_name for entry in entries if entry.trace_name not in paths_by_trace)
+        if missing:
+            raise KeyError(f"One-loop setup has no Wilson-line interaction trace {missing[0]!r}")
+        return entries
 
     def interaction_wilson_line_kernel_expression_map(
         self,
@@ -1631,7 +1830,7 @@ class OneLoopSetup:
 
     def interaction_wilson_line_expansion_terms_by_trace(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -1641,30 +1840,35 @@ class OneLoopSetup:
     ) -> dict[str, tuple[WilsonLineTraceExpansionTerm, ...]]:
         """Return Wilson-line propagator-expanded terms grouped by trace name."""
 
-        grouped: dict[str, list[WilsonLineTraceExpansionTerm]] = {
-            trace_name: []
-            for trace_name in expansion_indices_by_trace
-        }
-        for path in self.interaction_wilson_line_trace_paths(
+        grouped: dict[str, tuple[WilsonLineTraceExpansionTerm, ...]] = {}
+        plan_entries = self._interaction_wilson_line_plan_entries(
+            expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
             include_light_only=include_light_only,
-        ):
-            expansion_indices = expansion_indices_by_trace.get(path.trace_name)
-            if expansion_indices is None:
-                continue
-            grouped.setdefault(path.trace_name, []).extend(
-                path.propagator_expansion_terms(
-                    expansion_indices,
-                    act_open_derivatives=act_open_derivatives,
-                    max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        paths_by_trace = self.interaction_wilson_line_trace_paths_by_trace(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            trace_names=tuple(entry.trace_name for entry in plan_entries),
+        )
+        for entry in plan_entries:
+            terms: list[WilsonLineTraceExpansionTerm] = []
+            for path in paths_by_trace[entry.trace_name]:
+                terms.extend(
+                    path.propagator_expansion_terms(
+                        entry.expansion_indices,
+                        act_open_derivatives=act_open_derivatives,
+                        max_wilson_derivative_order=max_wilson_derivative_order,
+                    )
                 )
-            )
-        return {trace_name: tuple(terms) for trace_name, terms in grouped.items()}
+            grouped[entry.label] = tuple(terms)
+        return grouped
 
     def interaction_wilson_line_expansion_terms(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
@@ -1686,7 +1890,7 @@ class OneLoopSetup:
 
     def interaction_wilson_line_expansion_kernel_expression_map(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
         *,
         prefix: str = "interaction_wilson_line_expansion_kernel",
         loop_momentum_squared: Expression | None = None,
@@ -1714,7 +1918,7 @@ class OneLoopSetup:
 
     def interaction_wilson_line_expansion_vakint_integral_expression_map(
         self,
-        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
         *,
         prefix: str = "interaction_wilson_line_expansion_vakint_integral",
         loop_momentum_squared: Expression | None = None,
@@ -6151,6 +6355,37 @@ def _cde_plan_entry_label(trace_name: str, entry_index: int, slot_orders: tuple[
     return f"{trace_name}#cde{entry_index}_o{order_label}"
 
 
+def _wilson_line_plan_expansion_indices(
+    theory: Theory,
+    *,
+    trace_name: str,
+    entry_index: int,
+    slot_orders: tuple[int, ...],
+    index_prefix: str,
+) -> tuple[tuple[Expression, ...], ...]:
+    trace_key = safe_symbol_name(trace_name)
+    prefix_key = safe_symbol_name(index_prefix)
+    slots: list[tuple[Expression, ...]] = []
+    for slot_index, slot_order in enumerate(slot_orders):
+        indices: list[Expression] = []
+        for derivative_index in range(slot_order):
+            label = f"{prefix_key}_{trace_key}_{entry_index}_{slot_index}_{derivative_index}"
+            label_symbol = theory.symbol(
+                label,
+                role=SymbolRole.INDEX,
+                data={SymbolDataKey.NAME.value: label},
+                tags=("wilson_line", "wilson_line_plan"),
+            )
+            indices.append(theory.index(label_symbol, s.Lorentz))
+        slots.append(tuple(indices))
+    return tuple(slots)
+
+
+def _wilson_line_plan_entry_label(trace_name: str, entry_index: int, slot_orders: tuple[int, ...]) -> str:
+    order_label = "_".join(str(order) for order in slot_orders)
+    return f"{trace_name}#wilson{entry_index}_o{order_label}"
+
+
 def _wilson_line_link_indices(theory: Theory, trace_name: str, path_index: int) -> tuple[Expression, Expression]:
     trace_key = safe_symbol_name(trace_name)
     return (
@@ -6186,13 +6421,30 @@ def _cde_expansion_trace_names(expansion_request: BosonicCDEExpansionRequest) ->
 
 
 def _wilson_line_expansion_request_metadata(expansion_request: WilsonLineExpansionRequest) -> dict[str, Any]:
+    if isinstance(expansion_request, WilsonLineExpansionPlan):
+        return {
+            "interaction_wilson_line_trace_count": expansion_request.trace_count,
+            "interaction_wilson_line_trace_names": expansion_request.trace_names,
+            "interaction_wilson_line_plan_entry_count": expansion_request.entry_count,
+            "interaction_wilson_line_planned": True,
+            "interaction_wilson_line_plan_trace_names": expansion_request.trace_names,
+            "interaction_wilson_line_plan_max_total_order": expansion_request.max_total_order,
+            "interaction_wilson_line_plan_max_slot_order": expansion_request.max_slot_order,
+        }
     return {
         "interaction_wilson_line_trace_count": len(expansion_request),
+        "interaction_wilson_line_plan_entry_count": len(expansion_request),
+        "interaction_wilson_line_planned": False,
+        "interaction_wilson_line_plan_trace_names": tuple(expansion_request),
+        "interaction_wilson_line_plan_max_total_order": None,
+        "interaction_wilson_line_plan_max_slot_order": None,
         "interaction_wilson_line_trace_names": tuple(expansion_request),
     }
 
 
 def _wilson_line_expansion_trace_names(expansion_request: WilsonLineExpansionRequest) -> tuple[str, ...]:
+    if isinstance(expansion_request, WilsonLineExpansionPlan):
+        return expansion_request.trace_names
     return tuple(expansion_request)
 
 
@@ -6840,7 +7092,17 @@ def match_one_loop(
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
         )
-    wilson_line_expansion_indices_by_trace = options.wilson_line_expansion_indices_by_trace
+    wilson_line_expansion_indices_by_trace: Any = options.wilson_line_expansion_indices_by_trace
+    if wilson_line_expansion_indices_by_trace is None and options.wilson_line_max_total_order is not None:
+        wilson_line_expansion_indices_by_trace = setup.interaction_wilson_line_expansion_plan(
+            trace_names=options.wilson_line_trace_names,
+            max_total_order=options.wilson_line_max_total_order,
+            max_slot_order=options.wilson_line_max_slot_order,
+            index_prefix=options.wilson_line_index_prefix,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            include_light_only=options.include_light_only,
+        )
     if cde_expansion_indices_by_trace is not None and wilson_line_expansion_indices_by_trace is not None:
         raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
     cde_term_atom_requirements = (
@@ -7153,7 +7415,15 @@ def match_one_loop(
                 cde_term_atom_requirements is not None
             ),
             "wilson_line_expansion_enabled": wilson_line_expansion_indices_by_trace is not None,
-            "wilson_line_trace_names": ",".join(wilson_line_expansion_indices_by_trace or ()),
+            "wilson_line_expansion_planned": isinstance(wilson_line_expansion_indices_by_trace, WilsonLineExpansionPlan),
+            "wilson_line_trace_names": (
+                ",".join(wilson_line_expansion_indices_by_trace.trace_names)
+                if isinstance(wilson_line_expansion_indices_by_trace, WilsonLineExpansionPlan)
+                else ",".join(options.wilson_line_expansion_indices_by_trace or ())
+            ),
+            "wilson_line_max_total_order": options.wilson_line_max_total_order,
+            "wilson_line_max_slot_order": options.wilson_line_max_slot_order,
+            "wilson_line_index_prefix": options.wilson_line_index_prefix,
             "wilson_line_act_open_derivatives": options.wilson_line_act_open_derivatives,
             "wilson_line_max_derivative_order": options.wilson_line_max_derivative_order,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,

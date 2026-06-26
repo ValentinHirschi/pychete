@@ -26,6 +26,8 @@ from pychete import (
     VakintIntegralStage,
     WilsonLineTraceExpansionTerm,
     WilsonLineTracePath,
+    WilsonLineExpansionPlan,
+    WilsonLineExpansionPlanEntry,
     canonical_string,
     define_smeft_wilson_coefficient,
     dummy_indices,
@@ -1768,6 +1770,12 @@ def test_wilson_line_path_expands_propagator_terms_without_cde_result_object() -
     grouped = setup.interaction_wilson_line_expansion_terms_by_trace(expansion)
     kernels = setup.interaction_wilson_line_expansion_kernel_expression_map(expansion)
     integrals = setup.interaction_wilson_line_expansion_vakint_integral_expression_map(expansion)
+    generated_plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=0,
+    )
+    generated_grouped = setup.interaction_wilson_line_expansion_terms_by_trace(generated_plan)
+    generated_kernels = setup.interaction_wilson_line_expansion_kernel_expression_map(generated_plan)
 
     expected_numerator = -y() ** 2 * light() ** 2 / 2
     expected_kernel = s.SupertraceKernel(
@@ -1792,8 +1800,20 @@ def test_wilson_line_path_expands_propagator_terms_without_cde_result_object() -
     assert_expr_equal(grouped["hScalar-lScalar"][0].kernel_expression(), expected_kernel)
     assert tuple(kernels) == ("interaction_wilson_line_expansion_kernel[hScalar-lScalar,0,0]",)
     assert tuple(integrals) == ("interaction_wilson_line_expansion_vakint_integral[hScalar-lScalar,0,0]",)
+    assert isinstance(generated_plan, WilsonLineExpansionPlan)
+    assert generated_plan.trace_names == ("hScalar-lScalar",)
+    assert generated_plan.trace_count == 1
+    assert generated_plan.entry_count == 1
+    assert isinstance(generated_plan.entries[0], WilsonLineExpansionPlanEntry)
+    assert generated_plan.entries[0].slot_orders == (0, 0)
+    assert tuple(generated_grouped) == ("hScalar-lScalar#wilson0_o0_0",)
+    assert generated_grouped["hScalar-lScalar#wilson0_o0_0"][0].path_index == terms[0].path_index
     assert_expr_equal(terms[0].kernel_expression(), expected_kernel)
     assert_expr_equal(kernels["interaction_wilson_line_expansion_kernel[hScalar-lScalar,0,0]"], expected_kernel)
+    assert_expr_equal(
+        generated_kernels["interaction_wilson_line_expansion_kernel[hScalar-lScalar#wilson0_o0_0,0,0]"],
+        expected_kernel,
+    )
     assert_expr_equal(
         integrals["interaction_wilson_line_expansion_vakint_integral[hScalar-lScalar,0,0]"],
         expected_integral,
@@ -1887,6 +1907,26 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     assert_expr_equal(result.off_shell_eft_lagrangian, expected_integral)
     assert_expr_equal(result.expression("interaction_wilson_line_vakint_integral_sum"), expected_selected_integral)
     assert_expr_equal(result.expression("interaction_wilson_line_hybrid_vakint_integral_sum"), expected_integral)
+
+    generated_result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            wilson_line_trace_names=("hScalar-lScalar",),
+            wilson_line_max_total_order=0,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(generated_result, MatchingResult)
+    assert generated_result.metadata["stage"] == "interaction_wilson_line_hybrid_vakint_result"
+    assert generated_result.metadata["wilson_line_expansion_enabled"] is True
+    assert generated_result.metadata["wilson_line_expansion_planned"] is True
+    assert generated_result.metadata["wilson_line_trace_names"] == "hScalar-lScalar"
+    assert generated_result.metadata["interaction_wilson_line_planned"] is True
+    assert generated_result.metadata["interaction_wilson_line_plan_entry_count"] == 1
+    assert_expr_equal(generated_result.off_shell_eft_lagrangian, expected_integral)
 
 
 def test_one_loop_match_rejects_simultaneous_wilson_line_and_cde_expansion_options() -> None:

@@ -117,6 +117,16 @@
   `one_loop_preview_gap_report(...)`. This lets Matchete-independent fixture
   probes exercise the Wilson-line hybrid route directly instead of continuing
   to make new frontier checks CDE-shaped.
+- The current Wilson-line planning slice adds `WilsonLineExpansionPlanEntry`
+  and `WilsonLineExpansionPlan`, plus
+  `OneLoopSetup.interaction_wilson_line_expansion_plan(...)`. Public
+  `OneLoopMatchOptions` and validation fixture helpers now accept
+  `wilson_line_trace_names`, `wilson_line_max_total_order`,
+  `wilson_line_max_slot_order`, and `wilson_line_index_prefix` so selected
+  derivative-order frontier probes no longer need the legacy CDE planner.
+  Generated plans still enter the existing Symbolica-backed Wilson-line
+  expansion path; Python only enumerates the requested slot orders and creates
+  theory-owned Lorentz index symbols with Wilson-line plan tags.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw
@@ -474,6 +484,17 @@
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
   passed.
 - `git diff --check` passed after exposing Wilson-line validation controls.
+- 30 GiB memory-watch Wilson-line generated-plan gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_path_expands_propagator_terms_without_cde_result_object tests/integration/matching/test_fluctuation_operator.py::test_one_loop_match_can_use_selected_wilson_line_expansion_route tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathematica tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api tests/unit/definitions/test_public_api.py -q`
+  passed with 9 tests. This covers setup-level
+  `interaction_wilson_line_expansion_plan(...)`, public
+  `OneLoopMatchOptions(wilson_line_max_total_order=...)`, validation fixture
+  generated previews, gap-report forwarding of generated-plan controls, and
+  public API docstring/export coverage.
+- 30 GiB memory-watch typing gate after the Wilson-line generated-plan slice:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
+- `git diff --check` passed after the Wilson-line generated-plan slice.
 
 ## Current Validation Frontier
 
