@@ -604,6 +604,7 @@ class MatchingResult:
         *,
         names: Iterable[str] | None = None,
         expression_transform: Callable[[Expression], Expression] | None = None,
+        canonize_indices: bool = True,
         probe_parameters: Sequence[Expression] | None = None,
         probe_samples: Sequence[Sequence[NumericValue]] | None = None,
         probe_names: Iterable[str] | None = None,
@@ -615,11 +616,13 @@ class MatchingResult:
         Canonical Symbolica equality is the primary comparison. If
         ``expression_transform`` is supplied, it is applied to both candidate
         and reference expressions before canonical comparison and before any
-        numeric-probe fallback. If ``probe_parameters`` and ``probe_samples``
-        are provided, expressions that are not canonically equal are
-        additionally tested with Symbolica's evaluator-backed numeric probes.
-        ``probe_names`` can restrict the probe fallback to a subset of compared
-        names.
+        numeric-probe fallback. When ``canonize_indices`` is true, compared
+        expressions are first passed through Symbolica's tensor canonizer so
+        alpha-equivalent dummy-index contractions line up before equality is
+        tested. If ``probe_parameters`` and ``probe_samples`` are provided,
+        expressions that are not canonically equal are additionally tested with
+        Symbolica's evaluator-backed numeric probes. ``probe_names`` can
+        restrict the probe fallback to a subset of compared names.
         """
 
         if self.theory.name != reference.theory.name:
@@ -639,6 +642,11 @@ class MatchingResult:
             reference_expr = _optional_expression(reference, name)
             compared_candidate = _transform_optional_expression(candidate_expr, expression_transform)
             compared_reference = _transform_optional_expression(reference_expr, expression_transform)
+            if canonize_indices and compared_candidate is not None and compared_reference is not None:
+                compared_candidate, compared_reference = _canonize_comparison_indices(
+                    compared_candidate,
+                    compared_reference,
+                )
             canonical_equal = (
                 compared_candidate is not None
                 and compared_reference is not None
@@ -1270,6 +1278,13 @@ def _canonize_matching_projection_indices_with_aliases(
     canon_targets = tuple(_canonize_tensor_terms(target, index_specs) for target in projection_expressions)
     canon_aliases = tuple(_canonize_tensor_terms(alias, index_specs) for alias in alias_expressions)
     return canon_source, canon_targets, canon_aliases
+
+
+def _canonize_comparison_indices(lhs: Expression, rhs: Expression) -> tuple[Expression, Expression]:
+    index_specs = _matching_projection_index_specs(lhs, (rhs,))
+    if not index_specs:
+        return lhs, rhs
+    return _canonize_tensor_terms(lhs, index_specs), _canonize_tensor_terms(rhs, index_specs)
 
 
 def _canonize_tensor_terms(

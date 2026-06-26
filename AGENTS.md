@@ -395,6 +395,20 @@ central `s` symbol store. Strings are acceptable only at external input
 boundaries such as model parsers, JSON serialization, or user-facing API
 compatibility shims, and must be normalized immediately.
 
+For comparisons and projections involving contracted tensor or field indices,
+use Symbolica's native `Expression.canonize_tensors(contracted_indices)`. It
+returns the canonical expression together with the external and ordered dummy
+indices appearing in that canonical expression; use that native output to align
+alpha-equivalent dummy-index contractions before comparing or projecting. Do
+not hand-roll Python dummy-index renaming or rely on raw string equality when
+`canonize_tensors(...)` can make the index structure canonical.
+
+Selected bosonic CDE trace requests must stay target-local. When
+`bosonic_cde_trace_names` or explicit CDE expansion maps select a trace family,
+build only the requested interaction category blocks and reuse identical
+category-pair blocks within that selected trace. Do not construct the full
+interaction supertrace plan just to throw away unselected trace names.
+
 Public API discoverability lives in `src/pychete/api.py`. Keep implementation
 functions in their domain modules, but every function/class/enum intended for
 users must be re-exported through `pychete.api` and package-root `pychete`.

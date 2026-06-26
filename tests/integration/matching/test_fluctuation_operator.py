@@ -1830,6 +1830,42 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
         setup.interaction_bosonic_cde_kernel_expression_map({"missing": ((),)})
 
 
+def test_selected_bosonic_cde_builds_only_requested_interaction_category_blocks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_setup_selected_bosonic_cde_blocks")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() ** 3 / 6 - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=3)
+    category_block_calls: list[tuple[str, str]] = []
+    original_category_block = matching_module.FluctuationOperator.interaction_category_block
+
+    def fail_full_interaction_block(*_args: object, **_kwargs: object) -> object:
+        raise AssertionError("selected CDE trace construction should not build full sector blocks")
+
+    def record_category_block(
+        operator: matching_module.FluctuationOperator,
+        row_category: str,
+        column_category: str,
+        **kwargs: object,
+    ) -> matching_module.FluctuationOperatorBlock:
+        category_block_calls.append((row_category, column_category))
+        return original_category_block(operator, row_category, column_category, **kwargs)
+
+    monkeypatch.setattr(matching_module.FluctuationOperator, "interaction_block", fail_full_interaction_block)
+    monkeypatch.setattr(matching_module.FluctuationOperator, "interaction_category_block", record_category_block)
+
+    plan = setup.interaction_bosonic_cde_expansion_plan(
+        trace_names=("hScalar-hScalar-hScalar",),
+        max_total_order=0,
+    )
+
+    assert plan.trace_names == ("hScalar-hScalar-hScalar",)
+    assert category_block_calls == [("hScalar", "hScalar")]
+
+
 def test_public_bosonic_cde_matching_projects_scalar_ncm_chains() -> None:
     theory = Theory("one_loop_setup_interaction_bosonic_cde_projection")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

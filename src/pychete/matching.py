@@ -1207,11 +1207,13 @@ class OneLoopSetup:
             raise ValueError("max_total_order must be non-negative")
         if max_slot_order is not None and max_slot_order < 0:
             raise ValueError("max_slot_order must be non-negative")
+        selected_trace_names = None if trace_names is None else tuple(dict.fromkeys(trace_names))
         traces = self._interaction_bosonic_cde_trace_map(
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
+            trace_names=selected_trace_names,
         )
-        selected_trace_names = tuple(traces) if trace_names is None else tuple(dict.fromkeys(trace_names))
+        selected_trace_names = tuple(traces) if selected_trace_names is None else selected_trace_names
         entries: list[BosonicCDEExpansionPlanEntry] = []
         for trace_name in selected_trace_names:
             if trace_name not in traces:
@@ -1253,7 +1255,22 @@ class OneLoopSetup:
         *,
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
+        trace_names: Sequence[str] | None = None,
     ) -> dict[str, SupertraceBlockTrace]:
+        if trace_names is not None:
+            return {
+                name: self.fluctuation_operator.interaction_category_trace(
+                    _category_path_from_trace_name(name),
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+                for name in _selected_power_type_trace_names(
+                    self.fluctuation_operator.modes,
+                    max_trace_order=self.max_trace_order,
+                    trace_names=trace_names,
+                    include_light_only=False,
+                )
+            }
         return {
             trace.name: trace
             for trace in self.interaction_power_type_traces(
@@ -1269,10 +1286,6 @@ class OneLoopSetup:
         loop_momentum_squared: Expression | None = None,
         require_registered_mass: bool = True,
     ) -> tuple[BosonicCDEExpansionPlanEntry, ...]:
-        traces = self._interaction_bosonic_cde_trace_map(
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-        )
         if isinstance(expansion_request, BosonicCDEExpansionPlan):
             entries = expansion_request.entries
         else:
@@ -1286,9 +1299,12 @@ class OneLoopSetup:
                 )
                 for trace_name, expansion_indices in expansion_request.items()
             )
-        for entry in entries:
-            if entry.trace_name not in traces:
-                raise KeyError(f"One-loop setup has no interaction trace {entry.trace_name!r}")
+        _selected_power_type_trace_names(
+            self.fluctuation_operator.modes,
+            max_trace_order=self.max_trace_order,
+            trace_names=tuple(entry.trace_name for entry in entries),
+            include_light_only=False,
+        )
         return entries
 
     def interaction_bosonic_cde_kernel_expression_map(
@@ -1340,16 +1356,18 @@ class OneLoopSetup:
     ) -> dict[str, tuple[BosonicCDETraceExpansionTerm, ...]]:
         """Return selected CDE-expanded interaction terms grouped by trace or plan label."""
 
-        traces = self._interaction_bosonic_cde_trace_map(
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-        )
         grouped: dict[str, tuple[BosonicCDETraceExpansionTerm, ...]] = {}
-        for entry in self._interaction_bosonic_cde_plan_entries(
+        plan_entries = self._interaction_bosonic_cde_plan_entries(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
-        ):
+        )
+        traces = self._interaction_bosonic_cde_trace_map(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            trace_names=tuple(entry.trace_name for entry in plan_entries),
+        )
+        for entry in plan_entries:
             grouped[entry.label] = traces[entry.trace_name].bosonic_cde_expansion_terms(
                 entry.expansion_indices,
                 act_open_derivatives=act_open_derivatives,
@@ -4052,6 +4070,80 @@ class FluctuationOperator:
             ),
         )
 
+    def interaction_category_block(
+        self,
+        row_category: str,
+        column_category: str,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> FluctuationOperatorBlock:
+        """Return an interaction-only block restricted to exact supertrace categories."""
+
+        if not self.modes:
+            raise ValueError("This fluctuation operator does not carry basis mode metadata")
+        row_sector = _supertrace_category_sector(row_category)
+        column_sector = _supertrace_category_sector(column_category)
+        row_indices = _category_indices(self.modes, row_category)
+        column_indices = _category_indices(self.modes, column_category)
+        return FluctuationOperatorBlock(
+            theory=self.theory,
+            row_sector=row_sector,
+            column_sector=column_sector,
+            rows=tuple(self.modes[index] for index in row_indices),
+            columns=tuple(self.modes[index] for index in column_indices),
+            matrix=tuple(
+                tuple(
+                    self.interaction_entry(
+                        self.modes[row].field,
+                        self.modes[column].field,
+                        loop_momentum_squared=loop_momentum_squared,
+                        require_registered_mass=require_registered_mass,
+                    )
+                    for column in column_indices
+                )
+                for row in row_indices
+            ),
+            row_category=row_category,
+            column_category=column_category,
+        )
+
+    def interaction_category_trace(
+        self,
+        category_path: Sequence[str],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+    ) -> SupertraceBlockTrace:
+        """Return one selected interaction-only category trace without building the full plan."""
+
+        if not category_path:
+            raise ValueError("category_path must not be empty")
+        path = tuple(category_path)
+        closed_path = (*path, path[0])
+        block_cache: dict[tuple[str, str], FluctuationOperatorBlock] = {}
+        blocks: list[FluctuationOperatorBlock] = []
+        for index in range(len(path)):
+            key = (closed_path[index], closed_path[index + 1])
+            if key not in block_cache:
+                block_cache[key] = self.interaction_category_block(
+                    key[0],
+                    key[1],
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                )
+            blocks.append(block_cache[key])
+        block_tuple = tuple(blocks)
+        _validate_closed_block_chain(block_tuple)
+        return SupertraceBlockTrace(
+            theory=self.theory,
+            name="-".join(path),
+            blocks=block_tuple,
+            modes=block_tuple[0].rows,
+            expression=_supertrace_block_product(block_tuple),
+            cyclic_key=path,
+        )
+
     def interaction_supertrace_plan(
         self,
         *,
@@ -5043,6 +5135,57 @@ def _cyclically_unique_traces(traces: Iterable[SupertraceBlockTrace]) -> tuple[S
         seen.add(trace.cyclic_sector_key)
         unique.append(trace)
     return tuple(unique)
+
+
+def _selected_power_type_trace_names(
+    modes: tuple[FluctuationMode, ...],
+    *,
+    max_trace_order: int,
+    trace_names: Sequence[str],
+    include_light_only: bool = False,
+) -> tuple[str, ...]:
+    requested = tuple(dict.fromkeys(trace_names))
+    if not requested:
+        return ()
+    valid_names = _power_type_trace_names(
+        modes,
+        max_trace_order=max_trace_order,
+        include_light_only=include_light_only,
+    )
+    valid_name_set = set(valid_names)
+    for name in requested:
+        if name not in valid_name_set:
+            raise KeyError(f"One-loop setup has no interaction trace {name!r}")
+    return requested
+
+
+def _power_type_trace_names(
+    modes: tuple[FluctuationMode, ...],
+    *,
+    max_trace_order: int,
+    include_light_only: bool = False,
+) -> tuple[str, ...]:
+    names: list[str] = []
+    seen: set[tuple[str, ...]] = set()
+    labels = _supertrace_category_labels(modes)
+    for order in range(1, max_trace_order + 1):
+        for path in product(labels, repeat=order):
+            light_only = all(_supertrace_category_sector(label) is FluctuationSector.LIGHT for label in path)
+            if not include_light_only and light_only:
+                continue
+            key = _cyclic_sector_key(path)
+            if key in seen:
+                continue
+            seen.add(key)
+            names.append("-".join(path))
+    return tuple(names)
+
+
+def _category_path_from_trace_name(name: str) -> tuple[str, ...]:
+    path = tuple(part for part in name.split("-") if part)
+    if not path:
+        raise ValueError("interaction trace name must not be empty")
+    return path
 
 
 def _sector_indices(modes: tuple[FluctuationMode, ...], sector: FluctuationSector) -> tuple[int, ...]:

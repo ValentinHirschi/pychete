@@ -618,6 +618,48 @@
     passed.
   - `git diff --check` passed.
 
+### Selected CDE Trace Construction And Tensor-Index Comparison Follow-Up
+
+- Probed the Singlet `cH` frontier through the selected bosonic CDE path
+  `hScalar-hScalar-hScalar` at total derivative order zero. Before this slice,
+  the selected CDE request still built the full interaction supertrace map and
+  the diagnostic took roughly 33 seconds. After target-local selected trace
+  construction, the same probe completes in about 15.7 seconds.
+- The selected Singlet CDE candidate remains only the partial three-insertion
+  source `i*kappa^3/(32*pi^2*M^2)`, while Matchete's `cH` reference contains
+  additional threshold, tree/on-shell, and basis-reduction terms involving
+  `A`, `muphi`, logs/poles, and lower powers of `M`. This confirms the current
+  blocker is matching-content and reduction completeness, not the projection
+  hang fixed in the previous slice.
+- Added direct interaction category-block construction for selected CDE trace
+  names. Explicit CDE maps and `bosonic_cde_trace_names` now validate requested
+  trace names with the lightweight cyclic-unique trace-name enumerator, then
+  build only those category chains. Repeated category-pair blocks inside a
+  selected trace are cached.
+- Added `MatchingResult.compare_to(..., canonize_indices=True)`, defaulting to
+  native Symbolica tensor-index canonicalization before canonical string
+  comparison. This uses `Expression.canonize_tensors(...)` through the existing
+  projection index-spec helper so alpha-equivalent dummy-index contractions do
+  not appear as false canonical differences. `canonize_indices=False` remains
+  available for diagnostics.
+- Updated `AGENTS.md` to explicitly require Symbolica
+  `Expression.canonize_tensors(...)` for dummy-index alignment and to require
+  selected CDE trace requests to avoid full interaction-supertrace plan
+  construction.
+- Focused validation for this follow-up:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint tests/integration/matching/test_fluctuation_operator.py::test_selected_bosonic_cde_builds_only_requested_interaction_category_blocks tests/integration/validation/test_numeric_probes.py::test_matching_result_comparison_canonizes_alpha_equivalent_index_contractions -q'`
+    passed with 3 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_matching_preserves_unselected_interaction_traces tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_matching_projects_scalar_ncm_chains -q'`
+    passed with 2 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -k "comparison_canonizes or projects_alpha_equivalent_index_contractions or projection_canonizes_source_once or skips_tensor_canonization or adds_exact_and_alpha_equivalent" -q'`
+    passed with 5 tests and 40 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+- A broader `pytest -k "bosonic_cde or selected_bosonic_cde"` run was stopped
+  after several minutes to preserve the requested testing discipline; the
+  directly impacted CDE and projection tests above passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

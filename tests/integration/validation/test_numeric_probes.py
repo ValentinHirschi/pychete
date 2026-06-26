@@ -160,6 +160,39 @@ def test_matching_result_comparison_can_transform_expressions_before_comparing()
     assert transformed_comparison.expressions[0].canonical_equal is True
 
 
+def test_matching_result_comparison_canonizes_alpha_equivalent_index_contractions() -> None:
+    theory = Theory("comparison_index_canonization")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=s.Bar(higgs(i)) * higgs(i),
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=s.Bar(higgs(j)) * higgs(j),
+    )
+
+    canonicalized = candidate.compare_to(reference, names=("on_shell_eft_lagrangian",))
+    raw = candidate.compare_to(
+        reference,
+        names=("on_shell_eft_lagrangian",),
+        canonize_indices=False,
+    )
+
+    assert canonicalized.equal is True
+    assert canonicalized.expressions[0].canonical_equal is True
+    assert raw.equal is False
+    assert raw.expressions[0].canonical_equal is False
+
+
 def test_matching_result_comparison_can_restrict_evaluator_probe_names() -> None:
     x = S("comparison_probe_selected_x")
     theory = Theory("comparison_probe_selected")
