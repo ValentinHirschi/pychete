@@ -665,6 +665,35 @@ class SupertraceBlockTrace:
         )
         return replace(self, expression=spenso.tensor_network_result_scalar(network))
 
+    def wilson_line_trace_paths(self) -> tuple[WilsonLineTracePath, ...]:
+        """Return entry-level Wilson-line paths for this trace.
+
+        Matchete's current supertrace route interleaves interaction insertions
+        with propagators and a closing Wilson line before acting with open
+        derivatives. This method exposes the same ordered path structure
+        without changing the existing power-type result pipeline.
+        """
+
+        paths: list[WilsonLineTracePath] = []
+        for path_index, entry_path in enumerate(_supertrace_block_entry_paths(self.blocks)):
+            if not entry_path.next_modes:
+                continue
+            link_indices = _wilson_line_link_indices(self.theory, self.name, path_index)
+            paths.append(
+                WilsonLineTracePath(
+                    theory=self.theory,
+                    trace_name=self.name,
+                    path_index=path_index,
+                    sign=entry_path.sign,
+                    prefactor=self.power_type_log_prefactor * Expression.num(entry_path.sign),
+                    entries=entry_path.entries,
+                    propagator_modes=entry_path.next_modes,
+                    closing_mode=entry_path.next_modes[-1],
+                    link_indices=link_indices,
+                )
+            )
+        return tuple(paths)
+
     def bosonic_cde_expansion_terms(
         self,
         expansion_indices: Sequence[Sequence[Expression]],
@@ -743,6 +772,104 @@ class SupertraceBlockTrace:
 
     def _repr_html_(self) -> str:
         return f"<code>SupertraceBlockTrace({escape(self.name)} order={self.order})</code>"
+
+
+@dataclass(frozen=True)
+class WilsonLineTracePath:
+    """Entry-level supertrace path with an explicit closing Wilson line."""
+
+    theory: Theory
+    trace_name: str
+    path_index: int
+    sign: int
+    prefactor: Expression
+    entries: tuple[Expression, ...]
+    propagator_modes: tuple[FluctuationMode, ...]
+    closing_mode: FluctuationMode
+    link_indices: tuple[Expression, Expression]
+
+    @property
+    def order(self) -> int:
+        """Number of interaction insertions in this path."""
+
+        return len(self.entries)
+
+    @property
+    def closing_field_label(self) -> Expression:
+        """Field label carried by the closing Wilson line."""
+
+        label = self.closing_mode.label
+        return s.Bar(label) if self.closing_mode.conjugated else label
+
+    def mass_squareds(self, *, include_light: bool = True) -> tuple[Expression, ...]:
+        """Return propagator mass-squared slots in Wilson-line path order."""
+
+        return tuple(
+            _fluctuation_mass_squared(mode)
+            for mode in self.propagator_modes
+            if include_light or mode.is_heavy
+        )
+
+    def wilson_line_expression(self) -> Expression:
+        """Return the unexpanded closing ``WilsonLine`` placeholder."""
+
+        return s.WilsonLine(self.closing_field_label, list_expr(*self.link_indices))
+
+    def wilson_term_expression(
+        self,
+        derivative_indices: Sequence[Expression] = (),
+    ) -> Expression:
+        """Return a ``WilsonTerm`` placeholder with explicit derivative slots."""
+
+        return s.WilsonTerm(
+            self.closing_field_label,
+            list_expr(*self.link_indices),
+            list_expr(*derivative_indices),
+        )
+
+    def template_expression(
+        self,
+        *,
+        use_wilson_term: bool = False,
+        derivative_indices: Sequence[Expression] = (),
+    ) -> Expression:
+        """Return the prefactor-weighted ordered insertion template."""
+
+        closing = (
+            self.wilson_term_expression(derivative_indices)
+            if use_wilson_term
+            else self.wilson_line_expression()
+        )
+        return (self.prefactor * _ncm_chain(*self.entries, closing)).expand()
+
+    def kernel_expression(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+        use_wilson_term: bool = False,
+        derivative_indices: Sequence[Expression] = (),
+    ) -> Expression:
+        """Return this path as a ``SupertraceKernel`` with propagator slots."""
+
+        momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+        denominators = tuple(
+            s.PropagatorDenominator(momentum_squared, mass_squared)
+            for mass_squared in self.mass_squareds(include_light=include_light)
+        )
+        return s.SupertraceKernel(
+            self.template_expression(
+                use_wilson_term=use_wilson_term,
+                derivative_indices=derivative_indices,
+            ),
+            list_expr(*(list_expr(denominator) for denominator in denominators)),
+        )
+
+    def _repr_latex_(self) -> str:
+        return rf"$\mathrm{{WilsonLineTracePath}}\left({escape(self.trace_name)},\ {self.path_index}\right)$"
+
+    def _repr_html_(self) -> str:
+        return f"<code>WilsonLineTracePath({escape(self.trace_name)} path={self.path_index})</code>"
 
 
 def _fresh_cde_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expression:
@@ -1281,6 +1408,69 @@ class OneLoopSetup:
             max_total_order=max_total_order,
             max_slot_order=max_slot_order,
         )
+
+    def interaction_wilson_line_trace_paths(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+    ) -> tuple[WilsonLineTracePath, ...]:
+        """Return entry-level interaction traces with explicit Wilson lines."""
+
+        traces = _cyclically_unique_traces(
+            self.interaction_block_traces(
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                include_light_only=include_light_only,
+            )
+        )
+        return tuple(
+            path
+            for trace in traces
+            for path in trace.wilson_line_trace_paths()
+        )
+
+    def interaction_wilson_line_trace_paths_by_trace(
+        self,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+    ) -> dict[str, tuple[WilsonLineTracePath, ...]]:
+        """Return Wilson-line interaction paths grouped by trace name."""
+
+        grouped: dict[str, list[WilsonLineTracePath]] = {}
+        for path in self.interaction_wilson_line_trace_paths(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+        ):
+            grouped.setdefault(path.trace_name, []).append(path)
+        return {trace_name: tuple(paths) for trace_name, paths in grouped.items()}
+
+    def interaction_wilson_line_kernel_expression_map(
+        self,
+        *,
+        prefix: str = "interaction_wilson_line_kernel",
+        loop_momentum_squared: Expression | None = None,
+        include_light: bool = True,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+    ) -> dict[str, Expression]:
+        """Return interaction Wilson-line path kernels as named expressions."""
+
+        return {
+            f"{prefix}[{path.trace_name},{path.path_index}]": path.kernel_expression(
+                loop_momentum_squared=loop_momentum_squared,
+                include_light=include_light,
+            )
+            for path in self.interaction_wilson_line_trace_paths(
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                include_light_only=include_light_only,
+            )
+        }
 
     def _interaction_bosonic_cde_trace_map(
         self,
@@ -3805,6 +3995,9 @@ class OneLoopSetup:
             **self.propagator_plan().to_expression_map(prefix=f"{prefix}.propagator"),
             **self.supertrace_expression_map(prefix=f"{prefix}.supertrace_kernel"),
             **self.interaction_supertrace_expression_map(prefix=f"{prefix}.interaction_supertrace_kernel"),
+            **self.interaction_wilson_line_kernel_expression_map(
+                prefix=f"{prefix}.interaction_wilson_line_kernel",
+            ),
             **self.supertrace_propagator_expression_map(prefix=f"{prefix}.supertrace_propagator_kernel"),
             **self.supertrace_operator_propagator_expression_map(
                 prefix=f"{prefix}.supertrace_operator_propagator_kernel",
@@ -4931,6 +5124,14 @@ def _cde_plan_expansion_indices(
 def _cde_plan_entry_label(trace_name: str, entry_index: int, slot_orders: tuple[int, ...]) -> str:
     order_label = "_".join(str(order) for order in slot_orders)
     return f"{trace_name}#cde{entry_index}_o{order_label}"
+
+
+def _wilson_line_link_indices(theory: Theory, trace_name: str, path_index: int) -> tuple[Expression, Expression]:
+    trace_key = safe_symbol_name(trace_name)
+    return (
+        theory.symbol(f"wilson_line_{trace_key}_{path_index}_left", role=SymbolRole.INDEX),
+        theory.symbol(f"wilson_line_{trace_key}_{path_index}_right", role=SymbolRole.INDEX),
+    )
 
 
 def _cde_expansion_request_metadata(expansion_request: BosonicCDEExpansionRequest) -> dict[str, Any]:

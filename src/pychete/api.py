@@ -50,6 +50,7 @@ from .matching import (
     PropagatorPlan,
     SupertraceBlockTrace,
     SupertracePlan,
+    WilsonLineTracePath,
 )
 from .matching_options import (
     OneLoopIntegralBackend,
@@ -168,6 +169,7 @@ __all__ = [
     "ValidationFixture",
     "VakintIntegralStage",
     "canonical_string",
+    "WilsonLineTracePath",
     "canonize_loop_function",
     "canonize_loop_functions",
     "canonize_tensor_indices",

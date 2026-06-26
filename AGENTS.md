@@ -290,6 +290,18 @@ code may remain as an opt-in legacy diagnostic, validation, and regression
 route, but new core matching work should move toward explicit Wilson-line
 style functional traces and should not deepen SMEFT-specific or CDE-specific
 coupling in the main pipeline.
+Represent current-Matchete-style Wilson-line trace work through
+`WilsonLineTracePath`, `s.WilsonLine`, and `s.WilsonTerm`. Build these objects
+from the ordered entry paths returned by `_supertrace_block_entry_paths(...)`,
+before `SupertraceBlockTrace.expression` has summed over the matrix-trace
+entries and lost the individual propagator/insertion ordering. The propagator
+mass slots follow the Matchete `GenericPropagatorExpansion` convention: after
+each interaction insertion, record the next fluctuation mode, and close the
+path by a Wilson line for the final mode back to the initial mode. Do not bolt
+a Wilson-line placeholder onto an already summed trace and call it equivalent.
+Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
+and the idenso/spenso algebra path for field-strength, colour, and tensor
+simplification; do not implement it as a Python tree walker.
 Public bosonic CDE matching requests must replace only the selected
 interaction-supertrace families by their CDE-expanded aggregate and must keep
 all unselected interaction-power trace families in the one-loop source. Use the

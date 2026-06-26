@@ -310,6 +310,24 @@ def _print_open_cd(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) ->
     return _call("OpenCD", args, mode)
 
 
+def _print_wilson_line(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex:
+        return rf"\mathcal{{U}}\left({_join(args, mode)}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"WilsonLine[{_join(args, mode)}]"
+    return _call("WilsonLine", args, mode)
+
+
+def _print_wilson_term(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex:
+        return rf"\mathcal{{W}}\left({_join(args, mode)}\right)"
+    if mode is PrintMode.Mathematica:
+        return f"WilsonTerm[{_join(args, mode)}]"
+    return _call("WilsonTerm", args, mode)
+
+
 def _print_loop_function(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
     masses = _format_child(expr[0], mode, kwargs) if len(expr) > 0 else "{}"
     powers = _format_child(expr[1], mode, kwargs) if len(expr) > 1 else "{}"
@@ -360,6 +378,8 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "SupertraceKernel": lambda: _print_supertrace_kernel(expr, mode, kwargs),
         "DifferentialOperator": lambda: _print_differential_operator(expr, mode, kwargs),
         "OpenCD": lambda: _print_open_cd(expr, mode, kwargs),
+        "WilsonLine": lambda: _print_wilson_line(expr, mode, kwargs),
+        "WilsonTerm": lambda: _print_wilson_term(expr, mode, kwargs),
         "LoopFunction": lambda: _print_loop_function(expr, mode, kwargs),
         "Vector": lambda: _call("Vector", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "SU": lambda: _call("SU", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -574,6 +594,8 @@ class SymbolStore:
         "SupertraceKernel",
         "DifferentialOperator",
         "OpenCD",
+        "WilsonLine",
+        "WilsonTerm",
         "LoopFunction",
         "CovariantDerivativeProtectedBar",
         "CovariantDerivativeProtectedCommutator",
@@ -761,6 +783,14 @@ class SymbolStore:
     @cached_property
     def OpenCD(self) -> Expression:
         return self.head("OpenCD")
+
+    @cached_property
+    def WilsonLine(self) -> Expression:
+        return self.head("WilsonLine")
+
+    @cached_property
+    def WilsonTerm(self) -> Expression:
+        return self.head("WilsonTerm")
 
     @cached_property
     def LoopFunction(self) -> Expression:

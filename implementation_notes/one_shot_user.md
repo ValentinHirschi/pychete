@@ -234,5 +234,14 @@ discoveries, dependency patches, blockers, and remaining work.
   Wilson-line trace handling. Also avoid treating SMEFT Warsaw as a bespoke
   core module; expose it as an optional basis on top of generic operator-basis
   registration.
+- Matchete authors specifically flagged that CDE was the v0.1/accompanying
+  paper technique, while current Matchete has moved to explicit Wilson lines to
+  generalize trace handling beyond one loop. Course-correct future one-loop
+  work around this Wilson-line representation and keep CDE bounded as legacy
+  support.
+- Matchete authors also flagged that building SMEFT Warsaw as a special module
+  is philosophically risky for a generic matching tool. Keep the bundled SMEFT
+  basis only as an optional `OperatorBasis` provider and make all matching
+  machinery consume generic basis metadata.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

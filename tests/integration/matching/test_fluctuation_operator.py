@@ -24,6 +24,7 @@ from pychete import (
     SymbolRole,
     Theory,
     VakintIntegralStage,
+    WilsonLineTracePath,
     canonical_string,
     define_smeft_wilson_coefficient,
     dummy_indices,
@@ -1705,6 +1706,44 @@ def test_power_type_prefactor_keeps_periodic_cyclic_trace_factor() -> None:
     assert_expr_equal(contributions["hScalar-hScalar-hScalar"].prefactor, -Expression.num(1) / 6)
     assert_expr_equal(contributions["hScalar-hScalar"].numerator_expression, -y() ** 2 * light() ** 2 / 4)
     assert_expr_equal(contributions["hScalar-hScalar-hScalar"].numerator_expression, y() ** 3 * light() ** 3 / 6)
+
+
+def test_one_loop_setup_exposes_explicit_wilson_line_trace_paths() -> None:
+    theory = Theory("one_loop_setup_wilson_line_paths")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    paths_by_trace = setup.interaction_wilson_line_trace_paths_by_trace()
+    path = paths_by_trace["hScalar-lScalar"][0]
+
+    assert isinstance(path, WilsonLineTracePath)
+    assert path.trace_name == "hScalar-lScalar"
+    assert path.path_index == 0
+    assert path.order == 2
+    assert path.sign == 1
+    assert path.closing_mode.is_heavy is True
+    assert_expr_equal(path.prefactor, -Expression.num(1) / 2)
+    assert tuple(canonical_string(mass) for mass in path.mass_squareds()) == (
+        canonical_string(light_mass**2),
+        canonical_string(heavy_mass**2),
+    )
+    assert canonical_string(path.wilson_line_expression()).startswith("pychete::WilsonLine")
+    assert canonical_string(path.wilson_term_expression([theory.index("mu")])).startswith("pychete::WilsonTerm")
+    assert "pychete::WilsonLine" in canonical_string(path.template_expression())
+    kernel = path.kernel_expression()
+    assert canonical_string(kernel).startswith("pychete::SupertraceKernel")
+
+    expression_map = setup.interaction_wilson_line_kernel_expression_map()
+    assert_expr_equal(expression_map["interaction_wilson_line_kernel[hScalar-lScalar,0]"], kernel)
+    setup_map = setup.to_expression_map()
+    assert_expr_equal(setup_map["one_loop_setup.interaction_wilson_line_kernel[hScalar-lScalar,0]"], kernel)
 
 
 def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint() -> None:

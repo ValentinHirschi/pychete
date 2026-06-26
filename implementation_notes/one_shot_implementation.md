@@ -138,6 +138,23 @@
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
+- The current Wilson-line structural slice adds explicit pychete
+  `WilsonLine`/`WilsonTerm` symbols and a public `WilsonLineTracePath` object
+  built from ordered supertrace entry paths before the trace is summed. This is
+  a first bridge toward current Matchete-style Wilson-line traces: it preserves
+  the ordered interaction insertions, the next-mode propagator mass slots, the
+  closing field label, and a placeholder Wilson line/term without changing the
+  existing power-type or legacy CDE result pipeline.
+- `OneLoopSetup` now exposes interaction Wilson-line paths and named kernel
+  expressions through `interaction_wilson_line_trace_paths(...)`,
+  `interaction_wilson_line_trace_paths_by_trace(...)`, and
+  `interaction_wilson_line_kernel_expression_map(...)`. These are structural
+  diagnostics and future expansion inputs, not yet a full Wilson-line
+  functional-trace evaluator.
+- `AGENTS.md` now makes the Matchete-author course correction explicit:
+  new core matching work should use ordered Wilson-line path metadata, not a
+  CDE-first architecture, and SMEFT Warsaw must remain an optional
+  `OperatorBasis` provider rather than a bespoke matching core assumption.
 - Projection and comparison paths already use Symbolica
   `Expression.canonize_tensors(...)` through `tensor_index_specs(...)` and
   `canonize_tensor_indices(...)`, preserving the canonical expression,
@@ -238,6 +255,13 @@
   `comparison_canonize_indices`:
   `pytest tests/integration/validation/test_numeric_probes.py -q` passed with
   53 tests.
+- 30 GiB memory-watch Wilson-line structural/API gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_exposes_explicit_wilson_line_trace_paths tests/unit/definitions/test_public_api.py::test_public_api_exports_have_docstrings tests/unit/definitions/test_public_api.py::test_public_api_methods_have_docstrings -q`
+  passed with 3 tests.
+- 30 GiB memory-watch typing gate after the Wilson-line structural slice:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
+- `git diff --check` passed after the Wilson-line structural slice.
 - `python -m mypy` passed after the validation-report canonization slice.
 - `git diff --check` passed after the validation-report canonization slice.
 - Focused Singlet tree projection regression:
