@@ -105,6 +105,13 @@
   names, external Wilson names such as `cHW`, or `"wilson"` for all Wilson
   targets. This keeps target-local CDE/EOM/IBP investigations from projecting
   and comparing all 72 default SMEFT matching conditions on every smoke run.
+- The current projection-filter follow-up tightens the target atom-count
+  prefilter for powered field-strength atoms. Operators such as `cHW`, whose
+  registered target contains `FieldStrength(W)^2`, now require two compatible
+  `W` field-strength atoms before a generated CDE/source term survives the
+  label-level filter. Dummy-index alignment still remains delegated to
+  Symbolica `Expression.canonize_tensors(...)` and its returned canonical
+  external/dummy index payload.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -289,6 +296,21 @@
   passed with 3 tests and 35 deselected.
 - `python -m mypy` passed after adding target-subset fixture projection.
 - `git diff --check` passed after adding target-subset fixture projection.
+- Focused powered-field-strength target-filter regression:
+  `pytest tests/integration/matching/test_fluctuation_operator.py::test_projection_atom_filter_counts_powered_field_strength_targets -q`
+  passed and verifies a `cHW`-style `FieldStrength(W)^2` target requires two
+  `W` field strengths before a source term survives projection filtering.
+- Direct structured Singlet target smoke through the real
+  `registered_wilsons` CDE requirement path now reports
+  `(('field', 'Singlet_Scalar_Extension::field_H', 2),
+  ('field_strength', 'Singlet_Scalar_Extension::field_W', 2))` for the `cHW`
+  family, confirming the filter uses the stored Wilson operator metadata rather
+  than the coefficient symbol alone.
+- `python -m mypy` passed after the powered-field-strength filter fix.
+- `git diff --check` passed after the powered-field-strength filter fix.
+- A broader public CDE subset and the public order-four CDE test were started
+  during this slice, but stopped after they entered slow native CDE paths. They
+  are not counted as validation gates for this small projection-filter fix.
 
 ## Current Validation Frontier
 

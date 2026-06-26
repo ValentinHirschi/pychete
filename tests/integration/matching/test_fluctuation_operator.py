@@ -29,11 +29,13 @@ from pychete import (
     s,
 )
 import pychete.matching as matching_module
+import pychete.matching_results as matching_results_module
 from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals as vacuum_integrals_backend
 from pychete.backends import vakint as vakint_backend
 from pychete.matching import _lower_differential_operators_to_momentum
+from pychete.smeft import smeft_warsaw_operator
 
 from tests.conftest import assert_expr_equal
 
@@ -2269,6 +2271,34 @@ def test_public_bosonic_cde_can_filter_terms_by_matching_targets() -> None:
     assert filtered.metadata["interaction_bosonic_cde_term_count"] == 8
     assert set(filtered.matching_conditions) == {target}
     assert not bool(filtered.matching_conditions[target].expand() == Expression.num(0))
+
+
+def test_projection_atom_filter_counts_powered_field_strength_targets() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_filter_field_strength_powers")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    target = smeft_warsaw_operator(theory, "cHW")
+    assert target is not None
+    w_label = canonical_string(theory.field_handle("W").label)
+    requirement_groups = matching_results_module._projection_atom_requirement_groups_for_expressions((target,))
+
+    assert ("field_strength", w_label, 2) in requirement_groups[0]
+
+    coefficient_one = S("field_strength_power_filter_one")
+    coefficient_two = S("field_strength_power_filter_two")
+    i = theory.dummy_index(1, fund)
+    adjoint = theory.index("A", theory.symbol("SU2L", role=SymbolRole.GROUP)(s.adj))
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    higgs_bilinear = s.Bar(higgs(i)) * higgs(i)
+    strength = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adjoint), s.List())
+    source = coefficient_one * higgs_bilinear * strength + coefficient_two * higgs_bilinear * strength**2
+    filtered = matching_results_module._ProjectionCoefficientExtractor(source)._filtered_source(target)
+    rendered = canonical_string(filtered)
+
+    assert "field_strength_power_filter_one" not in rendered
+    assert "field_strength_power_filter_two" in rendered
 
 
 def test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator() -> None:

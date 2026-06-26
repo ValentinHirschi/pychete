@@ -1178,7 +1178,7 @@ def _projection_atom_requirement_groups_for_expressions(
 def _projection_atom_requirement_group(target: Expression) -> tuple[tuple[str, str, int], ...]:
     counts = _projection_atom_counts(target)
     indexed_field_labels = _indexed_projection_field_labels(target)
-    powered_field_labels = _powered_projection_field_labels(target)
+    powered_field_labels = _powered_indexed_projection_atom_labels(target, kind="field")
     requirements: list[tuple[str, str, int]] = []
     for (kind, label), count in sorted(counts.items()):
         if kind != "field" or label not in powered_field_labels:
@@ -1198,17 +1198,6 @@ def _indexed_projection_field_labels(target: Expression) -> set[str]:
         if is_head(indices, s.List) and len(indices):
             indexed_labels.add(canonical_string(match[s.FieldLabelWildcard]))
     return indexed_labels
-
-
-def _powered_projection_field_labels(target: Expression) -> set[str]:
-    powered_labels: set[str] = set()
-    power_pat = s.PowBaseWildcard ** s.PowExponentWildcard
-    field_pat = field_pattern()
-    for match in target.match(power_pat):
-        base = match[s.PowBaseWildcard]
-        for field_match in base.match(field_pat):
-            powered_labels.add(canonical_string(field_match[s.FieldLabelWildcard]))
-    return powered_labels
 
 
 def _term_satisfies_projection_atom_requirements(
@@ -1237,7 +1226,7 @@ def _counts_satisfy_projection_atom_requirement_group(
 
 
 def _projection_atom_counts(expr: Expression) -> Counter[tuple[str, str]]:
-    expr = _expand_indexed_field_powers_for_projection(expr)
+    expr = _expand_indexed_projection_atom_powers(expr)
     counts: Counter[tuple[str, str]] = Counter()
     field_pat = field_pattern()
     for match in expr.match(field_pat):
@@ -1620,10 +1609,10 @@ def _canonize_matching_projection_indices_with_aliases(
     projection_expressions: Sequence[Expression],
     alias_expressions: Sequence[Expression],
 ) -> tuple[Expression, tuple[Expression, ...], tuple[Expression, ...]]:
-    source = _expand_indexed_field_powers_for_projection(source)
+    source = _expand_indexed_projection_atom_powers(source)
     source = _split_overcontracted_scalar_derivative_bilinears_for_projection(source)
-    projection_expressions = tuple(_expand_indexed_field_powers_for_projection(expr) for expr in projection_expressions)
-    alias_expressions = tuple(_expand_indexed_field_powers_for_projection(expr) for expr in alias_expressions)
+    projection_expressions = tuple(_expand_indexed_projection_atom_powers(expr) for expr in projection_expressions)
+    alias_expressions = tuple(_expand_indexed_projection_atom_powers(expr) for expr in alias_expressions)
     index_specs = _matching_projection_index_specs(source, (*projection_expressions, *alias_expressions))
     if not index_specs:
         return source, tuple(projection_expressions), tuple(alias_expressions)
@@ -1667,8 +1656,8 @@ def _split_overcontracted_scalar_derivative_bilinears_for_projection(expr: Expre
     return expr.replace(pattern, replacement, rhs_cache_size=0)
 
 
-def _expand_indexed_field_powers_for_projection(expr: Expression) -> Expression:
-    """Expand indexed field powers into fresh-index factors for projection only."""
+def _expand_indexed_projection_atom_powers(expr: Expression) -> Expression:
+    """Expand indexed field/field-strength powers into fresh factors for projection only."""
 
     label_cache: dict[tuple[str, int], Expression] = {}
     power_pattern = s.PowBaseWildcard ** s.PowExponentWildcard
@@ -1678,11 +1667,11 @@ def _expand_indexed_field_powers_for_projection(expr: Expression) -> Expression:
         exponent = as_int(match[s.PowExponentWildcard])
         if exponent is None or exponent <= 1:
             return power_pattern.replace_wildcards(match)
-        parsed = _indexed_field_power_base(base)
+        parsed = _indexed_projection_atom_power_base(base)
         if parsed is None:
             return power_pattern.replace_wildcards(match)
-        field_expr, conjugate = parsed
-        indices = list_items(field_expr[2])
+        atom_expr, conjugate = parsed
+        indices = _indexed_projection_atom_indices(atom_expr)
         if not indices:
             return power_pattern.replace_wildcards(match)
         factors: list[Expression] = []
@@ -1691,19 +1680,59 @@ def _expand_indexed_field_powers_for_projection(expr: Expression) -> Expression:
                 _indexed_power_projection_index(index, copy, label_cache=label_cache)
                 for index in indices
             )
-            copied_field = s.Field(field_expr[0], field_expr[1], s.List(*copied_indices), field_expr[3])
-            factors.append(s.Bar(copied_field) if conjugate else copied_field)
+            copied_atom = _with_indexed_projection_atom_indices(atom_expr, copied_indices)
+            factors.append(s.Bar(copied_atom) if conjugate else copied_atom)
         return product_expr(factors)
 
     return expr.replace(power_pattern, replacement, rhs_cache_size=0)
 
 
-def _indexed_field_power_base(expr: Expression) -> tuple[Expression, bool] | None:
-    if is_head(expr, s.Field):
+def _indexed_projection_atom_power_base(expr: Expression) -> tuple[Expression, bool] | None:
+    if is_head(expr, s.Field) or is_head(expr, s.FieldStrength):
         return expr, False
-    if is_head(expr, s.Bar) and is_head(expr[0], s.Field):
+    if is_head(expr, s.Bar) and (is_head(expr[0], s.Field) or is_head(expr[0], s.FieldStrength)):
         return expr[0], True
     return None
+
+
+def _indexed_projection_atom_indices(expr: Expression) -> tuple[Expression, ...]:
+    if is_head(expr, s.Field):
+        return list_items(expr[2])
+    if is_head(expr, s.FieldStrength):
+        return (*list_items(expr[1]), *list_items(expr[2]))
+    return ()
+
+
+def _with_indexed_projection_atom_indices(
+    expr: Expression,
+    indices: Sequence[Expression],
+) -> Expression:
+    if is_head(expr, s.Field):
+        return s.Field(expr[0], expr[1], s.List(*indices), expr[3])
+    if is_head(expr, s.FieldStrength):
+        lorentz_count = len(list_items(expr[1]))
+        return s.FieldStrength(
+            expr[0],
+            s.List(*indices[:lorentz_count]),
+            s.List(*indices[lorentz_count:]),
+            expr[3],
+        )
+    raise ValueError(f"Expected projection atom, got {canonical_string(expr)}")
+
+
+def _powered_indexed_projection_atom_labels(target: Expression, *, kind: str) -> set[str]:
+    powered_labels: set[str] = set()
+    power_pat = s.PowBaseWildcard ** s.PowExponentWildcard
+    for match in target.match(power_pat):
+        parsed = _indexed_projection_atom_power_base(match[s.PowBaseWildcard])
+        if parsed is None:
+            continue
+        atom_expr, _conjugate = parsed
+        if kind == "field" and is_head(atom_expr, s.Field):
+            powered_labels.add(canonical_string(atom_expr[0]))
+        elif kind == "field_strength" and is_head(atom_expr, s.FieldStrength):
+            powered_labels.add(canonical_string(atom_expr[0]))
+    return powered_labels
 
 
 def _indexed_power_projection_index(
