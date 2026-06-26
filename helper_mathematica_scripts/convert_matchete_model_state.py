@@ -4,11 +4,13 @@ from __future__ import annotations
 import argparse
 import json
 import re
+from itertools import count
 from pathlib import Path
 from typing import Any
 
 from symbolica import Expression
 
+from pychete.dimensions import infer_coupling_mass_dimensions
 from pychete.loaders import parse_matchete_expression
 from pychete.backends.spenso import cg_tensor_component_expression
 from pychete.loaders.mathematica import (
@@ -31,6 +33,8 @@ from pychete.state import PycheteState
 from pychete.symbols import SymbolRole, s
 from pychete.theory import Theory
 from pychete.theory_metadata import FieldMassKind, FieldRole, RepresentationReality
+
+_DIMENSION_PROBE_COUNTER = count()
 
 
 def _entry_name(entry: dict[str, Any]) -> str:
@@ -110,6 +114,16 @@ def _field_role_for_entry(entry: dict[str, Any], type_expr: Expression) -> Field
 
 def _coupling_by_name(data: dict[str, Any]) -> dict[str, dict[str, Any]]:
     return {_entry_name(entry): entry for entry in data.get("couplings", [])}
+
+
+def _entry_mass_dimension(
+    entry: dict[str, Any],
+    coupling_dimensions: dict[str, int | float],
+) -> int | float | None:
+    value = entry.get("mass_dimension")
+    if value is not None:
+        return value
+    return coupling_dimensions.get(_entry_name(entry))
 
 
 def _mass_spec(entry: dict[str, Any], couplings: dict[str, dict[str, Any]], theory: Theory) -> int | tuple[str, str, tuple[Expression, ...]]:
@@ -285,16 +299,17 @@ def _sparse_array_components(raw: str, theory: Theory) -> Expression | None:
     return cg_tensor_component_expression(dimensions, components)
 
 
-def build_fixture_from_model_state(data: dict[str, Any], *, include_lagrangian: bool = True) -> tuple[dict[str, Any], list[str]]:
-    if data.get("kind") != "matchete_loaded_model_state":
-        raise ValueError("expected kind='matchete_loaded_model_state'")
-    if int(data.get("schema_version", 0)) != 1:
-        raise ValueError("only matchete_loaded_model_state schema_version=1 is supported")
-
-    warnings: list[str] = []
-    model_name = _clean_name(str(data["model"]))
-    theory = Theory(model_name)
+def _build_theory_from_model_state(
+    data: dict[str, Any],
+    *,
+    model_name: str,
+    warnings: list[str],
+    coupling_dimensions: dict[str, int | float] | None = None,
+    theory_name: str | None = None,
+) -> Theory:
+    theory = Theory(theory_name or model_name)
     couplings = _coupling_by_name(data)
+    dimensions = coupling_dimensions or {}
 
     for entry in data.get("flavor_indices", []):
         theory.define_flavor_index(_entry_name(entry), _parse_int(str(entry["dimension_input_form"])))
@@ -336,7 +351,7 @@ def build_fixture_from_model_state(data: dict[str, Any], *, include_lagrangian: 
             name,
             indices=_entry_expressions(entry, "indices_input_form", theory),
             eft_order=int(entry.get("eft_order", 0)),
-            mass_dimension=entry.get("mass_dimension"),
+            mass_dimension=_entry_mass_dimension(entry, dimensions),
             self_conjugate=_parse_self_conjugate(str(entry.get("self_conjugate_input_form", "False"))),
             symmetries=_parse_symmetries(str(entry.get("symmetries_input_form", "{}")), theory, warnings, name),
             diagonal=diagonal_flags,
@@ -379,6 +394,40 @@ def build_fixture_from_model_state(data: dict[str, Any], *, include_lagrangian: 
                 theory.define_cg_tensor(name, representations, tensor=tensor, source=source)
         except Exception as exc:  # noqa: BLE001 - development converter records unsupported Matchete metadata.
             warnings.append(f"Skipped CG tensor {entry['name_input_form']}: {exc}")
+
+    return theory
+
+
+def _infer_coupling_dimensions_from_lagrangian(data: dict[str, Any], model_name: str) -> dict[str, int | float]:
+    if not data.get("lagrangian_input_form"):
+        return {}
+    probe_name = f"{model_name}_dimension_probe_{next(_DIMENSION_PROBE_COUNTER)}"
+    probe_warnings: list[str] = []
+    probe_theory = _build_theory_from_model_state(
+        data,
+        model_name=model_name,
+        theory_name=probe_name,
+        warnings=probe_warnings,
+    )
+    lagrangian = parse_matchete_expression(str(data["lagrangian_input_form"]), probe_theory)
+    return infer_coupling_mass_dimensions(probe_theory, lagrangian)
+
+
+def build_fixture_from_model_state(data: dict[str, Any], *, include_lagrangian: bool = True) -> tuple[dict[str, Any], list[str]]:
+    if data.get("kind") != "matchete_loaded_model_state":
+        raise ValueError("expected kind='matchete_loaded_model_state'")
+    if int(data.get("schema_version", 0)) != 1:
+        raise ValueError("only matchete_loaded_model_state schema_version=1 is supported")
+
+    warnings: list[str] = []
+    model_name = _clean_name(str(data["model"]))
+    inferred_dimensions = _infer_coupling_dimensions_from_lagrangian(data, model_name) if include_lagrangian else {}
+    theory = _build_theory_from_model_state(
+        data,
+        model_name=model_name,
+        warnings=warnings,
+        coupling_dimensions=inferred_dimensions,
+    )
 
     state = PycheteState()
     state.add_theory(theory)

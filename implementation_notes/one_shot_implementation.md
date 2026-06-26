@@ -975,6 +975,54 @@
   - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "metadata or default_model_fixtures_load or matching_fixture or model_fixture" -q'`
     passed with 5 selected tests.
 
+## Current Coupling-Dimension Inference Slice
+
+- Added `infer_coupling_mass_dimensions(theory, lagrangian)` as a public
+  Symbolica-first helper for Matchete-derived theories whose exported coupling
+  metadata omits canonical mass dimensions. The helper expands the lagrangian
+  into monomials, extracts registered `Coupling(...)` atoms with
+  tag-restricted Symbolica patterns, reads numerator/denominator powers through
+  Symbolica's rational-polynomial representation, and solves the resulting
+  linear dimension equations with `Expression.solve_linear_system(...)`.
+- The helper treats existing coupling dimensions, gauge-group couplings, and
+  registered field mass couplings as known data. It strips pure coupling atoms
+  with `replace_multiple(...)` before calling the existing `operator_dimension`
+  machinery on the remaining operator. Pure top-level numeric prefactors are
+  ignored for power extraction when Symbolica's rational-polynomial conversion
+  rejects non-rational complex coefficients, as in the S1S3LQs
+  `lambdaH3p` term.
+- Refactored the optional Matchete model-state converter so it builds a
+  temporary probe theory, parses the lagrangian there, infers missing coupling
+  dimensions, and only then constructs the final serialized theory. This
+  preserves the structural rule that Symbolica symbol data is attached before
+  final symbols are used in fixture expressions.
+- Updated the committed E_VLL and S1S3LQs model and matching fixtures so all
+  their couplings now carry inferred `mass_dimension` metadata in both the
+  coupling blocks and symbol-manifest data. E_VLL inferred `ME=1`, `mu2=2`,
+  and dimensionless gauge/Yukawa/quartic couplings. S1S3LQs inferred `M1=1`,
+  `M3=1`, `mu2=2`, and all listed gauge/Yukawa/quartic/leptoquark portal
+  couplings dimensionless, including `lambdaH3p`.
+- Rechecked the latest user reminder about dummy-index alignment. The current
+  validation/projection path already uses Symbolica
+  `Expression.canonize_tensors(...)` through `tensor_index_specs(...)` and
+  `canonize_tensor_indices(...)`, preserving the returned canonical expression,
+  external-index list, and ordered dummy-index list. The persistent guidelines
+  in `AGENTS.md` already document this requirement; this slice keeps it in the
+  live context.
+- Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/eft/test_eft_counting.py::test_infer_coupling_mass_dimensions_uses_symbolica_rational_powers tests/unit/loaders/test_matchete_model_state_converter.py::test_matchete_model_state_converter_builds_normal_pychete_fixture -q'`
+    passed with 2 tests.
+  - A fixture probe over E_VLL and S1S3LQs confirmed that all intended coupling
+    dimensions infer from the committed lagrangians before fixture metadata was
+    refreshed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/eft/test_eft_counting.py tests/unit/loaders/test_matchete_model_state_converter.py tests/unit/definitions/test_public_api.py tests/integration/validation/test_numeric_probes.py -k "canoniz or mass_dimension or truncates_projected_coefficients" -q'`
+    passed with 8 tests and 60 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "metadata or default_model_fixtures_load or matching_fixture or model_fixture" -q'`
+    passed with 5 tests and 32 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Remaining Work
 
 - Continue the CDE/basis-reduction feature family from the new hybrid source:

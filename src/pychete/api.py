@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from .dimensions import infer_coupling_mass_dimensions
 from .eft import operator_dimension, series_eft
 from .functional import hermitian_conjugate
 from .group_algebra import simplify_pychete_color
@@ -183,6 +184,7 @@ __all__ = [
     "evaluate_one_loop_vakint_expression",
     "get_logger",
     "hermitian_conjugate",
+    "infer_coupling_mass_dimensions",
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",

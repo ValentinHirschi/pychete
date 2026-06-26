@@ -27,7 +27,10 @@ def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: 
         "kind": "matchete_loaded_model_state",
         "generator": "export_matchete_model_state.wls",
         "model": "Synthetic_Model",
-        "lagrangian_input_form": "-1/2*Coupling[m, {}, 1]^2*Field[phi, Scalar, {}, {}]^2",
+        "lagrangian_input_form": (
+            "-1/2*Coupling[m, {}, 1]^2*Field[phi, Scalar, {}, {}]^2"
+            "-1/24*Coupling[lambda, {}, 0]*Field[phi, Scalar, {}, {}]^4"
+        ),
         "flavor_indices": [{"name_input_form": "Flavor", "dimension_input_form": "3"}],
         "gauge_groups": [
             {
@@ -73,6 +76,16 @@ def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: 
                 "diagonal_coupling": [False, False],
                 "thermal_power_counting": 1,
                 "unitary": False,
+            },
+            {
+                "name_input_form": "lambda",
+                "indices_input_form": [],
+                "eft_order": 0,
+                "self_conjugate_input_form": "True",
+                "symmetries_input_form": "{}",
+                "diagonal_coupling": [],
+                "thermal_power_counting": 1,
+                "unitary": False,
             }
         ],
         "fields": [
@@ -103,11 +116,14 @@ def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: 
     theory = fixture.theory()
 
     assert sorted(theory.fields) == ["A", "phi"]
-    assert sorted(theory.couplings) == ["A", "S", "g", "m"]
+    assert sorted(theory.couplings) == ["A", "S", "g", "lambda", "m"]
     assert theory.groups["U1x"]["field"] == "A"
     assert theory.coupling_handle("g").definition.canonical_mass_dimension == 0
     assert theory.coupling_handle("m").definition.canonical_mass_dimension == 1
-    assert canonical_string(fixture.expression("lagrangian")).count("field_phi") == 1
+    assert theory.coupling_handle("lambda").definition.canonical_mass_dimension == 0
+    lagrangian_string = canonical_string(fixture.expression("lagrangian"))
+    assert lagrangian_string.count("field_phi") == 2
+    assert "coupling_lambda" in lagrangian_string
     antisymmetric = theory.coupling_handle("A").definition
     symmetric = theory.coupling_handle("S").definition
     assert [canonical_string(expr) for expr in antisymmetric.symmetry_exprs] == [

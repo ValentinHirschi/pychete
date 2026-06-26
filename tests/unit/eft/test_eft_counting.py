@@ -2,7 +2,16 @@ from __future__ import annotations
 
 from symbolica import Expression
 
-from pychete import FieldMassKind, SymbolRole, Theory, canonical_string, operator_dimension, series_eft, s
+from pychete import (
+    FieldMassKind,
+    SymbolRole,
+    Theory,
+    canonical_string,
+    infer_coupling_mass_dimensions,
+    operator_dimension,
+    series_eft,
+    s,
+)
 from pychete.expr import list_expr
 
 from tests.conftest import assert_expr_equal
@@ -86,3 +95,37 @@ def test_operator_dimension_uses_pattern_weighted_atoms() -> None:
     assert operator_dimension(s.CD(mu, heavy()), theory, heavy_field_dimension=False) == 2
     assert operator_dimension(s.Bar(psi()), theory) == 1.5
     assert operator_dimension(strength, theory) == 2
+
+
+def test_infer_coupling_mass_dimensions_uses_symbolica_rational_powers() -> None:
+    theory = Theory("eft_infer_coupling_dimensions")
+    theory.define_gauge_group("U1X", s.U1, "g", "B")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    psi = theory.define_field("psi", s.Fermion, self_conjugate=False, mass=0)
+    cubic = theory.define_coupling("A", self_conjugate=True)
+    quartic = theory.define_coupling("kappa", self_conjugate=True)
+    heavy_cubic = theory.define_coupling("muphi", self_conjugate=True)
+    yukawa = theory.define_coupling("y")
+    inverse_mass = theory.define_coupling("rho", self_conjugate=True)
+    heavy_mass = theory.coupling_handle("M")
+    light_mass = theory.coupling_handle("m")
+
+    lagrangian = (
+        -cubic() * heavy() * phi() ** 2
+        - quartic() * heavy() ** 2 * phi() ** 2 / 2
+        - heavy_cubic() * heavy() ** 3 / 6
+        - yukawa() * phi() * s.NCM(s.Bar(psi()), s.PR, psi())
+        - inverse_mass() * phi() ** 4 / heavy_mass()
+    )
+
+    dimensions = infer_coupling_mass_dimensions(theory, lagrangian)
+
+    assert dimensions["A"] == 1
+    assert dimensions["kappa"] == 0
+    assert dimensions["muphi"] == 1
+    assert dimensions["y"] == 0
+    assert dimensions["rho"] == 1
+    assert dimensions["M"] == 1
+    assert dimensions["m"] == 1
+    assert dimensions["g"] == 0

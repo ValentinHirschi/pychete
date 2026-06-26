@@ -220,6 +220,13 @@ powers. If any coupling dimension in a coefficient term is unknown, retain the
 term rather than guessing. Do not implement Wilson coefficient dimension cuts
 by string parsing, ad hoc scans of `M` names, or Python-side assumptions about
 which couplings are masses.
+For Matchete-derived model-state conversion, infer missing coupling
+mass-dimension metadata with `infer_coupling_mass_dimensions(theory,
+lagrangian)` in a temporary probe theory before constructing the final theory
+that will be serialized. This keeps the final `Theory.define_coupling(...)`
+calls structurally safe: Symbolica symbol data is fixed at symbol creation
+time, so converters must not parse lagrangians with dimensionless placeholders
+and then try to mutate coupling symbol metadata afterwards.
 For any equality/projection question where only dummy-index names differ, use
 `Expression.canonize_tensors(...)` with grouped pychete `Index(...)` specs and
 the returned canonical expression, external-index list, and dummy-index list.

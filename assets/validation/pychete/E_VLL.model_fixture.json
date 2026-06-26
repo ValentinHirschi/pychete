@@ -211,6 +211,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "E_VLL::coupling_ME",
+            "mass_dimension": 1,
             "name": "ME",
             "self_conjugate": true,
             "symmetries": [],
@@ -228,6 +229,7 @@
               "E_VLL::index_type_Flavor"
             ],
             "label": "E_VLL::coupling_Yd",
+            "mass_dimension": 0,
             "name": "Yd",
             "self_conjugate": false,
             "symmetries": [],
@@ -245,6 +247,7 @@
               "E_VLL::index_type_Flavor"
             ],
             "label": "E_VLL::coupling_Ye",
+            "mass_dimension": 0,
             "name": "Ye",
             "self_conjugate": false,
             "symmetries": [],
@@ -262,6 +265,7 @@
               "E_VLL::index_type_Flavor"
             ],
             "label": "E_VLL::coupling_Yu",
+            "mass_dimension": 0,
             "name": "Yu",
             "self_conjugate": false,
             "symmetries": [],
@@ -273,6 +277,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "E_VLL::coupling_gL",
+            "mass_dimension": 0,
             "name": "gL",
             "self_conjugate": true,
             "symmetries": [],
@@ -284,6 +289,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "E_VLL::coupling_gY",
+            "mass_dimension": 0,
             "name": "gY",
             "self_conjugate": true,
             "symmetries": [],
@@ -295,6 +301,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "E_VLL::coupling_gs",
+            "mass_dimension": 0,
             "name": "gs",
             "self_conjugate": true,
             "symmetries": [],
@@ -306,6 +313,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "E_VLL::coupling_lambda",
+            "mass_dimension": 0,
             "name": "lambda",
             "self_conjugate": true,
             "symmetries": [],
@@ -317,6 +325,7 @@
             "eft_order": 2,
             "indices": [],
             "label": "E_VLL::coupling_mu2",
+            "mass_dimension": 2,
             "name": "mu2",
             "self_conjugate": true,
             "symmetries": [],
@@ -332,6 +341,7 @@
               "E_VLL::index_type_Flavor"
             ],
             "label": "E_VLL::coupling_yE",
+            "mass_dimension": 0,
             "name": "yE",
             "self_conjugate": false,
             "symmetries": [],
@@ -1885,6 +1895,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 1,
               "eft_order": 0,
               "indices": [],
               "label": "ME",
@@ -1910,6 +1921,7 @@
                 0,
                 0
               ],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [
                 {
@@ -1942,6 +1954,7 @@
                 0,
                 0
               ],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [
                 {
@@ -1974,6 +1987,7 @@
                 0,
                 0
               ],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [
                 {
@@ -2003,6 +2017,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "gL",
@@ -2025,6 +2040,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "gY",
@@ -2047,6 +2063,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "gs",
@@ -2069,6 +2086,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "lambda",
@@ -2091,6 +2109,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 2,
               "eft_order": 2,
               "indices": [],
               "label": "mu2",
@@ -2115,6 +2134,7 @@
               "diagonal_coupling": [
                 0
               ],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [
                 {
