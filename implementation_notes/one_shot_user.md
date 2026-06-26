@@ -25,6 +25,17 @@ whenever the plan changes. Keep `one_shot_implementation.md` continuously
 updated with current progress, completed milestones, test status, backend/API
 discoveries, dependency patches, blockers, and remaining work.
 
+Current status clarification: no complete Matchete one-loop SMEFT integration
+model has been reproduced end-to-end yet. The successful tests are narrower
+integration slices around Mathematica-independent fixture loading, one-loop
+preview/gap-report plumbing, selected Wilson-line trace smoke paths,
+internal/vakint single-scale integral cross-checks, projection/canonicalization,
+and partial Singlet-style Wilson projection behavior. The broad remaining
+features are the full explicit Wilson-line trace engine, robust
+non-Abelian/group and Dirac algebra through idenso/spenso, mixed/zero-mass
+analytic vacuum integral coverage, complete converted model fixtures, and
+generic operator-basis projection without Warsaw-specific core assumptions.
+
 ## Approved Plan
 
 # One-Shot One-Loop Matching Port

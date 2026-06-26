@@ -18,7 +18,7 @@ from .matching_options import (
     VakintIntegralStage,
     one_loop_normalization_label,
 )
-from .matching import BosonicCDEExpansionPlan, WilsonLineExpansionPlan
+from .matching import BosonicCDEExpansionPlan, WilsonLineExpansionPlan, _term_atom_requirements_for_targets
 from .matching_results import (
     MatchingConditionTarget,
     MatchingResult,
@@ -658,10 +658,14 @@ class ValidationFixture:
         wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_max_derivative_order: int = 4,
+        wilson_line_filter_terms_by_matching_targets: bool = False,
+        matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         simplify_pychete_color_algebra: bool = False,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
 
+        if wilson_line_filter_terms_by_matching_targets and matching_condition_targets is None:
+            raise ValueError("Wilson-line target filtering requires matching_condition_targets")
         selected_backend = OneLoopIntegralBackend.from_user(integral_backend)
         normalization_label = one_loop_normalization_label(normalization)
         _LOGGER.info(
@@ -747,6 +751,11 @@ class ValidationFixture:
             )
         if bosonic_cde_expansion_request is not None and wilson_line_expansion_request is not None:
             raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
+        wilson_line_term_atom_requirements = (
+            _term_atom_requirements_for_targets(theory, matching_condition_targets)
+            if wilson_line_filter_terms_by_matching_targets and wilson_line_expansion_request is not None
+            else None
+        )
         if (
             wilson_line_expansion_request is not None
             and selected_backend is OneLoopIntegralBackend.INTERNAL
@@ -766,6 +775,7 @@ class ValidationFixture:
                 mu_r_squared=mu_r_squared,
                 combine_terms=internal_combine_terms,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif (
             wilson_line_expansion_request is not None
@@ -787,6 +797,7 @@ class ValidationFixture:
                 epsilon=epsilon,
                 mu_r_squared=mu_r_squared,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif (
             wilson_line_expansion_request is not None
@@ -808,6 +819,7 @@ class ValidationFixture:
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif wilson_line_expansion_request is not None:
             result = setup.interaction_wilson_line_hybrid_matching_result(
@@ -828,6 +840,7 @@ class ValidationFixture:
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif bosonic_cde_expansion_request is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(
@@ -1042,6 +1055,9 @@ class ValidationFixture:
                 "wilson_line_index_prefix": wilson_line_index_prefix,
                 "wilson_line_act_open_derivatives": wilson_line_act_open_derivatives,
                 "wilson_line_max_derivative_order": wilson_line_max_derivative_order,
+                "wilson_line_terms_filtered_by_matching_targets": (
+                    wilson_line_term_atom_requirements is not None
+                ),
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
             },
         )
@@ -1163,9 +1179,11 @@ class ValidationFixture:
         the public match route with ``project_reference_matching_conditions``:
         it forwards target-compatible CDE term filtering to
         :class:`OneLoopMatchOptions`.
-        ``wilson_line_filter_terms_by_matching_targets`` has the same
-        restrictions and forwards target-compatible Wilson-line term filtering
-        for generated or explicit Wilson-line expansion requests.
+        ``wilson_line_filter_terms_by_matching_targets`` forwards
+        target-compatible Wilson-line term filtering for generated or explicit
+        Wilson-line expansion requests. It works through the public matcher or
+        this fixture's direct preview route as long as reference matching
+        conditions are being projected.
         Prefer the ``wilson_line_*`` options for current-Matchete-style
         selected trace expansion. They route through the hybrid Wilson-line
         matcher and are mutually exclusive with the legacy ``bosonic_cde_*``
@@ -1193,8 +1211,6 @@ class ValidationFixture:
             raise ValueError(
                 "CDE target filtering in fixture reports requires project_reference_matching_conditions=True"
             )
-        if wilson_line_filter_terms_by_matching_targets and not use_public_match_api:
-            raise ValueError("Wilson-line target filtering in fixture reports requires use_public_match_api=True")
         if wilson_line_filter_terms_by_matching_targets and not project_reference_matching_conditions:
             raise ValueError(
                 "Wilson-line target filtering in fixture reports requires project_reference_matching_conditions=True"
@@ -1369,6 +1385,8 @@ class ValidationFixture:
                 wilson_line_index_prefix=wilson_line_index_prefix,
                 wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
                 wilson_line_max_derivative_order=wilson_line_max_derivative_order,
+                wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
+                matching_condition_targets=projected_targets,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         if project_reference_matching_conditions and not use_public_match_api:

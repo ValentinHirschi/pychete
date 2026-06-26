@@ -175,6 +175,32 @@
   public `Theory.match(...)` for current-Matchete Wilson-line probes, instead
   of only simplifying the pre-expansion setup and leaving generated
   Wilson-line CG structures raw.
+- The current Wilson-line fixture-filtering slice extends that alignment to
+  target-local term filtering. Direct `ValidationFixture.one_loop_preview(...)`
+  and non-public `one_loop_preview_gap_report(...)` runs can now accept
+  projected matching targets, compute the same Symbolica-pattern atom
+  requirements as `Theory.match(...)`, and pass them into Wilson-line hybrid
+  setup methods. This intentionally improves the current-Matchete Wilson-line
+  fixture path without adding a new legacy CDE-first surface.
+- Status clarification for the current user check: no complete Matchete
+  one-loop SMEFT integration model has been reproduced end-to-end yet.
+  Successful coverage so far is narrower integration plumbing: fixture loading
+  without Mathematica, one-loop preview/gap-report routes, selected
+  Wilson-line trace smoke paths, internal/vakint single-scale integral
+  cross-checks, projection/canonicalization behavior, and pieces of
+  Singlet-style Wilson projection. The broad remaining blockers are the full
+  explicit Wilson-line trace engine, robust non-Abelian/group and Dirac algebra
+  through idenso/spenso for realistic models, mixed/zero-mass analytic vacuum
+  integral coverage, complete converted model fixtures, and generic
+  operator-basis projection without Warsaw-specific engine assumptions.
+- Focused validation for the direct Wilson-line fixture-filtering slice used
+  the 30 GiB watchdog wrapper: `pytest
+  tests/integration/validation/test_validation_fixtures.py -k "wilson_line"
+  -q` passed with `3 passed, 38 deselected`; the broader Wilson-line gate
+  `pytest tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k "wilson_line"
+  -q` passed with `14 passed, 122 deselected`; `python -m mypy` reported no
+  issues; and `git diff --check` passed.
 - Focused validation for the current fermion-loop trace slice has so far used
   the 30 GiB watchdog wrapper: exact new/affected tests
   `test_idenso_bridge_traces_closed_pychete_dirac_chains_through_native_gamma`,

@@ -353,7 +353,8 @@ Wilson-line result methods available for diagnostics, not as the default public
 matching route.
 Validation-facing one-loop preview and gap-report helpers must expose the same
 `wilson_line_*` controls as `Theory.match(...)`, including generated
-Wilson-line plans. New Matchete parity probes should prefer these Wilson-line
+Wilson-line plans and target-local Wilson-line term filtering for direct
+fixture previews. New Matchete parity probes should prefer these Wilson-line
 controls over legacy `bosonic_cde_*` controls unless the purpose of the test is
 explicitly to preserve or compare the old CDE route.
 For target-local Wilson-line parity probes, use

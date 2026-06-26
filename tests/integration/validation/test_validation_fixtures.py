@@ -628,7 +628,13 @@ def test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathem
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
     light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     y = theory.define_coupling("y", self_conjugate=True)
-    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    z = theory.define_coupling("z", self_conjugate=True)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(light)
+        - y() * heavy() * light() ** 2 / 2
+        - z() * heavy() ** 2 / 2
+    )
     state = PycheteState()
     state.add_theory(theory)
     state.add_expression("lagrangian", theory, lagrangian)
@@ -704,6 +710,31 @@ def test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathem
     assert generated_preview.metadata["interaction_wilson_line_plan_entry_count"] == 1
     assert_expr_equal(generated_preview.off_shell_eft_lagrangian, expected_generated.off_shell_eft_lagrangian)
     generated_preview.validate()
+
+    unfiltered_for_target = fixture.one_loop_preview(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        wilson_line_trace_names=("hScalar", "hScalar-lScalar"),
+        wilson_line_max_total_order=0,
+    )
+    filtered_for_target = fixture.one_loop_preview(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        wilson_line_trace_names=("hScalar", "hScalar-lScalar"),
+        wilson_line_max_total_order=0,
+        wilson_line_filter_terms_by_matching_targets=True,
+        matching_condition_targets=(light() ** 2,),
+    )
+    assert filtered_for_target.metadata["wilson_line_terms_filtered_by_matching_targets"] is True
+    assert (
+        filtered_for_target.metadata["interaction_wilson_line_terms_filtered_by_matching_targets"]
+        is True
+    )
+    assert (
+        filtered_for_target.metadata["interaction_wilson_line_term_count"]
+        < unfiltered_for_target.metadata["interaction_wilson_line_term_count"]
+    )
+    filtered_for_target.validate()
 
     with pytest.raises(ValueError, match="mutually exclusive"):
         fixture.one_loop_preview(
@@ -1077,8 +1108,8 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     assert options.bosonic_cde_expansion_indices_by_trace is None
 
 
-def test_validation_fixture_gap_report_can_filter_public_wilson_line_terms_by_projected_targets() -> None:
-    theory = Theory("validation_fixture_public_wilson_line_filter")
+def test_validation_fixture_gap_report_can_filter_direct_wilson_line_terms_by_projected_targets() -> None:
+    theory = Theory("validation_fixture_direct_wilson_line_filter")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
     light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     y = theory.define_coupling("y", self_conjugate=True)
@@ -1096,7 +1127,7 @@ def test_validation_fixture_gap_report_can_filter_public_wilson_line_terms_by_pr
     state.add_theory(theory)
     state.add_expression("lagrangian", theory, lagrangian)
     fixture = ValidationFixture(
-        name="validation_fixture_public_wilson_line_filter",
+        name="validation_fixture_direct_wilson_line_filter",
         kind="model_smoke",
         state=state,
         source={"generator": "pytest", "mathematica_runtime_required": False},
@@ -1110,23 +1141,22 @@ def test_validation_fixture_gap_report_can_filter_public_wilson_line_terms_by_pr
         matching_conditions={target_name: Expression.num(0)},
     )
 
-    with pytest.raises(ValueError, match="use_public_match_api"):
+    with pytest.raises(ValueError, match="project_reference_matching_conditions"):
         fixture.one_loop_preview_gap_report(
             reference,
-            reference_name="public_wilson_line_filter_reference",
+            reference_name="direct_wilson_line_filter_reference",
             wilson_line_filter_terms_by_matching_targets=True,
         )
 
     report = fixture.one_loop_preview_gap_report(
         reference,
-        reference_name="public_wilson_line_filter_reference",
+        reference_name="direct_wilson_line_filter_reference",
         max_trace_order=2,
         integral_backend=OneLoopIntegralBackend.VAKINT,
         wilson_line_trace_names=("hScalar", "hScalar-lScalar"),
         wilson_line_max_total_order=0,
         wilson_line_filter_terms_by_matching_targets=True,
         project_reference_matching_conditions=True,
-        use_public_match_api=True,
     )
 
     assert report.candidate_stage == "interaction_wilson_line_hybrid_vakint_result"
