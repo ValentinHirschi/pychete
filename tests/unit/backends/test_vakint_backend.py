@@ -137,6 +137,21 @@ def test_vakint_lowers_pychete_loop_momentum_numerators_with_symbolica_patterns(
     assert canonical_string(lowered) == canonical_string(expected)
 
 
+def test_vakint_lowers_pychete_loop_momentum_index_wrappers_to_backend_safe_symbols() -> None:
+    theory = Theory("vakint_safe_loop_index_lowering")
+    mu = theory.index("mu")
+    lowered = vakint.lower_pychete_loop_momentum_numerators(s.LoopMomentum(mu), loop_id=2)
+    index_wildcard = S("vakint_safe_loop_index_")
+    match = next(iter(lowered.match(vakint.symbol("k")(2, index_wildcard), partial=False)))
+    safe_index = match[index_wildcard]
+
+    assert "pychete::Index" not in canonical_string(lowered)
+    assert canonical_string(safe_index) != canonical_string(mu)
+    assert canonical_string(vakint.decode_pychete_namespace(theory, vakint.symbol("g")(safe_index, safe_index))) == (
+        canonical_string(s.Metric(mu, mu))
+    )
+
+
 def test_vakint_one_loop_vacuum_integral_lowers_pychete_loop_momentum_numerators() -> None:
     mu = S("mu")
     mass_squared = S("M") ** 2
@@ -158,6 +173,25 @@ def test_vakint_tensor_reduce_lowers_direct_pychete_loop_momentum_numerators_bef
 
     expected = S("vakint::k")(1, mu) * topology
     assert canonical_string(engine.calls[0][1][0]) == canonical_string(expected)
+
+
+def test_vakint_tensor_reduce_hides_pychete_index_wrappers_from_engine_vector_slots() -> None:
+    engine = FakeVakintEngine()
+    theory = Theory("vakint_safe_loop_index_engine")
+    mu = theory.index("mu")
+    topology = vakint.one_loop_vacuum_topology((S("M") ** 2,))
+    expr = s.LoopMomentum(mu) * topology
+
+    vakint.tensor_reduce(expr, engine=engine)
+
+    engine_expr = engine.calls[0][1][0]
+    index_wildcard = S("vakint_engine_loop_index_")
+    match = next(iter(engine_expr.match(vakint.symbol("k")(1, index_wildcard))))
+    safe_index = match[index_wildcard]
+    assert "pychete::Index" not in canonical_string(engine_expr)
+    assert canonical_string(vakint.decode_pychete_namespace(theory, vakint.symbol("g")(safe_index, safe_index))) == (
+        canonical_string(s.Metric(mu, mu))
+    )
 
 
 def test_vakint_one_loop_vacuum_topology_builders_use_native_namespace() -> None:

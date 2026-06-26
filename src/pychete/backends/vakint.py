@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+from hashlib import sha256
 from functools import cache
 from typing import Any, Mapping, Sequence
 
@@ -11,6 +12,8 @@ from ..symbols import SymbolRole, canonical_string, s, safe_symbol_name
 from .common import import_backend
 
 _LOGGER = get_logger("backends.vakint")
+_LOOP_MOMENTUM_INDEX_SYMBOLS_BY_INDEX: dict[str, Expression] = {}
+_LOOP_MOMENTUM_INDEX_BY_SAFE_SYMBOL: dict[str, Expression] = {}
 
 
 def native_module():
@@ -60,15 +63,19 @@ def lower_pychete_loop_momentum_numerators(
 
     Open pychete numerator components ``LoopMomentum(mu)`` become
     ``vakint::k(loop_id, mu)`` and the scalar ``LoopMomentumSquared`` becomes
-    ``vakint::k(loop_id, scalar_index)^2``. The replacement is delegated to
-    Symbolica's wildcard matcher so callers can pass a full integral expression
-    or only a numerator.
+    ``vakint::k(loop_id, scalar_index)^2``. Full pychete ``Index(...)``
+    metadata is first mapped to flat backend-safe symbols so native vakint/FORM
+    never sees nested pychete index wrappers in vector slots. The mapping is
+    process-local and decoded back to ``Index(...)`` by
+    ``decode_pychete_namespace``. The replacement is delegated to Symbolica's
+    wildcard matcher so callers can pass a full integral expression or only a
+    numerator.
     """
 
     pattern = _pychete_loop_momentum_pattern()
 
     def lower_open_momentum(match: dict[Expression, Expression]) -> Expression:
-        return loop_momentum(loop_id, match[s.LoopMomentumIndexWildcard])
+        return loop_momentum(loop_id, _backend_safe_loop_momentum_index(match[s.LoopMomentumIndexWildcard]))
 
     return expr.replace_multiple(
         (
@@ -532,6 +539,9 @@ class _DecodeContext:
         return self.decode_payload(label)
 
     def decode_payload(self, expr: Expression) -> Expression:
+        safe_loop_index = _decode_backend_safe_loop_momentum_index(expr)
+        if safe_loop_index is not None:
+            return safe_loop_index
         builtin = _decode_vakint_builtin(expr)
         if builtin is not None:
             return builtin
@@ -632,6 +642,30 @@ def _decode_vakint_builtin(expr: Expression) -> Expression | None:
     if name == "adj":
         return s.adj
     return None
+
+
+def _backend_safe_loop_momentum_index(index: Expression) -> Expression:
+    if not is_head(index, s.Index):
+        return index
+    key = canonical_string(index)
+    if key not in _LOOP_MOMENTUM_INDEX_SYMBOLS_BY_INDEX:
+        digest = sha256(key.encode("utf-8")).hexdigest()[:24]
+        safe_symbol = S(f"pychete_vakint_index_{digest}")
+        safe_name = _safe_symbol_name(safe_symbol)
+        _LOOP_MOMENTUM_INDEX_SYMBOLS_BY_INDEX[key] = safe_symbol
+        _LOOP_MOMENTUM_INDEX_BY_SAFE_SYMBOL[safe_name] = index
+    return _LOOP_MOMENTUM_INDEX_SYMBOLS_BY_INDEX[key]
+
+
+def _decode_backend_safe_loop_momentum_index(expr: Expression) -> Expression | None:
+    return _LOOP_MOMENTUM_INDEX_BY_SAFE_SYMBOL.get(_safe_symbol_name(expr))
+
+
+def _safe_symbol_name(expr: Expression) -> str:
+    try:
+        return expr.get_name()
+    except TypeError:
+        return canonical_string(expr)
 
 
 @cache

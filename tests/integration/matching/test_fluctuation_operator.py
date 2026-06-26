@@ -1756,6 +1756,29 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
     assert_expr_equal(terms[0].kernel_expression(), expected_kernel)
     assert_expr_equal(kernels["interaction_bosonic_cde_kernel[hScalar-lScalar,0]"], expected_kernel)
     assert_expr_equal(integrals["interaction_bosonic_cde_vakint_integral[hScalar-lScalar,0]"], expected_integral)
+    cde_reduction_engine = FakeKernelVakintEngine()
+    setup.interaction_bosonic_cde_vakint_integral_sum(
+        expansion,
+        stage=VakintIntegralStage.TENSOR_REDUCED,
+        engine=cde_reduction_engine,
+    )
+    cde_engine_expr = cde_reduction_engine.calls[0][1]
+    cde_index_wildcard = S("cde_backend_loop_index_")
+    cde_loop_momentum_matches = tuple(cde_engine_expr.match(vakint_backend.symbol("k")(1, cde_index_wildcard)))
+    assert cde_loop_momentum_matches
+    cde_index_match = cde_loop_momentum_matches[0]
+    cde_safe_index = cde_index_match[cde_index_wildcard]
+    assert all(
+        "pychete::Index" not in canonical_string(match[cde_index_wildcard])
+        for match in cde_loop_momentum_matches
+    )
+    assert_expr_equal(
+        vakint_backend.decode_pychete_namespace(
+            theory,
+            vakint_backend.symbol("g")(cde_safe_index, cde_safe_index),
+        ),
+        s.Metric(mu, mu),
+    )
 
     acted_numerator = 2 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
     expected_acted_integral = vakint_backend.one_loop_vacuum_integral(

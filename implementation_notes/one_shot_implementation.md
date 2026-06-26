@@ -87,6 +87,10 @@
 - Vakint namespace decode now maps native metric/CG/CD/list wrappers back to
   pychete-facing heads where the registered theory metadata makes that
   unambiguous.
+- Vakint loop-momentum numerator lowering now maps full pychete `Index(...)`
+  arguments in `LoopMomentum(index)` to flat backend-safe symbols before native
+  vakint/FORM tensor reduction, then decodes returned metric wrappers back to
+  the original pychete index metadata.
 - Field-strength metric cleanup removes metric-traced antisymmetric
   field-strength terms before public projection.
 - Native colour-wrapper decoding is bounded and decode-only for public
@@ -118,6 +122,21 @@
   52 tests.
 - `python -m mypy` passed after the comparison-payload slice.
 - `git diff --check` passed after the comparison-payload slice.
+- Vakint backend safe-loop-index gate:
+  `pytest tests/unit/backends/test_vakint_backend.py -q` passed with 33 tests.
+- Adjacent vacuum-integral backend gate:
+  `pytest tests/unit/backends/test_vacuum_integrals_backend.py -q` passed with
+  37 tests.
+- Focused CDE generated-integral safe-index regression:
+  `pytest tests/integration/matching/test_fluctuation_operator.py::test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint -q`
+  passed.
+- Focused CDE tensor-reduction/public-output gate:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k "vakint_tensors or order_four_covariant_derivatives or metric_traced_field_strengths" -q`
+  passed with 3 tests and 67 deselected.
+- A tiny native vakint tensor-reduction smoke with
+  `LoopMomentum(Index(mu))*LoopMomentum(Index(nu))` now completes without the
+  previous Rust/FORM symbol-redefinition abort and decodes the returned metric
+  to `Metric(Index(mu, Lorentz), Index(nu, Lorentz))`.
 
 ## Current Validation Frontier
 
@@ -138,19 +157,17 @@
   work before these focused improvements translate to full parity.
 - A broad real Singlet CDE probe with `hScalar`, `hScalar-hScalar`, and
   `hScalar-hScalar-hScalar` selected at trace order 3 is currently too heavy
-  and can crash in native vakint/FORM tensor reduction because pychete
-  `Index(...)` wrappers leak into loop-momentum vector slots. The next CDE
-  backend slice should stage/reduce generated CDE terms independently and make
-  the vakint loop-momentum-index boundary backend-safe before broad default
-  CDE is enabled.
+  for routine slice validation. The immediate native vakint/FORM crash class
+  from pychete `Index(...)` wrappers in loop-momentum vector slots has a
+  focused fix and tests, but broad default CDE still needs source staging and
+  more basis reductions before it should be enabled by default.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - CDE source staging and backend-safe loop-momentum index lowering before
-    native vakint tensor reduction, so broad Singlet CDE probes do not hand
-    raw pychete `Index(...)` wrappers to FORM;
+  - CDE source staging and reduction batching for broad Singlet CDE probes,
+    building on the backend-safe loop-momentum index lowering now in place;
   - target-local EOM/IBP reductions for Higgs/gauge Wilson structures such as
     `cHBox`, `cHD`, `cHW`, `cHB`, and `cHWB`;
   - source staging for heavy-scalar-substituted Wilson projection so projection

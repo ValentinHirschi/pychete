@@ -395,7 +395,11 @@ Before native vakint engine calls, lower pychete loop-momentum numerator heads
 with `pychete.backends.vakint.lower_pychete_loop_momentum_numerators(...)`.
 This maps `LoopMomentum(index)` to native `vakint::k(loop_id, index)` and
 `LoopMomentumSquared` to native `vakint::k(loop_id, 1)^2`, matching the
-vakint tensor-reduction API.
+vakint tensor-reduction API. If `index` is a full pychete `Index(...)`
+expression, the vakint adapter must map it to a flat backend-safe symbol before
+calling native vakint/FORM and decode returned native metric wrappers back to
+the original `Index(...)` through `decode_pychete_namespace(...)`. Do not hand
+nested pychete `Index(...)` wrappers to native loop-vector slots.
 For CDE-generated internal analytic evaluation, reduce and evaluate each
 generated `BosonicCDETraceExpansionTerm` independently before summing the
 result. Do not first build one monolithic CDE topology sum and then ask vakint
