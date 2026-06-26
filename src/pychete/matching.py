@@ -1837,6 +1837,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, tuple[WilsonLineTraceExpansionTerm, ...]]:
         """Return Wilson-line propagator-expanded terms grouped by trace name."""
 
@@ -1863,7 +1864,10 @@ class OneLoopSetup:
                         max_wilson_derivative_order=max_wilson_derivative_order,
                     )
                 )
-            grouped[entry.label] = tuple(terms)
+            grouped[entry.label] = _filter_wilson_line_terms_by_projection_requirements(
+                terms,
+                term_atom_requirements,
+            )
         return grouped
 
     def interaction_wilson_line_expansion_terms(
@@ -1875,6 +1879,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> tuple[WilsonLineTraceExpansionTerm, ...]:
         """Return selected Wilson-line propagator-expanded terms in deterministic order."""
 
@@ -1885,6 +1890,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         return tuple(term for terms in grouped.values() for term in terms)
 
@@ -1898,6 +1904,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, Expression]:
         """Return selected Wilson-line propagator-expanded terms as kernels."""
 
@@ -1909,6 +1916,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         ).items():
             for term_index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.kernel_expression(
@@ -1926,6 +1934,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, Expression]:
         """Return selected Wilson-line propagator-expanded terms as vakint topologies."""
 
@@ -1937,6 +1946,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         ).items():
             for term_index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.vakint_integral_expression()
@@ -1954,6 +1964,7 @@ class OneLoopSetup:
         stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         short_form: bool | None = None,
         engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Return the summed selected Wilson-line-expanded interaction topologies."""
 
@@ -1964,6 +1975,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         return _vakint_integral_terms_at_stage(
             tuple(term.vakint_integral_expression() for term in terms),
@@ -1988,6 +2000,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Evaluate selected Wilson-line-expanded integrals with pychete."""
 
@@ -2000,6 +2013,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         evaluated_terms: list[Expression] = []
         with progress(
@@ -2039,6 +2053,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the selected Wilson-line-expanded interaction one-loop result."""
 
@@ -2054,6 +2069,7 @@ class OneLoopSetup:
             stage=selected_vakint_stage,
             short_form=vakint_short_form,
             engine=vakint_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         raw_named_integrals = self.interaction_wilson_line_expansion_vakint_integral_expression_map(
             expansion_indices_by_trace,
@@ -2062,6 +2078,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         named_integrals = {
             name: _vakint_expression_at_stage(
@@ -2080,6 +2097,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         supertraces = {
             **self.interaction_wilson_line_expansion_kernel_expression_map(
@@ -2089,6 +2107,7 @@ class OneLoopSetup:
                 include_light_only=include_light_only,
                 act_open_derivatives=act_open_derivatives,
                 max_wilson_derivative_order=max_wilson_derivative_order,
+                term_atom_requirements=term_atom_requirements,
             ),
             **named_integrals,
             "interaction_wilson_line_vakint_integral_sum": vakint_sum,
@@ -2125,6 +2144,7 @@ class OneLoopSetup:
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2151,6 +2171,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the Wilson-line-expanded interaction result evaluated internally."""
 
@@ -2163,6 +2184,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         raw_vakint_sum = self.interaction_wilson_line_vakint_integral_sum(
             expansion_indices_by_trace,
@@ -2171,6 +2193,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         evaluated = self.interaction_wilson_line_internal_integral_sum(
             expansion_indices_by_trace,
@@ -2184,6 +2207,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
@@ -2204,6 +2228,7 @@ class OneLoopSetup:
                     include_light_only=include_light_only,
                     act_open_derivatives=act_open_derivatives,
                     max_wilson_derivative_order=max_wilson_derivative_order,
+                    term_atom_requirements=term_atom_requirements,
                 ),
                 **self.interaction_wilson_line_expansion_vakint_integral_expression_map(
                     expansion_indices_by_trace,
@@ -2212,6 +2237,7 @@ class OneLoopSetup:
                     include_light_only=include_light_only,
                     act_open_derivatives=act_open_derivatives,
                     max_wilson_derivative_order=max_wilson_derivative_order,
+                    term_atom_requirements=term_atom_requirements,
                 ),
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
@@ -2227,6 +2253,7 @@ class OneLoopSetup:
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2255,6 +2282,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the internal Wilson-line result after minimal-subtraction pole removal."""
 
@@ -2271,6 +2299,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_wilson_line_internal_integral_pole_part")
         finite = unrenormalized.expression("interaction_wilson_line_internal_integral_finite_part")
@@ -2307,6 +2336,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint Wilson-line result after pole subtraction."""
 
@@ -2321,6 +2351,7 @@ class OneLoopSetup:
             max_wilson_derivative_order=max_wilson_derivative_order,
             stage=VakintIntegralStage.EVALUATED,
             engine=vakint_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
@@ -2333,6 +2364,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         named_integrals = {
             name: _vakint_expression_at_stage(
@@ -2351,6 +2383,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            term_atom_requirements=term_atom_requirements,
         )
         return MatchingResult(
             theory=self.theory,
@@ -2369,6 +2402,7 @@ class OneLoopSetup:
                     include_light_only=include_light_only,
                     act_open_derivatives=act_open_derivatives,
                     max_wilson_derivative_order=max_wilson_derivative_order,
+                    term_atom_requirements=term_atom_requirements,
                 ),
                 **named_integrals,
                 "interaction_wilson_line_vakint_integral_sum": evaluated,
@@ -2386,6 +2420,7 @@ class OneLoopSetup:
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2419,6 +2454,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return interaction-power traces with selected traces replaced by Wilson-line output."""
 
@@ -2453,6 +2489,7 @@ class OneLoopSetup:
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
             interaction_remainder,
@@ -2504,6 +2541,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid Wilson-line/interaction result evaluated internally."""
 
@@ -2536,6 +2574,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
             interaction_remainder,
@@ -2580,6 +2619,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid internal Wilson-line result after pole removal."""
 
@@ -2598,6 +2638,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_pole_part")
         finite = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_finite_part")
@@ -2636,6 +2677,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint hybrid Wilson-line result."""
 
@@ -2668,6 +2710,7 @@ class OneLoopSetup:
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
+            term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
             interaction_remainder,
@@ -6457,18 +6500,34 @@ def _filter_cde_terms_by_projection_requirements(
     return tuple(term for term in terms if _cde_term_matches_projection_requirements(term, requirements))
 
 
+def _filter_wilson_line_terms_by_projection_requirements(
+    terms: Sequence[WilsonLineTraceExpansionTerm],
+    requirements: ProjectionAtomRequirementGroups | None,
+) -> tuple[WilsonLineTraceExpansionTerm, ...]:
+    if not requirements:
+        return tuple(terms)
+    return tuple(term for term in terms if _term_numerator_matches_projection_requirements(term.numerator, requirements))
+
+
 def _cde_term_matches_projection_requirements(
     term: BosonicCDETraceExpansionTerm,
     requirements: ProjectionAtomRequirementGroups,
 ) -> bool:
-    counts = _projection_atom_counts(term.numerator)
+    return _term_numerator_matches_projection_requirements(term.numerator, requirements)
+
+
+def _term_numerator_matches_projection_requirements(
+    numerator: Expression,
+    requirements: ProjectionAtomRequirementGroups,
+) -> bool:
+    counts = _projection_atom_counts(numerator)
     for group in requirements:
         if all(counts[(kind, label)] >= required_count for kind, label, required_count in group):
             return True
     return False
 
 
-def _cde_term_atom_requirements_for_targets(
+def _term_atom_requirements_for_targets(
     theory: Theory,
     targets: MatchingConditionTargetInput | None,
 ) -> ProjectionAtomRequirementGroups | None:
@@ -7106,8 +7165,13 @@ def match_one_loop(
     if cde_expansion_indices_by_trace is not None and wilson_line_expansion_indices_by_trace is not None:
         raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
     cde_term_atom_requirements = (
-        _cde_term_atom_requirements_for_targets(theory, matching_condition_targets)
+        _term_atom_requirements_for_targets(theory, matching_condition_targets)
         if options.bosonic_cde_filter_terms_by_matching_targets and cde_expansion_indices_by_trace is not None
+        else None
+    )
+    wilson_line_term_atom_requirements = (
+        _term_atom_requirements_for_targets(theory, matching_condition_targets)
+        if options.wilson_line_filter_terms_by_matching_targets and wilson_line_expansion_indices_by_trace is not None
         else None
     )
     if wilson_line_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
@@ -7126,6 +7190,7 @@ def match_one_loop(
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
+            term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif (
         wilson_line_expansion_indices_by_trace is not None
@@ -7146,6 +7211,7 @@ def match_one_loop(
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
+            term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif (
         wilson_line_expansion_indices_by_trace is not None
@@ -7166,6 +7232,7 @@ def match_one_loop(
             named_supertrace_stage=options.named_supertrace_stage,
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
+            term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif wilson_line_expansion_indices_by_trace is not None:
         result = setup.interaction_wilson_line_hybrid_matching_result(
@@ -7185,6 +7252,7 @@ def match_one_loop(
             named_supertrace_stage=options.named_supertrace_stage,
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
+            term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(
@@ -7426,6 +7494,9 @@ def match_one_loop(
             "wilson_line_index_prefix": options.wilson_line_index_prefix,
             "wilson_line_act_open_derivatives": options.wilson_line_act_open_derivatives,
             "wilson_line_max_derivative_order": options.wilson_line_max_derivative_order,
+            "wilson_line_terms_filtered_by_matching_targets": (
+                wilson_line_term_atom_requirements is not None
+            ),
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )

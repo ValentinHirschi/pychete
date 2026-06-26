@@ -264,5 +264,10 @@ discoveries, dependency patches, blockers, and remaining work.
   expose and use `wilson_line_trace_names`, `wilson_line_max_total_order`,
   `wilson_line_max_slot_order`, and `wilson_line_index_prefix` instead of
   relying on the legacy CDE planner for convenience.
+- Target-local Matchete parity probes should also have a Wilson-line-native
+  filter route: use a conservative Symbolica-pattern atom filter for selected
+  Wilson-line terms before tensor reduction/evaluation, while keeping final
+  coefficient extraction in the generic matching projection path and avoiding
+  SMEFT-name-specific filters.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

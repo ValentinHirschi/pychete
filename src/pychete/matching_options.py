@@ -170,6 +170,13 @@ class OneLoopMatchOptions:
     optionally ``wilson_line_trace_names``/``wilson_line_max_slot_order``.
     This is the preferred convenience route for new Matchete parity probes
     because it avoids deepening the legacy CDE-named planning surface.
+    ``wilson_line_filter_terms_by_matching_targets`` applies the same
+    conservative target-local filtering policy to generated Wilson-line terms
+    as the CDE filter does for legacy CDE terms. It uses Symbolica pattern
+    matches to drop terms whose numerator lacks the field/field-strength atom
+    content required by the requested projection targets before tensor
+    reduction/evaluation; final coefficient extraction still uses the normal
+    projection path.
     """
 
     max_trace_order: int = 2
@@ -224,6 +231,7 @@ class OneLoopMatchOptions:
     wilson_line_index_prefix: str = "wilson_line"
     wilson_line_act_open_derivatives: bool = False
     wilson_line_max_derivative_order: int = 4
+    wilson_line_filter_terms_by_matching_targets: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True

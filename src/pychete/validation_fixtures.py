@@ -1116,6 +1116,7 @@ class ValidationFixture:
         wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_max_derivative_order: int = 4,
+        wilson_line_filter_terms_by_matching_targets: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         include_tree_level_matching: bool = False,
@@ -1158,6 +1159,9 @@ class ValidationFixture:
         the public match route with ``project_reference_matching_conditions``:
         it forwards target-compatible CDE term filtering to
         :class:`OneLoopMatchOptions`.
+        ``wilson_line_filter_terms_by_matching_targets`` has the same
+        restrictions and forwards target-compatible Wilson-line term filtering
+        for generated or explicit Wilson-line expansion requests.
         Prefer the ``wilson_line_*`` options for current-Matchete-style
         selected trace expansion. They route through the hybrid Wilson-line
         matcher and are mutually exclusive with the legacy ``bosonic_cde_*``
@@ -1184,6 +1188,12 @@ class ValidationFixture:
         if bosonic_cde_filter_terms_by_matching_targets and not project_reference_matching_conditions:
             raise ValueError(
                 "CDE target filtering in fixture reports requires project_reference_matching_conditions=True"
+            )
+        if wilson_line_filter_terms_by_matching_targets and not use_public_match_api:
+            raise ValueError("Wilson-line target filtering in fixture reports requires use_public_match_api=True")
+        if wilson_line_filter_terms_by_matching_targets and not project_reference_matching_conditions:
+            raise ValueError(
+                "Wilson-line target filtering in fixture reports requires project_reference_matching_conditions=True"
             )
         projected_target_selection = (
             _matching_condition_projection_targets(
@@ -1263,6 +1273,7 @@ class ValidationFixture:
                     wilson_line_index_prefix=wilson_line_index_prefix,
                     wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
                     wilson_line_max_derivative_order=wilson_line_max_derivative_order,
+                    wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                     include_tree_level_matching=include_tree_level_matching,

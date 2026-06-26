@@ -1821,6 +1821,53 @@ def test_wilson_line_path_expands_propagator_terms_without_cde_result_object() -
     assert "pychete::WilsonTerm" not in canonical_string(terms[0].numerator)
 
 
+def test_public_wilson_line_can_filter_terms_by_matching_targets() -> None:
+    theory = Theory("one_loop_setup_wilson_line_filter_targets")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    z = theory.define_coupling("z", self_conjugate=True)
+    wilson = theory.define_wilson_coefficient("cPhi2", operator=light() ** 2)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(light)
+        - y() * heavy() * light() ** 2 / 2
+        - z() * heavy() ** 2 / 2
+    )
+    common_options = dict(
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        max_trace_order=2,
+        wilson_line_trace_names=("hScalar", "hScalar-lScalar"),
+        wilson_line_max_total_order=0,
+        truncate_eft_result=False,
+    )
+    unfiltered = theory.match(
+        lagrangian,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        one_loop_options=OneLoopMatchOptions(**common_options),
+    )
+    filtered = theory.match(
+        lagrangian,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        one_loop_options=OneLoopMatchOptions(
+            **common_options,
+            wilson_line_filter_terms_by_matching_targets=True,
+        ),
+    )
+    target = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
+
+    assert unfiltered.metadata["wilson_line_terms_filtered_by_matching_targets"] is False
+    assert filtered.metadata["wilson_line_terms_filtered_by_matching_targets"] is True
+    assert unfiltered.metadata["interaction_wilson_line_term_count"] == 2
+    assert filtered.metadata["interaction_wilson_line_term_count"] == 1
+    assert set(filtered.matching_conditions) == {target}
+    assert not bool(filtered.matching_conditions[target].expand() == Expression.num(0))
+
+
 def test_wilson_line_expansion_lets_open_derivatives_act_on_wilson_terms() -> None:
     theory = Theory("one_loop_setup_wilson_line_open_derivatives")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

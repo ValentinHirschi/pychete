@@ -328,6 +328,14 @@ Validation-facing one-loop preview and gap-report helpers must expose the same
 Wilson-line plans. New Matchete parity probes should prefer these Wilson-line
 controls over legacy `bosonic_cde_*` controls unless the purpose of the test is
 explicitly to preserve or compare the old CDE route.
+For target-local Wilson-line parity probes, use
+`wilson_line_filter_terms_by_matching_targets=True` together with projected
+matching-condition targets. This conservative label-level filter may drop
+Wilson-line expansion terms whose numerators cannot contain any requested
+field/field-strength target before tensor reduction/evaluation, but final
+coefficient extraction must still be delegated to the ordinary Symbolica
+projection path. Do not add CDE-only filtering or SMEFT-name-specific filtering
+for new frontier checks.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
 simplification; do not implement it as a Python tree walker. Open covariant

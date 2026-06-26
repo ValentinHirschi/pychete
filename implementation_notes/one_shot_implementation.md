@@ -127,6 +127,19 @@
   Generated plans still enter the existing Symbolica-backed Wilson-line
   expansion path; Python only enumerates the requested slot orders and creates
   theory-owned Lorentz index symbols with Wilson-line plan tags.
+- The current author-feedback adjustment adds
+  `OneLoopMatchOptions.wilson_line_filter_terms_by_matching_targets` and the
+  matching validation-fixture option. This gives the preferred Wilson-line
+  route the same target-local performance guard previously added for legacy
+  CDE probes: selected Wilson-line expansion terms whose numerators cannot
+  contain any requested field/field-strength target are skipped before tensor
+  reduction/evaluation, and final coefficient extraction remains generic and
+  Symbolica-backed.
+- Validation for this slice used the 30 GiB watchdog wrapper:
+  `pytest tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k wilson_line -q`
+  passed with `9 passed, 117 deselected`, and `python -m mypy` reported no
+  issues.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw
