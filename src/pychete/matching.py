@@ -4919,7 +4919,8 @@ class OneLoopSetup:
         The returned EFT Lagrangians are the aggregate power-type contribution
         after lowering to the selected native vakint stage. Metadata keeps the
         result explicitly incomplete until the full Matchete-level matching
-        pipeline, on-shell reduction, and SMEFT-condition extraction land.
+        pipeline, on-shell reduction, and generic operator-basis condition
+        extraction land.
         """
 
         contributions = self.power_type_contributions(heavy_field_dimension=heavy_field_dimension)

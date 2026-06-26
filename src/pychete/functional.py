@@ -67,8 +67,9 @@ def expand_cd_operators(expr: Expression) -> Expression:
     """Expand explicit ``CD`` wrappers into pychete field-derivative slots.
 
     Generated matching expressions store covariant/ordinary derivative action
-    directly on ``Field(..., derivatives)`` atoms. User-facing operators, SMEFT
-    metadata, and fixtures may instead contain explicit ``CD(index, body)``
+    directly on ``Field(..., derivatives)`` atoms. User-facing operators,
+    operator-basis metadata, and fixtures may instead contain explicit
+    ``CD(index, body)``
     wrappers. This helper normalizes the latter representation with Symbolica
     replacement rules and :func:`apply_cd`, so product rules and nested
     derivatives use the same native variation machinery as functional

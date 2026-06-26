@@ -318,5 +318,11 @@ discoveries, dependency patches, blockers, and remaining work.
   `pychete.bases.smeft_warsaw`; `pychete.smeft` is a compatibility shim only.
   Do not add root-level SMEFT exports, matching-engine imports, or branches
   that depend on the SMEFT module or Warsaw names.
+- Latest Matchete-author clarification reinforces that this is not merely a
+  naming issue: future parity work should not deepen the legacy CDE route, and
+  the implementation should not use the bundled SMEFT Warsaw provider as the
+  architectural template for pychete. The engine should discover and consume
+  operator bases through generic `OperatorBasis`/registry metadata, while
+  Warsaw remains optional fixture/convenience data.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

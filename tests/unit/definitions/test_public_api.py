@@ -22,6 +22,15 @@ def test_smeft_module_is_compatibility_shim() -> None:
     assert smeft_compat.define_smeft_wilson_coefficient is smeft_warsaw.define_smeft_wilson_coefficient
 
 
+def test_bundled_basis_provider_registers_generically() -> None:
+    """Bundled bases are discoverable through the generic registry boundary."""
+
+    import pychete.bases
+
+    assert "SMEFT" in pychete.operator_basis_names()
+    assert pychete.registered_operator_basis("SMEFT") is pychete.bases.smeft_warsaw_basis()
+
+
 def test_package_root_does_not_export_optional_smeft_provider() -> None:
     """SMEFT Warsaw stays an optional basis provider, not a core root API."""
 

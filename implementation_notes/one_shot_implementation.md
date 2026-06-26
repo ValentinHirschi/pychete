@@ -16,7 +16,8 @@
   `pychete.bases.smeft_warsaw`; `pychete.smeft` remains only as a
   compatibility shim. Do not expose SMEFT-specific helpers from the package
   root; the root API stays generic and basis providers live under
-  `pychete.bases`.
+  `pychete.bases`. Generic code should consume `OperatorBasis` metadata and the
+  operator-basis registry, not Warsaw-specific modules or names.
 - Runtime pychete and pytest must remain Mathematica- and Matchete-independent.
   Optional Wolfram scripts may only generate committed pychete-owned fixtures.
 - Use Symbolica as the canonical symbolic engine. Before implementing symbolic
@@ -122,6 +123,15 @@
   `define_wilson_coefficient_from_basis(...)` as the intended basis mechanism.
   The package-root public API test now guards this explicitly, and tests that
   exercise SMEFT Warsaw fixtures import the optional provider directly.
+- The latest Matchete-author feedback pass adds a generic operator-basis
+  registry:
+  `register_operator_basis(...)`, `registered_operator_basis(...)`,
+  `operator_basis_names()`, and
+  `define_wilson_coefficient_from_registered_basis(...)`. The bundled Warsaw
+  provider registers through this boundary when `pychete.bases` is imported,
+  but package-root exports remain provider-agnostic. This makes the intended
+  structure explicit: SMEFT Warsaw is optional provider data, not the matching
+  engine's model for operator-basis support.
 - Focused validation for the author-feedback API adjustment used the 30 GiB
   watchdog wrapper: `pytest tests/unit/definitions/test_public_api.py
   tests/unit/definitions/test_theory_definitions.py::test_generic_operator_basis_defines_wilson_operator_metadata
@@ -269,7 +279,7 @@
 - The current author-feedback follow-up moves the SMEFT Warsaw provider out of
   the top-level implementation module and into `pychete.bases.smeft_warsaw`.
   `pychete.smeft` now re-exports the same helpers as a compatibility shim, and
-  `pychete.api` imports the provider from the generic basis namespace. This
+  `pychete.api` exposes only generic operator-basis registry helpers. This
   keeps Warsaw support as optional validation/convenience metadata rather than
   a core matching-engine module.
 - The same follow-up makes Wilson-line propagator expansion slot-statistics
@@ -474,6 +484,15 @@
 
 ## Latest Validation Evidence
 
+- Author-feedback generic-basis registry gate, under the 30 GiB watchdog
+  wrapper: `pytest tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_theory_definitions.py -k "public_api or
+  operator_basis or smeft_warsaw_operator" -q` passed with `11 passed, 48
+  deselected`.
+- `python -m mypy`, under the 30 GiB watchdog wrapper, reported no issues in
+  40 source files after the generic registry/course-correction slice.
+- `git diff --check` passed after the generic registry/course-correction
+  slice.
 - Vector-slot Wilson-line parity gate, under the 30 GiB watchdog wrapper:
   `pytest tests/integration/matching/test_fluctuation_operator.py -k
   "wilson_line_vector_slots_use_matchete_propagator_sign or

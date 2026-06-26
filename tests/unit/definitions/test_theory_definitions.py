@@ -20,7 +20,10 @@ from pychete import (
     canonical_string,
     collect_indices,
     define_wilson_coefficient_from_basis,
+    define_wilson_coefficient_from_registered_basis,
     matching_condition_targets,
+    registered_operator_basis,
+    register_operator_basis,
     s,
 )
 from pychete.bases.smeft_warsaw import (
@@ -1158,6 +1161,24 @@ def test_generic_operator_basis_defines_wilson_operator_metadata() -> None:
     assert handle.definition.order == 2
     assert handle.definition.operator_expr is not None
     assert_expr_equal(handle.definition.operator_expr, phi() ** 2)
+
+
+def test_generic_operator_basis_registry_defines_wilson_operator_metadata() -> None:
+    theory = Theory("generic_operator_basis_registry")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+
+    def phi_four(model: Theory, indices: tuple[Expression, ...]) -> Expression | None:
+        assert indices == ()
+        return model.field_handle("phi")() ** 4
+
+    basis = register_operator_basis(OperatorBasis("ToyRegistryBasis", {"cPhi4": phi_four}), replace=True)
+    handle = define_wilson_coefficient_from_registered_basis(theory, "ToyRegistryBasis", "cPhi4", eft_order=4)
+
+    assert registered_operator_basis("ToyRegistryBasis") is basis
+    assert handle.definition.basis_name == "ToyRegistryBasis"
+    assert handle.definition.order == 4
+    assert handle.definition.operator_expr is not None
+    assert_expr_equal(handle.definition.operator_expr, phi() ** 4)
 
 
 def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> None:

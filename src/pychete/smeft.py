@@ -1,8 +1,9 @@
 """Compatibility exports for the optional SMEFT Warsaw basis provider.
 
 New code should import SMEFT helpers from :mod:`pychete.bases.smeft_warsaw`
-or from the public package root. This module remains as a compatibility shim
-so existing pychete model fixtures keep working without making SMEFT a core
+or discover the provider through the generic operator-basis registry after
+importing :mod:`pychete.bases`. This module remains as a compatibility shim so
+existing pychete model fixtures keep working without making SMEFT a core
 matching-engine module.
 """
 

@@ -1,12 +1,13 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable
+from functools import cache
 from typing import TYPE_CHECKING
 
 from symbolica import Expression
 
 from ..expr import list_expr
-from ..operator_bases import OperatorBasis, define_wilson_coefficient_from_basis
+from ..operator_bases import OperatorBasis, define_wilson_coefficient_from_basis, register_operator_basis
 from ..symbols import SymbolRole, s
 from ..theory_metadata import ExternalHandle
 
@@ -91,13 +92,16 @@ def smeft_warsaw_operator_names() -> tuple[str, ...]:
     return smeft_warsaw_basis().operator_names()
 
 
+@cache
 def smeft_warsaw_basis() -> OperatorBasis:
     """Return pychete's optional built-in SMEFT Warsaw operator basis."""
 
     builders = _smeft_warsaw_operator_builders()
-    return OperatorBasis(
-        "SMEFT",
-        {name: builders[name] for name in SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES},
+    return register_operator_basis(
+        OperatorBasis(
+            "SMEFT",
+            {name: builders[name] for name in SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES},
+        )
     )
 
 

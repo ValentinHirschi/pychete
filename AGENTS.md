@@ -290,6 +290,12 @@ code may remain as an opt-in legacy diagnostic, validation, and regression
 route, but new core matching work should move toward explicit Wilson-line
 style functional traces and should not deepen SMEFT-specific or CDE-specific
 coupling in the main pipeline.
+This is direct feedback from the Matchete authors, not only a local preference:
+do not spend new implementation slices trying to complete one-loop parity by
+making the legacy CDE path more central. If a planned task can be expressed
+through either CDE or explicit Wilson-line traces, choose the Wilson-line route
+and leave CDE as a comparison/diagnostic route unless the task is explicitly
+about preserving old CDE behavior.
 When Matchete parity is the objective, treat CDE agreement as a legacy
 cross-check only. Do not add new CDE-first planners, public controls, or
 projection shortcuts unless they are explicitly preserving old behavior. New
@@ -702,7 +708,10 @@ documentation requirement implicit.
 
 Operator-basis metadata must be generic. Register known Wilson coefficient
 operators through `OperatorBasis` and
-`define_wilson_coefficient_from_basis(...)`; specialized helpers such as
+`define_wilson_coefficient_from_basis(...)`, or register a provider with
+`register_operator_basis(...)` and consume it through
+`registered_operator_basis(...)` /
+`define_wilson_coefficient_from_registered_basis(...)`. Specialized helpers such as
 `define_smeft_wilson_coefficient(...)` must be thin convenience wrappers over
 that generic basis machinery. SMEFT Warsaw is an optional built-in validation
 and user-convenience basis, not a core matching assumption. Its implementation
@@ -721,6 +730,11 @@ basis deliberately. The default Matchete SMEFT
 validation fixtures expect the full 64-name `SMEFTWilsonCoefficients[]` set
 from `SMEFT_Warsaw.m` to have pychete-native operator metadata, but the
 matching pipeline must remain basis-agnostic.
+Matchete-author feedback specifically warned against shaping pychete as a
+SMEFT-specific matching tool. Treat the bundled Warsaw provider as fixture and
+convenience data behind the generic operator-basis registry; do not use it as a
+template for engine control flow, backend simplification decisions, or public
+root API design.
 
 Take full advantage of Symbolica symbol tags, attributes, and symbol data.
 User-defined pychete symbols must be created through `Theory.symbol`, which

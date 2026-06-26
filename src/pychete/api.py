@@ -71,7 +71,14 @@ from .matching_results import (
     registered_wilson_matching_condition_targets,
 )
 from .noncommutative import normalize_ncm_chains
-from .operator_bases import OperatorBasis, define_wilson_coefficient_from_basis
+from .operator_bases import (
+    OperatorBasis,
+    define_wilson_coefficient_from_basis,
+    define_wilson_coefficient_from_registered_basis,
+    operator_basis_names,
+    registered_operator_basis,
+    register_operator_basis,
+)
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import Theory
@@ -187,6 +194,7 @@ __all__ = [
     "build_numeric_probe_plan",
     "deterministic_probe_samples",
     "define_wilson_coefficient_from_basis",
+    "define_wilson_coefficient_from_registered_basis",
     "evaluator_probe_equal",
     "evaluate_loop_functions",
     "evaluate_one_loop_single_scale_vakint_expression",
@@ -204,6 +212,7 @@ __all__ = [
     "load_state",
     "latex_string",
     "open_indices",
+    "operator_basis_names",
     "operator_dimension",
     "one_loop_normalization_factor",
     "matching_condition_targets",
@@ -215,6 +224,8 @@ __all__ = [
     "remove_loop_momentum_symmetry_vanishing_wilson_terms",
     "remove_symmetry_vanishing_wilson_terms",
     "registered_wilson_matching_condition_targets",
+    "registered_operator_basis",
+    "register_operator_basis",
     "s",
     "series_eft",
     "simplify_loop_functions",

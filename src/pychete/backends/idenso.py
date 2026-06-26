@@ -249,10 +249,11 @@ def simplify_pychete_field_strength_metrics(expr: Expression) -> Expression:
 def simplify_su2_field_strength_generator_bilinears(theory: Any, expr: Expression) -> Expression:
     """Project symmetric SU(2) field-strength generator bilinears to singlets.
 
-    The CDE commutator expansion can generate terms of the form
-    ``Bar(H_j) H_i T^A_{i k} T^B_{k j} W^A W^B``. For SU(2), the
-    field-strength pair is symmetric in ``A`` and ``B`` and idenso's native
-    colour trace fixes the singlet coefficient. This helper keeps the match in
+    Wilson-line and legacy CDE commutator expansions can generate fundamental
+    bilinears of the form
+    ``Bar(phi_j) phi_i T^A_{i k} T^B_{k j} F^A F^B``. For SU(2), a symmetric
+    adjoint field-strength pair projects onto the singlet with a coefficient
+    fixed by native idenso colour traces. This helper keeps the match in
     Symbolica replacement rules and delegates the group coefficient to idenso
     instead of hard-coding generator algebra in projection code.
     """
@@ -270,14 +271,15 @@ def simplify_su2_field_strength_generator_bilinears(theory: Any, expr: Expressio
 
 
 def simplify_su2_u1_field_strength_generator_bilinears(theory: Any, expr: Expression) -> Expression:
-    """Canonicalize mixed SU(2)-U(1) Higgs field-strength bilinears.
+    """Canonicalize mixed SU(2)-U(1) fundamental field-strength bilinears.
 
-    The CDE source naturally emits terms proportional to
-    ``H_i Bar(H_j) T^A_{i j} W^A B``. SMEFT Warsaw metadata registers the
-    mixed field-strength operator in the ``Bar(H_i) T^A_{i j} H_j W^A B``
-    orientation. This helper rewrites the generated source orientation into
-    the registered target orientation with Symbolica replacement rules; the
-    U(1) charge and coupling factors remain in the surrounding coefficient.
+    Generated sources can emit terms proportional to
+    ``phi_i Bar(phi_j) T^A_{i j} F^A B``. Registered operator-basis metadata may
+    choose the conjugate-first orientation
+    ``Bar(phi_i) T^A_{i j} phi_j F^A B``. This helper rewrites the generated
+    source orientation into that generic registered-target orientation with
+    Symbolica replacement rules; the U(1) charge and coupling factors remain
+    in the surrounding coefficient.
     """
 
     result = expr

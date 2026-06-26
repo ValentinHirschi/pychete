@@ -15,6 +15,7 @@ if TYPE_CHECKING:
 
 
 OperatorBuilder = Callable[["Theory", tuple[Expression, ...]], Expression | None]
+_OPERATOR_BASIS_REGISTRY: dict[str, "OperatorBasis"] = {}
 
 
 @dataclass(frozen=True)
@@ -92,7 +93,60 @@ def define_wilson_coefficient_from_basis(
     )
 
 
+def register_operator_basis(operator_basis: OperatorBasis, *, replace: bool = False) -> OperatorBasis:
+    """Register a generic operator-basis provider by name.
+
+    Basis-specific modules should use this hook when they are imported. The
+    matching engine still consumes only generic ``OperatorBasis`` metadata; the
+    registry is a convenience layer for discovery and user code.
+    """
+
+    existing = _OPERATOR_BASIS_REGISTRY.get(operator_basis.name)
+    if existing is not None and existing is not operator_basis and not replace:
+        raise ValueError(f"operator basis {operator_basis.name!r} is already registered")
+    _OPERATOR_BASIS_REGISTRY[operator_basis.name] = operator_basis
+    return operator_basis
+
+
+def registered_operator_basis(name: str) -> OperatorBasis:
+    """Return a registered operator basis by name."""
+
+    try:
+        return _OPERATOR_BASIS_REGISTRY[name]
+    except KeyError as exc:
+        raise KeyError(f"no operator basis {name!r} is registered") from exc
+
+
+def operator_basis_names() -> tuple[str, ...]:
+    """Return registered operator-basis names in deterministic order."""
+
+    return tuple(sorted(_OPERATOR_BASIS_REGISTRY))
+
+
+def define_wilson_coefficient_from_registered_basis(
+    theory: Theory,
+    basis: str,
+    name: str,
+    *,
+    indices: Iterable[Expression] = (),
+    eft_order: int = 0,
+) -> ExternalHandle:
+    """Define a Wilson coefficient from a registered operator basis."""
+
+    return define_wilson_coefficient_from_basis(
+        theory,
+        registered_operator_basis(basis),
+        name,
+        indices=indices,
+        eft_order=eft_order,
+    )
+
+
 __all__ = [
     "OperatorBasis",
+    "define_wilson_coefficient_from_registered_basis",
     "define_wilson_coefficient_from_basis",
+    "operator_basis_names",
+    "registered_operator_basis",
+    "register_operator_basis",
 ]

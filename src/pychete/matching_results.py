@@ -333,8 +333,9 @@ class MatchingResult:
         wrappers in the source and target operators into pychete's canonical
         field-derivative-slot representation before projection. The rewrite is
         guarded by native Symbolica pattern matching and is primarily needed
-        when SMEFT operator metadata uses explicit derivative wrappers while a
-        generated one-loop source stores derivatives directly on fields.
+        when registered operator-basis metadata uses explicit derivative
+        wrappers while a generated one-loop source stores derivatives directly
+        on fields.
         ``normalize_ibp_scalar_bilinears`` additionally allows target-local
         integration-by-parts projection aliases for bilinears of the form
         ``A * CD([mu, mu], B)``. Exact coefficient extraction is still tried
@@ -1670,8 +1671,8 @@ def matching_condition_targets(
 
     Coupling targets are recognized with native Symbolica pattern matching and
     role-tag restrictions. Any Symbolica expression can still be projected, but
-    pychete coupling/external targets carry explicit metadata for later SMEFT
-    basis and Wilson-coefficient logic.
+    pychete coupling/external targets carry explicit metadata for later
+    operator-basis and Wilson-coefficient logic.
     """
 
     return tuple(_matching_condition_target(name, target) for name, target in _matching_condition_targets(targets))
