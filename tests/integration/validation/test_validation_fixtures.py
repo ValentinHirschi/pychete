@@ -889,6 +889,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         reference,
         reference_name="public_match_forwarding",
         use_public_match_api=True,
+        project_reference_matching_conditions=True,
         simplify_pychete_color_algebra=True,
         substitute_heavy_scalar_solutions=True,
         include_tree_level_matching=True,
@@ -901,6 +902,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         bosonic_cde_emit_covariant_derivative_commutators=True,
         bosonic_cde_emit_covariant_derivative_commutator_passes=2,
         bosonic_cde_expand_covariant_derivative_commutators=True,
+        bosonic_cde_filter_terms_by_matching_targets=True,
         matching_condition_projection_expand_source=False,
         matching_condition_projection_canonize_indices=False,
         matching_condition_projection_normalize_derivative_operators=False,
@@ -923,12 +925,64 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert options.bosonic_cde_emit_covariant_derivative_commutators is True
     assert options.bosonic_cde_emit_covariant_derivative_commutator_passes == 2
     assert options.bosonic_cde_expand_covariant_derivative_commutators is True
+    assert options.bosonic_cde_filter_terms_by_matching_targets is True
     assert options.truncate_eft_result is False
     assert captured["matching_condition_expand_source"] is False
     assert captured["matching_condition_canonize_indices"] is False
     assert captured["matching_condition_normalize_derivative_operators"] is False
     assert captured["matching_condition_normalize_ibp_scalar_bilinears"] is True
     assert captured["matching_condition_truncate_eft"] is True
+
+
+def test_validation_fixture_gap_report_can_filter_public_cde_terms_by_projected_targets() -> None:
+    theory = Theory("validation_fixture_public_cde_filter")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    wilson = theory.define_wilson_coefficient("cPhi2", operator=light() ** 2)
+    target = s.Coupling(wilson.label, s.List(), Expression.num(0))
+    target_name = canonical_string(target)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
+    fixture = ValidationFixture(
+        name="validation_fixture_public_cde_filter",
+        kind="model_smoke",
+        state=state,
+        source={"generator": "pytest", "mathematica_runtime_required": False},
+        expression_names=("lagrangian",),
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=lagrangian,
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={target_name: Expression.num(0)},
+    )
+
+    with pytest.raises(ValueError, match="use_public_match_api"):
+        fixture.one_loop_preview_gap_report(
+            reference,
+            reference_name="public_cde_filter_reference",
+            bosonic_cde_filter_terms_by_matching_targets=True,
+        )
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="public_cde_filter_reference",
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        bosonic_cde_expansion_indices_by_trace={"hScalar-lScalar": ((), ())},
+        bosonic_cde_filter_terms_by_matching_targets=True,
+        project_reference_matching_conditions=True,
+        use_public_match_api=True,
+    )
+
+    assert report.candidate_stage == "interaction_bosonic_cde_hybrid_vakint_result"
+    assert report.matching_condition_projection_registered_wilson_names == (target_name,)
+    assert report.candidate_matching_condition_names == (target_name,)
+    assert report.reference_matching_condition_names == (target_name,)
 
 
 def test_validation_fixture_gap_report_projects_registered_wilsons_before_reference_targets(

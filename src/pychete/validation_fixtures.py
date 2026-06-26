@@ -993,6 +993,7 @@ class ValidationFixture:
         bosonic_cde_emit_covariant_derivative_commutators: bool = False,
         bosonic_cde_emit_covariant_derivative_commutator_passes: int = 1,
         bosonic_cde_expand_covariant_derivative_commutators: bool = False,
+        bosonic_cde_filter_terms_by_matching_targets: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         include_tree_level_matching: bool = False,
@@ -1030,6 +1031,10 @@ class ValidationFixture:
         When ``use_public_match_api=True``, set ``truncate_eft_result=False``
         together with ``matching_condition_projection_truncate_eft=True`` to
         avoid a global EFT truncation before target-local Wilson projection.
+        ``bosonic_cde_filter_terms_by_matching_targets`` is available only on
+        the public match route with ``project_reference_matching_conditions``:
+        it forwards target-compatible CDE term filtering to
+        :class:`OneLoopMatchOptions`.
         ``comparison_canonize_indices`` keeps Symbolica tensor-index
         canonicalization enabled for common-expression comparisons so fixture
         reports do not flag alpha-equivalent dummy-index relabelings as gaps.
@@ -1037,6 +1042,12 @@ class ValidationFixture:
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
         resolved_max_trace_order = _resolve_max_trace_order(max_trace_order, reference)
+        if bosonic_cde_filter_terms_by_matching_targets and not use_public_match_api:
+            raise ValueError("CDE target filtering in fixture reports requires use_public_match_api=True")
+        if bosonic_cde_filter_terms_by_matching_targets and not project_reference_matching_conditions:
+            raise ValueError(
+                "CDE target filtering in fixture reports requires project_reference_matching_conditions=True"
+            )
         projected_target_selection = (
             _matching_condition_projection_targets(self.theory(), reference)
             if project_reference_matching_conditions
@@ -1098,6 +1109,7 @@ class ValidationFixture:
                     bosonic_cde_expand_covariant_derivative_commutators=(
                         bosonic_cde_expand_covariant_derivative_commutators
                     ),
+                    bosonic_cde_filter_terms_by_matching_targets=bosonic_cde_filter_terms_by_matching_targets,
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                     include_tree_level_matching=include_tree_level_matching,

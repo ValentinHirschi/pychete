@@ -94,6 +94,12 @@
   target before tensor reduction/evaluation. The filter deliberately stays
   label-level and leaves all dummy-index alignment to the existing
   `Expression.canonize_tensors(...)` projection/comparison path.
+- The fixture-report path now exposes the same CDE target filter for
+  Matchete-independent validation frontier work:
+  `ValidationFixture.one_loop_preview_gap_report(...,
+  bosonic_cde_filter_terms_by_matching_targets=True)` forwards the option to
+  public `Theory.match(...)` when `use_public_match_api=True` and
+  `project_reference_matching_conditions=True`.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -250,6 +256,13 @@
   passed with 12 tests and 59 deselected.
 - `python -m mypy` passed after the target-local CDE filter slice.
 - `git diff --check` passed after the target-local CDE filter slice.
+- Validation-fixture public CDE filter forwarding gate:
+  `pytest tests/integration/validation/test_validation_fixtures.py -k "public_match_api or public_cde_filter or registered_wilsons_before_reference_targets" -q`
+  passed with 3 tests and 35 deselected.
+- `python -m mypy` passed after exposing CDE target filtering in fixture gap
+  reports.
+- `git diff --check` passed after exposing CDE target filtering in fixture gap
+  reports.
 
 ## Current Validation Frontier
 
@@ -281,8 +294,9 @@
   focused fix and tests, and native CDE aggregate staging now avoids monolithic
   selected-CDE tensor-reduction/evaluation calls. Target-local CDE term
   filtering now removes obviously irrelevant generated terms for projected
-  Wilson runs, but broad default CDE still needs more source coverage controls
-  and basis reductions before it should be enabled by default.
+  Wilson runs, and fixture gap reports can exercise that filtered public route.
+  Broad default CDE still needs more source coverage controls and basis
+  reductions before it should be enabled by default.
 
 ## Next Work
 
