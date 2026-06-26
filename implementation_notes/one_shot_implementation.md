@@ -852,6 +852,46 @@
   remains unchanged until heavy-scalar substitution/on-shell reduction becomes
   viable in the projected Singlet report.
 
+## Current Heavy-Substituted Projection Slice
+
+- Rechecked the selected Singlet `hScalar-hScalar-hScalar` zero-derivative CDE
+  source. The internal minimal-subtraction CDE expression already contains the
+  expected pre-substitution monomial
+  `phi * H^2 * Bar(H)^2 * kappa^2 * muphi` with coefficient
+  `-i/(64*pi^2*M^2)`. The CDE integral stage is therefore not the place where
+  the `A*kappa^2*muphi` contribution disappears.
+- Directly replacing the representative monomial with the heavy scalar
+  solution gives the expected light-operator shape
+  `H^3 * Bar(H)^3 * A * kappa^2 * muphi / M^2` before the loop integral mass
+  denominator and normalization factors. This confirmed that the replacement
+  rules themselves can produce the missing source content.
+- Isolated the actual projection failure mode: with
+  `heavy_scalar_solution_expand=False`,
+  `matching_condition_expand_source=False`, and global EFT truncation disabled,
+  the order-by-order heavy solution remains an additive factor inside a product.
+  Native exact coefficient extraction, collect, and factor routes can then miss
+  the target operator because the relevant Higgs bilinear is hidden inside that
+  small sum.
+- Added a guarded projection-local `Expression.expand()` fallback. It runs only
+  on the already filtered target-local source, only after native coefficient,
+  collect, and guarded factor routes fail, and only under Symbolica size guards
+  (`len(expr)` and `Expression.get_byte_size()`). This keeps the default
+  `matching_condition_expand_source=False` performance intent while recovering
+  small hidden additive factors from replacement-rule outputs such as heavy
+  scalar solutions.
+- A public Singlet-like probe with selected `hScalar-hScalar-hScalar`, heavy
+  substitution, evaluated hbar normalization, `truncate_eft_result=False`, and
+  `matching_condition_expand_source=False` still projects only the
+  `-hbar*kappa^3/(12*M^2)` part. Its post-substitution `cH` filtered source is
+  about 432 KB because derivative branches from the heavy solution remain
+  nested inside products, so the guarded small-source expansion intentionally
+  does not fire. A direct target-local `series_eft(filtered_source)` probe was
+  also too slow. The next substantive fix must split or branch-select
+  heavy-solution source content before projection rather than globally expand
+  the filtered source.
+- Updated `AGENTS.md` to document this narrow exception to the no-global-source
+  expansion rule and to keep the fallback Symbolica-native and size guarded.
+
 ## Current Remaining Work
 
 - Continue the CDE/basis-reduction feature family from the new hybrid source:
@@ -873,8 +913,9 @@
   dominated by gauge-dependent and Higgs-sector conditions.
 - Continue reducing heavy-scalar-substituted Wilson projection cost. The broad
   substituted Singlet report now completes, and simple coupling targets are
-  filtered cheaply. Direct `cH` projection over the substituted source is now
-  fast and returns zero, so the next work is source/basis completeness rather
-  than projection throughput for that target. Future slices should split
-  substituted source stages by target-compatible field content and apply
-  basis/on-shell reductions before projection.
+  filtered cheaply. The current target-local expansion fallback fixes the
+  small hidden-additive projection case, but the public Singlet-like
+  `A*kappa^2*muphi` loop term is still blocked by large nested heavy-solution
+  derivative branches. Broad substituted projection needs source staging by
+  target-compatible field content, branch/order selection for heavy solutions,
+  and basis/on-shell reductions before projection.

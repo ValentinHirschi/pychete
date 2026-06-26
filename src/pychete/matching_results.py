@@ -66,6 +66,8 @@ _DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES = {
 
 _MAX_PROJECTION_FACTOR_TERMS = 64
 _MAX_PROJECTION_FACTOR_BYTES = 16_384
+_MAX_PROJECTION_EXPAND_TERMS = 128
+_MAX_PROJECTION_EXPAND_BYTES = 32_768
 
 
 @dataclass(frozen=True)
@@ -757,6 +759,13 @@ class _ProjectionCoefficientExtractor:
             coefficient = factored.coefficient(factored_target).expand()
             if not is_zero(coefficient):
                 return coefficient
+        expanded_coefficient = _expanded_projection_coefficient(
+            source,
+            target,
+            wildcard_index_projection=self.wildcard_index_projection,
+        )
+        if expanded_coefficient is not None and not is_zero(expanded_coefficient):
+            return expanded_coefficient
         numeric_normalized = _numeric_factor_normalized_target(target)
         if numeric_normalized is not None:
             normalized_target, numeric_factor = numeric_normalized
@@ -848,6 +857,30 @@ def _source_is_small_enough_to_factor(source: Expression) -> bool:
         len(source) <= _MAX_PROJECTION_FACTOR_TERMS
         and source.get_byte_size() <= _MAX_PROJECTION_FACTOR_BYTES
     )
+
+
+def _source_is_small_enough_to_expand(source: Expression) -> bool:
+    return (
+        len(source) <= _MAX_PROJECTION_EXPAND_TERMS
+        and source.get_byte_size() <= _MAX_PROJECTION_EXPAND_BYTES
+    )
+
+
+def _expanded_projection_coefficient(
+    source: Expression,
+    target: Expression,
+    *,
+    wildcard_index_projection: bool,
+) -> Expression | None:
+    if not _source_is_small_enough_to_expand(source):
+        return None
+    expanded = source.expand()
+    if bool(expanded == source):
+        return None
+    return _ProjectionCoefficientExtractor(
+        expanded,
+        wildcard_index_projection=wildcard_index_projection,
+    ).coefficient(target)
 
 
 def _without_wildcard_index_projection(

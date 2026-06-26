@@ -1077,6 +1077,34 @@ def test_matching_result_projection_expands_indexed_higgs_bilinear_powers_to_ch(
     assert_expr_equal(projected["cH"], coefficient)
 
 
+def test_matching_result_projection_expands_hidden_additive_source_for_ch() -> None:
+    coefficient = S("condition_projection_ch_hidden_sum_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    target = smeft_warsaw_operator(theory, "cH")
+    assert target is not None
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    source_operator = (
+        higgs(i) ** 2
+        * s.Bar(higgs(i)) ** 2
+        * (higgs(j) * s.Bar(higgs(j)) + S("condition_projection_ch_hidden_branch"))
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    raw = result.project_matching_conditions({"cH": target}, canonize_indices=False, expand_source=False)
+    projected = result.project_matching_conditions({"cH": target}, expand_source=False)
+
+    assert_expr_equal(raw["cH"], Expression.num(0))
+    assert_expr_equal(projected["cH"], coefficient)
+
+
 def test_singlet_tree_matching_projects_ch_power_terms() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()

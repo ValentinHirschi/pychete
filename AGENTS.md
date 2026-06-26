@@ -171,7 +171,12 @@ projection. Gate this fallback with Symbolica's native expression size
 information, such as `len(expr)` and `Expression.get_byte_size()`, and fall
 through to the indexed wildcard projection path when the filtered source is
 too large. This is a performance guard around a native fallback, not an excuse
-to add Python-side algebra.
+to add Python-side algebra. A similarly guarded target-local
+`Expression.expand()` fallback is allowed only after native coefficient,
+collect, and factor routes fail; its purpose is to expose small hidden additive
+factors introduced by replacement-rule outputs such as order-by-order heavy
+scalar solutions while preserving `matching_condition_expand_source=False` for
+the full matching source.
 For simple registered `Coupling(label, indices, order)` matching targets, also
 prefilter source terms with a native Symbolica `Coupling(label, _, _)` pattern
 before coefficient extraction. This is a conservative label-presence filter:
