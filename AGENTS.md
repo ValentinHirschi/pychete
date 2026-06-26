@@ -91,6 +91,11 @@ dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- 
 
 Use this wrapper for broad pytest groups, slow validation fixtures, CDE/vakint
 matching smokes, and any workload that might approach machine RAM limits.
+The wrapper also polls `stop.order` in the current working directory by
+default. For long exploratory commands, prefer this file-based stop mechanism
+over process-management commands that may require sandbox approval: remove any
+stale `stop.order` before launching the workload, and create/touch
+`stop.order` to ask the wrapper to terminate the wrapped process group.
 
 ## Logging And Progress Output
 

@@ -657,6 +657,9 @@ class ValidationFixture:
         wilson_line_max_slot_order: int | None = None,
         wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
+        wilson_line_emit_covariant_derivative_commutators: bool = False,
+        wilson_line_emit_covariant_derivative_commutator_passes: int = 1,
+        wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
@@ -768,6 +771,11 @@ class ValidationFixture:
                 require_registered_mass=require_registered_mass,
                 include_light_only=include_light_only,
                 act_open_derivatives=wilson_line_act_open_derivatives,
+                emit_covariant_derivative_commutators=wilson_line_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=(
+                    wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 tensor_reduce=internal_tensor_reduce,
                 tensor_reduce_engine=vakint_engine,
@@ -789,6 +797,11 @@ class ValidationFixture:
                 require_registered_mass=require_registered_mass,
                 include_light_only=include_light_only,
                 act_open_derivatives=wilson_line_act_open_derivatives,
+                emit_covariant_derivative_commutators=wilson_line_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=(
+                    wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 tensor_reduce=internal_tensor_reduce,
                 tensor_reduce_engine=vakint_engine,
@@ -811,6 +824,11 @@ class ValidationFixture:
                 require_registered_mass=require_registered_mass,
                 include_light_only=include_light_only,
                 act_open_derivatives=wilson_line_act_open_derivatives,
+                emit_covariant_derivative_commutators=wilson_line_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=(
+                    wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 vakint_engine=vakint_engine,
                 max_pole_order=internal_max_pole_order,
@@ -830,6 +848,11 @@ class ValidationFixture:
                 require_registered_mass=require_registered_mass,
                 include_light_only=include_light_only,
                 act_open_derivatives=wilson_line_act_open_derivatives,
+                emit_covariant_derivative_commutators=wilson_line_emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=(
+                    wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 vakint_stage=vakint_stage,
                 vakint_short_form=vakint_short_form,
@@ -1054,6 +1077,13 @@ class ValidationFixture:
                 "wilson_line_max_slot_order": wilson_line_max_slot_order,
                 "wilson_line_index_prefix": wilson_line_index_prefix,
                 "wilson_line_act_open_derivatives": wilson_line_act_open_derivatives,
+                "wilson_line_commutators_emitted": wilson_line_emit_covariant_derivative_commutators,
+                "wilson_line_commutator_emit_passes": (
+                    wilson_line_emit_covariant_derivative_commutator_passes
+                    if wilson_line_emit_covariant_derivative_commutators
+                    else 0
+                ),
+                "wilson_line_commutators_expanded": wilson_line_expand_covariant_derivative_commutators,
                 "wilson_line_max_derivative_order": wilson_line_max_derivative_order,
                 "wilson_line_terms_filtered_by_matching_targets": (
                     wilson_line_term_atom_requirements is not None
@@ -1135,6 +1165,9 @@ class ValidationFixture:
         wilson_line_max_slot_order: int | None = None,
         wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
+        wilson_line_emit_covariant_derivative_commutators: bool = False,
+        wilson_line_emit_covariant_derivative_commutator_passes: int = 1,
+        wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
         simplify_pychete_color_algebra: bool = False,
@@ -1292,6 +1325,15 @@ class ValidationFixture:
                     wilson_line_max_slot_order=wilson_line_max_slot_order,
                     wilson_line_index_prefix=wilson_line_index_prefix,
                     wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
+                    wilson_line_emit_covariant_derivative_commutators=(
+                        wilson_line_emit_covariant_derivative_commutators
+                    ),
+                    wilson_line_emit_covariant_derivative_commutator_passes=(
+                        wilson_line_emit_covariant_derivative_commutator_passes
+                    ),
+                    wilson_line_expand_covariant_derivative_commutators=(
+                        wilson_line_expand_covariant_derivative_commutators
+                    ),
                     wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                     wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -1384,6 +1426,15 @@ class ValidationFixture:
                 wilson_line_max_slot_order=wilson_line_max_slot_order,
                 wilson_line_index_prefix=wilson_line_index_prefix,
                 wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
+                wilson_line_emit_covariant_derivative_commutators=(
+                    wilson_line_emit_covariant_derivative_commutators
+                ),
+                wilson_line_emit_covariant_derivative_commutator_passes=(
+                    wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                wilson_line_expand_covariant_derivative_commutators=(
+                    wilson_line_expand_covariant_derivative_commutators
+                ),
                 wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                 wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
                 matching_condition_targets=projected_targets,

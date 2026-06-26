@@ -147,7 +147,11 @@ def _symmetry_vanishes_wilson_term(
     if any(_has_repeated_wilson_pair(group) for group in wilson_groups):
         return True
     symmetric_groups = tuple(_symmetric_lorentz_index_groups(expr, symmetric_pattern))
-    return any(_is_subset_exprs(symmetric_group, wilson_group) for symmetric_group in symmetric_groups for wilson_group in wilson_groups)
+    return any(
+        len(wilson_group) == 2 and _is_subset_exprs(symmetric_group, wilson_group)
+        for symmetric_group in symmetric_groups
+        for wilson_group in wilson_groups
+    )
 
 
 def _has_any_repeated_wilson_pair(expr: Expression, wilson_pattern: Expression) -> bool:

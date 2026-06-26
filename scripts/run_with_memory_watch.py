@@ -15,6 +15,7 @@ import resource
 import signal
 import subprocess
 import sys
+import time
 from collections.abc import Sequence
 
 
@@ -23,6 +24,26 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
         description="Run a command with RLIMIT_AS/RLIMIT_DATA memory caps.",
     )
     parser.add_argument("--limit-gb", type=float, required=True, help="memory cap in GiB")
+    parser.add_argument(
+        "--stop-file",
+        default="stop.order",
+        help=(
+            "path to a file whose creation requests termination of the wrapped "
+            "process group; use an empty value to disable"
+        ),
+    )
+    parser.add_argument(
+        "--poll-interval-sec",
+        type=float,
+        default=1.0,
+        help="seconds between process/stop-file checks",
+    )
+    parser.add_argument(
+        "--terminate-grace-sec",
+        type=float,
+        default=10.0,
+        help="seconds to wait after SIGTERM before SIGKILL",
+    )
     parser.add_argument(
         "command",
         nargs=argparse.REMAINDER,
@@ -35,6 +56,10 @@ def _parse_args(argv: Sequence[str]) -> argparse.Namespace:
         parser.error("a command is required after --")
     if args.limit_gb <= 0:
         parser.error("--limit-gb must be positive")
+    if args.poll_interval_sec <= 0:
+        parser.error("--poll-interval-sec must be positive")
+    if args.terminate_grace_sec < 0:
+        parser.error("--terminate-grace-sec must be non-negative")
     return args
 
 
@@ -60,11 +85,28 @@ def _terminate_process_group(process: subprocess.Popen[bytes], signum: int) -> N
         return
 
 
+def _terminate_with_grace(process: subprocess.Popen[bytes], *, grace_sec: float) -> int:
+    _terminate_process_group(process, signal.SIGTERM)
+    try:
+        return process.wait(timeout=grace_sec)
+    except subprocess.TimeoutExpired:
+        _terminate_process_group(process, signal.SIGKILL)
+        return process.wait()
+
+
+def _stop_file_requested(stop_file: str | None) -> bool:
+    return bool(stop_file) and os.path.exists(stop_file)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
     args = _parse_args(sys.argv[1:] if argv is None else argv)
     limit_bytes = int(args.limit_gb * 1024**3)
+    stop_file = args.stop_file or None
     print(
-        f"[memory-watch] limit={args.limit_gb:g} GiB command={' '.join(args.command)}",
+        (
+            f"[memory-watch] limit={args.limit_gb:g} GiB "
+            f"stop_file={stop_file or '<disabled>'} command={' '.join(args.command)}"
+        ),
         flush=True,
     )
     process = subprocess.Popen(
@@ -72,7 +114,17 @@ def main(argv: Sequence[str] | None = None) -> int:
         preexec_fn=lambda: _apply_memory_limit(limit_bytes),
     )
     try:
-        return process.wait()
+        while True:
+            return_code = process.poll()
+            if return_code is not None:
+                return return_code
+            if _stop_file_requested(stop_file):
+                print(
+                    f"[memory-watch] stop file detected: {stop_file}; terminating process group",
+                    flush=True,
+                )
+                return _terminate_with_grace(process, grace_sec=args.terminate_grace_sec)
+            time.sleep(args.poll_interval_sec)
     except KeyboardInterrupt:
         _terminate_process_group(process, signal.SIGINT)
         try:

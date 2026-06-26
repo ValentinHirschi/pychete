@@ -1856,6 +1856,43 @@ def test_wilson_line_expansion_can_simplify_generated_color_algebra(
     assert "generated_wilson_line_color_simplified" in canonical_string(simplified_terms[0].numerator)
 
 
+def test_wilson_line_commutator_terms_survive_color_simplification_with_dummy_indices() -> None:
+    theory = Theory("one_loop_setup_wilson_line_commutator_color_fallback")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    vector = theory.field_handle("W")
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        + theory.free_lag(vector)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+    )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=1)
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+    d = theory.index("d")
+
+    terms = setup.interaction_wilson_line_expansion_terms(
+        {"hScalar": ((a, b, c, d),)},
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=True,
+        emit_covariant_derivative_commutator_passes=4,
+        expand_covariant_derivative_commutators=True,
+        simplify_pychete_color_algebra=True,
+    )
+    rendered = "\n".join(canonical_string(term.numerator) for term in terms)
+
+    assert len(terms) == 5
+    assert all("pychete::FieldStrength" in canonical_string(term.numerator) for term in terms)
+    assert "pychete::CG" in rendered
+    assert "spenso::" not in rendered
+
+
 def test_wilson_line_vector_slots_use_matchete_propagator_sign() -> None:
     theory = Theory("one_loop_setup_wilson_line_vector_prop_sign")
     group = theory.symbol("G", role=SymbolRole.GROUP)
@@ -1990,6 +2027,9 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
         one_loop_options=OneLoopMatchOptions(
             integral_backend=OneLoopIntegralBackend.VAKINT,
             wilson_line_expansion_indices_by_trace=expansion,
+            wilson_line_emit_covariant_derivative_commutators=True,
+            wilson_line_emit_covariant_derivative_commutator_passes=3,
+            wilson_line_expand_covariant_derivative_commutators=True,
             truncate_eft_result=False,
         ),
     )
@@ -2000,7 +2040,13 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     assert result.metadata["uses_interaction_power_remainder"] is True
     assert result.metadata["interaction_wilson_line_hybrid"] is True
     assert result.metadata["wilson_line_expansion_enabled"] is True
+    assert result.metadata["wilson_line_commutators_emitted"] is True
+    assert result.metadata["wilson_line_commutator_emit_passes"] == 3
+    assert result.metadata["wilson_line_commutators_expanded"] is True
     assert result.metadata["bosonic_cde_expansion_enabled"] is False
+    assert result.metadata["interaction_wilson_line_commutators_emitted"] is True
+    assert result.metadata["interaction_wilson_line_commutator_emit_passes"] == 3
+    assert result.metadata["interaction_wilson_line_commutators_expanded"] is True
     assert result.metadata["interaction_wilson_line_term_count"] == 1
     assert result.metadata["interaction_wilson_line_trace_names"] == ("hScalar-lScalar",)
     assert result.metadata["interaction_wilson_line_replaced_trace_names"] == "hScalar-lScalar"
@@ -2130,9 +2176,15 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
     mu = theory.index("mu")
     nu = theory.index("nu")
     rho = theory.index("rho")
+    sigma = theory.index("sigma")
     numerator = s.LoopMomentum(mu) * s.LoopMomentum(nu)
     vanishing = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
     survivor = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, rho))
+    four_derivative_survivor = numerator * s.WilsonTerm(
+        phi.label,
+        s.List(left, right),
+        s.List(mu, nu, rho, sigma),
+    )
     odd = s.LoopMomentum(mu) * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu))
 
     assert_expr_equal(
@@ -2145,6 +2197,10 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
     )
     assert "SymmetricLorentzInds" not in canonical_string(
         remove_loop_momentum_symmetry_vanishing_wilson_terms(survivor, (mu, nu))
+    )
+    assert_expr_equal(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(four_derivative_survivor, (mu, nu)),
+        four_derivative_survivor,
     )
     assert_expr_equal(remove_loop_momentum_symmetry_vanishing_wilson_terms(odd, (mu,)), Expression.num(0))
 

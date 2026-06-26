@@ -166,6 +166,12 @@ class OneLoopMatchOptions:
     traces remain in the one-loop source. It is intentionally opt-in until the
     higher-order Wilson-line expansion coverage is validated against committed
     fixtures.
+    ``wilson_line_emit_covariant_derivative_commutators`` and
+    ``wilson_line_expand_covariant_derivative_commutators`` apply the existing
+    Symbolica replacement-rule commutator emitter/lowerer to generated
+    Wilson-line numerators after open derivatives and WilsonTerm lowering.
+    Use these for current-Matchete Wilson-line parity probes that need
+    derivative-slot commutators lowered to registered ``FieldStrength`` atoms.
     For generated Wilson-line plans, set ``wilson_line_max_total_order`` and
     optionally ``wilson_line_trace_names``/``wilson_line_max_slot_order``.
     This is the preferred convenience route for new Matchete parity probes
@@ -230,6 +236,9 @@ class OneLoopMatchOptions:
     wilson_line_max_slot_order: int | None = None
     wilson_line_index_prefix: str = "wilson_line"
     wilson_line_act_open_derivatives: bool = False
+    wilson_line_emit_covariant_derivative_commutators: bool = False
+    wilson_line_emit_covariant_derivative_commutator_passes: int = 1
+    wilson_line_expand_covariant_derivative_commutators: bool = False
     wilson_line_max_derivative_order: int = 4
     wilson_line_filter_terms_by_matching_targets: bool = False
     simplify_pychete_color_algebra: bool = False

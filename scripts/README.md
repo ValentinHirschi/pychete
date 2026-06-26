@@ -76,4 +76,7 @@ dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- 
 ```
 
 The wrapper applies a hard 30 GiB process memory cap before running the command
-and requires no extra Python dependencies.
+and requires no extra Python dependencies. It also polls `stop.order` in the
+current working directory by default; create that file to request clean
+termination of the wrapped process group without using process-management
+commands. Remove stale `stop.order` before starting a long workload.

@@ -345,4 +345,12 @@ without Warsaw-specific core assumptions.
   `WilsonTerm(...)` lowering path, locking the generator orientation for barred
   fields through theory-owned Symbolica group/representation metadata.
 - When running tests or exploratory workloads that can exceed machine memory,
-  use the 30 GiB watchdog wrapper rather than invoking them directly.
+  use the 30 GiB watchdog wrapper rather than invoking them directly. The
+  wrapper now polls `stop.order` in the current working directory by default;
+  remove stale `stop.order` before launching long work, and touch/create
+  `stop.order` to terminate the wrapped process group without needing
+  sandboxed process-management permissions.
+- Current Wilson-line direction: order-four `hScalar` Wilson-line generation
+  now keeps field-strength-bearing Singlet `cHW` source terms even with
+  pychete colour simplification enabled. Exact public projected `cHW` parity
+  remains a later projection/evaluation slice.

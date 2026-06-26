@@ -431,7 +431,14 @@ def lower_native_hep_cg_tensors_to_spenso(theory: Theory, expr: Expression) -> E
         structure = native_hep_cg_tensor_structure_to_spenso(theory, atom[0])
         if structure is None:
             return atom
-        return structure.index(*_cg_index_labels(atom), cook_indices=True).to_expression()
+        try:
+            return structure.index(*_cg_index_labels(atom), cook_indices=True).to_expression()
+        except ValueError:
+            # Generated Wilson-line/CDE terms can carry pychete dummy-index
+            # labels that spenso cannot cook into native AbstractIndex objects
+            # yet. Keep the original theory-owned CG atom instead of letting a
+            # failed Symbolica replacement callback erase the surrounding term.
+            return atom
 
     return expr.replace_multiple(
         [

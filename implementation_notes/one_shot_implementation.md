@@ -51,7 +51,11 @@
   the next `one_shot_implementation_part_*.md` file and rewrite a compact live
   summary.
 - Tests or exploratory workloads that may exceed local memory must be run
-  through `scripts/run_with_memory_watch.py --limit-gb 30`.
+  through `scripts/run_with_memory_watch.py --limit-gb 30`. The wrapper now
+  polls `stop.order` in the current working directory by default; remove stale
+  `stop.order` before launching long work, and create/touch it to terminate the
+  wrapped process group without relying on sandboxed process-management
+  permissions.
 
 ## History Files
 
@@ -841,6 +845,50 @@
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
   passed.
 - `git diff --check` passed after the Wilson-line generated-plan slice.
+- Current Wilson-line commutator/colour-fallback slice:
+  - `OneLoopMatchOptions` now exposes
+    `wilson_line_emit_covariant_derivative_commutators`,
+    `wilson_line_emit_covariant_derivative_commutator_passes`, and
+    `wilson_line_expand_covariant_derivative_commutators`, matching the
+    existing CDE diagnostic controls but routing through explicit Wilson-line
+    trace expansion.
+  - Setup-level Wilson-line expansion methods thread these flags into the
+    native Symbolica replacement-rule commutator emission/lowering pipeline
+    before the existing Wilson-line numerator post-processing.
+  - The loop-momentum symmetry cleanup now only drops a `WilsonTerm` whose
+    derivative group has exactly two indices contained in a symmetric
+    loop-integration marker. Four-derivative Wilson terms must survive this
+    early cleanup because their later derivative-sublist expansion can produce
+    field-strength bilinears.
+  - `spenso.lower_native_hep_cg_tensors_to_spenso(...)` now conservatively
+    keeps a theory-owned pychete `CG(...)` atom when native spenso cannot cook
+    a generated dummy-index label into an `AbstractIndex`. This keeps native
+    colour simplification available for supported terms while preventing
+    callback failures from erasing Wilson-line field-strength terms.
+  - A direct Singlet Scalar Extension target-local probe for `hScalar` order
+    four and `cHW` requirements now keeps six field-strength-bearing
+    Wilson-line terms even with `simplify_pychete_color_algebra=True`. A full
+    projected public `cHW` coefficient probe entered expensive
+    projection/evaluation and was stopped; exact Singlet `cHW` parity remains a
+    later, larger projection-performance slice rather than a gate for this
+    backend/term-generation fix.
+  - The memory wrapper now supports file-based termination through `stop.order`
+    and has a unit regression for that stop-file path, avoiding future stalls
+    on sandboxed permission requests for process management.
+- 30 GiB memory-watch stop-file wrapper gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/unit/dependencies/test_memory_watch.py -q`
+  passed.
+- 30 GiB memory-watch Wilson-line commutator/color fallback gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "expand_wilson_terms or symmetry_vanishing_wilson_terms or wilson_line" -q`
+  passed with 23 tests and 74 deselected.
+- 30 GiB memory-watch validation-fixture Wilson-line forwarding gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "wilson_line or forwards_pychete_color_to_public_match_api" -q`
+  passed with 4 tests and 37 deselected.
+- 30 GiB memory-watch typing gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
+- `git diff --check` passed after the Wilson-line commutator/color-fallback
+  and stop-file wrapper slice.
 
 ## Current Validation Frontier
 
@@ -874,11 +922,21 @@
   and tests should remain bounded and useful for diagnostics, while full
   matching progress should pivot toward explicit Wilson-line trace handling,
   generic basis/on-shell reductions, and backend algebra coverage.
+- Explicit Wilson-line order-four `hScalar` generation now produces
+  field-strength-bearing terms for the Singlet `cHW` target subset, but the
+  final projected public `cHW` coefficient comparison is not yet reproduced.
+  The remaining blocker is projection/evaluation scalability and subsequent
+  basis/on-shell reduction, not the absence of Wilson-line field-strength
+  source terms.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
+  - target-local Wilson-line projection-performance work for Singlet `cHW`:
+    process/evaluate generated order-four `hScalar` terms in smaller batches,
+    keep the source filtered by field/field-strength requirements, and avoid
+    global expansion/factorization before native coefficient extraction;
   - explicit Wilson-line style supertrace representation and metadata, using
     current Matchete behavior as the reference direction rather than expanding
     the legacy CDE route;
