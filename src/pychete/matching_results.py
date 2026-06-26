@@ -31,7 +31,7 @@ from .expr import (
     sum_expr,
     terms,
 )
-from .indices import canonize_tensor_indices, tensor_index_specs
+from .indices import TensorCanonization, canonize_tensor_indices, tensor_index_specs
 from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
@@ -84,6 +84,15 @@ class MatchingExpressionComparison:
     reference: Expression | None = None
     canonical_equal: bool = False
     numeric_probe: NumericProbeResult | None = None
+    candidate_index_canonizations: tuple[TensorCanonization, ...] = ()
+    reference_index_canonizations: tuple[TensorCanonization, ...] = ()
+    index_canonization_failed_terms: int = 0
+
+    @property
+    def index_canonized(self) -> bool:
+        """Whether comparison used Symbolica tensor-index canonicalization."""
+
+        return bool(self.candidate_index_canonizations or self.reference_index_canonizations)
 
     def _repr_latex_(self) -> str:
         status = r"\checkmark" if self.equal else r"\times"
@@ -98,6 +107,10 @@ class MatchingExpressionComparison:
             status = f"different, max_abs_difference={self.numeric_probe.max_abs_difference:g}"
         else:
             status = "different"
+        if self.index_canonized:
+            status = f"{status}; index-canonized terms={len(self.candidate_index_canonizations)}"
+        if self.index_canonization_failed_terms:
+            status = f"{status}; index-canonization failures={self.index_canonization_failed_terms}"
         return f"<code>{escape(self.name)}: {status}</code>"
 
 
@@ -651,10 +664,20 @@ class MatchingResult:
             reference_expr = _optional_expression(reference, name)
             compared_candidate = _transform_optional_expression(candidate_expr, expression_transform)
             compared_reference = _transform_optional_expression(reference_expr, expression_transform)
+            candidate_index_canonizations: tuple[TensorCanonization, ...] = ()
+            reference_index_canonizations: tuple[TensorCanonization, ...] = ()
+            index_canonization_failed_terms = 0
             if canonize_indices and compared_candidate is not None and compared_reference is not None:
-                compared_candidate, compared_reference = _canonize_comparison_indices(
+                candidate_canonized, reference_canonized = _canonize_comparison_indices(
                     compared_candidate,
                     compared_reference,
+                )
+                compared_candidate = candidate_canonized.expression
+                compared_reference = reference_canonized.expression
+                candidate_index_canonizations = candidate_canonized.term_canonizations
+                reference_index_canonizations = reference_canonized.term_canonizations
+                index_canonization_failed_terms = (
+                    candidate_canonized.failed_terms + reference_canonized.failed_terms
                 )
             canonical_equal = (
                 compared_candidate is not None
@@ -688,6 +711,9 @@ class MatchingResult:
                     reference=compared_reference,
                     canonical_equal=canonical_equal,
                     numeric_probe=numeric_probe,
+                    candidate_index_canonizations=candidate_index_canonizations,
+                    reference_index_canonizations=reference_index_canonizations,
+                    index_canonization_failed_terms=index_canonization_failed_terms,
                 )
             )
         return MatchingResultComparison(candidate=self, reference=reference, expressions=tuple(comparisons))
@@ -1452,27 +1478,59 @@ def _indexed_power_projection_index(
     return s.Index(label_cache[key], index[1])
 
 
-def _canonize_comparison_indices(lhs: Expression, rhs: Expression) -> tuple[Expression, Expression]:
+@dataclass(frozen=True)
+class _TensorTermsCanonization:
+    expression: Expression
+    term_canonizations: tuple[TensorCanonization, ...]
+    failed_terms: int = 0
+
+
+def _canonize_comparison_indices(
+    lhs: Expression,
+    rhs: Expression,
+) -> tuple[_TensorTermsCanonization, _TensorTermsCanonization]:
     index_specs = _matching_projection_index_specs(lhs, (rhs,))
     if not index_specs:
-        return lhs, rhs
-    return _canonize_tensor_terms(lhs, index_specs), _canonize_tensor_terms(rhs, index_specs)
+        return (
+            _TensorTermsCanonization(lhs, ()),
+            _TensorTermsCanonization(rhs, ()),
+        )
+    return (
+        _canonize_tensor_terms_with_payload(lhs, index_specs),
+        _canonize_tensor_terms_with_payload(rhs, index_specs),
+    )
 
 
 def _canonize_tensor_terms(
     expr: Expression,
     index_specs: Sequence[tuple[Expression, Expression]],
 ) -> Expression:
+    return _canonize_tensor_terms_with_payload(expr, index_specs).expression
+
+
+def _canonize_tensor_terms_with_payload(
+    expr: Expression,
+    index_specs: Sequence[tuple[Expression, Expression]],
+) -> _TensorTermsCanonization:
     canonized_terms: list[Expression] = []
+    term_canonizations: list[TensorCanonization] = []
+    failed_terms = 0
     for term in terms(expr):
         try:
-            canonized_terms.append(canonize_tensor_indices(term, index_specs).expression)
+            canonized = canonize_tensor_indices(term, index_specs)
+            term_canonizations.append(canonized)
+            canonized_terms.append(canonized.expression)
         except ValueError:
             # Some generated terms currently reuse the same dummy more than
             # twice. Preserve them rather than aborting projection; a later
             # matching slice should split those contractions at their source.
+            failed_terms += 1
             canonized_terms.append(term)
-    return sum_expr(canonized_terms)
+    return _TensorTermsCanonization(
+        expression=sum_expr(canonized_terms),
+        term_canonizations=tuple(term_canonizations),
+        failed_terms=failed_terms,
+    )
 
 
 def _matching_projection_index_specs(

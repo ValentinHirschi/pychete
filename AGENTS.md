@@ -234,7 +234,10 @@ Treat that returned payload as the authoritative index-replacement map for
 aligning dummy indices; do not infer the same map by rescanning strings or
 expression trees. Do not compare raw canonical strings before this
 normalization, and do not write a Python dummy-index canonicalizer when
-Symbolica can provide the canonical replacements.
+Symbolica can provide the canonical replacements. Public comparison diagnostics
+such as `MatchingExpressionComparison` should keep these returned payloads
+attached when they used tensor-index canonicalization, so debugging and
+notebook output can show which native canonical dummy labels were compared.
 
 Before adding or modifying symbolic code, explicitly inspect the Python stubs
 and source listed below. Prefer native primitives even when a Python loop seems

@@ -452,10 +452,21 @@ def test_matching_result_comparison_canonizes_alpha_equivalent_dummy_indices() -
 
     canonized = candidate.compare_to(reference, names=["on_shell_eft_lagrangian"])
     raw = candidate.compare_to(reference, names=["on_shell_eft_lagrangian"], canonize_indices=False)
+    expression = canonized.expressions[0]
 
     assert canonized.equal is True
-    assert canonized.expressions[0].canonical_equal is True
+    assert expression.canonical_equal is True
+    assert expression.index_canonized is True
+    assert expression.index_canonization_failed_terms == 0
+    assert len(expression.candidate_index_canonizations) == 1
+    assert len(expression.reference_index_canonizations) == 1
+    candidate_dummy = expression.candidate_index_canonizations[0].dummy_indices[0]
+    reference_dummy = expression.reference_index_canonizations[0].dummy_indices[0]
+    assert_expr_equal(candidate_dummy.expr, reference_dummy.expr)
+    assert_expr_equal(candidate_dummy.group, fund)
+    assert_expr_equal(reference_dummy.group, fund)
     assert raw.equal is False
+    assert raw.expressions[0].index_canonized is False
 
 
 def test_matching_result_projects_alpha_equivalent_conjugate_representation_indices() -> None:
