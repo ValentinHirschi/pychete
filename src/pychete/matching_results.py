@@ -962,6 +962,7 @@ def _counts_satisfy_projection_atom_requirement_group(
 
 
 def _projection_atom_counts(expr: Expression) -> Counter[tuple[str, str]]:
+    expr = _expand_indexed_field_powers_for_projection(expr)
     counts: Counter[tuple[str, str]] = Counter()
     field_pat = field_pattern()
     for match in expr.match(field_pat):
@@ -1271,6 +1272,9 @@ def _canonize_matching_projection_indices_with_aliases(
     projection_expressions: Sequence[Expression],
     alias_expressions: Sequence[Expression],
 ) -> tuple[Expression, tuple[Expression, ...], tuple[Expression, ...]]:
+    source = _expand_indexed_field_powers_for_projection(source)
+    projection_expressions = tuple(_expand_indexed_field_powers_for_projection(expr) for expr in projection_expressions)
+    alias_expressions = tuple(_expand_indexed_field_powers_for_projection(expr) for expr in alias_expressions)
     index_specs = _matching_projection_index_specs(source, (*projection_expressions, *alias_expressions))
     if not index_specs:
         return source, tuple(projection_expressions), tuple(alias_expressions)
@@ -1278,6 +1282,59 @@ def _canonize_matching_projection_indices_with_aliases(
     canon_targets = tuple(_canonize_tensor_terms(target, index_specs) for target in projection_expressions)
     canon_aliases = tuple(_canonize_tensor_terms(alias, index_specs) for alias in alias_expressions)
     return canon_source, canon_targets, canon_aliases
+
+
+def _expand_indexed_field_powers_for_projection(expr: Expression) -> Expression:
+    """Expand indexed field powers into fresh-index factors for projection only."""
+
+    label_cache: dict[tuple[str, int], Expression] = {}
+    power_pattern = s.PowBaseWildcard ** s.PowExponentWildcard
+
+    def replacement(match: dict[Expression, Expression]) -> Expression:
+        base = match[s.PowBaseWildcard]
+        exponent = as_int(match[s.PowExponentWildcard])
+        if exponent is None or exponent <= 1:
+            return power_pattern.replace_wildcards(match)
+        parsed = _indexed_field_power_base(base)
+        if parsed is None:
+            return power_pattern.replace_wildcards(match)
+        field_expr, conjugate = parsed
+        indices = list_items(field_expr[2])
+        if not indices:
+            return power_pattern.replace_wildcards(match)
+        factors: list[Expression] = []
+        for copy in range(exponent):
+            copied_indices = tuple(
+                _indexed_power_projection_index(index, copy, label_cache=label_cache)
+                for index in indices
+            )
+            copied_field = s.Field(field_expr[0], field_expr[1], s.List(*copied_indices), field_expr[3])
+            factors.append(s.Bar(copied_field) if conjugate else copied_field)
+        return product_expr(factors)
+
+    return expr.replace(power_pattern, replacement, rhs_cache_size=0)
+
+
+def _indexed_field_power_base(expr: Expression) -> tuple[Expression, bool] | None:
+    if is_head(expr, s.Field):
+        return expr, False
+    if is_head(expr, s.Bar) and is_head(expr[0], s.Field):
+        return expr[0], True
+    return None
+
+
+def _indexed_power_projection_index(
+    index: Expression,
+    copy: int,
+    *,
+    label_cache: dict[tuple[str, int], Expression],
+) -> Expression:
+    if not is_head(index, s.Index):
+        return index
+    key = (canonical_string(index), copy)
+    if key not in label_cache:
+        label_cache[key] = s.head(f"matching_projection_power_index_{len(label_cache)}")
+    return s.Index(label_cache[key], index[1])
 
 
 def _canonize_comparison_indices(lhs: Expression, rhs: Expression) -> tuple[Expression, Expression]:

@@ -402,12 +402,25 @@ indices appearing in that canonical expression; use that native output to align
 alpha-equivalent dummy-index contractions before comparing or projecting. Do
 not hand-roll Python dummy-index renaming or rely on raw string equality when
 `canonize_tensors(...)` can make the index structure canonical.
+Before projection/canonicalization, normalize powers of indexed field atoms
+with Symbolica replacement rules into fresh-index products so shorthand terms
+such as `H[i]^3*Bar(H[i])^3` can project against Warsaw-basis operators written
+with independent dummy contractions. Keep this normalization target-local to
+matching-condition projection; do not globally rewrite user expressions just
+for display.
 
 Selected bosonic CDE trace requests must stay target-local. When
 `bosonic_cde_trace_names` or explicit CDE expansion maps select a trace family,
 build only the requested interaction category blocks and reuse identical
 category-pair blocks within that selected trace. Do not construct the full
 interaction supertrace plan just to throw away unselected trace names.
+
+Matchete-style one-loop matching conditions contain both tree-level matching
+pieces and one-loop threshold pieces. Public one-loop previews keep the
+historical loop-only default for diagnostics, but parity probes that compare
+full matching conditions should enable `OneLoopMatchOptions.include_tree_level_matching`.
+The tree-level matched EFT source must be added after loop normalization so
+loop prefactors never multiply tree terms.
 
 Public API discoverability lives in `src/pychete/api.py`. Keep implementation
 functions in their domain modules, but every function/class/enum intended for

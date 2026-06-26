@@ -660,6 +660,50 @@
   after several minutes to preserve the requested testing discipline; the
   directly impacted CDE and projection tests above passed.
 
+### Indexed-Power Projection And Tree-Plus-Loop Source Follow-Up
+
+- Diagnosed the next Singlet `cH` gap after the selected CDE slice. The
+  tree-level heavy-scalar matched EFT already contains the expected
+  `-A^2*kappa/(2*M^4) + A^3*muphi/(6*M^6)` Higgs-six terms, but pychete stored
+  them as indexed-power shorthand such as `H[d1]^3*bar(H[d1])^3`. The
+  registered SMEFT `cH` operator is written with three independent dummy
+  contractions, so projection returned zero even though the source term was
+  present.
+- Added projection-local normalization for powers of indexed `Field(...)` and
+  `Bar(Field(...))` atoms. It uses a Symbolica power-pattern replacement
+  callback to expand powered indexed atoms into fresh-index products, then
+  delegates dummy-index alignment to native `Expression.canonize_tensors(...)`.
+  The same normalized shape is used for the projection atom prefilter, so
+  powered indexed fields are counted with the correct multiplicity instead of
+  being filtered away before canonicalization.
+- Added `OneLoopMatchOptions.include_tree_level_matching`. When enabled,
+  `match_one_loop(...)` computes pychete's tree-level heavy-scalar matched EFT
+  source and adds it to the off/on-shell one-loop result after loop
+  normalization and before final truncation/projection. The loop-only stages
+  are preserved as `loop_only_off_shell_eft_lagrangian` and
+  `loop_only_on_shell_eft_lagrangian`, and the tree source is exposed as
+  `tree_level_eft_lagrangian`.
+- Forwarded `include_tree_level_matching` through validation fixture public
+  match gap reports so Matchete-style full matching-condition probes can opt
+  into tree-plus-loop sources.
+- Re-ran a focused Singlet `cH` public smoke with selected
+  `hScalar-hScalar-hScalar` CDE and `include_tree_level_matching=True`. It
+  completed in about 16.9 seconds and projected
+  `-A^2*kappa/(2*M^4) + A^3*muphi/(6*M^6) + i*kappa^3/(32*pi^2*M^2)`. This
+  closes the previously missing tree-level `cH` pieces for that route; the
+  remaining difference to Matchete is still the broader one-loop threshold,
+  pole/log, and on-shell/basis-reduction content.
+- Focused validation for this follow-up:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_expands_indexed_higgs_bilinear_powers_to_ch tests/integration/validation/test_numeric_probes.py::test_singlet_tree_matching_projects_ch_power_terms tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_can_include_tree_level_matching_source tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api -q'`
+    passed with 4 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -k "projection_ or comparison_canonizes or singlet_tree" -q'`
+    passed with 17 tests and 30 deselected.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_heavy_scalar_tree.py -q'`
+    passed with 20 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

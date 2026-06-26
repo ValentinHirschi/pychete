@@ -109,6 +109,11 @@ class OneLoopMatchOptions:
     immediately expands the reduced on-shell expression; keep it disabled for
     exploratory large-model projection when a less-expanded expression scales
     better.
+    ``include_tree_level_matching`` adds pychete's tree-level heavy-scalar
+    matched EFT Lagrangian to the one-loop result before final truncation and
+    matching-condition projection. The tree part is added after loop
+    normalization, so Matchete-style loop prefactors are applied only to loop
+    terms.
     ``bosonic_cde_expansion_indices_by_trace`` enables the current opt-in CDE
     interaction-supertrace path for explicitly selected trace names. The value
     maps each trace name to one Lorentz-index sequence per propagator slot in
@@ -154,6 +159,7 @@ class OneLoopMatchOptions:
     substitute_heavy_scalar_solutions: bool = False
     heavy_scalar_solution_lagrangian: Expression | None = None
     heavy_scalar_solution_expand: bool = False
+    include_tree_level_matching: bool = False
     truncate_eft_result: bool = True
     expand_abelian_covariant_derivatives: bool = False
     expand_non_abelian_covariant_derivatives: bool = False

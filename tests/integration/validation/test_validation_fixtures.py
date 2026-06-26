@@ -870,6 +870,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         use_public_match_api=True,
         simplify_pychete_color_algebra=True,
         substitute_heavy_scalar_solutions=True,
+        include_tree_level_matching=True,
         bosonic_cde_expansion_indices_by_trace={"hScalar": ((S("mu"),),)},
         bosonic_cde_trace_names=("hScalar",),
         bosonic_cde_max_total_order=2,
@@ -891,6 +892,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert isinstance(options, OneLoopMatchOptions)
     assert options.simplify_pychete_color_algebra is True
     assert options.substitute_heavy_scalar_solutions is True
+    assert options.include_tree_level_matching is True
     assert options.bosonic_cde_expansion_indices_by_trace == {"hScalar": ((S("mu"),),)}
     assert options.bosonic_cde_trace_names == ("hScalar",)
     assert options.bosonic_cde_max_total_order == 2

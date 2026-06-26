@@ -5569,6 +5569,33 @@ def match_one_loop(
         and result.metadata.get("loop_normalization_applied") is not True
     ):
         result = result.with_loop_normalization(options.normalization)
+    if options.include_tree_level_matching:
+        tree_level = match_tree(theory, matching_lagrangian, eft_order=eft_order)
+        result = replace(
+            result,
+            off_shell_eft_lagrangian=(tree_level + result.off_shell_eft_lagrangian).expand(),
+            on_shell_eft_lagrangian=(tree_level + result.on_shell_eft_lagrangian).expand(),
+            supertraces={
+                **result.supertraces,
+                "tree_level_eft_lagrangian": tree_level,
+                "loop_only_off_shell_eft_lagrangian": result.off_shell_eft_lagrangian,
+                "loop_only_on_shell_eft_lagrangian": result.on_shell_eft_lagrangian,
+            },
+            metadata={
+                **result.metadata,
+                "tree_level_matching_included": True,
+                "tree_level_matching_source": "matching_lagrangian",
+            },
+        )
+    else:
+        result = replace(
+            result,
+            metadata={
+                **result.metadata,
+                "tree_level_matching_included": False,
+                "tree_level_matching_source": "disabled",
+            },
+        )
     result = replace(
         result,
         metadata={

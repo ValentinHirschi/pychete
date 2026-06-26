@@ -982,6 +982,61 @@ def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_ch
     assert_expr_equal(projected["cHD"], 2 * coefficient)
 
 
+def test_matching_result_projection_expands_indexed_higgs_bilinear_powers_to_ch() -> None:
+    coefficient = S("condition_projection_ch_power_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    target = smeft_warsaw_operator(theory, "cH")
+    assert target is not None
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.dummy_index(1, fund)
+    source_operator = higgs(i) ** 3 * s.Bar(higgs(i)) ** 3
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    raw = result.project_matching_conditions({"cH": target}, canonize_indices=False)
+    projected = result.project_matching_conditions({"cH": target})
+
+    assert_expr_equal(raw["cH"], Expression.num(0))
+    assert_expr_equal(projected["cH"], coefficient)
+
+
+def test_singlet_tree_matching_projects_ch_power_terms() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    lagrangian = fixture.expression("lagrangian")
+    tree = theory.match(lagrangian, eft_order=6, loop_order=0)
+    assert isinstance(tree, Expression)
+    definition = theory.externals["cH"]
+    target = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=lagrangian,
+        off_shell_eft_lagrangian=tree,
+        on_shell_eft_lagrangian=tree,
+    )
+    A = theory.coupling_handle("A")
+    mass = theory.coupling_handle("M")
+    kappa = theory.coupling_handle("kappa")
+    muphi = theory.coupling_handle("muphi")
+
+    projected = result.project_matching_conditions(
+        {canonical_string(target): target},
+        expand_source=False,
+        normalize_ibp_scalar_bilinears=True,
+        eft_order=6,
+    )
+
+    assert_expr_equal(
+        projected[canonical_string(target)],
+        -A() ** 2 * kappa() / (2 * mass() ** 4) + A() ** 3 * muphi() / (6 * mass() ** 6),
+    )
+
+
 def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() -> None:
     theory = Theory("result_on_shell_reduction")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

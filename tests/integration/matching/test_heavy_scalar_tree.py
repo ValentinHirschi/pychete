@@ -219,6 +219,36 @@ def test_one_loop_match_substitutes_heavy_scalar_solution_before_projection() ->
     assert heavy_atom not in canonical_string(reduced.on_shell_eft_lagrangian)
 
 
+def test_one_loop_match_can_include_tree_level_matching_source() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    loop = theory.define_coupling("loop", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    tree_level = theory.match(lagrangian, eft_order=6, loop_order=0)
+    assert isinstance(tree_level, Expression)
+    engine = FakePoleVakintEngine(loop() * phi() ** 4)
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=engine,
+            include_tree_level_matching=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["tree_level_matching_included"] is True
+    assert result.metadata["tree_level_matching_source"] == "matching_lagrangian"
+    assert_expr_equal(result.expression("tree_level_eft_lagrangian"), tree_level)
+    assert_expr_equal(result.expression("loop_only_on_shell_eft_lagrangian"), loop() * phi() ** 4)
+    assert_expr_equal(result.on_shell_eft_lagrangian, tree_level + loop() * phi() ** 4)
+
+
 def test_heavy_scalar_solution_power_rules_use_fresh_dummy_indices() -> None:
     theory = Theory("heavy_scalar_fresh_dummies")
     theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
