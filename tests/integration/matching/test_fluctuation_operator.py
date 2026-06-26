@@ -1615,8 +1615,13 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
         expected_internal_finite,
     )
     matchete_hbar_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR)
+    external_hbar = S("matching_normalization_external_hbar")
     assert_expr_equal(one_loop_normalization_factor(None), Expression.num(1))
     assert_expr_equal(matchete_hbar_factor, Expression.I * s.HBar)
+    assert_expr_equal(
+        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_HBAR, hbar=external_hbar),
+        Expression.I * external_hbar,
+    )
     assert_expr_equal(
         one_loop_normalization_factor(OneLoopNormalization.MATCHETE_LOOP_FACTOR),
         Expression.I / (16 * Expression.PI**2),

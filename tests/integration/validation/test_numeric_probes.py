@@ -360,6 +360,27 @@ def test_matching_result_can_project_from_unexpanded_source_expression() -> None
     assert_expr_equal(projected.matching_conditions["phi2"], x + 1)
 
 
+def test_matching_result_loop_normalization_accepts_external_hbar_symbol() -> None:
+    theory = Theory("condition_projection_external_hbar")
+    hbar = theory.define_external("hbar")
+    x = S("condition_projection_hbar_source")
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=x,
+        on_shell_eft_lagrangian=2 * x,
+        matching_conditions={"x": 3 * x},
+    )
+
+    normalized = result.with_loop_normalization("matchete_hbar", hbar=hbar())
+
+    assert normalized.metadata["loop_normalization"] == "matchete_hbar"
+    assert_expr_equal(normalized.expression("interaction_power_type_loop_normalization_factor"), Expression.I * hbar())
+    assert_expr_equal(normalized.off_shell_eft_lagrangian, Expression.I * hbar() * x)
+    assert_expr_equal(normalized.on_shell_eft_lagrangian, 2 * Expression.I * hbar() * x)
+    assert_expr_equal(normalized.matching_conditions["x"], 3 * Expression.I * hbar() * x)
+
+
 def test_matching_result_projects_alpha_equivalent_index_contractions() -> None:
     theory = Theory("condition_projection_indices")
     theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")

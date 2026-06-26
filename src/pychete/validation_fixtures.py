@@ -614,6 +614,7 @@ class ValidationFixture:
         vakint_engine: Any | None = None,
         integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
         normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW,
+        hbar: Expression | None = None,
         internal_tensor_reduce: bool = True,
         internal_combine_terms: bool = False,
         internal_max_pole_order: int = 1,
@@ -665,6 +666,7 @@ class ValidationFixture:
             max_trace_order,
         )
         theory = self.theory()
+        resolved_hbar = hbar if hbar is not None else _optional_no_index_external(theory, "hbar")
         lagrangian_expr = self.expression(lagrangian)
         if expand_abelian_covariant_derivatives:
             lagrangian_expr = theory.expand_abelian_covariant_derivatives(lagrangian_expr)
@@ -851,6 +853,7 @@ class ValidationFixture:
                 max_pole_order=internal_max_pole_order,
                 epsilon=epsilon,
                 normalization=normalization,
+                hbar=resolved_hbar,
                 named_supertrace_stage=named_supertrace_stage,
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
@@ -874,7 +877,7 @@ class ValidationFixture:
             normalization_label != OneLoopNormalization.PREVIEW.value
             and result.metadata.get("loop_normalization_applied") is not True
         ):
-            result = result.with_loop_normalization(normalization)
+            result = result.with_loop_normalization(normalization, hbar=resolved_hbar)
         preview = MatchingResult(
             theory=result.theory,
             uv_lagrangian=result.uv_lagrangian,
@@ -944,6 +947,7 @@ class ValidationFixture:
         vakint_engine: Any | None = None,
         integral_backend: OneLoopIntegralBackend | str = OneLoopIntegralBackend.VAKINT,
         normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW,
+        hbar: Expression | None = None,
         internal_tensor_reduce: bool = True,
         internal_combine_terms: bool = False,
         internal_max_pole_order: int = 1,
@@ -1033,6 +1037,7 @@ class ValidationFixture:
             else None
         )
         projected_targets = projected_target_selection.targets if projected_target_selection is not None else None
+        resolved_hbar = hbar if hbar is not None else _optional_no_index_external(self.theory(), "hbar")
         if use_public_match_api:
             matched = self.theory().match(
                 self.expression(lagrangian),
@@ -1051,6 +1056,7 @@ class ValidationFixture:
                     named_supertrace_short_form=named_supertrace_short_form,
                     named_supertrace_engine=named_supertrace_engine,
                     normalization=normalization,
+                    hbar=resolved_hbar,
                     tensor_reduce=internal_tensor_reduce,
                     tensor_reduce_engine=vakint_engine,
                     combine_terms=internal_combine_terms,
@@ -1132,6 +1138,7 @@ class ValidationFixture:
                 vakint_engine=vakint_engine,
                 integral_backend=integral_backend,
                 normalization=normalization,
+                hbar=resolved_hbar,
                 internal_tensor_reduce=internal_tensor_reduce,
                 internal_combine_terms=internal_combine_terms,
                 internal_max_pole_order=internal_max_pole_order,
@@ -1731,6 +1738,13 @@ def _comparison_expression_transform(
         return transformed
 
     return transform
+
+
+def _optional_no_index_external(theory: Theory, name: str) -> Expression | None:
+    definition = theory.externals.get(name)
+    if definition is None or definition.index_exprs:
+        return None
+    return theory.external_handle(name)()
 
 
 def _metadata(value: Any) -> dict[str, str | int | float | bool | None]:

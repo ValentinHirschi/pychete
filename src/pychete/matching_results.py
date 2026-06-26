@@ -427,6 +427,7 @@ class MatchingResult:
         self,
         normalization: OneLoopNormalizationInput,
         *,
+        hbar: Expression | None = None,
         stage: str | None = None,
         unnormalized_expression_name: str | None = None,
         unnormalized_expression_alias: str | None = None,
@@ -444,7 +445,7 @@ class MatchingResult:
         normalization_label = one_loop_normalization_label(normalization)
         if normalization_label == OneLoopNormalization.PREVIEW.value:
             return self
-        factor = one_loop_normalization_factor(normalization)
+        factor = one_loop_normalization_factor(normalization, hbar=hbar)
         normalized_off_shell = (factor * self.off_shell_eft_lagrangian).expand()
         normalized_on_shell = (factor * self.on_shell_eft_lagrangian).expand()
         normalized_matching_conditions = {

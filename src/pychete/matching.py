@@ -3149,6 +3149,7 @@ class OneLoopSetup:
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
         normalization: OneLoopNormalizationInput = OneLoopNormalization.MATCHETE_HBAR,
+        hbar: Expression | None = None,
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
@@ -3173,6 +3174,7 @@ class OneLoopSetup:
         )
         return unnormalized.with_loop_normalization(
             normalization,
+            hbar=hbar,
             stage="interaction_power_type_normalized_vakint_result",
             unnormalized_expression_name="interaction_power_type_vakint_integral_sum",
         )
@@ -5545,6 +5547,7 @@ def match_one_loop(
             max_pole_order=options.max_pole_order,
             epsilon=options.epsilon,
             normalization=options.normalization,
+            hbar=options.hbar,
             named_supertrace_stage=options.named_supertrace_stage,
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
@@ -5568,7 +5571,7 @@ def match_one_loop(
         normalization_label != OneLoopNormalization.PREVIEW.value
         and result.metadata.get("loop_normalization_applied") is not True
     ):
-        result = result.with_loop_normalization(options.normalization)
+        result = result.with_loop_normalization(options.normalization, hbar=options.hbar)
     if options.include_tree_level_matching:
         tree_level = match_tree(theory, matching_lagrangian, eft_order=eft_order)
         result = replace(

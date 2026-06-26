@@ -731,6 +731,29 @@
     passed.
   - `git diff --check` passed.
 
+## Current Matchete Hbar Normalization Slice
+
+- Diagnosed the selected Singlet `cH` CDE probe with tree source enabled:
+  preview normalization gives the tree terms plus
+  `i*kappa^3/(32*pi^2*M^2)`, while `MATCHETE_HBAR` previously converted that
+  to package-level `s.HBar`. Converted Matchete fixtures instead store
+  `hbar` as a theory-owned external symbol such as
+  `Singlet_Scalar_Extension::external_hbar`.
+- Added optional `hbar` support to `one_loop_normalization_factor(...)`,
+  `MatchingResult.with_loop_normalization(...)`, and `OneLoopMatchOptions`.
+  The default remains the central `s.HBar` symbol, preserving existing public
+  behavior, but callers can now keep Matchete-parity loop-convention symbols
+  theory-owned.
+- Updated `ValidationFixture.one_loop_preview(...)` and
+  `one_loop_preview_gap_report(...)` to auto-resolve a registered no-index
+  external named `hbar` from the active theory and pass it into one-loop
+  normalization. This avoids comparing converted Matchete conditions carrying
+  `external_hbar` against pychete's package-level `s.HBar`.
+- Updated `AGENTS.md` to make the Matchete-parity hbar convention explicit.
+- Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_loop_normalization_accepts_external_hbar_symbol tests/integration/matching/test_fluctuation_operator.py::test_one_loop_setup_builds_operator_derived_propagator_insertions tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_apply_vakint_normalization_without_mathematica tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_resolves_registered_hbar_for_matchete_normalization -q'`
+    passed with 4 tests.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with

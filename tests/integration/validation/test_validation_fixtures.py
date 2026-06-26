@@ -1315,6 +1315,33 @@ def test_validation_fixture_gap_report_forwards_internal_scale_controls(
     assert captured["simplify_pychete_color_algebra"] is True
 
 
+def test_validation_fixture_gap_report_resolves_registered_hbar_for_matchete_normalization(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+    )
+    captured: dict[str, object] = {}
+
+    def fake_preview(self: object, **kwargs: object) -> MatchingResult:
+        captured.update(kwargs)
+        return candidate
+
+    monkeypatch.setattr(type(fixture), "one_loop_preview", fake_preview)
+    fixture.one_loop_preview_gap_report(
+        candidate,
+        reference_name="hbar_reference",
+        normalization=OneLoopNormalization.MATCHETE_HBAR,
+    )
+
+    assert_expr_equal(captured["hbar"], theory.external_handle("hbar")())
+
+
 def test_validation_fixture_gap_report_can_simplify_loop_functions_for_comparison(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

@@ -140,6 +140,13 @@ For matching-condition extraction from large one-loop expressions, prefer
 target coefficient first with native `Expression.coefficient(...)`, then
 applies `series_eft(...)` to only `coefficient * target`, preserving total
 EFT-order semantics without forcing global expansion of the full result.
+For Matchete-parity validation, keep loop-convention symbols theory-owned.
+When using `OneLoopNormalization.MATCHETE_HBAR` against converted Matchete
+fixtures, pass `OneLoopMatchOptions.hbar` as the registered external `hbar`
+symbol, or let `ValidationFixture.one_loop_preview_gap_report(...)` resolve it
+from the active theory. Do not compare converted Matchete conditions containing
+`external_hbar` against package-level `s.HBar` without an explicit convention
+choice.
 Before calling native `Expression.coefficient(...)` on large composite
 matching targets, prefilter candidate source terms with Symbolica pattern
 matches over registered field and field-strength labels. The filter must be

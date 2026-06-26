@@ -114,6 +114,11 @@ class OneLoopMatchOptions:
     matching-condition projection. The tree part is added after loop
     normalization, so Matchete-style loop prefactors are applied only to loop
     terms.
+    ``hbar`` optionally supplies the symbol used by the
+    ``MATCHETE_HBAR`` normalization factor. When omitted, pychete uses the
+    central ``s.HBar`` symbol; Matchete-derived validation fixtures can pass
+    their registered external ``hbar`` symbol to compare against converted
+    Matchete conditions without a separate replacement pass.
     ``bosonic_cde_expansion_indices_by_trace`` enables the current opt-in CDE
     interaction-supertrace path for explicitly selected trace names. The value
     maps each trace name to one Lorentz-index sequence per propagator slot in
@@ -144,6 +149,7 @@ class OneLoopMatchOptions:
     named_supertrace_short_form: bool | None = None
     named_supertrace_engine: Any | None = None
     normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW
+    hbar: Expression | None = None
     tensor_reduce: bool = False
     tensor_reduce_engine: Any | None = None
     combine_terms: bool = True
@@ -199,6 +205,8 @@ class OneLoopMatchOptions:
 
 def one_loop_normalization_factor(
     normalization: OneLoopNormalizationInput = OneLoopNormalization.PREVIEW,
+    *,
+    hbar: Expression | None = None,
 ) -> Expression:
     """Return the Symbolica factor for a one-loop normalization convention."""
 
@@ -211,7 +219,7 @@ def one_loop_normalization_factor(
     if selected is OneLoopNormalization.PREVIEW:
         return Expression.num(1)
     if selected is OneLoopNormalization.MATCHETE_HBAR:
-        return Expression.I * s.HBar
+        return Expression.I * (s.HBar if hbar is None else hbar)
     return Expression.I / (16 * Expression.PI**2)
 
 
