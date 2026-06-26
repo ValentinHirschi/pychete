@@ -17,16 +17,20 @@ from .spinor import is_barred_fermion, is_fermion_field, ncm_expr, ncm_target_re
 from .theory import FieldDefinition, FieldHandle, FieldVariation, Theory
 
 
+def _normalize_functional_expression(expr: Expression) -> Expression:
+    return normalize_ncm(expr)
+
+
 def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expression) -> Expression:
     out = expr
     for index in indices:
-        out = _single_cd(index, out).expand()
+        out = _normalize_functional_expression(_single_cd(index, out))
     return out
 
 
 def _single_cd(index: Expression, expr: Expression) -> Expression:
     varied = normalize_ncm(expr.replace_multiple(_cd_variation_replacements(index)))
-    return normalize_ncm(varied.series(s.CDVariationParameter, 0, 1).to_expression().coefficient(s.CDVariationParameter).expand())
+    return _normalize_functional_expression(varied.series(s.CDVariationParameter, 0, 1).to_expression().coefficient(s.CDVariationParameter))
 
 
 def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
@@ -112,11 +116,10 @@ def partial_functional_derivative(lagrangian: Expression, target_field: Expressi
         else [bar_protector, target_replacement]
     )
     varied = normalize_ncm(lagrangian.replace_multiple(replacements))
-    return normalize_ncm(
+    return _normalize_functional_expression(
         varied.series(s.FunctionalVariationParameter, 0, 1)
         .to_expression()
         .coefficient(s.FunctionalVariationParameter)
-        .expand()
     )
 
 
@@ -164,7 +167,7 @@ def derive_eom(
             contribution = apply_cd(tuple(reversed(derivatives)), partial)
             residual = residual + ((-1) ** len(derivatives)) * contribution
 
-    return normalize_ncm(residual.expand())
+    return _normalize_functional_expression(residual)
 
 
 def eom_expression(theory: Theory, lagrangian: Expression, field: FieldHandle | FieldDefinition | str, *, eft_order: int = 6) -> Expression:

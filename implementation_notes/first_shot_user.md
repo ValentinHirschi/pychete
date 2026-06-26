@@ -87,3 +87,31 @@
 > And what about the spenso_bridge.py? Do we have any dependencies of this somewhere, and should that be changed to an idenso_bridge?
 
 > I want to emphasize that color is not a special group in pychete, we will treat general Lie groups, and so don't want to use time with one special case.
+
+### Dirac algebra validation goal
+
+> If you didn't already, I want you to implement all Dirac-algebra unit tests from Matchete Validation/Test/NCM.wl that cover the current features of the Dirac algebra. Then ensure that they all pass.
+
+> The function is_commutative_spin_factor will be called a lot. We need it to be performant. Fastest check is most likely to check for things that are non-commutative and otherwise default to True (rather than listing the true things individually).
+
+> Why do you have both s.PL/s.PR and s.Proj?
+
+> Sure, get rid of it. But then also treat s.PL/s.PR at the level of _NONCOMMUTATIVE_SPIN_HEADS.
+
+> What version of symbolica are we running here?
+
+> Ok, crucial design question: I've seen that symbolica allows the use of normalization hooks for symbols. This looks like this is the canonical way to treat various "normalization" tasks. Currently there's an explicit call to normalize NCM, but it seems like having this be automated on the symbolica side would be canonical. Any drawbacks of this approach?
+
+> in matching.py we now have HeavyFermionSolution and HeavyScalarSolution. This is largely duplicate code, with more to come. We need to organize it better
+
+> I don't think we need separate wrapper classes just for the fermions to call normalize_ncm as part of normalize solutions. There's no issue in also calling this on scalar fields. It has to be a very cheap function to call or we have a big problem anyway
+
+> You should also call normalize_ncm before expand. NCM is further down towards the leaf of expressions.
+
+> Why do you need to normalize ncm twice?
+
+> Now for the Heavy field solutions. This thing worries me:
+> HeavyScalarSolution = HeavyFieldSolution
+> HeavyFermionSolution = HeavyFieldSolution
+>
+> My suspicion is that we can unify a lot (but not all) of the machinery for determining the heavy field solutions. EVentually we'll also add vectors, so might as well unify now

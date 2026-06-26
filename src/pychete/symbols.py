@@ -279,7 +279,6 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "NCM": lambda: _print_ncm(expr, mode, kwargs),
         "DiracProduct": lambda: _print_ncm(expr, mode, kwargs),
         "Gamma": lambda: _print_gamma(expr, mode, kwargs),
-        "Proj": lambda: _call("Proj", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "CG": lambda: _call("CG", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "EOM": lambda: _print_eom(expr, mode, kwargs),
         "HeavyFieldOrder": lambda: _call("HFO", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -442,7 +441,6 @@ class SymbolStore:
         "NCM",
         "DiracProduct",
         "Gamma",
-        "Proj",
         "CG",
         "EOM",
         "HeavyFieldOrder",
@@ -578,10 +576,6 @@ class SymbolStore:
     @cached_property
     def Gamma(self) -> Expression:
         return self.head("Gamma")
-
-    @cached_property
-    def Proj(self) -> Expression:
-        return self.head("Proj")
 
     @cached_property
     def CG(self) -> Expression:

@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from symbolica import Expression
 
-from pychete import FieldMassKind, Theory, canonical_string, s
+from pychete import FieldMassKind, HeavyFieldFamily, Theory, canonical_string, s
 
 from tests.conftest import assert_expr_equal
 
@@ -27,6 +27,7 @@ def test_heavy_scalar_eom_and_fixed_order_solution_match_reference() -> None:
     assert_expr_equal(eom, expected_eom)
 
     solution = theory.solve_heavy_scalar_eoms(lagrangian, eft_order=6)["S"]
+    assert solution.family is HeavyFieldFamily.SCALAR
     assert_expr_equal(solution.orders[1], -g() * phi() ** 2 / (2 * mass() ** 2))
     assert_expr_equal(solution.orders[2], Expression.num(0))
     assert_expr_equal(

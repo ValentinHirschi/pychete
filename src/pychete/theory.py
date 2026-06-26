@@ -13,7 +13,7 @@ from .expr import derivative_indices_expr, internal_indices_expr, is_head, loren
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
-    from .matching import HeavyFermionSolution, HeavyScalarSolution
+    from .matching import HeavyFieldSolution
 
 
 class FieldMassKind(StrEnum):
@@ -403,7 +403,7 @@ class Theory:
 
     A theory owns the symbols needed to interpret Symbolica expressions, but it
     does not own a Lagrangian. Pass Lagrangian expressions explicitly to methods
-    such as :meth:`derive_eom`, :meth:`solve_heavy_scalar_eoms`, and
+    such as :meth:`derive_eom`, :meth:`solve_heavy_field_eoms`, and
     :meth:`match`.
     """
 
@@ -800,10 +800,22 @@ class Theory:
 
         return derive_eom(self, lagrangian, field, eft_order=eft_order, variation=variation)
 
-    def solve_heavy_scalar_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyScalarSolution]:
+    def solve_heavy_field_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyFieldSolution]:
+        """Solve all supported heavy-field equations of motion order by order.
+
+        Returns a mapping from heavy field names to ``HeavyFieldSolution``
+        objects. Solutions are recomputed for the supplied Lagrangian and are
+        not cached on the theory.
+        """
+
+        from .matching import solve_heavy_field_eoms
+
+        return solve_heavy_field_eoms(self, lagrangian, eft_order=eft_order)
+
+    def solve_heavy_scalar_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyFieldSolution]:
         """Solve heavy scalar equations of motion order by order.
 
-        Returns a mapping from heavy field names to ``HeavyScalarSolution``
+        Returns a mapping from heavy scalar names to ``HeavyFieldSolution``
         objects. Solutions are recomputed for the supplied Lagrangian and are
         not cached on the theory.
         """
@@ -812,7 +824,7 @@ class Theory:
 
         return solve_heavy_scalar_eoms(self, lagrangian, eft_order=eft_order)
 
-    def solve_heavy_fermion_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyFermionSolution]:
+    def solve_heavy_fermion_eoms(self, lagrangian: Expression, *, eft_order: int = 6) -> dict[str, HeavyFieldSolution]:
         """Solve heavy Dirac-fermion equations of motion order by order.
 
         The current implementation supports diagonal heavy Dirac fields with

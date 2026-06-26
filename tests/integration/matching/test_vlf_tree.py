@@ -4,7 +4,7 @@ from pathlib import Path
 
 from symbolica import Expression
 
-from pychete import bar_expr, canonical_string, s
+from pychete import HeavyFieldFamily, bar_expr, canonical_string, s
 from pychete.loaders import load_matchete_model, load_python_model
 from pychete.spinor import ncm_expr
 
@@ -35,6 +35,8 @@ def _expected_vlf_tree_result(path: str):
 
 def test_vlf_python_asset_matches_raw_offshell_tree_result_through_dimension_six() -> None:
     theory, expressions, expected = _expected_vlf_tree_result("assets/models/VLF_toy_model.py")
+    solution = theory.solve_heavy_field_eoms(expressions["lagrangian"], eft_order=6)["Psi"]
+    assert solution.family is HeavyFieldFamily.FERMION
 
     matched = theory.match(expressions["lagrangian"], eft_order=6, loop_order=0)
 

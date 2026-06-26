@@ -451,3 +451,156 @@
   around general Lie-group data and identities, not a dedicated colour/SU(3)
   path. idenso's colour-named routines can be revisited only as backend details
   if they fit that general abstraction.
+
+### Matchete NCM validation port
+
+- Started porting the in-scope Dirac/NCM validation tests from
+  `Mathematica_reference/Matchete/Validation/Tests/NCM.wl`.
+- The scope gate for this pass is "current pychete Dirac-algebra features":
+  native Symbolica NCM ordering/linearity/scalar extraction, `bar_expr`/Hermitian
+  conjugation behavior, projector normalization, and spin-chain classification.
+  Fully fledged Matchete tensor-index simplification, charge conjugation,
+  Majorana-specific chains, and broader Lie-group algebra remain out of scope
+  unless they are already implemented by pychete.
+- Added Matchete-style spin-chain predicate helpers:
+  `is_left_open_spin_chain`, `is_right_open_spin_chain`, and
+  `is_closed_spin_chain`. These wrap `spin_chain_kind` while preserving
+  Matchete's convention that pure Dirac matrix chains are both left- and
+  right-open.
+- Extended `normalize_ncm` with conservative nested closed-spinor-line
+  extraction for the endpoint vocabulary currently implemented in pychete
+  (`Bar[fermion]`, `fermion`, and Dirac atoms). This ports Matchete's active
+  "Contraction of spinors 1-3" behavior without introducing unsupported
+  `Transp`/`CConj` semantics.
+- Added `tests/unit/spinor/test_matchete_ncm_reference.py` covering these active
+  Matchete `NCM.wl` TestIDs:
+  - `Extract scalar from spin chain`
+  - `Extract derivative scalar from spin chain`
+  - `Contraction of spinors 1`
+  - `Contraction of spinors 2`
+  - `Contraction of spinors 3`
+  - `LOpenSpinChainQ 1-5, 7, 9`
+  - `ROpenSpinChainQ 1-5, 7, 9`
+  - `ClosedSpinChainQ 1-4`
+  - `CanonizeSpinorLines: nothing 1, 2, 4` as normalization no-ops in the
+    currently implemented endpoint vocabulary.
+- Left the remaining active Matchete `NCM.wl` TestIDs unported for this pass
+  because they require not-yet-implemented pychete features:
+  - `Bar of Majorana with Dirac fermions 1-2`, `Bar of Majorana mass`,
+    `Canonical ordering 2-4`, `CanonizeSpinorLines: nothing 3`, and
+    `CanonizeSpinorLines: split chain 1-3` require `CConj`, `Transp`,
+    GammaCC, or Majorana-specific canonicalization.
+  - `LOpenSpinChainQ 6, 8`, `ROpenSpinChainQ 6, 8`, and
+    `Canonical ordering 1, 5` require `Transp`.
+  - `CanonizeSpinorLines: abort 1-2` require a public/explicit
+    `CanonizeSpinorLines` operation with Matchete-style diagnostics rather than
+    the current passive normalization path.
+- Focused verification passed:
+  `source "$HOME/.bashrc"; dependencies/.venv/bin/python -m pytest tests/unit/spinor/test_matchete_ncm_reference.py tests/unit/spinor/test_ncm.py`
+  and `tests/unit/definitions/test_public_api.py`.
+- Final verification passed:
+  `source "$HOME/.bashrc"; dependencies/.venv/bin/python -m pytest tests`
+  collected 78 tests with 77 passing and 1 expected skip for the optional
+  GammaLoop API.
+
+### NCM commutativity hot-path optimization
+
+- Reworked `is_commutative_spin_factor` to use a noncommutative blacklist with
+  a commutative default. It now fast-returns for numbers/variables, recurses
+  only for structural `Add`, `Mul`, `Pow`, `Bar`, and `CD`, and uses one
+  function-head lookup for pychete heads instead of checking every known
+  commutative head individually.
+- Preserved the current noncommutative cases: chiral projectors, `NCM`,
+  `DiracProduct`, `Gamma`, fermion fields, `Bar[fermion]`, and
+  derivatives of noncommutative spin factors. Couplings, field strengths,
+  metrics, CG tensors, and future ordinary function heads now fall through to
+  the intended commutative default.
+- Added a regression test in `tests/unit/spinor/test_ncm.py` for the new
+  default-commutative policy and the known noncommutative exceptions.
+- Verification passed:
+  `source "$HOME/.bashrc"; dependencies/.venv/bin/python -m pytest tests`
+  collected 79 tests with 78 passing and 1 expected skip for the optional
+  GammaLoop API.
+
+### Projector representation audit
+
+- Traced current uses of `s.PL`, `s.PR`, and `s.Proj`.
+- `s.PL` and `s.PR` are the canonical active pychete projector atoms used by
+  the Mathematica loader, VLF asset, NCM normalization, heavy-fermion matching,
+  and idenso bridge.
+- `s.Proj` is currently only a Matchete-shaped leftover/generic wrapper: it is
+  registered in `SymbolStore`, accepted by `is_dirac_atom`, and covered by a
+  pretty-printing smoke test, but it is not used by the actual projector
+  simplification or matching path.
+- Removed `s.Proj` from the central symbol registry, custom print handlers, and
+  pretty-printing smoke coverage. `s.PL` and `s.PR` remain the sole canonical
+  pychete chirality projectors.
+- Moved `s.PL` and `s.PR` into the cached noncommutative spin-symbol blacklist
+  used by `is_commutative_spin_factor`, so projector atoms are handled through
+  the same name-based hot path as `NCM`, `Gamma`, and `DiracProduct` instead of
+  through separate equality checks.
+
+### Symbolica normalization hook design note
+
+- Inspected the local Symbolica 2.1.0 source for symbol normalization hooks.
+  Python symbols accept a `normalization=Transformer` argument; the transformer
+  is run after Symbolica's own function normalization whenever an expression
+  with that head is normalized.
+- Confirmed a hook can enforce local invariants immediately at construction
+  time, e.g. `f()` can normalize to `42` in a fresh-symbol smoke test.
+- Confirmed the documented self-reference caveat: creating a normalizer whose
+  pattern mentions the same symbol by name defines the symbol before the hooked
+  definition is installed, causing a redefinition error. Self-normalizers need
+  wildcard-function patterns or a deliberately staged construction.
+- Current conclusion: use hooks for small, pure, idempotent NCM invariants that
+  can be expressed as native Symbolica transformers. Do not move the full
+  current `normalize_ncm` body into a Python `Transformer.map` hook yet, because
+  it would run on every `NCM` construction, cross the Python boundary, depend on
+  pychete semantic predicates such as fermion/scalar field metadata, and make
+  it harder to opt out, debug, or attach Matchete-style diagnostics.
+- Recommended migration path: keep explicit `normalize_ncm` as the semantic
+  normalization service for now, while progressively moving purely syntactic
+  pieces into the `s.NCM` symbol definition once they are expressible without
+  Python callbacks and once import-order/redefinition tests are in place.
+
+### Heavy-field matching solution refactor
+
+- Replaced the duplicated `HeavyScalarSolution`/`HeavyFermionSolution`
+  dataclass bodies in `matching.py` with a single concrete
+  `HeavyFieldSolution`.
+- `HeavyFieldSolution` owns EFT-order summation, conjugate fallback behavior,
+  notebook `_repr_latex_`/`_repr_html_` hooks, and inclusive-solution
+  normalization. It now calls the common NCM normalizer for every heavy field
+  solution, including scalars.
+- Removed the `HeavyScalarSolution = HeavyFieldSolution` and
+  `HeavyFermionSolution = HeavyFieldSolution` aliases. The public API now
+  exposes `HeavyFieldSolution` plus a `HeavyFieldFamily` enum carried by each
+  solution.
+- Added an internal `_HeavyFieldSolverSpec` registry shape: each heavy-field
+  family contributes a field-type selector, an EOM/source builder, an order
+  solver, and a conjugate-order strategy. `match_tree` now solves all
+  registered heavy-field families through this registry instead of manually
+  merging scalar and fermion solution maps.
+- Added `Theory.solve_heavy_field_eoms` for the generic all-family solve path.
+  The scalar and fermion methods remain as convenience filters over the same
+  generic solver machinery.
+- Preserved the public `solve_heavy_scalar_eoms` and
+  `solve_heavy_fermion_eoms` wrappers as compatibility entry points, backed by
+  the shared solver machinery.
+- Exported `HeavyFieldSolution` and `HeavyFieldFamily` through
+  `pychete.api`/package root as the common solution concept and family tag.
+- Added shared matching-local and functional-local normalization helpers that
+  call `normalize_ncm(expr)`. The extra explicit second normalization pass was
+  removed after checking `normalize_ncm` itself: it already performs NCM
+  replacement before expansion and repeats to a fixed point.
+- Matching now uses the common NCM normalizer when preparing Lagrangians,
+  zeroing heavy fields in sources, summing inclusive solutions, building
+  scalar/fermion order solutions, replacing heavy fields, and returning the
+  final matched result.
+- Functional derivative/EOM code and the fermion derivative bilinear
+  canonicalizer now rely directly on the same `normalize_ncm` ordering instead
+  of expanding first.
+- Verification passed:
+  `source "$HOME/.bashrc"; dependencies/.venv/bin/python -m pytest tests`
+  collected 79 tests with 78 passing and 1 expected skip for the optional
+  GammaLoop API.

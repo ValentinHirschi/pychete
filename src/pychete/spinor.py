@@ -20,6 +20,20 @@ class SpinChainKind(StrEnum):
     CLOSED = "closed"
 
 
+_FIELD_HEAD = s.Field.get_name()
+_BAR_HEAD = s.Bar.get_name()
+_CD_HEAD = s.CD.get_name()
+_DIRAC_ATOM_HEADS = frozenset(
+    {
+        s.DiracProduct.get_name(),
+        s.Gamma.get_name(),
+        s.PL.get_name(),
+        s.PR.get_name(),
+    }
+)
+_NONCOMMUTATIVE_SPIN_HEADS = _DIRAC_ATOM_HEADS | frozenset({s.NCM.get_name()})
+
+
 def _seq_items(expr: Expression) -> tuple[Expression, ...]:
     if expr.get_type() is AtomType.Fn and expr.get_name() == "symbolica::arg":
         return tuple(expr[i] for i in range(len(expr)))
@@ -45,11 +59,8 @@ def is_barred_fermion(expr: Expression) -> bool:
 def is_dirac_atom(expr: Expression) -> bool:
     """Return whether ``expr`` is a Dirac-space atom used in NCM chains."""
 
-    return bool(expr == s.PR) or bool(expr == s.PL) or is_head(expr, s.Gamma) or is_head(expr, s.Proj) or is_head(expr, s.DiracProduct)
-
-
-def _is_commutative_field(expr: Expression) -> bool:
-    return _is_field(expr) and not bool(field_type_from_label(expr[0]) == s.Fermion)
+    kind = expr.get_type()
+    return (kind is AtomType.Fn or kind is AtomType.Var) and expr.get_name() in _DIRAC_ATOM_HEADS
 
 
 def is_commutative_spin_factor(expr: Expression) -> bool:
@@ -58,29 +69,28 @@ def is_commutative_spin_factor(expr: Expression) -> bool:
     kind = expr.get_type()
     if kind is AtomType.Num:
         return True
-    if bool(expr == s.PR) or bool(expr == s.PL):
-        return False
     if kind is AtomType.Var:
-        return True
-    if is_head(expr, s.NCM) or is_head(expr, s.DiracProduct) or is_head(expr, s.Gamma) or is_head(expr, s.Proj):
-        return False
-    if is_bar_field(expr):
-        return not is_fermion_field(expr[0])
-    if is_head(expr, s.Bar):
-        return is_commutative_spin_factor(expr[0])
-    if _is_commutative_field(expr):
-        return True
-    if is_head(expr, s.Coupling) or is_head(expr, s.FieldStrength) or is_head(expr, s.Delta) or is_head(expr, s.Metric) or is_head(expr, s.CG):
-        return True
-    if is_head(expr, s.CD):
-        return is_commutative_spin_factor(expr[1])
+        return expr.get_name() not in _NONCOMMUTATIVE_SPIN_HEADS
+
     if kind is AtomType.Add:
         return all(is_commutative_spin_factor(item) for item in args(expr))
     if kind is AtomType.Mul:
         return all(is_commutative_spin_factor(item) for item in factors(expr))
     if kind is AtomType.Pow:
         return is_commutative_spin_factor(expr[0])
-    return False
+    if kind is not AtomType.Fn:
+        return True
+
+    head_name = expr.get_name()
+    if head_name in _NONCOMMUTATIVE_SPIN_HEADS:
+        return False
+    if head_name == _FIELD_HEAD:
+        return not bool(field_type_from_label(expr[0]) == s.Fermion)
+    if head_name == _BAR_HEAD:
+        return is_commutative_spin_factor(expr[0])
+    if head_name == _CD_HEAD:
+        return is_commutative_spin_factor(expr[1])
+    return True
 
 
 def _split_commutative_factor(expr: Expression) -> tuple[Expression, Expression | None]:
@@ -140,6 +150,30 @@ def _ncm_from_items(items: tuple[Expression, ...]) -> Expression:
     return s.NCM(*items)
 
 
+def _nested_closed_spinor_line(items: tuple[Expression, ...]) -> tuple[int, int] | None:
+    if len(items) < 4 or not is_barred_fermion(items[0]) or not is_fermion_field(items[-1]):
+        return None
+
+    for left in range(1, len(items) - 1):
+        if not is_barred_fermion(items[left]):
+            continue
+        for right in range(left + 1, len(items) - 1):
+            if is_fermion_field(items[right]):
+                return left, right
+    return None
+
+
+def _split_nested_spinor_lines(items: tuple[Expression, ...]) -> Expression:
+    nested = _nested_closed_spinor_line(items)
+    if nested is None:
+        return _ncm_from_items(items)
+
+    left, right = nested
+    inner = items[left : right + 1]
+    outer = items[:left] + items[right + 1 :]
+    return normalize_ncm(_ncm_from_items(outer)) * normalize_ncm(_ncm_from_items(inner))
+
+
 def _normalize_ncm_match(match: dict[Expression, Expression]) -> Expression:
     raw_factors = _seq_items(match[s.NCMInnerWildcard])
     scalar = Expression.num(1)
@@ -162,7 +196,7 @@ def _normalize_ncm_match(match: dict[Expression, Expression]) -> Expression:
     simplified = _simplify_projectors(ordered)
     if simplified is None:
         return Expression.num(0)
-    return (scalar * _ncm_from_items(simplified)).expand()
+    return (scalar * _split_nested_spinor_lines(simplified)).expand()
 
 
 def normalize_ncm(expr: Expression) -> Expression:
@@ -263,6 +297,24 @@ def spin_chain_kind(expr: Expression) -> SpinChainKind:
     return SpinChainKind.MATRIX if has_spin_atom else SpinChainKind.SCALAR
 
 
+def is_left_open_spin_chain(expr: Expression) -> bool:
+    """Return whether ``expr`` is open on the left in Matchete's sense."""
+
+    return spin_chain_kind(expr) in {SpinChainKind.LEFT_OPEN, SpinChainKind.MATRIX}
+
+
+def is_right_open_spin_chain(expr: Expression) -> bool:
+    """Return whether ``expr`` is open on the right in Matchete's sense."""
+
+    return spin_chain_kind(expr) in {SpinChainKind.RIGHT_OPEN, SpinChainKind.MATRIX}
+
+
+def is_closed_spin_chain(expr: Expression) -> bool:
+    """Return whether ``expr`` is a closed fermion spin chain."""
+
+    return spin_chain_kind(expr) is SpinChainKind.CLOSED
+
+
 def _is_plain_scalar_field(expr: Expression) -> bool:
     return is_head(expr, s.Field) and bool(field_type(expr) == s.Scalar) and field_derivatives(expr) == ()
 
@@ -331,7 +383,7 @@ def _parse_current_derivative_term(term: Expression) -> tuple[Expression, Expres
 def canonicalize_fermion_derivative_bilinears(expr: Expression) -> Expression:
     """Canonize first-derivative closed fermion bilinears to Matchete's raw form."""
 
-    expanded = normalize_ncm(expr.expand())
+    expanded = normalize_ncm(expr)
     term_list = list(terms(expanded))
     used = [False] * len(term_list)
     out = Expression.num(0)
@@ -368,7 +420,7 @@ def canonicalize_fermion_derivative_bilinears(expr: Expression) -> Expression:
         used[i] = True
         used[companion_index] = True
 
-    return normalize_ncm(out.expand())
+    return normalize_ncm(out)
 
 
 def ncm_contains_target(match: dict[Expression, Expression], target: Expression) -> int:

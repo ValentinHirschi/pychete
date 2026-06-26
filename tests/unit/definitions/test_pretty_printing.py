@@ -9,7 +9,7 @@ import textwrap
 from symbolica import Expression, PrintMode
 
 from pychete import FieldMassKind, PycheteState, Theory, canonical_string, collect_indices, load_state, s
-from pychete.matching import HeavyScalarSolution
+from pychete.matching import HeavyFieldSolution
 
 
 FORMAT_OPTIONS = {
@@ -131,7 +131,6 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.NCM(s.Bar(phi()), s.Gamma(mu), phi()),
         s.DiracProduct(s.Bar(phi()), phi()),
         s.Gamma(mu),
-        s.Proj(s.PR),
         s.CG(mu, nu),
         s.EOM(phi(), phi()),
         s.HeavyFieldOrder(phi(), 1),
@@ -268,7 +267,7 @@ def test_pychete_objects_expose_jupyter_repr_hooks() -> None:
     phi = theory.field_handle("phi")
     lam = theory.coupling_handle("lambda")
     index_info = collect_indices(theory.lorentz_index("mu"))[0]
-    solution = HeavyScalarSolution(field=phi.definition, orders={1: phi()})
+    solution = HeavyFieldSolution(field=phi.definition, orders={1: phi()})
     state = PycheteState()
     state.add_theory(theory)
     state.add_expression("lagrangian", theory, lagrangian)
