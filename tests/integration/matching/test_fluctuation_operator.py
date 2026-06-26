@@ -1841,6 +1841,64 @@ def test_wilson_line_expansion_lets_open_derivatives_act_on_wilson_terms() -> No
     )
 
 
+def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
+    theory = Theory("one_loop_match_wilson_line_expansion")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    expansion = {"hScalar-lScalar": ((), ())}
+    expected_numerator = -y() ** 2 * light() ** 2 / 2
+    expected_integral = vakint_backend.one_loop_vacuum_integral(
+        expected_numerator,
+        (light_mass**2, heavy_mass**2),
+        powers=(1, 1),
+    )
+
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            wilson_line_expansion_indices_by_trace=expansion,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["stage"] == "interaction_wilson_line_vakint_result"
+    assert result.metadata["uses_wilson_line_expansion"] is True
+    assert result.metadata["wilson_line_expansion_enabled"] is True
+    assert result.metadata["bosonic_cde_expansion_enabled"] is False
+    assert result.metadata["interaction_wilson_line_term_count"] == 1
+    assert result.metadata["interaction_wilson_line_trace_names"] == ("hScalar-lScalar",)
+    assert_expr_equal(result.off_shell_eft_lagrangian, expected_integral)
+    assert_expr_equal(result.expression("interaction_wilson_line_vakint_integral_sum"), expected_integral)
+
+
+def test_one_loop_match_rejects_simultaneous_wilson_line_and_cde_expansion_options() -> None:
+    theory = Theory("one_loop_match_wilson_line_cde_conflict")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    expansion = {"hScalar-lScalar": ((), ())}
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        theory.match(
+            lagrangian,
+            loop_order=1,
+            one_loop_options=OneLoopMatchOptions(
+                bosonic_cde_expansion_indices_by_trace=expansion,
+                wilson_line_expansion_indices_by_trace=expansion,
+            ),
+        )
+
+
 def test_expand_wilson_terms_returns_registered_identity_transporter() -> None:
     theory = Theory("wilson_term_identity")
     theory.define_gauge_group("SU2L", s.SU(2), "g2", "W")

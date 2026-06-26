@@ -248,5 +248,9 @@ discoveries, dependency patches, blockers, and remaining work.
   route. CDE-named APIs may remain for legacy diagnostics, but new public
   matching surfaces should not deepen CDE-first naming or SMEFT-specific core
   assumptions.
+- Latest continuation requirement interpretation: selected Wilson-line trace
+  expansion must be callable through `Theory.match(..., loop_order=1)` with
+  explicit `OneLoopMatchOptions.wilson_line_*` controls, separate from the
+  legacy `bosonic_cde_*` controls.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

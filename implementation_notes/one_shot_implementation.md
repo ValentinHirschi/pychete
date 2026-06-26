@@ -97,6 +97,20 @@
   derivative-carrying Wilson-line object. Open covariant derivatives append to
   the derivative slot through Symbolica replacement rules before
   `expand_wilson_terms(...)` lowers supported identity/field-strength cases.
+- The current continuation promotes the Wilson-line expansion route from
+  diagnostics into opt-in public matching. `OneLoopMatchOptions` now has
+  `wilson_line_expansion_indices_by_trace`,
+  `wilson_line_act_open_derivatives`, and
+  `wilson_line_max_derivative_order`; `Theory.match(..., loop_order=1)` can
+  route selected traces through
+  `OneLoopSetup.interaction_wilson_line_matching_result(...)` or the matching
+  internal/minimal-subtraction variants depending on the chosen integral
+  backend. This is still selected-trace and opt-in; hybrid replacement of only
+  selected trace families into the full interaction-power remainder remains a
+  later Wilson-line parity slice.
+- CDE and Wilson-line expansion options are now mutually exclusive in the
+  public matcher so the old v0.1-style path and current Wilson-line path cannot
+  be accidentally mixed without an explicit future policy.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw
@@ -313,6 +327,16 @@
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
   passed.
 - `git diff --check` passed after the Wilson-term expansion slice.
+- 30 GiB memory-watch Wilson-line public matcher/API gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "wilson" tests/unit/definitions/test_public_api.py -q`
+  passed with 11 tests selected and 78 deselected. This covers direct
+  Wilson-line expansion terms, `Theory.match(..., loop_order=1)` routing
+  through `OneLoopMatchOptions.wilson_line_expansion_indices_by_trace`, and
+  rejection of simultaneous Wilson-line/CDE expansion options.
+- 30 GiB memory-watch typing gate after the Wilson-line public matcher bridge:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
+- `git diff --check` passed after the Wilson-line public matcher bridge.
 - `python -m mypy` passed after the validation-report canonization slice.
 - `git diff --check` passed after the validation-report canonization slice.
 - Focused Singlet tree projection regression:

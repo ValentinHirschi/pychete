@@ -74,6 +74,7 @@ OneLoopNormalizationInput: TypeAlias = OneLoopNormalization | str | Expression |
 OnShellReplacementInput: TypeAlias = Mapping[Expression, Expression] | Sequence[Replacement] | None
 TensorComponentInput: TypeAlias = Expression | int | float | complex
 BosonicCDEExpansionInput: TypeAlias = Mapping[str, Sequence[Sequence[Expression]]] | None
+WilsonLineExpansionInput: TypeAlias = Mapping[str, Sequence[Sequence[Expression]]] | None
 
 
 @dataclass(frozen=True, slots=True)
@@ -153,6 +154,15 @@ class OneLoopMatchOptions:
     evaluation. This filter is conservative and uses Symbolica pattern matches;
     final coefficient extraction still runs through the ordinary projection
     path.
+    ``wilson_line_expansion_indices_by_trace`` enables the forward
+    current-Matchete-style explicit Wilson-line trace route for selected
+    interaction trace names. The value maps each trace name to one
+    Lorentz-index sequence per propagator slot. This path is separate from the
+    legacy CDE options: it builds ordered ``WilsonLineTracePath`` terms,
+    lets open derivatives act on the closing ``WilsonTerm`` when requested,
+    then lowers supported Wilson terms with ``expand_wilson_terms``. It is
+    intentionally opt-in until the higher-order Wilson-line expansion coverage
+    is validated against committed fixtures.
     """
 
     max_trace_order: int = 2
@@ -200,6 +210,9 @@ class OneLoopMatchOptions:
     bosonic_cde_emit_covariant_derivative_commutator_passes: int = 1
     bosonic_cde_expand_covariant_derivative_commutators: bool = False
     bosonic_cde_filter_terms_by_matching_targets: bool = False
+    wilson_line_expansion_indices_by_trace: WilsonLineExpansionInput = None
+    wilson_line_act_open_derivatives: bool = False
+    wilson_line_max_derivative_order: int = 4
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True
@@ -259,6 +272,7 @@ __all__ = [
     "OneLoopNormalizationInput",
     "OnShellReplacementInput",
     "BosonicCDEExpansionInput",
+    "WilsonLineExpansionInput",
     "VakintIntegralStage",
     "one_loop_normalization_factor",
     "one_loop_normalization_label",

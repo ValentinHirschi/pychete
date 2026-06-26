@@ -1161,6 +1161,7 @@ class BosonicCDEExpansionPlan:
 BosonicCDEExpansionRequest: TypeAlias = (
     Mapping[str, Sequence[Sequence[Expression]]] | BosonicCDEExpansionPlan
 )
+WilsonLineExpansionRequest: TypeAlias = Mapping[str, Sequence[Sequence[Expression]]]
 
 
 @dataclass(frozen=True)
@@ -1736,6 +1737,464 @@ class OneLoopSetup:
             for term_index, term in enumerate(terms):
                 entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.vakint_integral_expression()
         return entries
+
+    def interaction_wilson_line_vakint_integral_sum(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        short_form: bool | None = None,
+        engine: Any | None = None,
+    ) -> Expression:
+        """Return the summed selected Wilson-line-expanded interaction topologies."""
+
+        terms = self.interaction_wilson_line_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        return _vakint_integral_terms_at_stage(
+            tuple(term.vakint_integral_expression() for term in terms),
+            theory=self.theory,
+            stage=VakintIntegralStage.from_user(stage),
+            short_form=short_form,
+            engine=engine,
+            label="Wilson-line",
+        )
+
+    def interaction_wilson_line_internal_integral_sum(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> Expression:
+        """Evaluate selected Wilson-line-expanded integrals with pychete."""
+
+        from .backends import vakint, vacuum_integrals
+
+        terms = self.interaction_wilson_line_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        evaluated_terms: list[Expression] = []
+        with progress(
+            f"evaluating {len(terms)} Wilson-line scalar vacuum integrals termwise",
+            logger=_LOGGER,
+        ):
+            for term in terms:
+                raw = term.vakint_integral_expression()
+                if tensor_reduce:
+                    raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+                    raw = vakint.decode_pychete_namespace(self.theory, raw)
+                evaluated_terms.append(
+                    vacuum_integrals.evaluate_one_loop_vakint_expression(
+                        raw,
+                        epsilon=epsilon,
+                        mu_r_squared=mu_r_squared,
+                        combine_terms=False,
+                    )
+                )
+        evaluated = sum_expr(evaluated_terms).expand()
+        return evaluated.together() if combine_terms else evaluated
+
+    def interaction_wilson_line_matching_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the selected Wilson-line-expanded interaction one-loop result."""
+
+        selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
+        vakint_sum = self.interaction_wilson_line_vakint_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            stage=selected_vakint_stage,
+            short_form=vakint_short_form,
+            engine=vakint_engine,
+        )
+        raw_named_integrals = self.interaction_wilson_line_expansion_vakint_integral_expression_map(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        named_integrals = {
+            name: _vakint_expression_at_stage(
+                expr,
+                theory=self.theory,
+                stage=selected_named_stage,
+                short_form=named_supertrace_short_form,
+                engine=named_supertrace_engine,
+            )
+            for name, expr in raw_named_integrals.items()
+        }
+        terms = self.interaction_wilson_line_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        supertraces = {
+            **self.interaction_wilson_line_expansion_kernel_expression_map(
+                expansion_indices_by_trace,
+                loop_momentum_squared=loop_momentum_squared,
+                require_registered_mass=require_registered_mass,
+                include_light_only=include_light_only,
+                act_open_derivatives=act_open_derivatives,
+                max_wilson_derivative_order=max_wilson_derivative_order,
+            ),
+            **named_integrals,
+            "interaction_wilson_line_vakint_integral_sum": vakint_sum,
+            f"interaction_wilson_line_vakint_integral_sum[{selected_vakint_stage.value}]": vakint_sum,
+        }
+        if selected_vakint_stage is VakintIntegralStage.EVALUATED:
+            from .backends import vakint
+
+            supertraces["interaction_wilson_line_vakint_pole_part"] = vakint.pole_part(
+                vakint_sum,
+                max_pole_order=max_pole_order,
+                epsilon=epsilon,
+            )
+            supertraces["interaction_wilson_line_vakint_finite_part"] = vakint.finite_part(
+                vakint_sum,
+                epsilon=epsilon,
+            )
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=vakint_sum,
+            on_shell_eft_lagrangian=vakint_sum,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces=supertraces,
+            metadata={
+                "stage": "interaction_wilson_line_vakint_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
+                "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
+                "on_shell_reduced": False,
+                "vakint_stage": selected_vakint_stage.value,
+                "named_supertrace_stage": selected_named_stage.value,
+                "interaction_wilson_line_vakint_termwise_stage": selected_vakint_stage is not VakintIntegralStage.RAW,
+                "uses_interaction_operator": True,
+                "uses_wilson_line_expansion": True,
+            },
+        )
+
+    def interaction_wilson_line_internal_matching_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the Wilson-line-expanded interaction result evaluated internally."""
+
+        from .backends import vakint
+
+        terms = self.interaction_wilson_line_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        raw_vakint_sum = self.interaction_wilson_line_vakint_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        evaluated = self.interaction_wilson_line_internal_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=evaluated,
+            on_shell_eft_lagrangian=evaluated,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces={
+                **self.interaction_wilson_line_expansion_kernel_expression_map(
+                    expansion_indices_by_trace,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                    include_light_only=include_light_only,
+                    act_open_derivatives=act_open_derivatives,
+                    max_wilson_derivative_order=max_wilson_derivative_order,
+                ),
+                **self.interaction_wilson_line_expansion_vakint_integral_expression_map(
+                    expansion_indices_by_trace,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                    include_light_only=include_light_only,
+                    act_open_derivatives=act_open_derivatives,
+                    max_wilson_derivative_order=max_wilson_derivative_order,
+                ),
+                "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
+                "interaction_wilson_line_internal_integral_sum": evaluated,
+                "interaction_wilson_line_internal_integral_pole_part": pole,
+                "interaction_wilson_line_internal_integral_finite_part": finite,
+            },
+            metadata={
+                "stage": "interaction_wilson_line_internal_integral_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
+                "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
+                "on_shell_reduced": False,
+                "integral_backend": "pychete_internal",
+                "tensor_reduce": tensor_reduce,
+                "interaction_wilson_line_internal_termwise_evaluation": True,
+                "combine_terms": combine_terms,
+                "uses_interaction_operator": True,
+                "uses_wilson_line_expansion": True,
+                "max_pole_order": max_pole_order,
+            },
+        )
+
+    def interaction_wilson_line_internal_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the internal Wilson-line result after minimal-subtraction pole removal."""
+
+        unrenormalized = self.interaction_wilson_line_internal_matching_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = unrenormalized.expression("interaction_wilson_line_internal_integral_pole_part")
+        finite = unrenormalized.expression("interaction_wilson_line_internal_integral_finite_part")
+        counterterm = (-pole).expand()
+        return replace(
+            unrenormalized,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            supertraces={
+                **unrenormalized.supertraces,
+                "interaction_wilson_line_internal_integral_ms_counterterm": counterterm,
+            },
+            metadata={
+                **unrenormalized.metadata,
+                "stage": "interaction_wilson_line_internal_minimal_subtraction_result",
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "on_shell_reduced": False,
+            },
+        )
+
+    def interaction_wilson_line_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the finite native-vakint Wilson-line result after pole subtraction."""
+
+        from .backends import vakint
+
+        evaluated = self.interaction_wilson_line_vakint_integral_sum(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            stage=VakintIntegralStage.EVALUATED,
+            engine=vakint_engine,
+        )
+        selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
+        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
+        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        counterterm = (-pole).expand()
+        raw_named_integrals = self.interaction_wilson_line_expansion_vakint_integral_expression_map(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        named_integrals = {
+            name: _vakint_expression_at_stage(
+                expr,
+                theory=self.theory,
+                stage=selected_named_stage,
+                short_form=named_supertrace_short_form,
+                engine=named_supertrace_engine,
+            )
+            for name, expr in raw_named_integrals.items()
+        }
+        terms = self.interaction_wilson_line_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
+            supertraces={
+                **self.interaction_wilson_line_expansion_kernel_expression_map(
+                    expansion_indices_by_trace,
+                    loop_momentum_squared=loop_momentum_squared,
+                    require_registered_mass=require_registered_mass,
+                    include_light_only=include_light_only,
+                    act_open_derivatives=act_open_derivatives,
+                    max_wilson_derivative_order=max_wilson_derivative_order,
+                ),
+                **named_integrals,
+                "interaction_wilson_line_vakint_integral_sum": evaluated,
+                "interaction_wilson_line_vakint_integral_sum[evaluated]": evaluated,
+                "interaction_wilson_line_vakint_pole_part": pole,
+                "interaction_wilson_line_vakint_ms_counterterm": counterterm,
+                "interaction_wilson_line_vakint_finite_part": finite,
+            },
+            metadata={
+                "stage": "interaction_wilson_line_minimal_subtraction_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
+                "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
+                "on_shell_reduced": False,
+                "vakint_stage": VakintIntegralStage.EVALUATED.value,
+                "named_supertrace_stage": selected_named_stage.value,
+                "interaction_wilson_line_vakint_termwise_stage": True,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "max_pole_order": max_pole_order,
+                "uses_interaction_operator": True,
+                "uses_wilson_line_expansion": True,
+            },
+        )
 
     def _interaction_bosonic_cde_trace_map(
         self,
@@ -5425,6 +5884,13 @@ def _cde_expansion_trace_names(expansion_request: BosonicCDEExpansionRequest) ->
     return tuple(expansion_request)
 
 
+def _wilson_line_expansion_request_metadata(expansion_request: WilsonLineExpansionRequest) -> dict[str, Any]:
+    return {
+        "interaction_wilson_line_trace_count": len(expansion_request),
+        "interaction_wilson_line_trace_names": tuple(expansion_request),
+    }
+
+
 def _filter_cde_terms_by_projection_requirements(
     terms: Sequence[BosonicCDETraceExpansionTerm],
     requirements: ProjectionAtomRequirementGroups | None,
@@ -5601,13 +6067,14 @@ def _vakint_expression_at_stage(
     return vakint.decode_pychete_namespace(theory, result)
 
 
-def _cde_vakint_integral_terms_at_stage(
+def _vakint_integral_terms_at_stage(
     raw_terms: Sequence[Expression],
     *,
     theory: Theory,
     stage: VakintIntegralStage,
     short_form: bool | None = None,
     engine: Any | None = None,
+    label: str,
 ) -> Expression:
     if stage is VakintIntegralStage.RAW:
         return sum_expr(raw_terms).expand()
@@ -5618,7 +6085,7 @@ def _cde_vakint_integral_terms_at_stage(
 
     staged_terms: list[Expression] = []
     with progress(
-        f"{stage.value.replace('_', '-')} {len(raw_terms)} CDE vakint integrals termwise",
+        f"{stage.value.replace('_', '-')} {len(raw_terms)} {label} vakint integrals termwise",
         logger=_LOGGER,
     ):
         for raw in raw_terms:
@@ -5630,6 +6097,24 @@ def _cde_vakint_integral_terms_at_stage(
                 staged = vakint.evaluate(raw, engine=engine)
             staged_terms.append(vakint.decode_pychete_namespace(theory, staged))
     return sum_expr(staged_terms).expand()
+
+
+def _cde_vakint_integral_terms_at_stage(
+    raw_terms: Sequence[Expression],
+    *,
+    theory: Theory,
+    stage: VakintIntegralStage,
+    short_form: bool | None = None,
+    engine: Any | None = None,
+) -> Expression:
+    return _vakint_integral_terms_at_stage(
+        raw_terms,
+        theory=theory,
+        stage=stage,
+        short_form=short_form,
+        engine=engine,
+        label="CDE",
+    )
 
 
 def _fluctuation_statistics(field_type: Expression, field_role: FieldRole) -> FluctuationStatistics:
@@ -6027,12 +6512,83 @@ def match_one_loop(
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
         )
+    wilson_line_expansion_indices_by_trace = options.wilson_line_expansion_indices_by_trace
+    if cde_expansion_indices_by_trace is not None and wilson_line_expansion_indices_by_trace is not None:
+        raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
     cde_term_atom_requirements = (
         _cde_term_atom_requirements_for_targets(theory, matching_condition_targets)
         if options.bosonic_cde_filter_terms_by_matching_targets and cde_expansion_indices_by_trace is not None
         else None
     )
-    if cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
+    if wilson_line_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
+        result = setup.interaction_wilson_line_internal_matching_result(
+            wilson_line_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            include_light_only=options.include_light_only,
+            act_open_derivatives=options.wilson_line_act_open_derivatives,
+            max_wilson_derivative_order=options.wilson_line_max_derivative_order,
+            tensor_reduce=options.tensor_reduce,
+            tensor_reduce_engine=options.tensor_reduce_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            mu_r_squared=options.mu_r_squared,
+            combine_terms=options.combine_terms,
+        )
+    elif (
+        wilson_line_expansion_indices_by_trace is not None
+        and selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
+    ):
+        result = setup.interaction_wilson_line_internal_minimal_subtraction_result(
+            wilson_line_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            include_light_only=options.include_light_only,
+            act_open_derivatives=options.wilson_line_act_open_derivatives,
+            max_wilson_derivative_order=options.wilson_line_max_derivative_order,
+            tensor_reduce=options.tensor_reduce,
+            tensor_reduce_engine=options.tensor_reduce_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            mu_r_squared=options.mu_r_squared,
+            combine_terms=options.combine_terms,
+        )
+    elif (
+        wilson_line_expansion_indices_by_trace is not None
+        and selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION
+    ):
+        result = setup.interaction_wilson_line_minimal_subtraction_result(
+            wilson_line_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            include_light_only=options.include_light_only,
+            act_open_derivatives=options.wilson_line_act_open_derivatives,
+            max_wilson_derivative_order=options.wilson_line_max_derivative_order,
+            vakint_engine=options.vakint_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            named_supertrace_stage=options.named_supertrace_stage,
+            named_supertrace_short_form=options.named_supertrace_short_form,
+            named_supertrace_engine=options.named_supertrace_engine,
+        )
+    elif wilson_line_expansion_indices_by_trace is not None:
+        result = setup.interaction_wilson_line_matching_result(
+            wilson_line_expansion_indices_by_trace,
+            loop_momentum_squared=options.loop_momentum_squared,
+            require_registered_mass=options.require_registered_mass,
+            include_light_only=options.include_light_only,
+            act_open_derivatives=options.wilson_line_act_open_derivatives,
+            max_wilson_derivative_order=options.wilson_line_max_derivative_order,
+            vakint_stage=options.vakint_stage,
+            vakint_short_form=options.vakint_short_form,
+            vakint_engine=options.vakint_engine,
+            max_pole_order=options.max_pole_order,
+            epsilon=options.epsilon,
+            named_supertrace_stage=options.named_supertrace_stage,
+            named_supertrace_short_form=options.named_supertrace_short_form,
+            named_supertrace_engine=options.named_supertrace_engine,
+        )
+    elif cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(
             cde_expansion_indices_by_trace,
             heavy_field_dimension=options.heavy_field_dimension,
@@ -6260,6 +6816,10 @@ def match_one_loop(
             "bosonic_cde_terms_filtered_by_matching_targets": (
                 cde_term_atom_requirements is not None
             ),
+            "wilson_line_expansion_enabled": wilson_line_expansion_indices_by_trace is not None,
+            "wilson_line_trace_names": ",".join(wilson_line_expansion_indices_by_trace or ()),
+            "wilson_line_act_open_derivatives": options.wilson_line_act_open_derivatives,
+            "wilson_line_max_derivative_order": options.wilson_line_max_derivative_order,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )

@@ -306,6 +306,12 @@ the current Matchete route should use
 CDE-named public surfaces. Reusing the tested bosonic covariant propagator
 expansion primitive internally is allowed, but that primitive is an
 implementation detail, not the conceptual architecture.
+Public one-loop matching can opt into the same selected-trace route with
+`OneLoopMatchOptions.wilson_line_expansion_indices_by_trace`,
+`wilson_line_act_open_derivatives`, and
+`wilson_line_max_derivative_order`. This option is intentionally separate from
+`bosonic_cde_*`; requesting both CDE and Wilson-line expansion in one match is
+an API error until an explicit comparison/hybrid policy is designed.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
 simplification; do not implement it as a Python tree walker. Open covariant
