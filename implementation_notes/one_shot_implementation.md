@@ -169,6 +169,12 @@
   Wilson-term expansion and Dirac/NCM postprocessing when the option is
   enabled. Default diagnostic Wilson-line output remains raw unless the caller
   explicitly opts in.
+- The validation fixture direct preview path now forwards the same
+  `simplify_pychete_color_algebra` option into Wilson-line hybrid result
+  methods. This keeps `ValidationFixture.one_loop_preview(...)` aligned with
+  public `Theory.match(...)` for current-Matchete Wilson-line probes, instead
+  of only simplifying the pre-expansion setup and leaving generated
+  Wilson-line CG structures raw.
 - Focused validation for the current fermion-loop trace slice has so far used
   the 30 GiB watchdog wrapper: exact new/affected tests
   `test_idenso_bridge_traces_closed_pychete_dirac_chains_through_native_gamma`,
@@ -501,6 +507,13 @@
   deselected`.
 - `python -m mypy`, under the 30 GiB watchdog wrapper, reported no issues in
   40 source files after the Wilson-line generated-colour simplification slice.
+- Validation-fixture Wilson-line colour follow-through gate, under the 30 GiB
+  watchdog wrapper: `pytest tests/integration/validation/test_validation_fixtures.py
+  -k "validation_fixture_preview_can_use_wilson_line_expansion_without_mathematica
+  or preview_can_simplify_pychete_color_algebra or
+  gap_report_forwards_pychete_color" -q` passed with `3 passed, 38 deselected`.
+- `python -m mypy`, under the 30 GiB watchdog wrapper, reported no issues in
+  40 source files after the validation-fixture Wilson-line colour follow-through.
 - Author-feedback generic-basis registry gate, under the 30 GiB watchdog
   wrapper: `pytest tests/unit/definitions/test_public_api.py
   tests/unit/definitions/test_theory_definitions.py -k "public_api or

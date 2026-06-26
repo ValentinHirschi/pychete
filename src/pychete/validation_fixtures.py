@@ -765,6 +765,7 @@ class ValidationFixture:
                 epsilon=epsilon,
                 mu_r_squared=mu_r_squared,
                 combine_terms=internal_combine_terms,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         elif (
             wilson_line_expansion_request is not None
@@ -785,6 +786,7 @@ class ValidationFixture:
                 max_pole_order=internal_max_pole_order,
                 epsilon=epsilon,
                 mu_r_squared=mu_r_squared,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         elif (
             wilson_line_expansion_request is not None
@@ -805,6 +807,7 @@ class ValidationFixture:
                 named_supertrace_stage=named_supertrace_stage,
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         elif wilson_line_expansion_request is not None:
             result = setup.interaction_wilson_line_hybrid_matching_result(
@@ -824,6 +827,7 @@ class ValidationFixture:
                 named_supertrace_stage=named_supertrace_stage,
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )
         elif bosonic_cde_expansion_request is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
             result = setup.interaction_bosonic_cde_hybrid_internal_matching_result(

@@ -671,6 +671,22 @@ def test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathem
     assert_expr_equal(preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
     preview.validate()
 
+    color_simplified_preview = fixture.one_loop_preview(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        wilson_line_expansion_indices_by_trace=expansion,
+        wilson_line_act_open_derivatives=True,
+        wilson_line_max_derivative_order=3,
+        simplify_pychete_color_algebra=True,
+    )
+
+    assert color_simplified_preview.metadata["pychete_color_algebra_simplified"] is True
+    assert (
+        color_simplified_preview.metadata["interaction_wilson_line_pychete_color_algebra_simplified"]
+        is True
+    )
+    assert_expr_equal(color_simplified_preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
+
     generated_plan = setup.interaction_wilson_line_expansion_plan(
         trace_names=("hScalar-lScalar",),
         max_total_order=0,
