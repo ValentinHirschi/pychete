@@ -6425,6 +6425,8 @@ def _postprocess_wilson_line_numerator(
             traced = (Expression.num(4) * traced).expand()
         normalized = traced
     simplified = idenso.simplify_pychete_dirac_algebra(normalized)
+    simplified = idenso.simplify_pychete_loop_momentum_metrics(simplified)
+    simplified = idenso.simplify_pychete_field_strength_metrics(simplified)
     return scalarize_commutative_ncm_chains(simplified)
 
 

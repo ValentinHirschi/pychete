@@ -3571,10 +3571,14 @@ def test_wilson_line_postprocess_closes_pure_fermion_loop_dirac_traces() -> None
     theory = Theory("wilson_line_close_fermion_loop_postprocess")
     left = theory.define_field("psi", s.Fermion)
     right = theory.define_field("Psi", s.Fermion)
+    vector = theory.define_field("V", s.Vector, self_conjugate=True, mass=0)
     mu = theory.lorentz_index("mu")
     nu = theory.lorentz_index("nu")
+    rho = theory.lorentz_index("rho")
     scalar = S("x")
     closed_gamma_word = s.NCM(s.Gamma(mu), s.Gamma(nu))
+    closed_loop_momentum_word = s.LoopMomentum(mu) * s.LoopMomentum(nu) * closed_gamma_word
+    field_strength_trace = s.Metric(mu, nu) * s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
     open_chain = s.NCM(s.Bar(left()), s.Gamma(mu), right())
 
     assert_expr_equal(
@@ -3584,6 +3588,21 @@ def test_wilson_line_postprocess_closes_pure_fermion_loop_dirac_traces() -> None
     assert_expr_equal(
         matching_module._postprocess_wilson_line_numerator(closed_gamma_word, close_fermion_loop=True),
         4 * s.Metric(mu, nu),
+    )
+    assert_expr_equal(
+        matching_module._postprocess_wilson_line_numerator(closed_loop_momentum_word, close_fermion_loop=True),
+        4 * s.LoopMomentumSquared,
+    )
+    assert_expr_equal(
+        matching_module._postprocess_wilson_line_numerator(
+            s.Metric(mu, rho) * s.FieldStrength(vector.label, s.List(rho, nu), s.List(), s.List()),
+            close_fermion_loop=False,
+        ),
+        s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List()),
+    )
+    assert_expr_equal(
+        matching_module._postprocess_wilson_line_numerator(field_strength_trace, close_fermion_loop=False),
+        Expression.num(0),
     )
     assert_expr_equal(
         matching_module._postprocess_wilson_line_numerator(open_chain, close_fermion_loop=True),

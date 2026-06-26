@@ -420,6 +420,13 @@ before generated Wilson-line terms exist, so it is not sufficient for
 Wilson-line-generated CG structures. Keep this as explicit option plumbing into
 `WilsonLineTracePath.propagator_expansion_terms(...)`; do not silently simplify
 raw Wilson-line diagnostics by default.
+Generated Wilson-line postprocessing must also simplify pychete loop-momentum
+metric contractions and field-strength metric/antisymmetry relations through
+the idenso adapter before vakint/internal integral evaluation. Closed Dirac
+traces can introduce `Metric(mu,nu)` factors that must contract with
+`LoopMomentum(mu) LoopMomentum(nu)` to `LoopMomentumSquared`; do not leave
+those contractions for a Python-side vacuum-integral parser or projection-time
+special cases.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

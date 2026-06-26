@@ -182,6 +182,25 @@
   requirements as `Theory.match(...)`, and pass them into Wilson-line hybrid
   setup methods. This intentionally improves the current-Matchete Wilson-line
   fixture path without adding a new legacy CDE-first surface.
+- The current Wilson-line backend-boundary cleanup makes generated
+  Wilson-line numerator postprocessing contract pychete loop-momentum metrics
+  and field-strength metric/antisymmetry structures through the idenso adapter
+  after Dirac/NCM simplification. This addresses closed-fermion-loop cases
+  where native Dirac tracing emits `Metric(mu,nu)` factors that should reduce
+  `LoopMomentum(mu) LoopMomentum(nu)` to `LoopMomentumSquared` before
+  vakint/internal vacuum-integral evaluation.
+- Focused validation for the Wilson-line backend-boundary cleanup used the
+  30 GiB watchdog wrapper: the exact postprocess regression
+  `test_wilson_line_postprocess_closes_pure_fermion_loop_dirac_traces`
+  passed; `pytest tests/unit/backends/test_idenso_backend.py
+  tests/integration/matching/test_fluctuation_operator.py -k "wilson_line or
+  dirac or loop_momentum_metrics or field_strength_metrics" -q` passed with
+  `21 passed, 103 deselected`; the broader Wilson-line gate `pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k "wilson_line"
+  -q` passed with `14 passed, 122 deselected`; the full idenso backend file
+  passed with `29 passed`; `python -m mypy` reported no issues; and
+  `git diff --check` passed.
 - Status clarification for the current user check: no complete Matchete
   one-loop SMEFT integration model has been reproduced end-to-end yet.
   Successful coverage so far is narrower integration plumbing: fixture loading
