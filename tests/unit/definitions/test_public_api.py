@@ -12,6 +12,16 @@ def test_package_root_reexports_declared_public_api() -> None:
         assert getattr(pychete, name) is getattr(api, name)
 
 
+def test_smeft_module_is_compatibility_shim() -> None:
+    """The Warsaw provider lives in pychete.bases; pychete.smeft is legacy."""
+
+    import pychete.smeft as smeft_compat
+    from pychete.bases import smeft_warsaw
+
+    assert smeft_compat.smeft_warsaw_basis is smeft_warsaw.smeft_warsaw_basis
+    assert smeft_compat.define_smeft_wilson_coefficient is smeft_warsaw.define_smeft_wilson_coefficient
+
+
 def test_lagrangian_manipulations_are_theory_methods_not_top_level_exports() -> None:
     assert "derive_eom" not in pychete.__all__
     assert "match_tree" not in pychete.__all__

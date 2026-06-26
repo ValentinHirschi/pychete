@@ -306,6 +306,15 @@ the current Matchete route should use
 CDE-named public surfaces. Reusing the tested bosonic covariant propagator
 expansion primitive internally is allowed, but that primitive is an
 implementation detail, not the conceptual architecture.
+Wilson-line propagator expansion must respect the fluctuation statistics of
+each propagator slot. Bosonic slots use the `PropBosonExpand`-style
+`bosonic_covariant_propagator_expansion_terms(...)`; fermionic slots use
+`fermionic_covariant_propagator_expansion_terms(...)`, mirroring Matchete's
+`PropFermionExpand` as `(slash(k)+M) Helper[n] + i gamma(mu) OpenCD(mu)
+Helper[n-1]`. Generated slash/open-derivative Lorentz labels must be
+theory-owned pychete `Index(...)` expressions, and compact gamma/projector
+cleanup must remain delegated to idenso after Wilson-term expansion. Do not
+use the bosonic expansion for fermion Wilson-line slots.
 Public one-loop matching can opt into the same selected-trace route with
 `OneLoopMatchOptions.wilson_line_expansion_indices_by_trace`,
 `wilson_line_act_open_derivatives`, and
@@ -670,12 +679,14 @@ operators through `OperatorBasis` and
 `define_wilson_coefficient_from_basis(...)`; specialized helpers such as
 `define_smeft_wilson_coefficient(...)` must be thin convenience wrappers over
 that generic basis machinery. SMEFT Warsaw is an optional built-in validation
-and user-convenience basis, not a core matching assumption. Root-level SMEFT
-exports exist only for convenience and compatibility; new engine code must
-consume generic `OperatorBasis`/Wilson metadata and must not import
-`pychete.smeft` or branch on Warsaw names. Do not scatter ad hoc
+and user-convenience basis, not a core matching assumption. Its implementation
+lives under `pychete.bases.smeft_warsaw`; `pychete.smeft` is only a
+compatibility shim for older fixtures/scripts. Root-level SMEFT exports exist
+only for convenience and compatibility; new engine code must consume generic
+`OperatorBasis`/Wilson metadata and must not import `pychete.smeft`, import
+`pychete.bases.smeft_warsaw`, or branch on Warsaw names. Do not scatter ad hoc
 Wilson-to-operator maps in converters, fixtures, matching code, or
-SMEFT-specific modules outside the basis provider. Raw
+basis-specific modules outside `pychete.bases`. Raw
 `Theory.define_wilson_coefficient(...)` calls must stay basis-unassigned by
 default; use `define_wilson_coefficient_from_basis(...)` or a thin
 basis-specific convenience wrapper to attach `"SMEFT"` or any other named

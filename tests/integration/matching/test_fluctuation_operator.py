@@ -43,8 +43,8 @@ from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals as vacuum_integrals_backend
 from pychete.backends import vakint as vakint_backend
+from pychete.bases.smeft_warsaw import smeft_warsaw_operator
 from pychete.matching import _lower_differential_operators_to_momentum
-from pychete.smeft import smeft_warsaw_operator
 
 from tests.conftest import assert_expr_equal
 
@@ -3435,6 +3435,8 @@ def test_wilson_line_expansion_normalizes_nested_fermion_ncm_chains() -> None:
     light = theory.define_field("psi", s.Fermion, mass=0)
     scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     y = theory.define_coupling("y")
+    mass = theory.mass_expr(heavy.definition)
+    assert mass is not None
     interaction = -y() * scalar() * s.NCM(s.Bar(light()), s.PR, heavy())
     lagrangian = theory.free_lag(heavy, light, scalar) + interaction + s.Bar(interaction)
     setup = theory.one_loop_setup(lagrangian, max_trace_order=2)
@@ -3447,12 +3449,33 @@ def test_wilson_line_expansion_normalizes_nested_fermion_ncm_chains() -> None:
     assert all("pychete::NCM(pychete::NCM" not in canonical_string(numerator) for numerator in numerators)
     assert_expr_equal(
         sum(numerators, Expression.num(0)).expand(),
-        (
+        mass
+        * (
             s.Bar(y()) ** 2 * s.NCM(s.PL, light(), s.PL, light())
             + y() ** 2 * s.NCM(s.Bar(light()), s.PR, s.Bar(light()), s.PR)
         )
         / 2,
     )
+
+
+def test_wilson_line_fermion_slots_preserve_even_slash_numerators() -> None:
+    theory = Theory("wilson_line_fermion_even_slash")
+    heavy = theory.define_field("Psi", s.Fermion, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("psi", s.Fermion, mass=0)
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y")
+    interaction = -y() * scalar() * s.NCM(s.Bar(light()), s.PR, heavy())
+    lagrangian = theory.free_lag(heavy, light, scalar) + interaction + s.Bar(interaction)
+    setup = theory.one_loop_setup(lagrangian, max_trace_order=2)
+
+    terms = setup.interaction_wilson_line_expansion_terms({"hFermion-lFermion": ((), ())})
+
+    assert len(terms) == 2
+    for term in terms:
+        assert term.propagator_powers == (1, 1)
+        assert len(tuple(term.numerator.match(s.LoopMomentum(s.LoopMomentumIndexWildcard)))) == 2
+        assert len(tuple(term.numerator.match(s.Gamma(s.CDIndexWildcard)))) == 2
+        assert "pychete::NCM(pychete::NCM" not in canonical_string(term.numerator)
 
 
 def test_power_type_numerator_simplifies_mixed_ncm_dirac_subwords_before_eft_truncation() -> None:

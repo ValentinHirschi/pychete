@@ -12,7 +12,7 @@ from symbolica.core import AtomType, ParseMode
 from pychete.expr import as_int
 from pychete.loaders import parse_matchete_expression
 from pychete.loaders.mathematica import _clean_name, _convert_expression, _normalize_expression, _split_top_level, _strip_comments
-from pychete.smeft import define_smeft_wilson_coefficient
+from pychete.bases.smeft_warsaw import define_smeft_wilson_coefficient
 from pychete.state import PycheteState
 from pychete.symbols import canonical_string
 from pychete.theory import Theory

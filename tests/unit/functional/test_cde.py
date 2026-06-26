@@ -7,6 +7,7 @@ from pychete import Theory, s
 from pychete.cde import (
     act_with_open_covariant_derivatives,
     bosonic_covariant_propagator_expansion_terms,
+    fermionic_covariant_propagator_expansion_terms,
     open_covariant_derivative,
 )
 
@@ -110,6 +111,62 @@ def test_bosonic_covariant_propagator_expansion_terms_splice_into_open_cd_chain(
 
     assert term.denominator_power == 2
     assert_expr_equal(acted, -2 * Expression.I * s.LoopMomentum(mu) * phi(derivatives=[mu]))
+
+
+def test_fermionic_covariant_propagator_expansion_order_zero_has_mass_and_slash_terms() -> None:
+    theory = Theory("fermionic_prop_order_zero")
+    mass = theory.define_coupling("M", mass_dimension=1)
+    slash = theory.lorentz_index("slash")
+    derivative = theory.lorentz_index("derivative")
+
+    terms = fermionic_covariant_propagator_expansion_terms(
+        mass(),
+        (),
+        slash_index=slash,
+        derivative_index=derivative,
+    )
+
+    assert [term.denominator_power for term in terms] == [1, 1]
+    assert terms[0].loop_momentum_indices == ()
+    assert terms[1].loop_momentum_indices == (slash,)
+    assert_expr_equal(terms[0].numerator, mass())
+    assert_expr_equal(terms[1].numerator, s.LoopMomentum(slash) * s.DiracProduct(s.Gamma(slash)))
+
+
+def test_fermionic_covariant_propagator_expansion_order_one_adds_p_gamma_term() -> None:
+    theory = Theory("fermionic_prop_order_one")
+    mass = theory.define_coupling("M", mass_dimension=1)
+    mu = theory.lorentz_index("mu")
+    slash = theory.lorentz_index("slash")
+    derivative = theory.lorentz_index("derivative")
+
+    terms = fermionic_covariant_propagator_expansion_terms(
+        mass(),
+        (mu,),
+        slash_index=slash,
+        derivative_index=derivative,
+    )
+
+    assert [term.denominator_power for term in terms] == [2, 2, 1]
+    assert terms[0].loop_momentum_indices == (mu,)
+    assert terms[1].loop_momentum_indices == (slash, mu)
+    assert terms[2].loop_momentum_indices == ()
+    assert_expr_equal(
+        terms[0].numerator,
+        -2 * Expression.I * mass() * s.LoopMomentum(mu) * open_covariant_derivative(mu),
+    )
+    assert_expr_equal(
+        terms[1].numerator,
+        -2
+        * Expression.I
+        * s.LoopMomentum(slash)
+        * s.LoopMomentum(mu)
+        * s.NCM(s.DiracProduct(s.Gamma(slash)), open_covariant_derivative(mu)),
+    )
+    assert_expr_equal(
+        terms[2].numerator,
+        Expression.I * s.NCM(s.DiracProduct(s.Gamma(derivative)), open_covariant_derivative(derivative)),
+    )
 
 
 def test_bosonic_covariant_propagator_expansion_interleaves_pair_open_cds() -> None:

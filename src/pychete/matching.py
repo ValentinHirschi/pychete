@@ -8,7 +8,12 @@ from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeAlias
 
 from symbolica import Expression, Matrix, Replacement
 
-from .cde import act_with_open_covariant_derivatives, bosonic_covariant_propagator_expansion_terms
+from .cde import (
+    CovariantPropagatorExpansionTerm,
+    act_with_open_covariant_derivatives,
+    bosonic_covariant_propagator_expansion_terms,
+    fermionic_covariant_propagator_expansion_terms,
+)
 from .eft import series_eft
 from .expr import (
     bar_field_pattern,
@@ -925,8 +930,17 @@ class WilsonLineTracePath:
             raise ValueError("expansion_indices must contain one entry per Wilson-line path slot")
         normalized_indices = _normalize_cde_expansion_indices(expansion_indices)
         propagator_expansions = tuple(
-            bosonic_covariant_propagator_expansion_terms(indices)
-            for indices in normalized_indices
+            _wilson_line_propagator_expansion_terms(
+                self.theory,
+                mode,
+                indices,
+                trace_name=self.trace_name,
+                path_index=self.path_index,
+                slot_index=slot_index,
+            )
+            for slot_index, (mode, indices) in enumerate(
+                zip(self.propagator_modes, normalized_indices, strict=True)
+            )
         )
         from .wilson_lines import expand_wilson_terms, remove_loop_momentum_symmetry_vanishing_wilson_terms
 
@@ -6346,6 +6360,26 @@ def _postprocess_wilson_line_numerator(numerator: Expression) -> Expression:
     normalized = normalize_ncm_chains(numerator)
     simplified = idenso.simplify_pychete_dirac_algebra(normalized)
     return scalarize_commutative_ncm_chains(simplified)
+
+
+def _wilson_line_propagator_expansion_terms(
+    theory: Theory,
+    mode: FluctuationMode,
+    indices: Sequence[Expression],
+    *,
+    trace_name: str,
+    path_index: int,
+    slot_index: int,
+) -> tuple[CovariantPropagatorExpansionTerm, ...]:
+    if mode.statistics is not FluctuationStatistics.FERMIONIC:
+        return bosonic_covariant_propagator_expansion_terms(indices)
+    prefix = safe_symbol_name(f"{trace_name}_{path_index}_{slot_index}")
+    return fermionic_covariant_propagator_expansion_terms(
+        Expression.num(0) if mode.mass is None else mode.mass,
+        indices,
+        slash_index=theory.lorentz_index(f"{prefix}_slash"),
+        derivative_index=theory.lorentz_index(f"{prefix}_derivative"),
+    )
 
 
 def _normalize_cde_expansion_indices(

@@ -198,15 +198,15 @@ discoveries, dependency patches, blockers, and remaining work.
   smallest targeted marker group that exercises the redesigned surface.
 - Store SMEFT Wilson projection metadata through pychete-owned Symbolica
   operator expressions through generic operator-basis metadata. Known
-  Warsaw-basis coefficients should be registered through `pychete.smeft`
-  helpers only because SMEFT is a bundled convenience basis; unsupported
-  coefficients remain valid Wilson targets with missing operator metadata
-  documented explicitly.
-- For the default SMEFT validation fixtures, the optional `pychete.smeft`
-  basis provider should cover the full 64-name Warsaw coefficient set from
-  Matchete's `SMEFT_Warsaw.m`. That provider is the source of truth for the
-  bundled SMEFT basis, but user-defined bases must be able to use the same
-  generic mechanism.
+  Warsaw-basis coefficients should be registered through
+  `pychete.bases.smeft_warsaw` helpers, or the package-root re-exports, only
+  because SMEFT is a bundled convenience basis; unsupported coefficients remain
+  valid Wilson targets with missing operator metadata documented explicitly.
+- For the default SMEFT validation fixtures, the optional
+  `pychete.bases.smeft_warsaw` basis provider should cover the full 64-name
+  Warsaw coefficient set from Matchete's `SMEFT_Warsaw.m`. That provider is
+  the source of truth for the bundled SMEFT basis, but user-defined bases must
+  be able to use the same generic mechanism.
 - Matching-condition projection should be able to consume theory-owned
   registered Wilson metadata directly, without reconstructing target maps from
   reference fixtures. A selector such as `registered_wilsons` is the preferred
@@ -293,9 +293,19 @@ discoveries, dependency patches, blockers, and remaining work.
   noncommutative products: flatten nested pychete `NCM(...)` operands, hoist
   only scalar commutative coefficients, and then delegate projector/gamma-word
   cleanup to idenso before scalarizing commutative chains.
+- Wilson-line propagator expansion must be slot-statistics aware. Bosonic
+  propagator slots use the existing bosonic covariant propagator expansion,
+  while fermionic slots must use a Matchete `PropFermionExpand`-style
+  `(slash(k)+M)`/`Gamma(mu) OpenCD(mu)` expansion with generated pychete
+  Lorentz indices and idenso-backed gamma cleanup.
 - Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
   SMEFT. Basis metadata must be explicit through `OperatorBasis`,
   `define_wilson_coefficient_from_basis(...)`, or thin convenience helpers
   such as `define_smeft_wilson_coefficient(...)`.
+- In response to the Matchete author feedback, the SMEFT Warsaw implementation
+  now belongs under the generic optional basis-provider namespace
+  `pychete.bases.smeft_warsaw`; `pychete.smeft` is a compatibility shim only.
+  Do not add new matching-engine imports or branches that depend on the SMEFT
+  module or Warsaw names.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

@@ -14,8 +14,8 @@ _MAX_OPEN_CD_CHAIN_ARITY = 8
 
 
 @dataclass(frozen=True)
-class BosonicCovariantPropagatorExpansionTerm:
-    """One term in a bosonic CDE propagator expansion.
+class CovariantPropagatorExpansionTerm:
+    """One term in a covariant propagator expansion.
 
     ``denominator_power`` is the power of the scalar propagator denominator
     that must be represented in the loop topology. The numerator data is kept
@@ -42,10 +42,13 @@ class BosonicCovariantPropagatorExpansionTerm:
         return (self.prefactor * self.loop_momentum_numerator * chain).expand()
 
     def _repr_latex_(self) -> str:
-        return rf"$\mathrm{{BosonicCDEPropagatorTerm}}\left(P^{{-{self.denominator_power}}}\right)$"
+        return rf"$\mathrm{{CovariantPropagatorTerm}}\left(P^{{-{self.denominator_power}}}\right)$"
 
     def _repr_html_(self) -> str:
-        return f"<code>BosonicCDEPropagatorTerm(denominator_power={self.denominator_power})</code>"
+        return f"<code>CovariantPropagatorTerm(denominator_power={self.denominator_power})</code>"
+
+
+BosonicCovariantPropagatorExpansionTerm = CovariantPropagatorExpansionTerm
 
 
 def open_covariant_derivative(indices: Expression | Iterable[Expression]) -> Expression:
@@ -60,7 +63,7 @@ def open_covariant_derivative(indices: Expression | Iterable[Expression]) -> Exp
 
 def bosonic_covariant_propagator_expansion_terms(
     indices: Iterable[Expression],
-) -> tuple[BosonicCovariantPropagatorExpansionTerm, ...]:
+) -> tuple[CovariantPropagatorExpansionTerm, ...]:
     """Return Matchete-style bosonic covariant propagator expansion terms.
 
     The input indices label the CDE expansion order. For order ``n``, this
@@ -74,7 +77,7 @@ def bosonic_covariant_propagator_expansion_terms(
     order = len(index_tuple)
     if order == 0:
         return (
-            BosonicCovariantPropagatorExpansionTerm(
+            CovariantPropagatorExpansionTerm(
                 prefactor=Expression.num(1),
                 loop_momentum_numerator=Expression.num(1),
                 open_cd_operands=(),
@@ -83,7 +86,7 @@ def bosonic_covariant_propagator_expansion_terms(
             ),
         )
 
-    terms: list[BosonicCovariantPropagatorExpansionTerm] = []
+    terms: list[CovariantPropagatorExpansionTerm] = []
     for pair_count in range(0, order // 2 + 1):
         single_count = order - 2 * pair_count
         single_indices = index_tuple[:single_count]
@@ -94,10 +97,106 @@ def bosonic_covariant_propagator_expansion_terms(
         denominator_power = order + 1 - pair_count
         for pair_distribution in _integer_sets(pair_count, single_count + 1):
             terms.append(
-                BosonicCovariantPropagatorExpansionTerm(
+                CovariantPropagatorExpansionTerm(
                     prefactor=prefactor,
                     loop_momentum_numerator=loop_numerator,
                     open_cd_operands=_interleaved_open_cd_operands(
+                        single_indices,
+                        pair_indices,
+                        pair_distribution,
+                    ),
+                    denominator_power=denominator_power,
+                    loop_momentum_indices=single_indices,
+                )
+            )
+    return tuple(terms)
+
+
+def fermionic_covariant_propagator_expansion_terms(
+    mass: Expression,
+    indices: Iterable[Expression],
+    *,
+    slash_index: Expression,
+    derivative_index: Expression,
+) -> tuple[CovariantPropagatorExpansionTerm, ...]:
+    """Return Matchete-style fermion propagator expansion terms.
+
+    This mirrors Matchete's ``PropFermionExpand`` structure:
+    ``(slash(k) + M) Helper[n] + i gamma(mu) OpenCD(mu) Helper[n - 1]``.
+    ``slash_index`` and ``derivative_index`` are theory-owned generated
+    Lorentz indices supplied by the caller so public expressions keep pychete
+    index metadata instead of backend-local placeholders.
+    """
+
+    index_tuple = tuple(indices)
+    terms: list[CovariantPropagatorExpansionTerm] = []
+    for helper in _fermionic_propagator_helper_terms(index_tuple):
+        terms.append(
+            CovariantPropagatorExpansionTerm(
+                prefactor=(mass * helper.prefactor).expand(),
+                loop_momentum_numerator=helper.loop_momentum_numerator,
+                open_cd_operands=helper.open_cd_operands,
+                denominator_power=helper.denominator_power,
+                loop_momentum_indices=helper.loop_momentum_indices,
+            )
+        )
+        terms.append(
+            CovariantPropagatorExpansionTerm(
+                prefactor=helper.prefactor,
+                loop_momentum_numerator=(s.LoopMomentum(slash_index) * helper.loop_momentum_numerator).expand(),
+                open_cd_operands=(s.DiracProduct(s.Gamma(slash_index)), *helper.open_cd_operands),
+                denominator_power=helper.denominator_power,
+                loop_momentum_indices=(slash_index, *helper.loop_momentum_indices),
+            )
+        )
+    previous_helper_terms = () if not index_tuple else _fermionic_propagator_helper_terms(index_tuple[:-1])
+    for helper in previous_helper_terms:
+        terms.append(
+            CovariantPropagatorExpansionTerm(
+                prefactor=(Expression.I * helper.prefactor).expand(),
+                loop_momentum_numerator=helper.loop_momentum_numerator,
+                open_cd_operands=(
+                    s.DiracProduct(s.Gamma(derivative_index)),
+                    open_covariant_derivative(derivative_index),
+                    *helper.open_cd_operands,
+                ),
+                denominator_power=helper.denominator_power,
+                loop_momentum_indices=helper.loop_momentum_indices,
+            )
+        )
+    return tuple(term for term in terms if not is_zero(term.prefactor))
+
+
+def _fermionic_propagator_helper_terms(
+    indices: tuple[Expression, ...],
+) -> tuple[CovariantPropagatorExpansionTerm, ...]:
+    order = len(indices)
+    if order == 0:
+        return (
+            CovariantPropagatorExpansionTerm(
+                prefactor=Expression.num(1),
+                loop_momentum_numerator=Expression.num(1),
+                open_cd_operands=(),
+                denominator_power=1,
+                loop_momentum_indices=(),
+            ),
+        )
+
+    terms: list[CovariantPropagatorExpansionTerm] = []
+    for pair_count in range(0, order // 2 + 1):
+        single_count = order - 2 * pair_count
+        single_indices = indices[:single_count]
+        pair_indices = indices[single_count : single_count + 2 * pair_count]
+        prefactor = (Expression.num(-1) * Expression.I) ** order
+        prefactor *= (Expression.num(-1) ** pair_count) * (Expression.num(2) ** single_count)
+        loop_numerator = product_expr(s.LoopMomentum(index) for index in single_indices)
+        denominator_power = order + 1 - pair_count
+        for pair_distribution in _integer_sets(pair_count, single_count + 1):
+            terms.append(
+                CovariantPropagatorExpansionTerm(
+                    prefactor=prefactor,
+                    loop_momentum_numerator=loop_numerator,
+                    open_cd_operands=_interleaved_fermion_open_cd_operands(
                         single_indices,
                         pair_indices,
                         pair_distribution,
@@ -221,6 +320,31 @@ def _interleaved_open_cd_operands(
     return tuple(operands)
 
 
+def _interleaved_fermion_open_cd_operands(
+    single_indices: tuple[Expression, ...],
+    pair_indices: tuple[Expression, ...],
+    pair_distribution: tuple[int, ...],
+) -> tuple[Expression, ...]:
+    pair_position = 0
+    operands: list[Expression] = []
+    pair_blocks = tuple(
+        (
+            s.DiracProduct(s.Gamma(pair_indices[index])),
+            open_covariant_derivative(pair_indices[index]),
+            s.DiracProduct(s.Gamma(pair_indices[index + 1])),
+            open_covariant_derivative(pair_indices[index + 1]),
+        )
+        for index in range(0, len(pair_indices), 2)
+    )
+    for slot, pair_count in enumerate(pair_distribution):
+        for block in pair_blocks[pair_position : pair_position + pair_count]:
+            operands.extend(block)
+        pair_position += pair_count
+        if slot < len(single_indices):
+            operands.append(open_covariant_derivative(single_indices[slot]))
+    return tuple(operands)
+
+
 @cache
 def _integer_sets(total: int, slots: int) -> tuple[tuple[int, ...], ...]:
     if total < 0:
@@ -252,7 +376,9 @@ def _chain_expr(*operands: Expression) -> Expression:
 
 __all__ = [
     "BosonicCovariantPropagatorExpansionTerm",
+    "CovariantPropagatorExpansionTerm",
     "act_with_open_covariant_derivatives",
     "bosonic_covariant_propagator_expansion_terms",
+    "fermionic_covariant_propagator_expansion_terms",
     "open_covariant_derivative",
 ]

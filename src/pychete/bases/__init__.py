@@ -1,14 +1,13 @@
-"""Compatibility exports for the optional SMEFT Warsaw basis provider.
+"""Optional built-in operator-basis providers.
 
-New code should import SMEFT helpers from :mod:`pychete.bases.smeft_warsaw`
-or from the public package root. This module remains as a compatibility shim
-so existing pychete model fixtures keep working without making SMEFT a core
-matching-engine module.
+The matching engine consumes generic :class:`pychete.OperatorBasis` metadata.
+Basis-specific modules live here as convenience providers and validation
+fixtures; core matching code must stay basis-agnostic.
 """
 
 from __future__ import annotations
 
-from .bases.smeft_warsaw import (
+from .smeft_warsaw import (
     SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
     define_smeft_wilson_coefficient,
     smeft_warsaw_basis,

@@ -12,7 +12,9 @@
   Wilson-line trace handling that can generalize beyond one loop.
 - Keep operator-basis handling generic. SMEFT Warsaw is an optional built-in
   basis provider used for validation and convenience, not a special core
-  matching assumption.
+  matching assumption. The implementation lives under
+  `pychete.bases.smeft_warsaw`; `pychete.smeft` remains only as a
+  compatibility shim.
 - Runtime pychete and pytest must remain Mathematica- and Matchete-independent.
   Optional Wolfram scripts may only generate committed pychete-owned fixtures.
 - Use Symbolica as the canonical symbolic engine. Before implementing symbolic
@@ -214,6 +216,21 @@
   odd terms from being expanded only to be killed later by vakint tensor
   reduction, while even-rank survivors still preserve their explicit
   `LoopMomentum(...)` factors for the backend path.
+- The current author-feedback follow-up moves the SMEFT Warsaw provider out of
+  the top-level implementation module and into `pychete.bases.smeft_warsaw`.
+  `pychete.smeft` now re-exports the same helpers as a compatibility shim, and
+  `pychete.api` imports the provider from the generic basis namespace. This
+  keeps Warsaw support as optional validation/convenience metadata rather than
+  a core matching-engine module.
+- The same follow-up makes Wilson-line propagator expansion slot-statistics
+  aware. `fermionic_covariant_propagator_expansion_terms(...)` implements the
+  Matchete `PropFermionExpand`-style `(slash(k)+M) Helper[n] +
+  i gamma(mu) OpenCD(mu) Helper[n-1]` structure with theory-owned generated
+  Lorentz indices, and `WilsonLineTracePath.propagator_expansion_terms(...)`
+  now dispatches between bosonic and fermionic covariant propagator expansions
+  from the actual fluctuation mode metadata. The shared term type is now
+  `CovariantPropagatorExpansionTerm`, with the old bosonic name kept as a
+  compatibility alias.
 - The current Wilson-line noncommutative cleanup slice adds
   `normalize_ncm_chains(...)`, a bounded Symbolica-replacement pass that
   flattens nested pychete `NCM(...)` operands and hoists only commutative
@@ -315,9 +332,9 @@
   current CDE paths optional and bounded.
 - The current structural slice introduces generic operator-basis registration
   via `OperatorBasis` and `define_wilson_coefficient_from_basis(...)`.
-  `pychete.smeft` now exposes SMEFT Warsaw as an optional built-in basis using
-  that generic mechanism instead of making SMEFT-specific operator maps the
-  conceptual source for all matching code.
+  `pychete.bases.smeft_warsaw` now exposes SMEFT Warsaw as an optional
+  built-in basis using that generic mechanism instead of making SMEFT-specific
+  operator maps the conceptual source for all matching code.
 - A dependency-free memory watchdog now lives at
   `scripts/run_with_memory_watch.py` and is documented for 30 GiB capped test
   and matching workloads.
@@ -399,6 +416,18 @@
 
 ## Latest Validation Evidence
 
+- Author-feedback Wilson-line/provider follow-up gate, under the 30 GiB
+  watchdog wrapper: `pytest tests/unit/functional/test_cde.py
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_theory_definitions.py -k "fermionic_covariant or
+  bosonic_covariant or nested_fermion_ncm or even_slash or wilson_line or
+  public_api or compatibility_shim or generic_operator_basis or
+  smeft_warsaw_operator" -q` passed with `22 passed, 138 deselected`.
+- `python -m mypy`, also under the 30 GiB watchdog wrapper, reported no issues
+  in 40 source files.
+- `git diff --check` passed after the provider-layout and fermion-slot
+  Wilson-line expansion changes.
 - Focused dimension inference/converter/API/tensor-canonicalization gate:
   `pytest tests/unit/eft/test_eft_counting.py tests/unit/loaders/test_matchete_model_state_converter.py tests/unit/definitions/test_public_api.py tests/integration/validation/test_numeric_probes.py -k "canoniz or mass_dimension or truncates_projected_coefficients" -q`
   passed with 8 tests and 60 deselected.
