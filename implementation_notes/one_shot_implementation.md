@@ -553,6 +553,35 @@
     `42/72` accepted common matching conditions and `39/64` accepted common
     Wilson conditions.
 
+### Simple-Coupling Projection Prefilter Follow-Up
+
+- Probed selected Singlet renormalizable matching conditions after the
+  target-local projection slice. Direct public matching for only `mu2` and
+  `lambda`, with heavy-scalar solution substitution enabled and global EFT
+  truncation disabled, now completes in about 13 seconds. The candidate still
+  returns only the tree-level identities `mu2` and `lambda`, while the Matchete
+  reference includes large one-loop threshold corrections with `hbar`, pole,
+  logarithmic, portal-coupling, trilinear-`A`, and gauge-dependent terms. This
+  confirms that the renormalizable-condition gap is missing matching content,
+  not merely projection shape.
+- Added a conservative simple-coupling projection prefilter to
+  `_ProjectionCoefficientExtractor`. For exact registered
+  `Coupling(label, indices, order)` projection targets, pychete now filters the
+  source term tuple with a native Symbolica `Coupling(label, _, _)` pattern and
+  then delegates the actual coefficient extraction to Symbolica's
+  `Expression.coefficient(...)`, `collect_factors(...)`, and `factor(...)`
+  fallbacks. No Python-side coupling algebra or polynomial reasoning was
+  added.
+- Added a focused regression proving that unrelated source terms are excluded
+  from the simple-coupling filtered source while public projection still
+  returns the native Symbolica coefficient.
+- A direct single-target `cH` public projection over the heavy-scalar
+  substituted Singlet source still did not return inside the interactive
+  diagnostic window and was stopped. The next Wilson-focused performance slice
+  should reduce the substituted Wilson source before projection, likely by
+  splitting the post-substitution source into field-label-compatible pieces or
+  by applying basis/on-shell reductions before target projection.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -594,9 +623,9 @@
 - Broaden on-shell/EOM/IBP reduction beyond exact linear target isolation and
   target-local scalar-bilinear aliases. The remaining Singlet differences are
   dominated by gauge-dependent and Higgs-sector conditions.
-- Optimize heavy-scalar solution substitution/projection so it can be enabled
-  selectively for larger order-3 SMEFT projections without avoidable expression
-  growth. After disabling global EFT truncation, the broad substituted Singlet
-  report still bottlenecks in projection over the substituted source; the next
-  slice should further reduce canonicalization/filtering work by target group
-  or by splitting substituted source stages before projection.
+- Continue reducing heavy-scalar-substituted Wilson projection cost. The broad
+  substituted Singlet report now completes, and simple coupling targets are
+  filtered cheaply, but direct single-Wilson probes such as `cH` over the
+  substituted source are still too expensive for interactive diagnostics.
+  Future slices should split substituted source stages by target-compatible
+  field content and apply basis/on-shell reductions before projection.

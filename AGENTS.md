@@ -152,6 +152,12 @@ extractor, because many Wilson targets filter the same source. Do not expand
 the filtered source subset just to hand it to native coefficient extraction;
 let the subsequent `Expression.coefficient(...)`, `collect_factors(...)`, and
 `factor(...)` fallbacks do the symbolic work on the smaller selected source.
+For simple registered `Coupling(label, indices, order)` matching targets, also
+prefilter source terms with a native Symbolica `Coupling(label, _, _)` pattern
+before coefficient extraction. This is a conservative label-presence filter:
+it must not try to infer polynomial powers or coupling algebra in Python, and
+the final coefficient must still come from Symbolica's
+`Expression.coefficient(...)`/collect/factor path.
 Registered Wilson-coefficient projection targets with stored operator metadata
 are allowed to use target-local integration-by-parts projection aliases
 automatically, because the stored operator is already a basis-level projection

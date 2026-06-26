@@ -718,6 +718,7 @@ class _ProjectionCoefficientExtractor:
         tuple[tuple[tuple[str, str, int], ...], ...],
         Expression,
     ] = field(default_factory=dict)
+    coupling_filtered_sources: dict[str, Expression] = field(default_factory=dict)
     source_terms: tuple[Expression, ...] | None = None
     source_term_atom_counts: tuple[Counter[tuple[str, str]], ...] | None = None
     wildcard_index_projection: bool = True
@@ -760,10 +761,23 @@ class _ProjectionCoefficientExtractor:
         return (coefficient * denominator).expand()
 
     def _filtered_source(self, target: Expression) -> Expression:
+        coupling_label = _simple_coupling_projection_label(target)
+        if coupling_label is not None:
+            return self._filtered_source_for_coupling_label(coupling_label)
         if not _is_composite_projection_target(target):
             return self.source
         requirements = _projection_atom_requirement_groups(target)
         return self._filtered_source_for_requirements(requirements)
+
+    def _filtered_source_for_coupling_label(self, label: Expression) -> Expression:
+        key = canonical_string(label)
+        try:
+            return self.coupling_filtered_sources[key]
+        except KeyError:
+            pattern = coupling_pattern(label)
+            filtered = sum_expr(term for term in self._source_terms() if bool(term.matches(pattern)))
+            self.coupling_filtered_sources[key] = filtered
+            return filtered
 
     def _filtered_source_for_expressions(self, expressions: Sequence[Expression]) -> Expression:
         requirements = _projection_atom_requirement_groups_for_expressions(expressions)
@@ -823,10 +837,18 @@ def _without_wildcard_index_projection(
         collected_source=extractor.collected_source,
         factored_source=extractor.factored_source,
         filtered_sources=extractor.filtered_sources,
+        coupling_filtered_sources=extractor.coupling_filtered_sources,
         source_terms=extractor._source_terms(),
         source_term_atom_counts=extractor._source_term_atom_counts(),
         wildcard_index_projection=False,
     )
+
+
+def _simple_coupling_projection_label(target: Expression) -> Expression | None:
+    matches = tuple(target.match(coupling_pattern(), partial=False))
+    if len(matches) != 1:
+        return None
+    return matches[0][s.CouplingLabelWildcard]
 
 
 def _raw_projection_exhausts_filtered_source(

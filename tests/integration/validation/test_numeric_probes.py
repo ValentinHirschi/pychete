@@ -813,6 +813,35 @@ def test_matching_result_projection_reuses_source_term_atom_counts(
     assert source_scan_count == 2
 
 
+def test_matching_result_projection_prefilters_simple_coupling_targets() -> None:
+    theory = Theory("condition_projection_simple_coupling_prefilter")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    coupling = theory.define_coupling("lambda", self_conjugate=True)
+    coefficient = S("condition_projection_lambda_coefficient")
+    irrelevant = S("condition_projection_lambda_irrelevant_source")
+    i = theory.dummy_index(1, fund)
+    target = coupling()
+    source = coefficient * target + irrelevant * s.Bar(higgs(i)) * higgs(i)
+    extractor = matching_results_module._ProjectionCoefficientExtractor(source)
+
+    filtered = extractor._filtered_source(target)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    ).project_matching_conditions(
+        {"lambda": target},
+        expand_source=False,
+        include_coupling_identities=False,
+    )
+
+    assert "condition_projection_lambda_irrelevant_source" not in canonical_string(filtered)
+    assert_expr_equal(result["lambda"], coefficient)
+
+
 def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd() -> None:
     coefficient = S("condition_projection_chd_current_coefficient")
     theory = _singlet_scalar_extension_theory()
