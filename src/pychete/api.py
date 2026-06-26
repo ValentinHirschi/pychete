@@ -72,13 +72,6 @@ from .matching_results import (
 )
 from .noncommutative import normalize_ncm_chains
 from .operator_bases import OperatorBasis, define_wilson_coefficient_from_basis
-from .bases.smeft_warsaw import (
-    SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
-    define_smeft_wilson_coefficient,
-    smeft_warsaw_basis,
-    smeft_warsaw_operator,
-    smeft_warsaw_operator_names,
-)
 from .state import PycheteState, StateExpression, load_state
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
 from .theory import Theory
@@ -168,7 +161,6 @@ __all__ = [
     "RepresentationDefinition",
     "RepresentationReality",
     "StateExpression",
-    "SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES",
     "SupertraceOrderCoverage",
     "SupertraceBlockTrace",
     "SupertracePlan",
@@ -194,7 +186,6 @@ __all__ = [
     "dummy_indices",
     "build_numeric_probe_plan",
     "deterministic_probe_samples",
-    "define_smeft_wilson_coefficient",
     "define_wilson_coefficient_from_basis",
     "evaluator_probe_equal",
     "evaluate_loop_functions",
@@ -226,9 +217,6 @@ __all__ = [
     "registered_wilson_matching_condition_targets",
     "s",
     "series_eft",
-    "smeft_warsaw_basis",
-    "smeft_warsaw_operator",
-    "smeft_warsaw_operator_names",
     "simplify_loop_functions",
     "simplify_pychete_color",
     "tensor_index_specs",

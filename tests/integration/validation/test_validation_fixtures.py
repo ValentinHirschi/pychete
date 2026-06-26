@@ -14,7 +14,6 @@ from pychete import (
     OneLoopMatchOptions,
     OneLoopNormalization,
     OneLoopSetup,
-    SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
     Theory,
     ValidationFixture,
     one_loop_normalization_factor,
@@ -23,6 +22,7 @@ from pychete import (
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals
 from pychete.backends import vakint as vakint_backend
+from pychete.bases.smeft_warsaw import SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState

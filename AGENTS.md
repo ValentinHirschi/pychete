@@ -290,6 +290,13 @@ code may remain as an opt-in legacy diagnostic, validation, and regression
 route, but new core matching work should move toward explicit Wilson-line
 style functional traces and should not deepen SMEFT-specific or CDE-specific
 coupling in the main pipeline.
+When Matchete parity is the objective, treat CDE agreement as a legacy
+cross-check only. Do not add new CDE-first planners, public controls, or
+projection shortcuts unless they are explicitly preserving old behavior. New
+one-loop implementation slices should instead extend the explicit Wilson-line
+path, including fermion-loop closure, Wilson-term expansion, index/gamma/group
+algebra, tensor reduction, integral evaluation, and matching-condition
+projection from the Wilson-line representation.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by
@@ -671,7 +678,9 @@ rules and EFT truncation so they still add up to the final public source.
 
 Public API discoverability lives in `src/pychete/api.py`. Keep implementation
 functions in their domain modules, but every function/class/enum intended for
-users must be re-exported through `pychete.api` and package-root `pychete`.
+users must be re-exported through `pychete.api` and package-root `pychete`,
+except optional basis-provider helpers such as SMEFT Warsaw, which live under
+`pychete.bases` plus any explicit compatibility shim.
 Do not make users infer the public surface by browsing implementation files.
 Every exported public object, and every user-facing method on exported classes,
 must have a useful docstring at its implementation definition. These docstrings
@@ -687,12 +696,13 @@ operators through `OperatorBasis` and
 that generic basis machinery. SMEFT Warsaw is an optional built-in validation
 and user-convenience basis, not a core matching assumption. Its implementation
 lives under `pychete.bases.smeft_warsaw`; `pychete.smeft` is only a
-compatibility shim for older fixtures/scripts. Root-level SMEFT exports exist
-only for convenience and compatibility; new engine code must consume generic
-`OperatorBasis`/Wilson metadata and must not import `pychete.smeft`, import
-`pychete.bases.smeft_warsaw`, or branch on Warsaw names. Do not scatter ad hoc
-Wilson-to-operator maps in converters, fixtures, matching code, or
-basis-specific modules outside `pychete.bases`. Raw
+compatibility shim for older fixtures/scripts. Root-level SMEFT exports must
+not be added: optional basis providers are available through `pychete.bases`
+and compatibility shims, while the package-root API stays generic. New engine
+code must consume generic `OperatorBasis`/Wilson metadata and must not import
+`pychete.smeft`, import `pychete.bases.smeft_warsaw`, or branch on Warsaw
+names. Do not scatter ad hoc Wilson-to-operator maps in converters, fixtures,
+matching code, or basis-specific modules outside `pychete.bases`. Raw
 `Theory.define_wilson_coefficient(...)` calls must stay basis-unassigned by
 default; use `define_wilson_coefficient_from_basis(...)` or a thin
 basis-specific convenience wrapper to attach `"SMEFT"` or any other named

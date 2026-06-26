@@ -199,9 +199,9 @@ discoveries, dependency patches, blockers, and remaining work.
 - Store SMEFT Wilson projection metadata through pychete-owned Symbolica
   operator expressions through generic operator-basis metadata. Known
   Warsaw-basis coefficients should be registered through
-  `pychete.bases.smeft_warsaw` helpers, or the package-root re-exports, only
-  because SMEFT is a bundled convenience basis; unsupported coefficients remain
-  valid Wilson targets with missing operator metadata documented explicitly.
+  `pychete.bases.smeft_warsaw` helpers only because SMEFT is a bundled
+  convenience basis; unsupported coefficients remain valid Wilson targets with
+  missing operator metadata documented explicitly.
 - For the default SMEFT validation fixtures, the optional
   `pychete.bases.smeft_warsaw` basis provider should cover the full 64-name
   Warsaw coefficient set from Matchete's `SMEFT_Warsaw.m`. That provider is
@@ -304,12 +304,13 @@ discoveries, dependency patches, blockers, and remaining work.
   Wilson-line path, not from trace-name string checks.
 - Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
   SMEFT. Basis metadata must be explicit through `OperatorBasis`,
-  `define_wilson_coefficient_from_basis(...)`, or thin convenience helpers
-  such as `define_smeft_wilson_coefficient(...)`.
+  `define_wilson_coefficient_from_basis(...)`, or optional basis-provider
+  helpers such as
+  `pychete.bases.smeft_warsaw.define_smeft_wilson_coefficient(...)`.
 - In response to the Matchete author feedback, the SMEFT Warsaw implementation
   now belongs under the generic optional basis-provider namespace
   `pychete.bases.smeft_warsaw`; `pychete.smeft` is a compatibility shim only.
-  Do not add new matching-engine imports or branches that depend on the SMEFT
-  module or Warsaw names.
+  Do not add root-level SMEFT exports, matching-engine imports, or branches
+  that depend on the SMEFT module or Warsaw names.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

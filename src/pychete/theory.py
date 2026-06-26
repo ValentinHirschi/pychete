@@ -707,7 +707,8 @@ class Theory:
         from an EFT Lagrangian. Raw Wilson coefficients are not assigned to a
         named basis by default; use ``define_wilson_coefficient_from_basis`` or
         a basis-specific convenience helper such as
-        ``define_smeft_wilson_coefficient`` when basis metadata is intended.
+        ``pychete.bases.smeft_warsaw.define_smeft_wilson_coefficient`` when
+        basis metadata is intended.
         """
 
         return self.define_external(

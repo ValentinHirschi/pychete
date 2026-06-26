@@ -29,7 +29,6 @@ from pychete import (
     WilsonLineExpansionPlan,
     WilsonLineExpansionPlanEntry,
     canonical_string,
-    define_smeft_wilson_coefficient,
     dummy_indices,
     expand_wilson_terms,
     one_loop_normalization_factor,
@@ -43,7 +42,7 @@ from pychete.backends import idenso as idenso_backend
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals as vacuum_integrals_backend
 from pychete.backends import vakint as vakint_backend
-from pychete.bases.smeft_warsaw import smeft_warsaw_operator
+from pychete.bases.smeft_warsaw import define_smeft_wilson_coefficient, smeft_warsaw_operator
 from pychete.matching import _lower_differential_operators_to_momentum
 
 from tests.conftest import assert_expr_equal

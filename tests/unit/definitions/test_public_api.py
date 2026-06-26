@@ -22,6 +22,22 @@ def test_smeft_module_is_compatibility_shim() -> None:
     assert smeft_compat.define_smeft_wilson_coefficient is smeft_warsaw.define_smeft_wilson_coefficient
 
 
+def test_package_root_does_not_export_optional_smeft_provider() -> None:
+    """SMEFT Warsaw stays an optional basis provider, not a core root API."""
+
+    smeft_names = {
+        "SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES",
+        "define_smeft_wilson_coefficient",
+        "smeft_warsaw_basis",
+        "smeft_warsaw_operator",
+        "smeft_warsaw_operator_names",
+    }
+
+    assert smeft_names.isdisjoint(pychete.__all__)
+    for name in smeft_names:
+        assert not hasattr(pychete, name)
+
+
 def test_lagrangian_manipulations_are_theory_methods_not_top_level_exports() -> None:
     assert "derive_eom" not in pychete.__all__
     assert "match_tree" not in pychete.__all__

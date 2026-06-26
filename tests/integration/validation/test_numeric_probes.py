@@ -20,10 +20,10 @@ from pychete import (
     load_validation_fixture,
     registered_wilson_matching_condition_targets,
     s,
-    smeft_warsaw_operator,
     tensor_index_specs,
 )
 from pychete.backends import vacuum_integrals
+from pychete.bases.smeft_warsaw import smeft_warsaw_operator
 from pychete.functional import expand_cd_operators
 from pychete.validation_fixtures import _gap_report
 from tests.conftest import assert_expr_equal

@@ -14,7 +14,9 @@
   basis provider used for validation and convenience, not a special core
   matching assumption. The implementation lives under
   `pychete.bases.smeft_warsaw`; `pychete.smeft` remains only as a
-  compatibility shim.
+  compatibility shim. Do not expose SMEFT-specific helpers from the package
+  root; the root API stays generic and basis providers live under
+  `pychete.bases`.
 - Runtime pychete and pytest must remain Mathematica- and Matchete-independent.
   Optional Wolfram scripts may only generate committed pychete-owned fixtures.
 - Use Symbolica as the canonical symbolic engine. Before implementing symbolic
@@ -32,8 +34,10 @@
   enum/constant metadata internally; normalize strings only at external
   boundaries.
 - Public API discoverability remains through `pychete.api` and package root
-  `pychete`. Public objects and user-facing methods need docstrings and
-  Jupyter-friendly repr methods where relevant.
+  `pychete` for generic pychete objects. Optional basis providers such as SMEFT
+  Warsaw are discoverable through `pychete.bases`, not the root API. Public
+  objects and user-facing methods need docstrings and Jupyter-friendly repr
+  methods where relevant.
 - Use larger coherent implementation slices. Run focused tests during the
   slice, grouped targeted gates before a green milestone commit, and full/slow
   gates only when the milestone justifies it.
@@ -111,6 +115,22 @@
   matcher and validation preview helpers so the old v0.1-style path and
   current Wilson-line path cannot be accidentally mixed without an explicit
   future policy.
+- The latest author-feedback API adjustment removes SMEFT Warsaw helpers from
+  `pychete.api` and package-root `pychete`. The optional provider remains
+  available through `pychete.bases.smeft_warsaw` and the legacy
+  `pychete.smeft` shim, while the generic root keeps `OperatorBasis` and
+  `define_wilson_coefficient_from_basis(...)` as the intended basis mechanism.
+  The package-root public API test now guards this explicitly, and tests that
+  exercise SMEFT Warsaw fixtures import the optional provider directly.
+- Focused validation for the author-feedback API adjustment used the 30 GiB
+  watchdog wrapper: `pytest tests/unit/definitions/test_public_api.py
+  tests/unit/definitions/test_theory_definitions.py::test_generic_operator_basis_defines_wilson_operator_metadata
+  tests/unit/definitions/test_theory_definitions.py::test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata
+  -q` passed with `9 passed`; `pytest --collect-only
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_numeric_probes.py
+  tests/integration/validation/test_validation_fixtures.py -q` collected
+  `188 tests`; and `python -m mypy` reported no issues.
 - The current validation course-correction slice exposes the same
   `wilson_line_expansion_indices_by_trace`,
   `wilson_line_act_open_derivatives`, and
