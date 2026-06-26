@@ -466,6 +466,61 @@
     passed.
   - `git diff --check` passed.
 
+### Projection Performance Follow-Up For Substituted Singlet Probes
+
+- Reran the default projected-condition frontier test after the CDE `cH`
+  source fix. The tracked `max_trace_order=1` frontier remains unchanged:
+  Singlet stays at `42/72` accepted matching conditions and `39/64` accepted
+  Wilson targets; `E_VLL` and `S1S3LQs` remain at the previous `27/72` and
+  `12/72` accepted counts. This confirms the focused CDE fixes do not affect
+  the old order-1 interaction-power report by themselves.
+- Probed Singlet with selected CDE traces
+  `hScalar`, `hScalar-hScalar`, and `hScalar-hScalar-hScalar` through total CDE
+  order 0. The report still remained at `42/72` and `39/64` accepted Wilsons.
+  Inspecting selected coefficients showed the new `cH` source is present in
+  the candidate as the pure `kappa^3/M^2` term, while the Matchete reference
+  `cH` includes the larger `hbar`, logarithmic, and trilinear-`A` dependent
+  tree/one-loop structure. The next Singlet improvement therefore needs the
+  heavy-scalar substitution/on-shell reduction path, not only CDE projection.
+- Attempted the public-match Singlet gap report with
+  `substitute_heavy_scalar_solutions=True`. With global EFT truncation enabled,
+  the run hung in global `series_eft(...)` expansion. Added a
+  `ValidationFixture.one_loop_preview_gap_report(..., truncate_eft_result=...)`
+  pass-through so `use_public_match_api=True` can set
+  `OneLoopMatchOptions.truncate_eft_result=False` while keeping
+  `matching_condition_projection_truncate_eft=True` for target-local Wilson
+  truncation. This exposes the intended performance mode to fixture probes.
+- With global truncation disabled, the broad substituted Singlet projection
+  still remained too slow. Stack traces showed two projection hotspots:
+  duplicate full-source tensor canonicalization for target-local IBP aliases,
+  and repeated field/field-strength label counting plus expansion of filtered
+  source subsets in `_ProjectionCoefficientExtractor`.
+- Updated projection internals so the source, projection targets, and flat IBP
+  aliases are canonicalized through one shared
+  `Expression.canonize_tensors(...)` index-spec path, avoiding a second
+  full-source canonicalization pass. The projection extractor now caches the
+  source term tuple and each term's field/field-strength label counts, and it
+  returns the filtered source sum without expanding it before native Symbolica
+  coefficient/collect/factor fallbacks. Focused regressions verify one source
+  canonicalization when aliases exist and one source-term label scan reused
+  across multiple projection targets.
+- The broad substituted Singlet report is still not fast enough to become a
+  committed validation gate. The next performance slice should focus on
+  target-selected projection over substituted expressions, likely by grouping
+  Wilson targets by compatible field-label requirements and projecting only
+  those groups, or by splitting the substituted source into lower-cost stages
+  before canonicalization.
+- Focused validation for this follow-up:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_canonizes_source_once_for_ibp_aliases tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_reuses_source_term_atom_counts -q'`
+    passed with 2 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 39 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_api tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica -q'`
+    passed with 2 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -484,9 +539,9 @@
   field-strength targets come from the one-insertion order-4 `hScalar` source,
   `cHD` comes from the two-insertion order-2 `hScalar-hScalar` source, and `cH`
   comes from the three-insertion order-0 `hScalar-hScalar-hScalar` source. The
-  default fixture frontier above has not yet been rerun after these slices;
-  rerun targeted fixture probes after the next feature slice materially changes
-  basis/on-shell reduction or generated sources.
+  default fixture frontier above was rerun after the focused CDE slices and
+  remains unchanged until heavy-scalar substitution/on-shell reduction becomes
+  viable in the projected Singlet report.
 
 ## Current Remaining Work
 
@@ -509,4 +564,7 @@
   dominated by gauge-dependent and Higgs-sector conditions.
 - Optimize heavy-scalar solution substitution/projection so it can be enabled
   selectively for larger order-3 SMEFT projections without avoidable expression
-  growth.
+  growth. After disabling global EFT truncation, the broad substituted Singlet
+  report still bottlenecks in projection over the substituted source; the next
+  slice should further reduce canonicalization/filtering work by target group
+  or by splitting substituted source stages before projection.

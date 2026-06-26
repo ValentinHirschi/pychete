@@ -308,10 +308,13 @@ class MatchingResult:
                 for aliases in ibp_projection_aliases
             )
         if canonize_indices:
-            expr, projection_expressions = _canonize_matching_projection_indices(expr, projection_expressions)
             flat_aliases = tuple(alias for aliases in ibp_projection_aliases for alias, _weight in aliases)
-            if flat_aliases:
-                _canon_expr, canon_flat_aliases = _canonize_matching_projection_indices(expr, flat_aliases)
+            expr, projection_expressions, canon_flat_aliases = _canonize_matching_projection_indices_with_aliases(
+                expr,
+                projection_expressions,
+                flat_aliases,
+            )
+            if canon_flat_aliases:
                 alias_iter = iter(canon_flat_aliases)
                 ibp_projection_aliases = tuple(
                     tuple((next(alias_iter), weight) for _alias, weight in aliases)
@@ -699,6 +702,8 @@ class _ProjectionCoefficientExtractor:
         tuple[tuple[tuple[str, str, int], ...], ...],
         Expression,
     ] = field(default_factory=dict)
+    source_terms: tuple[Expression, ...] | None = None
+    source_term_atom_counts: tuple[Counter[tuple[str, str]], ...] | None = None
     wildcard_index_projection: bool = True
 
     def coefficient(self, target: Expression) -> Expression:
@@ -749,11 +754,25 @@ class _ProjectionCoefficientExtractor:
         except KeyError:
             filtered = sum_expr(
                 term
-                for term in terms(self.source)
-                if _term_satisfies_projection_atom_requirements(term, requirements)
-            ).expand()
+                for term, counts in zip(
+                    self._source_terms(),
+                    self._source_term_atom_counts(),
+                    strict=True,
+                )
+                if _counts_satisfy_projection_atom_requirements(counts, requirements)
+            )
             self.filtered_sources[requirements] = filtered
             return filtered
+
+    def _source_terms(self) -> tuple[Expression, ...]:
+        if self.source_terms is None:
+            self.source_terms = tuple(terms(self.source))
+        return self.source_terms
+
+    def _source_term_atom_counts(self) -> tuple[Counter[tuple[str, str]], ...]:
+        if self.source_term_atom_counts is None:
+            self.source_term_atom_counts = tuple(_projection_atom_counts(term) for term in self._source_terms())
+        return self.source_term_atom_counts
 
     def _collected_source(self, source: Expression) -> Expression:
         if source is self.source:
@@ -819,6 +838,13 @@ def _term_satisfies_projection_atom_requirements(
     requirements: Sequence[tuple[tuple[str, str, int], ...]],
 ) -> bool:
     counts = _projection_atom_counts(term)
+    return _counts_satisfy_projection_atom_requirements(counts, requirements)
+
+
+def _counts_satisfy_projection_atom_requirements(
+    counts: Counter[tuple[str, str]],
+    requirements: Sequence[tuple[tuple[str, str, int], ...]],
+) -> bool:
     return any(_counts_satisfy_projection_atom_requirement_group(counts, group) for group in requirements)
 
 
@@ -1086,12 +1112,26 @@ def _canonize_matching_projection_indices(
     source: Expression,
     projection_expressions: Sequence[Expression],
 ) -> tuple[Expression, tuple[Expression, ...]]:
-    index_specs = _matching_projection_index_specs(source, projection_expressions)
+    canon_source, canon_targets, _canon_aliases = _canonize_matching_projection_indices_with_aliases(
+        source,
+        projection_expressions,
+        (),
+    )
+    return canon_source, canon_targets
+
+
+def _canonize_matching_projection_indices_with_aliases(
+    source: Expression,
+    projection_expressions: Sequence[Expression],
+    alias_expressions: Sequence[Expression],
+) -> tuple[Expression, tuple[Expression, ...], tuple[Expression, ...]]:
+    index_specs = _matching_projection_index_specs(source, (*projection_expressions, *alias_expressions))
     if not index_specs:
-        return source, tuple(projection_expressions)
+        return source, tuple(projection_expressions), tuple(alias_expressions)
     canon_source = _canonize_tensor_terms(source, index_specs)
     canon_targets = tuple(_canonize_tensor_terms(target, index_specs) for target in projection_expressions)
-    return canon_source, canon_targets
+    canon_aliases = tuple(_canonize_tensor_terms(alias, index_specs) for alias in alias_expressions)
+    return canon_source, canon_targets, canon_aliases
 
 
 def _canonize_tensor_terms(

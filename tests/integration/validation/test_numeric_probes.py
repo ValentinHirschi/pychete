@@ -1,10 +1,13 @@
 from __future__ import annotations
 
+from collections import Counter
+from collections.abc import Sequence
 from pathlib import Path
 
 import pytest
 from symbolica import Expression, Replacement, S
 
+import pychete.matching_results as matching_results_module
 from pychete import (
     MatchingResult,
     NumericProbePlan,
@@ -645,6 +648,102 @@ def test_matching_result_projection_uses_registered_wilson_ibp_aliases() -> None
 
     assert_expr_equal(raw["cHBox"], Expression.num(0))
     assert_expr_equal(registered[canonical_string(wilson_target)], coefficient)
+
+
+def test_matching_result_projection_canonizes_source_once_for_ibp_aliases(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    coefficient = S("condition_projection_single_source_canonize_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    definition = theory.externals["cHBox"]
+    wilson_target = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_registered_hbox_once_i"), fund)
+    j = theory.index(theory.symbol("projection_registered_hbox_once_j"), fund)
+    mu = theory.dummy_index(0)
+    left_bilinear = s.Bar(higgs(i)) * higgs(i)
+    right_bilinear = s.Bar(higgs(j)) * higgs(j)
+    source_operator = -(
+        expand_cd_operators(s.CD(mu, left_bilinear)) * expand_cd_operators(s.CD(mu, right_bilinear))
+    ).expand()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+    original_canonize_tensor_terms = matching_results_module._canonize_tensor_terms
+    source_canonize_count = 0
+
+    def counting_canonize_tensor_terms(
+        expr: Expression,
+        index_specs: Sequence[tuple[Expression, Expression]],
+    ) -> Expression:
+        nonlocal source_canonize_count
+        if "condition_projection_single_source_canonize_coefficient" in canonical_string(expr):
+            source_canonize_count += 1
+        return original_canonize_tensor_terms(expr, index_specs)
+
+    monkeypatch.setattr(
+        matching_results_module,
+        "_canonize_tensor_terms",
+        counting_canonize_tensor_terms,
+    )
+
+    registered = result.project_matching_conditions([wilson_target])
+
+    assert_expr_equal(registered[canonical_string(wilson_target)], coefficient)
+    assert source_canonize_count == 1
+
+
+def test_matching_result_projection_reuses_source_term_atom_counts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("condition_projection_cached_atom_counts")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    light = theory.define_field("L", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    target_h2 = s.Bar(higgs(i)) * higgs(i)
+    target_l2 = s.Bar(light(j)) * light(j)
+    coefficient_h2 = S("source_scan_h2")
+    coefficient_l2 = S("source_scan_l2")
+    source = coefficient_h2 * target_h2 + coefficient_l2 * target_l2
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+    original_projection_atom_counts = matching_results_module._projection_atom_counts
+    source_scan_count = 0
+
+    def counting_projection_atom_counts(expr: Expression) -> Counter[tuple[str, str]]:
+        nonlocal source_scan_count
+        if "source_scan_" in canonical_string(expr):
+            source_scan_count += 1
+        return original_projection_atom_counts(expr)
+
+    monkeypatch.setattr(
+        matching_results_module,
+        "_projection_atom_counts",
+        counting_projection_atom_counts,
+    )
+
+    projected = result.project_matching_conditions(
+        {
+            "h2": target_h2,
+            "l2": target_l2,
+        },
+        expand_source=False,
+    )
+
+    assert_expr_equal(projected["h2"], coefficient_h2)
+    assert_expr_equal(projected["l2"], coefficient_l2)
+    assert source_scan_count == 2
 
 
 def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd() -> None:

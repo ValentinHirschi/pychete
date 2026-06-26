@@ -884,6 +884,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         matching_condition_projection_normalize_derivative_operators=False,
         matching_condition_projection_normalize_ibp_scalar_bilinears=True,
         matching_condition_projection_truncate_eft=True,
+        truncate_eft_result=False,
     )
 
     options = captured["one_loop_options"]
@@ -899,6 +900,7 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert options.bosonic_cde_emit_covariant_derivative_commutators is True
     assert options.bosonic_cde_emit_covariant_derivative_commutator_passes == 2
     assert options.bosonic_cde_expand_covariant_derivative_commutators is True
+    assert options.truncate_eft_result is False
     assert captured["matching_condition_expand_source"] is False
     assert captured["matching_condition_canonize_indices"] is False
     assert captured["matching_condition_normalize_derivative_operators"] is False

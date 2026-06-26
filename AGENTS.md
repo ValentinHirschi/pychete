@@ -146,14 +146,21 @@ matches over registered field and field-strength labels. The filter must be
 conservative: keep all terms whose field/field-strength label content can
 match one additive target term, reject terms with extra dynamical labels, and
 then delegate the actual coefficient extraction to Symbolica. Do not replace
-this with string filtering or a Python symbolic matcher.
+this with string filtering or a Python symbolic matcher. Cache the source term
+tuple and each term's field/field-strength label counts inside the projection
+extractor, because many Wilson targets filter the same source. Do not expand
+the filtered source subset just to hand it to native coefficient extraction;
+let the subsequent `Expression.coefficient(...)`, `collect_factors(...)`, and
+`factor(...)` fallbacks do the symbolic work on the smaller selected source.
 Registered Wilson-coefficient projection targets with stored operator metadata
 are allowed to use target-local integration-by-parts projection aliases
 automatically, because the stored operator is already a basis-level projection
 instruction. Raw expression targets must remain exact unless
 `normalize_ibp_scalar_bilinears=True` is requested. When aliases are present,
-canonicalize the source, target, and alias expressions through Symbolica's
-`Expression.canonize_tensors(...)` path before any wildcard-index fallback.
+canonicalize the source, target, and alias expressions together through one
+shared Symbolica `Expression.canonize_tensors(...)` index-spec path before any
+wildcard-index fallback. Do not recanonicalize the full source a second time
+just to canonicalize target-local aliases.
 For any equality/projection question where only dummy-index names differ, use
 `Expression.canonize_tensors(...)` with grouped pychete `Index(...)` specs and
 the returned canonical expression, external-index list, and dummy-index list.

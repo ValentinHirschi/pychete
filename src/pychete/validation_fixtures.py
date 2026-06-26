@@ -989,6 +989,7 @@ class ValidationFixture:
         bosonic_cde_expand_covariant_derivative_commutators: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
+        truncate_eft_result: bool = True,
         project_reference_matching_conditions: bool = False,
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_expand_source: bool = True,
@@ -1018,6 +1019,9 @@ class ValidationFixture:
         Set ``matching_condition_projection_normalize_ibp_scalar_bilinears``
         to additionally recognize target-local total-derivative-equivalent
         scalar bilinear projections such as ``A * CD([mu, mu], B)``.
+        When ``use_public_match_api=True``, set ``truncate_eft_result=False``
+        together with ``matching_condition_projection_truncate_eft=True`` to
+        avoid a global EFT truncation before target-local Wilson projection.
         """
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
@@ -1083,6 +1087,7 @@ class ValidationFixture:
                     ),
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
+                    truncate_eft_result=truncate_eft_result,
                 ),
                 matching_condition_targets=projected_targets,
                 matching_condition_source=matching_condition_projection_source,
