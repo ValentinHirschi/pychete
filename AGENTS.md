@@ -197,6 +197,16 @@ filtered target-local source, target, and alias expressions together through
 one shared Symbolica `Expression.canonize_tensors(...)` index-spec path before
 any wildcard-index fallback. Do not canonicalize the full matching source just
 to handle one target or target-local alias family.
+For target-local coefficient extraction, drop derivative-slot branches that
+cannot match the projection target before expensive extraction fallbacks. Use
+Symbolica pattern replacements over registered `Field(...)`,
+`Bar(Field(...))`, `FieldStrength(...)`, and `Bar(FieldStrength(...))` atoms to
+replace source atoms whose derivative-slot signature is absent from the target
+by zero. This is essential after order-by-order heavy-scalar substitution:
+irrelevant derivative branches can otherwise remain hidden inside additive
+solution factors and block projection of non-derivative Wilson targets such as
+`cH`. Keep this target-local and label-scoped; do not globally delete
+derivative operators from the matching source.
 For any equality/projection question where only dummy-index names differ, use
 `Expression.canonize_tensors(...)` with grouped pychete `Index(...)` specs and
 the returned canonical expression, external-index list, and dummy-index list.

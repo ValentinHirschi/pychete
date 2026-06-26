@@ -879,18 +879,48 @@
   `matching_condition_expand_source=False` performance intent while recovering
   small hidden additive factors from replacement-rule outputs such as heavy
   scalar solutions.
-- A public Singlet-like probe with selected `hScalar-hScalar-hScalar`, heavy
-  substitution, evaluated hbar normalization, `truncate_eft_result=False`, and
-  `matching_condition_expand_source=False` still projects only the
-  `-hbar*kappa^3/(12*M^2)` part. Its post-substitution `cH` filtered source is
-  about 432 KB because derivative branches from the heavy solution remain
-  nested inside products, so the guarded small-source expansion intentionally
-  does not fire. A direct target-local `series_eft(filtered_source)` probe was
-  also too slow. The next substantive fix must split or branch-select
-  heavy-solution source content before projection rather than globally expand
-  the filtered source.
+- Before derivative-branch pruning, a public Singlet-like probe with selected
+  `hScalar-hScalar-hScalar`, heavy substitution, evaluated hbar normalization,
+  `truncate_eft_result=False`, and `matching_condition_expand_source=False`
+  still projected only the `-hbar*kappa^3/(12*M^2)` part. Its
+  post-substitution `cH` filtered source was about 432 KB because derivative
+  branches from the heavy solution remained nested inside products, so the
+  guarded small-source expansion intentionally did not fire. A direct
+  target-local `series_eft(filtered_source)` probe was also too slow, motivating
+  branch pruning before coefficient extraction rather than global expansion.
+- Added target-local derivative-branch pruning for projection. The extractor
+  uses Symbolica replacements over `Field`, `Bar(Field)`, `FieldStrength`, and
+  `Bar(FieldStrength)` atoms to set derivative-slot signatures absent from the
+  target to zero. For non-derivative `cH`, this removes the derivative branches
+  hidden inside the order-by-order heavy solution before coefficient
+  extraction, without expanding the full filtered source.
+- Re-ran the selected Singlet fixture `cH` probe with tree-level source,
+  heavy-scalar substitution, evaluated hbar normalization, and selected
+  zero-derivative `hScalar-hScalar-hScalar` CDE. The projected condition now
+  contains the previously missing component
+  `+ hbar*A*kappa^2*muphi/(4*M^4)`. The condition still contains extra
+  high-power/log terms, so this is source-recovery progress rather than full
+  Singlet matching parity.
+- Added a slow public matching regression for the synthetic Singlet-like
+  `hScalar-hScalar-hScalar` path. It verifies that heavy-scalar substitution
+  plus target-local derivative pruning recovers the
+  `hbar*A*kappa^2*muphi/(4*M^4)` component in the projected `cH` condition
+  with `matching_condition_expand_source=False`.
 - Updated `AGENTS.md` to document this narrow exception to the no-global-source
-  expansion rule and to keep the fallback Symbolica-native and size guarded.
+  expansion rule, the derivative-branch pruning rule, and to keep both
+  fallbacks Symbolica-native and target-local.
+- Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_heavy_solution_projects_ch_muphi_component -q'`
+    passed with 1 slow test.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_expands_hidden_additive_source_for_ch tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_expands_indexed_higgs_bilinear_powers_to_ch -q'`
+    passed with 2 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 51 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_projects_three_insertion_higgs_potential_operator tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_heavy_solution_projects_ch_muphi_component -q'`
+    passed with 2 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
 
 ## Current Remaining Work
 
@@ -914,8 +944,8 @@
 - Continue reducing heavy-scalar-substituted Wilson projection cost. The broad
   substituted Singlet report now completes, and simple coupling targets are
   filtered cheaply. The current target-local expansion fallback fixes the
-  small hidden-additive projection case, but the public Singlet-like
-  `A*kappa^2*muphi` loop term is still blocked by large nested heavy-solution
-  derivative branches. Broad substituted projection needs source staging by
-  target-compatible field content, branch/order selection for heavy solutions,
-  and basis/on-shell reductions before projection.
+  small hidden-additive projection case, and derivative-branch pruning recovers
+  the public Singlet-like `A*kappa^2*muphi` loop component. Broad substituted
+  projection still needs source staging by target-compatible field content,
+  branch/order selection for heavy solutions beyond simple derivative-slot
+  pruning, and basis/on-shell reductions before projection.

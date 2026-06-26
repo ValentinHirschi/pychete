@@ -13,6 +13,8 @@ from .eft import series_eft
 from .functional import expand_cd_operators
 from .expr import (
     as_int,
+    bar_field_pattern,
+    bar_field_strength_pattern,
     cd_pattern,
     coupling_pattern,
     factors,
@@ -740,6 +742,7 @@ class _ProjectionCoefficientExtractor:
 
     def coefficient(self, target: Expression) -> Expression:
         source = self._filtered_source(target)
+        source = _projection_derivative_compatible_source(source, target)
         coefficient = source.coefficient(target).expand()
         if not is_zero(coefficient) or not _is_composite_projection_target(target):
             return coefficient
@@ -913,6 +916,7 @@ def _raw_projection_exhausts_filtered_source(
 ) -> bool:
     alias_expressions = tuple(alias for alias, _weight in ibp_aliases)
     filtered_source = extractor._filtered_source_for_expressions((projection_expression, *alias_expressions))
+    filtered_source = _projection_derivative_compatible_source(filtered_source, projection_expression)
     return is_zero((filtered_source - coefficient * projection_expression).expand())
 
 
@@ -1006,6 +1010,79 @@ def _projection_atom_counts(expr: Expression) -> Counter[tuple[str, str]]:
     for match in expr.match(strength_pat):
         counts[("field_strength", canonical_string(match[s.FieldStrengthLabelWildcard]))] += 1
     return counts
+
+
+def _projection_derivative_compatible_source(source: Expression, target: Expression) -> Expression:
+    field_signatures = _projection_field_derivative_signatures(target)
+    strength_signatures = _projection_field_strength_derivative_signatures(target)
+    if not field_signatures and not strength_signatures:
+        return source
+    pruned = source
+    if field_signatures:
+        pruned = _drop_incompatible_projection_field_derivatives(pruned, field_signatures)
+    if strength_signatures:
+        pruned = _drop_incompatible_projection_field_strength_derivatives(pruned, strength_signatures)
+    return pruned
+
+
+def _projection_field_derivative_signatures(target: Expression) -> dict[str, set[tuple[str, ...]]]:
+    pattern = field_pattern()
+    signatures: dict[str, set[tuple[str, ...]]] = {}
+    for match in target.match(pattern):
+        label = canonical_string(match[s.FieldLabelWildcard])
+        signatures.setdefault(label, set()).add(_derivative_signature(match[s.FieldDerivativesWildcard]))
+    return signatures
+
+
+def _projection_field_strength_derivative_signatures(target: Expression) -> dict[str, set[tuple[str, ...]]]:
+    pattern = field_strength_pattern()
+    signatures: dict[str, set[tuple[str, ...]]] = {}
+    for match in target.match(pattern):
+        label = canonical_string(match[s.FieldStrengthLabelWildcard])
+        signatures.setdefault(label, set()).add(_derivative_signature(match[s.FieldStrengthDerivativesWildcard]))
+    return signatures
+
+
+def _drop_incompatible_projection_field_derivatives(
+    source: Expression,
+    signatures: Mapping[str, set[tuple[str, ...]]],
+) -> Expression:
+    field_pat = field_pattern()
+    bar_pat = bar_field_pattern()
+
+    def replacement(pattern: Expression, match: dict[Expression, Expression]) -> Expression:
+        label = canonical_string(match[s.FieldLabelWildcard])
+        allowed = signatures.get(label)
+        if allowed is None or _derivative_signature(match[s.FieldDerivativesWildcard]) in allowed:
+            return pattern.replace_wildcards(match)
+        return Expression.num(0)
+
+    pruned = source.replace(bar_pat, lambda match: replacement(bar_pat, match), rhs_cache_size=0)
+    return pruned.replace(field_pat, lambda match: replacement(field_pat, match), rhs_cache_size=0)
+
+
+def _drop_incompatible_projection_field_strength_derivatives(
+    source: Expression,
+    signatures: Mapping[str, set[tuple[str, ...]]],
+) -> Expression:
+    strength_pat = field_strength_pattern()
+    bar_pat = bar_field_strength_pattern()
+
+    def replacement(pattern: Expression, match: dict[Expression, Expression]) -> Expression:
+        label = canonical_string(match[s.FieldStrengthLabelWildcard])
+        allowed = signatures.get(label)
+        if allowed is None or _derivative_signature(match[s.FieldStrengthDerivativesWildcard]) in allowed:
+            return pattern.replace_wildcards(match)
+        return Expression.num(0)
+
+    pruned = source.replace(bar_pat, lambda match: replacement(bar_pat, match), rhs_cache_size=0)
+    return pruned.replace(strength_pat, lambda match: replacement(strength_pat, match), rhs_cache_size=0)
+
+
+def _derivative_signature(derivatives: Expression) -> tuple[str, ...]:
+    if not is_head(derivatives, s.List):
+        return (canonical_string(derivatives),)
+    return tuple(canonical_string(derivative) for derivative in list_items(derivatives))
 
 
 def _numeric_factor_normalized_target(target: Expression) -> tuple[Expression, Expression] | None:

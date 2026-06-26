@@ -2243,6 +2243,57 @@ def test_public_bosonic_cde_projects_three_insertion_higgs_potential_operator() 
     assert not bool(result.matching_conditions[target].expand() == Expression.num(0))
 
 
+@pytest.mark.slow
+def test_public_bosonic_cde_heavy_solution_projects_ch_muphi_component() -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_heavy_solution_projects_ch")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    source = theory.define_coupling("A", self_conjugate=True)
+    kappa = theory.define_coupling("kappa", self_conjugate=True)
+    muphi = theory.define_coupling("muphi", self_conjugate=True)
+    hbar = theory.define_external("hbar")
+    wilson = define_smeft_wilson_coefficient(theory, "cH")
+    i = theory.dummy_index(1, fund)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(higgs)
+        - source() * heavy() * s.Bar(higgs(i)) * higgs(i)
+        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+        - muphi() * heavy() ** 3 / 6
+    )
+    target = canonical_string(s.Coupling(wilson.label, s.List(), Expression.num(0)))
+
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        matching_condition_targets="registered_wilsons",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+            normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+            hbar=hbar(),
+            max_trace_order=3,
+            bosonic_cde_trace_names=("hScalar-hScalar-hScalar",),
+            bosonic_cde_max_total_order=0,
+            bosonic_cde_max_slot_order=0,
+            tensor_reduce=True,
+            combine_terms=False,
+            truncate_eft_result=False,
+            substitute_heavy_scalar_solutions=True,
+        ),
+    )
+    coefficient = result.matching_conditions[target].coefficient(
+        hbar() * source() * kappa() ** 2 * muphi()
+    ).expand()
+
+    assert result.metadata["heavy_scalar_solutions_substituted"] is True
+    assert result.metadata["matching_condition_projection_canonize_indices"] is True
+    assert_expr_equal(coefficient, Expression.num(1) / (4 * theory.coupling_handle("M")() ** 4))
+
+
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:
     theory = Theory("one_loop_setup_interaction_bosonic_cde_commutator")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")
