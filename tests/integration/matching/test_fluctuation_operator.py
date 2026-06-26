@@ -1822,6 +1822,40 @@ def test_wilson_line_path_expands_propagator_terms_without_cde_result_object() -
     assert "pychete::WilsonTerm" not in canonical_string(terms[0].numerator)
 
 
+def test_wilson_line_expansion_can_simplify_generated_color_algebra(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_setup_wilson_line_generated_color_simplification")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    expansion = {"hScalar-lScalar": ((), ())}
+    calls: list[tuple[Theory, Expression]] = []
+    marker = S("generated_wilson_line_color_simplified")
+
+    def fake_simplify_pychete_color_algebra(
+        call_theory: Theory,
+        expr: Expression,
+        **_: object,
+    ) -> Expression:
+        calls.append((call_theory, expr))
+        return (expr + marker).expand()
+
+    monkeypatch.setattr(idenso_backend, "simplify_pychete_color_algebra", fake_simplify_pychete_color_algebra)
+
+    raw_terms = setup.interaction_wilson_line_expansion_terms(expansion)
+    simplified_terms = setup.interaction_wilson_line_expansion_terms(
+        expansion,
+        simplify_pychete_color_algebra=True,
+    )
+
+    assert calls == [(theory, raw_terms[0].numerator)]
+    assert "generated_wilson_line_color_simplified" not in canonical_string(raw_terms[0].numerator)
+    assert "generated_wilson_line_color_simplified" in canonical_string(simplified_terms[0].numerator)
+
+
 def test_wilson_line_vector_slots_use_matchete_propagator_sign() -> None:
     theory = Theory("one_loop_setup_wilson_line_vector_prop_sign")
     group = theory.symbol("G", role=SymbolRole.GROUP)
@@ -1973,6 +2007,27 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     assert_expr_equal(result.off_shell_eft_lagrangian, expected_integral)
     assert_expr_equal(result.expression("interaction_wilson_line_vakint_integral_sum"), expected_selected_integral)
     assert_expr_equal(result.expression("interaction_wilson_line_hybrid_vakint_integral_sum"), expected_integral)
+
+    color_simplified_result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            wilson_line_expansion_indices_by_trace=expansion,
+            truncate_eft_result=False,
+            simplify_pychete_color_algebra=True,
+        ),
+    )
+
+    assert color_simplified_result.metadata["pychete_color_algebra_simplified"] is True
+    assert (
+        color_simplified_result.metadata["interaction_wilson_line_pychete_color_algebra_simplified"]
+        is True
+    )
+    assert_expr_equal(
+        color_simplified_result.expression("interaction_wilson_line_vakint_integral_sum"),
+        expected_selected_integral,
+    )
 
     generated_result = theory.match(
         lagrangian,

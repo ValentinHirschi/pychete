@@ -915,6 +915,7 @@ class WilsonLineTracePath:
         *,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        simplify_pychete_color_algebra: bool = False,
     ) -> tuple[WilsonLineTraceExpansionTerm, ...]:
         """Return Matchete-style propagator-expanded terms for this path.
 
@@ -979,6 +980,10 @@ class WilsonLineTracePath:
                     and self.propagator_modes[0].statistics is FluctuationStatistics.FERMIONIC
                 ),
             )
+            if simplify_pychete_color_algebra:
+                from .backends import idenso
+
+                numerator = idenso.simplify_pychete_color_algebra(self.theory, numerator)
             if is_zero(numerator):
                 continue
             terms.append(
@@ -1862,6 +1867,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, tuple[WilsonLineTraceExpansionTerm, ...]]:
         """Return Wilson-line propagator-expanded terms grouped by trace name."""
@@ -1887,6 +1893,7 @@ class OneLoopSetup:
                         entry.expansion_indices,
                         act_open_derivatives=act_open_derivatives,
                         max_wilson_derivative_order=max_wilson_derivative_order,
+                        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     )
                 )
             grouped[entry.label] = _filter_wilson_line_terms_by_projection_requirements(
@@ -1904,6 +1911,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> tuple[WilsonLineTraceExpansionTerm, ...]:
         """Return selected Wilson-line propagator-expanded terms in deterministic order."""
@@ -1915,6 +1923,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         return tuple(term for terms in grouped.values() for term in terms)
@@ -1929,6 +1938,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, Expression]:
         """Return selected Wilson-line propagator-expanded terms as kernels."""
@@ -1941,6 +1951,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         ).items():
             for term_index, term in enumerate(terms):
@@ -1959,6 +1970,7 @@ class OneLoopSetup:
         include_light_only: bool = False,
         act_open_derivatives: bool = False,
         max_wilson_derivative_order: int = 4,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> dict[str, Expression]:
         """Return selected Wilson-line propagator-expanded terms as vakint topologies."""
@@ -1971,6 +1983,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         ).items():
             for term_index, term in enumerate(terms):
@@ -1989,6 +2002,7 @@ class OneLoopSetup:
         stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         short_form: bool | None = None,
         engine: Any | None = None,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Return the summed selected Wilson-line-expanded interaction topologies."""
@@ -2000,6 +2014,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         return _vakint_integral_terms_at_stage(
@@ -2025,6 +2040,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Evaluate selected Wilson-line-expanded integrals with pychete."""
@@ -2038,6 +2054,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         evaluated_terms: list[Expression] = []
@@ -2078,6 +2095,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the selected Wilson-line-expanded interaction one-loop result."""
@@ -2094,6 +2112,7 @@ class OneLoopSetup:
             stage=selected_vakint_stage,
             short_form=vakint_short_form,
             engine=vakint_engine,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         raw_named_integrals = self.interaction_wilson_line_expansion_vakint_integral_expression_map(
@@ -2103,6 +2122,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         named_integrals = {
@@ -2122,6 +2142,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         supertraces = {
@@ -2132,6 +2153,7 @@ class OneLoopSetup:
                 include_light_only=include_light_only,
                 act_open_derivatives=act_open_derivatives,
                 max_wilson_derivative_order=max_wilson_derivative_order,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                 term_atom_requirements=term_atom_requirements,
             ),
             **named_integrals,
@@ -2170,6 +2192,7 @@ class OneLoopSetup:
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
+                "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2196,6 +2219,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the Wilson-line-expanded interaction result evaluated internally."""
@@ -2209,6 +2233,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         raw_vakint_sum = self.interaction_wilson_line_vakint_integral_sum(
@@ -2218,6 +2243,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         evaluated = self.interaction_wilson_line_internal_integral_sum(
@@ -2232,6 +2258,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
@@ -2253,6 +2280,7 @@ class OneLoopSetup:
                     include_light_only=include_light_only,
                     act_open_derivatives=act_open_derivatives,
                     max_wilson_derivative_order=max_wilson_derivative_order,
+                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     term_atom_requirements=term_atom_requirements,
                 ),
                 **self.interaction_wilson_line_expansion_vakint_integral_expression_map(
@@ -2262,6 +2290,7 @@ class OneLoopSetup:
                     include_light_only=include_light_only,
                     act_open_derivatives=act_open_derivatives,
                     max_wilson_derivative_order=max_wilson_derivative_order,
+                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     term_atom_requirements=term_atom_requirements,
                 ),
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
@@ -2279,6 +2308,7 @@ class OneLoopSetup:
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
+                "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2307,6 +2337,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the internal Wilson-line result after minimal-subtraction pole removal."""
@@ -2324,6 +2355,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_wilson_line_internal_integral_pole_part")
@@ -2361,6 +2393,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint Wilson-line result after pole subtraction."""
@@ -2376,6 +2409,7 @@ class OneLoopSetup:
             max_wilson_derivative_order=max_wilson_derivative_order,
             stage=VakintIntegralStage.EVALUATED,
             engine=vakint_engine,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
@@ -2389,6 +2423,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         named_integrals = {
@@ -2408,6 +2443,7 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             act_open_derivatives=act_open_derivatives,
             max_wilson_derivative_order=max_wilson_derivative_order,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         return MatchingResult(
@@ -2427,6 +2463,7 @@ class OneLoopSetup:
                     include_light_only=include_light_only,
                     act_open_derivatives=act_open_derivatives,
                     max_wilson_derivative_order=max_wilson_derivative_order,
+                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     term_atom_requirements=term_atom_requirements,
                 ),
                 **named_integrals,
@@ -2446,6 +2483,7 @@ class OneLoopSetup:
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
+                "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2479,6 +2517,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return interaction-power traces with selected traces replaced by Wilson-line output."""
@@ -2514,6 +2553,7 @@ class OneLoopSetup:
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
@@ -2566,6 +2606,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid Wilson-line/interaction result evaluated internally."""
@@ -2599,6 +2640,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
@@ -2644,6 +2686,7 @@ class OneLoopSetup:
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid internal Wilson-line result after pole removal."""
@@ -2663,6 +2706,7 @@ class OneLoopSetup:
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_pole_part")
@@ -2702,6 +2746,7 @@ class OneLoopSetup:
         named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
+        simplify_pychete_color_algebra: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint hybrid Wilson-line result."""
@@ -2735,6 +2780,7 @@ class OneLoopSetup:
             named_supertrace_stage=named_supertrace_stage,
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
@@ -7287,6 +7333,7 @@ def match_one_loop(
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
+            simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif (
@@ -7308,6 +7355,7 @@ def match_one_loop(
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
+            simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif (
@@ -7329,6 +7377,7 @@ def match_one_loop(
             named_supertrace_stage=options.named_supertrace_stage,
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
+            simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif wilson_line_expansion_indices_by_trace is not None:
@@ -7349,6 +7398,7 @@ def match_one_loop(
             named_supertrace_stage=options.named_supertrace_stage,
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
+            simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:

@@ -411,6 +411,14 @@ delegate compact projector/gamma words to
 chains. This mirrors Matchete's `NCM`/`DiracProduct` cleanup while keeping the
 actual gamma algebra in the native backend; do not leave generated
 Wilson-line terms with `NCM(..., NCM(...), ...)` nesting that blocks idenso.
+When `OneLoopMatchOptions.simplify_pychete_color_algebra` is enabled, generated
+Wilson-line numerators must also pass through
+`idenso.simplify_pychete_color_algebra(...)` after supported `WilsonTerm`
+expansion and Dirac/NCM postprocessing. Setup-level colour simplification runs
+before generated Wilson-line terms exist, so it is not sufficient for
+Wilson-line-generated CG structures. Keep this as explicit option plumbing into
+`WilsonLineTracePath.propagator_expansion_terms(...)`; do not silently simplify
+raw Wilson-line diagnostics by default.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

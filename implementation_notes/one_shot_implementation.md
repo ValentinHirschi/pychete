@@ -160,6 +160,15 @@
   idenso does not currently reduce a lone closed projector trace through this
   bridge, so projector-only closed words remain formal rather than being
   replaced by Python-side gamma-trace identities.
+- The latest Wilson-line backend-algebra slice threads the existing
+  `simplify_pychete_color_algebra` option into generated Wilson-line terms.
+  Setup-level colour simplification happens before generated
+  `WilsonTerm`/field-strength CG structures exist, so
+  `WilsonLineTracePath.propagator_expansion_terms(...)` now delegates each
+  generated numerator to `idenso.simplify_pychete_color_algebra(...)` after
+  Wilson-term expansion and Dirac/NCM postprocessing when the option is
+  enabled. Default diagnostic Wilson-line output remains raw unless the caller
+  explicitly opts in.
 - Focused validation for the current fermion-loop trace slice has so far used
   the 30 GiB watchdog wrapper: exact new/affected tests
   `test_idenso_bridge_traces_closed_pychete_dirac_chains_through_native_gamma`,
@@ -484,6 +493,14 @@
 
 ## Latest Validation Evidence
 
+- Wilson-line generated-colour simplification gate, under the 30 GiB watchdog
+  wrapper: `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line_expansion_can_simplify_generated_color_algebra or
+  one_loop_match_can_use_selected_wilson_line_expansion or
+  wilson_line_path_expands_propagator_terms" -q` passed with `3 passed, 92
+  deselected`.
+- `python -m mypy`, under the 30 GiB watchdog wrapper, reported no issues in
+  40 source files after the Wilson-line generated-colour simplification slice.
 - Author-feedback generic-basis registry gate, under the 30 GiB watchdog
   wrapper: `pytest tests/unit/definitions/test_public_api.py
   tests/unit/definitions/test_theory_definitions.py -k "public_api or
