@@ -1792,6 +1792,101 @@ def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:
     assert_expr_equal(conjugate_expanded, Expression.I * theory.coupling_handle("gY")() * strength)
 
 
+def test_expand_wilson_terms_uses_derivative_sublist_partition_for_three_derivatives() -> None:
+    theory = Theory("wilson_term_abelian_three_derivative")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+    coupling = theory.coupling_handle("gY")()
+    vector = theory.field_handle("B").label
+    expected = (
+        -Expression.I
+        * Expression.num(2)
+        * coupling
+        / 3
+        * (
+            s.FieldStrength(vector, s.List(b, c), s.List(), s.List(a))
+            + s.FieldStrength(vector, s.List(a, c), s.List(), s.List(b))
+        )
+    )
+
+    expanded = expand_wilson_terms(theory, s.WilsonTerm(phi.label, s.List(left, right), s.List(a, b, c)))
+
+    assert_expr_equal(expanded, expected)
+
+
+def test_expand_wilson_terms_leaves_terms_above_requested_derivative_order_formal() -> None:
+    theory = Theory("wilson_term_requested_order_cap")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=0,
+    )
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    indices = [theory.index(name) for name in ("a", "b", "c")]
+    term = s.WilsonTerm(phi.label, s.List(left, right), s.List(*indices))
+
+    expanded = expand_wilson_terms(theory, term, max_derivative_order=2)
+
+    assert_expr_equal(expanded, term)
+
+
+def test_expand_wilson_terms_uses_multi_block_derivative_partitions() -> None:
+    theory = Theory("wilson_term_abelian_four_derivative")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=0,
+    )
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+    d = theory.index("d")
+    coupling = theory.coupling_handle("gY")()
+    vector = theory.field_handle("B").label
+
+    def strength(first: Expression, second: Expression, *derivatives: Expression) -> Expression:
+        return s.FieldStrength(vector, s.List(first, second), s.List(), s.List(*derivatives))
+
+    pair_partitions = (
+        strength(a, b) * strength(c, d)
+        + strength(a, c) * strength(b, d)
+        + strength(b, c) * strength(a, d)
+    )
+    full_block = (
+        strength(c, d, a, b)
+        + strength(b, d, a, c)
+        + strength(c, d, b, a)
+        + strength(a, d, b, c)
+        + strength(b, d, c, a)
+        + strength(a, d, c, b)
+    )
+    expected = -coupling**2 * pair_partitions / 4 - Expression.I * coupling * full_block / 8
+
+    expanded = expand_wilson_terms(theory, s.WilsonTerm(phi.label, s.List(left, right), s.List(a, b, c, d)))
+
+    assert_expr_equal(expanded, expected)
+
+
 def test_expand_wilson_terms_lowers_non_abelian_two_derivative_term() -> None:
     theory = Theory("wilson_term_non_abelian_two_derivative")
     theory.define_gauge_group("SU2L", s.SU(2), "g2", "W")

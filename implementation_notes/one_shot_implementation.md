@@ -153,12 +153,13 @@
   functional-trace evaluator.
 - The current Wilson-term expansion slice adds `expand_wilson_terms(theory,
   expr)` and `wilson_term_expansion(...)` as the reusable expansion boundary.
-  The supported cases are deliberately low-order and native-pattern based:
-  identity transport for zero derivatives, zero for one derivative, and the
-  two-derivative field-strength insertion for scalar/fermion representations
-  using theory-owned Abelian/non-Abelian gauge metadata. Higher derivative
-  `WilsonTerm` atoms and vector derivative terms remain formal for the next
-  Wilson-line expansion slice.
+  The supported cases are deliberately bounded and native-pattern based:
+  identity transport for zero derivatives, zero for one derivative, and
+  Matchete-style derivative-sublist field-strength insertions for
+  scalar/fermion representations up to `max_derivative_order` (default four)
+  using theory-owned Abelian/non-Abelian gauge metadata. `WilsonTerm` atoms
+  above the requested order and vector derivative terms remain formal for a
+  later tensor/generator-chain validation slice.
 - `WilsonLineTracePath` now exposes
   `wilson_term_expanded_template_expression(...)` and
   `wilson_term_expanded_kernel_expression(...)`, allowing future matching code
@@ -277,9 +278,11 @@
 - `git diff --check` passed after the Wilson-line structural slice.
 - 30 GiB memory-watch Wilson-term expansion focused gate:
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "wilson" -q`
-  passed with 4 tests selected and 73 deselected, covering identity,
+  passed with 7 tests selected and 73 deselected, covering identity,
   one-derivative zero, Abelian two-derivative field-strength insertion,
-  non-Abelian generator/field-strength insertion, and the
+  Abelian three-derivative derivative-sublist insertion, Abelian
+  four-derivative multi-block partitions, non-Abelian generator/field-strength
+  insertion, explicit derivative-order cap behavior, and the
   `WilsonLineTracePath` expansion bridge.
 - 30 GiB memory-watch public API gate after exporting Wilson expansion helpers:
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_public_api.py -q`

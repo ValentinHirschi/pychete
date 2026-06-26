@@ -1196,7 +1196,9 @@ class Theory:
         *,
         conjugate_field: bool,
         index_counter: Iterator[int],
+        field_strength_derivatives: Iterable[Expression] = (),
     ) -> Expression:
+        derivative_tuple = tuple(field_strength_derivatives)
         definition = self._field_definition_for_label(field_label(base_field))
         insertion = (
             self._abelian_field_strength_insertions(
@@ -1205,6 +1207,7 @@ class Theory:
                 left_index,
                 right_index,
                 conjugate_field=conjugate_field,
+                field_strength_derivatives=derivative_tuple,
             )
             + self._non_abelian_field_strength_insertions(
                 base_field,
@@ -1212,6 +1215,7 @@ class Theory:
                 right_index,
                 conjugate_field=conjugate_field,
                 index_counter=index_counter,
+                field_strength_derivatives=derivative_tuple,
             )
         )
         if bool(insertion == Expression.num(0)):
@@ -1433,8 +1437,10 @@ class Theory:
         right_index: Expression,
         *,
         conjugate_field: bool,
+        field_strength_derivatives: Iterable[Expression],
     ) -> Expression:
         field_factor = s.Bar(field) if conjugate_field else field
+        derivative_tuple = tuple(field_strength_derivatives)
         terms: list[Expression] = []
         for charge in definition.charge_exprs:
             group_symbol = self._group_symbol_for_charge(charge)
@@ -1465,7 +1471,7 @@ class Theory:
                 self.fields[vector_name].label,
                 list_expr(left_index, right_index),
                 list_expr(),
-                list_expr(),
+                list_expr(*derivative_tuple),
             )
             terms.append(charge[0] * self.coupling_handle(coupling_name)() * strength * field_factor)
         return sum_expr(terms).expand()
@@ -1478,7 +1484,9 @@ class Theory:
         *,
         conjugate_field: bool,
         index_counter: Iterator[int],
+        field_strength_derivatives: Iterable[Expression],
     ) -> Expression:
+        derivative_tuple = tuple(field_strength_derivatives)
         terms: list[Expression] = []
         field_indices = list(list_items(field[2]))
         for field_index, input_index in enumerate(field_indices):
@@ -1535,7 +1543,7 @@ class Theory:
                 self.fields[vector_name].label,
                 list_expr(left_index, right_index),
                 list_expr(adjoint_index),
-                list_expr(),
+                list_expr(*derivative_tuple),
             )
             generator_factor = self._non_abelian_generator_factor(
                 generator,
@@ -1561,6 +1569,7 @@ class Theory:
         *,
         conjugate_field: bool,
         index_counter: Iterator[int],
+        field_strength_derivatives: Iterable[Expression] = (),
     ) -> Expression:
         insertion = self._field_strength_adjoint_insertions(
             base_strength,
@@ -1568,6 +1577,7 @@ class Theory:
             right_index,
             conjugate_field=conjugate_field,
             index_counter=index_counter,
+            field_strength_derivatives=field_strength_derivatives,
         )
         if bool(insertion == Expression.num(0)):
             return insertion
@@ -1582,7 +1592,9 @@ class Theory:
         *,
         conjugate_field: bool,
         index_counter: Iterator[int],
+        field_strength_derivatives: Iterable[Expression],
     ) -> Expression:
+        derivative_tuple = tuple(field_strength_derivatives)
         definition = self._field_definition_for_label(field_strength_label(strength))
         type_expr = definition.type_expr
         if not is_head(type_expr, s.Vector) or len(type_expr) != 1:
@@ -1651,7 +1663,7 @@ class Theory:
                 self.fields[vector_name].label,
                 list_expr(left_index, right_index),
                 list_expr(adjoint_index),
-                list_expr(),
+                list_expr(*derivative_tuple),
             )
             generator_factor = self._non_abelian_generator_factor(
                 generator,

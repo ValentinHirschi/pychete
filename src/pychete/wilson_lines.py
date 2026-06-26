@@ -1,6 +1,8 @@
 from __future__ import annotations
 
-from collections.abc import Sequence
+from collections.abc import Iterator, Sequence
+from functools import cache
+from itertools import combinations, count, permutations
 from typing import TYPE_CHECKING
 
 from symbolica import Expression
@@ -18,16 +20,15 @@ def expand_wilson_terms(
     theory: Theory,
     expr: Expression,
     *,
-    max_derivative_order: int = 2,
+    max_derivative_order: int = 4,
 ) -> Expression:
     """Expand supported ``WilsonTerm`` atoms in ``expr``.
 
     This is the first current-Matchete-style Wilson-line expansion boundary.
     It handles the coincidence-limit identity term, the vanishing single
-    derivative term, and the two-derivative field-strength term. Higher
-    derivative ``WilsonTerm`` atoms are intentionally left formal until the
-    derivative-sublist/generator-chain expansion is implemented through the
-    idenso/spenso-backed algebra path.
+    derivative term, and Matchete-style derivative-sublist expansions up to
+    ``max_derivative_order``. Larger ``WilsonTerm`` atoms are intentionally
+    left formal so users can opt into higher combinatoric cost deliberately.
     """
 
     if max_derivative_order < 0:
@@ -36,16 +37,18 @@ def expand_wilson_terms(
     pattern = wilson_term_pattern()
     if not bool(expr.matches(pattern)):
         return expr
+    index_counter = count()
 
     def replace_wilson_term(match: dict[Expression, Expression]) -> Expression:
         derivative_indices = list_items(match[s.WilsonTermDerivativeIndicesWildcard])
         if len(derivative_indices) > max_derivative_order:
             return pattern.replace_wildcards(match)
-        return wilson_term_expansion(
+        return _wilson_term_expansion(
             theory,
             match[s.WilsonTermFieldWildcard],
             match[s.WilsonTermLinkIndicesWildcard],
             derivative_indices,
+            index_counter=index_counter,
         )
 
     return scalarize_commutative_ncm_chains(
@@ -61,6 +64,23 @@ def wilson_term_expansion(
 ) -> Expression:
     """Return the supported coincidence-limit expansion of one ``WilsonTerm``."""
 
+    return _wilson_term_expansion(
+        theory,
+        field,
+        link_indices,
+        derivative_indices,
+        index_counter=count(),
+    )
+
+
+def _wilson_term_expansion(
+    theory: Theory,
+    field: Expression,
+    link_indices: Expression,
+    derivative_indices: Sequence[Expression],
+    *,
+    index_counter: Iterator[int],
+) -> Expression:
     left_label, right_label = _wilson_link_labels(link_indices)
     conjugated = _is_conjugated_field_label(field)
     field_label = _base_field_label(field, conjugated=conjugated)
@@ -70,23 +90,24 @@ def wilson_term_expansion(
         return _wilson_identity_factor(field_label, left_label, right_label, conjugated=conjugated)
     if len(derivative_tuple) == 1:
         return Expression.num(0)
-    if len(derivative_tuple) != 2:
-        return s.WilsonTerm(field, link_indices, list_expr(*derivative_tuple))
     if _is_vector_field_label(field_label):
         return s.WilsonTerm(field, link_indices, list_expr(*derivative_tuple))
-    if bool(derivative_tuple[0] == derivative_tuple[1]):
+    terms: list[Expression] = []
+    for partition in _wilson_derivative_partitions(derivative_tuple):
+        term = _wilson_partition_expansion(
+            theory,
+            field_label,
+            left_label,
+            right_label,
+            partition,
+            conjugated=conjugated,
+            index_counter=index_counter,
+        )
+        if not bool(term == Expression.num(0)):
+            terms.append(term)
+    if not terms:
         return Expression.num(0)
-
-    probe = _wilson_probe_field(field_label, right_label)
-    probe = s.Bar(probe) if conjugated else probe
-    commutator = theory.covariant_derivative_commutator(probe, derivative_tuple[0], derivative_tuple[1])
-    matrix_element = _replace_probe_field_by_left_identity(
-        commutator,
-        field_label,
-        left_label,
-        conjugated=conjugated,
-    )
-    return (Expression.num(1) / 2 * matrix_element).expand()
+    return sum(terms, Expression.num(0)).expand()
 
 
 def _wilson_link_labels(link_indices: Expression) -> tuple[Expression, Expression]:
@@ -181,6 +202,126 @@ def _wilson_vector_lorentz_identity(
 
 def _is_vector_field_label(field_label: Expression) -> bool:
     return is_head(field_type_from_label(field_label), s.Vector)
+
+
+def _wilson_partition_expansion(
+    theory: Theory,
+    field_label: Expression,
+    left_label: Expression,
+    right_label: Expression,
+    partition: tuple[tuple[Expression, ...], ...],
+    *,
+    conjugated: bool,
+    index_counter: Iterator[int],
+) -> Expression:
+    out = _wilson_probe_field(field_label, right_label)
+    out = s.Bar(out) if conjugated else out
+    for block in reversed(partition):
+        out = _apply_wilson_derivative_block(
+            theory,
+            out,
+            field_label,
+            block,
+            conjugated=conjugated,
+            index_counter=index_counter,
+        )
+        if bool(out == Expression.num(0)):
+            return out
+    return _replace_probe_field_by_left_identity(
+        out,
+        field_label,
+        left_label,
+        conjugated=conjugated,
+    )
+
+
+def _apply_wilson_derivative_block(
+    theory: Theory,
+    expr: Expression,
+    field_label: Expression,
+    block: tuple[Expression, ...],
+    *,
+    conjugated: bool,
+    index_counter: Iterator[int],
+) -> Expression:
+    pattern = s.Field(
+        field_label,
+        field_type_from_label(field_label),
+        s.FieldIndicesWildcard,
+        s.List(),
+    )
+    if conjugated:
+        pattern = s.Bar(pattern)
+
+    def replace_field(match: dict[Expression, Expression]) -> Expression:
+        atom = pattern.replace_wildcards(match)
+        if conjugated:
+            atom = atom[0]
+        return _wilson_derivative_block_action(
+            theory,
+            atom,
+            block,
+            conjugated=conjugated,
+            index_counter=index_counter,
+        )
+
+    return expr.replace(pattern, replace_field, rhs_cache_size=0).expand()
+
+
+def _wilson_derivative_block_action(
+    theory: Theory,
+    base_field: Expression,
+    block: tuple[Expression, ...],
+    *,
+    conjugated: bool,
+    index_counter: Iterator[int],
+) -> Expression:
+    if len(block) < 2:
+        return Expression.num(0)
+    if len(block) == 2 and bool(block[0] == block[1]):
+        return Expression.num(0)
+
+    leading_permutations = tuple(permutations(block[:-1]))
+    if not leading_permutations:
+        return Expression.num(0)
+    prefactor = Expression.num(len(block) - 1) / (Expression.num(len(block)) * Expression.num(len(leading_permutations)))
+    terms: list[Expression] = []
+    for perm in leading_permutations:
+        left_index = perm[-1]
+        right_index = block[-1]
+        field_strength_derivatives = perm[:-1]
+        terms.append(
+            prefactor
+            * theory._covariant_derivative_commutator(
+                base_field,
+                left_index,
+                right_index,
+                conjugate_field=conjugated,
+                index_counter=index_counter,
+                field_strength_derivatives=field_strength_derivatives,
+            )
+        )
+    return sum(terms, Expression.num(0)).expand()
+
+
+@cache
+def _wilson_derivative_partitions(indices: tuple[Expression, ...]) -> tuple[tuple[tuple[Expression, ...], ...], ...]:
+    length = len(indices)
+    if length < 2:
+        return ()
+    if length < 4:
+        return ((indices,),)
+    out: list[tuple[tuple[Expression, ...], ...]] = []
+    positions = tuple(range(length - 1))
+    for subset_size in range(2, length - 1):
+        for subset in combinations(positions, subset_size):
+            subset_set = set(subset)
+            first = tuple(indices[position] for position in subset)
+            rest = tuple(indices[position] for position in range(length) if position not in subset_set)
+            for prefix in _wilson_derivative_partitions(first):
+                out.append((*prefix, rest))
+    out.append((indices,))
+    return tuple(out)
 
 
 def _replace_probe_field_by_left_identity(

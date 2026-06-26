@@ -305,10 +305,14 @@ simplification; do not implement it as a Python tree walker.
 Use `expand_wilson_terms(theory, expr)` as the public Wilson-line expansion
 boundary. Its first supported cases are the coincidence-limit identity
 transporter, the vanishing one-derivative term, and the two-derivative
-field-strength term for scalar/fermion representations. Higher derivative
-`WilsonTerm` atoms and vector-field derivative terms must remain formal until
-Matchete's derivative-sublist/generator-chain expansion has been implemented
-through Symbolica pattern replacements plus idenso/spenso simplification.
+field-strength term for scalar/fermion representations, plus
+Matchete-style derivative-sublist partitions up to the requested
+`max_derivative_order` (default four). Derivative-sublist expansion should keep
+using Symbolica replacement callbacks over `WilsonTerm(...)` and theory-owned
+gauge metadata; Python may enumerate derivative-index partitions, but it must
+not inspect expression trees to do group algebra. `WilsonTerm` atoms above the
+requested derivative order and vector-field derivative terms must remain formal
+until their tensor/generator-chain coverage is validated through idenso/spenso.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result
