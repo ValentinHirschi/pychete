@@ -156,6 +156,46 @@
   were updated to the already-established periodic cyclic prefactor convention
   (`hScalar-hScalar` carries `-1/4`, not a universal `-1/2`); rerunning those
   two setup tests passed.
+- The current Matchete-author-feedback slice continues the Wilson-line-first
+  correction by adding a pychete `SymmetricLorentzInds(...)` marker and a
+  public `remove_symmetry_vanishing_wilson_terms(...)` helper. The helper uses
+  Symbolica pattern matches over `SymmetricLorentzInds(...)` and
+  `WilsonTerm(...)` to remove additive terms whose Wilson derivative pair is
+  repeated or whose derivative-index list contains the loop-integration
+  symmetric Lorentz group. `expand_wilson_terms(...)` now runs this cleanup
+  before lowering supported Wilson terms, matching the current Matchete
+  Wilson-line pipeline more closely without adding new CDE machinery.
+- The same slice removes the implicit `"SMEFT"` basis default from raw
+  `Theory.define_wilson_coefficient(...)`. Unbased Wilson coefficients remain
+  basis-unassigned unless a caller explicitly uses `OperatorBasis`,
+  `define_wilson_coefficient_from_basis(...)`, or the optional
+  `define_smeft_wilson_coefficient(...)` convenience route. This keeps the
+  bundled SMEFT Warsaw provider as validation/convenience metadata rather than
+  a core matching assumption.
+- Focused validation for this slice used the 30 GiB watchdog wrapper:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "symmetry_vanishing_wilson_terms or expand_wilson_terms" -q` passed with
+  `10 passed, 79 deselected`; `pytest
+  tests/unit/definitions/test_pretty_printing.py -k
+  "supertrace_denominator_heads or builtin_pychete_symbols" -q` passed with
+  `2 passed, 8 deselected`; `pytest tests/unit/definitions/test_public_api.py
+  -q` passed with `5 passed`; `pytest
+  tests/unit/definitions/test_theory_definitions.py -k
+  "wilson_coefficients_are_unbased_by_default or wilson_coefficients_store_basis
+  or generic_operator_basis or smeft_warsaw_operator" -q` passed with
+  `4 passed, 46 deselected`; `pytest
+  tests/integration/validation/test_validation_fixtures.py -k
+  "wilson_line or cde_filter or projected_targets or
+  matching_condition_projection_names" -q` passed with
+  `4 passed, 37 deselected`; `pytest
+  tests/integration/matching/test_heavy_scalar_tree.py -k
+  "matching_condition or wilson or cPhi" -q` passed with
+  `2 passed, 18 deselected`; and `python -m mypy` reported no issues.
+  A broader follow-up ran `pytest tests/unit/definitions/test_theory_definitions.py
+  -q` with `50 passed` and `pytest
+  tests/integration/validation/test_numeric_probes.py -k
+  "wilson or basis or matching_condition" -q` with
+  `9 passed, 45 deselected`.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw

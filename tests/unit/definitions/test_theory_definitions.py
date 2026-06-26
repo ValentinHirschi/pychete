@@ -1126,6 +1126,19 @@ def test_wilson_coefficients_store_basis_and_matching_target_metadata() -> None:
     ]
 
 
+def test_wilson_coefficients_are_unbased_by_default() -> None:
+    theory = Theory("wilson_unbased_default")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    operator = phi() ** 2
+
+    wilson = theory.define_wilson_coefficient("cPhi2", operator=operator)
+
+    assert wilson.definition.basis_name is None
+    assert wilson.label.get_symbol_data(SymbolDataKey.BASIS.value) == ""
+    assert "basis_SMEFT" not in _local_tags(wilson.label)
+    assert "external_kind_wilson_coefficient" in _local_tags(wilson.label)
+
+
 def test_generic_operator_basis_defines_wilson_operator_metadata() -> None:
     theory = Theory("generic_operator_basis")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

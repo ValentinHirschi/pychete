@@ -113,7 +113,7 @@ from .validation_fixtures import (
     ValidationFixture,
     load_validation_fixture,
 )
-from .wilson_lines import expand_wilson_terms, wilson_term_expansion
+from .wilson_lines import expand_wilson_terms, remove_symmetry_vanishing_wilson_terms, wilson_term_expansion
 
 __all__ = [
     "BuiltinIndexType",
@@ -214,6 +214,7 @@ __all__ = [
     "reduce_loop_functions_first_power",
     "reduce_loop_functions_ibp",
     "relabel_dummy_indices",
+    "remove_symmetry_vanishing_wilson_terms",
     "registered_wilson_matching_condition_targets",
     "s",
     "series_eft",

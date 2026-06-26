@@ -274,5 +274,14 @@ discoveries, dependency patches, blockers, and remaining work.
   transporter and Lorentz endpoint metric instead of staying formal, while
   still leaving unsupported higher-order/combinatoric cases formal until they
   are explicitly validated.
+- Wilson-line expansion should now include the current Matchete cleanup stage
+  that removes symmetry-vanishing `WilsonTerm(...)` factors before lowering
+  supported terms. The marker for loop-integration symmetry is represented as
+  `SymmetricLorentzInds(...)`, and the implementation must use Symbolica
+  pattern matches over this marker and `WilsonTerm(...)`.
+- Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
+  SMEFT. Basis metadata must be explicit through `OperatorBasis`,
+  `define_wilson_coefficient_from_basis(...)`, or thin convenience helpers
+  such as `define_smeft_wilson_coefficient(...)`.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

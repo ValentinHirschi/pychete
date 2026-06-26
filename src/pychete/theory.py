@@ -697,14 +697,17 @@ class Theory:
         *,
         indices: Iterable[Expression] = (),
         eft_order: int = 0,
-        basis: str = "SMEFT",
+        basis: str | None = None,
         operator: Expression | None = None,
     ) -> ExternalHandle:
         """Register a Wilson-coefficient target as a theory-owned external.
 
         ``operator`` stores the basis monomial whose coefficient should be
         projected for this Wilson target when matching conditions are extracted
-        from an EFT Lagrangian.
+        from an EFT Lagrangian. Raw Wilson coefficients are not assigned to a
+        named basis by default; use ``define_wilson_coefficient_from_basis`` or
+        a basis-specific convenience helper such as
+        ``define_smeft_wilson_coefficient`` when basis metadata is intended.
         """
 
         return self.define_external(

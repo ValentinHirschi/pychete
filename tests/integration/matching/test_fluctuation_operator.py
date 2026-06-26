@@ -33,6 +33,7 @@ from pychete import (
     dummy_indices,
     expand_wilson_terms,
     one_loop_normalization_factor,
+    remove_symmetry_vanishing_wilson_terms,
     s,
 )
 import pychete.matching as matching_module
@@ -2027,6 +2028,25 @@ def test_expand_wilson_terms_returns_non_abelian_vector_identity_transporter() -
     )
 
     assert_expr_equal(identity, expected)
+
+
+def test_remove_symmetry_vanishing_wilson_terms_uses_loop_symmetry_markers() -> None:
+    theory = Theory("wilson_term_symmetric_lorentz_vanish")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    symmetric_marker = s.SymmetricLorentzInds(s.List(mu, nu))
+    vanishing = symmetric_marker * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
+    repeated = s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, mu))
+    survivor = symmetric_marker * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, rho))
+
+    assert_expr_equal(remove_symmetry_vanishing_wilson_terms(vanishing), Expression.num(0))
+    assert_expr_equal(remove_symmetry_vanishing_wilson_terms(repeated), Expression.num(0))
+    assert_expr_equal(remove_symmetry_vanishing_wilson_terms(vanishing + survivor), survivor)
+    assert_expr_equal(expand_wilson_terms(theory, vanishing), Expression.num(0))
 
 
 def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:

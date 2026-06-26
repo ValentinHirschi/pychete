@@ -90,6 +90,7 @@ def test_supertrace_denominator_heads_print_cleanly_in_all_symbolica_modes() -> 
     kernel = s.SupertraceKernel(Expression.num(3), s.List(s.List(denominator)))
     momentum = s.LoopMomentum(s.dummy_index(0))
     open_cd = s.OpenCD(s.List(s.dummy_index(0)))
+    symmetric_lorentz = s.SymmetricLorentzInds(s.List(s.dummy_index(0), s.dummy_index(1)))
 
     assert _format_lagrangian(momentum, PrintMode.Symbolica) == "q[d0]"
     assert _format_lagrangian(momentum, PrintMode.Latex) == "q_{d0}"
@@ -107,6 +108,11 @@ def test_supertrace_denominator_heads_print_cleanly_in_all_symbolica_modes() -> 
     assert _format_lagrangian(open_cd, PrintMode.Mathematica) == "OpenCD[{d0}]"
     assert _format_lagrangian(open_cd, PrintMode.Sympy) == "OpenCD({d0})"
     assert _format_lagrangian(open_cd, PrintMode.Typst) == "OpenCD({d0})"
+    assert _format_lagrangian(symmetric_lorentz, PrintMode.Symbolica) == "SymmetricLorentzInds({d0, d1})"
+    assert _format_lagrangian(symmetric_lorentz, PrintMode.Latex) == r"\mathcal{S}\left({d0, d1}\right)"
+    assert _format_lagrangian(symmetric_lorentz, PrintMode.Mathematica) == "SymmetricLorentzInds[{d0, d1}]"
+    assert _format_lagrangian(symmetric_lorentz, PrintMode.Sympy) == "SymmetricLorentzInds({d0, d1})"
+    assert _format_lagrangian(symmetric_lorentz, PrintMode.Typst) == "SymmetricLorentzInds({d0, d1})"
 
 
 def test_loop_hbar_symbol_prints_cleanly_in_all_symbolica_modes() -> None:
@@ -184,6 +190,9 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.Vector(s.U1),
         s.Ghost,
         s.AntiGhost,
+        s.WilsonLine(mu, nu),
+        s.WilsonTerm(phi.label, s.List(mu, nu), s.List(mu, nu)),
+        s.SymmetricLorentzInds(s.List(mu, nu)),
         s.Lorentz,
         s.U1,
         s.SU(3),
@@ -213,6 +222,12 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.FieldStrengthLorentzWildcard,
         s.FieldStrengthIndicesWildcard,
         s.FieldStrengthDerivativesWildcard,
+        s.LoopMomentumIndexWildcard,
+        s.OpenCDIndicesWildcard,
+        s.WilsonTermFieldWildcard,
+        s.WilsonTermLinkIndicesWildcard,
+        s.WilsonTermDerivativeIndicesWildcard,
+        s.SymmetricLorentzIndicesWildcard,
         vacuum_integrals.loop_function((Expression.symbol("M1"), Expression.symbol("M2")), (1, 1, 0)),
         s.LoopFunctionMassesWildcard,
         s.LoopFunctionPowersWildcard,

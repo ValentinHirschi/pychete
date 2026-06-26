@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING
 
 from symbolica import Expression
 
-from .expr import is_head, list_expr, list_items, product_expr, wilson_term_pattern
+from .expr import is_head, list_expr, list_items, product_expr, sum_expr, terms, wilson_term_pattern
 from .noncommutative import scalarize_commutative_ncm_chains
 from .symbols import s
 from .theory_metadata import (
@@ -40,6 +40,7 @@ def expand_wilson_terms(
     if max_derivative_order < 0:
         raise ValueError("max_derivative_order must be non-negative")
     theory._validate_registered_expression(expr)
+    expr = remove_symmetry_vanishing_wilson_terms(expr)
     pattern = wilson_term_pattern()
     if not bool(expr.matches(pattern)):
         return expr
@@ -77,6 +78,78 @@ def wilson_term_expansion(
         derivative_indices,
         index_counter=count(),
     )
+
+
+def remove_symmetry_vanishing_wilson_terms(expr: Expression) -> Expression:
+    """Drop additive terms whose ``WilsonTerm`` derivatives vanish by symmetry.
+
+    This mirrors the current Matchete Wilson-line stage that removes Wilson
+    terms whose derivative indices are fully contained in a symmetric Lorentz
+    loop-integration marker, or whose two derivative indices are identical.
+    Discovery of both markers and Wilson terms is done through Symbolica
+    pattern matching; Python only applies the term-level zeroing policy.
+    """
+
+    wilson_pattern = wilson_term_pattern()
+    if not bool(expr.matches(wilson_pattern)):
+        return expr
+    symmetric_pattern = s.SymmetricLorentzInds(s.SymmetricLorentzIndicesWildcard)
+    if not bool(expr.matches(symmetric_pattern)):
+        if not _has_any_repeated_wilson_pair(expr, wilson_pattern):
+            return expr
+    return sum_expr(
+        Expression.num(0) if _symmetry_vanishes_wilson_term(term, symmetric_pattern, wilson_pattern) else term
+        for term in terms(expr)
+    ).expand()
+
+
+def _symmetry_vanishes_wilson_term(
+    expr: Expression,
+    symmetric_pattern: Expression,
+    wilson_pattern: Expression,
+) -> bool:
+    wilson_groups = tuple(_wilson_derivative_groups(expr, wilson_pattern))
+    if not wilson_groups:
+        return False
+    if any(_has_repeated_wilson_pair(group) for group in wilson_groups):
+        return True
+    symmetric_groups = tuple(_symmetric_lorentz_index_groups(expr, symmetric_pattern))
+    return any(_is_subset_exprs(symmetric_group, wilson_group) for symmetric_group in symmetric_groups for wilson_group in wilson_groups)
+
+
+def _has_any_repeated_wilson_pair(expr: Expression, wilson_pattern: Expression) -> bool:
+    return any(_has_repeated_wilson_pair(group) for group in _wilson_derivative_groups(expr, wilson_pattern))
+
+
+def _symmetric_lorentz_index_groups(
+    expr: Expression,
+    symmetric_pattern: Expression,
+) -> Iterator[tuple[Expression, ...]]:
+    for match in expr.match(symmetric_pattern):
+        payload = match[s.SymmetricLorentzIndicesWildcard]
+        items = list_items(payload) if is_head(payload, s.List) else (payload,)
+        if items:
+            yield items
+
+
+def _wilson_derivative_groups(
+    expr: Expression,
+    wilson_pattern: Expression,
+) -> Iterator[tuple[Expression, ...]]:
+    for match in expr.match(wilson_pattern):
+        yield list_items(match[s.WilsonTermDerivativeIndicesWildcard])
+
+
+def _has_repeated_wilson_pair(indices: Sequence[Expression]) -> bool:
+    return len(indices) == 2 and bool(indices[0] == indices[1])
+
+
+def _is_subset_exprs(needles: Sequence[Expression], haystack: Sequence[Expression]) -> bool:
+    return all(_contains_expr(haystack, needle) for needle in needles)
+
+
+def _contains_expr(items: Sequence[Expression], target: Expression) -> bool:
+    return any(bool(item == target) for item in items)
 
 
 def _wilson_term_expansion(
@@ -368,4 +441,4 @@ def _replace_probe_field_by_left_identity(
     return expr.replace(pattern, replace_probe, rhs_cache_size=0).expand()
 
 
-__all__ = ["expand_wilson_terms", "wilson_term_expansion"]
+__all__ = ["expand_wilson_terms", "remove_symmetry_vanishing_wilson_terms", "wilson_term_expansion"]
