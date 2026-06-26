@@ -88,6 +88,8 @@ def test_bosonic_covariant_propagator_expansion_order_two_matches_open_cd_struct
     terms = bosonic_covariant_propagator_expansion_terms((mu, nu))
 
     assert [term.denominator_power for term in terms] == [3, 2]
+    assert terms[0].loop_momentum_indices == (mu, nu)
+    assert terms[1].loop_momentum_indices == ()
     assert_expr_equal(
         terms[0].numerator,
         -4 * s.LoopMomentum(mu) * s.LoopMomentum(nu) * s.NCM(open_covariant_derivative(mu), open_covariant_derivative(nu)),

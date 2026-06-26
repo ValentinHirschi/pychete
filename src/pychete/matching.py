@@ -926,12 +926,13 @@ class WilsonLineTracePath:
             bosonic_covariant_propagator_expansion_terms(indices)
             for indices in normalized_indices
         )
-        from .wilson_lines import expand_wilson_terms
+        from .wilson_lines import expand_wilson_terms, remove_loop_momentum_symmetry_vanishing_wilson_terms
 
         terms: list[WilsonLineTraceExpansionTerm] = []
         for choices in product(*propagator_expansions):
             prefactor = self.prefactor
             loop_numerator = Expression.num(1)
+            loop_momentum_indices: list[Expression] = []
             operands: list[Expression] = []
             masses: list[Expression] = []
             powers: list[int] = []
@@ -940,6 +941,7 @@ class WilsonLineTracePath:
             ):
                 prefactor *= expansion.prefactor
                 loop_numerator *= expansion.loop_momentum_numerator
+                loop_momentum_indices.extend(expansion.loop_momentum_indices)
                 operands.append(_fresh_trace_entry_dummy_indices(entry, slot_index))
                 operands.extend(expansion.open_cd_operands)
                 masses.append(_fluctuation_mass_squared(mode))
@@ -948,6 +950,7 @@ class WilsonLineTracePath:
             numerator = (prefactor * loop_numerator * _ncm_chain(*operands)).expand()
             if act_open_derivatives:
                 numerator = act_with_open_covariant_derivatives(numerator, cyclic=True)
+            numerator = remove_loop_momentum_symmetry_vanishing_wilson_terms(numerator, loop_momentum_indices)
             numerator = expand_wilson_terms(
                 self.theory,
                 numerator,

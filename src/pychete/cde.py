@@ -27,6 +27,7 @@ class BosonicCovariantPropagatorExpansionTerm:
     loop_momentum_numerator: Expression
     open_cd_operands: tuple[Expression, ...]
     denominator_power: int
+    loop_momentum_indices: tuple[Expression, ...] = ()
 
     @property
     def numerator(self) -> Expression:
@@ -78,6 +79,7 @@ def bosonic_covariant_propagator_expansion_terms(
                 loop_momentum_numerator=Expression.num(1),
                 open_cd_operands=(),
                 denominator_power=1,
+                loop_momentum_indices=(),
             ),
         )
 
@@ -101,6 +103,7 @@ def bosonic_covariant_propagator_expansion_terms(
                         pair_distribution,
                     ),
                     denominator_power=denominator_power,
+                    loop_momentum_indices=single_indices,
                 )
             )
     return tuple(terms)

@@ -196,6 +196,28 @@
   tests/integration/validation/test_numeric_probes.py -k
   "wilson or basis or matching_condition" -q` with
   `9 passed, 45 deselected`.
+- The current Wilson-line symmetry follow-up makes that cleanup effective for
+  generated propagator-expanded Wilson-line terms. `BosonicCovariantPropagatorExpansionTerm`
+  now stores the explicit `loop_momentum_indices` used to build its numerator,
+  avoiding loss of multiplicity when Symbolica simplifies repeated
+  `LoopMomentum(...)` factors into powers. `WilsonLineTracePath.propagator_expansion_terms(...)`
+  passes the accumulated index metadata through
+  `remove_loop_momentum_symmetry_vanishing_wilson_terms(...)` after open
+  derivatives act and before supported Wilson-term expansion. The helper
+  temporarily inserts `SymmetricLorentzInds(...)`, removes vanishing Wilson
+  terms with Symbolica pattern matches, then strips the marker so public
+  numerators still carry the original loop-momentum factors for vakint/idenso
+  tensor reduction.
+- Focused validation for this follow-up used the 30 GiB watchdog wrapper:
+  `pytest tests/unit/functional/test_cde.py -q` passed with `10 passed`;
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "loop_momentum_symmetry_cleanup or symmetry_vanishing_wilson_terms or
+  wilson_line_expansion_lets_open_derivatives or interaction_wilson_line_expansion"
+  -q` passed with `3 passed, 87 deselected`; the broader Wilson-line gate
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line or expand_wilson_terms" -q` passed with
+  `15 passed, 75 deselected`; `pytest tests/unit/definitions/test_public_api.py
+  -q` passed with `5 passed`; and `python -m mypy` reported no issues.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw

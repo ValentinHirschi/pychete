@@ -279,6 +279,12 @@ discoveries, dependency patches, blockers, and remaining work.
   supported terms. The marker for loop-integration symmetry is represented as
   `SymmetricLorentzInds(...)`, and the implementation must use Symbolica
   pattern matches over this marker and `WilsonTerm(...)`.
+- Generated Wilson-line propagator-expansion terms should carry explicit
+  loop-momentum index metadata so pychete can apply the Matchete
+  `SymmetricLorentzInds(...)` vanishing rule without reconstructing factor
+  multiplicity from simplified products. The marker should be temporary in
+  the vakint-backed path; public numerators keep `LoopMomentum(...)` factors
+  for backend tensor reduction.
 - Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
   SMEFT. Basis metadata must be explicit through `OperatorBasis`,
   `define_wilson_coefficient_from_basis(...)`, or thin convenience helpers

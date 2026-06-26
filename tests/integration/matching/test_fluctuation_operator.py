@@ -33,6 +33,7 @@ from pychete import (
     dummy_indices,
     expand_wilson_terms,
     one_loop_normalization_factor,
+    remove_loop_momentum_symmetry_vanishing_wilson_terms,
     remove_symmetry_vanishing_wilson_terms,
     s,
 )
@@ -2047,6 +2048,33 @@ def test_remove_symmetry_vanishing_wilson_terms_uses_loop_symmetry_markers() -> 
     assert_expr_equal(remove_symmetry_vanishing_wilson_terms(repeated), Expression.num(0))
     assert_expr_equal(remove_symmetry_vanishing_wilson_terms(vanishing + survivor), survivor)
     assert_expr_equal(expand_wilson_terms(theory, vanishing), Expression.num(0))
+
+
+def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
+    theory = Theory("wilson_term_loop_momentum_symmetry")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    numerator = s.LoopMomentum(mu) * s.LoopMomentum(nu)
+    vanishing = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
+    survivor = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, rho))
+    odd = s.LoopMomentum(mu) * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu))
+
+    assert_expr_equal(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(vanishing, (mu, nu)),
+        Expression.num(0),
+    )
+    assert_expr_equal(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(survivor, (mu, nu)),
+        survivor,
+    )
+    assert "SymmetricLorentzInds" not in canonical_string(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(survivor, (mu, nu))
+    )
+    assert_expr_equal(remove_loop_momentum_symmetry_vanishing_wilson_terms(odd, (mu,)), odd)
 
 
 def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:

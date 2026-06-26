@@ -103,6 +103,35 @@ def remove_symmetry_vanishing_wilson_terms(expr: Expression) -> Expression:
     ).expand()
 
 
+def remove_loop_momentum_symmetry_vanishing_wilson_terms(
+    expr: Expression,
+    loop_momentum_indices: Sequence[Expression],
+) -> Expression:
+    """Remove Wilson terms killed by symmetric loop-momentum integration.
+
+    ``loop_momentum_indices`` is the explicit ordered list of loop-vector
+    Lorentz indices carried by the generated numerator. For even nonzero rank,
+    pychete temporarily annotates ``expr`` with ``SymmetricLorentzInds(...)``
+    so :func:`remove_symmetry_vanishing_wilson_terms` can apply the current
+    Matchete Wilson-line rule. The marker is then stripped again, preserving
+    the original loop-momentum numerator for vakint/idenso tensor reduction.
+    """
+
+    indices = tuple(loop_momentum_indices)
+    if len(indices) < 2 or len(indices) % 2:
+        return expr
+    marker = s.SymmetricLorentzInds(list_expr(*indices))
+    cleaned = remove_symmetry_vanishing_wilson_terms((marker * expr).expand())
+    return _strip_symmetric_lorentz_indices(cleaned)
+
+
+def _strip_symmetric_lorentz_indices(expr: Expression) -> Expression:
+    pattern = s.SymmetricLorentzInds(s.SymmetricLorentzIndicesWildcard)
+    if not bool(expr.matches(pattern)):
+        return expr
+    return expr.replace(pattern, Expression.num(1), rhs_cache_size=0).expand()
+
+
 def _symmetry_vanishes_wilson_term(
     expr: Expression,
     symmetric_pattern: Expression,
@@ -441,4 +470,9 @@ def _replace_probe_field_by_left_identity(
     return expr.replace(pattern, replace_probe, rhs_cache_size=0).expand()
 
 
-__all__ = ["expand_wilson_terms", "remove_symmetry_vanishing_wilson_terms", "wilson_term_expansion"]
+__all__ = [
+    "expand_wilson_terms",
+    "remove_loop_momentum_symmetry_vanishing_wilson_terms",
+    "remove_symmetry_vanishing_wilson_terms",
+    "wilson_term_expansion",
+]
