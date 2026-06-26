@@ -623,6 +623,63 @@ def test_validation_fixture_preview_can_use_bosonic_cde_expansion_without_mathem
     generated_preview.validate()
 
 
+def test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathematica() -> None:
+    theory = Theory("validation_fixture_wilson_line")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
+    fixture = ValidationFixture(
+        name="validation_fixture_wilson_line",
+        kind="model_smoke",
+        state=state,
+        source={"generator": "pytest", "mathematica_runtime_required": False},
+        expression_names=("lagrangian",),
+    )
+    mu = theory.lorentz_index("mu")
+    expansion = {"hScalar-lScalar": ((mu,), ())}
+    setup = theory.one_loop_setup(
+        lagrangian,
+        eft_order=6,
+        max_trace_order=2,
+    )
+    expected = setup.interaction_wilson_line_hybrid_matching_result(
+        expansion,
+        act_open_derivatives=True,
+        max_wilson_derivative_order=3,
+    )
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        wilson_line_expansion_indices_by_trace=expansion,
+        wilson_line_act_open_derivatives=True,
+        wilson_line_max_derivative_order=3,
+    )
+
+    assert preview.metadata["stage"] == "interaction_wilson_line_hybrid_vakint_result"
+    assert preview.metadata["fixture"] == fixture.name
+    assert preview.metadata["uses_wilson_line_expansion"] is True
+    assert preview.metadata["interaction_wilson_line_hybrid"] is True
+    assert preview.metadata["wilson_line_expansion_enabled"] is True
+    assert preview.metadata["wilson_line_act_open_derivatives"] is True
+    assert preview.metadata["wilson_line_max_derivative_order"] == 3
+    assert preview.metadata["bosonic_cde_expansion_enabled"] is False
+    assert_expr_equal(preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
+    preview.validate()
+
+    with pytest.raises(ValueError, match="mutually exclusive"):
+        fixture.one_loop_preview(
+            max_trace_order=2,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            bosonic_cde_expansion_indices_by_trace=expansion,
+            wilson_line_expansion_indices_by_trace=expansion,
+        )
+
+
 def test_validation_fixture_preview_accepts_custom_internal_series_symbols_without_mathematica() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     eps = S("fixture_custom_eps")
@@ -932,6 +989,47 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert captured["matching_condition_normalize_derivative_operators"] is False
     assert captured["matching_condition_normalize_ibp_scalar_bilinears"] is True
     assert captured["matching_condition_truncate_eft"] is True
+
+
+def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    reference = MatchingResult(
+        theory=fixture.theory(),
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+    )
+    expansion = {"hScalar": ((S("mu"),),)}
+    captured: dict[str, object] = {}
+
+    def fake_match(self: Theory, *_args: object, **kwargs: object) -> MatchingResult:
+        captured.update(kwargs)
+        return MatchingResult(
+            theory=self,
+            uv_lagrangian=Expression.num(0),
+            off_shell_eft_lagrangian=Expression.num(0),
+            on_shell_eft_lagrangian=Expression.num(0),
+        )
+
+    monkeypatch.setattr(Theory, "match", fake_match)
+
+    fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="public_match_wilson_line_forwarding",
+        use_public_match_api=True,
+        wilson_line_expansion_indices_by_trace=expansion,
+        wilson_line_act_open_derivatives=True,
+        wilson_line_max_derivative_order=3,
+    )
+
+    options = captured["one_loop_options"]
+    assert isinstance(options, OneLoopMatchOptions)
+    assert options.wilson_line_expansion_indices_by_trace == expansion
+    assert options.wilson_line_act_open_derivatives is True
+    assert options.wilson_line_max_derivative_order == 3
+    assert options.bosonic_cde_expansion_indices_by_trace is None
 
 
 def test_validation_fixture_gap_report_can_filter_public_cde_terms_by_projected_targets() -> None:

@@ -256,5 +256,9 @@ discoveries, dependency patches, blockers, and remaining work.
   replacing only the selected trace families while preserving the unselected
   interaction-power remainder. Pure selected Wilson-line result methods remain
   diagnostic helpers.
+- Latest author-feedback course correction must apply to validation tooling as
+  well as core matching: Matchete parity previews and gap reports should expose
+  Wilson-line-named controls and prefer them for new frontier checks, while
+  keeping CDE controls only for legacy diagnostic coverage.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

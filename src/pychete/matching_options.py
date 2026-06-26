@@ -160,9 +160,12 @@ class OneLoopMatchOptions:
     Lorentz-index sequence per propagator slot. This path is separate from the
     legacy CDE options: it builds ordered ``WilsonLineTracePath`` terms,
     lets open derivatives act on the closing ``WilsonTerm`` when requested,
-    then lowers supported Wilson terms with ``expand_wilson_terms``. It is
-    intentionally opt-in until the higher-order Wilson-line expansion coverage
-    is validated against committed fixtures.
+    then lowers supported Wilson terms with ``expand_wilson_terms``. Public
+    matching uses the hybrid selected-trace route: selected trace families are
+    replaced by their Wilson-line aggregate while unselected interaction-power
+    traces remain in the one-loop source. It is intentionally opt-in until the
+    higher-order Wilson-line expansion coverage is validated against committed
+    fixtures.
     """
 
     max_trace_order: int = 2

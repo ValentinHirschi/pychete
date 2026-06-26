@@ -317,6 +317,11 @@ families are replaced by their Wilson-line-expanded aggregate while all
 unselected interaction-power traces remain in the source. Keep pure selected
 Wilson-line result methods available for diagnostics, not as the default public
 matching route.
+Validation-facing one-loop preview and gap-report helpers must expose the same
+`wilson_line_*` controls as `Theory.match(...)`. New Matchete parity probes
+should prefer these Wilson-line controls over legacy `bosonic_cde_*` controls
+unless the purpose of the test is explicitly to preserve or compare the old
+CDE route.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
 simplification; do not implement it as a Python tree walker. Open covariant

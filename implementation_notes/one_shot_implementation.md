@@ -97,20 +97,6 @@
   derivative-carrying Wilson-line object. Open covariant derivatives append to
   the derivative slot through Symbolica replacement rules before
   `expand_wilson_terms(...)` lowers supported identity/field-strength cases.
-- The current continuation promotes the Wilson-line expansion route from
-  diagnostics into opt-in public matching. `OneLoopMatchOptions` now has
-  `wilson_line_expansion_indices_by_trace`,
-  `wilson_line_act_open_derivatives`, and
-  `wilson_line_max_derivative_order`; `Theory.match(..., loop_order=1)` can
-  route selected traces through
-  `OneLoopSetup.interaction_wilson_line_matching_result(...)` or the matching
-  internal/minimal-subtraction variants depending on the chosen integral
-  backend. This is still selected-trace and opt-in; hybrid replacement of only
-  selected trace families into the full interaction-power remainder remains a
-  later Wilson-line parity slice.
-- CDE and Wilson-line expansion options are now mutually exclusive in the
-  public matcher so the old v0.1-style path and current Wilson-line path cannot
-  be accidentally mixed without an explicit future policy.
 - The current hybrid follow-up makes the public Wilson-line matcher preserve
   the unselected interaction-power remainder. The pure selected-trace
   `interaction_wilson_line_*_matching_result(...)` methods remain available for
@@ -119,6 +105,18 @@
   now routes through `interaction_wilson_line_hybrid_*` variants for all four
   backend modes. This mirrors the useful selected-trace replacement behavior
   from the legacy CDE path without using CDE-named public controls.
+- CDE and Wilson-line expansion options are mutually exclusive in the public
+  matcher and validation preview helpers so the old v0.1-style path and
+  current Wilson-line path cannot be accidentally mixed without an explicit
+  future policy.
+- The current validation course-correction slice exposes the same
+  `wilson_line_expansion_indices_by_trace`,
+  `wilson_line_act_open_derivatives`, and
+  `wilson_line_max_derivative_order` controls through
+  `ValidationFixture.one_loop_preview(...)` and
+  `one_loop_preview_gap_report(...)`. This lets Matchete-independent fixture
+  probes exercise the Wilson-line hybrid route directly instead of continuing
+  to make new frontier checks CDE-shaped.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw
@@ -464,6 +462,18 @@
 - `git diff --check` passed after the Matchete-author-feedback course
   correction, generic operator-basis refactor, memory-watch wrapper, and
   compact field-strength projection fast path.
+- 30 GiB memory-watch validation-fixture Wilson-line course-correction gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "wilson_line or bosonic_cde_expansion or forwards_pychete_color_to_public_match_api" -q`
+  passed with 4 tests and 36 deselected. This covers direct fixture
+  `one_loop_preview(...)` routing through the Wilson-line hybrid stage,
+  mutual exclusion with legacy CDE expansion, public gap-report forwarding of
+  `wilson_line_*` options, and preservation of the existing CDE forwarding
+  path.
+- 30 GiB memory-watch typing gate after exposing Wilson-line validation
+  controls:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
+- `git diff --check` passed after exposing Wilson-line validation controls.
 
 ## Current Validation Frontier
 
@@ -505,6 +515,9 @@
   - explicit Wilson-line style supertrace representation and metadata, using
     current Matchete behavior as the reference direction rather than expanding
     the legacy CDE route;
+  - Wilson-line fixture-frontier remeasurement, using
+    `ValidationFixture.one_loop_preview_gap_report(..., wilson_line_*)` instead
+    of adding more legacy CDE-first validation knobs;
   - target-local EOM/IBP reductions for generic operator-basis projection,
     including Higgs/gauge structures such as `cHBox`, `cHD`, `cHW`, `cHB`, and
     `cHWB`, without making those reductions SMEFT-specific;
