@@ -152,6 +152,13 @@ extractor, because many Wilson targets filter the same source. Do not expand
 the filtered source subset just to hand it to native coefficient extraction;
 let the subsequent `Expression.coefficient(...)`, `collect_factors(...)`, and
 `factor(...)` fallbacks do the symbolic work on the smaller selected source.
+Do not call native `Expression.factor()` on large filtered projection sources:
+even Rust-backed global factorization can dominate matching-condition
+projection. Gate this fallback with Symbolica's native expression size
+information, such as `len(expr)` and `Expression.get_byte_size()`, and fall
+through to the indexed wildcard projection path when the filtered source is
+too large. This is a performance guard around a native fallback, not an excuse
+to add Python-side algebra.
 For simple registered `Coupling(label, indices, order)` matching targets, also
 prefilter source terms with a native Symbolica `Coupling(label, _, _)` pattern
 before coefficient extraction. This is a conservative label-presence filter:

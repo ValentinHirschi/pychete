@@ -842,6 +842,81 @@ def test_matching_result_projection_prefilters_simple_coupling_targets() -> None
     assert_expr_equal(result["lambda"], coefficient)
 
 
+def test_matching_result_projection_skips_factor_fallback_for_large_filtered_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("condition_projection_skip_large_factor")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    bilinear = s.Bar(higgs(i)) * higgs(i)
+    target = bilinear**3
+    source = sum(
+        S(f"condition_projection_skip_large_factor_{n}") * bilinear**2
+        for n in range(matching_results_module._MAX_PROJECTION_FACTOR_TERMS + 2)
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+
+    def fail_factored_source(
+        self: object,
+        source: Expression,
+    ) -> Expression:
+        raise AssertionError("large filtered projection sources should not be globally factored")
+
+    monkeypatch.setattr(
+        matching_results_module._ProjectionCoefficientExtractor,
+        "_factored_source",
+        fail_factored_source,
+    )
+
+    projected = result.project_matching_conditions({"h6": target}, expand_source=False)
+
+    assert_expr_equal(projected["h6"], Expression.num(0))
+
+
+def test_matching_result_projection_skips_factor_fallback_for_large_expression_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("condition_projection_skip_large_byte_factor")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    bilinear = s.Bar(higgs(i)) * higgs(i)
+    target = bilinear**3
+    source = S("condition_projection_skip_large_byte_factor") * bilinear**2
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+
+    def fail_factored_source(
+        self: object,
+        source: Expression,
+    ) -> Expression:
+        raise AssertionError("large-byte filtered projection sources should not be globally factored")
+
+    monkeypatch.setattr(matching_results_module, "_MAX_PROJECTION_FACTOR_TERMS", 1_000)
+    monkeypatch.setattr(matching_results_module, "_MAX_PROJECTION_FACTOR_BYTES", 1)
+    monkeypatch.setattr(
+        matching_results_module._ProjectionCoefficientExtractor,
+        "_factored_source",
+        fail_factored_source,
+    )
+
+    projected = result.project_matching_conditions({"h6": target}, expand_source=False)
+
+    assert_expr_equal(projected["h6"], Expression.num(0))
+
+
 def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd() -> None:
     coefficient = S("condition_projection_chd_current_coefficient")
     theory = _singlet_scalar_extension_theory()

@@ -63,6 +63,9 @@ _DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES = {
     ),
 }
 
+_MAX_PROJECTION_FACTOR_TERMS = 64
+_MAX_PROJECTION_FACTOR_BYTES = 16_384
+
 
 @dataclass(frozen=True)
 class MatchingExpressionComparison:
@@ -736,13 +739,14 @@ class _ProjectionCoefficientExtractor:
         coefficient = collected.coefficient(factored_target).expand()
         if not is_zero(coefficient):
             return coefficient
-        factored = self._factored_source(source)
-        coefficient = factored.coefficient(target).expand()
-        if not is_zero(coefficient):
-            return coefficient
-        coefficient = factored.coefficient(factored_target).expand()
-        if not is_zero(coefficient):
-            return coefficient
+        if _source_is_small_enough_to_factor(source):
+            factored = self._factored_source(source)
+            coefficient = factored.coefficient(target).expand()
+            if not is_zero(coefficient):
+                return coefficient
+            coefficient = factored.coefficient(factored_target).expand()
+            if not is_zero(coefficient):
+                return coefficient
         numeric_normalized = _numeric_factor_normalized_target(target)
         if numeric_normalized is not None:
             normalized_target, numeric_factor = numeric_normalized
@@ -751,7 +755,7 @@ class _ProjectionCoefficientExtractor:
         normalized = _negative_power_normalized_target(target)
         if normalized is None:
             wildcard_coefficient = (
-                _wildcard_index_projection_coefficient(self.source, target)
+                _wildcard_index_projection_coefficient(source, target)
                 if self.wildcard_index_projection
                 else None
             )
@@ -827,6 +831,13 @@ class _ProjectionCoefficientExtractor:
                 self.factored_source = self.source.factor()
             return self.factored_source
         return source.factor()
+
+
+def _source_is_small_enough_to_factor(source: Expression) -> bool:
+    return (
+        len(source) <= _MAX_PROJECTION_FACTOR_TERMS
+        and source.get_byte_size() <= _MAX_PROJECTION_FACTOR_BYTES
+    )
 
 
 def _without_wildcard_index_projection(

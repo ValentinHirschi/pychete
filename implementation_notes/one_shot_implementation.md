@@ -582,6 +582,42 @@
   splitting the post-substitution source into field-label-compatible pieces or
   by applying basis/on-shell reductions before target projection.
 
+### Large-Source Projection Factor-Gate Follow-Up
+
+- Profiled direct `cH` projection over a heavy-scalar-substituted Singlet
+  result by splitting source generation from projection. Source generation
+  completed in about 13.1 seconds, then projection stalled in
+  `_ProjectionCoefficientExtractor._factored_source(...)`, i.e. native
+  `Expression.factor()` on the filtered Higgs-only source. The filtered `cH`
+  source had only six terms but about 31 KB of Symbolica expression data, so
+  term count alone was not a sufficient complexity guard.
+- Added a bounded factor fallback for matching-condition projection. The
+  extractor still tries native `Expression.coefficient(...)` and
+  `collect_factors()` first, but it now skips the global `factor()` fallback
+  unless the filtered source is small by both Symbolica term count and
+  `Expression.get_byte_size()`. The final wildcard-index projection fallback
+  now uses the already filtered source rather than the full matching source.
+  This keeps the operation native-Symbolica based while avoiding an expensive
+  global factorization on large substituted sources.
+- Added regressions showing that projection skips the factor fallback for both
+  many-term filtered sources and few-term but large-byte filtered sources.
+- Re-ran the separated direct `cH` probe after the factor gate. The substituted
+  source still builds in about 13.2 seconds, but `cH` projection now returns in
+  about 0.26 seconds with coefficient `0`. This turns the previous projection
+  hang into an inspectable missing-source/reduction frontier: current
+  max-trace-order-1 substituted Singlet output does not yet contain the
+  Matchete `cH` contribution in a projectable form.
+- Focused validation for this follow-up:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_skips_factor_fallback_for_large_filtered_sources tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_skips_factor_fallback_for_large_expression_sources tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_prefilters_simple_coupling_targets tests/integration/validation/test_numeric_probes.py::test_matching_result_projection_adds_exact_and_alpha_equivalent_index_matches -q'`
+    passed with 4 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -q'`
+    passed with 44 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py::test_default_matching_target_projected_matching_condition_frontier_without_mathematica -q'`
+    passed with 1 test.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `git diff --check` passed.
+
 ## Current Validation Frontier
 
 - Latest focused projected-condition probe for default models with
@@ -625,7 +661,8 @@
   dominated by gauge-dependent and Higgs-sector conditions.
 - Continue reducing heavy-scalar-substituted Wilson projection cost. The broad
   substituted Singlet report now completes, and simple coupling targets are
-  filtered cheaply, but direct single-Wilson probes such as `cH` over the
-  substituted source are still too expensive for interactive diagnostics.
-  Future slices should split substituted source stages by target-compatible
-  field content and apply basis/on-shell reductions before projection.
+  filtered cheaply. Direct `cH` projection over the substituted source is now
+  fast and returns zero, so the next work is source/basis completeness rather
+  than projection throughput for that target. Future slices should split
+  substituted source stages by target-compatible field content and apply
+  basis/on-shell reductions before projection.
