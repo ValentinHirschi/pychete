@@ -62,8 +62,8 @@
 
 ## Current Status
 
-- Current pushed milestone: `75e20f6 Stage native vakint CDE aggregates
-  termwise`.
+- Recent pushed milestones include `75e20f6 Stage native vakint CDE aggregates
+  termwise` and `0f02dc9 Expose index canonization in fixture reports`.
 - Recent milestones since the Part E summary added public
   `infer_coupling_mass_dimensions(theory, lagrangian)`, exposed Symbolica
   tensor-index canonicalization diagnostics, made vakint loop-momentum index
@@ -74,6 +74,12 @@
   supertrace and matching-condition comparisons use Symbolica
   `Expression.canonize_tensors(...)` by default instead of reporting
   alpha-equivalent dummy-index relabelings as false gaps.
+- The current slice fixes target-local tree/projection recovery for the
+  Singlet `cHBox` derivative operator: explicit list-form `CD({mu, mu}, ...)`
+  now counts one EFT derivative per listed index, additive projection targets
+  can extract coefficient terms common to every additive component, and
+  over-contracted scalar derivative bilinears are split with Symbolica
+  replacement rules before tensor canonization.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -82,6 +88,12 @@
   `canonize_tensor_indices(...)`, preserving the canonical expression,
   external-index list, and ordered dummy-index list for alpha-equivalent
   contractions.
+- The current projection/comparison route was rechecked against the Symbolica
+  stub contract: `Expression.canonize_tensors(...)` returns the canonical
+  expression plus the canonical external and ordered dummy indices. pychete
+  treats that returned payload as the native replacement/alignment information
+  for dummy-index comparisons instead of inferring an index map by rescanning
+  expression strings.
 - `MatchingExpressionComparison` now keeps the per-term
   `TensorCanonization` payloads returned by Symbolica when comparison used
   tensor-index canonicalization, so diagnostics can show which canonical
@@ -173,6 +185,24 @@
   53 tests.
 - `python -m mypy` passed after the validation-report canonization slice.
 - `git diff --check` passed after the validation-report canonization slice.
+- Focused Singlet tree projection regression:
+  `pytest tests/integration/validation/test_numeric_probes.py::test_singlet_tree_matching_projects_ch_and_hbox_terms -q`
+  passed and verifies the tree-level `cH` term plus `cHBox = -A^2/(2*M^4)`.
+- EFT counting gate:
+  `pytest tests/unit/eft/test_eft_counting.py -q` passed with 7 tests,
+  including direct coverage that `CD({mu, mu}, heavy)` has two derivative
+  dimensions.
+- Heavy-scalar tree matching gate:
+  `pytest tests/integration/matching/test_heavy_scalar_tree.py -q` passed with
+  20 tests.
+- Focused HBox/CD/IBP projection subset:
+  `pytest tests/integration/validation/test_numeric_probes.py -k "hbox or cd_targets or ibp or singlet_tree" -q`
+  passed with 8 tests and 45 deselected.
+- Full numeric-probe/projection file:
+  `pytest tests/integration/validation/test_numeric_probes.py -q` passed with
+  53 tests after the additive projection and CD-counting fixes.
+- `python -m mypy` passed after the target-local HBox projection slice.
+- `git diff --check` passed after the target-local HBox projection slice.
 
 ## Current Validation Frontier
 
@@ -191,6 +221,11 @@
   `cHWB`, `cHD`, and `cH` coefficients in small heavy-scalar/Higgs models.
   The default fixtures still need more basis/on-shell/IBP and source-coverage
   work before these focused improvements translate to full parity.
+- With tree-level matching included, the tree-only Singlet source now projects
+  `cHBox = -A^2/(2*M^4)`. In the combined one-loop+tree reduced public source,
+  loop-only derivative pieces can still overlap the same HBox additive alias
+  and hide this common tree contribution, so source separation or staged
+  projection remains a blocker for full default Singlet parity.
 - A broad real Singlet CDE probe with `hScalar`, `hScalar-hScalar`, and
   `hScalar-hScalar-hScalar` selected at trace order 3 is currently too heavy
   for routine slice validation. The immediate native vakint/FORM crash class

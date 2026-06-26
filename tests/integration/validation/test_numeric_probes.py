@@ -1141,14 +1141,20 @@ def test_matching_result_projection_expands_hidden_additive_source_for_ch() -> N
     assert_expr_equal(projected["cH"], coefficient)
 
 
-def test_singlet_tree_matching_projects_ch_power_terms() -> None:
+def test_singlet_tree_matching_projects_ch_and_hbox_terms() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
     lagrangian = fixture.expression("lagrangian")
     tree = theory.match(lagrangian, eft_order=6, loop_order=0)
     assert isinstance(tree, Expression)
-    definition = theory.externals["cH"]
-    target = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    ch_definition = theory.externals["cH"]
+    ch_target = s.Coupling(ch_definition.label, s.List(*ch_definition.index_exprs), Expression.num(ch_definition.order))
+    hbox_definition = theory.externals["cHBox"]
+    hbox_target = s.Coupling(
+        hbox_definition.label,
+        s.List(*hbox_definition.index_exprs),
+        Expression.num(hbox_definition.order),
+    )
     result = MatchingResult(
         theory=theory,
         uv_lagrangian=lagrangian,
@@ -1161,16 +1167,20 @@ def test_singlet_tree_matching_projects_ch_power_terms() -> None:
     muphi = theory.coupling_handle("muphi")
 
     projected = result.project_matching_conditions(
-        {canonical_string(target): target},
+        {
+            canonical_string(ch_target): ch_target,
+            canonical_string(hbox_target): hbox_target,
+        },
         expand_source=False,
         normalize_ibp_scalar_bilinears=True,
         eft_order=6,
     )
 
     assert_expr_equal(
-        projected[canonical_string(target)],
+        projected[canonical_string(ch_target)],
         -A() ** 2 * kappa() / (2 * mass() ** 4) + A() ** 3 * muphi() / (6 * mass() ** 6),
     )
+    assert_expr_equal(projected[canonical_string(hbox_target)], -A() ** 2 / (2 * mass() ** 4))
 
 
 def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() -> None:

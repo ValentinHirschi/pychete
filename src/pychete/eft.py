@@ -17,6 +17,7 @@ from .expr import (
     field_pattern,
     field_strength_pattern,
     field_type,
+    is_head,
     is_zero,
     list_items,
     sum_expr,
@@ -77,7 +78,8 @@ def _field_strength_scaled_dimension(expr: Expression) -> int:
 
 
 def _cd_scaled_dimension(expr: Expression, theory: Theory | None, *, heavy_field_dimension: bool) -> int:
-    return _scaled_operator_dimension(expr[1], theory, heavy_field_dimension=heavy_field_dimension) + 2
+    indices = list_items(expr[0]) if is_head(expr[0], s.List) else (expr[0],)
+    return _scaled_operator_dimension(expr[1], theory, heavy_field_dimension=heavy_field_dimension) + 2 * len(indices)
 
 
 def _eft_weight_replacements(theory: Theory | None, *, heavy_field_dimension: bool) -> tuple[Replacement, ...]:

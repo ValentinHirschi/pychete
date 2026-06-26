@@ -775,6 +775,9 @@ class _ProjectionCoefficientExtractor:
         coefficient = source.coefficient(target).expand()
         if not is_zero(coefficient) or not _is_composite_projection_target(target):
             return coefficient
+        additive_coefficient = self._additive_target_coefficient(source, target)
+        if additive_coefficient is not None:
+            return additive_coefficient
         collected = self._collected_source(source)
         coefficient = collected.coefficient(target).expand()
         if not is_zero(coefficient):
@@ -814,6 +817,26 @@ class _ProjectionCoefficientExtractor:
         normalized_target, denominator = normalized
         coefficient = self.coefficient(normalized_target)
         return (coefficient * denominator).expand()
+
+    def _additive_target_coefficient(self, source: Expression, target: Expression) -> Expression | None:
+        target_terms = terms(target)
+        if len(target_terms) <= 1:
+            return None
+        term_extractor = _ProjectionCoefficientExtractor(
+            source,
+            collected_source=self.collected_source,
+            factored_source=self.factored_source,
+            filtered_sources=self.filtered_sources,
+            coupling_filtered_sources=self.coupling_filtered_sources,
+            source_terms=self.source_terms,
+            source_term_atom_counts=self.source_term_atom_counts,
+            wildcard_index_projection=self.wildcard_index_projection,
+        )
+        coefficients = tuple(term_extractor.coefficient(term) for term in target_terms)
+        if any(is_zero(coefficient) for coefficient in coefficients):
+            return None
+        common = _common_coefficient_terms(coefficients)
+        return None if is_zero(common) else common
 
     def _filtered_source(self, target: Expression) -> Expression:
         coupling_label = _simple_coupling_projection_label(target)
@@ -882,6 +905,20 @@ class _ProjectionCoefficientExtractor:
                 self.factored_source = self.source.factor()
             return self.factored_source
         return source.factor()
+
+
+def _common_coefficient_terms(coefficients: Sequence[Expression]) -> Expression:
+    if not coefficients:
+        return Expression.num(0)
+    expanded = tuple(coefficient.expand() for coefficient in coefficients)
+    common_keys = set(_term_key(term) for term in terms(expanded[0]))
+    for coefficient in expanded[1:]:
+        common_keys &= {_term_key(term) for term in terms(coefficient)}
+    return sum_expr(term for term in terms(expanded[0]) if _term_key(term) in common_keys).expand()
+
+
+def _term_key(term: Expression) -> str:
+    return canonical_string(term.expand())
 
 
 def _source_is_small_enough_to_factor(source: Expression) -> bool:
@@ -1414,6 +1451,7 @@ def _canonize_matching_projection_indices_with_aliases(
     alias_expressions: Sequence[Expression],
 ) -> tuple[Expression, tuple[Expression, ...], tuple[Expression, ...]]:
     source = _expand_indexed_field_powers_for_projection(source)
+    source = _split_overcontracted_scalar_derivative_bilinears_for_projection(source)
     projection_expressions = tuple(_expand_indexed_field_powers_for_projection(expr) for expr in projection_expressions)
     alias_expressions = tuple(_expand_indexed_field_powers_for_projection(expr) for expr in alias_expressions)
     index_specs = _matching_projection_index_specs(source, (*projection_expressions, *alias_expressions))
@@ -1423,6 +1461,40 @@ def _canonize_matching_projection_indices_with_aliases(
     canon_targets = tuple(_canonize_tensor_terms(target, index_specs) for target in projection_expressions)
     canon_aliases = tuple(_canonize_tensor_terms(alias, index_specs) for alias in alias_expressions)
     return canon_source, canon_targets, canon_aliases
+
+
+def _split_overcontracted_scalar_derivative_bilinears_for_projection(expr: Expression) -> Expression:
+    """Split projection-local scalar bilinears with one index reused four times."""
+
+    label = s.head("matching_projection_split_label_")
+    type_expr = s.head("matching_projection_split_type_")
+    index = s.head("matching_projection_split_index_")
+    derivative = s.head("matching_projection_split_derivative_")
+    plain = s.Field(label, type_expr, s.List(index), s.List())
+    differentiated = s.Field(label, type_expr, s.List(index), s.List(derivative))
+    pattern = plain * differentiated * s.Bar(plain) * s.Bar(differentiated)
+    fresh_counter = 0
+
+    def replacement(match: dict[Expression, Expression]) -> Expression:
+        nonlocal fresh_counter
+        matched_type = match[type_expr]
+        matched_index = match[index]
+        if not bool(matched_type == s.Scalar) or not is_head(matched_index, s.Index):
+            return pattern.replace_wildcards(match)
+        fresh_label = s.head(f"matching_projection_split_index_{fresh_counter}")
+        fresh_counter += 1
+        split_index = s.Index(fresh_label, matched_index[1])
+        matched_label = match[label]
+        matched_derivative = match[derivative]
+        left_plain = s.Field(matched_label, matched_type, s.List(matched_index), s.List())
+        right_differentiated = s.Field(matched_label, matched_type, s.List(split_index), s.List(matched_derivative))
+        right_plain_bar = s.Bar(s.Field(matched_label, matched_type, s.List(split_index), s.List()))
+        left_differentiated_bar = s.Bar(
+            s.Field(matched_label, matched_type, s.List(matched_index), s.List(matched_derivative))
+        )
+        return left_plain * right_differentiated * right_plain_bar * left_differentiated_bar
+
+    return expr.replace(pattern, replacement, rhs_cache_size=0)
 
 
 def _expand_indexed_field_powers_for_projection(expr: Expression) -> Expression:

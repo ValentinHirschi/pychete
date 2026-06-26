@@ -492,6 +492,16 @@ such as `H[i]^3*Bar(H[i])^3` can project against Warsaw-basis operators written
 with independent dummy contractions. Keep this normalization target-local to
 matching-condition projection; do not globally rewrite user expressions just
 for display.
+Also keep projection-local scalar derivative bilinears from reusing one
+field-index contraction across every factor. Terms such as
+`H[i] * D(mu, H[i]) * Bar(H[i]) * Bar(D(mu, H[i]))` must be split with
+Symbolica replacement rules into independent dummy contractions before tensor
+canonization, so `cHBox`-style IBP aliases can be projected without changing
+the stored tree-level expression globally.
+When counting EFT order for explicit `CD(...)` wrappers, a list-form derivative
+index such as `CD({mu, mu}, body)` carries one derivative per listed index.
+Do not count the whole list as a single derivative; otherwise Wilson
+mass-dimension filtering drops valid dimension-six targets like `cHBox`.
 
 Selected bosonic CDE trace requests must stay target-local. When
 `bosonic_cde_trace_names` or explicit CDE expansion maps select a trace family,

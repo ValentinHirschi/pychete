@@ -93,6 +93,7 @@ def test_operator_dimension_uses_pattern_weighted_atoms() -> None:
     assert operator_dimension(heavy(), theory) == 2
     assert operator_dimension(heavy(), theory, heavy_field_dimension=False) == 1
     assert operator_dimension(s.CD(mu, heavy()), theory, heavy_field_dimension=False) == 2
+    assert operator_dimension(s.CD(list_expr(mu, mu), heavy()), theory, heavy_field_dimension=False) == 3
     assert operator_dimension(s.Bar(psi()), theory) == 1.5
     assert operator_dimension(strength, theory) == 2
 
