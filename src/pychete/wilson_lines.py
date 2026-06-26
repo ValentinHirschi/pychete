@@ -110,15 +110,19 @@ def remove_loop_momentum_symmetry_vanishing_wilson_terms(
     """Remove Wilson terms killed by symmetric loop-momentum integration.
 
     ``loop_momentum_indices`` is the explicit ordered list of loop-vector
-    Lorentz indices carried by the generated numerator. For even nonzero rank,
-    pychete temporarily annotates ``expr`` with ``SymmetricLorentzInds(...)``
-    so :func:`remove_symmetry_vanishing_wilson_terms` can apply the current
+    Lorentz indices carried by the generated numerator. Odd-rank terms vanish
+    immediately, matching Matchete's ``LoopMoms`` loop-integration symmetry
+    rule. For even nonzero rank, pychete temporarily annotates ``expr`` with
+    ``SymmetricLorentzInds(...)`` so
+    :func:`remove_symmetry_vanishing_wilson_terms` can apply the current
     Matchete Wilson-line rule. The marker is then stripped again, preserving
     the original loop-momentum numerator for vakint/idenso tensor reduction.
     """
 
     indices = tuple(loop_momentum_indices)
-    if len(indices) < 2 or len(indices) % 2:
+    if len(indices) % 2:
+        return Expression.num(0)
+    if len(indices) < 2:
         return expr
     marker = s.SymmetricLorentzInds(list_expr(*indices))
     cleaned = remove_symmetry_vanishing_wilson_terms((marker * expr).expand())

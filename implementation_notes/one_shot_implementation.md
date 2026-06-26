@@ -208,6 +208,23 @@
   terms with Symbolica pattern matches, then strips the marker so public
   numerators still carry the original loop-momentum factors for vakint/idenso
   tensor reduction.
+- The next Wilson-line gather-stage adjustment tightens that helper further:
+  odd-rank generated loop-momentum numerator terms now vanish immediately,
+  matching Matchete's `LoopMoms[...]` rule before `WilsonExpand`. This keeps
+  odd terms from being expanded only to be killed later by vakint tensor
+  reduction, while even-rank survivors still preserve their explicit
+  `LoopMomentum(...)` factors for the backend path.
+- Focused validation for the odd-rank Wilson-line gather adjustment used the
+  30 GiB watchdog wrapper: `pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "loop_momentum_symmetry_cleanup or wilson_line_expansion_drops_odd_loop_rank
+  or interaction_wilson_line_expansion or
+  one_loop_match_can_use_selected_wilson_line_expansion" -q` passed with
+  `3 passed, 87 deselected`; the broader Wilson-line/validation gate `pytest
+  tests/integration/matching/test_fluctuation_operator.py
+  tests/integration/validation/test_validation_fixtures.py -k "wilson_line"
+  -q` passed with `9 passed, 122 deselected`; `python -m mypy` reported no
+  issues; and `git diff --check` passed.
 - Focused validation for this follow-up used the 30 GiB watchdog wrapper:
   `pytest tests/unit/functional/test_cde.py -q` passed with `10 passed`;
   `pytest tests/integration/matching/test_fluctuation_operator.py -k

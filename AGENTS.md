@@ -360,11 +360,12 @@ loop integration.
 When the Wilson-line path still delegates tensor reduction to vakint, use
 `remove_loop_momentum_symmetry_vanishing_wilson_terms(...)` with the explicit
 loop-momentum index metadata from the generated propagator-expansion terms.
-That helper temporarily annotates the term with `SymmetricLorentzInds(...)`,
-applies the vanishing rule, then strips the marker so public numerators keep
-their original `LoopMomentum(...)` factors for backend tensor reduction. Do
-not replace those loop momenta by a Python angular-average formula in this
-path.
+That helper first drops odd-rank loop-momentum terms, matching Matchete's
+`LoopMoms[...]` symmetry rule before Wilson expansion. For even nonzero rank it
+temporarily annotates the term with `SymmetricLorentzInds(...)`, applies the
+Wilson-term vanishing rule, then strips the marker so public numerators keep
+their original `LoopMomentum(...)` factors for backend tensor reduction. Do not
+replace those loop momenta by a Python angular-average formula in this path.
 Derivative-sublist expansion should keep
 using Symbolica replacement callbacks over `WilsonTerm(...)` and theory-owned
 gauge metadata; Python may enumerate derivative-index partitions, but it must

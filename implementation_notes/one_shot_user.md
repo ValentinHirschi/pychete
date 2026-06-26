@@ -285,6 +285,10 @@ discoveries, dependency patches, blockers, and remaining work.
   multiplicity from simplified products. The marker should be temporary in
   the vakint-backed path; public numerators keep `LoopMomentum(...)` factors
   for backend tensor reduction.
+- The same Wilson-line helper should also apply Matchete's gather-stage
+  odd-rank loop-momentum rule: generated odd-rank loop-vector numerator terms
+  vanish before Wilson-term expansion instead of being expanded and only later
+  killed by vakint tensor reduction.
 - Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
   SMEFT. Basis metadata must be explicit through `OperatorBasis`,
   `define_wilson_coefficient_from_basis(...)`, or thin convenience helpers

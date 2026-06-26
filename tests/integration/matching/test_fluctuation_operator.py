@@ -1870,15 +1870,11 @@ def test_public_wilson_line_can_filter_terms_by_matching_targets() -> None:
     assert not bool(filtered.matching_conditions[target].expand() == Expression.num(0))
 
 
-def test_wilson_line_expansion_lets_open_derivatives_act_on_wilson_terms() -> None:
-    theory = Theory("one_loop_setup_wilson_line_open_derivatives")
+def test_wilson_line_expansion_drops_odd_loop_rank_after_open_derivatives() -> None:
+    theory = Theory("one_loop_setup_wilson_line_odd_loop_rank")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
     light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
     y = theory.define_coupling("y", self_conjugate=True)
-    heavy_mass = theory.mass_expr(heavy.definition)
-    light_mass = theory.mass_expr(light.definition)
-    assert heavy_mass is not None
-    assert light_mass is not None
     lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
     setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
     mu = theory.lorentz_index("mu")
@@ -1893,21 +1889,8 @@ def test_wilson_line_expansion_lets_open_derivatives_act_on_wilson_terms() -> No
         act_open_derivatives=True,
     )
 
-    expected_numerator = 2 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
-    expected_kernel = s.SupertraceKernel(
-        expected_numerator,
-        s.List(
-            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2) ** 2),
-            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)),
-        ),
-    )
-
-    assert len(terms) == 1
-    assert_expr_equal(terms[0].kernel_expression(), expected_kernel)
-    assert_expr_equal(
-        kernels["interaction_wilson_line_expansion_kernel[hScalar-lScalar,0,0]"],
-        expected_kernel,
-    )
+    assert terms == ()
+    assert kernels == {}
 
 
 def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
@@ -2074,7 +2057,7 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
     assert "SymmetricLorentzInds" not in canonical_string(
         remove_loop_momentum_symmetry_vanishing_wilson_terms(survivor, (mu, nu))
     )
-    assert_expr_equal(remove_loop_momentum_symmetry_vanishing_wilson_terms(odd, (mu,)), odd)
+    assert_expr_equal(remove_loop_momentum_symmetry_vanishing_wilson_terms(odd, (mu,)), Expression.num(0))
 
 
 def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:
