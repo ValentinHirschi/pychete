@@ -100,6 +100,11 @@
   bosonic_cde_filter_terms_by_matching_targets=True)` forwards the option to
   public `Theory.match(...)` when `use_public_match_api=True` and
   `project_reference_matching_conditions=True`.
+- Fixture gap reports now also support
+  `matching_condition_projection_names=...`, accepting canonical condition
+  names, external Wilson names such as `cHW`, or `"wilson"` for all Wilson
+  targets. This keeps target-local CDE/EOM/IBP investigations from projecting
+  and comparing all 72 default SMEFT matching conditions on every smoke run.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -263,6 +268,27 @@
   reports.
 - `git diff --check` passed after exposing CDE target filtering in fixture gap
   reports.
+- Focused target-subset fixture report smoke:
+  a real Singlet public-match report with
+  `matching_condition_projection_names=("cHBox",)`, internal minimal
+  subtraction, heavy-scalar substitution, and tree-level matching completed in
+  about 15 seconds and exposed exactly one candidate/reference matching
+  condition.
+- Focused raw CDE fixture report smoke:
+  a real Singlet public-match report with
+  `matching_condition_projection_names=("cHW",)`, raw CDE `hScalar` expansion
+  through order 4, target filtering, and pychete colour simplification
+  completed in about 14 seconds and exposed exactly one candidate/reference
+  condition. The condition remains different from Matchete, so this is
+  tractable frontier evidence rather than parity.
+- Target-subset fixture projection gate:
+  `pytest tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_projects_registered_wilsons_before_reference_targets tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_filter_public_cde_terms_by_projected_targets -q`
+  passed.
+- Broader public-match fixture projection subset:
+  `pytest tests/integration/validation/test_validation_fixtures.py -k "public_cde_filter or registered_wilsons_before_reference_targets or public_match_api" -q`
+  passed with 3 tests and 35 deselected.
+- `python -m mypy` passed after adding target-subset fixture projection.
+- `git diff --check` passed after adding target-subset fixture projection.
 
 ## Current Validation Frontier
 
@@ -294,9 +320,10 @@
   focused fix and tests, and native CDE aggregate staging now avoids monolithic
   selected-CDE tensor-reduction/evaluation calls. Target-local CDE term
   filtering now removes obviously irrelevant generated terms for projected
-  Wilson runs, and fixture gap reports can exercise that filtered public route.
-  Broad default CDE still needs more source coverage controls and basis
-  reductions before it should be enabled by default.
+  Wilson runs, and fixture gap reports can exercise that filtered public route
+  on selected targets such as `cHW`. Broad default CDE still needs more source
+  coverage controls and basis reductions before it should be enabled by
+  default.
 
 ## Next Work
 
@@ -305,7 +332,7 @@
   - CDE source staging, target-local filtering, and reduction batching for
     broad Singlet CDE probes, building on backend-safe loop-momentum index
     lowering, termwise native CDE aggregate staging, and the current
-    target-compatible atom filter;
+    target-compatible atom filter plus target-subset fixture projection;
   - target-local EOM/IBP reductions for Higgs/gauge Wilson structures such as
     `cHBox`, `cHD`, `cHW`, `cHB`, and `cHWB`;
   - source staging for heavy-scalar-substituted Wilson projection so projection

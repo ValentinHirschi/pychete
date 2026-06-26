@@ -40,6 +40,7 @@ TensorComponent = Expression | int | float | complex
 TraceOrderInput = int | Literal["reference"]
 ProbeNamePreset = Literal["common", "canonical_different", "wilson", "canonical_different_wilson"]
 ProbeNameSelection = Iterable[str] | ProbeNamePreset
+ProjectionNameSelection = str | Iterable[str]
 _PROBE_NAME_PRESETS = {"common", "canonical_different", "wilson", "canonical_different_wilson"}
 _WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
 _LOGGER = get_logger("validation")
@@ -999,6 +1000,7 @@ class ValidationFixture:
         include_tree_level_matching: bool = False,
         truncate_eft_result: bool = True,
         project_reference_matching_conditions: bool = False,
+        matching_condition_projection_names: ProjectionNameSelection | None = None,
         matching_condition_projection_source: str = "on_shell_eft_lagrangian",
         matching_condition_projection_expand_source: bool = True,
         matching_condition_projection_canonize_indices: bool = True,
@@ -1035,6 +1037,10 @@ class ValidationFixture:
         the public match route with ``project_reference_matching_conditions``:
         it forwards target-compatible CDE term filtering to
         :class:`OneLoopMatchOptions`.
+        ``matching_condition_projection_names`` restricts projected reference
+        matching conditions to a target-local subset. Entries may be canonical
+        condition names or external Wilson names such as ``cHW``; the reserved
+        string ``"wilson"`` selects all Wilson-coefficient conditions.
         ``comparison_canonize_indices`` keeps Symbolica tensor-index
         canonicalization enabled for common-expression comparisons so fixture
         reports do not flag alpha-equivalent dummy-index relabelings as gaps.
@@ -1042,6 +1048,10 @@ class ValidationFixture:
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
         resolved_max_trace_order = _resolve_max_trace_order(max_trace_order, reference)
+        if matching_condition_projection_names is not None and not project_reference_matching_conditions:
+            raise ValueError(
+                "matching_condition_projection_names requires project_reference_matching_conditions=True"
+            )
         if bosonic_cde_filter_terms_by_matching_targets and not use_public_match_api:
             raise ValueError("CDE target filtering in fixture reports requires use_public_match_api=True")
         if bosonic_cde_filter_terms_by_matching_targets and not project_reference_matching_conditions:
@@ -1049,11 +1059,20 @@ class ValidationFixture:
                 "CDE target filtering in fixture reports requires project_reference_matching_conditions=True"
             )
         projected_target_selection = (
-            _matching_condition_projection_targets(self.theory(), reference)
+            _matching_condition_projection_targets(
+                self.theory(),
+                reference,
+                names=matching_condition_projection_names,
+            )
             if project_reference_matching_conditions
             else None
         )
         projected_targets = projected_target_selection.targets if projected_target_selection is not None else None
+        reference_for_report = (
+            _reference_with_matching_conditions(reference, tuple(projected_targets or ()))
+            if matching_condition_projection_names is not None and projected_targets is not None
+            else reference
+        )
         resolved_hbar = hbar if hbar is not None else _optional_no_index_external(self.theory(), "hbar")
         if use_public_match_api:
             matched = self.theory().match(
@@ -1214,7 +1233,7 @@ class ValidationFixture:
                 self.name,
                 reference_name,
                 candidate,
-                reference,
+                reference_for_report,
                 probe_parameters=probe_parameters,
                 probe_samples=probe_samples,
                 probe_supertrace_names=probe_supertrace_names,
@@ -1393,14 +1412,27 @@ def _tensor_network_component_source(
 def _matching_condition_projection_targets(
     theory: Theory,
     reference: MatchingResult,
+    *,
+    names: ProjectionNameSelection | None = None,
 ) -> _MatchingConditionProjectionTargets:
     registered_wilsons = registered_wilson_matching_condition_targets(theory)
     registered_wilsons_by_external_name = _registered_wilson_targets_by_external_name(theory)
+    selected_names = _projection_name_selection_set(names)
+    seen_selected_names: set[str] = set()
     targets: dict[str, Expression] = {}
     registered_wilson_names: list[str] = []
     reference_non_wilson_names: list[str] = []
     reference_wilson_fallback_names: list[str] = []
     for target in reference.matching_condition_targets():
+        target_names = _matching_condition_target_selection_names(target)
+        if selected_names is not None and "wilson" not in selected_names and not (selected_names & target_names):
+            continue
+        if selected_names is not None and "wilson" in selected_names and not target.is_wilson_coefficient:
+            continue
+        if selected_names is not None:
+            seen_selected_names.update(selected_names & target_names)
+            if "wilson" in selected_names and target.is_wilson_coefficient:
+                seen_selected_names.add("wilson")
         if target.is_wilson_coefficient:
             registered_target = registered_wilsons.get(target.name)
             if registered_target is None:
@@ -1419,12 +1451,38 @@ def _matching_condition_projection_targets(
             continue
         targets[target.name] = target.expression
         reference_non_wilson_names.append(target.name)
-    return _MatchingConditionProjectionTargets(
+    result = _MatchingConditionProjectionTargets(
         targets=targets,
         registered_wilson_names=_sorted_names(registered_wilson_names),
         reference_non_wilson_names=_sorted_names(reference_non_wilson_names),
         reference_wilson_fallback_names=_sorted_names(reference_wilson_fallback_names),
     )
+    if selected_names is not None:
+        missing = selected_names - seen_selected_names
+        if missing:
+            raise ValueError(f"Unknown matching-condition projection name(s): {', '.join(_sorted_names(missing))}")
+    return result
+
+
+def _projection_name_selection_set(names: ProjectionNameSelection | None) -> set[str] | None:
+    if names is None:
+        return None
+    if isinstance(names, str):
+        return {names}
+    return {str(name) for name in names}
+
+
+def _matching_condition_target_selection_names(target: MatchingConditionTarget) -> set[str]:
+    names = {target.name}
+    external_name = _matching_condition_target_external_name(target)
+    if external_name is not None:
+        names.add(external_name)
+    return names
+
+
+def _reference_with_matching_conditions(reference: MatchingResult, names: tuple[str, ...]) -> MatchingResult:
+    selected = {name: reference.matching_conditions[name] for name in names if name in reference.matching_conditions}
+    return replace(reference, matching_conditions=selected)
 
 
 def _registered_wilson_targets_by_external_name(theory: Theory) -> dict[str, Expression]:

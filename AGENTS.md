@@ -491,6 +491,12 @@ Symbolica pattern matches to require the requested field/field-strength atoms,
 but do not try to line up dummy indices inside the filter. Leave
 dummy-index alignment to the existing projection/comparison path based on
 `Expression.canonize_tensors(...)` and its returned canonical index payload.
+For Matchete fixture frontier work, combine CDE filtering with
+`ValidationFixture.one_loop_preview_gap_report(...,
+matching_condition_projection_names=...)` so expensive public matching runs can
+project only the Wilson family currently under investigation. Projection names
+may be canonical condition names or external Wilson names such as `cHW`; use
+`"wilson"` only when all Wilson conditions are intentionally needed.
 Before projection/canonicalization, normalize powers of indexed field atoms
 with Symbolica replacement rules into fresh-index products so shorthand terms
 such as `H[i]^3*Bar(H[i])^3` can project against Warsaw-basis operators written

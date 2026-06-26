@@ -1044,6 +1044,34 @@ def test_validation_fixture_gap_report_projects_registered_wilsons_before_refere
     assert report_obj["matching_condition_projection_reference_non_wilson_count"] == 1
     assert report_obj["matching_condition_projection_reference_wilson_fallback_count"] == 0
 
+    wilson_only_report = fixture.one_loop_preview_gap_report(
+        reference,
+        project_reference_matching_conditions=True,
+        matching_condition_projection_names=("cPhi2",),
+        matching_condition_include_coupling_identities=False,
+    )
+    assert wilson_only_report.common_matching_condition_names == (wilson_name,)
+    assert wilson_only_report.candidate_matching_condition_names == (wilson_name,)
+    assert wilson_only_report.reference_matching_condition_names == (wilson_name,)
+    assert wilson_only_report.matching_condition_projection_registered_wilson_names == (wilson_name,)
+    assert wilson_only_report.matching_condition_projection_reference_non_wilson_names == ()
+
+    all_wilsons_report = fixture.one_loop_preview_gap_report(
+        reference,
+        project_reference_matching_conditions=True,
+        matching_condition_projection_names="wilson",
+        matching_condition_include_coupling_identities=False,
+    )
+    assert all_wilsons_report.common_matching_condition_names == (wilson_name,)
+    assert all_wilsons_report.matching_condition_projection_registered_wilson_names == (wilson_name,)
+
+    with pytest.raises(ValueError, match="Unknown matching-condition projection name"):
+        fixture.one_loop_preview_gap_report(
+            reference,
+            project_reference_matching_conditions=True,
+            matching_condition_projection_names=("missing_target",),
+        )
+
 
 def test_default_matching_condition_probe_accepts_fixture_function_indeterminates() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
