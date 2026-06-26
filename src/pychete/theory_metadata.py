@@ -485,6 +485,17 @@ def coupling_eft_order_from_label(label: Expression) -> int:
     return int(symbol_data(label, SymbolDataKey.EFT_ORDER, 0))
 
 
+def coupling_mass_dimension_from_label(label: Expression) -> int | float | None:
+    """Return the canonical mass dimension stored on a coupling label."""
+
+    value = symbol_data(label, SymbolDataKey.DIMENSION)
+    if value is None:
+        return None
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise ValueError(f"Coupling mass dimension is not numeric on {canonical_string(label)}")
+    return value
+
+
 def _normalize_coupling_self_conjugate(value: CouplingSelfConjugate | Iterable[int]) -> CouplingSelfConjugate:
     if isinstance(value, bool):
         return value
@@ -857,6 +868,7 @@ class CouplingDefinition:
     label: Expression
     indices: tuple[Expression, ...] = ()
     eft_order: int = 0
+    mass_dimension: int | float | None = None
     self_conjugate: CouplingSelfConjugate = False
     symmetries: tuple[Expression, ...] = ()
     diagonal: tuple[bool, ...] = ()
@@ -875,6 +887,12 @@ class CouplingDefinition:
         """Index representations stored on the coupling label."""
 
         return coupling_indices_from_label(self.label)
+
+    @property
+    def canonical_mass_dimension(self) -> int | float | None:
+        """Canonical mass dimension stored on the coupling label."""
+
+        return coupling_mass_dimension_from_label(self.label)
 
     @property
     def self_conjugate_spec(self) -> CouplingSelfConjugate:
@@ -912,6 +930,7 @@ class CouplingDefinition:
             "label": canonical_string(self.label),
             "indices": [canonical_string(i) for i in coupling_indices_from_label(self.label)],
             "eft_order": coupling_eft_order_from_label(self.label),
+            "mass_dimension": coupling_mass_dimension_from_label(self.label),
             "self_conjugate": coupling_self_conjugate_from_label(self.label),
             "symmetries": [canonical_string(i) for i in coupling_symmetries_from_label(self.label)],
             "diagonal": list(coupling_diagonal_flags_from_label(self.label)),
@@ -1263,6 +1282,7 @@ __all__ = [
     "coupling_diagonal_flags_from_label",
     "coupling_eft_order_from_label",
     "coupling_indices_from_label",
+    "coupling_mass_dimension_from_label",
     "coupling_self_conjugate_from_label",
     "coupling_symmetries_from_label",
     "coupling_thermal_power_counting_from_label",

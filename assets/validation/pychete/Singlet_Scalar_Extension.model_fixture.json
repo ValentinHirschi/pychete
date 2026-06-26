@@ -211,6 +211,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_A",
+            "mass_dimension": 1,
             "name": "A",
             "self_conjugate": true,
             "symmetries": [],
@@ -222,6 +223,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_M",
+            "mass_dimension": 1,
             "name": "M",
             "self_conjugate": true,
             "symmetries": [],
@@ -239,6 +241,7 @@
               "Singlet_Scalar_Extension::index_type_Flavor"
             ],
             "label": "Singlet_Scalar_Extension::coupling_Yd",
+            "mass_dimension": 0,
             "name": "Yd",
             "self_conjugate": false,
             "symmetries": [],
@@ -256,6 +259,7 @@
               "Singlet_Scalar_Extension::index_type_Flavor"
             ],
             "label": "Singlet_Scalar_Extension::coupling_Ye",
+            "mass_dimension": 0,
             "name": "Ye",
             "self_conjugate": false,
             "symmetries": [],
@@ -273,6 +277,7 @@
               "Singlet_Scalar_Extension::index_type_Flavor"
             ],
             "label": "Singlet_Scalar_Extension::coupling_Yu",
+            "mass_dimension": 0,
             "name": "Yu",
             "self_conjugate": false,
             "symmetries": [],
@@ -284,6 +289,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_gL",
+            "mass_dimension": 0,
             "name": "gL",
             "self_conjugate": true,
             "symmetries": [],
@@ -295,6 +301,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_gY",
+            "mass_dimension": 0,
             "name": "gY",
             "self_conjugate": true,
             "symmetries": [],
@@ -306,6 +313,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_gs",
+            "mass_dimension": 0,
             "name": "gs",
             "self_conjugate": true,
             "symmetries": [],
@@ -317,6 +325,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_kappa",
+            "mass_dimension": 0,
             "name": "kappa",
             "self_conjugate": true,
             "symmetries": [],
@@ -328,6 +337,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_lambda",
+            "mass_dimension": 0,
             "name": "lambda",
             "self_conjugate": true,
             "symmetries": [],
@@ -339,6 +349,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_lambdaphi",
+            "mass_dimension": 0,
             "name": "lambdaphi",
             "self_conjugate": true,
             "symmetries": [],
@@ -350,6 +361,7 @@
             "eft_order": 2,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_mu2",
+            "mass_dimension": 2,
             "name": "mu2",
             "self_conjugate": true,
             "symmetries": [],
@@ -361,6 +373,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "Singlet_Scalar_Extension::coupling_muphi",
+            "mass_dimension": 1,
             "name": "muphi",
             "self_conjugate": true,
             "symmetries": [],
@@ -1912,6 +1925,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 1,
               "eft_order": 0,
               "indices": [],
               "label": "A",
@@ -1934,6 +1948,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 1,
               "eft_order": 0,
               "indices": [],
               "label": "M",
@@ -1959,6 +1974,7 @@
                 0,
                 0
               ],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [
                 {
@@ -1991,6 +2007,7 @@
                 0,
                 0
               ],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [
                 {
@@ -2023,6 +2040,7 @@
                 0,
                 0
               ],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [
                 {
@@ -2052,6 +2070,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "gL",
@@ -2074,6 +2093,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "gY",
@@ -2096,6 +2116,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "gs",
@@ -2118,6 +2139,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "kappa",
@@ -2140,6 +2162,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "lambda",
@@ -2162,6 +2185,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "lambdaphi",
@@ -2184,6 +2208,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 2,
               "eft_order": 2,
               "indices": [],
               "label": "mu2",
@@ -2206,6 +2231,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 1,
               "eft_order": 0,
               "indices": [],
               "label": "muphi",

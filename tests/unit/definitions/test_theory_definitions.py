@@ -1007,6 +1007,32 @@ def test_diagonal_and_self_conjugation_metadata_must_match_index_count() -> None
         raise AssertionError("self-conjugation permutation with wrong arity was accepted")
 
 
+def test_coupling_mass_dimension_is_symbol_data_and_round_trips() -> None:
+    theory = Theory("coupling_mass_dimension")
+    trilinear = theory.define_coupling("A", mass_dimension=1, self_conjugate=True)
+    quartic = theory.define_coupling("lambda", mass_dimension=0, self_conjugate=True)
+    heavy = theory.define_field("S", s.Scalar, mass=(FieldMassKind.HEAVY, "M"))
+
+    assert trilinear.definition.canonical_mass_dimension == 1
+    assert quartic.definition.canonical_mass_dimension == 0
+    assert theory.coupling_handle("M").definition.canonical_mass_dimension == 1
+    assert trilinear.label.get_symbol_data(SymbolDataKey.DIMENSION.value) == 1
+
+    restored = Theory.from_json_obj(json.loads(theory.to_json()))
+
+    assert restored.coupling_handle("A").definition.canonical_mass_dimension == 1
+    assert restored.coupling_handle("lambda").definition.canonical_mass_dimension == 0
+    assert restored.coupling_handle("M").definition.canonical_mass_dimension == 1
+    assert restored.fields[heavy.name].mass_expr() is not None
+
+    try:
+        theory.define_coupling("bad_dimension", mass_dimension="1")  # type: ignore[arg-type]
+    except ValueError as exc:
+        assert "mass dimension" in str(exc)
+    else:
+        raise AssertionError("non-numeric coupling mass dimension was accepted")
+
+
 def test_mass_kind_and_builtin_index_type_use_enums_internally() -> None:
     theory = Theory("enum_defs")
     heavy = theory.define_field("H", s.Scalar, mass=(FieldMassKind.HEAVY, "M"))

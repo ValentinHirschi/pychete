@@ -47,6 +47,7 @@ def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: 
                 "name_input_form": "m",
                 "indices_input_form": [],
                 "eft_order": 1,
+                "mass_dimension": 1,
                 "self_conjugate_input_form": "True",
                 "symmetries_input_form": "{}",
                 "diagonal_coupling": [],
@@ -104,6 +105,8 @@ def test_matchete_model_state_converter_builds_normal_pychete_fixture(tmp_path: 
     assert sorted(theory.fields) == ["A", "phi"]
     assert sorted(theory.couplings) == ["A", "S", "g", "m"]
     assert theory.groups["U1x"]["field"] == "A"
+    assert theory.coupling_handle("g").definition.canonical_mass_dimension == 0
+    assert theory.coupling_handle("m").definition.canonical_mass_dimension == 1
     assert canonical_string(fixture.expression("lagrangian")).count("field_phi") == 1
     antisymmetric = theory.coupling_handle("A").definition
     symmetric = theory.coupling_handle("S").definition

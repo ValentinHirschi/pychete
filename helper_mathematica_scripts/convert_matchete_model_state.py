@@ -336,6 +336,7 @@ def build_fixture_from_model_state(data: dict[str, Any], *, include_lagrangian: 
             name,
             indices=_entry_expressions(entry, "indices_input_form", theory),
             eft_order=int(entry.get("eft_order", 0)),
+            mass_dimension=entry.get("mass_dimension"),
             self_conjugate=_parse_self_conjugate(str(entry.get("self_conjugate_input_form", "False"))),
             symmetries=_parse_symmetries(str(entry.get("symmetries_input_form", "{}")), theory, warnings, name),
             diagonal=diagonal_flags,

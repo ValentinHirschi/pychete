@@ -140,6 +140,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "VLF_toy_model::coupling_M",
+            "mass_dimension": 1,
             "name": "M",
             "self_conjugate": true,
             "symmetries": [],
@@ -151,6 +152,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "VLF_toy_model::coupling_e",
+            "mass_dimension": 0,
             "name": "e",
             "self_conjugate": true,
             "symmetries": [],
@@ -162,6 +164,7 @@
             "eft_order": 1,
             "indices": [],
             "label": "VLF_toy_model::coupling_m",
+            "mass_dimension": 1,
             "name": "m",
             "self_conjugate": true,
             "symmetries": [],
@@ -173,6 +176,7 @@
             "eft_order": 0,
             "indices": [],
             "label": "VLF_toy_model::coupling_y",
+            "mass_dimension": 0,
             "name": "y",
             "self_conjugate": false,
             "symmetries": [],
@@ -322,6 +326,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 1,
               "eft_order": 0,
               "indices": [],
               "label": "M",
@@ -344,6 +349,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "e",
@@ -366,6 +372,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 1,
               "eft_order": 1,
               "indices": [],
               "label": "m",
@@ -388,6 +395,7 @@
           {
             "data": {
               "diagonal_coupling": [],
+              "dimension": 0,
               "eft_order": 0,
               "indices": [],
               "label": "y",

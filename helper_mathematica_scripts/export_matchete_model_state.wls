@@ -85,6 +85,7 @@ couplingEntry[label_, props_] := <|
   "name_input_form" -> toInputString[label],
   "indices_input_form" -> listInputStrings[props[Indices]],
   "eft_order" -> props[EFTOrder],
+  "mass_dimension" -> If[KeyExistsQ[props, MassDimension], props[MassDimension], Null],
   "self_conjugate_input_form" -> toInputString[props[SelfConjugate]],
   "symmetries_input_form" -> toInputString[props[Symmetries]],
   "diagonal_coupling" -> props[DiagonalCoupling],

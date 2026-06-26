@@ -523,6 +523,31 @@ def test_matching_result_truncates_projected_coefficients_target_locally() -> No
     assert_expr_equal(projected.matching_conditions["phi2"], x)
 
 
+def test_matching_result_filters_wilson_coefficients_by_coupling_mass_dimension() -> None:
+    theory = Theory("condition_projection_wilson_mass_dimension")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    source = theory.define_coupling("A", mass_dimension=1, self_conjugate=True)
+    mass = theory.define_coupling("M", mass_dimension=1, self_conjugate=True)
+    quartic = theory.define_coupling("kappa", mass_dimension=0, self_conjugate=True)
+    unknown = theory.define_coupling("unknown", self_conjugate=True)
+    operator = phi() ** 6
+    wilson = theory.define_wilson_coefficient("cPhi6", eft_order=6, basis="toy", operator=operator)
+    target = s.Coupling(wilson.label, s.List(), Expression.num(6))
+    valid = source() ** 2 * quartic() / mass() ** 4
+    dimension_incompatible = source() ** 2 * quartic() / mass() ** 6
+    unknown_dimension = unknown() / mass() ** 6
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=(valid + dimension_incompatible + unknown_dimension) * operator,
+    )
+
+    projected = result.project_matching_conditions([target], expand_source=False, eft_order=6)
+
+    assert_expr_equal(projected[canonical_string(target)], valid + unknown_dimension)
+
+
 def test_matching_result_projects_wilson_conditions_from_operator_metadata() -> None:
     x = S("condition_projection_wilson_x")
     theory = Theory("condition_projection_wilson_operator")

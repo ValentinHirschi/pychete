@@ -954,6 +954,7 @@ def _load_matchete_model_into(
                     _clean_name(label),
                     indices=_eval_expression_list(opts["Indices"], theory) if "Indices" in opts else (),
                     eft_order=_parse_int(opts["EFTOrder"]) if "EFTOrder" in opts else 0,
+                    mass_dimension=_parse_int(opts["MassDimension"]) if "MassDimension" in opts else None,
                     self_conjugate=_parse_coupling_self_conjugate(opts["SelfConjugate"]) if "SelfConjugate" in opts else False,
                     symmetries=_eval_expression_list(opts["Symmetries"], theory) if "Symmetries" in opts else (),
                     diagonal=_parse_diagonal_coupling(opts["DiagonalCoupling"]) if "DiagonalCoupling" in opts else None,

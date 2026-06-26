@@ -3,13 +3,14 @@ from __future__ import annotations
 from collections import Counter
 from collections.abc import Callable, Iterable, Mapping, Sequence
 from dataclasses import dataclass, field, replace
+from fractions import Fraction
 from html import escape
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Any
 
 from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
-from .eft import series_eft
+from .eft import operator_dimension, series_eft
 from .functional import expand_cd_operators
 from .expr import (
     as_int,
@@ -42,6 +43,7 @@ from .supertraces import is_named_supertrace
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
 from .theory_metadata import (
     ExternalKind,
+    coupling_mass_dimension_from_label,
     external_basis_from_label,
     external_kind_from_label,
     external_operator_from_label,
@@ -364,6 +366,7 @@ class MatchingResult:
                 coefficient = _truncate_projected_coefficient(
                     coefficient,
                     target_projection_expression,
+                    target,
                     self.theory,
                     eft_order=eft_order,
                     heavy_field_dimension=heavy_field_dimension,
@@ -1531,6 +1534,7 @@ def _tree_level_coupling_identity(theory: Theory, target: MatchingConditionTarge
 def _truncate_projected_coefficient(
     coefficient: Expression,
     target: Expression,
+    structured_target: MatchingConditionTarget,
     theory: Theory,
     *,
     eft_order: int | tuple[int, ...],
@@ -1542,7 +1546,110 @@ def _truncate_projected_coefficient(
         eft_order=eft_order,
         heavy_field_dimension=heavy_field_dimension,
     )
-    return _ProjectionCoefficientExtractor(projected_piece).coefficient(target)
+    truncated = _ProjectionCoefficientExtractor(projected_piece).coefficient(target)
+    return _filter_projected_wilson_coefficient_mass_dimension(
+        truncated,
+        structured_target,
+        theory,
+    )
+
+
+def _filter_projected_wilson_coefficient_mass_dimension(
+    coefficient: Expression,
+    target: MatchingConditionTarget,
+    theory: Theory,
+) -> Expression:
+    if not target.is_wilson_coefficient or target.operator is None:
+        return coefficient
+    if not _has_explicit_coupling_mass_dimension(coefficient):
+        return coefficient
+    try:
+        required_scaled_dimension = 8 - _scaled_dimension_value(
+            operator_dimension(target.operator, theory, heavy_field_dimension=False)
+        )
+    except ValueError:
+        return coefficient
+
+    kept: list[Expression] = []
+    for term in terms(coefficient.expand()):
+        term_dimension = _term_coupling_scaled_mass_dimension(term)
+        if term_dimension is None or term_dimension == required_scaled_dimension:
+            kept.append(term)
+    return sum_expr(kept).expand()
+
+
+def _has_explicit_coupling_mass_dimension(expr: Expression) -> bool:
+    return any(dimension is not None for _atom, dimension in _coupling_dimension_variables(expr))
+
+
+def _term_coupling_scaled_mass_dimension(term: Expression) -> int | None:
+    variables = _coupling_dimension_variables(term)
+    if not variables:
+        return 0
+    if any(dimension is None for _atom, dimension in variables):
+        return None
+    variable_exprs = tuple(atom for atom, _dimension in variables)
+    try:
+        rational = term.to_rational_polynomial(variable_exprs)
+    except ValueError:
+        return None
+    numerator_powers = _single_polynomial_power_vector(
+        rational.numerator().coefficient_list(variable_exprs),
+        len(variable_exprs),
+    )
+    denominator_powers = _single_polynomial_power_vector(
+        rational.denominator().coefficient_list(variable_exprs),
+        len(variable_exprs),
+    )
+    if numerator_powers is None or denominator_powers is None:
+        return None
+    scaled_dimension = 0
+    for numerator_power, denominator_power, (_atom, dimension) in zip(
+        numerator_powers,
+        denominator_powers,
+        variables,
+        strict=True,
+    ):
+        if dimension is None:
+            return None
+        scaled_dimension += (numerator_power - denominator_power) * _scaled_dimension_value(dimension)
+    return scaled_dimension
+
+
+def _coupling_dimension_variables(expr: Expression) -> tuple[tuple[Expression, int | float | None], ...]:
+    coupling_pat = coupling_pattern()
+    label_is_coupling = s.CouplingLabelWildcard.req_tag(SymbolRole.COUPLING.value)
+    variables: dict[str, tuple[Expression, int | float | None]] = {}
+    for match in expr.match(coupling_pat, label_is_coupling):
+        atom = coupling_pat.replace_wildcards(match)
+        dimension = coupling_mass_dimension_from_label(match[s.CouplingLabelWildcard])
+        variables.setdefault(canonical_string(atom), (atom, dimension))
+        barred = s.Bar(atom)
+        if bool(expr.matches(barred)):
+            variables.setdefault(canonical_string(barred), (barred, dimension))
+    return tuple(variables.values())
+
+
+def _single_polynomial_power_vector(
+    coefficients: Sequence[tuple[Sequence[int], Any]],
+    variable_count: int,
+) -> tuple[int, ...] | None:
+    nonzero = [
+        tuple(int(power) for power in powers)
+        for powers, coefficient in coefficients
+        if not is_zero(coefficient.to_expression())
+    ]
+    if len(nonzero) != 1 or len(nonzero[0]) != variable_count:
+        return None
+    return nonzero[0]
+
+
+def _scaled_dimension_value(value: int | float) -> int:
+    fraction = Fraction(value) if isinstance(value, int) else Fraction(str(value))
+    scaled = 2 * fraction
+    if scaled.denominator != 1:
+        raise ValueError(f"dimension {value!r} cannot be represented in half-integer units")
+    return scaled.numerator
 
 
 def _metadata_eft_order(eft_order: int | tuple[int, ...] | None) -> int | str | None:

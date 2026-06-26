@@ -922,6 +922,59 @@
     passed.
   - `git diff --check` passed.
 
+## Current Coupling-Dimension Projection Slice
+
+- Folded the latest Symbolica tensor-index canonicalization reminder into the
+  live guidance again: projection and comparison code must keep using
+  `Expression.canonize_tensors(...)` plus the returned external/dummy index
+  payload rather than inventing a Python dummy-index relabeler. The current
+  public `tensor_index_specs(...)` / `canonize_tensor_indices(...)` helper and
+  `MatchingResult.compare_to(..., canonize_indices=True)` already follow this
+  shape.
+- Added optional canonical mass-dimension metadata for couplings. Known values
+  are stored on the coupling label through `SymbolDataKey.DIMENSION` and round
+  trip through `CouplingDefinition.to_json()`, theory JSON, and fixture symbol
+  manifests. Heavy/light field mass couplings now register with dimension one;
+  gauge couplings created by `define_gauge_group(...)` register as
+  dimensionless. Direct Mathematica model loading and the optional Wolfram
+  exporter/converter now pass through an explicit `MassDimension` /
+  `mass_dimension` value when one is present.
+- Added Wilson coefficient projection filtering by coefficient canonical mass
+  dimension. This is intentionally target-local and conservative: it only runs
+  for registered Wilson targets with stored operator metadata, only when the
+  projected coefficient contains couplings with explicit dimension metadata,
+  and it retains terms with any unknown coupling dimension. Coupling powers are
+  extracted through Symbolica's `Expression.to_rational_polynomial(...)`, so
+  inverse powers such as `1/M^6` are counted from the denominator while masses
+  inside logarithms remain non-rational atoms and do not affect the polynomial
+  power count.
+- Updated the Singlet and VLF committed pychete fixtures so their coupling
+  blocks and symbol manifests carry explicit dimensions before Symbolica parses
+  expressions. This avoids symbol redefinition conflicts in same-process tests
+  and lets restored fixture theories use the coefficient-dimension filter
+  structurally. The VLF Python model now also declares its Yukawa coupling as
+  dimensionless.
+- Re-ran the selected Singlet fixture `cH` probe with heavy-scalar
+  substitution, evaluated hbar normalization, selected zero-derivative
+  `hScalar-hScalar-hScalar` CDE, `matching_condition_expand_source=False`, and
+  target-local Wilson truncation. The projected `cH` condition no longer
+  contains the previously observed dimension-incompatible
+  `A^2*kappa/M^16` or `A^4*kappa/M^18` tails; both coefficients probe to zero.
+  The remaining terms are dimension-compatible, so full parity still depends
+  on basis/on-shell reductions and broader source coverage, not this specific
+  coefficient-dimension over-retention.
+- Focused validation for this slice:
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_theory_definitions.py::test_coupling_mass_dimension_is_symbol_data_and_round_trips tests/unit/loaders/test_matchete_model_state_converter.py::test_matchete_model_state_converter_builds_normal_pychete_fixture tests/integration/validation/test_numeric_probes.py::test_matching_result_filters_wilson_coefficients_by_coupling_mass_dimension -q'`
+    passed with 3 tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_public_bosonic_cde_heavy_solution_projects_ch_muphi_component -q'`
+    passed with 1 slow test.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_numeric_probes.py -k "mass_dimension or truncates_projected_coefficients or singlet_tree" tests/unit/definitions/test_theory_definitions.py::test_coupling_mass_dimension_is_symbol_data_and_round_trips tests/unit/loaders/test_matchete_model_state_converter.py::test_matchete_model_state_converter_builds_normal_pychete_fixture tests/integration/models/test_model_loaders.py::test_sm_model_metadata_loads_without_lagrangian_parsing -q'`
+    passed with 4 selected tests.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m mypy'`
+    passed.
+  - `bash -lc 'source "$HOME/.bashrc" && PYTHONPATH=src dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "metadata or default_model_fixtures_load or matching_fixture or model_fixture" -q'`
+    passed with 5 selected tests.
+
 ## Current Remaining Work
 
 - Continue the CDE/basis-reduction feature family from the new hybrid source:

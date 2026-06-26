@@ -10,7 +10,7 @@ def build():
     heavy_psi = theory.define_field("Psi", s.Fermion, charges=[u1e_charge], mass=(FieldMassKind.HEAVY, "M"))
     psi = theory.define_field("psi", s.Fermion, charges=[u1e_charge], mass=0)
     phi = theory.define_field("phi", s.Scalar, mass=(FieldMassKind.LIGHT, "m"), self_conjugate=True)
-    y = theory.define_coupling("y")
+    y = theory.define_coupling("y", mass_dimension=0)
 
     lint = -y() * s.NCM(s.Bar(psi()), s.PR, heavy_psi()) * phi()
     lagrangian = theory.free_lag("A", heavy_psi, psi, phi) + lint + s.Bar(lint)

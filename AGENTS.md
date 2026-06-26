@@ -207,6 +207,19 @@ irrelevant derivative branches can otherwise remain hidden inside additive
 solution factors and block projection of non-derivative Wilson targets such as
 `cH`. Keep this target-local and label-scoped; do not globally delete
 derivative operators from the matching source.
+When truncating registered Wilson-coefficient projections, enforce coefficient
+canonical mass dimension only from explicit coupling symbol data. Store known
+coupling dimensions through `Theory.define_coupling(..., mass_dimension=...)`
+and `SymbolDataKey.DIMENSION`; heavy/light field mass couplings have dimension
+one and gauge/Yukawa/quartic couplings should be explicitly dimensionless when
+known. Use Symbolica tag-restricted coupling matches and
+`Expression.to_rational_polynomial(...)` to read numerator and denominator
+powers, so inverse heavy-mass powers are handled natively and masses inside
+non-rational functions such as logarithms are not counted as polynomial
+powers. If any coupling dimension in a coefficient term is unknown, retain the
+term rather than guessing. Do not implement Wilson coefficient dimension cuts
+by string parsing, ad hoc scans of `M` names, or Python-side assumptions about
+which couplings are masses.
 For any equality/projection question where only dummy-index names differ, use
 `Expression.canonize_tensors(...)` with grouped pychete `Index(...)` specs and
 the returned canonical expression, external-index list, and dummy-index list.

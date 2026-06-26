@@ -392,6 +392,7 @@ class Theory:
         *,
         indices: Iterable[Expression] = (),
         eft_order: int = 0,
+        mass_dimension: int | float | None = None,
         self_conjugate: CouplingSelfConjugate | Iterable[int] = False,
         symmetries: Iterable[Expression] = (),
         diagonal: bool | Iterable[bool] | None = None,
@@ -408,6 +409,9 @@ class Theory:
             Optional index representations carried by the coupling.
         eft_order:
             EFT order assigned to the coupling for truncation.
+        mass_dimension:
+            Optional canonical mass dimension of the coupling. Store this when
+            the dimension is known; leave it unset rather than guessing.
         self_conjugate:
             Whether the coupling is treated as self-conjugate, or a
             one-based index permutation describing conjugation.
@@ -428,6 +432,10 @@ class Theory:
         indices_tuple = tuple(indices)
         if eft_order < 0:
             raise ValueError("coupling EFT order must be non-negative")
+        if mass_dimension is not None and (
+            isinstance(mass_dimension, bool) or not isinstance(mass_dimension, (int, float))
+        ):
+            raise ValueError("coupling mass dimension must be numeric")
         if any(bool(index == s.Lorentz) for index in indices_tuple):
             raise ValueError("Lorentz cannot be a coupling index representation")
         self_conjugate_spec = _normalize_coupling_self_conjugate(self_conjugate)
@@ -450,6 +458,7 @@ class Theory:
                 SymbolDataKey.NAME.value: name,
                 SymbolDataKey.INDICES.value: list(indices_tuple),
                 SymbolDataKey.EFT_ORDER.value: eft_order,
+                **({SymbolDataKey.DIMENSION.value: mass_dimension} if mass_dimension is not None else {}),
                 SymbolDataKey.SELF_CONJUGATE.value: list(self_conjugate_spec) if isinstance(self_conjugate_spec, tuple) else int(self_conjugate_spec),
                 SymbolDataKey.SYMMETRIES.value: list(symmetries_tuple),
                 SymbolDataKey.DIAGONAL_COUPLING.value: list(diagonal_tuple),
@@ -462,6 +471,7 @@ class Theory:
             label=label,
             indices=indices_tuple,
             eft_order=eft_order,
+            mass_dimension=mass_dimension,
             self_conjugate=self_conjugate_spec,
             symmetries=symmetries_tuple,
             diagonal=diagonal_tuple,
@@ -533,6 +543,7 @@ class Theory:
                 str(mass_name),
                 indices=mass_indices,
                 eft_order=order,
+                mass_dimension=1,
                 self_conjugate=True,
             )
             mass_label = mass_handle.label
@@ -801,7 +812,7 @@ class Theory:
 
         if name in self.groups:
             raise ValueError(f"Group {name!r} is already registered")
-        coupling_handle = self.define_coupling(coupling, eft_order=0, self_conjugate=True)
+        coupling_handle = self.define_coupling(coupling, eft_order=0, mass_dimension=0, self_conjugate=True)
         abelian = bool(group_type == s.U1)
         group_symbol = self.symbol(
             name,
@@ -2299,6 +2310,7 @@ class Theory:
                 name,
                 indices=[theory._parse_registered_expression(x) for x in data.get("indices", [])],
                 eft_order=int(data.get("eft_order", 0)),
+                mass_dimension=data.get("mass_dimension"),
                 self_conjugate=self_conjugate,
                 symmetries=[theory._parse_registered_expression(x) for x in data.get("symmetries", [])],
                 diagonal=[bool(flag) for flag in data.get("diagonal", [])] if "diagonal" in data else None,
