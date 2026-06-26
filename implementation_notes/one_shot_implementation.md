@@ -111,6 +111,14 @@
 - CDE and Wilson-line expansion options are now mutually exclusive in the
   public matcher so the old v0.1-style path and current Wilson-line path cannot
   be accidentally mixed without an explicit future policy.
+- The current hybrid follow-up makes the public Wilson-line matcher preserve
+  the unselected interaction-power remainder. The pure selected-trace
+  `interaction_wilson_line_*_matching_result(...)` methods remain available for
+  diagnostics, but `Theory.match(..., loop_order=1,
+  one_loop_options=OneLoopMatchOptions(wilson_line_expansion_indices_by_trace=...))`
+  now routes through `interaction_wilson_line_hybrid_*` variants for all four
+  backend modes. This mirrors the useful selected-trace replacement behavior
+  from the legacy CDE path without using CDE-named public controls.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw
@@ -337,6 +345,14 @@
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
   passed.
 - `git diff --check` passed after the Wilson-line public matcher bridge.
+- 30 GiB memory-watch Wilson-line hybrid matcher/API gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "wilson" tests/unit/definitions/test_public_api.py -q`
+  passed with 11 tests selected and 78 deselected. This now verifies that
+  public `Theory.match(...)` Wilson-line expansion uses the hybrid stage and
+  keeps unselected interaction-power remainder terms.
+- 30 GiB memory-watch typing gate after the Wilson-line hybrid matcher slice:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
 - `python -m mypy` passed after the validation-report canonization slice.
 - `git diff --check` passed after the validation-report canonization slice.
 - Focused Singlet tree projection regression:

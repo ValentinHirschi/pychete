@@ -252,5 +252,9 @@ discoveries, dependency patches, blockers, and remaining work.
   expansion must be callable through `Theory.match(..., loop_order=1)` with
   explicit `OneLoopMatchOptions.wilson_line_*` controls, separate from the
   legacy `bosonic_cde_*` controls.
+- Follow-up direction: public Wilson-line matching should be hybrid by default,
+  replacing only the selected trace families while preserving the unselected
+  interaction-power remainder. Pure selected Wilson-line result methods remain
+  diagnostic helpers.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

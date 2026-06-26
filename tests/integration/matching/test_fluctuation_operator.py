@@ -1853,11 +1853,16 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
     expansion = {"hScalar-lScalar": ((), ())}
     expected_numerator = -y() ** 2 * light() ** 2 / 2
-    expected_integral = vakint_backend.one_loop_vacuum_integral(
+    expected_selected_integral = vakint_backend.one_loop_vacuum_integral(
         expected_numerator,
         (light_mass**2, heavy_mass**2),
         powers=(1, 1),
     )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    expected_remainder = setup.interaction_power_type_vakint_integral_sum(
+        exclude_trace_names=("hScalar-lScalar",),
+    )
+    expected_integral = (expected_remainder + expected_selected_integral).expand()
 
     result = theory.match(
         lagrangian,
@@ -1870,14 +1875,18 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     )
 
     assert isinstance(result, MatchingResult)
-    assert result.metadata["stage"] == "interaction_wilson_line_vakint_result"
+    assert result.metadata["stage"] == "interaction_wilson_line_hybrid_vakint_result"
     assert result.metadata["uses_wilson_line_expansion"] is True
+    assert result.metadata["uses_interaction_power_remainder"] is True
+    assert result.metadata["interaction_wilson_line_hybrid"] is True
     assert result.metadata["wilson_line_expansion_enabled"] is True
     assert result.metadata["bosonic_cde_expansion_enabled"] is False
     assert result.metadata["interaction_wilson_line_term_count"] == 1
     assert result.metadata["interaction_wilson_line_trace_names"] == ("hScalar-lScalar",)
+    assert result.metadata["interaction_wilson_line_replaced_trace_names"] == "hScalar-lScalar"
     assert_expr_equal(result.off_shell_eft_lagrangian, expected_integral)
-    assert_expr_equal(result.expression("interaction_wilson_line_vakint_integral_sum"), expected_integral)
+    assert_expr_equal(result.expression("interaction_wilson_line_vakint_integral_sum"), expected_selected_integral)
+    assert_expr_equal(result.expression("interaction_wilson_line_hybrid_vakint_integral_sum"), expected_integral)
 
 
 def test_one_loop_match_rejects_simultaneous_wilson_line_and_cde_expansion_options() -> None:

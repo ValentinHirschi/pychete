@@ -2196,6 +2196,307 @@ class OneLoopSetup:
             },
         )
 
+    def interaction_wilson_line_hybrid_matching_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        vakint_short_form: bool | None = None,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return interaction-power traces with selected traces replaced by Wilson-line output."""
+
+        selected_trace_names = _wilson_line_expansion_trace_names(expansion_indices_by_trace)
+        interaction_remainder = self.interaction_power_type_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            exclude_trace_names=selected_trace_names,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        wilson_line_result = self.interaction_wilson_line_matching_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            vakint_stage=vakint_stage,
+            vakint_short_form=vakint_short_form,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        result = _combine_interaction_expansion_hybrid_results(
+            interaction_remainder,
+            wilson_line_result,
+            stage="interaction_wilson_line_hybrid_vakint_result",
+            selected_trace_names=selected_trace_names,
+            aggregate_expression_names=(
+                "interaction_wilson_line_hybrid_vakint_integral_sum",
+                f"interaction_wilson_line_hybrid_vakint_integral_sum[{VakintIntegralStage.from_user(vakint_stage).value}]",
+            ),
+            metadata_prefix="interaction_wilson_line",
+            expansion_flag_name="uses_wilson_line_expansion",
+            hybrid_flag_name="interaction_wilson_line_hybrid",
+        )
+        if VakintIntegralStage.from_user(vakint_stage) is VakintIntegralStage.EVALUATED:
+            from .backends import vakint
+
+            result = replace(
+                result,
+                supertraces={
+                    **result.supertraces,
+                    "interaction_wilson_line_hybrid_vakint_pole_part": vakint.pole_part(
+                        result.off_shell_eft_lagrangian,
+                        max_pole_order=max_pole_order,
+                        epsilon=epsilon,
+                    ),
+                    "interaction_wilson_line_hybrid_vakint_finite_part": vakint.finite_part(
+                        result.off_shell_eft_lagrangian,
+                        epsilon=epsilon,
+                    ),
+                },
+            )
+        return result
+
+    def interaction_wilson_line_hybrid_internal_matching_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the hybrid Wilson-line/interaction result evaluated internally."""
+
+        from .backends import vakint
+
+        selected_trace_names = _wilson_line_expansion_trace_names(expansion_indices_by_trace)
+        interaction_remainder = self.interaction_power_type_internal_matching_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            exclude_trace_names=selected_trace_names,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        wilson_line_result = self.interaction_wilson_line_internal_matching_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        result = _combine_interaction_expansion_hybrid_results(
+            interaction_remainder,
+            wilson_line_result,
+            stage="interaction_wilson_line_hybrid_internal_integral_result",
+            selected_trace_names=selected_trace_names,
+            aggregate_expression_names=("interaction_wilson_line_hybrid_internal_integral_sum",),
+            metadata_prefix="interaction_wilson_line",
+            expansion_flag_name="uses_wilson_line_expansion",
+            hybrid_flag_name="interaction_wilson_line_hybrid",
+        )
+        return replace(
+            result,
+            supertraces={
+                **result.supertraces,
+                "interaction_wilson_line_hybrid_internal_integral_pole_part": vakint.pole_part(
+                    result.off_shell_eft_lagrangian,
+                    max_pole_order=max_pole_order,
+                    epsilon=epsilon,
+                ),
+                "interaction_wilson_line_hybrid_internal_integral_finite_part": vakint.finite_part(
+                    result.off_shell_eft_lagrangian,
+                    epsilon=epsilon,
+                ),
+            },
+        )
+
+    def interaction_wilson_line_hybrid_internal_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        tensor_reduce: bool = True,
+        tensor_reduce_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        mu_r_squared: Expression | None = None,
+        combine_terms: bool = False,
+    ) -> MatchingResult:
+        """Return the hybrid internal Wilson-line result after pole removal."""
+
+        unrenormalized = self.interaction_wilson_line_hybrid_internal_matching_result(
+            expansion_indices_by_trace,
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
+        pole = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_pole_part")
+        finite = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_finite_part")
+        counterterm = (-pole).expand()
+        return replace(
+            unrenormalized,
+            off_shell_eft_lagrangian=finite,
+            on_shell_eft_lagrangian=finite,
+            supertraces={
+                **unrenormalized.supertraces,
+                "interaction_wilson_line_hybrid_internal_integral_ms_counterterm": counterterm,
+            },
+            metadata={
+                **unrenormalized.metadata,
+                "stage": "interaction_wilson_line_hybrid_internal_minimal_subtraction_result",
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+                "on_shell_reduced": False,
+            },
+        )
+
+    def interaction_wilson_line_hybrid_minimal_subtraction_result(
+        self,
+        expansion_indices_by_trace: WilsonLineExpansionRequest,
+        *,
+        heavy_field_dimension: bool = False,
+        include_light: bool = True,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+        vakint_engine: Any | None = None,
+        max_pole_order: int = 1,
+        epsilon: Expression | None = None,
+        named_supertrace_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        named_supertrace_short_form: bool | None = None,
+        named_supertrace_engine: Any | None = None,
+    ) -> MatchingResult:
+        """Return the finite native-vakint hybrid Wilson-line result."""
+
+        from .backends import vakint
+
+        selected_trace_names = _wilson_line_expansion_trace_names(expansion_indices_by_trace)
+        interaction_remainder = self.interaction_power_type_minimal_subtraction_result(
+            heavy_field_dimension=heavy_field_dimension,
+            include_light=include_light,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            exclude_trace_names=selected_trace_names,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        wilson_line_result = self.interaction_wilson_line_minimal_subtraction_result(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+            vakint_engine=vakint_engine,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+            named_supertrace_stage=named_supertrace_stage,
+            named_supertrace_short_form=named_supertrace_short_form,
+            named_supertrace_engine=named_supertrace_engine,
+        )
+        result = _combine_interaction_expansion_hybrid_results(
+            interaction_remainder,
+            wilson_line_result,
+            stage="interaction_wilson_line_hybrid_minimal_subtraction_result",
+            selected_trace_names=selected_trace_names,
+            aggregate_expression_names=("interaction_wilson_line_hybrid_vakint_finite_part",),
+            metadata_prefix="interaction_wilson_line",
+            expansion_flag_name="uses_wilson_line_expansion",
+            hybrid_flag_name="interaction_wilson_line_hybrid",
+        )
+        pole = vakint.pole_part(
+            (
+                interaction_remainder.expression("interaction_power_type_vakint_integral_sum[evaluated]")
+                + wilson_line_result.expression("interaction_wilson_line_vakint_integral_sum[evaluated]")
+            ).expand(),
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+        )
+        return replace(
+            result,
+            supertraces={
+                **result.supertraces,
+                "interaction_wilson_line_hybrid_vakint_pole_part": pole,
+                "interaction_wilson_line_hybrid_vakint_ms_counterterm": (-pole).expand(),
+            },
+            metadata={
+                **result.metadata,
+                "subtraction_scheme": "minimal_subtraction_preview",
+                "poles_subtracted": True,
+            },
+        )
+
     def _interaction_bosonic_cde_trace_map(
         self,
         *,
@@ -5891,6 +6192,10 @@ def _wilson_line_expansion_request_metadata(expansion_request: WilsonLineExpansi
     }
 
 
+def _wilson_line_expansion_trace_names(expansion_request: WilsonLineExpansionRequest) -> tuple[str, ...]:
+    return tuple(expansion_request)
+
+
 def _filter_cde_terms_by_projection_requirements(
     terms: Sequence[BosonicCDETraceExpansionTerm],
     requirements: ProjectionAtomRequirementGroups | None,
@@ -5935,41 +6240,64 @@ def _combine_bosonic_cde_hybrid_results(
     selected_trace_names: tuple[str, ...],
     aggregate_expression_names: Iterable[str],
 ) -> MatchingResult:
-    off_shell = (interaction_remainder.off_shell_eft_lagrangian + cde_result.off_shell_eft_lagrangian).expand()
-    on_shell = (interaction_remainder.on_shell_eft_lagrangian + cde_result.on_shell_eft_lagrangian).expand()
+    return _combine_interaction_expansion_hybrid_results(
+        interaction_remainder,
+        cde_result,
+        stage=stage,
+        selected_trace_names=selected_trace_names,
+        aggregate_expression_names=aggregate_expression_names,
+        metadata_prefix="interaction_bosonic_cde",
+        expansion_flag_name="uses_bosonic_cde_expansion",
+        hybrid_flag_name="interaction_bosonic_cde_hybrid",
+    )
+
+
+def _combine_interaction_expansion_hybrid_results(
+    interaction_remainder: MatchingResult,
+    expansion_result: MatchingResult,
+    *,
+    stage: str,
+    selected_trace_names: tuple[str, ...],
+    aggregate_expression_names: Iterable[str],
+    metadata_prefix: str,
+    expansion_flag_name: str,
+    hybrid_flag_name: str,
+) -> MatchingResult:
+    off_shell = (interaction_remainder.off_shell_eft_lagrangian + expansion_result.off_shell_eft_lagrangian).expand()
+    on_shell = (interaction_remainder.on_shell_eft_lagrangian + expansion_result.on_shell_eft_lagrangian).expand()
     aggregate_supertraces = {name: off_shell for name in aggregate_expression_names}
     return MatchingResult(
-        theory=cde_result.theory,
-        uv_lagrangian=cde_result.uv_lagrangian,
+        theory=expansion_result.theory,
+        uv_lagrangian=expansion_result.uv_lagrangian,
         off_shell_eft_lagrangian=off_shell,
         on_shell_eft_lagrangian=on_shell,
         matching_conditions={
             **interaction_remainder.matching_conditions,
-            **cde_result.matching_conditions,
+            **expansion_result.matching_conditions,
         },
         fluctuation_operators={
             **interaction_remainder.fluctuation_operators,
-            **cde_result.fluctuation_operators,
+            **expansion_result.fluctuation_operators,
         },
         supertraces={
             **interaction_remainder.supertraces,
-            **cde_result.supertraces,
+            **expansion_result.supertraces,
             **aggregate_supertraces,
         },
         metadata={
             **interaction_remainder.metadata,
-            **cde_result.metadata,
+            **expansion_result.metadata,
             "stage": stage,
             "complete": False,
             "on_shell_reduced": False,
             "uses_interaction_operator": True,
-            "uses_bosonic_cde_expansion": True,
+            expansion_flag_name: True,
             "uses_interaction_power_remainder": True,
-            "interaction_bosonic_cde_hybrid": True,
-            "interaction_bosonic_cde_replaced_trace_names": ",".join(selected_trace_names),
-            "interaction_bosonic_cde_replaced_trace_count": len(selected_trace_names),
+            hybrid_flag_name: True,
+            f"{metadata_prefix}_replaced_trace_names": ",".join(selected_trace_names),
+            f"{metadata_prefix}_replaced_trace_count": len(selected_trace_names),
             "interaction_power_type_component_stage": interaction_remainder.metadata.get("stage"),
-            "interaction_bosonic_cde_component_stage": cde_result.metadata.get("stage"),
+            f"{metadata_prefix}_component_stage": expansion_result.metadata.get("stage"),
             "interaction_power_type_remainder_contribution_count": interaction_remainder.metadata.get(
                 "interaction_power_type_contribution_count"
             ),
@@ -6521,8 +6849,10 @@ def match_one_loop(
         else None
     )
     if wilson_line_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
-        result = setup.interaction_wilson_line_internal_matching_result(
+        result = setup.interaction_wilson_line_hybrid_internal_matching_result(
             wilson_line_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             include_light_only=options.include_light_only,
@@ -6539,8 +6869,10 @@ def match_one_loop(
         wilson_line_expansion_indices_by_trace is not None
         and selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION
     ):
-        result = setup.interaction_wilson_line_internal_minimal_subtraction_result(
+        result = setup.interaction_wilson_line_hybrid_internal_minimal_subtraction_result(
             wilson_line_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             include_light_only=options.include_light_only,
@@ -6557,8 +6889,10 @@ def match_one_loop(
         wilson_line_expansion_indices_by_trace is not None
         and selected_backend is OneLoopIntegralBackend.VAKINT_MINIMAL_SUBTRACTION
     ):
-        result = setup.interaction_wilson_line_minimal_subtraction_result(
+        result = setup.interaction_wilson_line_hybrid_minimal_subtraction_result(
             wilson_line_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             include_light_only=options.include_light_only,
@@ -6572,8 +6906,10 @@ def match_one_loop(
             named_supertrace_engine=options.named_supertrace_engine,
         )
     elif wilson_line_expansion_indices_by_trace is not None:
-        result = setup.interaction_wilson_line_matching_result(
+        result = setup.interaction_wilson_line_hybrid_matching_result(
             wilson_line_expansion_indices_by_trace,
+            heavy_field_dimension=options.heavy_field_dimension,
+            include_light=options.include_light,
             loop_momentum_squared=options.loop_momentum_squared,
             require_registered_mass=options.require_registered_mass,
             include_light_only=options.include_light_only,

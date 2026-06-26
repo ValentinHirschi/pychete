@@ -311,7 +311,12 @@ Public one-loop matching can opt into the same selected-trace route with
 `wilson_line_act_open_derivatives`, and
 `wilson_line_max_derivative_order`. This option is intentionally separate from
 `bosonic_cde_*`; requesting both CDE and Wilson-line expansion in one match is
-an API error until an explicit comparison/hybrid policy is designed.
+an API error until an explicit comparison policy is designed. The public
+`Theory.match(...)` Wilson-line route must be hybrid by default: selected trace
+families are replaced by their Wilson-line-expanded aggregate while all
+unselected interaction-power traces remain in the source. Keep pure selected
+Wilson-line result methods available for diagnostics, not as the default public
+matching route.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
 simplification; do not implement it as a Python tree walker. Open covariant
