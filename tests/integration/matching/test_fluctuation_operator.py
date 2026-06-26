@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from collections.abc import Sequence
+
 import pytest
 from symbolica import Expression, S
 
@@ -2297,8 +2299,61 @@ def test_projection_atom_filter_counts_powered_field_strength_targets() -> None:
     filtered = matching_results_module._ProjectionCoefficientExtractor(source)._filtered_source(target)
     rendered = canonical_string(filtered)
 
+    compact_strength_power = matching_results_module._expand_indexed_projection_atom_powers(
+        strength**2,
+        include_field_strength=False,
+    )
+
+    assert_expr_equal(compact_strength_power, strength**2)
+    assert matching_results_module._projection_atom_counts(strength**2)[("field_strength", w_label)] == 2
     assert "field_strength_power_filter_one" not in rendered
     assert "field_strength_power_filter_two" in rendered
+
+
+def test_matching_projection_handles_compact_alpha_equivalent_field_strength_powers(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_project_compact_field_strength_powers")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    target = smeft_warsaw_operator(theory, "cHW")
+    assert target is not None
+    coefficient = S("compact_field_strength_power_projection_coefficient")
+    source_higgs_index = theory.index("source_higgs", fund)
+    source_adjoint = theory.index("source_adjoint", theory.symbol("SU2L", role=SymbolRole.GROUP)(s.adj))
+    source_mu = theory.index("source_mu")
+    source_nu = theory.index("source_nu")
+    source_operator = (
+        s.Bar(higgs(source_higgs_index))
+        * higgs(source_higgs_index)
+        * s.FieldStrength(
+            theory.field_handle("W").label,
+            s.List(source_mu, source_nu),
+            s.List(source_adjoint),
+            s.List(),
+        )
+        ** 2
+        / theory.coupling_handle("gL")() ** 2
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    def fail_canonize_tensor_terms(
+        expr: Expression,
+        index_specs: Sequence[tuple[Expression, Expression]],
+    ) -> Expression:
+        raise AssertionError("wildcard projection should handle compact field-strength powers")
+
+    monkeypatch.setattr(matching_results_module, "_canonize_tensor_terms", fail_canonize_tensor_terms)
+
+    projected = result.project_matching_conditions({"cHW": target}, expand_source=False)
+
+    assert_expr_equal(projected["cHW"], coefficient)
 
 
 def test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator() -> None:

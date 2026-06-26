@@ -44,6 +44,12 @@ discoveries, dependency patches, blockers, and remaining work.
   single-scale, zero-mass, and mixed-mass cases. Use vakint for
   topology-independent tensor reduction and as an optional supported backend or
   cross-check for single-scale massive analytic evaluations.
+- Incorporate Matchete author feedback: CDE is an older v0.1/paper route and
+  should remain an opt-in diagnostic/validation path in pychete, while the
+  forward core architecture should move toward explicit Wilson-line trace
+  handling that generalizes beyond one loop. SMEFT Warsaw support should be an
+  optional built-in operator basis on top of generic basis machinery, not a
+  special core matching module.
 - Compare results by pychete canonical equality, backed by Symbolica evaluator
   numeric probes for hard-to-canonicalize expressions.
 
@@ -65,8 +71,12 @@ discoveries, dependency patches, blockers, and remaining work.
   never require `wolframscript` in normal tests.
 - Extend pychete metadata with gauge groups, representations, CG tensors,
   charges, chiral fermions, ghosts, Goldstones, background fields, coupling
-  symmetries, diagonal/unitary metadata, and SMEFT basis metadata using
-  Symbolica symbol tags/data.
+  symmetries, diagonal/unitary metadata, and generic operator-basis metadata
+  using Symbolica symbol tags/data.
+- Keep SMEFT Warsaw as one optional built-in basis provider implemented through
+  the same generic `OperatorBasis`/Wilson-metadata route that any user-defined
+  basis should use. Do not make core matching logic depend on SMEFT-specific
+  modules or maps.
 - Replace the current tiny Mathematica loader as the path for complex
   validation models with fixture loading; keep direct Mathematica-input support
   explicitly secondary and limited to its documented subset.
@@ -187,14 +197,16 @@ discoveries, dependency patches, blockers, and remaining work.
   reveal a design problem, refactor fearlessly inside the slice, then rerun the
   smallest targeted marker group that exercises the redesigned surface.
 - Store SMEFT Wilson projection metadata through pychete-owned Symbolica
-  operator expressions. Known Warsaw-basis coefficients should be registered
-  through `pychete.smeft` helpers so matching-condition projection can use the
-  stored operator monomial; unsupported coefficients remain valid Wilson
-  targets with missing operator metadata documented explicitly.
-- For the default SMEFT validation fixtures, `pychete.smeft` should cover the
-  full 64-name Warsaw coefficient set from Matchete's `SMEFT_Warsaw.m`; this
-  registry is the source of truth for Wilson-to-operator metadata used by
-  fixture conversion and later matching-condition projection.
+  operator expressions through generic operator-basis metadata. Known
+  Warsaw-basis coefficients should be registered through `pychete.smeft`
+  helpers only because SMEFT is a bundled convenience basis; unsupported
+  coefficients remain valid Wilson targets with missing operator metadata
+  documented explicitly.
+- For the default SMEFT validation fixtures, the optional `pychete.smeft`
+  basis provider should cover the full 64-name Warsaw coefficient set from
+  Matchete's `SMEFT_Warsaw.m`. That provider is the source of truth for the
+  bundled SMEFT basis, but user-defined bases must be able to use the same
+  generic mechanism.
 - Matching-condition projection should be able to consume theory-owned
   registered Wilson metadata directly, without reconstructing target maps from
   reference fixtures. A selector such as `registered_wilsons` is the preferred
@@ -216,3 +228,11 @@ discoveries, dependency patches, blockers, and remaining work.
   tensor-index canonicalization. Use `Expression.canonize_tensors(...)`, which
   returns the canonical expression and canonical external/dummy index lists, to
   compare or project expressions whose dummy-index names need to line up.
+- Matchete author feedback clarified that CDE should not remain the core port
+  direction: treat existing CDE code as legacy-compatible diagnostics and
+  validation support, and steer new one-loop architecture toward explicit
+  Wilson-line trace handling. Also avoid treating SMEFT Warsaw as a bespoke
+  core module; expose it as an optional basis on top of generic operator-basis
+  registration.
+- When running tests or exploratory workloads that can exceed machine memory,
+  use the 30 GiB watchdog wrapper rather than invoking them directly.

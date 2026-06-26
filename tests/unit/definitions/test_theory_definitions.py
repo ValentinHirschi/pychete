@@ -12,15 +12,19 @@ from pychete import (
     FieldRole,
     FreeLagConvention,
     GroupKind,
+    OperatorBasis,
     RepresentationReality,
+    SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
     SymbolDataKey,
     SymbolRole,
     Theory,
     canonical_string,
     collect_indices,
     define_smeft_wilson_coefficient,
+    define_wilson_coefficient_from_basis,
     matching_condition_targets,
     s,
+    smeft_warsaw_basis,
     smeft_warsaw_operator,
     smeft_warsaw_operator_names,
 )
@@ -1122,6 +1126,25 @@ def test_wilson_coefficients_store_basis_and_matching_target_metadata() -> None:
     ]
 
 
+def test_generic_operator_basis_defines_wilson_operator_metadata() -> None:
+    theory = Theory("generic_operator_basis")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+
+    def phi_squared(model: Theory, indices: tuple[Expression, ...]) -> Expression | None:
+        assert indices == ()
+        return model.field_handle("phi")() ** 2
+
+    basis = OperatorBasis("ToyBasis", {"cPhi2": phi_squared})
+    handle = define_wilson_coefficient_from_basis(theory, basis, "cPhi2", eft_order=2)
+
+    assert basis.operator_names() == ("cPhi2",)
+    assert basis.operator(theory, "missing") is None
+    assert handle.definition.basis_name == "ToyBasis"
+    assert handle.definition.order == 2
+    assert handle.definition.operator_expr is not None
+    assert_expr_equal(handle.definition.operator_expr, phi() ** 2)
+
+
 def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> None:
     theory = Theory("smeft_ops")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
@@ -1150,6 +1173,8 @@ def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> Non
     c_duq = define_smeft_wilson_coefficient(theory, "cduq", indices=[p, r, s_flavor, t])
 
     assert len(smeft_warsaw_operator_names()) == 64
+    assert smeft_warsaw_operator_names() == SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES
+    assert smeft_warsaw_basis().operator_names() == smeft_warsaw_operator_names()
     for name in smeft_warsaw_operator_names():
         flavor_indices = ()
         if name in {"cllHH", "ceH", "cuH", "cdH", "ceW", "ceB", "cuG", "cuW", "cuB", "cdG", "cdW", "cdB", "cHl1", "cHl3", "cHe", "cHq1", "cHq3", "cHu", "cHd", "cHud"}:
@@ -1158,6 +1183,7 @@ def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> Non
             flavor_indices = (p, r, s_flavor, t)
         operator = smeft_warsaw_operator(theory, name, flavor_indices)
         assert operator is not None, name
+        assert_expr_equal(operator, smeft_warsaw_basis().operator(theory, name, flavor_indices))
         theory._validate_registered_expression(operator)
 
     for handle in (c_h, c_hb, c_hwb, c_hd, c_ew, c_ll, c_duq):

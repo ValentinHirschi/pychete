@@ -385,7 +385,7 @@ class MatchingResult:
             coefficient: Expression | None = None
             if canonize_indices:
                 raw_extractor = _without_wildcard_index_projection(coefficient_extractor)
-                raw_coefficient = raw_extractor.coefficient(projection_expression)
+                raw_coefficient = _raw_exact_projection_coefficient(raw_extractor, projection_expression)
                 if not is_zero(raw_coefficient) and _raw_projection_exhausts_filtered_source(
                     raw_extractor,
                     projection_expression,
@@ -394,13 +394,19 @@ class MatchingResult:
                 ):
                     coefficient = raw_coefficient
                 else:
-                    target_extractor, target_projection_expression, target_ibp_aliases = (
-                        _target_local_canonized_projection(
-                            coefficient_extractor,
-                            projection_expression,
-                            ibp_aliases,
-                        )
+                    coefficient = _target_local_wildcard_projection_coefficient(
+                        coefficient_extractor,
+                        projection_expression,
+                        ibp_aliases,
                     )
+                    if coefficient is None:
+                        target_extractor, target_projection_expression, target_ibp_aliases = (
+                            _target_local_canonized_projection(
+                                coefficient_extractor,
+                                projection_expression,
+                                ibp_aliases,
+                            )
+                        )
             if coefficient is None:
                 coefficient = _matching_projection_coefficient(
                     target_extractor,
@@ -1156,6 +1162,37 @@ def _raw_projection_exhausts_filtered_source(
     return is_zero((filtered_source - coefficient * projection_expression).expand())
 
 
+def _raw_exact_projection_coefficient(
+    extractor: _ProjectionCoefficientExtractor,
+    projection_expression: Expression,
+) -> Expression:
+    coefficients = (
+        _projection_derivative_compatible_source(term, projection_expression)
+        .coefficient(projection_expression)
+        .expand()
+        for term in _projection_filtered_terms_for_expressions(extractor, (projection_expression,))
+    )
+    return sum_expr(coefficients).expand()
+
+
+def _projection_filtered_terms_for_expressions(
+    extractor: _ProjectionCoefficientExtractor,
+    expressions: Sequence[Expression],
+) -> tuple[Expression, ...]:
+    requirements = _projection_atom_requirement_groups_for_expressions(expressions)
+    if not requirements:
+        return extractor._source_terms()
+    return tuple(
+        term
+        for term, counts in zip(
+            extractor._source_terms(),
+            extractor._source_term_atom_counts(),
+            strict=True,
+        )
+        if _counts_satisfy_projection_atom_requirements(counts, requirements)
+    )
+
+
 def _projection_atom_requirement_groups(target: Expression) -> tuple[tuple[tuple[str, str, int], ...], ...]:
     return tuple(
         group
@@ -1440,6 +1477,54 @@ def _target_local_canonized_projection(
     )
 
 
+def _target_local_wildcard_projection_coefficient(
+    source_extractor: _ProjectionCoefficientExtractor,
+    projection_expression: Expression,
+    ibp_aliases: Sequence[tuple[Expression, Expression]],
+) -> Expression | None:
+    if not _powered_indexed_projection_atom_labels(projection_expression, kind="field_strength"):
+        return None
+    alias_expressions = tuple(alias for alias, _weight in ibp_aliases)
+    candidate_terms = _projection_filtered_terms_for_expressions(
+        source_extractor,
+        (projection_expression, *alias_expressions),
+    )
+    coefficient = _termwise_wildcard_index_projection_coefficient(candidate_terms, projection_expression)
+    contributions: list[Expression] = []
+    if coefficient is not None and not is_zero(coefficient):
+        contributions.append(coefficient)
+    for alias, weight in ibp_aliases:
+        if is_zero(alias):
+            continue
+        alias_coefficient = _termwise_wildcard_index_projection_coefficient(candidate_terms, alias)
+        if alias_coefficient is not None and not is_zero(alias_coefficient):
+            contributions.append(weight * alias_coefficient)
+    if not contributions:
+        return None
+    return sum_expr(contributions).expand()
+
+
+def _termwise_wildcard_index_projection_coefficient(
+    terms: Sequence[Expression],
+    projection_expression: Expression,
+) -> Expression | None:
+    coefficients: list[Expression] = []
+    saw_matchable_term = False
+    for term in terms:
+        coefficient = _wildcard_index_projection_coefficient(
+            _projection_derivative_compatible_source(term, projection_expression),
+            projection_expression,
+        )
+        if coefficient is None:
+            continue
+        saw_matchable_term = True
+        if not is_zero(coefficient):
+            coefficients.append(coefficient)
+    if not saw_matchable_term:
+        return None
+    return sum_expr(coefficients).expand()
+
+
 def _expressions_have_indices(expressions: Sequence[Expression]) -> bool:
     pattern = index_pattern()
     return any(any(expression.match(pattern)) for expression in expressions)
@@ -1609,10 +1694,16 @@ def _canonize_matching_projection_indices_with_aliases(
     projection_expressions: Sequence[Expression],
     alias_expressions: Sequence[Expression],
 ) -> tuple[Expression, tuple[Expression, ...], tuple[Expression, ...]]:
-    source = _expand_indexed_projection_atom_powers(source)
+    source = _expand_indexed_projection_atom_powers(source, include_field_strength=False)
     source = _split_overcontracted_scalar_derivative_bilinears_for_projection(source)
-    projection_expressions = tuple(_expand_indexed_projection_atom_powers(expr) for expr in projection_expressions)
-    alias_expressions = tuple(_expand_indexed_projection_atom_powers(expr) for expr in alias_expressions)
+    projection_expressions = tuple(
+        _expand_indexed_projection_atom_powers(expr, include_field_strength=False)
+        for expr in projection_expressions
+    )
+    alias_expressions = tuple(
+        _expand_indexed_projection_atom_powers(expr, include_field_strength=False)
+        for expr in alias_expressions
+    )
     index_specs = _matching_projection_index_specs(source, (*projection_expressions, *alias_expressions))
     if not index_specs:
         return source, tuple(projection_expressions), tuple(alias_expressions)
@@ -1656,7 +1747,11 @@ def _split_overcontracted_scalar_derivative_bilinears_for_projection(expr: Expre
     return expr.replace(pattern, replacement, rhs_cache_size=0)
 
 
-def _expand_indexed_projection_atom_powers(expr: Expression) -> Expression:
+def _expand_indexed_projection_atom_powers(
+    expr: Expression,
+    *,
+    include_field_strength: bool = True,
+) -> Expression:
     """Expand indexed field/field-strength powers into fresh factors for projection only."""
 
     label_cache: dict[tuple[str, int], Expression] = {}
@@ -1667,7 +1762,7 @@ def _expand_indexed_projection_atom_powers(expr: Expression) -> Expression:
         exponent = as_int(match[s.PowExponentWildcard])
         if exponent is None or exponent <= 1:
             return power_pattern.replace_wildcards(match)
-        parsed = _indexed_projection_atom_power_base(base)
+        parsed = _indexed_projection_atom_power_base(base, include_field_strength=include_field_strength)
         if parsed is None:
             return power_pattern.replace_wildcards(match)
         atom_expr, conjugate = parsed
@@ -1687,10 +1782,16 @@ def _expand_indexed_projection_atom_powers(expr: Expression) -> Expression:
     return expr.replace(power_pattern, replacement, rhs_cache_size=0)
 
 
-def _indexed_projection_atom_power_base(expr: Expression) -> tuple[Expression, bool] | None:
-    if is_head(expr, s.Field) or is_head(expr, s.FieldStrength):
+def _indexed_projection_atom_power_base(
+    expr: Expression,
+    *,
+    include_field_strength: bool = True,
+) -> tuple[Expression, bool] | None:
+    if is_head(expr, s.Field) or (include_field_strength and is_head(expr, s.FieldStrength)):
         return expr, False
-    if is_head(expr, s.Bar) and (is_head(expr[0], s.Field) or is_head(expr[0], s.FieldStrength)):
+    if is_head(expr, s.Bar) and (
+        is_head(expr[0], s.Field) or (include_field_strength and is_head(expr[0], s.FieldStrength))
+    ):
         return expr[0], True
     return None
 

@@ -80,6 +80,18 @@ source "$HOME/.bashrc"
 dependencies/.venv/bin/python -m pytest tests
 ```
 
+Run tests or exploratory matching workloads that could grow large through the
+project memory wrapper with a 30 GiB cap:
+
+```sh
+source "$HOME/.bashrc"
+dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- \
+  dependencies/.venv/bin/python -m pytest tests/integration/matching
+```
+
+Use this wrapper for broad pytest groups, slow validation fixtures, CDE/vakint
+matching smokes, and any workload that might approach machine RAM limits.
+
 ## Logging And Progress Output
 
 Use pychete's package logging layer for user-facing progress and debugging
@@ -270,6 +282,14 @@ Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator
 factors. Keep this lowering implemented as Symbolica replacement rules over
 `DifferentialOperator(...)`, then hand tensor numerator reduction to vakint
 where applicable.
+Do not treat the covariant-derivative expansion (CDE) implementation as the
+forward core architecture for one-loop matching. Matchete used CDE in its early
+v0.1/paper route, but the current Matchete direction uses explicit Wilson-line
+trace handling because it generalizes better to higher loops. pychete's CDE
+code may remain as an opt-in legacy diagnostic, validation, and regression
+route, but new core matching work should move toward explicit Wilson-line
+style functional traces and should not deepen SMEFT-specific or CDE-specific
+coupling in the main pipeline.
 Public bosonic CDE matching requests must replace only the selected
 interaction-supertrace families by their CDE-expanded aggregate and must keep
 all unselected interaction-power trace families in the one-loop source. Use the
@@ -547,13 +567,17 @@ and editor hover tooltips such as VS Code/Pylance. When adding or promoting a
 public API, update the public API docstring tests rather than leaving the
 documentation requirement implicit.
 
-SMEFT Warsaw-basis Wilson coefficients with known pychete operator monomials
-must be registered through `src/pychete/smeft.py` helpers such as
-`define_smeft_wilson_coefficient`. Do not scatter ad hoc Wilson-to-operator
-maps in converters, fixtures, or matching code; keep the central registry as
-the source of truth. The default Matchete SMEFT validation fixtures expect the
-full 64-name `SMEFTWilsonCoefficients[]` set from `SMEFT_Warsaw.m` to have
-pychete-native operator metadata.
+Operator-basis metadata must be generic. Register known Wilson coefficient
+operators through `OperatorBasis` and
+`define_wilson_coefficient_from_basis(...)`; specialized helpers such as
+`define_smeft_wilson_coefficient(...)` must be thin convenience wrappers over
+that generic basis machinery. SMEFT Warsaw is an optional built-in validation
+and user-convenience basis, not a core matching assumption. Do not scatter
+ad hoc Wilson-to-operator maps in converters, fixtures, matching code, or
+SMEFT-specific modules outside the basis provider. The default Matchete SMEFT
+validation fixtures expect the full 64-name `SMEFTWilsonCoefficients[]` set
+from `SMEFT_Warsaw.m` to have pychete-native operator metadata, but the
+matching pipeline must remain basis-agnostic.
 
 Take full advantage of Symbolica symbol tags, attributes, and symbol data.
 User-defined pychete symbols must be created through `Theory.symbol`, which

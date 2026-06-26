@@ -5,6 +5,14 @@
 - Continue the one-shot Matchete-style one-loop matching port on branch
   `one-shot-port`, targeting the default SMEFT-oriented Matchete models first:
   `VLF_toy_model`, `Singlet_Scalar_Extension`, `E_VLL`, and `S1S3LQs`.
+- Incorporate Matchete author feedback from the current slice: CDE was the
+  early v0.1/paper route and must not become pychete's forward core matching
+  architecture. Keep existing CDE machinery as opt-in legacy diagnostics and
+  validation support, and steer new one-loop core work toward explicit
+  Wilson-line trace handling that can generalize beyond one loop.
+- Keep operator-basis handling generic. SMEFT Warsaw is an optional built-in
+  basis provider used for validation and convenience, not a special core
+  matching assumption.
 - Runtime pychete and pytest must remain Mathematica- and Matchete-independent.
   Optional Wolfram scripts may only generate committed pychete-owned fixtures.
 - Use Symbolica as the canonical symbolic engine. Before implementing symbolic
@@ -35,6 +43,8 @@
   Keep this live file current; when it grows large again, move it unchanged to
   the next `one_shot_implementation_part_*.md` file and rewrite a compact live
   summary.
+- Tests or exploratory workloads that may exceed local memory must be run
+  through `scripts/run_with_memory_watch.py --limit-gb 30`.
 
 ## History Files
 
@@ -112,6 +122,19 @@
   label-level filter. Dummy-index alignment still remains delegated to
   Symbolica `Expression.canonize_tensors(...)` and its returned canonical
   external/dummy index payload.
+- Matchete author feedback triggered a course correction: existing CDE support
+  remains useful as a diagnostic/validation path, but it is no longer treated
+  as the architectural route for completing the one-loop port. New core work
+  should investigate explicit Wilson-line style trace handling, while keeping
+  current CDE paths optional and bounded.
+- The current structural slice introduces generic operator-basis registration
+  via `OperatorBasis` and `define_wilson_coefficient_from_basis(...)`.
+  `pychete.smeft` now exposes SMEFT Warsaw as an optional built-in basis using
+  that generic mechanism instead of making SMEFT-specific operator maps the
+  conceptual source for all matching code.
+- A dependency-free memory watchdog now lives at
+  `scripts/run_with_memory_watch.py` and is documented for 30 GiB capped test
+  and matching workloads.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -311,6 +334,21 @@
 - A broader public CDE subset and the public order-four CDE test were started
   during this slice, but stopped after they entered slow native CDE paths. They
   are not counted as validation gates for this small projection-filter fix.
+- 30 GiB memory-watch focused public API/operator-basis gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/unit/definitions/test_theory_definitions.py::test_generic_operator_basis_defines_wilson_operator_metadata tests/unit/definitions/test_theory_definitions.py::test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata tests/unit/definitions/test_public_api.py -q`
+  passed with 7 tests. An initial run found that the new SMEFT basis exposed
+  builder insertion order rather than the published
+  `SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES` order; the basis constructor now
+  preserves the published order.
+- 30 GiB memory-watch compact field-strength projection gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py::test_projection_atom_filter_counts_powered_field_strength_targets tests/integration/matching/test_fluctuation_operator.py::test_matching_projection_handles_compact_alpha_equivalent_field_strength_powers -q`
+  passed with 2 tests.
+- 30 GiB memory-watch typing gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
+- `git diff --check` passed after the Matchete-author-feedback course
+  correction, generic operator-basis refactor, memory-watch wrapper, and
+  compact field-strength projection fast path.
 
 ## Current Validation Frontier
 
@@ -336,27 +374,25 @@
   basis/on-shell/IBP reductions and loop-source coverage beyond this HBox
   source-staging fix.
 - A broad real Singlet CDE probe with `hScalar`, `hScalar-hScalar`, and
-  `hScalar-hScalar-hScalar` selected at trace order 3 is currently too heavy
-  for routine slice validation. The immediate native vakint/FORM crash class
-  from pychete `Index(...)` wrappers in loop-momentum vector slots has a
-  focused fix and tests, and native CDE aggregate staging now avoids monolithic
-  selected-CDE tensor-reduction/evaluation calls. Target-local CDE term
-  filtering now removes obviously irrelevant generated terms for projected
-  Wilson runs, and fixture gap reports can exercise that filtered public route
-  on selected targets such as `cHW`. Broad default CDE still needs more source
-  coverage controls and basis reductions before it should be enabled by
-  default.
+  `hScalar-hScalar-hScalar` selected at trace order 3 remains too heavy for
+  routine slice validation. The latest 30 GiB watchdog run also showed that a
+  public order-four CDE projection can still exceed the memory cap after the
+  focused powered-field-strength fixes. Treat this as a legacy CDE performance
+  frontier, not as the next core architecture blocker. Existing CDE controls
+  and tests should remain bounded and useful for diagnostics, while full
+  matching progress should pivot toward explicit Wilson-line trace handling,
+  generic basis/on-shell reductions, and backend algebra coverage.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - CDE source staging, target-local filtering, and reduction batching for
-    broad Singlet CDE probes, building on backend-safe loop-momentum index
-    lowering, termwise native CDE aggregate staging, and the current
-    target-compatible atom filter plus target-subset fixture projection;
-  - target-local EOM/IBP reductions for Higgs/gauge Wilson structures such as
-    `cHBox`, `cHD`, `cHW`, `cHB`, and `cHWB`;
+  - explicit Wilson-line style supertrace representation and metadata, using
+    current Matchete behavior as the reference direction rather than expanding
+    the legacy CDE route;
+  - target-local EOM/IBP reductions for generic operator-basis projection,
+    including Higgs/gauge structures such as `cHBox`, `cHD`, `cHW`, `cHB`, and
+    `cHWB`, without making those reductions SMEFT-specific;
   - source staging for heavy-scalar-substituted Wilson projection so projection
     cost scales with target-compatible field content;
   - additional idenso/spenso-backed group/CG contractions exposed by E_VLL or

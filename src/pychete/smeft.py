@@ -6,6 +6,7 @@ from typing import TYPE_CHECKING
 from symbolica import Expression
 
 from .expr import list_expr
+from .operator_bases import OperatorBasis, define_wilson_coefficient_from_basis
 from .symbols import SymbolRole, s
 from .theory_metadata import ExternalHandle
 
@@ -87,7 +88,17 @@ SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES = (
 def smeft_warsaw_operator_names() -> tuple[str, ...]:
     """Return SMEFT Warsaw operator labels with pychete-native builders."""
 
-    return SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES
+    return smeft_warsaw_basis().operator_names()
+
+
+def smeft_warsaw_basis() -> OperatorBasis:
+    """Return pychete's optional built-in SMEFT Warsaw operator basis."""
+
+    builders = _smeft_warsaw_operator_builders()
+    return OperatorBasis(
+        "SMEFT",
+        {name: builders[name] for name in SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES},
+    )
 
 
 def smeft_warsaw_operator(
@@ -104,8 +115,11 @@ def smeft_warsaw_operator(
     does not carry the required SM field/group metadata, ``None`` is returned.
     """
 
-    flavor_indices = tuple(indices)
-    builders: dict[str, SmeftOperatorBuilder] = {
+    return smeft_warsaw_basis().operator(theory, name, tuple(indices))
+
+
+def _smeft_warsaw_operator_builders() -> dict[str, SmeftOperatorBuilder]:
+    return {
         "cllHH": _weinberg_operator,
         "cG": _triple_field_strength_operator("G", "gs", "fStruct_SU3c", dual=False),
         "cGt": _triple_field_strength_operator("G", "gs", "fStruct_SU3c", dual=True),
@@ -171,10 +185,6 @@ def smeft_warsaw_operator(
         "cqqq": _baryon_number_violating_operator("qqq"),
         "cduu": _baryon_number_violating_operator("duu"),
     }
-    builder = builders.get(name)
-    if builder is None:
-        return None
-    return builder(theory, flavor_indices)
 
 
 def define_smeft_wilson_coefficient(
@@ -187,13 +197,13 @@ def define_smeft_wilson_coefficient(
 ) -> ExternalHandle:
     """Define a SMEFT Wilson coefficient and attach known Warsaw operator data."""
 
-    index_tuple = tuple(indices)
-    return theory.define_wilson_coefficient(
+    return define_wilson_coefficient_from_basis(
+        theory,
+        smeft_warsaw_basis(),
         name,
-        indices=index_tuple,
+        indices=indices,
         eft_order=eft_order,
         basis=basis,
-        operator=smeft_warsaw_operator(theory, name, index_tuple),
     )
 
 
@@ -964,6 +974,7 @@ def _baryon_number_violating_operator(kind: str) -> SmeftOperatorBuilder:
 __all__ = [
     "SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES",
     "define_smeft_wilson_coefficient",
+    "smeft_warsaw_basis",
     "smeft_warsaw_operator",
     "smeft_warsaw_operator_names",
 ]

@@ -63,3 +63,17 @@ used by pychete tests and users who do not have Mathematica. These scripts are
 optional convenience entry points; some delegate to helper implementations
 under `helper_mathematica_scripts/`, but pychete does not depend on
 Mathematica or Matchete at runtime.
+
+## Memory-Capped Workloads
+
+Use `scripts/run_with_memory_watch.py` for broad tests or exploratory matching
+workloads that may use substantial RAM:
+
+```sh
+source "$HOME/.bashrc"
+dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- \
+  dependencies/.venv/bin/python -m pytest tests/integration/matching
+```
+
+The wrapper applies a hard 30 GiB process memory cap before running the command
+and requires no extra Python dependencies.

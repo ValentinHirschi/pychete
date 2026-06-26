@@ -66,9 +66,11 @@ from .matching_results import (
     matching_condition_targets,
     registered_wilson_matching_condition_targets,
 )
+from .operator_bases import OperatorBasis, define_wilson_coefficient_from_basis
 from .smeft import (
     SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES,
     define_smeft_wilson_coefficient,
+    smeft_warsaw_basis,
     smeft_warsaw_operator,
     smeft_warsaw_operator_names,
 )
@@ -147,6 +149,7 @@ __all__ = [
     "OneLoopMatchOptions",
     "OneLoopNormalization",
     "OneLoopSetup",
+    "OperatorBasis",
     "PowerTypeSupertraceContribution",
     "PropagatorPlan",
     "PycheteState",
@@ -176,6 +179,7 @@ __all__ = [
     "build_numeric_probe_plan",
     "deterministic_probe_samples",
     "define_smeft_wilson_coefficient",
+    "define_wilson_coefficient_from_basis",
     "evaluator_probe_equal",
     "evaluate_loop_functions",
     "evaluate_one_loop_single_scale_vakint_expression",
@@ -203,6 +207,7 @@ __all__ = [
     "registered_wilson_matching_condition_targets",
     "s",
     "series_eft",
+    "smeft_warsaw_basis",
     "smeft_warsaw_operator",
     "smeft_warsaw_operator_names",
     "simplify_loop_functions",
