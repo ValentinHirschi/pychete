@@ -25,6 +25,8 @@ def native_module():
 def symbol(name: str) -> Expression:
     """Return a Symbolica symbol in vakint's namespace."""
 
+    if name == "g":
+        return S("vakint::g", is_symmetric=True)
     return S(f"vakint::{name}")
 
 

@@ -49,6 +49,12 @@ class FakeVakintEngine:
         return ("value", None)
 
 
+def test_vakint_metric_symbol_matches_native_symmetry_before_import() -> None:
+    mu, nu = S("mu", "nu")
+
+    assert canonical_string(vakint.symbol("g")(nu, mu)) == canonical_string(vakint.symbol("g")(mu, nu))
+
+
 def test_vakint_method_factories_import_without_engine_creation() -> None:
     method = vakint.new_alphaloop_method()
 

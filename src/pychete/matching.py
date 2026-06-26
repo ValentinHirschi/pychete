@@ -1462,20 +1462,17 @@ class OneLoopSetup:
     ) -> Expression:
         """Return the summed selected CDE-expanded interaction topologies."""
 
-        raw = sum_expr(
-            term.vakint_integral_expression()
-            for term in self.interaction_bosonic_cde_expansion_terms(
-                expansion_indices_by_trace,
-                loop_momentum_squared=loop_momentum_squared,
-                require_registered_mass=require_registered_mass,
-                act_open_derivatives=act_open_derivatives,
-                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            )
-        ).expand()
-        return _vakint_expression_at_stage(
-            raw,
+        terms = self.interaction_bosonic_cde_expansion_terms(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            act_open_derivatives=act_open_derivatives,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+        )
+        return _cde_vakint_integral_terms_at_stage(
+            tuple(term.vakint_integral_expression() for term in terms),
             theory=self.theory,
             stage=VakintIntegralStage.from_user(stage),
             short_form=short_form,
@@ -2286,6 +2283,7 @@ class OneLoopSetup:
                 "on_shell_reduced": False,
                 "vakint_stage": selected_vakint_stage.value,
                 "named_supertrace_stage": selected_named_stage.value,
+                "interaction_bosonic_cde_vakint_termwise_stage": selected_vakint_stage is not VakintIntegralStage.RAW,
                 "uses_interaction_operator": True,
                 "uses_bosonic_cde_expansion": True,
             },
@@ -2575,6 +2573,7 @@ class OneLoopSetup:
                 "on_shell_reduced": False,
                 "vakint_stage": VakintIntegralStage.EVALUATED.value,
                 "named_supertrace_stage": selected_named_stage.value,
+                "interaction_bosonic_cde_vakint_termwise_stage": True,
                 "subtraction_scheme": "minimal_subtraction_preview",
                 "poles_subtracted": True,
                 "max_pole_order": max_pole_order,
@@ -5042,6 +5041,37 @@ def _vakint_expression_at_stage(
     if theory is None:
         return result
     return vakint.decode_pychete_namespace(theory, result)
+
+
+def _cde_vakint_integral_terms_at_stage(
+    raw_terms: Sequence[Expression],
+    *,
+    theory: Theory,
+    stage: VakintIntegralStage,
+    short_form: bool | None = None,
+    engine: Any | None = None,
+) -> Expression:
+    if stage is VakintIntegralStage.RAW:
+        return sum_expr(raw_terms).expand()
+    if not raw_terms:
+        return Expression.num(0)
+
+    from .backends import vakint
+
+    staged_terms: list[Expression] = []
+    with progress(
+        f"{stage.value.replace('_', '-')} {len(raw_terms)} CDE vakint integrals termwise",
+        logger=_LOGGER,
+    ):
+        for raw in raw_terms:
+            if stage is VakintIntegralStage.CANONICAL:
+                staged = vakint.to_canonical(raw, short_form=short_form, engine=engine)
+            elif stage is VakintIntegralStage.TENSOR_REDUCED:
+                staged = vakint.tensor_reduce(raw, engine=engine)
+            else:
+                staged = vakint.evaluate(raw, engine=engine)
+            staged_terms.append(vakint.decode_pychete_namespace(theory, staged))
+    return sum_expr(staged_terms).expand()
 
 
 def _fluctuation_statistics(field_type: Expression, field_role: FieldRole) -> FluctuationStatistics:

@@ -1860,6 +1860,29 @@ def test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vak
         "interaction_bosonic_cde_vakint_integral[hScalar-lScalar#cde1_o0_1,0]",
         "interaction_bosonic_cde_vakint_integral[hScalar-lScalar#cde2_o1_0,0]",
     )
+    plan_raw_terms = tuple(plan_integrals.values())
+    plan_reduction_engine = FakeKernelVakintEngine()
+    plan_reduced_sum = setup.interaction_bosonic_cde_vakint_integral_sum(
+        plan,
+        stage=VakintIntegralStage.TENSOR_REDUCED,
+        engine=plan_reduction_engine,
+    )
+    expected_plan_reduced_sum = Expression.num(0)
+    for raw in plan_raw_terms:
+        expected_plan_reduced_sum += S("reduced")(raw)
+    expected_plan_reduced_sum = expected_plan_reduced_sum.expand()
+    assert [name for name, _expr, _short in plan_reduction_engine.calls] == ["tensor_reduce"] * len(plan_raw_terms)
+    assert tuple(expr for _name, expr, _short in plan_reduction_engine.calls) == plan_raw_terms
+    assert_expr_equal(plan_reduced_sum, expected_plan_reduced_sum)
+    termwise_result_engine = FakeKernelVakintEngine()
+    termwise_result = setup.interaction_bosonic_cde_matching_result(
+        plan,
+        vakint_stage=VakintIntegralStage.TENSOR_REDUCED,
+        vakint_engine=termwise_result_engine,
+    )
+    assert termwise_result.metadata["interaction_bosonic_cde_vakint_termwise_stage"] is True
+    assert [name for name, _expr, _short in termwise_result_engine.calls] == ["tensor_reduce"] * len(plan_raw_terms)
+    assert_expr_equal(termwise_result.off_shell_eft_lagrangian, expected_plan_reduced_sum)
     planned_match = theory.match(
         lagrangian,
         loop_order=1,

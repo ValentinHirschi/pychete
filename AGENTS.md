@@ -406,6 +406,13 @@ result. Do not first build one monolithic CDE topology sum and then ask vakint
 to tensor-reduce the whole expression; multi-insertion traces such as
 `hScalar-hScalar` scale much better when the backend boundary is the generated
 CDE term.
+The same termwise rule applies to selected CDE aggregates at native vakint
+stages: raw diagnostic sums may stay raw, but canonicalized, tensor-reduced, or
+evaluated native CDE aggregates must process each generated term independently
+and only then sum decoded outputs. Keep native vakint wrapper constructors
+attribute-compatible with the Rust backend before import; for example
+`vakint::g` must be created as symmetric when Python code needs the wrapper
+before native vakint has been imported.
 Freshen dummy indices independently on every ordered CDE trace-entry operand
 before multiplying the entry chain. Repeated trace insertions are independent
 index sums; reusing one dummy label across all insertions creates an invalid

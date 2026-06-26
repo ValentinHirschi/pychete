@@ -84,6 +84,9 @@
   selected CDE supertrace families replace only the selected interaction-power
   families while unselected interaction-power contributions remain in the
   source.
+- Selected CDE vakint aggregates now stage native canonicalization,
+  tensor-reduction, and evaluation per generated CDE term before summing
+  decoded outputs. Raw diagnostic sums remain raw sums.
 - Vakint namespace decode now maps native metric/CG/CD/list wrappers back to
   pychete-facing heads where the registered theory metadata makes that
   unambiguous.
@@ -91,6 +94,9 @@
   arguments in `LoopMomentum(index)` to flat backend-safe symbols before native
   vakint/FORM tensor reduction, then decodes returned metric wrappers back to
   the original pychete index metadata.
+- Python-side construction of native vakint wrapper symbols is attribute-safe
+  before native import; in particular `vakint::g` is created symmetric so later
+  native vakint initialization does not abort on symbol redefinition.
 - Field-strength metric cleanup removes metric-traced antisymmetric
   field-strength terms before public projection.
 - Native colour-wrapper decoding is bounded and decode-only for public
@@ -137,6 +143,21 @@
   `LoopMomentum(Index(mu))*LoopMomentum(Index(nu))` now completes without the
   previous Rust/FORM symbol-redefinition abort and decodes the returned metric
   to `Metric(Index(mu, Lorentz), Index(nu, Lorentz))`.
+- CDE/vakint staging regression:
+  `pytest tests/integration/matching/test_fluctuation_operator.py::test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint -q`
+  passed and verifies a three-entry generated CDE plan calls the native tensor
+  reducer once per generated term.
+- Native vakint import-order reproducer:
+  `pytest tests/integration/matching/test_fluctuation_operator.py::test_interaction_bosonic_cde_expansion_maps_selected_trace_to_kernel_and_vakint tests/integration/matching/test_fluctuation_operator.py::test_bosonic_cde_internal_tensor_reduction_decodes_native_vakint_tensors -q -s`
+  passed after making `vakint::g` Python construction symmetric.
+- Broader non-slow bosonic CDE gate:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k "bosonic_cde and not heavy_solution" -q`
+  passed with 11 tests and 59 deselected.
+- Backend gate after staging:
+  `pytest tests/unit/backends/test_vakint_backend.py tests/unit/backends/test_vacuum_integrals_backend.py -q`
+  passed with 71 tests.
+- `python -m mypy` passed after the CDE/vakint staging slice.
+- `git diff --check` passed after the CDE/vakint staging slice.
 
 ## Current Validation Frontier
 
@@ -159,15 +180,18 @@
   `hScalar-hScalar-hScalar` selected at trace order 3 is currently too heavy
   for routine slice validation. The immediate native vakint/FORM crash class
   from pychete `Index(...)` wrappers in loop-momentum vector slots has a
-  focused fix and tests, but broad default CDE still needs source staging and
-  more basis reductions before it should be enabled by default.
+  focused fix and tests, and native CDE aggregate staging now avoids monolithic
+  selected-CDE tensor-reduction/evaluation calls. Broad default CDE still needs
+  more source filtering and basis reductions before it should be enabled by
+  default.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
   - CDE source staging and reduction batching for broad Singlet CDE probes,
-    building on the backend-safe loop-momentum index lowering now in place;
+    building on backend-safe loop-momentum index lowering and termwise native
+    CDE aggregate staging now in place;
   - target-local EOM/IBP reductions for Higgs/gauge Wilson structures such as
     `cHBox`, `cHD`, `cHW`, `cHB`, and `cHWB`;
   - source staging for heavy-scalar-substituted Wilson projection so projection
