@@ -298,6 +298,10 @@ discoveries, dependency patches, blockers, and remaining work.
   while fermionic slots must use a Matchete `PropFermionExpand`-style
   `(slash(k)+M)`/`Gamma(mu) OpenCD(mu)` expansion with generated pychete
   Lorentz indices and idenso-backed gamma cleanup.
+- Vector propagator slots are not just ordinary bosonic slots: Matchete's
+  current `PropExpand` applies `Vector -> -PropBosonExpand[...]`. pychete must
+  apply this extra sign from `FluctuationMode.field_type` metadata in the
+  Wilson-line path, not from trace-name string checks.
 - Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
   SMEFT. Basis metadata must be explicit through `OperatorBasis`,
   `define_wilson_coefficient_from_basis(...)`, or thin convenience helpers

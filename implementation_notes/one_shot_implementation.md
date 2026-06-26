@@ -231,6 +231,14 @@
   from the actual fluctuation mode metadata. The shared term type is now
   `CovariantPropagatorExpansionTerm`, with the old bosonic name kept as a
   compatibility alias.
+- The current vector-slot parity slice implements Matchete's
+  `PropExpand[Vector] = -PropBosonExpand[...]` rule in the Wilson-line
+  propagator dispatch. The check uses `FluctuationMode.field_type` and the
+  registered vector field type, not `hVector` trace-name strings. The sign is
+  stored on the covariant propagator term prefactor, so the existing
+  Wilson-line term construction, vakint topology lowering, and internal
+  evaluation paths see the same denominator powers and loop-momentum metadata
+  as scalar slots with only the Matchete vector sign flipped.
 - The current Wilson-line noncommutative cleanup slice adds
   `normalize_ncm_chains(...)`, a bounded Symbolica-replacement pass that
   flattens nested pychete `NCM(...)` operands and hoists only commutative
@@ -416,6 +424,19 @@
 
 ## Latest Validation Evidence
 
+- Vector-slot Wilson-line parity gate, under the 30 GiB watchdog wrapper:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line_vector_slots_use_matchete_propagator_sign or
+  wilson_line_path_expands_propagator_terms_without_cde_result_object or
+  fermion_slots_preserve_even_slash or normalizes_nested_fermion_ncm or
+  one_loop_match_can_use_selected_wilson_line_expansion" -q` passed with
+  `5 passed, 88 deselected`.
+- Broader vector/Wilson-line affected gate, under the 30 GiB watchdog wrapper:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line or vector" -q` passed with `19 passed, 74 deselected`.
+- `python -m mypy`, under the 30 GiB watchdog wrapper, reported no issues in
+  40 source files after the vector-slot sign change.
+- `git diff --check` passed after the vector-slot sign change.
 - Author-feedback Wilson-line/provider follow-up gate, under the 30 GiB
   watchdog wrapper: `pytest tests/unit/functional/test_cde.py
   tests/integration/matching/test_fluctuation_operator.py

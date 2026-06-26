@@ -6372,7 +6372,19 @@ def _wilson_line_propagator_expansion_terms(
     slot_index: int,
 ) -> tuple[CovariantPropagatorExpansionTerm, ...]:
     if mode.statistics is not FluctuationStatistics.FERMIONIC:
-        return bosonic_covariant_propagator_expansion_terms(indices)
+        terms = bosonic_covariant_propagator_expansion_terms(indices)
+        if not _is_vector_field_type(mode.field_type):
+            return terms
+        return tuple(
+            CovariantPropagatorExpansionTerm(
+                prefactor=-term.prefactor,
+                loop_momentum_numerator=term.loop_momentum_numerator,
+                open_cd_operands=term.open_cd_operands,
+                denominator_power=term.denominator_power,
+                loop_momentum_indices=term.loop_momentum_indices,
+            )
+            for term in terms
+        )
     prefix = safe_symbol_name(f"{trace_name}_{path_index}_{slot_index}")
     return fermionic_covariant_propagator_expansion_terms(
         Expression.num(0) if mode.mass is None else mode.mass,
@@ -6380,6 +6392,10 @@ def _wilson_line_propagator_expansion_terms(
         slash_index=theory.lorentz_index(f"{prefix}_slash"),
         derivative_index=theory.lorentz_index(f"{prefix}_derivative"),
     )
+
+
+def _is_vector_field_type(field_type: Expression) -> bool:
+    return bool(field_type == s.Vector) or is_head(field_type, s.Vector)
 
 
 def _normalize_cde_expansion_indices(

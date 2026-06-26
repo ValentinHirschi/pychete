@@ -1823,6 +1823,41 @@ def test_wilson_line_path_expands_propagator_terms_without_cde_result_object() -
     assert "pychete::WilsonTerm" not in canonical_string(terms[0].numerator)
 
 
+def test_wilson_line_vector_slots_use_matchete_propagator_sign() -> None:
+    theory = Theory("one_loop_setup_wilson_line_vector_prop_sign")
+    group = theory.symbol("G", role=SymbolRole.GROUP)
+    vector = theory.define_field("V", s.Vector(group), self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    vector_mass = theory.mass_expr(vector.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert vector_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(vector) + theory.free_lag(light) - y() * vector() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    expansion = {"hVector-lScalar": ((), ())}
+    terms = setup.interaction_wilson_line_expansion_terms(expansion)
+    left = theory.index(theory.symbol("wilson_line_hVector_lScalar_0_left", role=SymbolRole.INDEX))
+    right = theory.index(theory.symbol("wilson_line_hVector_lScalar_0_right", role=SymbolRole.INDEX))
+
+    assert len(terms) == 1
+    assert terms[0].propagator_powers == (1, 1)
+    assert_expr_equal(
+        terms[0].numerator,
+        y() ** 2 * light() ** 2 * s.Metric(left, right) / 2,
+    )
+    assert_expr_equal(
+        terms[0].kernel_expression(),
+        s.SupertraceKernel(
+            y() ** 2 * light() ** 2 * s.Metric(left, right) / 2,
+            s.List(
+                s.List(s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2)),
+                s.List(s.PropagatorDenominator(s.LoopMomentumSquared, vector_mass**2)),
+            ),
+        ),
+    )
+
+
 def test_public_wilson_line_can_filter_terms_by_matching_targets() -> None:
     theory = Theory("one_loop_setup_wilson_line_filter_targets")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

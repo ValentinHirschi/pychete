@@ -315,6 +315,12 @@ Helper[n-1]`. Generated slash/open-derivative Lorentz labels must be
 theory-owned pychete `Index(...)` expressions, and compact gamma/projector
 cleanup must remain delegated to idenso after Wilson-term expansion. Do not
 use the bosonic expansion for fermion Wilson-line slots.
+Within the non-fermion branch, vector propagator slots must carry Matchete's
+extra `PropExpand[Vector] = -PropBosonExpand[...]` sign. Detect this from
+`FluctuationMode.field_type`/registered field metadata, never from trace names
+such as `hVector`, and keep the sign on the covariant propagator term
+prefactor so downstream Wilson-line termwise vakint/internal evaluation sees
+the same topology and numerator structure as scalar slots.
 Public one-loop matching can opt into the same selected-trace route with
 `OneLoopMatchOptions.wilson_line_expansion_indices_by_trace`,
 `wilson_line_act_open_derivatives`, and
