@@ -62,12 +62,18 @@
 
 ## Current Status
 
-- Current pushed milestone: `c3cc55c Infer Matchete coupling mass dimensions`.
-- The latest milestone added public
-  `infer_coupling_mass_dimensions(theory, lagrangian)`, refactored the optional
-  Matchete model-state converter to infer missing dimensions in a temporary
-  probe theory before final symbol creation, and refreshed E_VLL/S1S3LQs model
-  and matching fixtures with coupling `mass_dimension` metadata.
+- Current pushed milestone: `75e20f6 Stage native vakint CDE aggregates
+  termwise`.
+- Recent milestones since the Part E summary added public
+  `infer_coupling_mass_dimensions(theory, lagrangian)`, exposed Symbolica
+  tensor-index canonicalization diagnostics, made vakint loop-momentum index
+  lowering backend-safe, and staged selected native CDE/vakint aggregate
+  canonicalization/reduction/evaluation term-by-term.
+- Validation fixture gap reports now expose `comparison_canonize_indices`
+  and pass it through to `MatchingResult.compare_to(...)`, so common
+  supertrace and matching-condition comparisons use Symbolica
+  `Expression.canonize_tensors(...)` by default instead of reporting
+  alpha-equivalent dummy-index relabelings as false gaps.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -158,6 +164,15 @@
   passed with 71 tests.
 - `python -m mypy` passed after the CDE/vakint staging slice.
 - `git diff --check` passed after the CDE/vakint staging slice.
+- Focused validation-report tensor-canonization regression:
+  `pytest tests/integration/validation/test_numeric_probes.py::test_fixture_gap_report_canonizes_alpha_equivalent_matching_conditions -q`
+  passed.
+- Full numeric-probe/validation-report file after exposing
+  `comparison_canonize_indices`:
+  `pytest tests/integration/validation/test_numeric_probes.py -q` passed with
+  53 tests.
+- `python -m mypy` passed after the validation-report canonization slice.
+- `git diff --check` passed after the validation-report canonization slice.
 
 ## Current Validation Frontier
 

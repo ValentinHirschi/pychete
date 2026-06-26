@@ -482,6 +482,10 @@ mapping. When Symbolica exposes canonical index replacements or equivalent
 external/dummy index payloads, keep those payloads attached to comparison and
 projection results so later code can line up dummy indices without another
 Python-side collection pass.
+Validation fixture gap reports must leave `comparison_canonize_indices=True`
+unless a test is explicitly measuring raw non-canonical behavior; otherwise
+alpha-equivalent dummy contractions in common supertraces or matching
+conditions will be reported as false validation gaps.
 Before projection/canonicalization, normalize powers of indexed field atoms
 with Symbolica replacement rules into fresh-index products so shorthand terms
 such as `H[i]^3*Bar(H[i])^3` can project against Warsaw-basis operators written

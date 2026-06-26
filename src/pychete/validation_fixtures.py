@@ -187,6 +187,7 @@ class MatchingFixtureGapReport:
     matching_condition_projection_registered_wilson_names: tuple[str, ...] = ()
     matching_condition_projection_reference_non_wilson_names: tuple[str, ...] = ()
     matching_condition_projection_reference_wilson_fallback_names: tuple[str, ...] = ()
+    comparison_canonize_indices: bool = True
 
     @property
     def complete(self) -> bool:
@@ -452,6 +453,7 @@ class MatchingFixtureGapReport:
             "different_after_probe_common_supertrace_count": self.different_after_probe_common_supertrace_count,
             "candidate_matching_condition_count": self.candidate_matching_condition_count,
             "reference_matching_condition_count": self.reference_matching_condition_count,
+            "comparison_canonize_indices": self.comparison_canonize_indices,
             "common_matching_condition_count": len(self.common_matching_condition_names),
             "missing_reference_matching_condition_count": self.missing_reference_matching_condition_count,
             "candidate_only_matching_condition_count": len(self.candidate_only_matching_condition_names),
@@ -1008,6 +1010,7 @@ class ValidationFixture:
         simplify_loop_functions_for_comparison: bool = False,
         evaluate_loop_functions_for_comparison: bool = False,
         comparison_combine_terms: bool = True,
+        comparison_canonize_indices: bool = True,
     ) -> MatchingFixtureGapReport:
         """Report current one-loop preview coverage against a reference result.
 
@@ -1027,6 +1030,9 @@ class ValidationFixture:
         When ``use_public_match_api=True``, set ``truncate_eft_result=False``
         together with ``matching_condition_projection_truncate_eft=True`` to
         avoid a global EFT truncation before target-local Wilson projection.
+        ``comparison_canonize_indices`` keeps Symbolica tensor-index
+        canonicalization enabled for common-expression comparisons so fixture
+        reports do not flag alpha-equivalent dummy-index relabelings as gaps.
         """
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
@@ -1212,6 +1218,7 @@ class ValidationFixture:
                     evaluate_loop_functions_for_comparison=evaluate_loop_functions_for_comparison,
                     comparison_combine_terms=comparison_combine_terms,
                 ),
+                comparison_canonize_indices=comparison_canonize_indices,
                 matching_condition_projection_targets=projected_target_selection,
             )
         _LOGGER.info(
@@ -1522,6 +1529,7 @@ def _gap_report(
     probe_absolute_tolerance: float = 1e-9,
     probe_relative_tolerance: float = 1e-9,
     comparison_expression_transform: Callable[[Expression], Expression] | None = None,
+    comparison_canonize_indices: bool = True,
     matching_condition_projection_targets: _MatchingConditionProjectionTargets | None = None,
 ) -> MatchingFixtureGapReport:
     if auto_probe_samples and (probe_parameters is not None or probe_samples is not None):
@@ -1536,6 +1544,7 @@ def _gap_report(
         reference,
         names=_sorted_names(common_supertraces),
         expression_transform=comparison_expression_transform,
+        canonize_indices=comparison_canonize_indices,
     )
     selected_supertrace_probe_names = _probe_name_selection(
         probe_supertrace_names,
@@ -1581,6 +1590,7 @@ def _gap_report(
             absolute_tolerance=probe_absolute_tolerance,
             relative_tolerance=probe_relative_tolerance,
             expression_transform=comparison_expression_transform,
+            canonize_indices=comparison_canonize_indices,
         )
     else:
         compared_supertraces = base_compared_supertraces
@@ -1592,6 +1602,7 @@ def _gap_report(
         reference,
         names=_sorted_names(common_conditions),
         expression_transform=comparison_expression_transform,
+        canonize_indices=comparison_canonize_indices,
     )
     selected_condition_probe_names = _probe_name_selection(
         probe_matching_condition_names,
@@ -1638,6 +1649,7 @@ def _gap_report(
             absolute_tolerance=probe_absolute_tolerance,
             relative_tolerance=probe_relative_tolerance,
             expression_transform=comparison_expression_transform,
+            canonize_indices=comparison_canonize_indices,
         )
     else:
         compared_conditions = base_compared_conditions
@@ -1709,6 +1721,7 @@ def _gap_report(
             if matching_condition_projection_targets is None
             else matching_condition_projection_targets.reference_wilson_fallback_names
         ),
+        comparison_canonize_indices=comparison_canonize_indices,
     )
 
 

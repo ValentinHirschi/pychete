@@ -1440,6 +1440,47 @@ def test_fixture_gap_report_compares_common_matching_conditions() -> None:
     assert report_obj["different_after_probe_common_matching_condition_count"] == 1
 
 
+def test_fixture_gap_report_canonizes_alpha_equivalent_matching_conditions() -> None:
+    theory = Theory("condition_gap_index_canonization")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    j = theory.dummy_index(2, fund)
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={"indexed": 3 * s.Bar(higgs(i)) * higgs(i)},
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={"indexed": 3 * s.Bar(higgs(j)) * higgs(j)},
+    )
+
+    report = _gap_report("candidate_fixture", "reference_fixture", candidate, reference)
+    raw_report = _gap_report(
+        "candidate_fixture",
+        "reference_fixture",
+        candidate,
+        reference,
+        comparison_canonize_indices=False,
+    )
+    report_obj = report.to_json_obj()
+
+    assert report.comparison_canonize_indices is True
+    assert report.canonical_equal_common_matching_condition_names == ("indexed",)
+    assert report.canonical_different_common_matching_condition_names == ()
+    assert report_obj["comparison_canonize_indices"] is True
+    assert raw_report.comparison_canonize_indices is False
+    assert raw_report.canonical_equal_common_matching_condition_names == ()
+    assert raw_report.canonical_different_common_matching_condition_names == ("indexed",)
+
+
 def test_fixture_gap_report_records_wilson_matching_condition_frontier() -> None:
     x = S("condition_gap_wilson_x")
     theory = Theory("condition_gap_wilson")
