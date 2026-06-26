@@ -269,5 +269,10 @@ discoveries, dependency patches, blockers, and remaining work.
   Wilson-line terms before tensor reduction/evaluation, while keeping final
   coefficient extraction in the generic matching projection path and avoiding
   SMEFT-name-specific filters.
+- Continue expanding the Wilson-line-native path directly. A bounded next
+  step is to make vector Wilson terms use the implicit non-Abelian adjoint
+  transporter and Lorentz endpoint metric instead of staying formal, while
+  still leaving unsupported higher-order/combinatoric cases formal until they
+  are explicitly validated.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.

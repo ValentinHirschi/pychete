@@ -350,9 +350,12 @@ Matchete-style derivative-sublist partitions up to the requested
 `max_derivative_order` (default four). Derivative-sublist expansion should keep
 using Symbolica replacement callbacks over `WilsonTerm(...)` and theory-owned
 gauge metadata; Python may enumerate derivative-index partitions, but it must
-not inspect expression trees to do group algebra. `WilsonTerm` atoms above the
-requested derivative order and vector-field derivative terms must remain formal
-until their tensor/generator-chain coverage is validated through idenso/spenso.
+not inspect expression trees to do group algebra. Non-Abelian vector
+`WilsonTerm` expansion has bounded support through the vector field's implicit
+adjoint gauge transporter and the Lorentz endpoint metric; Abelian vector
+derivative terms with no gauge charge lower to zero. `WilsonTerm` atoms above
+the requested derivative order must remain formal until their combinatoric
+coverage is explicitly requested and tested.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

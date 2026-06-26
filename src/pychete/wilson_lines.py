@@ -10,7 +10,13 @@ from symbolica import Expression
 from .expr import is_head, list_expr, list_items, product_expr, wilson_term_pattern
 from .noncommutative import scalarize_commutative_ncm_chains
 from .symbols import s
-from .theory_metadata import field_indices_from_label, field_type_from_label
+from .theory_metadata import (
+    GroupKind,
+    SymbolDataKey,
+    field_indices_from_label,
+    field_type_from_label,
+    symbol_data,
+)
 
 if TYPE_CHECKING:
     from .theory import Theory
@@ -90,8 +96,6 @@ def _wilson_term_expansion(
         return _wilson_identity_factor(field_label, left_label, right_label, conjugated=conjugated)
     if len(derivative_tuple) == 1:
         return Expression.num(0)
-    if _is_vector_field_label(field_label):
-        return s.WilsonTerm(field, link_indices, list_expr(*derivative_tuple))
     terms: list[Expression] = []
     for partition in _wilson_derivative_partitions(derivative_tuple):
         term = _wilson_partition_expansion(
@@ -143,7 +147,21 @@ def _wilson_probe_field(field_label: Expression, right_label: Expression) -> Exp
 
 
 def _endpoint_field_indices(field_label: Expression, endpoint_label: Expression) -> tuple[Expression, ...]:
-    return tuple(s.Index(endpoint_label, representation) for representation in field_indices_from_label(field_label))
+    return tuple(s.Index(endpoint_label, representation) for representation in _wilson_field_representations(field_label))
+
+
+def _wilson_field_representations(field_label: Expression) -> tuple[Expression, ...]:
+    representations = list(field_indices_from_label(field_label))
+    type_expr = field_type_from_label(field_label)
+    if is_head(type_expr, s.Vector) and len(type_expr) == 1:
+        group_symbol = type_expr[0]
+        group_kind = GroupKind.from_user(
+            str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+        )
+        abelian = bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0))
+        if group_kind is GroupKind.GAUGE and not abelian:
+            representations.append(group_symbol(s.adj))
+    return tuple(representations)
 
 
 def _wilson_identity_factor(
@@ -170,7 +188,7 @@ def _wilson_identity_from_actual_indices(
     right_label: Expression | None = None,
     conjugated: bool,
 ) -> Expression:
-    field_representations = field_indices_from_label(field_label)
+    field_representations = _wilson_field_representations(field_label)
     if len(actual_indices) != len(field_representations):
         raise ValueError("WilsonTerm field-index payload does not match registered field metadata")
     factors = [_wilson_vector_lorentz_identity(field_label, left_label, right_label)]
@@ -200,10 +218,6 @@ def _wilson_vector_lorentz_identity(
     return Expression.num(1)
 
 
-def _is_vector_field_label(field_label: Expression) -> bool:
-    return is_head(field_type_from_label(field_label), s.Vector)
-
-
 def _wilson_partition_expansion(
     theory: Theory,
     field_label: Expression,
@@ -231,6 +245,7 @@ def _wilson_partition_expansion(
         out,
         field_label,
         left_label,
+        right_label,
         conjugated=conjugated,
     )
 
@@ -328,6 +343,7 @@ def _replace_probe_field_by_left_identity(
     expr: Expression,
     field_label: Expression,
     left_label: Expression,
+    right_label: Expression,
     *,
     conjugated: bool,
 ) -> Expression:
@@ -345,6 +361,7 @@ def _replace_probe_field_by_left_identity(
             field_label,
             left_label,
             list_items(match[s.FieldIndicesWildcard]),
+            right_label=right_label,
             conjugated=conjugated,
         )
 

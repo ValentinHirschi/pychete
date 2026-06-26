@@ -140,6 +140,22 @@
   tests/integration/validation/test_validation_fixtures.py -k wilson_line -q`
   passed with `9 passed, 117 deselected`, and `python -m mypy` reported no
   issues.
+- The current WilsonTerm vector-support slice removes the previous blanket
+  formal fallback for vector Wilson terms. Non-Abelian vector fields now carry
+  an implicit adjoint endpoint representation derived from the registered
+  gauge-group symbol data, so zero-derivative vector Wilson terms expand to
+  the Lorentz endpoint metric times the adjoint transporter delta, and
+  two-or-more-derivative terms can lower to field-strength/generator-chain
+  structures through the existing Symbolica replacement callbacks. Abelian
+  vector derivative terms with no field charges lower to zero. Focused
+  validation under the 30 GiB watchdog:
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line or expand_wilson_terms or periodic_cyclic_trace_factor" -q`
+  passed with `16 passed, 72 deselected`, and `python -m mypy` reported no
+  issues. While checking the broader affected file, two older setup assertions
+  were updated to the already-established periodic cyclic prefactor convention
+  (`hScalar-hScalar` carries `-1/4`, not a universal `-1/2`); rerunning those
+  two setup tests passed.
 - The generic-basis rule was tightened: SMEFT Warsaw stays an optional
   `OperatorBasis` convenience provider and validation asset. New engine code
   should consume generic Wilson/operator metadata and must not branch on Warsaw

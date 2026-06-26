@@ -1169,7 +1169,7 @@ def test_theory_one_loop_setup_prepares_current_matching_pipeline_inputs() -> No
     )
     assert_expr_equal(
         setup.power_type_eft_lagrangian(),
-        -Expression.num(3) - y() ** 2 * light() ** 2 / 2,
+        -Expression.num(2) - y() ** 2 * light() ** 2 / 2,
     )
     setup_map = setup.to_expression_map()
     assert setup_map
@@ -1304,7 +1304,7 @@ def test_one_loop_setup_propagator_plan_recovers_masses_from_symbol_data() -> No
     )
     expected_power_type_vakint_sum = (
         vakint_backend.one_loop_vacuum_integral(heavy_mass**2 / 2, (heavy_mass**2,))
-        + vakint_backend.one_loop_vacuum_integral(-(heavy_mass**2) ** 2 / 2, (heavy_mass**2, heavy_mass**2))
+        + vakint_backend.one_loop_vacuum_integral(-(heavy_mass**2) ** 2 / 4, (heavy_mass**2, heavy_mass**2))
         + vakint_backend.one_loop_vacuum_integral(
             -y() ** 2 * light() ** 2 / 2,
             (heavy_mass**2, light_mass**2),
@@ -2012,6 +2012,23 @@ def test_expand_wilson_terms_returns_registered_identity_transporter() -> None:
     assert_expr_equal(one_derivative, Expression.num(0))
 
 
+def test_expand_wilson_terms_returns_non_abelian_vector_identity_transporter() -> None:
+    theory = Theory("wilson_term_vector_identity")
+    theory.define_gauge_group("SU2L", s.SU(2), "g2", "W")
+    adj = theory.define_representation("SU2L", "adj")
+    vector = theory.field_handle("W")
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+
+    identity = expand_wilson_terms(theory, s.WilsonTerm(vector.label, s.List(left, right), s.List()))
+    expected = (
+        s.Metric(theory.index(left), theory.index(right))
+        * s.Delta(theory.index(left, adj), theory.index(right, s.Bar(adj)))
+    )
+
+    assert_expr_equal(identity, expected)
+
+
 def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:
     theory = Theory("wilson_term_abelian_two_derivative")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")
@@ -2131,6 +2148,51 @@ def test_expand_wilson_terms_uses_multi_block_derivative_partitions() -> None:
     expanded = expand_wilson_terms(theory, s.WilsonTerm(phi.label, s.List(left, right), s.List(a, b, c, d)))
 
     assert_expr_equal(expanded, expected)
+
+
+def test_expand_wilson_terms_lowers_non_abelian_vector_two_derivative_term() -> None:
+    theory = Theory("wilson_term_non_abelian_vector_two_derivative")
+    theory.define_gauge_group("SU2L", s.SU(2), "g2", "W")
+    adj = theory.define_representation("SU2L", "adj")
+    vector = theory.field_handle("W")
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+
+    expanded = expand_wilson_terms(theory, s.WilsonTerm(vector.label, s.List(left, right), s.List(mu, nu)))
+
+    output_label = theory.symbol("covariant_commutator_0_0", role=SymbolRole.INDEX)
+    adjoint_label = theory.symbol("covariant_commutator_0_1", role=SymbolRole.INDEX)
+    output = theory.index(output_label, adj)
+    adjoint = theory.index(adjoint_label, adj)
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(adjoint), s.List())
+    generator = theory.cg_tensor_handle("gen_SU2L_adj")
+    expected = (
+        -Expression.I
+        / 2
+        * theory.coupling_handle("g2")()
+        * strength
+        * generator(adjoint, output, theory.index(right, adj))
+        * s.Delta(theory.index(left, adj), theory.index(output_label, s.Bar(adj)))
+        * s.Metric(theory.index(left), theory.index(right))
+    )
+
+    assert_expr_equal(expanded, expected)
+
+
+def test_expand_wilson_terms_lowers_abelian_vector_derivative_term_to_zero() -> None:
+    theory = Theory("wilson_term_abelian_vector_derivative")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    vector = theory.field_handle("B")
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+
+    expanded = expand_wilson_terms(theory, s.WilsonTerm(vector.label, s.List(left, right), s.List(mu, nu)))
+
+    assert_expr_equal(expanded, Expression.num(0))
 
 
 def test_expand_wilson_terms_lowers_non_abelian_two_derivative_term() -> None:
