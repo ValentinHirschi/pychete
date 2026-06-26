@@ -24,6 +24,7 @@ from pychete import (
     SymbolRole,
     Theory,
     VakintIntegralStage,
+    WilsonLineTraceExpansionTerm,
     WilsonLineTracePath,
     canonical_string,
     define_smeft_wilson_coefficient,
@@ -1747,6 +1748,97 @@ def test_one_loop_setup_exposes_explicit_wilson_line_trace_paths() -> None:
     assert_expr_equal(setup_map["one_loop_setup.interaction_wilson_line_kernel[hScalar-lScalar,0]"], kernel)
     assert "pychete::WilsonTerm" not in canonical_string(path.wilson_term_expanded_template_expression())
     assert "pychete::WilsonTerm" not in canonical_string(path.wilson_term_expanded_kernel_expression())
+
+
+def test_wilson_line_path_expands_propagator_terms_without_cde_result_object() -> None:
+    theory = Theory("one_loop_setup_wilson_line_expansion_terms")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    path = setup.interaction_wilson_line_trace_paths_by_trace()["hScalar-lScalar"][0]
+    expansion = {"hScalar-lScalar": ((), ())}
+
+    terms = path.propagator_expansion_terms(expansion["hScalar-lScalar"])
+    grouped = setup.interaction_wilson_line_expansion_terms_by_trace(expansion)
+    kernels = setup.interaction_wilson_line_expansion_kernel_expression_map(expansion)
+    integrals = setup.interaction_wilson_line_expansion_vakint_integral_expression_map(expansion)
+
+    expected_numerator = -y() ** 2 * light() ** 2 / 2
+    expected_kernel = s.SupertraceKernel(
+        expected_numerator,
+        s.List(
+            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2)),
+            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)),
+        ),
+    )
+    expected_integral = vakint_backend.one_loop_vacuum_integral(
+        expected_numerator,
+        (light_mass**2, heavy_mass**2),
+        powers=(1, 1),
+    )
+
+    assert len(terms) == 1
+    assert isinstance(terms[0], WilsonLineTraceExpansionTerm)
+    assert not isinstance(terms[0], BosonicCDETraceExpansionTerm)
+    assert tuple(grouped) == ("hScalar-lScalar",)
+    assert len(grouped["hScalar-lScalar"]) == 1
+    assert grouped["hScalar-lScalar"][0].path_index == terms[0].path_index
+    assert_expr_equal(grouped["hScalar-lScalar"][0].kernel_expression(), expected_kernel)
+    assert tuple(kernels) == ("interaction_wilson_line_expansion_kernel[hScalar-lScalar,0,0]",)
+    assert tuple(integrals) == ("interaction_wilson_line_expansion_vakint_integral[hScalar-lScalar,0,0]",)
+    assert_expr_equal(terms[0].kernel_expression(), expected_kernel)
+    assert_expr_equal(kernels["interaction_wilson_line_expansion_kernel[hScalar-lScalar,0,0]"], expected_kernel)
+    assert_expr_equal(
+        integrals["interaction_wilson_line_expansion_vakint_integral[hScalar-lScalar,0,0]"],
+        expected_integral,
+    )
+    assert "pychete::WilsonTerm" not in canonical_string(terms[0].numerator)
+
+
+def test_wilson_line_expansion_lets_open_derivatives_act_on_wilson_terms() -> None:
+    theory = Theory("one_loop_setup_wilson_line_open_derivatives")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    heavy_mass = theory.mass_expr(heavy.definition)
+    light_mass = theory.mass_expr(light.definition)
+    assert heavy_mass is not None
+    assert light_mass is not None
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    mu = theory.lorentz_index("mu")
+    expansion = {"hScalar-lScalar": ((mu,), ())}
+
+    terms = setup.interaction_wilson_line_expansion_terms(
+        expansion,
+        act_open_derivatives=True,
+    )
+    kernels = setup.interaction_wilson_line_expansion_kernel_expression_map(
+        expansion,
+        act_open_derivatives=True,
+    )
+
+    expected_numerator = 2 * Expression.I * s.LoopMomentum(mu) * y() ** 2 * light() * light(derivatives=[mu])
+    expected_kernel = s.SupertraceKernel(
+        expected_numerator,
+        s.List(
+            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, light_mass**2) ** 2),
+            s.List(s.PropagatorDenominator(s.LoopMomentumSquared, heavy_mass**2)),
+        ),
+    )
+
+    assert len(terms) == 1
+    assert_expr_equal(terms[0].kernel_expression(), expected_kernel)
+    assert_expr_equal(
+        kernels["interaction_wilson_line_expansion_kernel[hScalar-lScalar,0,0]"],
+        expected_kernel,
+    )
 
 
 def test_expand_wilson_terms_returns_registered_identity_transporter() -> None:

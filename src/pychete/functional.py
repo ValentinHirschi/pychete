@@ -28,6 +28,7 @@ from .expr import (
     product_expr,
     sum_expr,
     terms,
+    wilson_term_pattern,
 )
 from .linear_external import linear_external_function_heads
 from .symbols import SymbolRole, canonical_string, s
@@ -105,6 +106,7 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
     bar_strength_pat = bar_field_strength_pattern()
     commutator_pat = covariant_derivative_commutator_pattern()
     cd_pat = cd_pattern()
+    wilson_pat = wilson_term_pattern()
 
     def field_variation(match: dict[Expression, Expression]) -> Expression:
         matched = field_pat.replace_wildcards(match)
@@ -168,10 +170,20 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
         derivative = Expression.num(0) if is_zero(body_derivative) else s.CD(match[s.CDIndexWildcard], body_derivative)
         return matched + s.CDVariationParameter * derivative
 
+    def wilson_term_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = wilson_pat.replace_wildcards(match)
+        derivative = s.WilsonTerm(
+            match[s.WilsonTermFieldWildcard],
+            match[s.WilsonTermLinkIndicesWildcard],
+            s.List(*list_items(match[s.WilsonTermDerivativeIndicesWildcard]), index),
+        )
+        return matched + s.CDVariationParameter * derivative
+
     field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
     field_strength_label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
     return (
         Replacement(cd_pat, cd_variation),
+        Replacement(wilson_pat, wilson_term_variation),
         Replacement(commutator_pat, commutator_variation),
         Replacement(bar_strength_pat, bar_field_strength_variation, field_strength_label_is_tagged),
         Replacement(strength_pat, field_strength_variation, field_strength_label_is_tagged),

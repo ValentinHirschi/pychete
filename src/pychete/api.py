@@ -50,6 +50,7 @@ from .matching import (
     PropagatorPlan,
     SupertraceBlockTrace,
     SupertracePlan,
+    WilsonLineTraceExpansionTerm,
     WilsonLineTracePath,
 )
 from .matching_options import (
@@ -171,6 +172,7 @@ __all__ = [
     "VakintIntegralStage",
     "canonical_string",
     "WilsonLineTracePath",
+    "WilsonLineTraceExpansionTerm",
     "canonize_loop_function",
     "canonize_loop_functions",
     "canonize_tensor_indices",

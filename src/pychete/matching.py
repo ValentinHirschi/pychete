@@ -902,6 +902,73 @@ class WilsonLineTracePath:
             ),
         )
 
+    def propagator_expansion_terms(
+        self,
+        expansion_indices: Sequence[Sequence[Expression]],
+        *,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+    ) -> tuple[WilsonLineTraceExpansionTerm, ...]:
+        """Return Matchete-style propagator-expanded terms for this path.
+
+        ``expansion_indices`` contains one Lorentz-index sequence per
+        propagator slot in this ordered Wilson-line path. The implementation
+        reuses the tested covariant propagator expansion primitive, but the
+        public object is Wilson-line based: open derivative operators act on
+        the ordered insertion chain and the closing ``WilsonTerm`` before the
+        supported Wilson-term expansion is applied.
+        """
+
+        if len(expansion_indices) != len(self.entries):
+            raise ValueError("expansion_indices must contain one entry per Wilson-line path slot")
+        normalized_indices = _normalize_cde_expansion_indices(expansion_indices)
+        propagator_expansions = tuple(
+            bosonic_covariant_propagator_expansion_terms(indices)
+            for indices in normalized_indices
+        )
+        from .wilson_lines import expand_wilson_terms
+
+        terms: list[WilsonLineTraceExpansionTerm] = []
+        for choices in product(*propagator_expansions):
+            prefactor = self.prefactor
+            loop_numerator = Expression.num(1)
+            operands: list[Expression] = []
+            masses: list[Expression] = []
+            powers: list[int] = []
+            for slot_index, (entry, mode, expansion) in enumerate(
+                zip(self.entries, self.propagator_modes, choices, strict=True)
+            ):
+                prefactor *= expansion.prefactor
+                loop_numerator *= expansion.loop_momentum_numerator
+                operands.append(_fresh_trace_entry_dummy_indices(entry, slot_index))
+                operands.extend(expansion.open_cd_operands)
+                masses.append(_fluctuation_mass_squared(mode))
+                powers.append(expansion.denominator_power)
+            operands.append(self.wilson_term_expression())
+            numerator = (prefactor * loop_numerator * _ncm_chain(*operands)).expand()
+            if act_open_derivatives:
+                numerator = act_with_open_covariant_derivatives(numerator, cyclic=True)
+            numerator = expand_wilson_terms(
+                self.theory,
+                numerator,
+                max_derivative_order=max_wilson_derivative_order,
+            )
+            numerator = scalarize_commutative_ncm_chains(numerator)
+            if is_zero(numerator):
+                continue
+            terms.append(
+                WilsonLineTraceExpansionTerm(
+                    theory=self.theory,
+                    trace_name=self.trace_name,
+                    path_index=self.path_index,
+                    expansion_indices=normalized_indices,
+                    numerator=numerator,
+                    mass_squareds=tuple(masses),
+                    propagator_powers=tuple(powers),
+                )
+            )
+        return tuple(terms)
+
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{WilsonLineTracePath}}\left({escape(self.trace_name)},\ {self.path_index}\right)$"
 
@@ -909,10 +976,62 @@ class WilsonLineTracePath:
         return f"<code>WilsonLineTracePath({escape(self.trace_name)} path={self.path_index})</code>"
 
 
-def _fresh_cde_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expression:
-    """Make dummy contractions local to one ordered CDE trace insertion."""
+def _fresh_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expression:
+    """Make dummy contractions local to one ordered trace insertion."""
 
     return relabel_dummy_indices(entry, start=200_000 + 1_000 * slot_index)
+
+
+def _fresh_cde_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expression:
+    """Make dummy contractions local to one ordered legacy CDE trace insertion."""
+
+    return _fresh_trace_entry_dummy_indices(entry, slot_index)
+
+
+@dataclass(frozen=True)
+class WilsonLineTraceExpansionTerm:
+    """One Wilson-line propagator-expanded supertrace-kernel term."""
+
+    theory: Theory
+    trace_name: str
+    path_index: int
+    expansion_indices: tuple[tuple[Expression, ...], ...]
+    numerator: Expression
+    mass_squareds: tuple[Expression, ...]
+    propagator_powers: tuple[int, ...]
+
+    def kernel_expression(self, *, loop_momentum_squared: Expression | None = None) -> Expression:
+        """Return this term as a pychete ``SupertraceKernel`` expression."""
+
+        momentum_squared = s.LoopMomentumSquared if loop_momentum_squared is None else loop_momentum_squared
+        denominators = tuple(
+            s.PropagatorDenominator(momentum_squared, mass_squared) ** power
+            for mass_squared, power in zip(self.mass_squareds, self.propagator_powers, strict=True)
+        )
+        return s.SupertraceKernel(self.numerator, list_expr(*(list_expr(denominator) for denominator in denominators)))
+
+    def vakint_integral_expression(self) -> Expression:
+        """Lower this term to the existing one-loop vakint topology representation."""
+
+        from .backends import vakint
+
+        return vakint.one_loop_vacuum_integral(
+            self.numerator,
+            self.mass_squareds,
+            powers=self.propagator_powers,
+        )
+
+    def _repr_latex_(self) -> str:
+        return (
+            rf"$\mathrm{{WilsonLineTraceExpansionTerm}}\left("
+            rf"{escape(self.trace_name)},\ {self.path_index}\right)$"
+        )
+
+    def _repr_html_(self) -> str:
+        return (
+            f"<code>WilsonLineTraceExpansionTerm({escape(self.trace_name)} "
+            f"path={self.path_index} powers={self.propagator_powers})</code>"
+        )
 
 
 @dataclass(frozen=True)
@@ -1508,6 +1627,115 @@ class OneLoopSetup:
                 include_light_only=include_light_only,
             )
         }
+
+    def interaction_wilson_line_expansion_terms_by_trace(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+    ) -> dict[str, tuple[WilsonLineTraceExpansionTerm, ...]]:
+        """Return Wilson-line propagator-expanded terms grouped by trace name."""
+
+        grouped: dict[str, list[WilsonLineTraceExpansionTerm]] = {
+            trace_name: []
+            for trace_name in expansion_indices_by_trace
+        }
+        for path in self.interaction_wilson_line_trace_paths(
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+        ):
+            expansion_indices = expansion_indices_by_trace.get(path.trace_name)
+            if expansion_indices is None:
+                continue
+            grouped.setdefault(path.trace_name, []).extend(
+                path.propagator_expansion_terms(
+                    expansion_indices,
+                    act_open_derivatives=act_open_derivatives,
+                    max_wilson_derivative_order=max_wilson_derivative_order,
+                )
+            )
+        return {trace_name: tuple(terms) for trace_name, terms in grouped.items()}
+
+    def interaction_wilson_line_expansion_terms(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+    ) -> tuple[WilsonLineTraceExpansionTerm, ...]:
+        """Return selected Wilson-line propagator-expanded terms in deterministic order."""
+
+        grouped = self.interaction_wilson_line_expansion_terms_by_trace(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        )
+        return tuple(term for terms in grouped.values() for term in terms)
+
+    def interaction_wilson_line_expansion_kernel_expression_map(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        prefix: str = "interaction_wilson_line_expansion_kernel",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+    ) -> dict[str, Expression]:
+        """Return selected Wilson-line propagator-expanded terms as kernels."""
+
+        entries: dict[str, Expression] = {}
+        for trace_name, terms in self.interaction_wilson_line_expansion_terms_by_trace(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        ).items():
+            for term_index, term in enumerate(terms):
+                entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.kernel_expression(
+                    loop_momentum_squared=loop_momentum_squared,
+                )
+        return entries
+
+    def interaction_wilson_line_expansion_vakint_integral_expression_map(
+        self,
+        expansion_indices_by_trace: Mapping[str, Sequence[Sequence[Expression]]],
+        *,
+        prefix: str = "interaction_wilson_line_expansion_vakint_integral",
+        loop_momentum_squared: Expression | None = None,
+        require_registered_mass: bool = True,
+        include_light_only: bool = False,
+        act_open_derivatives: bool = False,
+        max_wilson_derivative_order: int = 4,
+    ) -> dict[str, Expression]:
+        """Return selected Wilson-line propagator-expanded terms as vakint topologies."""
+
+        entries: dict[str, Expression] = {}
+        for trace_name, terms in self.interaction_wilson_line_expansion_terms_by_trace(
+            expansion_indices_by_trace,
+            loop_momentum_squared=loop_momentum_squared,
+            require_registered_mass=require_registered_mass,
+            include_light_only=include_light_only,
+            act_open_derivatives=act_open_derivatives,
+            max_wilson_derivative_order=max_wilson_derivative_order,
+        ).items():
+            for term_index, term in enumerate(terms):
+                entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.vakint_integral_expression()
+        return entries
 
     def _interaction_bosonic_cde_trace_map(
         self,

@@ -291,17 +291,27 @@ route, but new core matching work should move toward explicit Wilson-line
 style functional traces and should not deepen SMEFT-specific or CDE-specific
 coupling in the main pipeline.
 Represent current-Matchete-style Wilson-line trace work through
-`WilsonLineTracePath`, `s.WilsonLine`, and `s.WilsonTerm`. Build these objects
-from the ordered entry paths returned by `_supertrace_block_entry_paths(...)`,
-before `SupertraceBlockTrace.expression` has summed over the matrix-trace
-entries and lost the individual propagator/insertion ordering. The propagator
-mass slots follow the Matchete `GenericPropagatorExpansion` convention: after
-each interaction insertion, record the next fluctuation mode, and close the
-path by a Wilson line for the final mode back to the initial mode. Do not bolt
-a Wilson-line placeholder onto an already summed trace and call it equivalent.
+`WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
+`s.WilsonTerm`. Build these objects from the ordered entry paths returned by
+`_supertrace_block_entry_paths(...)`, before `SupertraceBlockTrace.expression`
+has summed over the matrix-trace entries and lost the individual
+propagator/insertion ordering. The propagator mass slots follow the Matchete
+`GenericPropagatorExpansion` convention: after each interaction insertion,
+record the next fluctuation mode, and close the path by a Wilson line for the
+final mode back to the initial mode. Do not bolt a Wilson-line placeholder onto
+an already summed trace and call it equivalent. Public diagnostics that expose
+the current Matchete route should use
+`WilsonLineTracePath.propagator_expansion_terms(...)` and
+`OneLoopSetup.interaction_wilson_line_expansion_*` rather than adding new
+CDE-named public surfaces. Reusing the tested bosonic covariant propagator
+expansion primitive internally is allowed, but that primitive is an
+implementation detail, not the conceptual architecture.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
-simplification; do not implement it as a Python tree walker.
+simplification; do not implement it as a Python tree walker. Open covariant
+derivatives acting on a closing `WilsonTerm(...)` must append to its derivative
+slot through `apply_cd`/Symbolica replacement rules before
+`expand_wilson_terms(...)` lowers the supported cases.
 Use `expand_wilson_terms(theory, expr)` as the public Wilson-line expansion
 boundary. Its first supported cases are the coincidence-limit identity
 transporter, the vanishing one-derivative term, and the two-derivative
@@ -600,8 +610,11 @@ operators through `OperatorBasis` and
 `define_wilson_coefficient_from_basis(...)`; specialized helpers such as
 `define_smeft_wilson_coefficient(...)` must be thin convenience wrappers over
 that generic basis machinery. SMEFT Warsaw is an optional built-in validation
-and user-convenience basis, not a core matching assumption. Do not scatter
-ad hoc Wilson-to-operator maps in converters, fixtures, matching code, or
+and user-convenience basis, not a core matching assumption. Root-level SMEFT
+exports exist only for convenience and compatibility; new engine code must
+consume generic `OperatorBasis`/Wilson metadata and must not import
+`pychete.smeft` or branch on Warsaw names. Do not scatter ad hoc
+Wilson-to-operator maps in converters, fixtures, matching code, or
 SMEFT-specific modules outside the basis provider. The default Matchete SMEFT
 validation fixtures expect the full 64-name `SMEFTWilsonCoefficients[]` set
 from `SMEFT_Warsaw.m` to have pychete-native operator metadata, but the

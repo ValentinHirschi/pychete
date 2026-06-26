@@ -79,6 +79,28 @@
   tensor-index canonicalization diagnostics, made vakint loop-momentum index
   lowering backend-safe, and staged selected native CDE/vakint aggregate
   canonicalization/reduction/evaluation term-by-term.
+- Matchete author feedback has been promoted to an active architectural
+  constraint for the current slice: CDE remains legacy/diagnostic support,
+  while forward matching work should expose explicit Wilson-line trace
+  machinery. This slice adds `WilsonLineTraceExpansionTerm` and
+  `WilsonLineTracePath.propagator_expansion_terms(...)` so termwise propagator
+  expansion can be requested through Wilson-line-named APIs rather than only
+  through `BosonicCDETraceExpansionTerm`.
+- `OneLoopSetup.interaction_wilson_line_expansion_terms_by_trace(...)`,
+  `interaction_wilson_line_expansion_terms(...)`,
+  `interaction_wilson_line_expansion_kernel_expression_map(...)`, and
+  `interaction_wilson_line_expansion_vakint_integral_expression_map(...)` are
+  the new structured diagnostic hooks for the current Matchete Wilson-line
+  route. They reuse the tested covariant propagator expansion primitive
+  internally but keep the public architecture Wilson-line-first.
+- `apply_cd` now treats `WilsonTerm(field, links, derivatives)` as the
+  derivative-carrying Wilson-line object. Open covariant derivatives append to
+  the derivative slot through Symbolica replacement rules before
+  `expand_wilson_terms(...)` lowers supported identity/field-strength cases.
+- The generic-basis rule was tightened: SMEFT Warsaw stays an optional
+  `OperatorBasis` convenience provider and validation asset. New engine code
+  should consume generic Wilson/operator metadata and must not branch on Warsaw
+  names or import `pychete.smeft` for core matching behavior.
 - Validation fixture gap reports now expose `comparison_canonize_indices`
   and pass it through to `MatchingResult.compare_to(...)`, so common
   supertrace and matching-condition comparisons use Symbolica

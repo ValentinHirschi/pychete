@@ -243,5 +243,10 @@ discoveries, dependency patches, blockers, and remaining work.
   is philosophically risky for a generic matching tool. Keep the bundled SMEFT
   basis only as an optional `OperatorBasis` provider and make all matching
   machinery consume generic basis metadata.
+- Latest author-feedback implementation adjustment: add Wilson-line-named
+  propagator expansion diagnostics and term objects as the forward structured
+  route. CDE-named APIs may remain for legacy diagnostics, but new public
+  matching surfaces should not deepen CDE-first naming or SMEFT-specific core
+  assumptions.
 - When running tests or exploratory workloads that can exceed machine memory,
   use the 30 GiB watchdog wrapper rather than invoking them directly.
