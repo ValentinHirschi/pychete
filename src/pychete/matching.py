@@ -36,7 +36,15 @@ from .matching_options import (
     VakintIntegralStage,
     one_loop_normalization_label,
 )
-from .matching_results import MatchingExpressionComparison, MatchingResult, MatchingResultComparison
+from .matching_results import (
+    LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE,
+    LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE,
+    TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE,
+    TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
+    MatchingExpressionComparison,
+    MatchingResult,
+    MatchingResultComparison,
+)
 from .noncommutative import scalarize_commutative_ncm_chains
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
 from .theory import Theory
@@ -5636,6 +5644,10 @@ def match_one_loop(
                 "tree_level_eft_lagrangian": tree_level,
                 "loop_only_off_shell_eft_lagrangian": result.off_shell_eft_lagrangian,
                 "loop_only_on_shell_eft_lagrangian": result.on_shell_eft_lagrangian,
+                LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE: result.off_shell_eft_lagrangian,
+                LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE: result.on_shell_eft_lagrangian,
+                TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE: tree_level,
+                TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE: tree_level,
             },
             metadata={
                 **result.metadata,
@@ -5785,18 +5797,33 @@ def match_one_loop(
     if matching_condition_targets is None:
         _log_one_loop_result(result)
         return result
-    projected = result.with_projected_matching_conditions(
-        matching_condition_targets,
-        source=matching_condition_source,
-        expand_source=matching_condition_expand_source,
-        canonize_indices=matching_condition_canonize_indices,
-        normalize_derivative_operators=matching_condition_normalize_derivative_operators,
-        normalize_ibp_scalar_bilinears=matching_condition_normalize_ibp_scalar_bilinears,
-        drop_zero=matching_condition_drop_zero,
-        include_coupling_identities=matching_condition_include_coupling_identities,
-        eft_order=eft_order if matching_condition_truncate_eft else None,
-        heavy_field_dimension=options.heavy_field_dimension,
-    )
+    staged_sources = result.staged_projection_sources(matching_condition_source)
+    if staged_sources:
+        projected = result.with_projected_matching_conditions_from_sources(
+            matching_condition_targets,
+            staged_sources,
+            expand_source=matching_condition_expand_source,
+            canonize_indices=matching_condition_canonize_indices,
+            normalize_derivative_operators=matching_condition_normalize_derivative_operators,
+            normalize_ibp_scalar_bilinears=matching_condition_normalize_ibp_scalar_bilinears,
+            drop_zero=matching_condition_drop_zero,
+            include_coupling_identities=matching_condition_include_coupling_identities,
+            eft_order=eft_order if matching_condition_truncate_eft else None,
+            heavy_field_dimension=options.heavy_field_dimension,
+        )
+    else:
+        projected = result.with_projected_matching_conditions(
+            matching_condition_targets,
+            source=matching_condition_source,
+            expand_source=matching_condition_expand_source,
+            canonize_indices=matching_condition_canonize_indices,
+            normalize_derivative_operators=matching_condition_normalize_derivative_operators,
+            normalize_ibp_scalar_bilinears=matching_condition_normalize_ibp_scalar_bilinears,
+            drop_zero=matching_condition_drop_zero,
+            include_coupling_identities=matching_condition_include_coupling_identities,
+            eft_order=eft_order if matching_condition_truncate_eft else None,
+            heavy_field_dimension=options.heavy_field_dimension,
+        )
     _log_one_loop_result(projected)
     return projected
 

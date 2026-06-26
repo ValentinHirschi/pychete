@@ -115,7 +115,11 @@ class OneLoopMatchOptions:
     matched EFT Lagrangian to the one-loop result before final truncation and
     matching-condition projection. The tree part is added after loop
     normalization, so Matchete-style loop prefactors are applied only to loop
-    terms.
+    terms. Matching-condition projection then uses staged loop-only and
+    tree-level source expressions when those stages are available, which keeps
+    target-local aliases such as IBP-equivalent derivative operators from
+    hiding a tree contribution behind a direct loop coefficient in the summed
+    source.
     ``hbar`` optionally supplies the symbol used by the
     ``MATCHETE_HBAR`` normalization factor. When omitted, pychete uses the
     central ``s.HBar`` symbol; Matchete-derived validation fixtures can pass

@@ -515,6 +515,15 @@ historical loop-only default for diagnostics, but parity probes that compare
 full matching conditions should enable `OneLoopMatchOptions.include_tree_level_matching`.
 The tree-level matched EFT source must be added after loop normalization so
 loop prefactors never multiply tree terms.
+When tree-level matching is included, preserve separate loop-only and
+tree-level projection sources and project matching conditions source-by-source
+with `MatchingResult.project_matching_conditions_from_sources(...)` or the
+automatic one-loop staged projection path. Do not project full tree+loop
+matching conditions only from the summed on-shell source: a direct loop
+coefficient of an additive target can otherwise stop native coefficient
+extraction before target-local IBP aliases recover the independent tree
+contribution. Keep the staged sources updated through on-shell replacement
+rules and EFT truncation so they still add up to the final public source.
 
 Public API discoverability lives in `src/pychete/api.py`. Keep implementation
 functions in their domain modules, but every function/class/enum intended for

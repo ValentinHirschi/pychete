@@ -791,6 +791,55 @@ def test_matching_result_projection_uses_registered_wilson_ibp_aliases() -> None
     assert_expr_equal(registered[canonical_string(wilson_target)], coefficient)
 
 
+def test_matching_result_staged_projection_preserves_hbox_tree_alias_with_direct_loop_term() -> None:
+    tree_coefficient = S("condition_projection_staged_hbox_tree_coefficient")
+    loop_coefficient = S("condition_projection_staged_hbox_loop_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    target = smeft_warsaw_operator(theory, "cHBox")
+    assert target is not None
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_staged_hbox_i"), fund)
+    j = theory.index(theory.symbol("projection_staged_hbox_j"), fund)
+    mu = theory.dummy_index(0)
+    left_bilinear = s.Bar(higgs(i)) * higgs(i)
+    right_bilinear = s.Bar(higgs(j)) * higgs(j)
+    tree_source = -(
+        expand_cd_operators(s.CD(mu, left_bilinear)) * expand_cd_operators(s.CD(mu, right_bilinear))
+    ).expand()
+    loop_source = expand_cd_operators(target)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=(tree_coefficient * tree_source + loop_coefficient * loop_source).expand(),
+        supertraces={
+            matching_results_module.LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE: loop_coefficient * loop_source,
+            matching_results_module.TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE: tree_coefficient * tree_source,
+        },
+    )
+
+    combined = result.project_matching_conditions(
+        {"cHBox": target},
+        expand_source=False,
+        normalize_ibp_scalar_bilinears=True,
+    )
+    staged = result.with_projected_matching_conditions_from_sources(
+        {"cHBox": target},
+        result.staged_projection_sources(),
+        expand_source=False,
+        normalize_ibp_scalar_bilinears=True,
+    )
+
+    assert_expr_equal(combined["cHBox"], loop_coefficient)
+    assert_expr_equal(staged.matching_conditions["cHBox"], tree_coefficient + loop_coefficient)
+    assert staged.metadata["matching_condition_projection_source"] == "staged"
+    assert staged.metadata["matching_condition_projection_sources"] == (
+        f"{matching_results_module.LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE},"
+        f"{matching_results_module.TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE}"
+    )
+
+
 def test_matching_result_projection_canonizes_source_once_for_ibp_aliases(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

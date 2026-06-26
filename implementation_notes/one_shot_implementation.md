@@ -80,6 +80,13 @@
   can extract coefficient terms common to every additive component, and
   over-contracted scalar derivative bilinears are split with Symbolica
   replacement rules before tensor canonization.
+- The current staged-projection slice adds loop/tree source staging for full
+  one-loop matching conditions. `MatchingResult` can now project matching
+  conditions independently from multiple source stages and sum the coefficients,
+  and public one-loop matching uses this automatically when
+  `include_tree_level_matching=True` created loop-only and tree-level projection
+  sources. Those staged sources are carried through on-shell replacement rules
+  and EFT truncation.
 - The converter path now preserves the structural invariant that Symbolica
   symbol data is attached before fixture expressions are parsed. Do not mutate
   coupling symbol data after final symbols exist.
@@ -203,6 +210,26 @@
   53 tests after the additive projection and CD-counting fixes.
 - `python -m mypy` passed after the target-local HBox projection slice.
 - `git diff --check` passed after the target-local HBox projection slice.
+- Staged projection regression gate:
+  `pytest tests/integration/validation/test_numeric_probes.py::test_matching_result_staged_projection_preserves_hbox_tree_alias_with_direct_loop_term tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_can_include_tree_level_matching_source tests/unit/definitions/test_public_api.py::test_public_api_methods_have_docstrings -q`
+  passed with 3 tests.
+- A real Singlet public-match smoke with `max_trace_order=1`, internal minimal
+  subtraction, `include_tree_level_matching=True`,
+  `substitute_heavy_scalar_solutions=True`, target-local EFT truncation, and
+  only the `cHBox` target now reports
+  `matching_condition_projection_source=staged` and includes the tree piece
+  `-A^2/(2*M^4)` in the projected coefficient:
+  `-A^2/(2*M^4) - i*log(mursq)*A^2*lambdaphi/(32*pi^2*M^4)
+  + i*log(M)*A^2*lambdaphi/(16*pi^2*M^4)
+  - i*A^2*lambdaphi/(32*pi^2*M^4)`.
+- Focused touched-file gate:
+  `pytest tests/integration/matching/test_heavy_scalar_tree.py tests/unit/definitions/test_public_api.py -q`
+  passed with 25 tests.
+- Focused HBox/staged-projection gate:
+  `pytest tests/integration/validation/test_numeric_probes.py -k "hbox or staged_projection or projection_source" -q`
+  passed with 4 tests and 50 deselected.
+- `python -m mypy` passed after the staged projection slice.
+- `git diff --check` passed after the staged projection slice.
 
 ## Current Validation Frontier
 
@@ -221,11 +248,12 @@
   `cHWB`, `cHD`, and `cH` coefficients in small heavy-scalar/Higgs models.
   The default fixtures still need more basis/on-shell/IBP and source-coverage
   work before these focused improvements translate to full parity.
-- With tree-level matching included, the tree-only Singlet source now projects
-  `cHBox = -A^2/(2*M^4)`. In the combined one-loop+tree reduced public source,
-  loop-only derivative pieces can still overlap the same HBox additive alias
-  and hide this common tree contribution, so source separation or staged
-  projection remains a blocker for full default Singlet parity.
+- With tree-level matching included, staged loop/tree matching-condition
+  projection now preserves the tree-only Singlet `cHBox = -A^2/(2*M^4)` piece
+  even when loop-only derivative pieces also project directly onto the same
+  additive HBox target. Full default Singlet parity still needs broader
+  basis/on-shell/IBP reductions and loop-source coverage beyond this HBox
+  source-staging fix.
 - A broad real Singlet CDE probe with `hScalar`, `hScalar-hScalar`, and
   `hScalar-hScalar-hScalar` selected at trace order 3 is currently too heavy
   for routine slice validation. The immediate native vakint/FORM crash class

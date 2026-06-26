@@ -248,6 +248,32 @@ def test_one_loop_match_can_include_tree_level_matching_source() -> None:
     assert_expr_equal(result.expression("loop_only_on_shell_eft_lagrangian"), loop() * phi() ** 4)
     assert_expr_equal(result.on_shell_eft_lagrangian, tree_level + loop() * phi() ** 4)
 
+    projected = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=engine,
+            include_tree_level_matching=True,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={"phi4": phi() ** 4},
+        matching_condition_expand_source=False,
+    )
+
+    assert isinstance(projected, MatchingResult)
+    assert projected.metadata["matching_condition_projection_source"] == "staged"
+    assert projected.metadata["matching_condition_projection_sources"] == (
+        "loop_only_on_shell_projection_source,tree_level_on_shell_projection_source"
+    )
+    assert_expr_equal(
+        projected.matching_conditions["phi4"],
+        (tree_level + loop() * phi() ** 4).coefficient(phi() ** 4).expand(),
+    )
+
 
 def test_heavy_scalar_solution_power_rules_use_fresh_dummy_indices() -> None:
     theory = Theory("heavy_scalar_fresh_dummies")

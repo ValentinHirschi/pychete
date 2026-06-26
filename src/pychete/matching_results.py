@@ -73,6 +73,20 @@ _MAX_PROJECTION_FACTOR_BYTES = 16_384
 _MAX_PROJECTION_EXPAND_TERMS = 128
 _MAX_PROJECTION_EXPAND_BYTES = 32_768
 
+LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE = "loop_only_off_shell_projection_source"
+LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE = "loop_only_on_shell_projection_source"
+TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE = "tree_level_off_shell_projection_source"
+TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE = "tree_level_on_shell_projection_source"
+
+_OFF_SHELL_STAGED_PROJECTION_SOURCES = (
+    LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE,
+    TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE,
+)
+_ON_SHELL_STAGED_PROJECTION_SOURCES = (
+    LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE,
+    TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
+)
+
 
 @dataclass(frozen=True)
 class MatchingExpressionComparison:
@@ -253,6 +267,24 @@ class MatchingResult:
         for name in self.expression_names():
             self.theory._validate_registered_expression(self.expression(name))
 
+    def staged_projection_sources(self, source: str = "on_shell_eft_lagrangian") -> tuple[str, ...]:
+        """Return staged source names that add up to a final expression stage.
+
+        One-loop matching can keep loop and tree contributions in separate
+        projection sources while still exposing their summed off/on-shell EFT
+        Lagrangians. Splitting projection this way preserves linear
+        coefficient extraction when one source has a direct target coefficient
+        and another only matches through a target-local alias.
+        """
+
+        if source == "off_shell_eft_lagrangian":
+            candidates = _OFF_SHELL_STAGED_PROJECTION_SOURCES
+        elif source == "on_shell_eft_lagrangian":
+            candidates = _ON_SHELL_STAGED_PROJECTION_SOURCES
+        else:
+            return ()
+        return candidates if all(candidate in self.supertraces for candidate in candidates) else ()
+
     def project_matching_conditions(
         self,
         targets: MatchingConditionTargetInput,
@@ -393,6 +425,64 @@ class MatchingResult:
             conditions[target.name] = coefficient
         return conditions
 
+    def project_matching_conditions_from_sources(
+        self,
+        targets: MatchingConditionTargetInput,
+        sources: Sequence[str],
+        *,
+        expand_source: bool = True,
+        canonize_indices: bool = True,
+        normalize_derivative_operators: bool = True,
+        normalize_ibp_scalar_bilinears: bool = False,
+        drop_zero: bool = False,
+        include_coupling_identities: bool = False,
+        eft_order: int | tuple[int, ...] | None = None,
+        heavy_field_dimension: bool = False,
+    ) -> dict[str, Expression]:
+        """Project matching conditions independently from multiple sources.
+
+        The returned coefficient for each target is the sum of the coefficients
+        projected from every source. The symbolic work for each stage is still
+        delegated to ``project_matching_conditions`` and therefore to native
+        Symbolica coefficient extraction, pattern replacement, and tensor-index
+        canonization. Coupling identities and zero dropping are applied once
+        after the stage coefficients are summed.
+        """
+
+        source_names = tuple(sources)
+        if not source_names:
+            raise ValueError("staged matching-condition projection requires at least one source")
+        conditions: dict[str, Expression] = {}
+        for source in source_names:
+            projected = self.project_matching_conditions(
+                targets,
+                source=source,
+                expand_source=expand_source,
+                canonize_indices=canonize_indices,
+                normalize_derivative_operators=normalize_derivative_operators,
+                normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
+                drop_zero=False,
+                include_coupling_identities=False,
+                eft_order=eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            )
+            for name, coefficient in projected.items():
+                previous = conditions.get(name, Expression.num(0))
+                conditions[name] = (previous + coefficient).expand()
+        if include_coupling_identities:
+            for target in matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets)):
+                identity = _tree_level_coupling_identity(self.theory, target)
+                if identity is not None:
+                    previous = conditions.get(target.name, Expression.num(0))
+                    conditions[target.name] = (previous + identity).expand()
+        if drop_zero:
+            conditions = {
+                name: coefficient
+                for name, coefficient in conditions.items()
+                if _canonical_expr(coefficient) != "0"
+            }
+        return conditions
+
     def with_projected_matching_conditions(
         self,
         targets: MatchingConditionTargetInput,
@@ -430,6 +520,58 @@ class MatchingResult:
                 **self.metadata,
                 "matching_conditions_projected": True,
                 "matching_condition_projection_source": source,
+                "matching_condition_projection_count": len(projected),
+                "matching_condition_projection_expand_source": expand_source,
+                "matching_condition_projection_canonize_indices": canonize_indices,
+                "matching_condition_projection_normalize_derivative_operators": normalize_derivative_operators,
+                "matching_condition_projection_normalize_ibp_scalar_bilinears": (
+                    normalize_ibp_scalar_bilinears
+                ),
+                "matching_condition_projection_coupling_identities": include_coupling_identities,
+                "matching_condition_projection_eft_order": _metadata_eft_order(eft_order),
+                "matching_condition_projection_heavy_field_dimension": heavy_field_dimension,
+            },
+        )
+
+    def with_projected_matching_conditions_from_sources(
+        self,
+        targets: MatchingConditionTargetInput,
+        sources: Sequence[str],
+        *,
+        expand_source: bool = True,
+        canonize_indices: bool = True,
+        normalize_derivative_operators: bool = True,
+        normalize_ibp_scalar_bilinears: bool = False,
+        drop_zero: bool = False,
+        merge: bool = True,
+        include_coupling_identities: bool = False,
+        eft_order: int | tuple[int, ...] | None = None,
+        heavy_field_dimension: bool = False,
+    ) -> MatchingResult:
+        """Return a result with matching conditions projected from staged sources."""
+
+        source_names = tuple(sources)
+        projected = self.project_matching_conditions_from_sources(
+            targets,
+            source_names,
+            expand_source=expand_source,
+            canonize_indices=canonize_indices,
+            normalize_derivative_operators=normalize_derivative_operators,
+            normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
+            drop_zero=drop_zero,
+            include_coupling_identities=include_coupling_identities,
+            eft_order=eft_order,
+            heavy_field_dimension=heavy_field_dimension,
+        )
+        matching_conditions = {**self.matching_conditions, **projected} if merge else projected
+        return replace(
+            self,
+            matching_conditions=matching_conditions,
+            metadata={
+                **self.metadata,
+                "matching_conditions_projected": True,
+                "matching_condition_projection_source": "staged",
+                "matching_condition_projection_sources": ",".join(source_names),
                 "matching_condition_projection_count": len(projected),
                 "matching_condition_projection_expand_source": expand_source,
                 "matching_condition_projection_canonize_indices": canonize_indices,
@@ -542,14 +684,21 @@ class MatchingResult:
         reduced = input_expression.replace_multiple(replacement_rules, repeat=repeat)
         if expand:
             reduced = reduced.expand()
+        supertraces = {
+            **self.supertraces,
+            "on_shell_eft_lagrangian_before_reduction": input_expression,
+            "on_shell_eft_lagrangian_after_reduction": reduced,
+        }
+        if source == "on_shell_eft_lagrangian":
+            for stage_name in _ON_SHELL_STAGED_PROJECTION_SOURCES:
+                if stage_name not in self.supertraces:
+                    continue
+                staged = self.supertraces[stage_name].replace_multiple(replacement_rules, repeat=repeat)
+                supertraces[stage_name] = staged.expand() if expand else staged
         return replace(
             self,
             on_shell_eft_lagrangian=reduced,
-            supertraces={
-                **self.supertraces,
-                "on_shell_eft_lagrangian_before_reduction": input_expression,
-                "on_shell_eft_lagrangian_after_reduction": reduced,
-            },
+            supertraces=supertraces,
             metadata={
                 **self.metadata,
                 "on_shell_reduced": True,
@@ -598,19 +747,40 @@ class MatchingResult:
             ).expand()
             for name, expression in self.matching_conditions.items()
         }
+        supertraces = {
+            **self.supertraces,
+            "off_shell_eft_lagrangian_before_eft_truncation": self.off_shell_eft_lagrangian,
+            "on_shell_eft_lagrangian_before_eft_truncation": self.on_shell_eft_lagrangian,
+            "off_shell_eft_lagrangian_after_eft_truncation": truncated_off_shell,
+            "on_shell_eft_lagrangian_after_eft_truncation": truncated_on_shell,
+        }
+        for stage_name in _OFF_SHELL_STAGED_PROJECTION_SOURCES:
+            if stage_name not in self.supertraces:
+                continue
+            staged = series_eft(
+                self.supertraces[stage_name],
+                self.theory,
+                eft_order=eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            )
+            supertraces[stage_name] = staged.expand() if expand else staged
+        for stage_name in _ON_SHELL_STAGED_PROJECTION_SOURCES:
+            if stage_name not in self.supertraces:
+                continue
+            staged = series_eft(
+                self.supertraces[stage_name],
+                self.theory,
+                eft_order=eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            )
+            supertraces[stage_name] = staged.expand() if expand else staged
         previous_stage = self.metadata.get("stage")
         return replace(
             self,
             off_shell_eft_lagrangian=truncated_off_shell,
             on_shell_eft_lagrangian=truncated_on_shell,
             matching_conditions=truncated_matching_conditions,
-            supertraces={
-                **self.supertraces,
-                "off_shell_eft_lagrangian_before_eft_truncation": self.off_shell_eft_lagrangian,
-                "on_shell_eft_lagrangian_before_eft_truncation": self.on_shell_eft_lagrangian,
-                "off_shell_eft_lagrangian_after_eft_truncation": truncated_off_shell,
-                "on_shell_eft_lagrangian_after_eft_truncation": truncated_on_shell,
-            },
+            supertraces=supertraces,
             metadata={
                 **self.metadata,
                 "eft_result_truncated": True,
