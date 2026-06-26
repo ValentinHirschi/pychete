@@ -188,6 +188,19 @@ def simplify_pychete_dirac_algebra(expr: Expression) -> Expression:
     return simplify_pychete_dirac_projectors(out).expand()
 
 
+def trace_pychete_closed_dirac_chains(expr: Expression) -> Expression:
+    """Trace closed compact pychete Dirac words through native idenso.
+
+    This is intended for scalar supertrace numerators whose ``NCM`` operands
+    are entirely pychete gamma/projector factors or ``DiracProduct`` wrappers.
+    Chains containing field endpoints or any other non-Dirac operand are left
+    unchanged so open spinor lines are not accidentally closed.
+    """
+
+    out = expand_pychete_ncm_powers(expr)
+    return out.replace_multiple(_closed_ncm_dirac_trace_replacements()).expand()
+
+
 def expand_pychete_ncm_powers(expr: Expression) -> Expression:
     """Expand bounded positive integer powers of pychete ``NCM`` chains.
 
@@ -509,6 +522,22 @@ def _mixed_ncm_dirac_subword_replacements() -> tuple[Replacement, ...]:
 
 
 @cache
+def _closed_ncm_dirac_trace_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
+        wildcards = _dirac_word_wildcards("closed_ncm_trace", arity)
+        pattern = s.NCM(*wildcards)
+        replacements.append(
+            Replacement(
+                pattern,
+                _closed_ncm_dirac_trace_replacement(pattern, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+@cache
 def _ncm_power_replacements() -> tuple[Replacement, ...]:
     replacements: list[Replacement] = []
     for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
@@ -643,6 +672,21 @@ def _mixed_ncm_dirac_subword_replacement(
     return replace_mixed_chain
 
 
+def _closed_ncm_dirac_trace_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_closed_chain(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        factors_to_trace = _flatten_pychete_dirac_factors(tuple(match[wildcard] for wildcard in wildcards))
+        if factors_to_trace is None:
+            return matched
+        traced = _native_closed_dirac_word(factors_to_trace)
+        return matched if traced is None else traced
+
+    return replace_closed_chain
+
+
 def _dirac_word_wildcards(kind: str, arity: int) -> tuple[Expression, ...]:
     return tuple(s.head(f"dirac_{kind}_{arity}_{index}_") for index in range(arity))
 
@@ -762,6 +806,20 @@ def _native_dirac_word(pychete_factors: tuple[Expression, ...]) -> Expression | 
     return _decode_simple_native_dirac_result(native_module().simplify_gamma(native_expr))
 
 
+def _native_closed_dirac_word(pychete_factors: tuple[Expression, ...]) -> Expression | None:
+    if not pychete_factors:
+        return Expression.num(4)
+    native_expr = Expression.num(1)
+    last = len(pychete_factors)
+    for index, factor in enumerate(pychete_factors, start=1):
+        right = 1 if index == last else index + 1
+        native_factor = _native_dirac_factor(factor, index, right)
+        if native_factor is None:
+            return None
+        native_expr *= native_factor
+    return _decode_simple_native_dirac_result(native_module().simplify_gamma(native_expr))
+
+
 def _native_dirac_factor(factor: Expression, left: int, right: int) -> Expression | None:
     if bool(factor == s.PR) or bool(factor == s.PL):
         return _native_projector_tensor(factor)(left, right)
@@ -803,6 +861,9 @@ def _decode_simple_native_dirac_result(expr: Expression) -> Expression | None:
         return chain
     if _is_native_spinor_metric(expr):
         return Expression.num(1)
+    metric = _decode_native_lorentz_metric(expr)
+    if metric is not None:
+        return metric
     kind = expr.get_type()
     if kind is AtomType.Num:
         return expr
@@ -1504,6 +1565,17 @@ def _decode_native_lorentz_index(expr: Expression) -> Expression:
     return expr
 
 
+def _decode_native_lorentz_metric(expr: Expression) -> Expression | None:
+    if (
+        not is_head(expr, Expression.symbol("spenso::g"))
+        or len(expr) != 2
+        or not _is_native_minkowski_index(expr[0])
+        or not _is_native_minkowski_index(expr[1])
+    ):
+        return None
+    return s.Metric(_decode_native_lorentz_index(expr[0]), _decode_native_lorentz_index(expr[1]))
+
+
 def _is_native_spinor_metric(expr: Expression) -> bool:
     return (
         is_head(expr, Expression.symbol("spenso::g"))
@@ -1515,6 +1587,10 @@ def _is_native_spinor_metric(expr: Expression) -> bool:
 
 def _is_native_bis_index(expr: Expression) -> bool:
     return is_head(expr, Expression.symbol("spenso::bis")) and len(expr) == 2
+
+
+def _is_native_minkowski_index(expr: Expression) -> bool:
+    return is_head(expr, Expression.symbol("spenso::mink")) and len(expr) == 2
 
 
 def _pychete_dirac_word(dirac_factors: tuple[Expression, ...]) -> Expression:
@@ -1546,6 +1622,7 @@ __all__ = [
     "expand_pychete_ncm_powers",
     "simplify_pychete_color_algebra",
     "simplify_pychete_dirac_algebra",
+    "trace_pychete_closed_dirac_chains",
     "simplify_pychete_field_strength_metrics",
     "simplify_pychete_open_dirac_chains",
     "simplify_pychete_dirac_projectors",

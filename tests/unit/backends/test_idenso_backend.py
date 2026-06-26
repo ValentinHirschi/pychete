@@ -470,6 +470,24 @@ def test_idenso_bridge_simplifies_pychete_dirac_products_inside_ncm() -> None:
     )
 
 
+def test_idenso_bridge_traces_closed_pychete_dirac_chains_through_native_gamma() -> None:
+    theory = Theory("idenso_closed_dirac_trace")
+    left = theory.define_field("psi", s.Fermion)
+    right = theory.define_field("Psi", s.Fermion)
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+
+    traced = idenso.trace_pychete_closed_dirac_chains(s.NCM(s.Gamma(mu), s.Gamma(nu)))
+
+    assert _same(traced, 4 * s.Metric(mu, nu))
+    assert "spenso::" not in canonical_string(traced)
+    assert _same(idenso.trace_pychete_closed_dirac_chains(s.NCM(s.Gamma(mu))), Expression.num(0))
+    assert _same(
+        idenso.trace_pychete_closed_dirac_chains(s.NCM(s.Bar(left()), s.Gamma(mu), right())),
+        s.NCM(s.Bar(left()), s.Gamma(mu), right()),
+    )
+
+
 def test_idenso_bridge_expands_bounded_ncm_powers_before_dirac_simplification() -> None:
     left = S("left")
     right = S("right")

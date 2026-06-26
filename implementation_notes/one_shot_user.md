@@ -302,6 +302,12 @@ discoveries, dependency patches, blockers, and remaining work.
   current `PropExpand` applies `Vector -> -PropBosonExpand[...]`. pychete must
   apply this extra sign from `FluctuationMode.field_type` metadata in the
   Wilson-line path, not from trace-name string checks.
+- Current Matchete `CloseFermionLoop` behavior must be represented in the
+  Wilson-line path. Closed compact Dirac words should be traced through native
+  idenso via `pychete.backends.idenso.trace_pychete_closed_dirac_chains(...)`,
+  while open chains with registered fermion endpoints must stay open. Do not
+  implement gamma traces by hand in Python; if native idenso cannot reduce a
+  projector-only closed word, leave it formal and document the backend gap.
 - Raw `Theory.define_wilson_coefficient(...)` calls should not implicitly mean
   SMEFT. Basis metadata must be explicit through `OperatorBasis`,
   `define_wilson_coefficient_from_basis(...)`, or optional basis-provider

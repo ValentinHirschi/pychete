@@ -3512,6 +3512,30 @@ def test_wilson_line_fermion_slots_preserve_even_slash_numerators() -> None:
         assert "pychete::NCM(pychete::NCM" not in canonical_string(term.numerator)
 
 
+def test_wilson_line_postprocess_closes_pure_fermion_loop_dirac_traces() -> None:
+    theory = Theory("wilson_line_close_fermion_loop_postprocess")
+    left = theory.define_field("psi", s.Fermion)
+    right = theory.define_field("Psi", s.Fermion)
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    scalar = S("x")
+    closed_gamma_word = s.NCM(s.Gamma(mu), s.Gamma(nu))
+    open_chain = s.NCM(s.Bar(left()), s.Gamma(mu), right())
+
+    assert_expr_equal(
+        matching_module._postprocess_wilson_line_numerator(scalar, close_fermion_loop=True),
+        4 * scalar,
+    )
+    assert_expr_equal(
+        matching_module._postprocess_wilson_line_numerator(closed_gamma_word, close_fermion_loop=True),
+        4 * s.Metric(mu, nu),
+    )
+    assert_expr_equal(
+        matching_module._postprocess_wilson_line_numerator(open_chain, close_fermion_loop=True),
+        open_chain,
+    )
+
+
 def test_power_type_numerator_simplifies_mixed_ncm_dirac_subwords_before_eft_truncation() -> None:
     theory = Theory("power_type_mixed_ncm_dirac")
     mu = theory.dummy_index(0)

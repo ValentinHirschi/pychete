@@ -131,6 +131,36 @@
   tests/integration/validation/test_numeric_probes.py
   tests/integration/validation/test_validation_fixtures.py -q` collected
   `188 tests`; and `python -m mypy` reported no issues.
+- The current Wilson-line fermion-loop slice re-read Matchete's
+  `CloseFermionLoop`/`FermionTrace` path and the local idenso/spenso Python
+  stubs. The native `idenso.simplify_gamma(...)` stub explicitly supports
+  trace identities such as `Tr(gamma(mu) gamma(nu))`, so pychete now has
+  `pychete.backends.idenso.trace_pychete_closed_dirac_chains(...)` for pure
+  compact pychete `NCM(...)` gamma/projector words. The helper lowers closed
+  spinor-index chains to native spenso tensors, delegates the trace to idenso,
+  and decodes native Lorentz `spenso::g(mink(...), mink(...))` wrappers back
+  to `pychete::Metric(...)`.
+- `WilsonLineTracePath.propagator_expansion_terms(...)` now asks the
+  Wilson-line numerator postprocessor to close a fermion loop when the first
+  propagator slot is fermionic, mirroring Matchete's `CloseFermionLoop`
+  dispatch. The closure is intentionally conservative: pure gamma words are
+  traced through idenso, scalar fermion-loop numerators with no compact Dirac
+  factors and no registered fermion fields receive the Dirac identity trace
+  factor, and open chains with registered fermion endpoints stay open. Native
+  idenso does not currently reduce a lone closed projector trace through this
+  bridge, so projector-only closed words remain formal rather than being
+  replaced by Python-side gamma-trace identities.
+- Focused validation for the current fermion-loop trace slice has so far used
+  the 30 GiB watchdog wrapper: exact new/affected tests
+  `test_idenso_bridge_traces_closed_pychete_dirac_chains_through_native_gamma`,
+  `test_wilson_line_postprocess_closes_pure_fermion_loop_dirac_traces`, and
+  `test_wilson_line_fermion_slots_preserve_even_slash_numerators` passed with
+  `3 passed`; the broader focused gate
+  `pytest tests/unit/backends/test_idenso_backend.py
+  tests/integration/matching/test_fluctuation_operator.py -k "wilson_line or
+  dirac" -q` passed with `16 passed, 107 deselected`; the full idenso backend
+  file `pytest tests/unit/backends/test_idenso_backend.py -q` passed with
+  `29 passed`; and `python -m mypy` reported no issues.
 - The current validation course-correction slice exposes the same
   `wilson_line_expansion_indices_by_trace`,
   `wilson_line_act_open_derivatives`, and

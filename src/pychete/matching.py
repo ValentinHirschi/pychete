@@ -972,7 +972,13 @@ class WilsonLineTracePath:
                 numerator,
                 max_derivative_order=max_wilson_derivative_order,
             )
-            numerator = _postprocess_wilson_line_numerator(numerator)
+            numerator = _postprocess_wilson_line_numerator(
+                numerator,
+                close_fermion_loop=(
+                    bool(self.propagator_modes)
+                    and self.propagator_modes[0].statistics is FluctuationStatistics.FERMIONIC
+                ),
+            )
             if is_zero(numerator):
                 continue
             terms.append(
@@ -6354,12 +6360,39 @@ def _postprocess_bosonic_cde_numerator(
     return numerator
 
 
-def _postprocess_wilson_line_numerator(numerator: Expression) -> Expression:
+def _postprocess_wilson_line_numerator(
+    numerator: Expression,
+    *,
+    close_fermion_loop: bool = False,
+) -> Expression:
     from .backends import idenso
 
     normalized = normalize_ncm_chains(numerator)
+    if close_fermion_loop:
+        traced = idenso.trace_pychete_closed_dirac_chains(normalized)
+        if (
+            bool(traced == normalized)
+            and not _contains_registered_fermion_field(normalized)
+            and not _contains_pychete_dirac_factor(normalized)
+        ):
+            traced = (Expression.num(4) * traced).expand()
+        normalized = traced
     simplified = idenso.simplify_pychete_dirac_algebra(normalized)
     return scalarize_commutative_ncm_chains(simplified)
+
+
+def _contains_registered_fermion_field(expr: Expression) -> bool:
+    label = s.head("fermion_field_label_")
+    indices = s.head("fermion_field_indices_")
+    derivatives = s.head("fermion_field_derivatives_")
+    field = s.Field(label, s.Fermion, indices, derivatives)
+    label_is_field = label.req_tag(SymbolRole.FIELD.value)
+    return bool(tuple(expr.match(field, label_is_field))) or bool(tuple(expr.match(s.Bar(field), label_is_field)))
+
+
+def _contains_pychete_dirac_factor(expr: Expression) -> bool:
+    index = s.head("dirac_factor_index_")
+    return bool(expr.contains(s.PR) or expr.contains(s.PL) or tuple(expr.match(s.Gamma(index))))
 
 
 def _wilson_line_propagator_expansion_terms(
