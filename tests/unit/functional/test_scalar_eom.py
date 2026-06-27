@@ -187,12 +187,15 @@ def test_expose_scalar_derivative_commutator_bilinears_keeps_residual_terms() ->
     field_ab = phi(derivatives=[mu, nu])
     field_ba = phi(derivatives=[nu, mu])
     expr = 3 * bar_ab * field_ab - 5 * bar_ab * field_ba + 7 * bar_ba * field_ab + 11 * bar_ba * field_ba
-    antisymmetric = ((bar_ab - bar_ba) * (field_ab - field_ba)).expand()
     commutator_bilinear = (
         s.CovariantDerivativeCommutator(mu, nu, s.Bar(phi()))
         * s.CovariantDerivativeCommutator(mu, nu, phi())
     )
-    expected = (expr - 3 * antisymmetric + 3 * commutator_bilinear).expand()
+    expected = (
+        -2 * s.Bar(phi(derivatives=[mu, mu])) * phi(derivatives=[nu, nu])
+        + 18 * s.Bar(phi(derivatives=[nu, nu])) * phi(derivatives=[mu, mu])
+        + 15 * commutator_bilinear
+    ).expand()
 
     exposed = expose_scalar_derivative_commutator_bilinears(
         theory,

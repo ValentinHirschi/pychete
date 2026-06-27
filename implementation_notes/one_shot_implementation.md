@@ -1702,6 +1702,42 @@
   the Wilson-line normal-form stage itself: pychete is producing/probing
   explicit field-strength structures before it has a Matchete-equivalent
   derivative-bilinear `MatchReduce`/`GreensSimplify` layer.
+- Follow-up Matchete dissection used the debug WolframScript repeatedly for
+  prop-order sweeps `0`, `2`, and `4`, writing
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_cHW.prop0.debug.json`,
+  `.prop2.debug.json`, and `.prop4.debug.json`. These dumps show each isolated
+  prop order still produces derivative Higgs bilinears with no explicit
+  `W` field strengths through raw `EvaluateSTr`; the saved validation trace is
+  where `ContractCGs // MatchReduce // GreensSimplify` produces the
+  `FieldStrength[W]` basis structures. Minimal Matchete `GreensSimplify`
+  probes then fixed concrete scalar-bilinear reference coefficients:
+  `Bar[D_mu D_nu H] D_mu D_nu H -> cHW_like` has weight `1/4`,
+  `Bar[D_mu D_nu H] D_nu D_mu H -> cHW_like` has weight `1/8`,
+  one-sided `Bar[D_mu D_nu D_mu D_nu H] H -> cHW_like` has weight `1/8`,
+  grouped `Bar[D_mu D_mu D_nu D_nu H] H` has weight `0`, and
+  `Bar[D_mu D_nu D_nu D_mu H] H -> cHW_like` has weight `1/4`, with the
+  pychete target normalized as `Bar[H] H F_W^2/gL^2`.
+- Implemented a generic scalar Green-bilinear exposure correction in
+  `expose_scalar_derivative_commutator_bilinears(...)`. It now discovers
+  scalar two-derivative and one-sided four-derivative bilinears with
+  Symbolica tag-restricted `match`, extracts component coefficients through
+  native `Expression.coefficient(...)`, and lowers the field-strength
+  components through theory-owned `CovariantDerivativeCommutator` expansion.
+  This is deliberately generic in field label, representation, and gauge
+  metadata; it is not a `cHW` patch. Added focused unit coverage in
+  `tests/unit/functional/test_scalar_green_bilinears.py`, including the old
+  antisymmetric commutator case and the Matchete probe weights above.
+- Targeted checks after that correction:
+  `pytest tests/unit/functional/test_scalar_green_bilinears.py
+  tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_vakint_stage_postprocess_exposes_scalar_derivative_bilinears -q`
+  passed (`7 passed`), and the watchdog-wrapped validation smoke
+  `test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathematica`
+  passed. A compact selected Singlet diagnostic still reports the same
+  `hScalar-lScalar#wilson14_o4_0` split: the post-Wilson tensor-reduction path
+  projects terms `4` and `9`, while the pre-Wilson path projects only term
+  `9`. Therefore the next localized blocker is the pre-Wilson
+  tensor-reduction/WilsonTerm metric-contraction representation, not the local
+  scalar Green-bilinear field-strength identity.
 
 ## Next Work
 

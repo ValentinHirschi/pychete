@@ -132,25 +132,33 @@ def expose_scalar_derivative_commutator_bilinears(
     expand_commutators: bool = True,
     max_candidates: int = _MAX_SCALAR_DERIVATIVE_BILINEAR_CANDIDATES,
 ) -> Expression:
-    """Expose antisymmetric two-derivative scalar bilinears as commutators.
+    """Expose scalar derivative bilinear field-strength components.
 
-    For scalar fields, the antisymmetric part of a two-derivative factor is
-    ``D_a D_b - D_b D_a = [D_a, D_b]``. This helper decomposes products of a
-    barred two-derivative scalar and an unbarred two-derivative scalar into the
-    antisymmetric commutator component plus the remaining derivative bilinear
-    pieces. Candidate atoms are discovered with Symbolica tag-restricted
-    patterns and the four component coefficients are extracted with native
-    ``Expression.coefficient(...)`` calls. The replacement is generic in the
-    field label, field indices, and gauge representation; it is not tied to a
-    particular operator basis such as SMEFT Warsaw.
+    Matchete's Green-basis simplification uses IBP and covariant-derivative
+    commutation identities to expose field-strength components hidden inside
+    scalar derivative bilinears. This helper implements the local, generic
+    scalar cases needed by Wilson-line matching: two two-derivative scalar
+    factors and one-sided four-derivative scalar factors. Candidate atoms are
+    discovered with Symbolica tag-restricted patterns and component
+    coefficients are extracted with native ``Expression.coefficient(...)``
+    calls. The field-strength part is represented through formal
+    ``CovariantDerivativeCommutator`` products and lowered by the theory's
+    registered Symbolica-backed commutator expansion; the helper is not tied
+    to a particular operator basis such as SMEFT Warsaw.
     """
 
     if max_candidates < 0:
         raise ValueError("max_candidates must be non-negative")
     theory._validate_registered_expression(expr)
-    field_atoms = _scalar_two_derivative_field_atoms(expr)
-    barred_atoms = _scalar_two_derivative_barred_field_atoms(expr)
-    if not field_atoms or not barred_atoms:
+    field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=2)
+    barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=2)
+    four_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=4)
+    four_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=4)
+    zero_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=0)
+    zero_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=0)
+    if not (field_atoms and barred_atoms) and not (
+        (four_field_atoms and zero_barred_atoms) or (four_barred_atoms and zero_field_atoms)
+    ):
         return expr
 
     out = expr
@@ -182,7 +190,7 @@ def expose_scalar_derivative_commutator_bilinears(
             candidate_count += 1
             if candidate_count > max_candidates:
                 return out
-            out = _expose_scalar_derivative_commutator_bilinear_candidate(
+            out = _expose_scalar_two_derivative_green_bilinear_candidate(
                 theory,
                 out,
                 barred_base,
@@ -191,17 +199,55 @@ def expose_scalar_derivative_commutator_bilinears(
                 include_gauge_coupling=include_gauge_coupling,
                 expand_commutators=expand_commutators,
             )
+    for barred in four_barred_atoms:
+        barred_base = bar_field_inner(barred)
+        barred_key = canonical_string(field_with_derivatives(barred_base, ()))
+        for field in zero_field_atoms:
+            if canonical_string(field_with_derivatives(field, ())) != barred_key:
+                continue
+            candidate_count += 1
+            if candidate_count > max_candidates:
+                return out
+            out = _expose_scalar_one_sided_four_derivative_green_bilinear_candidate(
+                theory,
+                out,
+                barred_base,
+                field,
+                field_derivatives(barred_base),
+                four_derivatives_on_bar=True,
+                include_gauge_coupling=include_gauge_coupling,
+                expand_commutators=expand_commutators,
+            )
+    for field in four_field_atoms:
+        field_key = canonical_string(field_with_derivatives(field, ()))
+        for barred in zero_barred_atoms:
+            barred_base = bar_field_inner(barred)
+            if canonical_string(field_with_derivatives(barred_base, ())) != field_key:
+                continue
+            candidate_count += 1
+            if candidate_count > max_candidates:
+                return out
+            out = _expose_scalar_one_sided_four_derivative_green_bilinear_candidate(
+                theory,
+                out,
+                barred_base,
+                field,
+                field_derivatives(field),
+                four_derivatives_on_bar=False,
+                include_gauge_coupling=include_gauge_coupling,
+                expand_commutators=expand_commutators,
+            )
     return out.expand()
 
 
-def _scalar_two_derivative_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+def _scalar_derivative_field_atoms(expr: Expression, *, derivative_count: int) -> tuple[Expression, ...]:
     pattern = field_pattern()
     label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
     atoms: list[Expression] = []
     seen: set[str] = set()
     for match in expr.match(pattern, label_is_tagged):
         atom = pattern.replace_wildcards(match)
-        if not _is_scalar_two_derivative_field(atom):
+        if not _is_scalar_derivative_field(atom, derivative_count=derivative_count):
             continue
         key = canonical_string(atom)
         if key in seen:
@@ -211,7 +257,7 @@ def _scalar_two_derivative_field_atoms(expr: Expression) -> tuple[Expression, ..
     return tuple(atoms)
 
 
-def _scalar_two_derivative_barred_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+def _scalar_derivative_barred_field_atoms(expr: Expression, *, derivative_count: int) -> tuple[Expression, ...]:
     pattern = bar_field_pattern()
     label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
     atoms: list[Expression] = []
@@ -221,7 +267,7 @@ def _scalar_two_derivative_barred_field_atoms(expr: Expression) -> tuple[Express
         if not is_bar_field(atom):
             continue
         inner = bar_field_inner(atom)
-        if not _is_scalar_two_derivative_field(inner):
+        if not _is_scalar_derivative_field(inner, derivative_count=derivative_count):
             continue
         key = canonical_string(atom)
         if key in seen:
@@ -231,8 +277,17 @@ def _scalar_two_derivative_barred_field_atoms(expr: Expression) -> tuple[Express
     return tuple(atoms)
 
 
-def _is_scalar_two_derivative_field(atom: Expression) -> bool:
-    return bool(field_type(atom) == s.Scalar) and _canonical_distinct_derivative_pair(field_derivatives(atom)) is not None
+def _is_scalar_derivative_field(atom: Expression, *, derivative_count: int) -> bool:
+    if not bool(field_type(atom) == s.Scalar):
+        return False
+    derivatives = field_derivatives(atom)
+    if len(derivatives) != derivative_count:
+        return False
+    if derivative_count == 2:
+        return _canonical_distinct_derivative_pair(derivatives) is not None
+    if derivative_count == 4:
+        return _four_derivative_pair_order(derivatives) is not None
+    return derivative_count == 0
 
 
 def _canonical_distinct_derivative_pair(derivatives: tuple[Expression, ...]) -> tuple[Expression, Expression] | None:
@@ -244,7 +299,7 @@ def _canonical_distinct_derivative_pair(derivatives: tuple[Expression, ...]) -> 
     return (right, left) if canonical_string(right) < canonical_string(left) else (left, right)
 
 
-def _expose_scalar_derivative_commutator_bilinear_candidate(
+def _expose_scalar_two_derivative_green_bilinear_candidate(
     theory: Theory,
     expr: Expression,
     barred_base: Expression,
@@ -255,36 +310,146 @@ def _expose_scalar_derivative_commutator_bilinear_candidate(
     expand_commutators: bool,
 ) -> Expression:
     first, second = derivative_pair
-    barred_ab = s.Bar(field_with_derivatives(barred_base, (first, second)))
-    barred_ba = s.Bar(field_with_derivatives(barred_base, (second, first)))
-    field_ab = field_with_derivatives(field_base, (first, second))
-    field_ba = field_with_derivatives(field_base, (second, first))
-    antisymmetric_bilinear = ((barred_ab - barred_ba) * (field_ab - field_ba)).expand()
-    coefficient = (
-        expr.coefficient(barred_ab * field_ab)
-        - expr.coefficient(barred_ab * field_ba)
-        - expr.coefficient(barred_ba * field_ab)
-        + expr.coefficient(barred_ba * field_ba)
-    ).expand() / Expression.num(4)
+    components = (
+        ((first, second), (first, second), Expression.num(1)),
+        ((first, second), (second, first), _half_expr()),
+        ((second, first), (first, second), _half_expr()),
+        ((second, first), (second, first), Expression.num(1)),
+    )
+    out = expr
+    for barred_derivatives, field_derivatives_, commutator_weight in components:
+        source = s.Bar(field_with_derivatives(barred_base, barred_derivatives)) * field_with_derivatives(
+            field_base,
+            field_derivatives_,
+        )
+        coefficient = expr.coefficient(source).expand()
+        if is_zero(coefficient):
+            continue
+        replacement = _scalar_green_bilinear_replacement(
+            theory,
+            barred_base,
+            field_base,
+            barred_derivatives[0],
+            barred_derivatives[1],
+            commutator_first=first,
+            commutator_second=second,
+            commutator_weight=commutator_weight,
+            include_gauge_coupling=include_gauge_coupling,
+            expand_commutators=expand_commutators,
+        )
+        out = (out - coefficient * source + coefficient * replacement).expand()
+    return out
+
+
+def _expose_scalar_one_sided_four_derivative_green_bilinear_candidate(
+    theory: Theory,
+    expr: Expression,
+    barred_base: Expression,
+    field_base: Expression,
+    derivatives: tuple[Expression, ...],
+    *,
+    four_derivatives_on_bar: bool,
+    include_gauge_coupling: bool,
+    expand_commutators: bool,
+) -> Expression:
+    pair_order = _four_derivative_pair_order(derivatives)
+    if pair_order is None:
+        return expr
+    first, second = pair_order
+    source = (
+        s.Bar(field_with_derivatives(barred_base, derivatives)) * field_with_derivatives(field_base, ())
+        if four_derivatives_on_bar
+        else s.Bar(field_with_derivatives(barred_base, ())) * field_with_derivatives(field_base, derivatives)
+    )
+    coefficient = expr.coefficient(source).expand()
     if is_zero(coefficient):
         return expr
-    barred_commutator = s.CovariantDerivativeCommutator(
+    replacement = _scalar_green_bilinear_replacement(
+        theory,
+        barred_base,
+        field_base,
         first,
         second,
+        commutator_weight=_four_derivative_commutator_weight(derivatives),
+        include_gauge_coupling=include_gauge_coupling,
+        expand_commutators=expand_commutators,
+    )
+    return (expr - coefficient * source + coefficient * replacement).expand()
+
+
+def _scalar_green_bilinear_replacement(
+    theory: Theory,
+    barred_base: Expression,
+    field_base: Expression,
+    first: Expression,
+    second: Expression,
+    *,
+    commutator_first: Expression | None = None,
+    commutator_second: Expression | None = None,
+    commutator_weight: Expression,
+    include_gauge_coupling: bool,
+    expand_commutators: bool,
+) -> Expression:
+    basis_bilinear = s.Bar(field_with_derivatives(barred_base, (first, first))) * field_with_derivatives(
+        field_base,
+        (second, second),
+    )
+    if is_zero(commutator_weight):
+        return basis_bilinear
+    comm_first = first if commutator_first is None else commutator_first
+    comm_second = second if commutator_second is None else commutator_second
+    barred_commutator = s.CovariantDerivativeCommutator(
+        comm_first,
+        comm_second,
         s.Bar(field_with_derivatives(barred_base, ())),
     )
-    field_commutator = s.CovariantDerivativeCommutator(
-        first,
-        second,
-        field_with_derivatives(field_base, ()),
-    )
-    replacement = (barred_commutator * field_commutator).expand()
+    field_commutator = s.CovariantDerivativeCommutator(comm_first, comm_second, field_with_derivatives(field_base, ()))
+    replacement = (basis_bilinear + commutator_weight * barred_commutator * field_commutator).expand()
     if expand_commutators:
         replacement = theory.expand_covariant_derivative_commutators(
             replacement,
             include_gauge_coupling=include_gauge_coupling,
         )
-    return (expr - coefficient * antisymmetric_bilinear + coefficient * replacement).expand()
+    return replacement
+
+
+def _four_derivative_pair_order(derivatives: tuple[Expression, ...]) -> tuple[Expression, Expression] | None:
+    if len(derivatives) != 4:
+        return None
+    first = derivatives[0]
+    second: Expression | None = None
+    counts = {canonical_string(first): 1}
+    for derivative in derivatives[1:]:
+        key = canonical_string(derivative)
+        counts[key] = counts.get(key, 0) + 1
+        if second is None and not bool(derivative == first):
+            second = derivative
+    if second is None or bool(second == first):
+        return None
+    if counts.get(canonical_string(first), 0) != 2 or counts.get(canonical_string(second), 0) != 2:
+        return None
+    if len(counts) != 2:
+        return None
+    return first, second
+
+
+def _four_derivative_commutator_weight(derivatives: tuple[Expression, ...]) -> Expression:
+    pair_order = _four_derivative_pair_order(derivatives)
+    if pair_order is None:
+        return Expression.num(0)
+    first, second = pair_order
+    binary = [0 if bool(derivative == first) else 1 for derivative in derivatives]
+    inversions = sum(1 for i, left in enumerate(binary) for right in binary[i + 1 :] if left > right)
+    swaps_to_grouped_order = min(inversions, 4 - inversions)
+    if swaps_to_grouped_order == 0:
+        return Expression.num(0)
+    if swaps_to_grouped_order == 1:
+        return _half_expr()
+    return Expression.num(1)
+
+
+def _half_expr() -> Expression:
+    return Expression.num(1) / Expression.num(2)
 
 
 def _single_cd(index: Expression, expr: Expression) -> Expression:

@@ -669,3 +669,11 @@ without Warsaw-specific core assumptions.
   (`10/10` filtered/unfiltered). The remaining mismatch is therefore in
   pychete's Wilson-line normal-form/reduction representation rather than in
   the target-filter count for this entry.
+- Follow-up in the same direction: ran additional Matchete WolframScript
+  prop-order dumps for `0`, `2`, and `4`, and separate minimal
+  `GreensSimplify` probes for scalar derivative bilinears. These probes fixed
+  the reference weights for the local `H^\dagger H F_W^2` component and drove
+  a generic pychete scalar Green-bilinear correction with focused pytest
+  coverage. The selected Singlet trace still disagrees afterward, now
+  localized more tightly to the pre-Wilson tensor-reduction/WilsonTerm
+  metric-contraction representation.
