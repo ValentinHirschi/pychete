@@ -563,8 +563,8 @@ two-derivative scalar field atoms with Symbolica patterns, extracts the four
 exact bilinear coefficients with native `Expression.coefficient(...)`, and
 exposes the antisymmetric component as
 `CovariantDerivativeCommutator(...) * CovariantDerivativeCommutator(...)`
-plus residual derivative terms. In the Wilson-line internal route this is
-available through
+plus residual derivative terms. In Wilson-line internal, vakint, and validation
+preview routes this is available through
 `OneLoopMatchOptions.wilson_line_expose_scalar_derivative_commutator_bilinears`
 and remains opt-in while the broader Matchete-normal-form layer is validated.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and

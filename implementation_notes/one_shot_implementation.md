@@ -1485,6 +1485,23 @@
   still under validation. Focused tests passed for the helper decomposition,
   field-strength lowering, public API export, hybrid internal option
   forwarding, and public `Theory.match(...)` forwarding.
+- Current backend-parity follow-up: the same opt-in scalar derivative-bilinear
+  normal-form pass is now reachable from Wilson-line VAKINT and
+  VAKINT-minimal-subtraction routes, not only the internal pychete evaluator.
+  The VAKINT stage postprocessor skips raw/canonical stages and applies the
+  Wilson-line post-tensor cleanup only after tensor reduction/evaluation, where
+  vakint has already produced pychete-decodable field and metric structures.
+  `ValidationFixture.one_loop_preview(...)` and
+  `one_loop_preview_gap_report(...)` now expose and forward
+  `wilson_line_expose_scalar_derivative_commutator_bilinears` through both
+  direct-preview and public-match routes, with metadata recording the selected
+  switch state.
+- Focused validation for that backend-parity follow-up passed: `py_compile` for
+  touched source and tests; three focused Wilson-line matching tests covering
+  internal forwarding, VAKINT forwarding, and the VAKINT-stage postprocessor;
+  one validation-fixture direct-preview forwarding test; full scalar functional
+  unit tests; and mypy for `matching.py`, `validation_fixtures.py`, and
+  `matching_options.py`.
 - Current first-milestone status remains unchanged: no full Matchete one-loop
   matching integration test is green yet. The closest target is still the
   Singlet `cHW` Wilson-line route, where the expected `hScalar-lScalar`

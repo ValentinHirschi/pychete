@@ -2350,6 +2350,111 @@ def test_one_loop_match_forwards_wilson_line_scalar_derivative_bilinear_option(
     assert result.metadata["wilson_line_scalar_derivative_commutator_bilinears_exposed"] is True
 
 
+def test_one_loop_match_forwards_wilson_line_scalar_derivative_bilinear_option_to_vakint(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_match_wilson_line_scalar_derivative_vakint_option")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light)
+    captured_hybrid_kwargs: dict[str, object] = {}
+
+    def fake_hybrid(
+        self: matching_module.OneLoopSetup,
+        expansion_indices_by_trace: object,
+        **kwargs: object,
+    ) -> MatchingResult:
+        captured_hybrid_kwargs["expansion_indices_by_trace"] = expansion_indices_by_trace
+        captured_hybrid_kwargs.update(kwargs)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=S("fake_wilson_line_hybrid_vakint_result"),
+            on_shell_eft_lagrangian=S("fake_wilson_line_hybrid_vakint_result"),
+            supertraces={
+                "interaction_wilson_line_hybrid_vakint_integral_sum": S(
+                    "fake_wilson_line_hybrid_vakint_result"
+                ),
+            },
+            metadata={
+                "stage": "fake_wilson_line_hybrid_vakint",
+                "complete": False,
+            },
+        )
+
+    monkeypatch.setattr(
+        matching_module.OneLoopSetup,
+        "interaction_wilson_line_hybrid_matching_result",
+        fake_hybrid,
+    )
+
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            wilson_line_expansion_indices_by_trace={"hScalar-lScalar": ((), ())},
+            wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert result.metadata["stage"] == "fake_wilson_line_hybrid_vakint"
+    assert captured_hybrid_kwargs["expose_scalar_derivative_commutator_bilinears"] is True
+    assert result.metadata["wilson_line_scalar_derivative_commutator_bilinears_exposed"] is True
+
+
+def test_wilson_line_vakint_stage_postprocess_exposes_scalar_derivative_bilinears() -> None:
+    theory = Theory("wilson_line_vakint_stage_scalar_bilinear_postprocess")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=0,
+    )
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    expr = (
+        (s.Bar(phi(derivatives=[mu, nu])) - s.Bar(phi(derivatives=[nu, mu])))
+        * (phi(derivatives=[mu, nu]) - phi(derivatives=[nu, mu]))
+    ).expand()
+    formal_commutator_bilinear = (
+        s.CovariantDerivativeCommutator(mu, nu, s.Bar(phi()))
+        * s.CovariantDerivativeCommutator(mu, nu, phi())
+    )
+    expected = theory.expand_covariant_derivative_commutators(
+        formal_commutator_bilinear,
+        include_gauge_coupling=False,
+    ).expand()
+
+    raw = matching_module._postprocess_wilson_line_vakint_stage_expression(
+        theory,
+        expr,
+        stage=VakintIntegralStage.RAW,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=False,
+        expose_scalar_derivative_commutator_bilinears=True,
+    )
+    evaluated = matching_module._postprocess_wilson_line_vakint_stage_expression(
+        theory,
+        expr,
+        stage=VakintIntegralStage.EVALUATED,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=False,
+        expose_scalar_derivative_commutator_bilinears=True,
+    )
+
+    assert_expr_equal(raw, expr)
+    assert_expr_equal(evaluated, expected)
+
+
 def test_wilson_line_internal_results_expose_entrywise_laurent_sums() -> None:
     theory = Theory("one_loop_setup_wilson_line_entrywise_laurent")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

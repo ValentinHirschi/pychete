@@ -2134,6 +2134,7 @@ class OneLoopSetup:
         short_form: bool | None = None,
         engine: Any | None = None,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Return the summed selected Wilson-line-expanded interaction topologies."""
@@ -2156,13 +2157,24 @@ class OneLoopSetup:
         raw_terms = tuple(term.vakint_integral_expression() for term in terms)
         if VakintIntegralStage.from_user(stage) is VakintIntegralStage.RAW:
             return _wilson_line_raw_integral_sum_from_expressions(raw_terms)
-        return _vakint_integral_terms_at_stage(
+        vakint_sum = _vakint_integral_terms_at_stage(
             raw_terms,
             theory=self.theory,
             stage=VakintIntegralStage.from_user(stage),
             short_form=short_form,
             engine=engine,
             label="Wilson-line",
+        )
+        return _postprocess_wilson_line_vakint_stage_expression(
+            self.theory,
+            vakint_sum,
+            stage=VakintIntegralStage.from_user(stage),
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
         )
 
     def interaction_wilson_line_internal_integral_sum(
@@ -2241,6 +2253,7 @@ class OneLoopSetup:
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the selected Wilson-line-expanded interaction one-loop result."""
@@ -2275,13 +2288,38 @@ class OneLoopSetup:
                 engine=vakint_engine,
                 label="Wilson-line",
             )
+            vakint_sum = _postprocess_wilson_line_vakint_stage_expression(
+                self.theory,
+                vakint_sum,
+                stage=selected_vakint_stage,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=(
+                    expose_scalar_derivative_commutator_bilinears
+                ),
+            )
         named_integrals = {
-            name: _vakint_expression_at_stage(
-                expr,
-                theory=self.theory,
+            name: _postprocess_wilson_line_vakint_stage_expression(
+                self.theory,
+                _vakint_expression_at_stage(
+                    expr,
+                    theory=self.theory,
+                    stage=selected_named_stage,
+                    short_form=named_supertrace_short_form,
+                    engine=named_supertrace_engine,
+                ),
                 stage=selected_named_stage,
-                short_form=named_supertrace_short_form,
-                engine=named_supertrace_engine,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=(
+                    expose_scalar_derivative_commutator_bilinears
+                ),
             )
             for name, expr in raw_named_integrals.items()
         }
@@ -2328,6 +2366,9 @@ class OneLoopSetup:
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
+                "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
+                    expose_scalar_derivative_commutator_bilinears
+                ),
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_commutators_emitted": emit_covariant_derivative_commutators,
                 "interaction_wilson_line_commutator_emit_passes": (
@@ -2690,6 +2731,7 @@ class OneLoopSetup:
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint Wilson-line result after pole subtraction."""
@@ -2719,17 +2761,42 @@ class OneLoopSetup:
             engine=vakint_engine,
             label="Wilson-line",
         )
+        evaluated = _postprocess_wilson_line_vakint_stage_expression(
+            self.theory,
+            evaluated,
+            stage=VakintIntegralStage.EVALUATED,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=(
+                expose_scalar_derivative_commutator_bilinears
+            ),
+        )
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
         counterterm = (-pole).expand()
         named_integrals = {
-            name: _vakint_expression_at_stage(
-                expr,
-                theory=self.theory,
+            name: _postprocess_wilson_line_vakint_stage_expression(
+                self.theory,
+                _vakint_expression_at_stage(
+                    expr,
+                    theory=self.theory,
+                    stage=selected_named_stage,
+                    short_form=named_supertrace_short_form,
+                    engine=named_supertrace_engine,
+                ),
                 stage=selected_named_stage,
-                short_form=named_supertrace_short_form,
-                engine=named_supertrace_engine,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=(
+                    expose_scalar_derivative_commutator_bilinears
+                ),
             )
             for name, expr in raw_named_integrals.items()
         }
@@ -2766,6 +2833,9 @@ class OneLoopSetup:
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
+                "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
+                    expose_scalar_derivative_commutator_bilinears
+                ),
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_commutators_emitted": emit_covariant_derivative_commutators,
                 "interaction_wilson_line_commutator_emit_passes": (
@@ -2816,6 +2886,7 @@ class OneLoopSetup:
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return interaction-power traces with selected traces replaced by Wilson-line output."""
@@ -2856,6 +2927,7 @@ class OneLoopSetup:
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
             term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
@@ -3072,6 +3144,7 @@ class OneLoopSetup:
         named_supertrace_short_form: bool | None = None,
         named_supertrace_engine: Any | None = None,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the finite native-vakint hybrid Wilson-line result."""
@@ -3110,6 +3183,7 @@ class OneLoopSetup:
             named_supertrace_short_form=named_supertrace_short_form,
             named_supertrace_engine=named_supertrace_engine,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
             term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
@@ -6816,6 +6890,36 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     return scalarize_commutative_ncm_chains(out)
 
 
+def _postprocess_wilson_line_vakint_stage_expression(
+    theory: Theory,
+    expr: Expression,
+    *,
+    stage: VakintIntegralStage,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
+    expose_scalar_derivative_commutator_bilinears: bool = False,
+) -> Expression:
+    """Normalize Wilson-line vakint tensor-reduced or evaluated expressions."""
+
+    if stage in (VakintIntegralStage.RAW, VakintIntegralStage.CANONICAL):
+        return expr
+    return _postprocess_wilson_line_tensor_reduced_expression(
+        theory,
+        expr,
+        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+        expose_scalar_derivative_commutator_bilinears_option=(
+            expose_scalar_derivative_commutator_bilinears
+        ),
+    )
+
+
 def _restore_theory_owned_generated_lorentz_indices(theory: Theory, expr: Expression) -> Expression:
     label = s.head("generated_lorentz_label_")
     index = s.Index(label, s.Lorentz)
@@ -8179,6 +8283,9 @@ def match_one_loop(
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=(
+                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+            ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif wilson_line_expansion_indices_by_trace is not None:
@@ -8210,6 +8317,9 @@ def match_one_loop(
             named_supertrace_short_form=options.named_supertrace_short_form,
             named_supertrace_engine=options.named_supertrace_engine,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=(
+                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+            ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif cde_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:

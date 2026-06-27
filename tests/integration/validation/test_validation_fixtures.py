@@ -840,6 +840,54 @@ def test_validation_fixture_preview_can_use_internal_minimal_subtraction_backend
     assert report.reference_stage is None
 
 
+def test_validation_fixture_preview_forwards_wilson_line_scalar_derivative_bilinear_option(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
+    captured_hybrid_kwargs: dict[str, object] = {}
+
+    def fake_hybrid(
+        self: OneLoopSetup,
+        expansion_indices_by_trace: object,
+        **kwargs: object,
+    ) -> MatchingResult:
+        captured_hybrid_kwargs["expansion_indices_by_trace"] = expansion_indices_by_trace
+        captured_hybrid_kwargs.update(kwargs)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=S("fixture_fake_wilson_line_hybrid_vakint_result"),
+            on_shell_eft_lagrangian=S("fixture_fake_wilson_line_hybrid_vakint_result"),
+            supertraces={
+                "interaction_wilson_line_hybrid_vakint_integral_sum": S(
+                    "fixture_fake_wilson_line_hybrid_vakint_result"
+                ),
+            },
+            metadata={
+                "stage": "fixture_fake_wilson_line_hybrid_vakint",
+                "complete": False,
+            },
+        )
+
+    monkeypatch.setattr(
+        OneLoopSetup,
+        "interaction_wilson_line_hybrid_matching_result",
+        fake_hybrid,
+    )
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        integral_backend=OneLoopIntegralBackend.VAKINT,
+        wilson_line_expansion_indices_by_trace={"hScalar-lScalar": ((), ())},
+        wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+    )
+
+    assert preview.metadata["stage"] == "fixture_fake_wilson_line_hybrid_vakint"
+    assert preview.metadata["fixture"] == fixture.name
+    assert preview.metadata["wilson_line_scalar_derivative_commutator_bilinears_exposed"] is True
+    assert captured_hybrid_kwargs["expose_scalar_derivative_commutator_bilinears"] is True
+
+
 def test_validation_fixture_preview_can_use_vakint_minimal_subtraction_backend_without_mathematica() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
     eps = vakint_backend.epsilon_symbol()

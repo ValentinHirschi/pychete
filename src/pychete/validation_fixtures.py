@@ -668,6 +668,7 @@ class ValidationFixture:
         wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
+        wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         simplify_pychete_color_algebra: bool = False,
     ) -> MatchingResult:
@@ -789,6 +790,9 @@ class ValidationFixture:
                 mu_r_squared=mu_r_squared,
                 combine_terms=internal_combine_terms,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=(
+                    wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif (
@@ -816,6 +820,9 @@ class ValidationFixture:
                 epsilon=epsilon,
                 mu_r_squared=mu_r_squared,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=(
+                    wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif (
@@ -843,6 +850,9 @@ class ValidationFixture:
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=(
+                    wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif wilson_line_expansion_request is not None:
@@ -869,6 +879,9 @@ class ValidationFixture:
                 named_supertrace_short_form=named_supertrace_short_form,
                 named_supertrace_engine=named_supertrace_engine,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=(
+                    wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
         elif bosonic_cde_expansion_request is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
@@ -1096,6 +1109,9 @@ class ValidationFixture:
                 "wilson_line_terms_filtered_by_matching_targets": (
                     wilson_line_term_atom_requirements is not None
                 ),
+                "wilson_line_scalar_derivative_commutator_bilinears_exposed": (
+                    wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
             },
         )
@@ -1178,6 +1194,7 @@ class ValidationFixture:
         wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
+        wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         include_tree_level_matching: bool = False,
@@ -1225,6 +1242,9 @@ class ValidationFixture:
         Wilson-line expansion requests. It works through the public matcher or
         this fixture's direct preview route as long as reference matching
         conditions are being projected.
+        ``wilson_line_expose_scalar_derivative_commutator_bilinears`` forwards
+        the opt-in scalar two-derivative commutator-bilinear normal-form pass
+        to Wilson-line internal and vakint preview routes.
         Prefer the ``wilson_line_*`` options for current-Matchete-style
         selected trace expansion. They route through the hybrid Wilson-line
         matcher and are mutually exclusive with the legacy ``bosonic_cde_*``
@@ -1344,6 +1364,9 @@ class ValidationFixture:
                     ),
                     wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                     wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
+                    wilson_line_expose_scalar_derivative_commutator_bilinears=(
+                        wilson_line_expose_scalar_derivative_commutator_bilinears
+                    ),
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                     include_tree_level_matching=include_tree_level_matching,
@@ -1445,6 +1468,9 @@ class ValidationFixture:
                 ),
                 wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                 wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
+                wilson_line_expose_scalar_derivative_commutator_bilinears=(
+                    wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
                 matching_condition_targets=projected_targets,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             )

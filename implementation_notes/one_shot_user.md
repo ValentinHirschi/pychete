@@ -605,3 +605,8 @@ without Warsaw-specific core assumptions.
   option. This advances the missing Matchete-style Wilson-line normal-form
   layer but does not yet make the first full Matchete one-loop integration test
   pass.
+- Latest follow-up progress: extended that opt-in helper to the Wilson-line
+  VAKINT and VAKINT-minimal-subtraction routes and to validation fixture
+  previews/gap reports. This makes the same generic normal-form switch usable
+  in the Singlet `cHW` frontier probes that go through VAKINT/evaluated-hbar
+  paths, but it is not yet a full `cHW` parity result.
