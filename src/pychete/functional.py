@@ -152,12 +152,23 @@ def expose_scalar_derivative_commutator_bilinears(
     theory._validate_registered_expression(expr)
     field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=2)
     barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=2)
+    one_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=1)
+    one_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=1)
     four_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=4)
     four_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=4)
     zero_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=0)
     zero_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=0)
-    if not (field_atoms and barred_atoms) and not (
+    has_two_derivative_bilinears = bool(field_atoms and barred_atoms)
+    has_one_sided_four_derivative_bilinears = bool(
         (four_field_atoms and zero_barred_atoms) or (four_barred_atoms and zero_field_atoms)
+    )
+    has_mixed_field_strength_bilinears = bool((field_atoms and zero_barred_atoms) or (barred_atoms and zero_field_atoms))
+    has_first_derivative_field_strength_bilinears = bool(one_field_atoms and one_barred_atoms)
+    if not (
+        has_two_derivative_bilinears
+        or has_one_sided_four_derivative_bilinears
+        or has_mixed_field_strength_bilinears
+        or has_first_derivative_field_strength_bilinears
     ):
         return expr
 
@@ -237,6 +248,71 @@ def expose_scalar_derivative_commutator_bilinears(
                 include_gauge_coupling=include_gauge_coupling,
                 expand_commutators=expand_commutators,
             )
+    for barred in one_barred_atoms:
+        barred_base = bar_field_inner(barred)
+        barred_key = canonical_string(field_with_derivatives(barred_base, ()))
+        barred_derivatives = field_derivatives(barred_base)
+        if len(barred_derivatives) != 1:
+            continue
+        for field in one_field_atoms:
+            if canonical_string(field_with_derivatives(field, ())) != barred_key:
+                continue
+            field_derivatives_ = field_derivatives(field)
+            if len(field_derivatives_) != 1:
+                continue
+            candidate_count += 1
+            if candidate_count > max_candidates:
+                return out
+            out = _expose_scalar_first_derivative_field_strength_ibp_candidate(
+                theory,
+                out,
+                barred_base,
+                field,
+                barred_derivatives[0],
+                field_derivatives_[0],
+                include_gauge_coupling=include_gauge_coupling,
+                expand_commutators=expand_commutators,
+            )
+    for field in field_atoms:
+        field_key = canonical_string(field_with_derivatives(field, ()))
+        field_derivatives_ = field_derivatives(field)
+        for barred in zero_barred_atoms:
+            barred_base = bar_field_inner(barred)
+            if canonical_string(field_with_derivatives(barred_base, ())) != field_key:
+                continue
+            candidate_count += 1
+            if candidate_count > max_candidates:
+                return out
+            out = _expose_scalar_mixed_field_strength_green_bilinear_candidate(
+                theory,
+                out,
+                barred_base,
+                field,
+                field_derivatives_,
+                derivatives_on_bar=False,
+                include_gauge_coupling=include_gauge_coupling,
+                expand_commutators=expand_commutators,
+            )
+    for barred in barred_atoms:
+        barred_base = bar_field_inner(barred)
+        barred_key = canonical_string(field_with_derivatives(barred_base, ()))
+        barred_derivatives = field_derivatives(barred_base)
+        for field in zero_field_atoms:
+            if canonical_string(field_with_derivatives(field, ())) != barred_key:
+                continue
+            candidate_count += 1
+            if candidate_count > max_candidates:
+                return out
+            out = _expose_scalar_mixed_field_strength_green_bilinear_candidate(
+                theory,
+                out,
+                barred_base,
+                field,
+                barred_derivatives,
+                derivatives_on_bar=True,
+                include_gauge_coupling=include_gauge_coupling,
+                expand_commutators=expand_commutators,
+            )
     return out.expand()
 
 
@@ -285,6 +361,8 @@ def _is_scalar_derivative_field(atom: Expression, *, derivative_count: int) -> b
         return False
     if derivative_count == 2:
         return _canonical_distinct_derivative_pair(derivatives) is not None
+    if derivative_count == 1:
+        return True
     if derivative_count == 4:
         return _four_derivative_pair_order(derivatives) is not None
     return derivative_count == 0
@@ -375,6 +453,104 @@ def _expose_scalar_one_sided_four_derivative_green_bilinear_candidate(
         expand_commutators=expand_commutators,
     )
     return (expr - coefficient * source + coefficient * replacement).expand()
+
+
+def _expose_scalar_mixed_field_strength_green_bilinear_candidate(
+    theory: Theory,
+    expr: Expression,
+    barred_base: Expression,
+    field_base: Expression,
+    derivatives: tuple[Expression, ...],
+    *,
+    derivatives_on_bar: bool,
+    include_gauge_coupling: bool,
+    expand_commutators: bool,
+) -> Expression:
+    if len(derivatives) != 2 or bool(derivatives[0] == derivatives[1]):
+        return expr
+    zero_barred = s.Bar(field_with_derivatives(barred_base, ()))
+    zero_field = field_with_derivatives(field_base, ())
+    source = (
+        s.Bar(field_with_derivatives(barred_base, derivatives)) * zero_field
+        if derivatives_on_bar
+        else zero_barred * field_with_derivatives(field_base, derivatives)
+    )
+    coefficient = expr.coefficient(source).expand()
+    if is_zero(coefficient):
+        return expr
+    field_strength_pair = _matching_field_strength_lorentz_pair(coefficient, derivatives)
+    if field_strength_pair is None:
+        return expr
+    left, right, commutator_weight = field_strength_pair
+    commutator_body = zero_barred if derivatives_on_bar else zero_field
+    commutator = s.CovariantDerivativeCommutator(left, right, commutator_body)
+    replacement = (commutator_weight * commutator * (zero_field if derivatives_on_bar else zero_barred)).expand()
+    if expand_commutators:
+        replacement = theory.expand_covariant_derivative_commutators(
+            replacement,
+            include_gauge_coupling=include_gauge_coupling,
+        )
+    return (expr - coefficient * source + coefficient * replacement).expand()
+
+
+def _expose_scalar_first_derivative_field_strength_ibp_candidate(
+    theory: Theory,
+    expr: Expression,
+    barred_base: Expression,
+    field_base: Expression,
+    barred_derivative: Expression,
+    field_derivative: Expression,
+    *,
+    include_gauge_coupling: bool,
+    expand_commutators: bool,
+) -> Expression:
+    if bool(barred_derivative == field_derivative):
+        return expr
+    zero_barred = s.Bar(field_with_derivatives(barred_base, ()))
+    source_field = field_with_derivatives(field_base, (field_derivative,))
+    source = s.Bar(field_with_derivatives(barred_base, (barred_derivative,))) * source_field
+    coefficient = expr.coefficient(source).expand()
+    if is_zero(coefficient):
+        return expr
+    field_strength_pair = _matching_field_strength_lorentz_pair(coefficient, (barred_derivative, field_derivative))
+    if field_strength_pair is None:
+        return expr
+    left, right, commutator_weight = field_strength_pair
+    commutator_replacement = (
+        commutator_weight
+        * zero_barred
+        * s.CovariantDerivativeCommutator(left, right, field_with_derivatives(field_base, ()))
+    ).expand()
+    if expand_commutators:
+        commutator_replacement = theory.expand_covariant_derivative_commutators(
+            commutator_replacement,
+            include_gauge_coupling=include_gauge_coupling,
+        )
+    replacement = (
+        -apply_cd([barred_derivative], coefficient) * zero_barred * source_field
+        - coefficient * commutator_replacement
+    ).expand()
+    return (expr - coefficient * source + replacement).expand()
+
+
+def _matching_field_strength_lorentz_pair(
+    coefficient: Expression,
+    derivatives: tuple[Expression, Expression],
+) -> tuple[Expression, Expression, Expression] | None:
+    first, second = derivatives
+    pattern = field_strength_pattern()
+    label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    for match in coefficient.match(pattern, label_is_tagged):
+        atom = pattern.replace_wildcards(match)
+        lorentz_indices = list_items(atom[1])
+        if len(lorentz_indices) != 2:
+            continue
+        left, right = lorentz_indices
+        if bool(left == first) and bool(right == second):
+            return left, right, _half_expr()
+        if bool(left == second) and bool(right == first):
+            return left, right, -_half_expr()
+    return None
 
 
 def _scalar_green_bilinear_replacement(

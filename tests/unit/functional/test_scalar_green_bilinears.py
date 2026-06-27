@@ -31,6 +31,24 @@ def _scalar_su2_probe() -> tuple[Theory, object, Expression, Expression, Express
     return theory, higgs, target, i, mu, nu
 
 
+def _scalar_u1_probe() -> tuple[Theory, object, Expression, Expression, Expression, Expression]:
+    theory = Theory("scalar_green_mixed_field_strength_probe")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
+    target = s.Bar(phi()) * phi() * strength**2
+    return theory, phi, strength, target, mu, nu
+
+
 @pytest.mark.parametrize(
     ("name", "derivatives", "expected_weight"),
     (
@@ -88,6 +106,66 @@ def test_scalar_green_bilinear_preserves_antisymmetric_commutator_component() ->
     assert_expr_equal(coefficient, theory.coupling_handle("gL")() ** 2 / 4)
 
 
+@pytest.mark.parametrize(
+    ("derivatives", "expected_weight"),
+    (
+        (("mu", "nu"), Expression.num(1) / Expression.num(2)),
+        (("nu", "mu"), -Expression.num(1) / Expression.num(2)),
+    ),
+)
+def test_scalar_green_bilinear_exposes_mixed_field_strength_derivative_component(
+    derivatives: tuple[str, str],
+    expected_weight: Expression,
+) -> None:
+    theory, phi, strength, target, mu, nu = _scalar_u1_probe()
+    derivative_lookup = {"mu": mu, "nu": nu}
+    source = (
+        Expression.I
+        * strength
+        * s.Bar(phi())
+        * phi(derivatives=tuple(derivative_lookup[label] for label in derivatives))
+    )
+
+    coefficient = _project_mixed_field_strength_coefficient(theory, source, target)
+
+    assert_expr_equal(coefficient, expected_weight)
+
+
+def test_scalar_green_bilinear_exposes_conjugate_mixed_field_strength_derivative_component() -> None:
+    theory, phi, strength, target, mu, nu = _scalar_u1_probe()
+    source = Expression.I * strength * s.Bar(phi(derivatives=[mu, nu])) * phi()
+
+    coefficient = _project_mixed_field_strength_coefficient(theory, source, target)
+
+    assert_expr_equal(coefficient, -Expression.num(1) / Expression.num(2))
+
+
+@pytest.mark.parametrize(
+    ("barred_derivative", "field_derivative", "expected_weight"),
+    (
+        ("mu", "nu", -Expression.num(1) / Expression.num(2)),
+        ("nu", "mu", Expression.num(1) / Expression.num(2)),
+    ),
+)
+def test_scalar_green_bilinear_ibp_exposes_first_derivative_field_strength_component(
+    barred_derivative: str,
+    field_derivative: str,
+    expected_weight: Expression,
+) -> None:
+    theory, phi, strength, target, mu, nu = _scalar_u1_probe()
+    derivative_lookup = {"mu": mu, "nu": nu}
+    source = (
+        Expression.I
+        * strength
+        * s.Bar(phi(derivatives=[derivative_lookup[barred_derivative]]))
+        * phi(derivatives=[derivative_lookup[field_derivative]])
+    )
+
+    coefficient = _project_mixed_field_strength_coefficient(theory, source, target)
+
+    assert_expr_equal(coefficient, expected_weight)
+
+
 def _project_c_hw_like_coefficient(theory: Theory, source: Expression, target: Expression) -> Expression:
     normalized = expose_scalar_derivative_commutator_bilinears(
         theory,
@@ -104,3 +182,22 @@ def _project_c_hw_like_coefficient(theory: Theory, source: Expression, target: E
         on_shell_eft_lagrangian=normalized.expand(),
     )
     return result.project_matching_conditions({"cHW_like": target}, expand_source=False)["cHW_like"].expand()
+
+
+def _project_mixed_field_strength_coefficient(theory: Theory, source: Expression, target: Expression) -> Expression:
+    normalized = expose_scalar_derivative_commutator_bilinears(
+        theory,
+        source,
+        include_gauge_coupling=False,
+        expand_commutators=True,
+    )
+    normalized = idenso.simplify_pychete_field_strength_group_algebra(theory, normalized)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized.expand(),
+    )
+    return result.project_matching_conditions({"field_strength_like": target}, expand_source=False)[
+        "field_strength_like"
+    ].expand()

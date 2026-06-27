@@ -6911,6 +6911,13 @@ def _postprocess_wilson_line_tensor_reduced_expression(
                 break
             out = updated
     out = simplify_trivial_cd_operators(out)
+    if expose_scalar_derivative_commutator_bilinears_option:
+        out = expose_scalar_derivative_commutator_bilinears(
+            theory,
+            out,
+            include_gauge_coupling=False,
+            expand_commutators=True,
+        )
     out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
     if simplify_pychete_color_algebra:
         out = idenso.simplify_pychete_color_algebra(theory, out)

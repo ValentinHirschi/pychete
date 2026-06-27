@@ -1780,6 +1780,32 @@
   `aabb` zero. The next correction should therefore target the generic
   SymGammaFactor/tensor-reduced scalar Green-bilinear normal form, not the
   final `cHW` coefficient and not a path-orientation patch.
+- Added and tested two more generic scalar Green-normal-form reductions in
+  `expose_scalar_derivative_commutator_bilinears(...)`:
+  - mixed antisymmetric field-strength contractions
+    `F_ab * Bar[H] * D_a D_b H` and the barred-field orientation are reduced
+    through formal `CovariantDerivativeCommutator(...)` markers and then
+    lowered with the theory-owned commutator expansion;
+  - first-derivative IBP contractions
+    `F_ab * D_a Bar[H] * D_b H` are reduced by integrating the derivative off
+    the barred scalar, using pychete's Symbolica-backed `apply_cd(...)` on the
+    coefficient so derivative-field-strength residuals remain explicit.
+  These rules are deliberately generic in scalar field, gauge representation,
+  and field-strength label; they are not a `cHW` or Singlet-specific patch.
+  Focused U(1) scalar tests now cover same-order, reversed-order, conjugate,
+  and first-derivative IBP cases.
+- Remeasured the selected Singlet `hScalar-lScalar#wilson14_o4_0` termwise
+  projection after the mixed/IBP reductions. The nonzero footprint is still
+  only term 4/path 0 in the post-Wilson tensor-reduction route and term 9/path
+  2 in the pre-Wilson route, both with the same `-1/8 * A^2 gL^2 * topo`
+  coefficient as before. A broader candidate diagnostic showed why the new
+  rules do not move the real frontier yet: exact same-field
+  `D Bar[H] * D H` coefficient extraction finds no nonzero pairs in the
+  selected Singlet terms. The nonzero derivative-pair structures are mostly
+  mixed heavy-scalar/Higgs factors such as `D(phi) * D Bar[H]` with an
+  additional undifferentiated Higgs and field-strength factor. The first
+  remaining mismatch is therefore a mixed-field Green/IBP and heavy-field
+  normal-form problem, not a missing same-field Higgs-bilinear identity.
 
 ## Next Work
 
@@ -1819,6 +1845,10 @@
   - target-local EOM/IBP reductions for generic operator-basis projection,
     including Higgs/gauge structures such as `cHBox`, `cHD`, `cHW`, `cHB`, and
     `cHWB`, without making those reductions SMEFT-specific;
+  - generic mixed heavy/light scalar Green-normal-form reductions for terms
+    such as `D(phi) * D Bar[H] * H * F`, calibrated against Matchete
+    `GreensSimplify` intermediate dumps before changing the selected Singlet
+    `cHW` projection path;
   - source staging for heavy-scalar-substituted Wilson projection so projection
     cost scales with target-compatible field content;
   - additional idenso/spenso-backed group/CG contractions exposed by E_VLL or
