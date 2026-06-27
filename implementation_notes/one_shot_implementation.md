@@ -1806,6 +1806,43 @@
   additional undifferentiated Higgs and field-strength factor. The first
   remaining mismatch is therefore a mixed-field Green/IBP and heavy-field
   normal-form problem, not a missing same-field Higgs-bilinear identity.
+- Matchete-dissection policy for the current `hScalar-lScalar -> cHW`
+  milestone is now explicit and operational: keep running focused debug
+  WolframScripts when changing this frontier, and compare against Matchete's
+  own intermediate stages (`GenericPropagatorExpansion`,
+  `DeterminePowerInsertions`, `ActWithOpenCDs`, `GatherLoopMomenta`,
+  `RemoveSymmetryVanishingWilsonTerms`, `WilsonExpand`, `LoopIntegrate`,
+  `post_index_group_cleanup`, `eps_expanded_relabelled`, raw `EvaluateSTr`,
+  and saved validation `ContractCGs // MatchReduce // GreensSimplify`) before
+  drawing conclusions from the final Wilson coefficient. The committed
+  Matchete debug fixtures under `assets/validation/matchete/debug/` are useful
+  snapshots, but they are not a substitute for rerunning the WolframScript
+  after changing the Wilson-line/Green-normal-form layer.
+- Added a matching pychete-side development diagnostic:
+  `scripts/debug_pychete_singlet_wilson_trace.py`. It dumps a compact JSON
+  counterpart to the Matchete Wolfram debug output at
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_cHW.pychete.debug.json`.
+  The script is not runtime API and pytest must not depend on it; it is for
+  stage-by-stage local comparison only. It loads the committed
+  `Singlet_Scalar_Extension` model fixture, generates the selected
+  `hScalar-lScalar` Wilson-line plan for the `cHW` target, runs both the
+  post-Wilson and pre-Wilson tensor-reduction orderings through the ordinary
+  pychete/vakint/internal-evaluation/postprocess boundaries, and records full
+  unrenormalized and finite Matchete-`hbar`-normalized `cHW` projections.
+- Current pychete debug dump result: the selected target-filtered plan has 15
+  generated plan entries, but only `hScalar-lScalar#wilson14_o4_0` is nonempty
+  with 10 terms. The finite total projection is identical in the post-Wilson
+  and pre-Wilson tensor-reduction orderings:
+  `hbar*A^2*gL^2/M^4*(-1/8*log(mursq) + 1/4*log(M) - 1/8)`, using canonical
+  pychete coupling labels. Termwise, post-Wilson reduction projects only
+  term 4/path 0, while pre-Wilson reduction projects only term 9/path 2; both
+  are propagator powers `(3, 1)` and carry the same finite coefficient. This
+  confirms that the current mismatch is not caused by a final projection
+  convention or a broad trace-selection error. The next correction must find
+  why Matchete's derivative-bilinear/`SymGammaFactor` normal form converts the
+  corresponding order-four structures to `+1/12*hbar*A^2*gL^2/M^4` after
+  `GreensSimplify`, while pychete's selected finite normal form remains the
+  `-1/8` matching-scale value.
 
 ## Next Work
 
@@ -1820,6 +1857,13 @@
     mode on the selected Singlet `hScalar-lScalar#wilson14_o4_0` terms,
     starting from per-term or per-power-class diagnostics rather than a full
     fixture gap report;
+  - use `helper_mathematica_scripts/debug_singlet_wilson_trace.wls` and
+    `scripts/debug_pychete_singlet_wilson_trace.py` as the paired comparison
+    loop for the next correction: regenerate Matchete and pychete dumps after
+    each normal-form change, compare the first divergent derivative word,
+    `SymGammaFactor`/loop-momentum class, finite integral class, and projected
+    coefficient, and only then decide which generic Symbolica/idenso/vakint
+    primitive needs to be extended;
   - inspect why the pre-Wilson path keeps only the path-2 `(3, 1)` contribution
     while Matchete expects a smaller nonzero total, focusing on symmetric
     Wilson-line path pairing/orientation, WilsonTerm endpoint conventions, and

@@ -683,3 +683,13 @@ without Warsaw-specific core assumptions.
   and compare them against pychete stages. The goal is to identify the first
   representation/source/coefficient stage where Matchete and pychete diverge,
   instead of only comparing the final projected matching condition.
+- Follow-up implementation response: added a paired pychete-side development
+  dump script, `scripts/debug_pychete_singlet_wilson_trace.py`, and generated
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_cHW.pychete.debug.json`.
+  It mirrors the current Matchete debug workflow for the selected
+  `hScalar-lScalar -> cHW` frontier and records termwise post-Wilson and
+  pre-Wilson tensor-reduction projections. The current dump confirms the
+  nonempty selected pychete entry is only `hScalar-lScalar#wilson14_o4_0`;
+  post-Wilson projection comes from term 4/path 0, pre-Wilson projection comes
+  from term 9/path 2, and both give the same finite selected total, still
+  mismatched against Matchete's saved `+1/12*hbar*A^2*gL^2/M^4`.

@@ -1,0 +1,404 @@
+{
+  "fixture": "assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json",
+  "generator": "debug_pychete_singlet_wilson_trace.py",
+  "model": "Singlet_Scalar_Extension_model_definition",
+  "nonempty_grouped_entries": {
+    "hScalar-lScalar#wilson14_o4_0": 10
+  },
+  "normalization": "matchete_evaluated_hbar",
+  "normalization_factor": "-16\ud835\udc56*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar",
+  "plan_entry_count": 15,
+  "rows": [
+    {
+      "entry_label": "hScalar-lScalar#wilson14_o4_0",
+      "expansion_slot_lengths": [
+        4,
+        0
+      ],
+      "mass_squareds": [
+        "0",
+        "pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2"
+      ],
+      "numerator": {
+        "bar_field_atoms": 37,
+        "byte_size": 13289,
+        "field_atoms": 112,
+        "field_strength_atoms": 18,
+        "loop_momenta": 0,
+        "name": "numerator",
+        "node_count": 32,
+        "propagator_denominators": 0,
+        "sample_input_form": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(20100...",
+        "term_count": 32,
+        "wilson_terms": 0
+      },
+      "path_index": 0,
+      "post_wilson_tensor_reduced": {
+        "cHW_projection": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "cHW_projection_finite": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "cHW_projection_finite_is_zero": false,
+        "cHW_projection_finite_sample_input_form": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Co...",
+        "cHW_projection_is_zero": false,
+        "cHW_projection_sample_input_form": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Co...",
+        "evaluated": {
+          "bar_field_atoms": 192,
+          "byte_size": 155921,
+          "field_atoms": 1072,
+          "field_strength_atoms": 336,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.evaluated",
+          "node_count": 352,
+          "propagator_denominators": 0,
+          "sample_input_form": "1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_B,pychete::List(pychete::Index(vakint::...",
+          "term_count": 352,
+          "wilson_terms": 0
+        },
+        "finite_minimal_subtraction": {
+          "bar_field_atoms": 144,
+          "byte_size": 117280,
+          "field_atoms": 804,
+          "field_strength_atoms": 252,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.finite_minimal_subtraction",
+          "node_count": 264,
+          "propagator_denominators": 0,
+          "sample_input_form": "1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_B,pychete::List(pychete::Index(vakint::...",
+          "term_count": 264,
+          "wilson_terms": 0
+        },
+        "processed_integral": {
+          "bar_field_atoms": 48,
+          "byte_size": 46390,
+          "field_atoms": 268,
+          "field_strength_atoms": 84,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.processed_integral",
+          "node_count": 88,
+          "propagator_denominators": 0,
+          "sample_input_form": "1\ud835\udc56/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_B,pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz),pychete::Inde...",
+          "term_count": 88,
+          "wilson_terms": 0
+        },
+        "raw_integral": {
+          "bar_field_atoms": 37,
+          "byte_size": 13422,
+          "field_atoms": 112,
+          "field_strength_atoms": 18,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.raw_integral",
+          "node_count": 2,
+          "propagator_denominators": 0,
+          "sample_input_form": "(-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(2010...",
+          "term_count": 32,
+          "wilson_terms": 0
+        }
+      },
+      "pre_wilson_numerator": {
+        "bar_field_atoms": 90,
+        "byte_size": 37765,
+        "field_atoms": 297,
+        "field_strength_atoms": 0,
+        "loop_momenta": 0,
+        "name": "pre_wilson_numerator",
+        "node_count": 90,
+        "propagator_denominators": 0,
+        "sample_input_form": "-pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::du...",
+        "term_count": 90,
+        "wilson_terms": 90
+      },
+      "pre_wilson_tensor_reduced": {
+        "cHW_projection": "0",
+        "cHW_projection_finite": "0",
+        "cHW_projection_finite_is_zero": true,
+        "cHW_projection_finite_sample_input_form": "0",
+        "cHW_projection_is_zero": true,
+        "cHW_projection_sample_input_form": "0",
+        "evaluated": {
+          "bar_field_atoms": 104,
+          "byte_size": 108740,
+          "field_atoms": 740,
+          "field_strength_atoms": 200,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.evaluated",
+          "node_count": 240,
+          "propagator_denominators": 0,
+          "sample_input_form": "1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_B,pychete::List(pychete::Index(vakint::di...",
+          "term_count": 240,
+          "wilson_terms": 0
+        },
+        "finite_minimal_subtraction": {
+          "bar_field_atoms": 78,
+          "byte_size": 81782,
+          "field_atoms": 555,
+          "field_strength_atoms": 150,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.finite_minimal_subtraction",
+          "node_count": 180,
+          "propagator_denominators": 0,
+          "sample_input_form": "1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_B,pychete::List(pychete::Index(vakint::di...",
+          "term_count": 180,
+          "wilson_terms": 0
+        },
+        "processed_integral": {
+          "bar_field_atoms": 26,
+          "byte_size": 32243,
+          "field_atoms": 185,
+          "field_strength_atoms": 50,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.processed_integral",
+          "node_count": 60,
+          "propagator_denominators": 0,
+          "sample_input_form": "1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_B,pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz),pychete::Index(...",
+          "term_count": 60,
+          "wilson_terms": 0
+        },
+        "raw_integral": {
+          "bar_field_atoms": 90,
+          "byte_size": 37898,
+          "field_atoms": 297,
+          "field_strength_atoms": 0,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.raw_integral",
+          "node_count": 2,
+          "propagator_denominators": 0,
+          "sample_input_form": "(-pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::d...",
+          "term_count": 90,
+          "wilson_terms": 90
+        }
+      },
+      "propagator_powers": [
+        3,
+        1
+      ],
+      "term_index": 4,
+      "trace_name": "hScalar-lScalar"
+    },
+    {
+      "entry_label": "hScalar-lScalar#wilson14_o4_0",
+      "expansion_slot_lengths": [
+        4,
+        0
+      ],
+      "mass_squareds": [
+        "0",
+        "pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2"
+      ],
+      "numerator": {
+        "bar_field_atoms": 32,
+        "byte_size": 13254,
+        "field_atoms": 112,
+        "field_strength_atoms": 18,
+        "loop_momenta": 0,
+        "name": "numerator",
+        "node_count": 32,
+        "propagator_denominators": 0,
+        "sample_input_form": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::List(pychete::Index(Singlet_Scalar_Extension::index_diag_hScalar_lScalar_14_0_1,pychete::Lorentz)),1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extensi...",
+        "term_count": 32,
+        "wilson_terms": 0
+      },
+      "path_index": 2,
+      "post_wilson_tensor_reduced": {
+        "cHW_projection": "0",
+        "cHW_projection_finite": "0",
+        "cHW_projection_finite_is_zero": true,
+        "cHW_projection_finite_sample_input_form": "0",
+        "cHW_projection_is_zero": true,
+        "cHW_projection_sample_input_form": "0",
+        "evaluated": {
+          "bar_field_atoms": 292,
+          "byte_size": 123387,
+          "field_atoms": 912,
+          "field_strength_atoms": 240,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.evaluated",
+          "node_count": 292,
+          "propagator_denominators": 0,
+          "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+          "term_count": 292,
+          "wilson_terms": 0
+        },
+        "finite_minimal_subtraction": {
+          "bar_field_atoms": 219,
+          "byte_size": 92820,
+          "field_atoms": 684,
+          "field_strength_atoms": 180,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.finite_minimal_subtraction",
+          "node_count": 219,
+          "propagator_denominators": 0,
+          "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+          "term_count": 219,
+          "wilson_terms": 0
+        },
+        "processed_integral": {
+          "bar_field_atoms": 73,
+          "byte_size": 36995,
+          "field_atoms": 228,
+          "field_strength_atoms": 60,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.processed_integral",
+          "node_count": 73,
+          "propagator_denominators": 0,
+          "sample_input_form": "-1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pych...",
+          "term_count": 73,
+          "wilson_terms": 0
+        },
+        "raw_integral": {
+          "bar_field_atoms": 32,
+          "byte_size": 13387,
+          "field_atoms": 112,
+          "field_strength_atoms": 18,
+          "loop_momenta": 0,
+          "name": "post_wilson_tensor_reduced.raw_integral",
+          "node_count": 2,
+          "propagator_denominators": 0,
+          "sample_input_form": "(-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::List(pychete::Index(Singlet_Scalar_Extension::index_diag_hScalar_lScalar_14_0_1,pychete::Lorentz)),1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extens...",
+          "term_count": 32,
+          "wilson_terms": 0
+        }
+      },
+      "pre_wilson_numerator": {
+        "bar_field_atoms": 90,
+        "byte_size": 37765,
+        "field_atoms": 297,
+        "field_strength_atoms": 0,
+        "loop_momenta": 0,
+        "name": "pre_wilson_numerator",
+        "node_count": 90,
+        "propagator_denominators": 0,
+        "sample_input_form": "-pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),p...",
+        "term_count": 90,
+        "wilson_terms": 90
+      },
+      "pre_wilson_tensor_reduced": {
+        "cHW_projection": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "cHW_projection_finite": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "cHW_projection_finite_is_zero": false,
+        "cHW_projection_finite_sample_input_form": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Co...",
+        "cHW_projection_is_zero": false,
+        "cHW_projection_sample_input_form": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Co...",
+        "evaluated": {
+          "bar_field_atoms": 240,
+          "byte_size": 100752,
+          "field_atoms": 740,
+          "field_strength_atoms": 188,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.evaluated",
+          "node_count": 240,
+          "propagator_denominators": 0,
+          "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+          "term_count": 240,
+          "wilson_terms": 0
+        },
+        "finite_minimal_subtraction": {
+          "bar_field_atoms": 180,
+          "byte_size": 75793,
+          "field_atoms": 555,
+          "field_strength_atoms": 141,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.finite_minimal_subtraction",
+          "node_count": 180,
+          "propagator_denominators": 0,
+          "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+          "term_count": 180,
+          "wilson_terms": 0
+        },
+        "processed_integral": {
+          "bar_field_atoms": 60,
+          "byte_size": 30244,
+          "field_atoms": 185,
+          "field_strength_atoms": 47,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.processed_integral",
+          "node_count": 60,
+          "propagator_denominators": 0,
+          "sample_input_form": "-1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pych...",
+          "term_count": 60,
+          "wilson_terms": 0
+        },
+        "raw_integral": {
+          "bar_field_atoms": 90,
+          "byte_size": 37898,
+          "field_atoms": 297,
+          "field_strength_atoms": 0,
+          "loop_momenta": 0,
+          "name": "pre_wilson_tensor_reduced.raw_integral",
+          "node_count": 2,
+          "propagator_denominators": 0,
+          "sample_input_form": "(-pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),...",
+          "term_count": 90,
+          "wilson_terms": 90
+        }
+      },
+      "propagator_powers": [
+        3,
+        1
+      ],
+      "term_index": 9,
+      "trace_name": "hScalar-lScalar"
+    }
+  ],
+  "schema_version": 1,
+  "target": "cHW",
+  "total_projections": {
+    "post_wilson_tensor_reduced_finite": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+    "post_wilson_tensor_reduced_unrenormalized": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+    "pre_wilson_tensor_reduced_finite": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+    "pre_wilson_tensor_reduced_unrenormalized": "-1/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-1/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gL,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+  },
+  "total_summaries": {
+    "post_wilson_tensor_reduced_finite": {
+      "bar_field_atoms": 3318,
+      "byte_size": 2036030,
+      "field_atoms": 13005,
+      "field_strength_atoms": 3603,
+      "loop_momenta": 0,
+      "name": "post_wilson_tensor_reduced_finite",
+      "node_count": 4017,
+      "propagator_denominators": 0,
+      "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+      "term_count": 4017,
+      "wilson_terms": 0
+    },
+    "post_wilson_tensor_reduced_unrenormalized": {
+      "bar_field_atoms": 4464,
+      "byte_size": 2858154,
+      "field_atoms": 17492,
+      "field_strength_atoms": 4852,
+      "loop_momenta": 0,
+      "name": "post_wilson_tensor_reduced_unrenormalized",
+      "node_count": 5404,
+      "propagator_denominators": 0,
+      "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+      "term_count": 5404,
+      "wilson_terms": 0
+    },
+    "pre_wilson_tensor_reduced_finite": {
+      "bar_field_atoms": 2247,
+      "byte_size": 1405637,
+      "field_atoms": 9081,
+      "field_strength_atoms": 2169,
+      "loop_momenta": 0,
+      "name": "pre_wilson_tensor_reduced_finite",
+      "node_count": 2811,
+      "propagator_denominators": 0,
+      "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+      "term_count": 2811,
+      "wilson_terms": 0
+    },
+    "pre_wilson_tensor_reduced_unrenormalized": {
+      "bar_field_atoms": 2996,
+      "byte_size": 1955712,
+      "field_atoms": 12108,
+      "field_strength_atoms": 2892,
+      "loop_momenta": 0,
+      "name": "pre_wilson_tensor_reduced_unrenormalized",
+      "node_count": 3748,
+      "propagator_denominators": 0,
+      "sample_input_form": "-1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List(pychete::Index(vakint::diag_hScalar_lScalar_14_0_0,pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_covariant_commutator_4_0,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::FieldStrength(Singlet_Scalar_Extension::field_W,pychete::L...",
+      "term_count": 3748,
+      "wilson_terms": 0
+    }
+  },
+  "trace_name": "hScalar-lScalar"
+}
