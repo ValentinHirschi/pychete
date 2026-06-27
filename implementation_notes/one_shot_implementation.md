@@ -1120,6 +1120,25 @@
   `pytest tests/integration/matching/test_fluctuation_operator.py -k
   "wilson_line or projection_atom_filter or field_strength_powers" -q` passed
   with `17 passed, 83 deselected`; and `python -m mypy` reported no issues.
+- Current fixture-diagnostics follow-up: `MatchingFixtureGapReport` now carries
+  JSON-safe snapshots of the candidate and reference `MatchingResult.metadata`.
+  This exposes Wilson-line plan and target-filter metadata such as
+  `interaction_wilson_line_plan_entry_count`,
+  `interaction_wilson_line_term_count`,
+  `interaction_wilson_line_terms_filtered_by_matching_targets`, backend stage,
+  normalization, and fixture source directly in Python report objects and
+  `to_json_obj()` output. The snapshot normalizes tuples/lists recursively and
+  renders unexpected objects as strings, so report JSON remains stable without
+  making validation tests depend on private result internals. This does not
+  alter the physics result; it makes real Singlet `cHW` and other Wilson-line
+  fixture probes easier to triage without rerunning separate ad hoc
+  diagnostics.
+- Focused validation for this diagnostic slice used the 30 GiB watchdog
+  wrapper: `pytest tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_filter_direct_wilson_line_terms_by_projected_targets -q`
+  passed with `1 passed`; `pytest
+  tests/integration/validation/test_validation_fixtures.py -k "wilson_line or
+  candidate_metadata or matching_condition_projection" -q` passed with
+  `3 passed, 38 deselected`; and `python -m mypy` reported no issues.
 
 ## Next Work
 

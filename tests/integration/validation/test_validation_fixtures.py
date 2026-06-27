@@ -1166,6 +1166,10 @@ def test_validation_fixture_gap_report_can_filter_direct_wilson_line_terms_by_pr
     assert report.matching_condition_projection_registered_wilson_names == (target_name,)
     assert report.candidate_matching_condition_names == (target_name,)
     assert report.reference_matching_condition_names == (target_name,)
+    assert report.candidate_metadata["wilson_line_terms_filtered_by_matching_targets"] is True
+    assert report.candidate_metadata["interaction_wilson_line_terms_filtered_by_matching_targets"] is True
+    assert report.candidate_metadata["interaction_wilson_line_plan_entry_count"] == 2
+    assert report.to_json_obj()["candidate_metadata"]["interaction_wilson_line_plan_entry_count"] == 2
 
 
 def test_validation_fixture_gap_report_can_filter_public_cde_terms_by_projected_targets() -> None:

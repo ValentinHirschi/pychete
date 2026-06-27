@@ -42,6 +42,7 @@ TraceOrderInput = int | Literal["reference"]
 ProbeNamePreset = Literal["common", "canonical_different", "wilson", "canonical_different_wilson"]
 ProbeNameSelection = Iterable[str] | ProbeNamePreset
 ProjectionNameSelection = str | Iterable[str]
+MetadataJsonValue = dict[str, Any] | list[Any] | str | int | float | bool | None
 _PROBE_NAME_PRESETS = {"common", "canonical_different", "wilson", "canonical_different_wilson"}
 _WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
 _LOGGER = get_logger("validation")
@@ -190,6 +191,8 @@ class MatchingFixtureGapReport:
     matching_condition_projection_reference_non_wilson_names: tuple[str, ...] = ()
     matching_condition_projection_reference_wilson_fallback_names: tuple[str, ...] = ()
     comparison_canonize_indices: bool = True
+    candidate_metadata: dict[str, MetadataJsonValue] = field(default_factory=dict)
+    reference_metadata: dict[str, MetadataJsonValue] = field(default_factory=dict)
 
     @property
     def complete(self) -> bool:
@@ -471,6 +474,8 @@ class MatchingFixtureGapReport:
             ),
             "accepted_common_matching_condition_count": self.accepted_common_matching_condition_count,
             "reference_wilson_matching_condition_count": self.reference_wilson_matching_condition_count,
+            "candidate_metadata": self.candidate_metadata,
+            "reference_metadata": self.reference_metadata,
             "matching_condition_projection_registered_wilson_count": (
                 self.matching_condition_projection_registered_wilson_count
             ),
@@ -2061,7 +2066,28 @@ def _gap_report(
             else matching_condition_projection_targets.reference_wilson_fallback_names
         ),
         comparison_canonize_indices=comparison_canonize_indices,
+        candidate_metadata=_metadata_json_snapshot(candidate.metadata),
+        reference_metadata=_metadata_json_snapshot(reference.metadata),
     )
+
+
+def _metadata_json_snapshot(metadata: Mapping[str, Any]) -> dict[str, MetadataJsonValue]:
+    return {key: _metadata_json_value(value) for key, value in sorted(metadata.items())}
+
+
+def _metadata_json_value(value: Any) -> MetadataJsonValue:
+    if value is None or isinstance(value, (str, int, float, bool)):
+        return value
+    if isinstance(value, Expression):
+        return str(value)
+    if isinstance(value, Mapping):
+        return {
+            str(key): _metadata_json_value(item)
+            for key, item in sorted(value.items(), key=lambda pair: str(pair[0]))
+        }
+    if isinstance(value, (list, tuple)):
+        return [_metadata_json_value(item) for item in value]
+    return str(value)
 
 
 def _comparison_expression_transform(

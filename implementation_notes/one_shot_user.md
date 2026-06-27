@@ -430,3 +430,9 @@ without Warsaw-specific core assumptions.
   Wilson-term lowering, commutator expansion, tensor reduction, or integral
   evaluation. It is a scaling improvement for the Singlet `cHW` frontier and
   broader Wilson-line fixture probes, not a full `cHW` parity result yet.
+- Latest fixture-report diagnostic update: gap reports now include JSON-safe
+  snapshots of candidate/reference `MatchingResult.metadata`, so Wilson-line
+  plan counts, generated term counts, target-filter flags, backend stage, and
+  normalization choices are visible directly in report objects and
+  `to_json_obj()` output. This helps triage Singlet `cHW` and other
+  Wilson-line fixture probes without rerunning separate ad hoc diagnostics.
