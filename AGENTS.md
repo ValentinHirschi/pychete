@@ -456,6 +456,14 @@ field/field-strength target before tensor reduction/evaluation, but final
 coefficient extraction must still be delegated to the ordinary Symbolica
 projection path. Do not add CDE-only filtering or SMEFT-name-specific filtering
 for new frontier checks.
+For field-strength projection targets such as `cHW`, the Wilson-line filter
+must remain conservative with respect to Matchete's later reduction stages:
+raw Matchete `EvaluateSTr` output can be derivative-only, with explicit
+`FieldStrength(...)` atoms appearing only after `ContractCGs`, `MatchReduce`,
+and `GreensSimplify`. Therefore do not require explicit field-strength atoms
+inside generated Wilson-line numerators when charged fields and enough
+derivative order can generate the requested field strengths through
+covariant-derivative commutators.
 Future `WilsonTerm` expansion must use Symbolica replacement rules/patterns
 and the idenso/spenso algebra path for field-strength, colour, and tensor
 simplification; do not implement it as a Python tree walker. Open covariant

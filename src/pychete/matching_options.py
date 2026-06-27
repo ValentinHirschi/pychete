@@ -187,8 +187,11 @@ class OneLoopMatchOptions:
     as the CDE filter does for legacy CDE terms. It uses Symbolica pattern
     matches to drop terms whose numerator lacks the field/field-strength atom
     content required by the requested projection targets before tensor
-    reduction/evaluation; final coefficient extraction still uses the normal
-    projection path.
+    reduction/evaluation. For field-strength targets, this filter also keeps
+    derivative-only Wilson-line terms whose charged fields can generate the
+    requested field strengths through later covariant-derivative commutator
+    reduction; final coefficient extraction still uses the normal projection
+    path.
     ``wilson_line_expose_scalar_derivative_commutator_bilinears`` enables a
     post-tensor internal Wilson-line normal-form pass that decomposes
     two-derivative scalar bilinears into their antisymmetric commutator

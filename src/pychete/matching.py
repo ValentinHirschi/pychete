@@ -7269,7 +7269,7 @@ def _filter_wilson_line_terms_by_projection_requirements(
 ) -> tuple[WilsonLineTraceExpansionTerm, ...]:
     if not requirements:
         return tuple(terms)
-    return tuple(term for term in terms if _term_numerator_matches_projection_requirements(term.numerator, requirements))
+    return tuple(term for term in terms if _wilson_line_term_matches_projection_requirements(term, requirements))
 
 
 def _cde_term_matches_projection_requirements(
@@ -7288,6 +7288,40 @@ def _term_numerator_matches_projection_requirements(
         if all(counts[(kind, label)] >= required_count for kind, label, required_count in group):
             return True
     return False
+
+
+def _wilson_line_term_matches_projection_requirements(
+    term: WilsonLineTraceExpansionTerm,
+    requirements: ProjectionAtomRequirementGroups,
+) -> bool:
+    counts = _projection_atom_counts(term.numerator)
+    possible_generated_strength_labels = _wilson_line_term_generated_field_strength_labels(term)
+    max_generated_field_strengths = sum(len(indices) for indices in term.expansion_indices) // 2
+    for group in requirements:
+        if _wilson_line_atom_counts_can_satisfy_requirement_group(
+            counts,
+            group,
+            possible_generated_strength_labels=possible_generated_strength_labels,
+            max_generated_field_strengths=max_generated_field_strengths,
+        ):
+            return True
+    return False
+
+
+def _wilson_line_atom_counts_can_satisfy_requirement_group(
+    counts: Mapping[tuple[str, str], int],
+    group: Sequence[ProjectionAtomRequirement],
+    *,
+    possible_generated_strength_labels: frozenset[str],
+    max_generated_field_strengths: int,
+) -> bool:
+    for kind, label, required_count in group:
+        available = counts.get((kind, label), 0)
+        if kind == "field_strength" and label in possible_generated_strength_labels:
+            available += max_generated_field_strengths
+        if available < required_count:
+            return False
+    return True
 
 
 def _term_atom_requirements_for_targets(
@@ -7767,6 +7801,24 @@ def _wilson_line_path_generated_field_strength_labels(path: WilsonLineTracePath)
             labels.update(_field_generated_field_strength_labels(path.theory, match[s.FieldLabelWildcard]))
     closing_label = path.closing_field_label[0] if is_head(path.closing_field_label, s.Bar) else path.closing_field_label
     labels.update(_field_generated_field_strength_labels(path.theory, closing_label))
+    return frozenset(labels)
+
+
+def _wilson_line_term_generated_field_strength_labels(term: WilsonLineTraceExpansionTerm) -> frozenset[str]:
+    labels: set[str] = set()
+    for expr in (term.pre_wilson_numerator, term.numerator):
+        if expr is None:
+            continue
+        labels.update(_expression_generated_field_strength_labels(term.theory, expr))
+    return frozenset(labels)
+
+
+def _expression_generated_field_strength_labels(theory: Theory, expr: Expression) -> frozenset[str]:
+    labels: set[str] = set()
+    field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    for pattern in (field_pattern(), bar_field_pattern()):
+        for match in expr.match(pattern, field_label_is_tagged):
+            labels.update(_field_generated_field_strength_labels(theory, match[s.FieldLabelWildcard]))
     return frozenset(labels)
 
 

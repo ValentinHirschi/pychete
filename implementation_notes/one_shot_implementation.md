@@ -1666,16 +1666,52 @@
   is `normalized_interaction_wilson_line_hybrid_internal_minimal_subtraction_result`;
   it has no accepted common matching condition and one different common
   matching condition, the external `cHW`.
+- Matchete-side debug dump added:
+  `helper_mathematica_scripts/debug_singlet_wilson_trace.wls` now exports
+  focused JSON summaries for the Singlet Scalar Extension
+  `hScalar-lScalar` trace at propagator order 4. The script calls
+  Matchete's own `SetCurrentLagrangian`, `GenericPropagatorExpansion`,
+  `DeterminePowerInsertions`, and every `EvaluateSTr` stage through
+  `LoopIntegrate`, and also anchors against Matchete's saved previous
+  validation result. Run under the 30 GiB watchdog, it writes
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_cHW.debug.json`.
+- New Matchete comparison result: raw live Matchete `EvaluateSTr` for the two
+  order-four `hScalar-lScalar` insertions has 20 generated propagator terms per
+  insertion, both orientations remain `Bar[H] ... H`, and no explicit
+  `FieldStrength[W]` atoms appear through `EvaluateSTr` or raw
+  `PowerTypeSTr`. Matchete's saved validation result, after
+  `ContractCGs // MatchReduce // GreensSimplify`, has 38
+  `hScalar-lScalar` terms, 4 `W` field-strength atoms, and
+  `cHW = hbar*A^2*gL^2/(12*M^4)`. Therefore pychete's selected Wilson-line
+  `cHW` disagreement is not only a finite-integral convention issue: pychete
+  was filtering/generating around explicit `FieldStrength[W]` atoms too early,
+  whereas current Matchete keeps derivative-only Higgs bilinears until the
+  later reduction stage creates the field-strength basis structures.
+- Implemented a conservative Wilson-line target-filter correction from this
+  comparison. `wilson_line_filter_terms_by_matching_targets` now still uses
+  Symbolica atom counts, but for field-strength target requirements it also
+  keeps Wilson-line terms whose charged fields can generate the requested
+  field strengths through later covariant-derivative commutators, bounded by
+  half the term's derivative expansion order. This is generic and based on
+  theory-owned field/gauge metadata; it is not a `cHW` special case.
+- Immediate remeasurement after the filter correction: the selected Singlet
+  `hScalar-lScalar#wilson14_o4_0` generated-term count is unchanged
+  (`10/10` filtered/unfiltered, paths `{0: 5, 2: 5}`). This means the first
+  `cHW` mismatch is not caused by the public target filter dropping extra
+  terms in that entry. The Matchete dump instead localizes the disagreement to
+  the Wilson-line normal-form stage itself: pychete is producing/probing
+  explicit field-strength structures before it has a Matchete-equivalent
+  derivative-bilinear `MatchReduce`/`GreensSimplify` layer.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - decompose and correct the `hScalar-lScalar#wilson14_o4_0` order-four
-    Wilson-line coefficient against Matchete's `EvaluateSymmetricLorentzInds`,
-    `WilsonTermExpand`, tensor-reduction, and one-loop finite-part
-    conventions; the current normalized finite result is `7/24` where
-    Matchete expects `1/12`;
+  - remeasure the selected Singlet `hScalar-lScalar -> cHW` route after the
+    conservative Wilson-line filter fix; focus first on whether derivative-only
+    `Bar[H] D^4 H`-type structures now survive to the internal evaluated
+    source and whether the downstream commutator/IBP reduction can turn them
+    into the saved Matchete validation `cHW` value;
   - harden and remeasure the new Matchete-order Wilson-line tensor-reduction
     mode on the selected Singlet `hScalar-lScalar#wilson14_o4_0` terms,
     starting from per-term or per-power-class diagnostics rather than a full

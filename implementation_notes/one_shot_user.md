@@ -655,3 +655,17 @@ without Warsaw-specific core assumptions.
   30 GiB watchdog. It is still not Matchete-equal: the pre-Wilson path halves
   the old selected contribution by killing the path-0 `(3, 1)` term, but the
   external `cHW` condition remains different from the Matchete reference.
+- Latest user instruction for this milestone: dissect the Singlet
+  `hScalar-lScalar -> cHW` disagreement with frequent focused Matchete
+  WolframScript debug dumps rather than only pychete-side probes. The first
+  dump shows raw Matchete `EvaluateSTr` keeps both `Bar[H] ... H`
+  orientations derivative-only, with no explicit `W` field strengths until the
+  saved validation-stage `ContractCGs // MatchReduce // GreensSimplify`
+  result. This led to a generic Wilson-line filter correction: field-strength
+  target filters must keep derivative-only charged-field terms when they can
+  generate the requested field strengths later.
+- Follow-up remeasurement: that filter correction is policy-correct but does
+  not change the current Singlet `hScalar-lScalar#wilson14_o4_0` term count
+  (`10/10` filtered/unfiltered). The remaining mismatch is therefore in
+  pychete's Wilson-line normal-form/reduction representation rather than in
+  the target-filter count for this entry.
