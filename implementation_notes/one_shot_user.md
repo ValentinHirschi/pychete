@@ -618,3 +618,8 @@ without Warsaw-specific core assumptions.
   exposure active still projects zero for `cHW`, confirming the next blocker is
   the remaining heavy-scalar on-shell/basis/source reduction work rather than
   missing option plumbing.
+- Direct validation previews now also support and gap-report-forward the
+  public matcher's heavy-scalar solution substitution controls. This makes
+  future bounded Singlet Wilson-line diagnostics able to apply the same
+  existing heavy-scalar on-shell reduction machinery before projection, but it
+  does not by itself complete the first Matchete one-loop integration target.

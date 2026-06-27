@@ -55,6 +55,29 @@ class FakeTensorNetwork:
         self.expr = expr
 
 
+def _heavy_scalar_validation_fixture() -> tuple[ValidationFixture, object, object, object]:
+    theory = Theory("validation_heavy_scalar_preview")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    coupling = theory.define_coupling("g", self_conjugate=True)
+    lagrangian = theory.free_lag(heavy, light) - coupling() * heavy() * light() ** 2 / 2
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
+    return (
+        ValidationFixture(
+            name="validation_heavy_scalar_preview",
+            kind="unit",
+            state=state,
+            source={"generator": "pytest"},
+            expression_names=("lagrangian",),
+        ),
+        heavy,
+        light,
+        coupling,
+    )
+
+
 def _fixture_obj_from_model(path: Path) -> dict[str, object]:
     theory, expressions = load_python_model(path)
     state = PycheteState()
@@ -335,6 +358,44 @@ def test_default_model_fixtures_build_order_three_one_loop_preview_without_mathe
                 assert "pychete::eft_order_parameter" not in trace_text
                 assert "der(" not in trace_text
         preview.validate()
+
+
+def test_validation_fixture_direct_preview_substitutes_heavy_scalar_solutions(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture, heavy, light, coupling = _heavy_scalar_validation_fixture()
+    heavy_expr = heavy()
+
+    def fake_result(self: OneLoopSetup, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=heavy_expr,
+            on_shell_eft_lagrangian=heavy_expr,
+            metadata={"stage": "fake_preview", "loop_order": 1},
+        )
+
+    monkeypatch.setattr(OneLoopSetup, "interaction_power_type_matching_result", fake_result)
+
+    raw = fixture.one_loop_preview(max_trace_order=1, substitute_heavy_scalar_solutions=False)
+    reduced = fixture.one_loop_preview(max_trace_order=1, substitute_heavy_scalar_solutions=True)
+    heavy_atom = canonical_string(heavy_expr)
+    reduced_text = canonical_string(reduced.on_shell_eft_lagrangian)
+
+    assert raw.metadata["heavy_scalar_solutions_substituted"] is False
+    assert raw.metadata["heavy_scalar_solution_source"] == "disabled"
+    assert raw.metadata["heavy_scalar_solution_fresh_dummy_indices"] is False
+    assert reduced.metadata["heavy_scalar_solutions_substituted"] is True
+    assert reduced.metadata["heavy_scalar_solution_count"] == 1
+    assert reduced.metadata["heavy_scalar_solution_rule_count"] > 0
+    assert reduced.metadata["heavy_scalar_solution_source"] == "matching_lagrangian"
+    assert reduced.metadata["heavy_scalar_solution_expand"] is False
+    assert reduced.metadata["heavy_scalar_solution_fresh_dummy_indices"] is True
+    assert heavy_atom in canonical_string(raw.on_shell_eft_lagrangian)
+    assert heavy_atom in canonical_string(reduced.expression("on_shell_eft_lagrangian_before_reduction"))
+    assert heavy_atom not in reduced_text
+    assert canonical_string(light()) in reduced_text
+    assert canonical_string(coupling()) in reduced_text
 
 
 def test_validation_fixture_preview_can_evaluate_tensor_networks_with_stored_cg_components(
@@ -1135,6 +1196,45 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     assert captured["matching_condition_normalize_derivative_operators"] is False
     assert captured["matching_condition_normalize_ibp_scalar_bilinears"] is True
     assert captured["matching_condition_truncate_eft"] is True
+
+
+def test_validation_fixture_gap_report_forwards_heavy_scalar_options_to_direct_preview(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture, _heavy, _light, _coupling = _heavy_scalar_validation_fixture()
+    reference = MatchingResult(
+        theory=fixture.theory(),
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+    )
+    captured: dict[str, object] = {}
+
+    def fake_one_loop_preview(self: ValidationFixture, **kwargs: object) -> MatchingResult:
+        captured.update(kwargs)
+        return MatchingResult(
+            theory=self.theory(),
+            uv_lagrangian=Expression.num(0),
+            off_shell_eft_lagrangian=Expression.num(0),
+            on_shell_eft_lagrangian=Expression.num(0),
+        )
+
+    monkeypatch.setattr(ValidationFixture, "one_loop_preview", fake_one_loop_preview)
+
+    fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="direct_preview_forwarding",
+        substitute_heavy_scalar_solutions=True,
+        heavy_scalar_solution_lagrangian="lagrangian",
+        heavy_scalar_solution_expand=True,
+    )
+
+    assert captured["substitute_heavy_scalar_solutions"] is True
+    assert captured["heavy_scalar_solution_expand"] is True
+    assert_expr_equal(
+        captured["heavy_scalar_solution_lagrangian"],
+        fixture.expression("lagrangian"),
+    )
 
 
 def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(

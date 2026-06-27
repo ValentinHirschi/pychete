@@ -1528,6 +1528,18 @@
   (`7/24` vs Matchete `1/12`) until the remaining Wilson-line normal-form,
   Wilson-term expansion, tensor/integral convention, and projection reductions
   are aligned.
+- Direct validation previews now expose the same heavy-scalar solution
+  substitution controls as the public one-loop matcher:
+  `substitute_heavy_scalar_solutions`, optional
+  `heavy_scalar_solution_lagrangian`, and `heavy_scalar_solution_expand`.
+  The direct route uses the existing `solve_heavy_scalar_eoms(...)` and
+  `heavy_scalar_solution_replacements(...)` helpers, validates an explicit
+  source Lagrangian, applies `MatchingResult.with_on_shell_reduction(...)`,
+  and records metadata matching the public matcher. Gap reports forward the
+  same controls on both the public and direct preview routes. This closes a
+  validation diagnostic mismatch where bounded Singlet Wilson-line probes could
+  project a direct-preview source that had not received the public matcher's
+  heavy-scalar on-shell reduction.
 
 ## Next Work
 

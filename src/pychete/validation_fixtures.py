@@ -31,6 +31,7 @@ from .supertraces import is_unnormalized_supertrace_alias, supertrace_word_order
 from .symbols import SymbolDataKey, s, symbol_data
 from .theory import Theory
 from .theory_metadata import ExternalKind
+from .tree_matching import heavy_scalar_solution_replacements, solve_heavy_scalar_eoms
 from .validation import (
     NumericProbePlan,
     NumericValue,
@@ -673,6 +674,9 @@ class ValidationFixture:
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         simplify_pychete_color_algebra: bool = False,
+        substitute_heavy_scalar_solutions: bool = False,
+        heavy_scalar_solution_lagrangian: Expression | str | None = None,
+        heavy_scalar_solution_expand: bool = False,
     ) -> MatchingResult:
         """Build the current incomplete interaction-power preview from fixture expressions."""
 
@@ -694,6 +698,12 @@ class ValidationFixture:
         theory = self.theory()
         resolved_hbar = hbar if hbar is not None else _optional_no_index_external(theory, "hbar")
         lagrangian_expr = self.expression(lagrangian)
+        explicit_heavy_scalar_solution_lagrangian = heavy_scalar_solution_lagrangian is not None
+        resolved_heavy_scalar_solution_lagrangian = (
+            self.expression(heavy_scalar_solution_lagrangian)
+            if isinstance(heavy_scalar_solution_lagrangian, str)
+            else heavy_scalar_solution_lagrangian
+        )
         if expand_abelian_covariant_derivatives:
             lagrangian_expr = theory.expand_abelian_covariant_derivatives(lagrangian_expr)
         if expand_non_abelian_covariant_derivatives:
@@ -1054,6 +1064,52 @@ class ValidationFixture:
             result = result.with_loop_normalization(normalization, hbar=resolved_hbar)
         if simplify_pychete_color_algebra:
             result = _decode_preview_native_color_wrappers(theory, result)
+        if substitute_heavy_scalar_solutions:
+            solution_lagrangian = (
+                resolved_heavy_scalar_solution_lagrangian
+                if resolved_heavy_scalar_solution_lagrangian is not None
+                else lagrangian_expr
+            )
+            theory._validate_registered_expression(solution_lagrangian)
+            solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
+            replacement_rules = heavy_scalar_solution_replacements(solutions, fresh_dummy_indices=True)
+            if replacement_rules:
+                _LOGGER.info(
+                    "substituting %d heavy scalar solution(s) in one-loop preview for fixture %s",
+                    len(solutions),
+                    self.name,
+                )
+                result = result.with_on_shell_reduction(
+                    replacement_rules,
+                    expand=heavy_scalar_solution_expand,
+                )
+            result = replace(
+                result,
+                metadata={
+                    **result.metadata,
+                    "heavy_scalar_solutions_substituted": bool(replacement_rules),
+                    "heavy_scalar_solution_count": len(solutions),
+                    "heavy_scalar_solution_rule_count": len(replacement_rules),
+                    "heavy_scalar_solution_source": (
+                        "option" if explicit_heavy_scalar_solution_lagrangian else "matching_lagrangian"
+                    ),
+                    "heavy_scalar_solution_expand": heavy_scalar_solution_expand,
+                    "heavy_scalar_solution_fresh_dummy_indices": True,
+                },
+            )
+        else:
+            result = replace(
+                result,
+                metadata={
+                    **result.metadata,
+                    "heavy_scalar_solutions_substituted": False,
+                    "heavy_scalar_solution_count": 0,
+                    "heavy_scalar_solution_rule_count": 0,
+                    "heavy_scalar_solution_source": "disabled",
+                    "heavy_scalar_solution_expand": False,
+                    "heavy_scalar_solution_fresh_dummy_indices": False,
+                },
+            )
         preview = MatchingResult(
             theory=result.theory,
             uv_lagrangian=result.uv_lagrangian,
@@ -1217,6 +1273,8 @@ class ValidationFixture:
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
+        heavy_scalar_solution_lagrangian: Expression | str | None = None,
+        heavy_scalar_solution_expand: bool = False,
         include_tree_level_matching: bool = False,
         truncate_eft_result: bool = True,
         project_reference_matching_conditions: bool = False,
@@ -1269,6 +1327,10 @@ class ValidationFixture:
         Wilson-line local commutator identity mode, including the bounded
         Matchete-adjacent ``"all_distinct"`` mode used by current Singlet
         frontier probes.
+        ``substitute_heavy_scalar_solutions`` applies the same heavy-scalar
+        on-shell replacement pass as the public one-loop matcher before direct
+        preview matching-condition projection. ``heavy_scalar_solution_lagrangian``
+        may be either a fixture expression name or a validated expression.
         Prefer the ``wilson_line_*`` options for current-Matchete-style
         selected trace expansion. They route through the hybrid Wilson-line
         matcher and are mutually exclusive with the legacy ``bosonic_cde_*``
@@ -1316,6 +1378,11 @@ class ValidationFixture:
             else reference
         )
         resolved_hbar = hbar if hbar is not None else _optional_no_index_external(self.theory(), "hbar")
+        resolved_heavy_scalar_solution_lagrangian = (
+            self.expression(heavy_scalar_solution_lagrangian)
+            if isinstance(heavy_scalar_solution_lagrangian, str)
+            else heavy_scalar_solution_lagrangian
+        )
         if use_public_match_api:
             matched = self.theory().match(
                 self.expression(lagrangian),
@@ -1396,6 +1463,8 @@ class ValidationFixture:
                     ),
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
+                    heavy_scalar_solution_lagrangian=resolved_heavy_scalar_solution_lagrangian,
+                    heavy_scalar_solution_expand=heavy_scalar_solution_expand,
                     include_tree_level_matching=include_tree_level_matching,
                     truncate_eft_result=truncate_eft_result,
                 ),
@@ -1503,6 +1572,9 @@ class ValidationFixture:
                 ),
                 matching_condition_targets=projected_targets,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
+                heavy_scalar_solution_lagrangian=resolved_heavy_scalar_solution_lagrangian,
+                heavy_scalar_solution_expand=heavy_scalar_solution_expand,
             )
         if project_reference_matching_conditions and not use_public_match_api:
             candidate = candidate.with_projected_matching_conditions(
