@@ -2289,24 +2289,48 @@ class OneLoopSetup:
         terms = _flatten_wilson_line_terms(grouped_terms)
         raw_vakint_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
         raw_vakint_sum = _wilson_line_raw_integral_sum_from_expressions(raw_vakint_integrals.values())
-        evaluated_terms = _wilson_line_internal_evaluated_terms_from_terms(
+        evaluated_terms_by_entry = _wilson_line_internal_evaluated_terms_by_entry_from_terms(
             self.theory,
-            terms,
+            grouped_terms,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
         )
+        evaluated_terms = _flatten_expression_slots(evaluated_terms_by_entry.values())
+        evaluated_by_entry = _wilson_line_internal_expression_map_by_entry(
+            evaluated_terms_by_entry,
+            "interaction_wilson_line_internal_integral_sum",
+            combine_terms=combine_terms,
+        )
         evaluated = _sum_wilson_line_internal_terms(evaluated_terms, combine_terms=combine_terms)
-        pole = _sum_wilson_line_internal_terms(
-            (
+        pole_terms_by_entry = {
+            entry_label: tuple(
                 vakint.pole_part(term, max_pole_order=max_pole_order, epsilon=epsilon)
-                for term in evaluated_terms
-            ),
+                for term in entry_terms
+            )
+            for entry_label, entry_terms in evaluated_terms_by_entry.items()
+        }
+        pole_by_entry = _wilson_line_internal_expression_map_by_entry(
+            pole_terms_by_entry,
+            "interaction_wilson_line_internal_integral_pole_part",
+            combine_terms=combine_terms,
+        )
+        pole = _sum_wilson_line_internal_terms(
+            _flatten_expression_slots(pole_terms_by_entry.values()),
+            combine_terms=combine_terms,
+        )
+        finite_terms_by_entry = {
+            entry_label: tuple(vakint.finite_part(term, epsilon=epsilon) for term in entry_terms)
+            for entry_label, entry_terms in evaluated_terms_by_entry.items()
+        }
+        finite_by_entry = _wilson_line_internal_expression_map_by_entry(
+            finite_terms_by_entry,
+            "interaction_wilson_line_internal_integral_finite_part",
             combine_terms=combine_terms,
         )
         finite = _sum_wilson_line_internal_terms(
-            (vakint.finite_part(term, epsilon=epsilon) for term in evaluated_terms),
+            _flatten_expression_slots(finite_terms_by_entry.values()),
             combine_terms=combine_terms,
         )
         return MatchingResult(
@@ -2324,6 +2348,9 @@ class OneLoopSetup:
                     loop_momentum_squared=loop_momentum_squared,
                 ),
                 **raw_vakint_integrals,
+                **evaluated_by_entry,
+                **pole_by_entry,
+                **finite_by_entry,
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
                 "interaction_wilson_line_internal_integral_pole_part": pole,
@@ -2402,24 +2429,48 @@ class OneLoopSetup:
         terms = _flatten_wilson_line_terms(grouped_terms)
         raw_vakint_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
         raw_vakint_sum = _wilson_line_raw_integral_sum_from_expressions(raw_vakint_integrals.values())
-        evaluated_terms = _wilson_line_internal_evaluated_terms_from_terms(
+        evaluated_terms_by_entry = _wilson_line_internal_evaluated_terms_by_entry_from_terms(
             self.theory,
-            terms,
+            grouped_terms,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
         )
+        evaluated_terms = _flatten_expression_slots(evaluated_terms_by_entry.values())
+        evaluated_by_entry = _wilson_line_internal_expression_map_by_entry(
+            evaluated_terms_by_entry,
+            "interaction_wilson_line_internal_integral_sum",
+            combine_terms=combine_terms,
+        )
         evaluated = _sum_wilson_line_internal_terms(evaluated_terms, combine_terms=combine_terms)
-        pole = _sum_wilson_line_internal_terms(
-            (
+        pole_terms_by_entry = {
+            entry_label: tuple(
                 vakint.pole_part(term, max_pole_order=max_pole_order, epsilon=epsilon)
-                for term in evaluated_terms
-            ),
+                for term in entry_terms
+            )
+            for entry_label, entry_terms in evaluated_terms_by_entry.items()
+        }
+        pole_by_entry = _wilson_line_internal_expression_map_by_entry(
+            pole_terms_by_entry,
+            "interaction_wilson_line_internal_integral_pole_part",
+            combine_terms=combine_terms,
+        )
+        pole = _sum_wilson_line_internal_terms(
+            _flatten_expression_slots(pole_terms_by_entry.values()),
+            combine_terms=combine_terms,
+        )
+        finite_terms_by_entry = {
+            entry_label: tuple(vakint.finite_part(term, epsilon=epsilon) for term in entry_terms)
+            for entry_label, entry_terms in evaluated_terms_by_entry.items()
+        }
+        finite_by_entry = _wilson_line_internal_expression_map_by_entry(
+            finite_terms_by_entry,
+            "interaction_wilson_line_internal_integral_finite_part",
             combine_terms=combine_terms,
         )
         finite = _sum_wilson_line_internal_terms(
-            (vakint.finite_part(term, epsilon=epsilon) for term in evaluated_terms),
+            _flatten_expression_slots(finite_terms_by_entry.values()),
             combine_terms=combine_terms,
         )
         counterterm = -pole
@@ -2438,6 +2489,9 @@ class OneLoopSetup:
                     loop_momentum_squared=loop_momentum_squared,
                 ),
                 **raw_vakint_integrals,
+                **evaluated_by_entry,
+                **pole_by_entry,
+                **finite_by_entry,
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
                 "interaction_wilson_line_internal_integral_pole_part": pole,
@@ -7101,27 +7155,65 @@ def _wilson_line_internal_evaluated_terms_from_terms(
     epsilon: Expression | None,
     mu_r_squared: Expression | None,
 ) -> tuple[Expression, ...]:
+    grouped_terms = {"selected": tuple(terms)}
+    evaluated_by_entry = _wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped_terms,
+        tensor_reduce=tensor_reduce,
+        tensor_reduce_engine=tensor_reduce_engine,
+        epsilon=epsilon,
+        mu_r_squared=mu_r_squared,
+    )
+    return evaluated_by_entry["selected"]
+
+
+def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
+    theory: Theory,
+    grouped_terms: Mapping[str, Sequence[WilsonLineTraceExpansionTerm]],
+    *,
+    tensor_reduce: bool,
+    tensor_reduce_engine: Any | None,
+    epsilon: Expression | None,
+    mu_r_squared: Expression | None,
+) -> dict[str, tuple[Expression, ...]]:
     from .backends import vakint, vacuum_integrals
 
-    evaluated_terms: list[Expression] = []
+    total_terms = sum(len(terms) for terms in grouped_terms.values())
+    evaluated_by_entry: dict[str, tuple[Expression, ...]] = {}
     with progress(
-        f"evaluating {len(terms)} Wilson-line scalar vacuum integrals termwise",
+        f"evaluating {total_terms} Wilson-line scalar vacuum integrals termwise",
         logger=_LOGGER,
     ):
-        for term in terms:
-            raw = term.vakint_integral_expression()
-            if tensor_reduce:
-                raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
-                raw = vakint.decode_pychete_namespace(theory, raw)
-            evaluated_terms.append(
-                vacuum_integrals.evaluate_one_loop_vakint_expression(
-                    raw,
-                    epsilon=epsilon,
-                    mu_r_squared=mu_r_squared,
-                    combine_terms=False,
+        for entry_label, terms in grouped_terms.items():
+            evaluated_terms: list[Expression] = []
+            for term in terms:
+                raw = term.vakint_integral_expression()
+                if tensor_reduce:
+                    raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+                    raw = vakint.decode_pychete_namespace(theory, raw)
+                evaluated_terms.append(
+                    vacuum_integrals.evaluate_one_loop_vakint_expression(
+                        raw,
+                        epsilon=epsilon,
+                        mu_r_squared=mu_r_squared,
+                        combine_terms=False,
+                    )
                 )
-            )
-    return tuple(evaluated_terms)
+            evaluated_by_entry[entry_label] = tuple(evaluated_terms)
+    return evaluated_by_entry
+
+
+def _wilson_line_internal_expression_map_by_entry(
+    terms_by_entry: Mapping[str, Sequence[Expression]],
+    prefix: str,
+    *,
+    combine_terms: bool,
+) -> dict[str, Expression]:
+    return {
+        f"{prefix}[{entry_label}]": _sum_wilson_line_internal_terms(entry_terms, combine_terms=combine_terms)
+        for entry_label, entry_terms in terms_by_entry.items()
+        if entry_terms
+    }
 
 
 def _sum_wilson_line_internal_terms(

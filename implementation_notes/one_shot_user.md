@@ -455,3 +455,23 @@ without Warsaw-specific core assumptions.
   path reuse one grouped expansion for evaluated sums, named integrals, kernel
   maps, and metadata instead of regenerating the same Wilson-line terms
   repeatedly.
+- Latest sandbox-policy update: `AGENTS.md` and both live one-shot notes now
+  explicitly ban `sandbox_permissions: "require_escalated"` for this
+  repository. Direct sandboxed commands may still run when appropriate, but
+  `.git` metadata writes and direct `Operation not permitted` failures must go
+  through the user-started `listener.py` route instead of tool approval
+  escalation.
+- Latest Singlet `cHW` frontier measurement: the Wilson-line route with
+  target filtering and internal minimal subtraction still differs from the
+  Matchete `cHW` reference. The completed diagnostic found 65 surviving
+  target-filtered Wilson-line terms across 35 plan entries, with only 11
+  nonzero order-four entries: `hScalar` contributes 5 terms,
+  `hScalar-hScalar` contributes 20 terms, and `hScalar-lScalar` contributes
+  40 terms. The next projection work should use smaller entrywise finite-part
+  sources rather than one monolithic hybrid expression.
+- Latest Wilson-line backend update: internal Wilson-line results now expose
+  entry-level evaluated, pole, and finite sums in `MatchingResult.supertraces`
+  using names such as
+  `interaction_wilson_line_internal_integral_finite_part[<entry>]`. Aggregate
+  results are unchanged. This gives the next `cHW` probe a smaller source
+  boundary for locating the mismatching trace/order family.

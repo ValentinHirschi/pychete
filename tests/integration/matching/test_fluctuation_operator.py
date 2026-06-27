@@ -2249,6 +2249,47 @@ def test_wilson_line_hybrid_internal_reuses_component_laurent_parts(
     )
 
 
+def test_wilson_line_internal_results_expose_entrywise_laurent_sums() -> None:
+    theory = Theory("one_loop_setup_wilson_line_entrywise_laurent")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    z = theory.define_coupling("z", self_conjugate=True)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(light)
+        - y() * heavy() * light() ** 2 / 2
+        - z() * heavy() ** 2 / 2
+    )
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=0,
+    )
+    entry_label = plan.entries[0].label
+
+    result = setup.interaction_wilson_line_internal_matching_result(plan, tensor_reduce=False)
+    assert result.metadata["interaction_wilson_line_term_count_by_entry"][entry_label] > 0
+    assert_expr_equal(
+        result.expression(f"interaction_wilson_line_internal_integral_sum[{entry_label}]"),
+        result.expression("interaction_wilson_line_internal_integral_sum"),
+    )
+    assert_expr_equal(
+        result.expression(f"interaction_wilson_line_internal_integral_pole_part[{entry_label}]"),
+        result.expression("interaction_wilson_line_internal_integral_pole_part"),
+    )
+    assert_expr_equal(
+        result.expression(f"interaction_wilson_line_internal_integral_finite_part[{entry_label}]"),
+        result.expression("interaction_wilson_line_internal_integral_finite_part"),
+    )
+
+    subtracted = setup.interaction_wilson_line_internal_minimal_subtraction_result(plan, tensor_reduce=False)
+    assert_expr_equal(
+        subtracted.expression(f"interaction_wilson_line_internal_integral_finite_part[{entry_label}]"),
+        subtracted.off_shell_eft_lagrangian,
+    )
+
+
 def test_one_loop_match_rejects_simultaneous_wilson_line_and_cde_expansion_options() -> None:
     theory = Theory("one_loop_match_wilson_line_cde_conflict")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

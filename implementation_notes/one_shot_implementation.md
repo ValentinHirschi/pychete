@@ -1160,16 +1160,56 @@
   tests/integration/validation/test_validation_fixtures.py -k "wilson_line or
   candidate_metadata" -q` passed with `3 passed, 38 deselected`; `python -m
   mypy` reported no issues; and `git diff --check` passed.
+- Current sandbox-policy hardening: `AGENTS.md` and both live one-shot notes
+  now explicitly ban the `exec_command` parameter
+  `sandbox_permissions: "require_escalated"` for this repository. Direct
+  sandboxed commands may still run when appropriate, but any `.git` metadata
+  write or direct `Operation not permitted` failure must go through the
+  user-started `listener.py` route instead of the tool approval path. This
+  policy-only commit was pushed as `5679d04`.
+- Current Singlet `cHW` frontier remeasurement: a bounded
+  `ValidationFixture.one_loop_preview_gap_report(...)` using the Wilson-line
+  route, internal minimal subtraction, Matchete evaluated-hbar normalization,
+  target filtering, and only the projected `cHW` condition completed far
+  enough to expose the new accounting. The candidate is still canonically
+  different from the Matchete `cHW` reference. The target-filtered Wilson-line
+  source contains 65 generated terms across 35 plan entries, with 24 empty
+  entries and 11 nonzero entries. Surviving terms split as `hScalar: 5`,
+  `hScalar-hScalar: 20`, and `hScalar-lScalar: 40`; the nonzero entries are
+  exactly the total-derivative-order-four entries
+  `hScalar#wilson4_o4`, `hScalar-hScalar#wilson15_o0_4` through
+  `hScalar-hScalar#wilson19_o4_0`, and `hScalar-lScalar#wilson30_o0_4`
+  through `hScalar-lScalar#wilson34_o4_0`. A follow-up monolithic direct value
+  projection was stopped via `stop.order` because it produced no intermediate
+  output after several minutes, confirming that smaller entrywise projection
+  probes are needed before more physics changes.
+- Current Wilson-line entrywise-backend slice: internal Wilson-line result
+  paths now keep evaluated scalar-vacuum-integral terms grouped by expansion
+  plan entry. `MatchingResult.supertraces` exposes
+  `interaction_wilson_line_internal_integral_sum[<entry>]`,
+  `interaction_wilson_line_internal_integral_pole_part[<entry>]`, and
+  `interaction_wilson_line_internal_integral_finite_part[<entry>]` for nonzero
+  generated entries, while aggregate sums remain unchanged. This is a
+  diagnostic/performance boundary for the next Singlet `cHW` pass: project the
+  smaller entry-level finite pieces to identify which trace/order family
+  produces the mismatch instead of projecting one monolithic hybrid source.
+- Focused validation for the entrywise-backend slice used the 30 GiB watchdog
+  wrapper: `pytest tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_internal_results_expose_entrywise_laurent_sums -q`
+  passed with `1 passed`; `pytest
+  tests/integration/matching/test_fluctuation_operator.py -k "wilson_line and
+  internal" -q` passed with `2 passed, 99 deselected`; and `python -m mypy`
+  reported no issues. `git diff --check` is pending for the green milestone.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
   - target-local Wilson-line projection-performance work for Singlet `cHW`:
-    process/evaluate generated order-four `hScalar` terms in smaller batches,
-    keep the source filtered by field/field-strength requirements, and avoid
-    global collection/expansion/factorization before native coefficient
-    extraction;
+    project the new entrywise internal finite-part supertraces for the 11
+    nonzero order-four `hScalar`, `hScalar-hScalar`, and `hScalar-lScalar`
+    plan entries, keep the source filtered by field/field-strength
+    requirements, and avoid global collection/expansion/factorization before
+    native coefficient extraction;
   - explicit Wilson-line style supertrace representation and metadata, using
     current Matchete behavior as the reference direction rather than expanding
     the legacy CDE route;
