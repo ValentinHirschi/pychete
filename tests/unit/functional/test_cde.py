@@ -10,6 +10,7 @@ from pychete.cde import (
     fermionic_covariant_propagator_expansion_terms,
     open_covariant_derivative,
 )
+from pychete.functional import simplify_trivial_cd_operators
 
 from tests.conftest import assert_expr_equal
 
@@ -71,6 +72,18 @@ def test_open_covariant_derivative_rejects_invalid_bounds() -> None:
         act_with_open_covariant_derivatives(Expression.num(1), max_chain_arity=0)
     with pytest.raises(ValueError, match="max_passes"):
         act_with_open_covariant_derivatives(Expression.num(1), max_passes=-1)
+
+
+def test_simplify_trivial_cd_operators_removes_derivatives_of_zero() -> None:
+    theory = Theory("trivial_cd_cleanup")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+
+    expr = s.CD(mu, Expression.num(0)) + phi() * s.CD(s.List(mu, nu), Expression.num(0)) + s.CD(mu, phi())
+    expected = s.CD(mu, phi())
+
+    assert_expr_equal(simplify_trivial_cd_operators(expr), expected)
 
 
 def test_bosonic_covariant_propagator_expansion_order_zero_is_scalar_propagator() -> None:

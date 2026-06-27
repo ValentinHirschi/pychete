@@ -407,3 +407,11 @@ without Warsaw-specific core assumptions.
   function-atom parameters after dummy-index canonicalization. Full
   `tests/integration/matching/test_fluctuation_operator.py` now passes locally
   under the 30 GiB watchdog.
+- Latest generated-numerator cleanup: commutator-enabled Singlet `cHW`
+  Wilson-line source generation now keeps 25 filtered field-strength terms for
+  the selected order-four `hScalar`/`hScalar-hScalar` plan, and generated
+  `CD(..., 0)` wrappers are removed with a Symbolica replacement helper before
+  idenso/vakint work. This is a performance and source-cleanliness improvement,
+  not yet full `cHW` parity; the remaining blockers are still backend finite
+  extraction/projection through the full hybrid result, generic on-shell/IBP
+  reductions, and group/CG simplification.

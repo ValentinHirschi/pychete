@@ -1056,6 +1056,25 @@
   `MatchingResult.compare_to(...)` probes, so canonized dummy labels inside
   function atoms such as `Yd[d2, index_i2]` are included in the Symbolica
   evaluator parameter map.
+- Current Wilson-line/CDE generated-numerator cleanup: commutator-enabled
+  Singlet `cHW` order-four Wilson-line source generation now produces 25
+  filtered field-strength-bearing terms for the selected `hScalar` and
+  `hScalar-hScalar` plan. The diagnostic also exposed large intermediate
+  `CD(..., 0)` wrappers after commutator expansion. Added
+  `simplify_trivial_cd_operators(...)`, implemented as a Symbolica replacement
+  over the central `CD` pattern, and call it at the generated-numerator
+  postprocessing boundary before idenso/vakint work. This does not solve the
+  final `cHW = hbar*A^2*gL^2/(12*M^4)` parity yet, but it removes a real
+  expression-size/performance obstacle and prevents zero-derivative clutter
+  from influencing target-local filtering/projection.
+- Focused validation for this cleanup used the 30 GiB watchdog wrapper:
+  `pytest tests/unit/functional/test_cde.py::test_simplify_trivial_cd_operators_removes_derivatives_of_zero tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_commutator_terms_survive_color_simplification_with_dummy_indices -q`
+  passed with `2 passed`; the broader affected gate
+  `pytest tests/unit/functional/test_cde.py tests/integration/matching/test_fluctuation_operator.py -k "trivial_cd_cleanup or wilson_line_commutator or symmetry_vanishing_wilson_terms or expand_wilson_terms or wilson_line_postprocess" -q`
+  passed with `13 passed, 99 deselected`; `python -m mypy` reported no issues.
+  A term-level Singlet diagnostic confirmed `filtered_terms=25`,
+  `zero_cd_terms=0`, and `field_strength_terms=25` for the commutator-enabled
+  `cHW` Wilson-line plan.
 
 ## Next Work
 

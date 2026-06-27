@@ -30,7 +30,12 @@ from .expr import (
     product_expr,
     sum_expr,
 )
-from .functional import derive_eom, eom_replacement_rules_for_expression, partial_functional_derivative
+from .functional import (
+    derive_eom,
+    eom_replacement_rules_for_expression,
+    partial_functional_derivative,
+    simplify_trivial_cd_operators,
+)
 from .indices import relabel_dummy_indices
 from .logging import get_logger, progress
 from .matching_options import (
@@ -6540,7 +6545,7 @@ def _postprocess_bosonic_cde_numerator(
         )
     if expand_covariant_derivative_commutators:
         numerator = theory.expand_covariant_derivative_commutators(numerator)
-    return numerator
+    return simplify_trivial_cd_operators(numerator)
 
 
 def _postprocess_wilson_line_numerator(

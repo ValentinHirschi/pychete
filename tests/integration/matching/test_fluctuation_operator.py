@@ -1924,6 +1924,7 @@ def test_wilson_line_commutator_terms_survive_color_simplification_with_dummy_in
 
     assert len(terms) == 5
     assert all("pychete::FieldStrength" in canonical_string(term.numerator) for term in terms)
+    assert all(not bool(term.numerator.matches(s.CD(s.CDIndexWildcard, Expression.num(0)))) for term in terms)
     assert "pychete::CG" in rendered
     assert "spenso::" not in rendered
 

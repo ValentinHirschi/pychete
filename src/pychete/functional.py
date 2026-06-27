@@ -94,6 +94,35 @@ def expand_cd_operators(expr: Expression) -> Expression:
     return out
 
 
+def simplify_trivial_cd_operators(expr: Expression) -> Expression:
+    """Remove explicit covariant derivatives acting on zero.
+
+    Generated Wilson-line and CDE expressions can contain intermediate
+    ``CD(indices, 0)`` wrappers after commutator expansion. Keep this as a
+    Symbolica pattern rewrite so only the trivial derivative operator is
+    removed; nonzero ``CD`` bodies remain available for later projection and
+    backend simplification.
+    """
+
+    cd_pat = cd_pattern()
+    if not bool(expr.matches(cd_pat)):
+        return expr
+
+    def cd_zero_replacement(match: dict[Expression, Expression]) -> Expression:
+        body = match[s.CDBodyWildcard]
+        if is_zero(body):
+            return Expression.num(0)
+        return cd_pat.replace_wildcards(match)
+
+    out = expr
+    for _ in range(16):
+        updated = out.replace(cd_pat, cd_zero_replacement).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
+
+
 def _single_cd(index: Expression, expr: Expression) -> Expression:
     varied = expr.replace_multiple(_cd_variation_replacements(index))
     varied = _linearize_variation_wrappers(varied, s.CDVariationParameter)
