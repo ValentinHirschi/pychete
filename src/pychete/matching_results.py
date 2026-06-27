@@ -76,6 +76,8 @@ _MAX_CANONIZED_PROJECTION_GENERIC_TERMS = 16
 _MAX_CANONIZED_PROJECTION_GENERIC_BYTES = 8_192
 _MAX_PROJECTION_EXPAND_TERMS = 128
 _MAX_PROJECTION_EXPAND_BYTES = 32_768
+_MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_TERMS = 512
+_MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_BYTES = 512_000
 
 LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE = "loop_only_off_shell_projection_source"
 LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE = "loop_only_on_shell_projection_source"
@@ -376,6 +378,7 @@ class MatchingResult:
         conditions: dict[str, Expression] = {}
         coefficient_extractor = _ProjectionCoefficientExtractor(
             expr,
+            theory=self.theory,
             wildcard_index_projection=canonize_indices,
         )
         for target, projection_expression, ibp_aliases in zip(
@@ -955,6 +958,7 @@ def _transform_optional_expression(
 @dataclass
 class _ProjectionCoefficientExtractor:
     source: Expression
+    theory: Theory | None = None
     collected_source: Expression | None = None
     factored_source: Expression | None = None
     filtered_sources: dict[
@@ -980,6 +984,7 @@ class _ProjectionCoefficientExtractor:
 
         source = self._filtered_source(target)
         source = _projection_derivative_compatible_source(source, target)
+        source = _field_strength_group_simplified_projection_source(self.theory, source, target)
         wildcard_coefficient = _indexed_field_strength_wildcard_projection_coefficient(source, target)
         if wildcard_coefficient is not None:
             return wildcard_coefficient
@@ -1027,6 +1032,7 @@ class _ProjectionCoefficientExtractor:
             return None
         term_extractor = _ProjectionCoefficientExtractor(
             source,
+            theory=self.theory,
             collected_source=self.collected_source,
             factored_source=self.factored_source,
             filtered_sources=self.filtered_sources,
@@ -1152,6 +1158,30 @@ def _source_is_small_enough_for_generic_projection(source: Expression) -> bool:
     )
 
 
+def _source_is_small_enough_for_field_strength_group_simplification(source: Expression) -> bool:
+    return (
+        len(source) <= _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_TERMS
+        and source.get_byte_size() <= _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_BYTES
+    )
+
+
+def _field_strength_group_simplified_projection_source(
+    theory: Theory | None,
+    source: Expression,
+    target: Expression,
+) -> Expression:
+    if theory is None:
+        return source
+    if not bool(target.matches(field_strength_pattern())):
+        return source
+    if not _source_is_small_enough_for_field_strength_group_simplification(source):
+        return source
+    from .backends import idenso as idenso_backend
+
+    simplified = idenso_backend.simplify_pychete_field_strength_group_algebra(theory, source)
+    return simplified if not bool(simplified == source) else source
+
+
 def _expanded_projection_coefficient(
     source: Expression,
     target: Expression,
@@ -1203,6 +1233,7 @@ def _without_wildcard_index_projection(
 ) -> _ProjectionCoefficientExtractor:
     return _ProjectionCoefficientExtractor(
         source=extractor.source,
+        theory=extractor.theory,
         collected_source=extractor.collected_source,
         factored_source=extractor.factored_source,
         filtered_sources=extractor.filtered_sources,
@@ -1555,6 +1586,7 @@ def _target_local_canonized_projection(
     return (
         _ProjectionCoefficientExtractor(
             canon_source,
+            theory=source_extractor.theory,
             filtered_sources=filtered_sources,
             wildcard_index_projection=True,
         ),

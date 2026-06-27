@@ -491,3 +491,17 @@ without Warsaw-specific core assumptions.
   project to zero. This moves the active `cHW` gap away from coefficient
   extraction and toward Wilson-line source generation/simplification, especially
   Lorentz, field-strength, group, and basis/on-shell reduction.
+- Latest Wilson-line propagation/backend update: explicit Wilson-line paths
+  now insert field-space propagation `Delta(...)` factors between adjacent
+  interaction entries, the idenso bridge contracts those pychete deltas into
+  registered `CG(...)` tensors before group simplification, and the vakint
+  tensor-reduction adapter now uses an evaluation-free engine so PySecDec is
+  not required for tensor reduction. A focused projection regression now
+  handles Wilson-line-shaped `Metric * Delta * CG * CG * F * F * H^\dagger H`
+  sources. The actual Singlet `cHW` entrywise probe is still not green: after
+  the new cleanup, mixed heavy-light sources visibly contain target-shaped
+  `A^2*gL^2*H^\dagger H*W^2/M^4` terms and isolated terms project correctly,
+  but full entry sums still cancel to zero for the mixed entries. The only
+  projected entrywise total remains the spurious
+  `-hbar*gL^4*kappa/(12*M^2)` pure-heavy contribution, so no full Matchete
+  one-loop integration test is reproduced yet.

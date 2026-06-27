@@ -701,6 +701,7 @@ class SupertraceBlockTrace:
                     prefactor=self.power_type_log_prefactor * Expression.num(entry_path.sign),
                     entries=entry_path.entries,
                     propagator_modes=entry_path.next_modes,
+                    propagation_target_modes=entry_path.propagation_target_modes,
                     closing_mode=entry_path.next_modes[-1],
                     link_indices=link_indices,
                 )
@@ -798,6 +799,7 @@ class WilsonLineTracePath:
     prefactor: Expression
     entries: tuple[Expression, ...]
     propagator_modes: tuple[FluctuationMode, ...]
+    propagation_target_modes: tuple[FluctuationMode, ...]
     closing_mode: FluctuationMode
     link_indices: tuple[Expression, Expression]
 
@@ -969,6 +971,14 @@ class WilsonLineTracePath:
                 loop_numerator *= expansion.loop_momentum_numerator
                 loop_momentum_indices.extend(expansion.loop_momentum_indices)
                 operands.append(_fresh_trace_entry_dummy_indices(entry, slot_index))
+                operands.append(
+                    _fresh_fluctuation_propagation_pairing(
+                        mode,
+                        self.propagation_target_modes[slot_index],
+                        slot_index,
+                        (slot_index + 1) % self.order,
+                    )
+                )
                 operands.extend(expansion.open_cd_operands)
                 masses.append(_fluctuation_mass_squared(mode))
                 powers.append(expansion.denominator_power)
@@ -1026,6 +1036,65 @@ def _fresh_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expr
     """Make dummy contractions local to one ordered trace insertion."""
 
     return relabel_dummy_indices(entry, start=200_000 + 1_000 * slot_index)
+
+
+def _fresh_fluctuation_propagation_pairing(
+    column_mode: FluctuationMode,
+    target_row_mode: FluctuationMode,
+    column_slot_index: int,
+    target_slot_index: int,
+) -> Expression:
+    """Return the field-space identity carried by one explicit propagator slot."""
+
+    propagated_field = column_mode.field if column_mode.self_conjugate else _conjugate_fluctuation_field(column_mode.field)
+    source = _slot_local_fluctuation_field(propagated_field, column_slot_index)
+    target = _slot_local_fluctuation_field(target_row_mode.field, target_slot_index)
+    return _fluctuation_field_pairing(source, target)
+
+
+def _slot_local_fluctuation_field(field: Expression, slot_index: int) -> Expression:
+    conjugated = is_bar_field(field)
+    base = bar_field_inner(field) if conjugated else field
+    if not is_head(base, s.Field):
+        return field
+    indices = tuple(
+        s.Index(s.dummy_index(200_000 + 1_000 * slot_index + offset), index[1])
+        if is_head(index, s.Index)
+        else index
+        for offset, index in enumerate(list_items(base[2]))
+    )
+    relabeled = s.Field(base[0], base[1], list_expr(*indices), base[3])
+    return s.Bar(relabeled) if conjugated else relabeled
+
+
+def _fluctuation_field_pairing(source: Expression, target: Expression) -> Expression:
+    source_base = bar_field_inner(source) if is_bar_field(source) else source
+    target_base = bar_field_inner(target) if is_bar_field(target) else target
+    source_conjugated = is_bar_field(source)
+    target_conjugated = is_bar_field(target)
+    if source_conjugated != target_conjugated:
+        raise ValueError(
+            "Propagation pairing requires aligned fluctuation orientations, got "
+            f"{canonical_string(source)} and {canonical_string(target)}"
+        )
+    if not bool(field_label(source_base) == field_label(target_base)):
+        raise ValueError(
+            "Propagation pairing requires matching field labels, got "
+            f"{canonical_string(source_base)} and {canonical_string(target_base)}"
+        )
+    source_indices = list_items(source_base[2])
+    target_indices = list_items(target_base[2])
+    if len(source_indices) != len(target_indices):
+        raise ValueError("Propagation pairing field-index ranks do not match")
+    factors: list[Expression] = []
+    for source_index, target_index in zip(source_indices, target_indices, strict=True):
+        if not is_head(source_index, s.Index) or not is_head(target_index, s.Index):
+            raise ValueError("Propagation pairing requires concrete Index field slots")
+        if source_conjugated:
+            factors.append(s.Delta(s.Index(source_index[0], s.Bar(source_index[1])), target_index))
+        else:
+            factors.append(s.Delta(source_index, s.Index(target_index[0], s.Bar(target_index[1]))))
+    return product_expr(factors)
 
 
 def _fresh_cde_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expression:
@@ -7550,6 +7619,7 @@ class _SupertraceBlockEntryPath:
     sign: int
     entries: tuple[Expression, ...]
     next_modes: tuple[FluctuationMode, ...]
+    propagation_target_modes: tuple[FluctuationMode, ...]
 
 
 def _supertrace_block_entry_paths(blocks: tuple[FluctuationOperatorBlock, ...]) -> tuple[_SupertraceBlockEntryPath, ...]:
@@ -7562,9 +7632,11 @@ def _supertrace_block_entry_paths(blocks: tuple[FluctuationOperatorBlock, ...]) 
         block_index: int,
         row_index: int,
         first_row_key: str,
+        first_row_mode: FluctuationMode,
         first_sign: int,
         entries: tuple[Expression, ...],
         next_modes: tuple[FluctuationMode, ...],
+        propagation_target_modes: tuple[FluctuationMode, ...],
     ) -> None:
         block = blocks[block_index]
         for column_index, column_mode in enumerate(block.columns):
@@ -7579,19 +7651,23 @@ def _supertrace_block_entry_paths(blocks: tuple[FluctuationOperatorBlock, ...]) 
                         sign=first_sign,
                         entries=next_entries,
                         next_modes=next_path_modes,
+                        propagation_target_modes=(*propagation_target_modes, first_row_mode),
                     )
                 )
                 continue
             next_row_index = row_index_by_block[block_index + 1].get(propagated_key)
             if next_row_index is None:
                 continue
+            next_row_mode = blocks[block_index + 1].rows[next_row_index]
             visit(
                 block_index + 1,
                 next_row_index,
                 first_row_key,
+                first_row_mode,
                 first_sign,
                 next_entries,
                 next_path_modes,
+                (*propagation_target_modes, next_row_mode),
             )
 
     for row_index, mode in enumerate(blocks[0].rows):
@@ -7599,7 +7675,9 @@ def _supertrace_block_entry_paths(blocks: tuple[FluctuationOperatorBlock, ...]) 
             0,
             row_index,
             canonical_string(mode.field),
+            mode,
             mode.supertrace_sign,
+            (),
             (),
             (),
         )

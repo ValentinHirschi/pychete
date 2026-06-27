@@ -61,6 +61,20 @@ def test_vakint_method_factories_import_without_engine_creation() -> None:
     assert "AlphaLoop" in str(method)
 
 
+def test_vakint_tensor_reduce_uses_tensor_only_default_engine(monkeypatch: pytest.MonkeyPatch) -> None:
+    engine = FakeVakintEngine()
+    expr = S("I")
+
+    def fail_default_engine() -> None:
+        raise AssertionError("tensor_reduce should not use the full default evaluation engine")
+
+    monkeypatch.setattr(vakint, "default_engine", fail_default_engine)
+    monkeypatch.setattr(vakint, "default_tensor_reduction_engine", lambda: engine)
+
+    assert canonical_string(vakint.tensor_reduce(expr)) == canonical_string(S("reduced")(expr))
+    assert [name for name, _args in engine.calls] == ["tensor_reduce"]
+
+
 def test_vakint_adapters_delegate_integral_operations_to_engine() -> None:
     engine = FakeVakintEngine()
     expr = S("I")

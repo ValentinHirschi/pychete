@@ -270,6 +270,19 @@ def create_engine(**kwargs: Any) -> Any:
         return native_module().Vakint(**kwargs)
 
 
+def create_tensor_reduction_engine(**kwargs: Any) -> Any:
+    """Create a native vakint engine that does not require evaluation backends.
+
+    Tensor reduction is topology independent in vakint and does not need the
+    analytic or numerical integral-evaluation stack. Passing an explicit empty
+    evaluation order avoids constructor-time checks for optional evaluators
+    such as PySecDec while keeping the native tensor reducer available.
+    """
+
+    kwargs.setdefault("evaluation_order", [])
+    return create_engine(**kwargs)
+
+
 @cache
 def default_engine() -> Any:
     """Return a cached default native vakint engine."""
@@ -277,10 +290,23 @@ def default_engine() -> Any:
     return create_engine()
 
 
+@cache
+def default_tensor_reduction_engine() -> Any:
+    """Return a cached native vakint tensor-reduction-only engine."""
+
+    return create_tensor_reduction_engine()
+
+
 def _engine(engine: Any | None) -> Any:
     if engine is not None:
         return engine
     return default_engine()
+
+
+def _tensor_reduction_engine(engine: Any | None) -> Any:
+    if engine is not None:
+        return engine
+    return default_tensor_reduction_engine()
 
 
 def vakint_expression(expr: Expression) -> Any:
@@ -342,7 +368,7 @@ def tensor_reduce(integral_expression: Expression, *, engine: Any | None = None)
 
     integral_expression = _prepare_integral_expression(integral_expression)
     _LOGGER.debug("tensor-reducing vakint expression with native engine")
-    return _engine(engine).tensor_reduce(integral_expression)
+    return _tensor_reduction_engine(engine).tensor_reduce(integral_expression)
 
 
 def evaluate_integral(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
@@ -878,9 +904,11 @@ def finite_part(expr: Expression, *, epsilon: Expression | None = None) -> Expre
 
 __all__ = [
     "create_engine",
+    "create_tensor_reduction_engine",
     "collect_identical_propagators",
     "decode_pychete_namespace",
     "default_engine",
+    "default_tensor_reduction_engine",
     "edge",
     "epsilon_coefficient",
     "epsilon_symbol",

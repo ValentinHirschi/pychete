@@ -1227,6 +1227,47 @@
   or field_strength_target_denominators or entrywise_laurent" -q` passed with
   `3 passed, 99 deselected`; `python -m mypy` reported no issues; and
   `git diff --check` passed.
+- Current Wilson-line propagation/backend slice: explicit Wilson-line path
+  expansion now records the fluctuation row mode reached after each propagator
+  slot and inserts a slot-local field-space propagation `Delta(...)` between
+  adjacent interaction entries. This fixes the previous disconnected
+  heavy-light generator-chain shape in mixed Singlet `hScalar-lScalar`
+  sources. The idenso bridge now contracts explicit pychete `Delta` heads into
+  neighboring registered `CG(...)` tensors before native-backed colour and
+  field-strength group simplification, and the vakint adapter now uses a
+  tensor-reduction-only default engine (`evaluation_order=[]`) for
+  `vakint.tensor_reduce(...)` so PySecDec is not required for
+  topology-independent tensor reduction.
+- Current projection-local cleanup: `_ProjectionCoefficientExtractor` now
+  carries the active theory and, for bounded field-strength projection targets,
+  applies `idenso.simplify_pychete_field_strength_group_algebra(...)` only to
+  the conservatively filtered target-local source before native Symbolica
+  coefficient extraction. A focused regression shows Wilson-line-shaped
+  `Metric * Delta * CG * CG * F * F * H^\dagger H` sources project onto the
+  generic `cHW` target with the expected SU(2) trace factor.
+- Current Singlet `cHW` remeasurement after this slice: the representative
+  mixed `hScalar-lScalar` `(2,2)` entry now visibly reduces local terms to
+  compact `A^2*gL^2*H^\dagger H*W^2/M^4` structures, and individual isolated
+  terms project correctly. However, the full simplified target-local
+  `(2,2)` source cancels under the current generated entry sum, and the
+  entrywise probe over all 11 nonzero order-four entries still returns only
+  `-hbar*gL^4*kappa/(12*M^2)` from `hScalar#wilson4_o4`, with all
+  `hScalar-hScalar` and `hScalar-lScalar` entries projecting to zero. No full
+  Matchete one-loop integration test is reproduced yet. The first milestone
+  remains Singlet `cHW`; the next blocker is no longer the missing propagation
+  delta or vakint tensor-reduction constructor, but the remaining Wilson-line
+  source/sign/combinatorics and basis/on-shell reduction needed to produce the
+  Matchete `+hbar*A^2*gL^2/(12*M^4)` condition while eliminating the spurious
+  pure-heavy `kappa*gL^4/M^2` projection.
+- Focused validation for this slice: `pytest
+  tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_contracts_pychete_delta_head_into_cg_tensor
+  tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_projects_su2_field_strength_bilinear_with_pychete_delta
+  tests/unit/backends/test_vakint_backend.py::test_vakint_tensor_reduce_uses_tensor_only_default_engine
+  tests/integration/matching/test_fluctuation_operator.py::test_matching_projection_simplifies_target_local_field_strength_group_structures
+  tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_complex_scalar_paths_follow_conjugate_propagators
+  tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_path_expands_propagator_terms_without_cde_result_object
+  -q` passed with `6 passed`; `python -m mypy` reported no issues; and
+  `git diff --check` passed.
 
 ## Next Work
 

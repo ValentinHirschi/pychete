@@ -105,7 +105,8 @@ def simplify_pychete_color_algebra(
 
     from . import spenso
 
-    normalized = _replace_adjoint_generators_with_structure_constants(theory, expr)
+    normalized = contract_pychete_deltas_into_cg_tensors(expr)
+    normalized = _replace_adjoint_generators_with_structure_constants(theory, normalized)
     groups = _cg_groups_in_expression(theory, normalized)
     if not groups:
         return normalized.expand()
@@ -141,6 +142,106 @@ def decode_native_color_wrappers(
     if decode_metrics:
         decoded = _decode_native_color_metrics(theory, decoded, groups)
     return _decode_native_color_tensors(theory, decoded, groups).expand()
+
+
+@cache
+def _pychete_delta_cg_contraction_replacements() -> tuple[Replacement, ...]:
+    left_label = s.head("pychete_delta_cg_left_")
+    right_label = s.head("pychete_delta_cg_right_")
+    representation = s.head("pychete_delta_cg_representation_")
+    cg_label = s.head("pychete_delta_cg_label_")
+    cg_indices = s.head("pychete_delta_cg_indices_")
+
+    left = s.Index(left_label, representation)
+    right_dual = s.Index(right_label, s.Bar(representation))
+    left_dual = s.Index(left_label, s.Bar(representation))
+    right = s.Index(right_label, representation)
+    cg = s.CG(cg_label, cg_indices)
+    direct_pattern = s.Delta(left, right_dual) * cg
+    conjugate_pattern = s.Delta(left_dual, right) * cg
+
+    def direct_contract(match: dict[Expression, Expression]) -> Expression:
+        matched = direct_pattern.replace_wildcards(match)
+        contracted = _contract_delta_match_into_cg(
+            match,
+            cg_label=cg_label,
+            cg_indices=cg_indices,
+            first_label=left_label,
+            second_label=right_label,
+            representation=representation,
+            direct=True,
+        )
+        return matched if contracted is None else contracted
+
+    def conjugate_contract(match: dict[Expression, Expression]) -> Expression:
+        matched = conjugate_pattern.replace_wildcards(match)
+        contracted = _contract_delta_match_into_cg(
+            match,
+            cg_label=cg_label,
+            cg_indices=cg_indices,
+            first_label=left_label,
+            second_label=right_label,
+            representation=representation,
+            direct=False,
+        )
+        return matched if contracted is None else contracted
+
+    return (
+        Replacement(direct_pattern, direct_contract, cg_label.req_tag(SymbolRole.CG_TENSOR.value)),
+        Replacement(conjugate_pattern, conjugate_contract, cg_label.req_tag(SymbolRole.CG_TENSOR.value)),
+    )
+
+
+def _contract_delta_match_into_cg(
+    match: dict[Expression, Expression],
+    *,
+    cg_label: Expression,
+    cg_indices: Expression,
+    first_label: Expression,
+    second_label: Expression,
+    representation: Expression,
+    direct: bool,
+) -> Expression | None:
+    rep = match[representation]
+    if direct:
+        replacements = (
+            (match[second_label], match[first_label], rep),
+            (match[first_label], match[second_label], s.Bar(rep)),
+        )
+    else:
+        replacements = (
+            (match[first_label], match[second_label], rep),
+            (match[second_label], match[first_label], s.Bar(rep)),
+        )
+    for source_label, target_label, index_representation in replacements:
+        updated_indices, changed = _replace_cg_index_label(
+            match[cg_indices],
+            source_label=source_label,
+            target_label=target_label,
+            representation=index_representation,
+        )
+        if changed:
+            return s.CG(match[cg_label], updated_indices)
+    return None
+
+
+def _replace_cg_index_label(
+    indices_expr: Expression,
+    *,
+    source_label: Expression,
+    target_label: Expression,
+    representation: Expression,
+) -> tuple[Expression, bool]:
+    indices = list_items(indices_expr)
+    updated: list[Expression] = []
+    changed = False
+    for index in indices:
+        if is_head(index, s.Index) and bool(index[0] == source_label) and bool(index[1] == representation):
+            updated.append(s.Index(target_label, representation))
+            changed = True
+        else:
+            updated.append(index)
+    return s.List(*updated), changed
 
 
 def simplify_gamma(expr: Expression) -> Expression:
@@ -326,9 +427,23 @@ def simplify_pychete_field_strength_group_algebra(theory: Any, expr: Expression)
     replacement rules backed by idenso colour traces.
     """
 
-    result = simplify_pychete_field_strength_metrics(expr)
+    result = contract_pychete_deltas_into_cg_tensors(expr)
+    result = simplify_pychete_field_strength_metrics(result)
     result = simplify_su2_field_strength_generator_bilinears(theory, result)
     return simplify_su2_u1_field_strength_generator_bilinears(theory, result)
+
+
+def contract_pychete_deltas_into_cg_tensors(expr: Expression) -> Expression:
+    """Contract explicit pychete ``Delta`` factors into registered ``CG`` tensors.
+
+    Wilson-line transporters emit the public ``Delta(Index(...), Index(...))``
+    head, while the native colour bridge lowers registered ``CG`` tensors.
+    Normalize the transporter deltas into neighboring CG index labels before
+    handing the expression to the native-backed colour and field-strength
+    projectors.
+    """
+
+    return expr.replace_multiple(_pychete_delta_cg_contraction_replacements(), repeat=True).expand()
 
 
 def decode_native_color_wrappers_and_simplify_field_strengths(theory: Any, expr: Expression) -> Expression:
@@ -1718,6 +1833,7 @@ def _pychete_dirac_word(dirac_factors: tuple[Expression, ...]) -> Expression:
 __all__ = [
     "cook_function",
     "cook_indices",
+    "contract_pychete_deltas_into_cg_tensors",
     "decode_native_color_wrappers",
     "decode_native_color_wrappers_and_simplify_field_strengths",
     "dirac_adjoint",

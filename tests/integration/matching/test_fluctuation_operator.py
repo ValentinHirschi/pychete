@@ -3333,6 +3333,65 @@ def test_matching_projection_normalizes_field_strength_target_denominators_befor
     assert_expr_equal(projected["cHW"], coefficient * theory.coupling_handle("gL")() ** 2)
 
 
+def test_matching_projection_simplifies_target_local_field_strength_group_structures() -> None:
+    theory = Theory("one_loop_setup_project_field_strength_group_local")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    target = smeft_warsaw_operator(theory, "cHW")
+    assert target is not None
+    coefficient = S("field_strength_group_projection_coefficient")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    higgs_left = theory.index("higgs_left", fund)
+    higgs_right = theory.index("higgs_right", fund)
+    internal_left = theory.index("internal_left", fund)
+    internal_right = theory.index("internal_right", fund)
+    internal_left_dual = theory.index("internal_left", s.Bar(fund))
+    internal_right_dual = theory.index("internal_right", s.Bar(fund))
+    higgs_right_dual = theory.index("higgs_right", s.Bar(fund))
+    adjoint_left = theory.index("adjoint_left", adj)
+    adjoint_right = theory.index("adjoint_right", adj)
+    metric_left = s.Index(S(f"{theory.name}::index_wilson_line_projection_left"), s.Lorentz)
+    metric_right = s.Index(S(f"{theory.name}::index_wilson_line_projection_right"), s.Lorentz)
+    shared_lorentz = s.Index(S("pychete::wilson_line_projection_shared"), s.Lorentz)
+    left_strength = s.FieldStrength(
+        theory.field_handle("W").label,
+        s.List(shared_lorentz, metric_right),
+        s.List(adjoint_left),
+        s.List(),
+    )
+    right_strength = s.FieldStrength(
+        theory.field_handle("W").label,
+        s.List(shared_lorentz, metric_left),
+        s.List(adjoint_right),
+        s.List(),
+    )
+    source_operator = (
+        higgs(higgs_left)
+        * s.Bar(higgs(higgs_right))
+        * s.Delta(internal_left, internal_right_dual)
+        * generator(adjoint_left, higgs_left, internal_left_dual)
+        * generator(adjoint_right, internal_right, higgs_right_dual)
+        * s.Metric(metric_left, metric_right)
+        * left_strength
+        * right_strength
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    projected = result.project_matching_conditions({"cHW": target}, expand_source=False)
+
+    assert_expr_equal(
+        projected["cHW"],
+        coefficient * theory.coupling_handle("gL")() ** 2 / Expression.num(4),
+    )
+
+
 def test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator() -> None:
     theory = Theory("one_loop_setup_bosonic_cde_projects_chd")
     theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")

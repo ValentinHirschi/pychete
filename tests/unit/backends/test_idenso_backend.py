@@ -119,6 +119,26 @@ def test_idenso_bridge_contracts_pychete_generator_with_delta() -> None:
     assert "spenso::" not in canonical_string(simplified)
 
 
+def test_idenso_bridge_contracts_pychete_delta_head_into_cg_tensor() -> None:
+    theory = Theory("idenso_color_su2_generator_pychete_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    i = theory.index("i", s.Bar(fund))
+    k = theory.index("k", fund)
+    ell = theory.index("ell", fund)
+    ell_dual = theory.index("ell", s.Bar(fund))
+
+    expr = s.Delta(k, ell_dual) * generator(adj_a, ell, i)
+    expected = generator(adj_a, k, i)
+    simplified = idenso.contract_pychete_deltas_into_cg_tensors(expr)
+
+    assert _same(simplified, expected)
+    assert "pychete::Delta" not in canonical_string(simplified)
+
+
 def test_idenso_bridge_decodes_uncontracted_pychete_structure_constant() -> None:
     theory = Theory("idenso_color_su3_uncontracted_f")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
@@ -349,6 +369,44 @@ def test_idenso_bridge_shared_field_strength_group_helper_projects_su2_bilinear(
     simplified = idenso.simplify_pychete_field_strength_group_algebra(theory, expr)
 
     assert _same(simplified, expected)
+    assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_projects_su2_field_strength_bilinear_with_pychete_delta() -> None:
+    theory = Theory("idenso_color_su2_field_strength_pychete_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    k = theory.index("k", fund)
+    ell = theory.index("ell", fund)
+    k_dual = theory.index("k", s.Bar(fund))
+    ell_dual = theory.index("ell", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    field_strength_a = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_a), s.List())
+    field_strength_b = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_b), s.List())
+    expr = (
+        higgs(i)
+        * s.Bar(higgs(j))
+        * s.Delta(k, ell_dual)
+        * generator(adj_a, i, k_dual)
+        * generator(adj_b, ell, j_dual)
+        * field_strength_a
+        * field_strength_b
+    )
+    expected = Expression.num(1) / Expression.num(4) * higgs(i) * s.Bar(higgs(i)) * field_strength_a**2
+
+    simplified = idenso.simplify_pychete_field_strength_group_algebra(theory, expr)
+
+    assert _same(simplified, expected)
+    assert "pychete::Delta" not in canonical_string(simplified)
     assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
 
 
