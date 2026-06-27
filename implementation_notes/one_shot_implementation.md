@@ -1309,6 +1309,33 @@
   `hScalar-lScalar` terms. The two order-four finite projections still give
   `cHW = 0`, so this removes non-Matchete cyclic sources but does not yet
   complete the first Matchete parity milestone.
+- Current Wilson-line symmetry correction: re-reading Matchete's
+  `RemoveSymmetryVanishingWilsonTerms` showed that its
+  `SubsetQ[symInds, wilsonInds]` rule is rank-agnostic. pychete's
+  `remove_symmetry_vanishing_wilson_terms(...)` now drops any Wilson term whose
+  derivative-index list contains the full symmetric loop-momentum index group,
+  not only two-derivative Wilson terms. Focused validation passed with
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "loop_momentum_symmetry_cleanup or remove_symmetry_vanishing" -q`
+  (`2 passed, 101 deselected`).
+- Singlet `cHW` remeasurement after the rank-agnostic symmetry fix: unfiltered
+  selected generation over `hScalar`, `hScalar-hScalar`, and `hScalar-lScalar`
+  still has seven nonzero plan entries and 25 terms, but with Wilson-term
+  field-strength artifacts removed it contains no field strengths unless
+  Higgs-derivative commutators are explicitly emitted and lowered. With
+  commutator emission/lowering enabled, the selected source has field-strength
+  terms and target filtering keeps only `hScalar-hScalar#wilson19_o4_0` and
+  `hScalar-lScalar#wilson34_o4_0`; however the projection atom counter still
+  finds zero generated additive terms satisfying the exact `cHW` requirement
+  `H^2 W^2` with no extra dynamical labels. The committed Matchete reference
+  fixture projects `cHW` entirely from `hScalar-lScalar`, with one reference
+  term satisfying that exact requirement. pychete's generated `hScalar-lScalar`
+  near-misses currently carry extra background-heavy `phi` atoms or only one
+  field-strength atom after power-aware counting. The first milestone remains
+  incomplete; the next coherent slice should focus on Matchete-equivalent
+  `hScalar-lScalar` Wilson-line source generation and the stage at which
+  background-heavy scalar fields are eliminated before target-local Wilson
+  projection.
 
 ## Next Work
 

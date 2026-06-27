@@ -2384,10 +2384,15 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
     numerator = s.LoopMomentum(mu) * s.LoopMomentum(nu)
     vanishing = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
     survivor = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, rho))
-    four_derivative_survivor = numerator * s.WilsonTerm(
+    four_derivative_vanishing = numerator * s.WilsonTerm(
         phi.label,
         s.List(left, right),
         s.List(mu, nu, rho, sigma),
+    )
+    four_derivative_survivor = numerator * s.WilsonTerm(
+        phi.label,
+        s.List(left, right),
+        s.List(mu, rho, sigma, theory.index("lambda")),
     )
     odd = s.LoopMomentum(mu) * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu))
 
@@ -2401,6 +2406,10 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
     )
     assert "SymmetricLorentzInds" not in canonical_string(
         remove_loop_momentum_symmetry_vanishing_wilson_terms(survivor, (mu, nu))
+    )
+    assert_expr_equal(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(four_derivative_vanishing, (mu, nu)),
+        Expression.num(0),
     )
     assert_expr_equal(
         remove_loop_momentum_symmetry_vanishing_wilson_terms(four_derivative_survivor, (mu, nu)),

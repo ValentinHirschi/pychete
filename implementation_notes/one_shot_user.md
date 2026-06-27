@@ -526,3 +526,18 @@ without Warsaw-specific core assumptions.
   only 8 `hScalar-hScalar` terms and 16 `hScalar-lScalar` terms. The surviving
   order-four finite projections still give `cHW = 0`, so the first full
   Matchete one-loop integration target remains incomplete.
+- Latest Wilson-line symmetry update: pychete now matches Matchete's
+  rank-agnostic `RemoveSymmetryVanishingWilsonTerms` subset rule, so Wilson
+  terms vanish whenever their derivative-index list contains the full
+  symmetric loop-momentum index group, not only in the two-derivative case.
+  The focused symmetry regression passes. Re-measuring the Singlet `cHW`
+  frontier after this correction shows that the earlier field-strength-bearing
+  selected Wilson-line terms were artifacts of under-removing symmetry-killed
+  Wilson terms. With Higgs-derivative commutator emission/lowering enabled,
+  generated `hScalar-lScalar` terms still do not contain an exact power-aware
+  `H^2 W^2` source with no extra dynamical labels, while the Matchete fixture
+  projects the full `cHW = hbar*A^2*gL^2/(12*M^4)` contribution entirely from
+  `hScalar-lScalar`. The first full one-loop matching integration test is
+  still not reproduced; the active blocker is now specifically
+  Matchete-equivalent `hScalar-lScalar` Wilson-line source generation and
+  background-heavy-scalar elimination before target-local projection.
