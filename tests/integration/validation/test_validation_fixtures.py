@@ -711,8 +711,34 @@ def test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathem
     assert generated_preview.metadata["wilson_line_expansion_planned"] is True
     assert generated_preview.metadata["interaction_wilson_line_hybrid"] is True
     assert generated_preview.metadata["interaction_wilson_line_plan_entry_count"] == 1
+    generated_entry_counts = generated_preview.metadata["interaction_wilson_line_term_count_by_entry"]
+    assert sum(generated_entry_counts.values()) == generated_preview.metadata["interaction_wilson_line_term_count"]
+    assert (
+        generated_preview.metadata["interaction_wilson_line_term_count_by_trace"]["hScalar-lScalar"]
+        == generated_preview.metadata["interaction_wilson_line_term_count"]
+    )
     assert_expr_equal(generated_preview.off_shell_eft_lagrangian, expected_generated.off_shell_eft_lagrangian)
     generated_preview.validate()
+
+    eps = vakint_backend.epsilon_symbol()
+    fake_evaluated = S("single") / eps + S("finite")
+    minimal_engine = FakePoleVakintEngine(fake_evaluated)
+    single_scale_plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar",),
+        max_total_order=0,
+    )
+    minimal_subtracted = setup.interaction_wilson_line_minimal_subtraction_result(
+        single_scale_plan,
+        vakint_engine=minimal_engine,
+    )
+    minimal_term_count = minimal_subtracted.metadata["interaction_wilson_line_term_count"]
+    assert minimal_term_count > 0
+    assert len(minimal_engine.calls) == minimal_term_count
+    assert (
+        minimal_subtracted.metadata["interaction_wilson_line_term_count_by_trace"]["hScalar"]
+        == minimal_term_count
+    )
+    assert_expr_equal(minimal_subtracted.off_shell_eft_lagrangian, minimal_term_count * S("finite"))
 
     unfiltered_for_target = fixture.one_loop_preview(
         max_trace_order=2,
@@ -1169,6 +1195,10 @@ def test_validation_fixture_gap_report_can_filter_direct_wilson_line_terms_by_pr
     assert report.candidate_metadata["wilson_line_terms_filtered_by_matching_targets"] is True
     assert report.candidate_metadata["interaction_wilson_line_terms_filtered_by_matching_targets"] is True
     assert report.candidate_metadata["interaction_wilson_line_plan_entry_count"] == 2
+    candidate_entry_counts = report.candidate_metadata["interaction_wilson_line_term_count_by_entry"]
+    assert len(candidate_entry_counts) == 2
+    assert sum(candidate_entry_counts.values()) == report.candidate_metadata["interaction_wilson_line_term_count"]
+    assert "interaction_wilson_line_term_count_by_trace" in report.to_json_obj()["candidate_metadata"]
     assert report.to_json_obj()["candidate_metadata"]["interaction_wilson_line_plan_entry_count"] == 2
 
 

@@ -2226,6 +2226,7 @@ class OneLoopSetup:
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
@@ -2336,6 +2337,7 @@ class OneLoopSetup:
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
@@ -2450,6 +2452,7 @@ class OneLoopSetup:
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
@@ -2501,7 +2504,7 @@ class OneLoopSetup:
 
         from .backends import vakint
 
-        evaluated = self.interaction_wilson_line_vakint_integral_sum(
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -2511,28 +2514,22 @@ class OneLoopSetup:
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
-            stage=VakintIntegralStage.EVALUATED,
-            engine=vakint_engine,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
+        )
+        terms = _flatten_wilson_line_terms(grouped_terms)
+        raw_named_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
+        evaluated = _vakint_integral_terms_at_stage(
+            tuple(raw_named_integrals.values()),
+            theory=self.theory,
+            stage=VakintIntegralStage.EVALUATED,
+            engine=vakint_engine,
+            label="Wilson-line",
         )
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
         counterterm = (-pole).expand()
-        raw_named_integrals = self.interaction_wilson_line_expansion_vakint_integral_expression_map(
-            expansion_indices_by_trace,
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-            include_light_only=include_light_only,
-            act_open_derivatives=act_open_derivatives,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            max_wilson_derivative_order=max_wilson_derivative_order,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            term_atom_requirements=term_atom_requirements,
-        )
         named_integrals = {
             name: _vakint_expression_at_stage(
                 expr,
@@ -2543,19 +2540,6 @@ class OneLoopSetup:
             )
             for name, expr in raw_named_integrals.items()
         }
-        terms = self.interaction_wilson_line_expansion_terms(
-            expansion_indices_by_trace,
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-            include_light_only=include_light_only,
-            act_open_derivatives=act_open_derivatives,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            max_wilson_derivative_order=max_wilson_derivative_order,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            term_atom_requirements=term_atom_requirements,
-        )
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -2566,18 +2550,9 @@ class OneLoopSetup:
                 **self.fluctuation_operator.interaction_expression_map(),
             },
             supertraces={
-                **self.interaction_wilson_line_expansion_kernel_expression_map(
-                    expansion_indices_by_trace,
+                **_wilson_line_kernel_expression_map_from_terms(
+                    grouped_terms,
                     loop_momentum_squared=loop_momentum_squared,
-                    require_registered_mass=require_registered_mass,
-                    include_light_only=include_light_only,
-                    act_open_derivatives=act_open_derivatives,
-                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-                    max_wilson_derivative_order=max_wilson_derivative_order,
-                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                    term_atom_requirements=term_atom_requirements,
                 ),
                 **named_integrals,
                 "interaction_wilson_line_vakint_integral_sum": evaluated,
@@ -2594,6 +2569,7 @@ class OneLoopSetup:
                 "max_trace_order": self.max_trace_order,
                 "supertrace_kernel_count": self.supertrace_kernel_count,
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
@@ -6777,6 +6753,38 @@ def _wilson_line_expansion_trace_names(expansion_request: WilsonLineExpansionReq
     if isinstance(expansion_request, WilsonLineExpansionPlan):
         return expansion_request.trace_names
     return tuple(expansion_request)
+
+
+def _wilson_line_expansion_term_metadata(
+    grouped_terms: Mapping[str, Sequence[WilsonLineTraceExpansionTerm]],
+) -> dict[str, Any]:
+    count_by_entry: dict[str, int] = {}
+    count_by_trace: dict[str, int] = {}
+    count_by_entry_path: dict[str, dict[str, int]] = {}
+    nonzero_entries: list[str] = []
+    for entry_label, terms in grouped_terms.items():
+        term_count = len(terms)
+        trace_name = terms[0].trace_name if terms else _wilson_line_trace_name_from_entry_label(entry_label)
+        count_by_entry[entry_label] = term_count
+        count_by_trace[trace_name] = count_by_trace.get(trace_name, 0) + term_count
+        if term_count:
+            nonzero_entries.append(entry_label)
+        path_counts: dict[str, int] = {}
+        for term in terms:
+            path_key = str(term.path_index)
+            path_counts[path_key] = path_counts.get(path_key, 0) + 1
+        count_by_entry_path[entry_label] = dict(sorted(path_counts.items(), key=lambda item: int(item[0])))
+    return {
+        "interaction_wilson_line_term_count_by_entry": count_by_entry,
+        "interaction_wilson_line_term_count_by_trace": dict(sorted(count_by_trace.items())),
+        "interaction_wilson_line_term_count_by_entry_path": count_by_entry_path,
+        "interaction_wilson_line_nonzero_plan_entries": tuple(nonzero_entries),
+        "interaction_wilson_line_empty_plan_entry_count": sum(1 for count in count_by_entry.values() if count == 0),
+    }
+
+
+def _wilson_line_trace_name_from_entry_label(entry_label: str) -> str:
+    return entry_label.split("#wilson", 1)[0]
 
 
 def _filter_cde_terms_by_projection_requirements(

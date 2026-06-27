@@ -1139,6 +1139,24 @@
   tests/integration/validation/test_validation_fixtures.py -k "wilson_line or
   candidate_metadata or matching_condition_projection" -q` passed with
   `3 passed, 38 deselected`; and `python -m mypy` reported no issues.
+- Current Wilson-line accounting follow-up: Wilson-line matching results now
+  record generated term counts by expansion-plan entry, by original trace
+  name, and by plan-entry/path index. Empty plan entries are preserved in the
+  metadata, and nonzero plan labels are listed explicitly. The same data is
+  available through validation fixture gap-report metadata snapshots and JSON.
+  This does not change symbolic output; it makes the next Singlet `cHW`
+  Wilson-line frontier probe actionable because a mismatch can be localized to
+  the exact trace/order/path family that survived target filtering.
+  While adding this accounting, the native-vakint Wilson-line minimal
+  subtraction path was tightened to generate the grouped Wilson-line terms
+  once and reuse them for evaluated sums, named integrals, kernel maps, and
+  metadata instead of rebuilding the same expansion several times.
+- Focused validation for this accounting follow-up used the 30 GiB watchdog
+  wrapper: `pytest tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathematica tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_can_filter_direct_wilson_line_terms_by_projected_targets -q`
+  passed with `2 passed`; `pytest
+  tests/integration/validation/test_validation_fixtures.py -k "wilson_line or
+  candidate_metadata" -q` passed with `3 passed, 38 deselected`; `python -m
+  mypy` reported no issues; and `git diff --check` passed.
 
 ## Next Work
 
@@ -1153,8 +1171,9 @@
     current Matchete behavior as the reference direction rather than expanding
     the legacy CDE route;
   - Wilson-line fixture-frontier remeasurement, using
-    `ValidationFixture.one_loop_preview_gap_report(..., wilson_line_*)` instead
-    of adding more legacy CDE-first validation knobs;
+    `ValidationFixture.one_loop_preview_gap_report(..., wilson_line_*)` and
+    the new per-entry/per-trace term-count metadata instead of adding more
+    legacy CDE-first validation knobs;
   - target-local EOM/IBP reductions for generic operator-basis projection,
     including Higgs/gauge structures such as `cHBox`, `cHD`, `cHW`, `cHB`, and
     `cHWB`, without making those reductions SMEFT-specific;

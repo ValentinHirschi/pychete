@@ -436,3 +436,13 @@ without Warsaw-specific core assumptions.
   normalization choices are visible directly in report objects and
   `to_json_obj()` output. This helps triage Singlet `cHW` and other
   Wilson-line fixture probes without rerunning separate ad hoc diagnostics.
+- Latest Wilson-line accounting update: Wilson-line matching metadata now
+  breaks generated term counts down by expansion-plan entry, by original trace
+  name, and by plan-entry/path index, preserving empty plan entries and listing
+  nonzero plan labels. The same data appears in validation gap-report metadata
+  snapshots, so future Singlet `cHW` mismatch probes can identify exactly
+  which Wilson-line trace/order/path family survived target filtering.
+  The same slice also makes the native-vakint Wilson-line minimal-subtraction
+  path reuse one grouped expansion for evaluated sums, named integrals, kernel
+  maps, and metadata instead of regenerating the same Wilson-line terms
+  repeatedly.
