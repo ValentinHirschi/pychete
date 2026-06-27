@@ -71,6 +71,12 @@
   retry through the listener rather than waiting for approval. The listener is
   the sandbox-dispatch fallback; keep using the 30 GiB watchdog for long or
   memory-sensitive Python/test/matching workloads.
+- Mechanical fail-closed guard for shell tool calls: the `sandbox_permissions`
+  key must be absent from every `exec_command` payload, including the value
+  `use_default`. Before sending any shell command, inspect the intended payload;
+  if the key is present, remove it and re-plan. If the command might require
+  approval, dispatch it through `listener.py` instead of escalation. Approval
+  escalation is not an available path on this branch.
 
 ## History Files
 
@@ -1198,18 +1204,40 @@
   passed with `1 passed`; `pytest
   tests/integration/matching/test_fluctuation_operator.py -k "wilson_line and
   internal" -q` passed with `2 passed, 99 deselected`; and `python -m mypy`
-  reported no issues. `git diff --check` is pending for the green milestone.
+  reported no issues; and `git diff --check` passed before the milestone was
+  committed as `a627d19`.
+- Current projection-performance follow-up: registered powered
+  field-strength targets with denominator factors, such as the Singlet
+  `cHW` projection target `H^\dagger H W^2/gL^2`, now normalize numeric
+  factors and negative powers before the generic coefficient path, then try
+  the bounded indexed-field-strength wildcard projection before broad
+  collect/factor fallbacks. This keeps target-local `cHW` projection on
+  entrywise finite sources from entering unbounded global collection. The
+  follow-up Singlet probe projected all 11 nonzero order-four entry-level
+  finite parts exposed by the Wilson-line internal backend; every entry
+  projected to zero, so the missing `hbar*A^2*gL^2/(12*M^4)` coefficient is
+  now localized to Wilson-line source generation/simplification or group,
+  Lorentz, and basis/on-shell reduction rather than to the coefficient-sum
+  mechanism.
+- Focused validation for the projection-performance follow-up: `pytest
+  tests/integration/matching/test_fluctuation_operator.py::test_matching_projection_handles_compact_alpha_equivalent_field_strength_powers
+  tests/integration/matching/test_fluctuation_operator.py::test_matching_projection_normalizes_field_strength_target_denominators_before_fallbacks
+  -q` passed with `2 passed`; `pytest
+  tests/integration/matching/test_fluctuation_operator.py -k "field_strength_power
+  or field_strength_target_denominators or entrywise_laurent" -q` passed with
+  `3 passed, 99 deselected`; `python -m mypy` reported no issues; and
+  `git diff --check` passed.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - target-local Wilson-line projection-performance work for Singlet `cHW`:
-    project the new entrywise internal finite-part supertraces for the 11
-    nonzero order-four `hScalar`, `hScalar-hScalar`, and `hScalar-lScalar`
-    plan entries, keep the source filtered by field/field-strength
-    requirements, and avoid global collection/expansion/factorization before
-    native coefficient extraction;
+  - Wilson-line source/simplification work for Singlet `cHW`: inspect the
+    11 nonzero entrywise finite sources that now project boundedly to zero and
+    identify which generated structures fail to reduce to the registered
+    `H^\dagger H W^A_{\mu\nu} W^{A\mu\nu}` target, prioritizing idenso-backed
+    Lorentz/field-strength/group simplification and missing Wilson-term
+    source generation over projection mechanics;
   - explicit Wilson-line style supertrace representation and metadata, using
     current Matchete behavior as the reference direction rather than expanding
     the legacy CDE route;

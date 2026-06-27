@@ -967,8 +967,23 @@ class _ProjectionCoefficientExtractor:
     wildcard_index_projection: bool = True
 
     def coefficient(self, target: Expression) -> Expression:
+        numeric_normalized = _numeric_factor_normalized_target(target)
+        if numeric_normalized is not None:
+            normalized_target, numeric_factor = numeric_normalized
+            coefficient = self.coefficient(normalized_target)
+            return (coefficient / numeric_factor).expand()
+        normalized = _negative_power_normalized_target(target)
+        if normalized is not None:
+            normalized_target, denominator = normalized
+            coefficient = self.coefficient(normalized_target)
+            return (coefficient * denominator).expand()
+
         source = self._filtered_source(target)
         source = _projection_derivative_compatible_source(source, target)
+        wildcard_coefficient = _indexed_field_strength_wildcard_projection_coefficient(source, target)
+        if wildcard_coefficient is not None:
+            return wildcard_coefficient
+
         coefficient = source.coefficient(target).expand()
         if not is_zero(coefficient) or not _is_composite_projection_target(target):
             return coefficient
@@ -999,22 +1014,12 @@ class _ProjectionCoefficientExtractor:
         )
         if expanded_coefficient is not None and not is_zero(expanded_coefficient):
             return expanded_coefficient
-        numeric_normalized = _numeric_factor_normalized_target(target)
-        if numeric_normalized is not None:
-            normalized_target, numeric_factor = numeric_normalized
-            coefficient = self.coefficient(normalized_target)
-            return (coefficient / numeric_factor).expand()
-        normalized = _negative_power_normalized_target(target)
-        if normalized is None:
-            wildcard_coefficient = (
-                _wildcard_index_projection_coefficient(source, target)
-                if self.wildcard_index_projection
-                else None
-            )
-            return coefficient if wildcard_coefficient is None else wildcard_coefficient
-        normalized_target, denominator = normalized
-        coefficient = self.coefficient(normalized_target)
-        return (coefficient * denominator).expand()
+        wildcard_coefficient = (
+            _wildcard_index_projection_coefficient(source, target)
+            if self.wildcard_index_projection
+            else None
+        )
+        return coefficient if wildcard_coefficient is None else wildcard_coefficient
 
     def _additive_target_coefficient(self, source: Expression, target: Expression) -> Expression | None:
         target_terms = terms(target)
@@ -1162,6 +1167,35 @@ def _expanded_projection_coefficient(
         expanded,
         wildcard_index_projection=wildcard_index_projection,
     ).coefficient(target)
+
+
+def _indexed_field_strength_wildcard_projection_coefficient(
+    source: Expression,
+    target: Expression,
+) -> Expression | None:
+    if not _powered_indexed_projection_atom_labels(target, kind="field_strength"):
+        return None
+    candidate_terms = terms(source)
+    target_forms: list[Expression] = []
+    seen_target_forms: set[str] = set()
+    for target_form in (target, _expand_indexed_projection_atom_powers(target)):
+        key = canonical_string(target_form)
+        if key in seen_target_forms:
+            continue
+        seen_target_forms.add(key)
+        target_forms.append(target_form)
+    coefficients: list[Expression] = []
+    saw_matchable_form = False
+    for target_form in target_forms:
+        coefficient = _termwise_wildcard_index_projection_coefficient(candidate_terms, target_form)
+        if coefficient is None:
+            continue
+        saw_matchable_form = True
+        if not is_zero(coefficient):
+            coefficients.append(coefficient)
+    if not saw_matchable_form:
+        return None
+    return sum_expr(coefficients).expand()
 
 
 def _without_wildcard_index_projection(

@@ -34,6 +34,13 @@ metadata error, immediately dispatch the same command through the user-started
 `listener.py` route by writing exactly one command to `run.order` and reading
 `run.output`.
 
+Mechanical fail-closed guard: the `sandbox_permissions` key must be absent from
+every `exec_command` payload, including the value `use_default`. Before sending
+any shell command, check the payload; if that key is present, remove it and
+re-plan. If the command might require approval, send it through `listener.py`
+instead of escalation. Approval escalation is not an available path for this
+branch.
+
 Current status clarification: no complete Matchete one-loop SMEFT integration
 model has been reproduced end-to-end yet. The successful tests are narrower
 integration slices around Mathematica-independent fixture loading, one-loop
@@ -475,3 +482,12 @@ without Warsaw-specific core assumptions.
   `interaction_wilson_line_internal_integral_finite_part[<entry>]`. Aggregate
   results are unchanged. This gives the next `cHW` probe a smaller source
   boundary for locating the mismatching trace/order family.
+- Latest projection-performance update: powered field-strength matching
+  targets with denominator factors, including Singlet `cHW`, now normalize
+  those factors before the generic coefficient path and try the bounded
+  indexed-field-strength wildcard projection before broad collect/factor
+  fallbacks. The 11 nonzero order-four Wilson-line entrywise finite sources
+  can now be projected without the previous monolithic stall; all currently
+  project to zero. This moves the active `cHW` gap away from coefficient
+  extraction and toward Wilson-line source generation/simplification, especially
+  Lorentz, field-strength, group, and basis/on-shell reduction.

@@ -3241,7 +3241,10 @@ def test_matching_projection_handles_compact_alpha_equivalent_field_strength_pow
     assert target is not None
     coefficient = S("compact_field_strength_power_projection_coefficient")
     source_higgs_index = theory.index("source_higgs", fund)
-    source_adjoint = theory.index("source_adjoint", theory.symbol("SU2L", role=SymbolRole.GROUP)(s.adj))
+    source_adjoint = theory.index(
+        "source_adjoint",
+        theory.symbol("SU2L", role=SymbolRole.GROUP)(s.adj),
+    )
     source_mu = theory.index("source_mu")
     source_nu = theory.index("source_nu")
     source_operator = (
@@ -3274,6 +3277,60 @@ def test_matching_projection_handles_compact_alpha_equivalent_field_strength_pow
     projected = result.project_matching_conditions({"cHW": target}, expand_source=False)
 
     assert_expr_equal(projected["cHW"], coefficient)
+
+
+def test_matching_projection_normalizes_field_strength_target_denominators_before_fallbacks(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_setup_bosonic_cde_project_field_strength_denominator")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    target = smeft_warsaw_operator(theory, "cHW")
+    assert target is not None
+    coefficient = S("field_strength_denominator_projection_coefficient")
+    source_higgs_index = theory.index("source_higgs", fund)
+    source_adjoint = theory.index("source_adjoint", theory.symbol("SU2L", role=SymbolRole.GROUP)(s.adj))
+    source_mu = theory.index("source_mu")
+    source_nu = theory.index("source_nu")
+    source_operator = (
+        s.Bar(higgs(source_higgs_index))
+        * higgs(source_higgs_index)
+        * s.FieldStrength(
+            theory.field_handle("W").label,
+            s.List(source_mu, source_nu),
+            s.List(source_adjoint),
+            s.List(),
+        )
+        ** 2
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    def fail_collected_source(*_args: object, **_kwargs: object) -> Expression:
+        raise AssertionError("field-strength denominator projection should not collect source")
+
+    def fail_factored_source(*_args: object, **_kwargs: object) -> Expression:
+        raise AssertionError("field-strength denominator projection should not factor source")
+
+    monkeypatch.setattr(
+        matching_results_module._ProjectionCoefficientExtractor,
+        "_collected_source",
+        fail_collected_source,
+    )
+    monkeypatch.setattr(
+        matching_results_module._ProjectionCoefficientExtractor,
+        "_factored_source",
+        fail_factored_source,
+    )
+
+    projected = result.project_matching_conditions({"cHW": target}, expand_source=False)
+
+    assert_expr_equal(projected["cHW"], coefficient * theory.coupling_handle("gL")() ** 2)
 
 
 def test_public_bosonic_cde_projects_two_insertion_higgs_derivative_operator() -> None:
