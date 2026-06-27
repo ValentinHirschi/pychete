@@ -2226,6 +2226,7 @@ def test_wilson_line_hybrid_internal_reuses_component_laurent_parts(
     wilson_pole = S("wilson_pole")
     remainder_finite = S("remainder_finite")
     wilson_finite = S("wilson_finite")
+    captured_wilson_line_kwargs: dict[str, object] = {}
 
     def fake_remainder(*_args: object, **_kwargs: object) -> MatchingResult:
         return MatchingResult(
@@ -2243,7 +2244,8 @@ def test_wilson_line_hybrid_internal_reuses_component_laurent_parts(
             },
         )
 
-    def fake_wilson_line(*_args: object, **_kwargs: object) -> MatchingResult:
+    def fake_wilson_line(*_args: object, **kwargs: object) -> MatchingResult:
+        captured_wilson_line_kwargs.update(kwargs)
         return MatchingResult(
             theory=theory,
             uv_lagrangian=lagrangian,
@@ -2278,8 +2280,12 @@ def test_wilson_line_hybrid_internal_reuses_component_laurent_parts(
     monkeypatch.setattr(vakint_backend, "pole_part", fail_aggregate_pole_part)
     monkeypatch.setattr(vakint_backend, "finite_part", fail_aggregate_finite_part)
 
-    result = setup.interaction_wilson_line_hybrid_internal_matching_result({"hScalar-lScalar": ((), ())})
+    result = setup.interaction_wilson_line_hybrid_internal_matching_result(
+        {"hScalar-lScalar": ((), ())},
+        expose_scalar_derivative_commutator_bilinears=True,
+    )
 
+    assert captured_wilson_line_kwargs["expose_scalar_derivative_commutator_bilinears"] is True
     assert_expr_equal(
         result.expression("interaction_wilson_line_hybrid_internal_integral_pole_part"),
         remainder_pole + wilson_pole,
@@ -2288,6 +2294,60 @@ def test_wilson_line_hybrid_internal_reuses_component_laurent_parts(
         result.expression("interaction_wilson_line_hybrid_internal_integral_finite_part"),
         remainder_finite + wilson_finite,
     )
+
+
+def test_one_loop_match_forwards_wilson_line_scalar_derivative_bilinear_option(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_match_wilson_line_scalar_derivative_option")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light)
+    captured_hybrid_kwargs: dict[str, object] = {}
+
+    def fake_hybrid(
+        self: matching_module.OneLoopSetup,
+        expansion_indices_by_trace: object,
+        **kwargs: object,
+    ) -> MatchingResult:
+        captured_hybrid_kwargs["expansion_indices_by_trace"] = expansion_indices_by_trace
+        captured_hybrid_kwargs.update(kwargs)
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=S("fake_wilson_line_hybrid_internal_result"),
+            on_shell_eft_lagrangian=S("fake_wilson_line_hybrid_internal_result"),
+            supertraces={
+                "interaction_wilson_line_hybrid_internal_integral_sum": S(
+                    "fake_wilson_line_hybrid_internal_result"
+                ),
+            },
+            metadata={
+                "stage": "fake_wilson_line_hybrid_internal",
+                "complete": False,
+            },
+        )
+
+    monkeypatch.setattr(
+        matching_module.OneLoopSetup,
+        "interaction_wilson_line_hybrid_internal_matching_result",
+        fake_hybrid,
+    )
+
+    result = theory.match(
+        lagrangian,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            wilson_line_expansion_indices_by_trace={"hScalar-lScalar": ((), ())},
+            wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert result.metadata["stage"] == "fake_wilson_line_hybrid_internal"
+    assert captured_hybrid_kwargs["expose_scalar_derivative_commutator_bilinears"] is True
+    assert result.metadata["wilson_line_scalar_derivative_commutator_bilinears_exposed"] is True
 
 
 def test_wilson_line_internal_results_expose_entrywise_laurent_sums() -> None:

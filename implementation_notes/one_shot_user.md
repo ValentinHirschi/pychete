@@ -599,3 +599,9 @@ without Warsaw-specific core assumptions.
   Singlet `cHW`, with the expected `hScalar-lScalar` Wilson-line entry now
   projecting nonzero but still giving `7/24` instead of Matchete's `1/12`
   after the evaluated-hbar normalization and log cancellation.
+- Follow-up implementation progress after that summary: added a generic
+  Symbolica-pattern scalar derivative-bilinear normal-form helper and wired it
+  into the internal Wilson-line route behind an explicit opt-in matching
+  option. This advances the missing Matchete-style Wilson-line normal-form
+  layer but does not yet make the first full Matchete one-loop integration test
+  pass.

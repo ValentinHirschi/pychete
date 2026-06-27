@@ -189,6 +189,11 @@ class OneLoopMatchOptions:
     content required by the requested projection targets before tensor
     reduction/evaluation; final coefficient extraction still uses the normal
     projection path.
+    ``wilson_line_expose_scalar_derivative_commutator_bilinears`` enables a
+    post-tensor internal Wilson-line normal-form pass that decomposes
+    two-derivative scalar bilinears into their antisymmetric commutator
+    component plus residual derivative terms. It is off by default while the
+    Matchete-parity normal-form layer is still being validated.
     """
 
     max_trace_order: int = 2
@@ -248,6 +253,7 @@ class OneLoopMatchOptions:
     wilson_line_expand_covariant_derivative_commutators: bool = False
     wilson_line_max_derivative_order: int = 4
     wilson_line_filter_terms_by_matching_targets: bool = False
+    wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True

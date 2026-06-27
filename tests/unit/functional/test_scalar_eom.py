@@ -4,7 +4,12 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import FieldMassKind, Theory, hermitian_conjugate, s
-from pychete.functional import apply_cd, expand_cd_operators, partial_functional_derivative
+from pychete.functional import (
+    apply_cd,
+    expand_cd_operators,
+    expose_scalar_derivative_commutator_bilinears,
+    partial_functional_derivative,
+)
 from pychete.symbols import canonical_string
 from pychete.theory_metadata import EXTERNAL_LINEAR_FUNCTION_TAG
 
@@ -170,6 +175,58 @@ def test_expand_cd_operators_differentiates_lowered_commutator_field_strength_in
     expected = -Expression.I * coupling() * (derived_strength * phi() + strength * phi(derivatives=[a]))
 
     assert_expr_equal(expanded, expected)
+
+
+def test_expose_scalar_derivative_commutator_bilinears_keeps_residual_terms() -> None:
+    theory = Theory("scalar_commutator_bilinear_decomposition")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=False, mass=0)
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    bar_ab = s.Bar(phi(derivatives=[mu, nu]))
+    bar_ba = s.Bar(phi(derivatives=[nu, mu]))
+    field_ab = phi(derivatives=[mu, nu])
+    field_ba = phi(derivatives=[nu, mu])
+    expr = 3 * bar_ab * field_ab - 5 * bar_ab * field_ba + 7 * bar_ba * field_ab + 11 * bar_ba * field_ba
+    antisymmetric = ((bar_ab - bar_ba) * (field_ab - field_ba)).expand()
+    commutator_bilinear = (
+        s.CovariantDerivativeCommutator(mu, nu, s.Bar(phi()))
+        * s.CovariantDerivativeCommutator(mu, nu, phi())
+    )
+    expected = (expr - 3 * antisymmetric + 3 * commutator_bilinear).expand()
+
+    exposed = expose_scalar_derivative_commutator_bilinears(
+        theory,
+        expr,
+        expand_commutators=False,
+    )
+
+    assert_expr_equal(exposed, expected)
+
+
+def test_expose_scalar_derivative_commutator_bilinears_can_lower_to_field_strengths() -> None:
+    theory = Theory("scalar_commutator_bilinear_lowered")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=0,
+    )
+    mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
+    expr = (
+        (s.Bar(phi(derivatives=[mu, nu])) - s.Bar(phi(derivatives=[nu, mu])))
+        * (phi(derivatives=[mu, nu]) - phi(derivatives=[nu, mu]))
+    ).expand()
+    expected = (
+        theory.covariant_derivative_commutator(s.Bar(phi()), mu, nu)
+        * theory.covariant_derivative_commutator(phi(), mu, nu)
+    ).expand()
+
+    exposed = expose_scalar_derivative_commutator_bilinears(theory, expr)
+
+    assert_expr_equal(exposed, expected)
 
 
 def test_apply_cd_ignores_couplings_as_non_field_atoms() -> None:

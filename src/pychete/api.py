@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from .dimensions import infer_coupling_mass_dimensions
 from .eft import operator_dimension, series_eft
-from .functional import hermitian_conjugate
+from .functional import expose_scalar_derivative_commutator_bilinears, hermitian_conjugate
 from .group_algebra import simplify_pychete_color
 from .backends.vacuum_integrals import (
     absorb_vakint_scalar_loop_momentum_numerators,
@@ -201,6 +201,7 @@ __all__ = [
     "evaluate_one_loop_single_scale_vacuum_integral",
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
     "evaluate_one_loop_vakint_expression",
+    "expose_scalar_derivative_commutator_bilinears",
     "expand_wilson_terms",
     "get_logger",
     "hermitian_conjugate",

@@ -33,6 +33,7 @@ from .expr import (
 from .functional import (
     derive_eom,
     eom_replacement_rules_for_expression,
+    expose_scalar_derivative_commutator_bilinears,
     expand_cd_operators,
     partial_functional_derivative,
     simplify_trivial_cd_operators,
@@ -2183,6 +2184,7 @@ class OneLoopSetup:
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> Expression:
         """Evaluate selected Wilson-line-expanded integrals with pychete."""
@@ -2211,6 +2213,7 @@ class OneLoopSetup:
             covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
@@ -2368,6 +2371,7 @@ class OneLoopSetup:
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the Wilson-line-expanded interaction result evaluated internally."""
@@ -2401,6 +2405,7 @@ class OneLoopSetup:
             covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
         )
@@ -2475,6 +2480,9 @@ class OneLoopSetup:
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
+                "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
+                    expose_scalar_derivative_commutator_bilinears
+                ),
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_commutators_emitted": emit_covariant_derivative_commutators,
                 "interaction_wilson_line_commutator_emit_passes": (
@@ -2520,6 +2528,7 @@ class OneLoopSetup:
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the internal Wilson-line result after minimal-subtraction pole removal."""
@@ -2553,6 +2562,7 @@ class OneLoopSetup:
             covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
         )
@@ -2629,6 +2639,9 @@ class OneLoopSetup:
                 "interaction_wilson_line_term_count": len(terms),
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
+                "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
+                    expose_scalar_derivative_commutator_bilinears
+                ),
                 "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
                 "interaction_wilson_line_commutators_emitted": emit_covariant_derivative_commutators,
                 "interaction_wilson_line_commutator_emit_passes": (
@@ -2900,6 +2913,7 @@ class OneLoopSetup:
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid Wilson-line/interaction result evaluated internally."""
@@ -2936,6 +2950,7 @@ class OneLoopSetup:
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
             term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
@@ -2987,6 +3002,7 @@ class OneLoopSetup:
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
+        expose_scalar_derivative_commutator_bilinears: bool = False,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid internal Wilson-line result after pole removal."""
@@ -3011,6 +3027,7 @@ class OneLoopSetup:
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
             term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_pole_part")
@@ -6756,6 +6773,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
+    expose_scalar_derivative_commutator_bilinears_option: bool = False,
 ) -> Expression:
     """Normalize tensor-reduced Wilson-line expressions before scalar evaluation."""
 
@@ -6763,6 +6781,13 @@ def _postprocess_wilson_line_tensor_reduced_expression(
 
     out = idenso.simplify_pychete_field_derivative_metrics(expr)
     out = _restore_theory_owned_generated_lorentz_indices(theory, out)
+    if expose_scalar_derivative_commutator_bilinears_option:
+        out = expose_scalar_derivative_commutator_bilinears(
+            theory,
+            out,
+            include_gauge_coupling=False,
+            expand_commutators=True,
+        )
     if emit_covariant_derivative_commutators or expand_covariant_derivative_commutators:
         max_cycles = max(1, min(8, emit_covariant_derivative_commutator_passes + 1))
         for _ in range(max_cycles):
@@ -7353,6 +7378,7 @@ def _wilson_line_internal_integral_sum_from_terms(
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
+    expose_scalar_derivative_commutator_bilinears: bool,
     epsilon: Expression | None,
     mu_r_squared: Expression | None,
     combine_terms: bool,
@@ -7367,6 +7393,7 @@ def _wilson_line_internal_integral_sum_from_terms(
         covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
         expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+        expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
         epsilon=epsilon,
         mu_r_squared=mu_r_squared,
     )
@@ -7384,6 +7411,7 @@ def _wilson_line_internal_evaluated_terms_from_terms(
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
+    expose_scalar_derivative_commutator_bilinears: bool,
     epsilon: Expression | None,
     mu_r_squared: Expression | None,
 ) -> tuple[Expression, ...]:
@@ -7398,6 +7426,7 @@ def _wilson_line_internal_evaluated_terms_from_terms(
         covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
         expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+        expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
         epsilon=epsilon,
         mu_r_squared=mu_r_squared,
     )
@@ -7415,6 +7444,7 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
+    expose_scalar_derivative_commutator_bilinears: bool,
     epsilon: Expression | None,
     mu_r_squared: Expression | None,
 ) -> dict[str, tuple[Expression, ...]]:
@@ -7445,6 +7475,9 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
                             expand_covariant_derivative_commutators
                         ),
                         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                        expose_scalar_derivative_commutator_bilinears_option=(
+                            expose_scalar_derivative_commutator_bilinears
+                        ),
                     )
                 evaluated_terms.append(
                     vacuum_integrals.evaluate_one_loop_vakint_expression(
@@ -8076,6 +8109,9 @@ def match_one_loop(
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=(
+                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+            ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif (
@@ -8108,6 +8144,9 @@ def match_one_loop(
             mu_r_squared=options.mu_r_squared,
             combine_terms=options.combine_terms,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
+            expose_scalar_derivative_commutator_bilinears=(
+                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+            ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
     elif (
@@ -8427,6 +8466,9 @@ def match_one_loop(
             "wilson_line_max_derivative_order": options.wilson_line_max_derivative_order,
             "wilson_line_terms_filtered_by_matching_targets": (
                 wilson_line_term_atom_requirements is not None
+            ),
+            "wilson_line_scalar_derivative_commutator_bilinears_exposed": (
+                options.wilson_line_expose_scalar_derivative_commutator_bilinears
             ),
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },

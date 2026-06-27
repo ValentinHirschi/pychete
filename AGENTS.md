@@ -556,6 +556,17 @@ repeat-to-fixed-point loop, because adjacent derivative swaps would otherwise
 commute the same pair back and grow the expression. Public Wilson-line parity
 probes should select it through
 `OneLoopMatchOptions.wilson_line_covariant_derivative_commutator_mode`.
+For scalar two-derivative bilinear normal forms, use the generic
+`expose_scalar_derivative_commutator_bilinears(theory, expr, ...)` helper
+rather than adding projection-specific replacements. It collects tagged
+two-derivative scalar field atoms with Symbolica patterns, extracts the four
+exact bilinear coefficients with native `Expression.coefficient(...)`, and
+exposes the antisymmetric component as
+`CovariantDerivativeCommutator(...) * CovariantDerivativeCommutator(...)`
+plus residual derivative terms. In the Wilson-line internal route this is
+available through
+`OneLoopMatchOptions.wilson_line_expose_scalar_derivative_commutator_bilinears`
+and remains opt-in while the broader Matchete-normal-form layer is validated.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

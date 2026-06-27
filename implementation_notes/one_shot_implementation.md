@@ -1468,6 +1468,30 @@
   source modules. A direct mypy run on the whole definition test file still
   reports pre-existing Optional-type issues later in that test file, outside
   this slice.
+- Latest normal-form slice: added
+  `expose_scalar_derivative_commutator_bilinears(theory, expr, ...)`, a generic
+  Symbolica-pattern helper that detects two-derivative scalar atoms through
+  tagged field patterns, extracts the four exact bilinear coefficients with
+  native `Expression.coefficient(...)`, and exposes the antisymmetric
+  component as a product of `CovariantDerivativeCommutator(...)` factors plus
+  residual derivative terms. This is not a `cHW` patch; it is a bounded
+  Matchete-normal-form primitive for Wilson-line sources. The helper can keep
+  commutators formal or lower them through
+  `Theory.expand_covariant_derivative_commutators(...)`.
+- The helper is exported through the generic public API and is wired into the
+  internal Wilson-line post-tensor cleanup behind
+  `OneLoopMatchOptions.wilson_line_expose_scalar_derivative_commutator_bilinears`,
+  defaulting to `False` while the broader Matchete-parity normal-form layer is
+  still under validation. Focused tests passed for the helper decomposition,
+  field-strength lowering, public API export, hybrid internal option
+  forwarding, and public `Theory.match(...)` forwarding.
+- Current first-milestone status remains unchanged: no full Matchete one-loop
+  matching integration test is green yet. The closest target is still the
+  Singlet `cHW` Wilson-line route, where the expected `hScalar-lScalar`
+  order-four source projects nonzero but remains coefficient-mismatched
+  (`7/24` vs Matchete `1/12`) until the remaining Wilson-line normal-form,
+  Wilson-term expansion, tensor/integral convention, and projection reductions
+  are aligned.
 
 ## Next Work
 
