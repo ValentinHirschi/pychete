@@ -843,10 +843,13 @@ def epsilon_coefficient(expr: Expression, power: int, *, epsilon: Expression | N
     """Return the coefficient of one epsilon Laurent power using Symbolica."""
 
     regulator = epsilon_symbol() if epsilon is None else epsilon
-    target = Expression.num(1) if power == 0 else regulator**power
-    for epsilon_power, coefficient in expr.coefficient_list(regulator):
-        if bool(epsilon_power == target):
-            return coefficient.expand()
+    try:
+        return expr.series(regulator, 0, max(power, 0))[power].expand()
+    except Exception:
+        target = Expression.num(1) if power == 0 else regulator**power
+        for epsilon_power, coefficient in expr.coefficient_list(regulator):
+            if bool(epsilon_power == target):
+                return coefficient.expand()
     return Expression.num(0)
 
 

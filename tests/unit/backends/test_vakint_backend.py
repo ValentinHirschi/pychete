@@ -535,6 +535,16 @@ def test_vakint_laurent_helpers_use_symbolica_coefficients() -> None:
         vakint.pole_part(expr, max_pole_order=0)
 
 
+def test_vakint_laurent_helpers_expand_epsilon_rational_terms_with_series() -> None:
+    eps = vakint.epsilon_symbol()
+    pole = S("pole")
+    finite = S("finite")
+    rational = pole / (eps * (eps - 2)) + finite / (eps - 2)
+
+    assert canonical_string(vakint.epsilon_coefficient(rational, -1)) == canonical_string(-pole / 2)
+    assert canonical_string(vakint.finite_part(rational)) == canonical_string(-pole / 4 - finite / 2)
+
+
 def test_vakint_laurent_helpers_accept_custom_epsilon_symbol() -> None:
     eps = S("custom_eps")
     expr = S("pole") / eps + S("finite")

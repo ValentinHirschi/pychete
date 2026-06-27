@@ -368,3 +368,14 @@ without Warsaw-specific core assumptions.
   reference `hbar*A^2*gL^2/(12*M^4)`, so the next work is mixed scalar trace
   source coverage, finite/pole convention cleanup, and target-local
   performance for those mixed traces.
+- Latest mixed-trace performance update: selected `hScalar-lScalar` Wilson-line
+  probes for Singlet `cHW` are now bounded. Term generation skips trace entries
+  that cannot satisfy the projected field-strength requirements, keeping only
+  five order-four entries and 40 generated terms. Internal Laurent extraction
+  now uses Symbolica series coefficients before falling back to full
+  coefficient lists, and the hybrid internal result reuses component pole and
+  finite parts instead of recomputing them from the aggregate. The real
+  fixture-level `hScalar-lScalar`/`cHW` gap-report probe returns under the
+  30 GiB watchdog in about 153 seconds with one candidate and one reference
+  condition, still different; the selected mixed-trace finite projection alone
+  is currently zero.

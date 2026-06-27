@@ -2096,6 +2096,84 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     assert_expr_equal(generated_result.off_shell_eft_lagrangian, expected_integral)
 
 
+def test_wilson_line_hybrid_internal_reuses_component_laurent_parts(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_setup_wilson_line_hybrid_component_laurent")
+    heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light)
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    remainder_expr = S("remainder_expr")
+    wilson_expr = S("wilson_expr")
+    remainder_pole = S("remainder_pole")
+    wilson_pole = S("wilson_pole")
+    remainder_finite = S("remainder_finite")
+    wilson_finite = S("wilson_finite")
+
+    def fake_remainder(*_args: object, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=theory,
+            uv_lagrangian=lagrangian,
+            off_shell_eft_lagrangian=remainder_expr,
+            on_shell_eft_lagrangian=remainder_expr,
+            supertraces={
+                "interaction_power_type_internal_integral_pole_part": remainder_pole,
+                "interaction_power_type_internal_integral_finite_part": remainder_finite,
+            },
+            metadata={
+                "stage": "fake_remainder",
+                "interaction_power_type_contribution_count": 1,
+            },
+        )
+
+    def fake_wilson_line(*_args: object, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=theory,
+            uv_lagrangian=lagrangian,
+            off_shell_eft_lagrangian=wilson_expr,
+            on_shell_eft_lagrangian=wilson_expr,
+            supertraces={
+                "interaction_wilson_line_internal_integral_pole_part": wilson_pole,
+                "interaction_wilson_line_internal_integral_finite_part": wilson_finite,
+            },
+            metadata={
+                "stage": "fake_wilson_line",
+                "interaction_wilson_line_term_count": 1,
+            },
+        )
+
+    def fail_aggregate_pole_part(*_args: object, **_kwargs: object) -> Expression:
+        raise AssertionError("hybrid internal result should reuse component pole parts")
+
+    def fail_aggregate_finite_part(*_args: object, **_kwargs: object) -> Expression:
+        raise AssertionError("hybrid internal result should reuse component finite parts")
+
+    monkeypatch.setattr(
+        matching_module.OneLoopSetup,
+        "interaction_power_type_internal_matching_result",
+        fake_remainder,
+    )
+    monkeypatch.setattr(
+        matching_module.OneLoopSetup,
+        "interaction_wilson_line_internal_matching_result",
+        fake_wilson_line,
+    )
+    monkeypatch.setattr(vakint_backend, "pole_part", fail_aggregate_pole_part)
+    monkeypatch.setattr(vakint_backend, "finite_part", fail_aggregate_finite_part)
+
+    result = setup.interaction_wilson_line_hybrid_internal_matching_result({"hScalar-lScalar": ((), ())})
+
+    assert_expr_equal(
+        result.expression("interaction_wilson_line_hybrid_internal_integral_pole_part"),
+        remainder_pole + wilson_pole,
+    )
+    assert_expr_equal(
+        result.expression("interaction_wilson_line_hybrid_internal_integral_finite_part"),
+        remainder_finite + wilson_finite,
+    )
+
+
 def test_one_loop_match_rejects_simultaneous_wilson_line_and_cde_expansion_options() -> None:
     theory = Theory("one_loop_match_wilson_line_cde_conflict")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

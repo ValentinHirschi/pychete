@@ -1901,6 +1901,12 @@ class OneLoopSetup:
         for entry in plan_entries:
             terms: list[WilsonLineTraceExpansionTerm] = []
             for path in paths_by_trace[entry.trace_name]:
+                if not _wilson_line_entry_can_satisfy_projection_requirements(
+                    path,
+                    entry,
+                    term_atom_requirements,
+                ):
+                    continue
                 terms.extend(
                     path.propagator_expansion_terms(
                         entry.expansion_indices,
@@ -1968,8 +1974,7 @@ class OneLoopSetup:
     ) -> dict[str, Expression]:
         """Return selected Wilson-line propagator-expanded terms as kernels."""
 
-        entries: dict[str, Expression] = {}
-        for trace_name, terms in self.interaction_wilson_line_expansion_terms_by_trace(
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -1981,12 +1986,12 @@ class OneLoopSetup:
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
-        ).items():
-            for term_index, term in enumerate(terms):
-                entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.kernel_expression(
-                    loop_momentum_squared=loop_momentum_squared,
-                )
-        return entries
+        )
+        return _wilson_line_kernel_expression_map_from_terms(
+            grouped_terms,
+            prefix=prefix,
+            loop_momentum_squared=loop_momentum_squared,
+        )
 
     def interaction_wilson_line_expansion_vakint_integral_expression_map(
         self,
@@ -2006,8 +2011,7 @@ class OneLoopSetup:
     ) -> dict[str, Expression]:
         """Return selected Wilson-line propagator-expanded terms as vakint topologies."""
 
-        entries: dict[str, Expression] = {}
-        for trace_name, terms in self.interaction_wilson_line_expansion_terms_by_trace(
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -2019,10 +2023,8 @@ class OneLoopSetup:
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
-        ).items():
-            for term_index, term in enumerate(terms):
-                entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.vakint_integral_expression()
-        return entries
+        )
+        return _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms, prefix=prefix)
 
     def interaction_wilson_line_vakint_integral_sum(
         self,
@@ -2044,7 +2046,7 @@ class OneLoopSetup:
     ) -> Expression:
         """Return the summed selected Wilson-line-expanded interaction topologies."""
 
-        terms = self.interaction_wilson_line_expansion_terms(
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -2057,8 +2059,12 @@ class OneLoopSetup:
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
+        terms = _flatten_wilson_line_terms(grouped_terms)
+        raw_terms = tuple(term.vakint_integral_expression() for term in terms)
+        if VakintIntegralStage.from_user(stage) is VakintIntegralStage.RAW:
+            return _wilson_line_raw_integral_sum_from_expressions(raw_terms)
         return _vakint_integral_terms_at_stage(
-            tuple(term.vakint_integral_expression() for term in terms),
+            raw_terms,
             theory=self.theory,
             stage=VakintIntegralStage.from_user(stage),
             short_form=short_form,
@@ -2088,9 +2094,7 @@ class OneLoopSetup:
     ) -> Expression:
         """Evaluate selected Wilson-line-expanded integrals with pychete."""
 
-        from .backends import vakint, vacuum_integrals
-
-        terms = self.interaction_wilson_line_expansion_terms(
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -2103,26 +2107,15 @@ class OneLoopSetup:
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
-        evaluated_terms: list[Expression] = []
-        with progress(
-            f"evaluating {len(terms)} Wilson-line scalar vacuum integrals termwise",
-            logger=_LOGGER,
-        ):
-            for term in terms:
-                raw = term.vakint_integral_expression()
-                if tensor_reduce:
-                    raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
-                    raw = vakint.decode_pychete_namespace(self.theory, raw)
-                evaluated_terms.append(
-                    vacuum_integrals.evaluate_one_loop_vakint_expression(
-                        raw,
-                        epsilon=epsilon,
-                        mu_r_squared=mu_r_squared,
-                        combine_terms=False,
-                    )
-                )
-        evaluated = sum_expr(evaluated_terms).expand()
-        return evaluated.together() if combine_terms else evaluated
+        return _wilson_line_internal_integral_sum_from_terms(
+            self.theory,
+            _flatten_wilson_line_terms(grouped_terms),
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+            combine_terms=combine_terms,
+        )
 
     def interaction_wilson_line_matching_result(
         self,
@@ -2151,23 +2144,7 @@ class OneLoopSetup:
 
         selected_vakint_stage = VakintIntegralStage.from_user(vakint_stage)
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
-        vakint_sum = self.interaction_wilson_line_vakint_integral_sum(
-            expansion_indices_by_trace,
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-            include_light_only=include_light_only,
-            act_open_derivatives=act_open_derivatives,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            max_wilson_derivative_order=max_wilson_derivative_order,
-            stage=selected_vakint_stage,
-            short_form=vakint_short_form,
-            engine=vakint_engine,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            term_atom_requirements=term_atom_requirements,
-        )
-        raw_named_integrals = self.interaction_wilson_line_expansion_vakint_integral_expression_map(
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -2180,6 +2157,20 @@ class OneLoopSetup:
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
+        terms = _flatten_wilson_line_terms(grouped_terms)
+        raw_named_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
+        raw_integral_expressions = tuple(raw_named_integrals.values())
+        if selected_vakint_stage is VakintIntegralStage.RAW:
+            vakint_sum = _wilson_line_raw_integral_sum_from_expressions(raw_integral_expressions)
+        else:
+            vakint_sum = _vakint_integral_terms_at_stage(
+                raw_integral_expressions,
+                theory=self.theory,
+                stage=selected_vakint_stage,
+                short_form=vakint_short_form,
+                engine=vakint_engine,
+                label="Wilson-line",
+            )
         named_integrals = {
             name: _vakint_expression_at_stage(
                 expr,
@@ -2190,32 +2181,10 @@ class OneLoopSetup:
             )
             for name, expr in raw_named_integrals.items()
         }
-        terms = self.interaction_wilson_line_expansion_terms(
-            expansion_indices_by_trace,
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-            include_light_only=include_light_only,
-            act_open_derivatives=act_open_derivatives,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            max_wilson_derivative_order=max_wilson_derivative_order,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            term_atom_requirements=term_atom_requirements,
-        )
         supertraces = {
-            **self.interaction_wilson_line_expansion_kernel_expression_map(
-                expansion_indices_by_trace,
+            **_wilson_line_kernel_expression_map_from_terms(
+                grouped_terms,
                 loop_momentum_squared=loop_momentum_squared,
-                require_registered_mass=require_registered_mass,
-                include_light_only=include_light_only,
-                act_open_derivatives=act_open_derivatives,
-                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-                max_wilson_derivative_order=max_wilson_derivative_order,
-                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                term_atom_requirements=term_atom_requirements,
             ),
             **named_integrals,
             "interaction_wilson_line_vakint_integral_sum": vakint_sum,
@@ -2297,7 +2266,7 @@ class OneLoopSetup:
 
         from .backends import vakint
 
-        terms = self.interaction_wilson_line_expansion_terms(
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -2310,39 +2279,29 @@ class OneLoopSetup:
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
-        raw_vakint_sum = self.interaction_wilson_line_vakint_integral_sum(
-            expansion_indices_by_trace,
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-            include_light_only=include_light_only,
-            act_open_derivatives=act_open_derivatives,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            max_wilson_derivative_order=max_wilson_derivative_order,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            term_atom_requirements=term_atom_requirements,
-        )
-        evaluated = self.interaction_wilson_line_internal_integral_sum(
-            expansion_indices_by_trace,
-            loop_momentum_squared=loop_momentum_squared,
-            require_registered_mass=require_registered_mass,
-            include_light_only=include_light_only,
-            act_open_derivatives=act_open_derivatives,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            max_wilson_derivative_order=max_wilson_derivative_order,
+        terms = _flatten_wilson_line_terms(grouped_terms)
+        raw_vakint_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
+        raw_vakint_sum = _wilson_line_raw_integral_sum_from_expressions(raw_vakint_integrals.values())
+        evaluated_terms = _wilson_line_internal_evaluated_terms_from_terms(
+            self.theory,
+            terms,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
-            combine_terms=combine_terms,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            term_atom_requirements=term_atom_requirements,
         )
-        pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
-        finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        evaluated = _sum_wilson_line_internal_terms(evaluated_terms, combine_terms=combine_terms)
+        pole = _sum_wilson_line_internal_terms(
+            (
+                vakint.pole_part(term, max_pole_order=max_pole_order, epsilon=epsilon)
+                for term in evaluated_terms
+            ),
+            combine_terms=combine_terms,
+        )
+        finite = _sum_wilson_line_internal_terms(
+            (vakint.finite_part(term, epsilon=epsilon) for term in evaluated_terms),
+            combine_terms=combine_terms,
+        )
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -2353,32 +2312,11 @@ class OneLoopSetup:
                 **self.fluctuation_operator.interaction_expression_map(),
             },
             supertraces={
-                **self.interaction_wilson_line_expansion_kernel_expression_map(
-                    expansion_indices_by_trace,
+                **_wilson_line_kernel_expression_map_from_terms(
+                    grouped_terms,
                     loop_momentum_squared=loop_momentum_squared,
-                    require_registered_mass=require_registered_mass,
-                    include_light_only=include_light_only,
-                    act_open_derivatives=act_open_derivatives,
-                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-                    max_wilson_derivative_order=max_wilson_derivative_order,
-                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                    term_atom_requirements=term_atom_requirements,
                 ),
-                **self.interaction_wilson_line_expansion_vakint_integral_expression_map(
-                    expansion_indices_by_trace,
-                    loop_momentum_squared=loop_momentum_squared,
-                    require_registered_mass=require_registered_mass,
-                    include_light_only=include_light_only,
-                    act_open_derivatives=act_open_derivatives,
-                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-                    max_wilson_derivative_order=max_wilson_derivative_order,
-                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                    term_atom_requirements=term_atom_requirements,
-                ),
+                **raw_vakint_integrals,
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
                 "interaction_wilson_line_internal_integral_pole_part": pole,
@@ -2438,7 +2376,9 @@ class OneLoopSetup:
     ) -> MatchingResult:
         """Return the internal Wilson-line result after minimal-subtraction pole removal."""
 
-        unrenormalized = self.interaction_wilson_line_internal_matching_result(
+        from .backends import vakint
+
+        grouped_terms = self.interaction_wilson_line_expansion_terms_by_trace(
             expansion_indices_by_trace,
             loop_momentum_squared=loop_momentum_squared,
             require_registered_mass=require_registered_mass,
@@ -2448,32 +2388,85 @@ class OneLoopSetup:
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
-            tensor_reduce=tensor_reduce,
-            tensor_reduce_engine=tensor_reduce_engine,
-            max_pole_order=max_pole_order,
-            epsilon=epsilon,
-            mu_r_squared=mu_r_squared,
-            combine_terms=combine_terms,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             term_atom_requirements=term_atom_requirements,
         )
-        pole = unrenormalized.expression("interaction_wilson_line_internal_integral_pole_part")
-        finite = unrenormalized.expression("interaction_wilson_line_internal_integral_finite_part")
-        counterterm = (-pole).expand()
-        return replace(
-            unrenormalized,
+        terms = _flatten_wilson_line_terms(grouped_terms)
+        raw_vakint_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
+        raw_vakint_sum = _wilson_line_raw_integral_sum_from_expressions(raw_vakint_integrals.values())
+        evaluated_terms = _wilson_line_internal_evaluated_terms_from_terms(
+            self.theory,
+            terms,
+            tensor_reduce=tensor_reduce,
+            tensor_reduce_engine=tensor_reduce_engine,
+            epsilon=epsilon,
+            mu_r_squared=mu_r_squared,
+        )
+        evaluated = _sum_wilson_line_internal_terms(evaluated_terms, combine_terms=combine_terms)
+        pole = _sum_wilson_line_internal_terms(
+            (
+                vakint.pole_part(term, max_pole_order=max_pole_order, epsilon=epsilon)
+                for term in evaluated_terms
+            ),
+            combine_terms=combine_terms,
+        )
+        finite = _sum_wilson_line_internal_terms(
+            (vakint.finite_part(term, epsilon=epsilon) for term in evaluated_terms),
+            combine_terms=combine_terms,
+        )
+        counterterm = -pole
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
             off_shell_eft_lagrangian=finite,
             on_shell_eft_lagrangian=finite,
+            fluctuation_operators={
+                **self.fluctuation_operator.to_expression_map(),
+                **self.fluctuation_operator.interaction_expression_map(),
+            },
             supertraces={
-                **unrenormalized.supertraces,
+                **_wilson_line_kernel_expression_map_from_terms(
+                    grouped_terms,
+                    loop_momentum_squared=loop_momentum_squared,
+                ),
+                **raw_vakint_integrals,
+                "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
+                "interaction_wilson_line_internal_integral_sum": evaluated,
+                "interaction_wilson_line_internal_integral_pole_part": pole,
+                "interaction_wilson_line_internal_integral_finite_part": finite,
                 "interaction_wilson_line_internal_integral_ms_counterterm": counterterm,
             },
             metadata={
-                **unrenormalized.metadata,
                 "stage": "interaction_wilson_line_internal_minimal_subtraction_result",
+                "complete": False,
+                "loop_order": 1,
+                "eft_order": self.eft_order,
+                "max_trace_order": self.max_trace_order,
+                "supertrace_kernel_count": self.supertrace_kernel_count,
+                **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
+                "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
+                "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
+                "interaction_wilson_line_act_open_derivatives": act_open_derivatives,
+                "interaction_wilson_line_commutators_emitted": emit_covariant_derivative_commutators,
+                "interaction_wilson_line_commutator_emit_passes": (
+                    emit_covariant_derivative_commutator_passes
+                    if emit_covariant_derivative_commutators
+                    else None
+                ),
+                "interaction_wilson_line_commutators_expanded": expand_covariant_derivative_commutators,
+                "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
+                "on_shell_reduced": False,
+                "integral_backend": "pychete_internal",
+                "tensor_reduce": tensor_reduce,
+                "interaction_wilson_line_internal_termwise_evaluation": True,
+                "interaction_wilson_line_internal_termwise_minimal_subtraction": True,
+                "combine_terms": combine_terms,
+                "uses_interaction_operator": True,
+                "uses_wilson_line_expansion": True,
+                "max_pole_order": max_pole_order,
                 "subtraction_scheme": "minimal_subtraction_preview",
                 "poles_subtracted": True,
-                "on_shell_reduced": False,
             },
         )
 
@@ -2741,8 +2734,6 @@ class OneLoopSetup:
     ) -> MatchingResult:
         """Return the hybrid Wilson-line/interaction result evaluated internally."""
 
-        from .backends import vakint
-
         selected_trace_names = _wilson_line_expansion_trace_names(expansion_indices_by_trace)
         interaction_remainder = self.interaction_power_type_internal_matching_result(
             heavy_field_dimension=heavy_field_dimension,
@@ -2786,19 +2777,20 @@ class OneLoopSetup:
             expansion_flag_name="uses_wilson_line_expansion",
             hybrid_flag_name="interaction_wilson_line_hybrid",
         )
+        pole = (
+            interaction_remainder.expression("interaction_power_type_internal_integral_pole_part")
+            + wilson_line_result.expression("interaction_wilson_line_internal_integral_pole_part")
+        )
+        finite = (
+            interaction_remainder.expression("interaction_power_type_internal_integral_finite_part")
+            + wilson_line_result.expression("interaction_wilson_line_internal_integral_finite_part")
+        )
         return replace(
             result,
             supertraces={
                 **result.supertraces,
-                "interaction_wilson_line_hybrid_internal_integral_pole_part": vakint.pole_part(
-                    result.off_shell_eft_lagrangian,
-                    max_pole_order=max_pole_order,
-                    epsilon=epsilon,
-                ),
-                "interaction_wilson_line_hybrid_internal_integral_finite_part": vakint.finite_part(
-                    result.off_shell_eft_lagrangian,
-                    epsilon=epsilon,
-                ),
+                "interaction_wilson_line_hybrid_internal_integral_pole_part": pole,
+                "interaction_wilson_line_hybrid_internal_integral_finite_part": finite,
             },
         )
 
@@ -2850,7 +2842,7 @@ class OneLoopSetup:
         )
         pole = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_pole_part")
         finite = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_finite_part")
-        counterterm = (-pole).expand()
+        counterterm = -pole
         return replace(
             unrenormalized,
             off_shell_eft_lagrangian=finite,
@@ -7026,6 +7018,127 @@ def _vakint_integral_terms_at_stage(
                 staged = vakint.evaluate(raw, engine=engine)
             staged_terms.append(vakint.decode_pychete_namespace(theory, staged))
     return sum_expr(staged_terms).expand()
+
+
+def _flatten_wilson_line_terms(
+    grouped_terms: Mapping[str, Sequence[WilsonLineTraceExpansionTerm]],
+) -> tuple[WilsonLineTraceExpansionTerm, ...]:
+    return tuple(term for terms in grouped_terms.values() for term in terms)
+
+
+def _wilson_line_kernel_expression_map_from_terms(
+    grouped_terms: Mapping[str, Sequence[WilsonLineTraceExpansionTerm]],
+    *,
+    prefix: str = "interaction_wilson_line_expansion_kernel",
+    loop_momentum_squared: Expression | None = None,
+) -> dict[str, Expression]:
+    entries: dict[str, Expression] = {}
+    for trace_name, terms in grouped_terms.items():
+        for term_index, term in enumerate(terms):
+            entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.kernel_expression(
+                loop_momentum_squared=loop_momentum_squared,
+            )
+    return entries
+
+
+def _wilson_line_vakint_integral_expression_map_from_terms(
+    grouped_terms: Mapping[str, Sequence[WilsonLineTraceExpansionTerm]],
+    *,
+    prefix: str = "interaction_wilson_line_expansion_vakint_integral",
+) -> dict[str, Expression]:
+    entries: dict[str, Expression] = {}
+    for trace_name, terms in grouped_terms.items():
+        for term_index, term in enumerate(terms):
+            entries[f"{prefix}[{trace_name},{term.path_index},{term_index}]"] = term.vakint_integral_expression()
+    return entries
+
+
+def _wilson_line_raw_integral_sum_from_expressions(expressions: Iterable[Expression]) -> Expression:
+    return sum_expr(expressions).expand()
+
+
+def _wilson_line_internal_integral_sum_from_terms(
+    theory: Theory,
+    terms: Sequence[WilsonLineTraceExpansionTerm],
+    *,
+    tensor_reduce: bool,
+    tensor_reduce_engine: Any | None,
+    epsilon: Expression | None,
+    mu_r_squared: Expression | None,
+    combine_terms: bool,
+) -> Expression:
+    evaluated_terms = _wilson_line_internal_evaluated_terms_from_terms(
+        theory,
+        terms,
+        tensor_reduce=tensor_reduce,
+        tensor_reduce_engine=tensor_reduce_engine,
+        epsilon=epsilon,
+        mu_r_squared=mu_r_squared,
+    )
+    return _sum_wilson_line_internal_terms(evaluated_terms, combine_terms=combine_terms)
+
+
+def _wilson_line_internal_evaluated_terms_from_terms(
+    theory: Theory,
+    terms: Sequence[WilsonLineTraceExpansionTerm],
+    *,
+    tensor_reduce: bool,
+    tensor_reduce_engine: Any | None,
+    epsilon: Expression | None,
+    mu_r_squared: Expression | None,
+) -> tuple[Expression, ...]:
+    from .backends import vakint, vacuum_integrals
+
+    evaluated_terms: list[Expression] = []
+    with progress(
+        f"evaluating {len(terms)} Wilson-line scalar vacuum integrals termwise",
+        logger=_LOGGER,
+    ):
+        for term in terms:
+            raw = term.vakint_integral_expression()
+            if tensor_reduce:
+                raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
+                raw = vakint.decode_pychete_namespace(theory, raw)
+            evaluated_terms.append(
+                vacuum_integrals.evaluate_one_loop_vakint_expression(
+                    raw,
+                    epsilon=epsilon,
+                    mu_r_squared=mu_r_squared,
+                    combine_terms=False,
+                )
+            )
+    return tuple(evaluated_terms)
+
+
+def _sum_wilson_line_internal_terms(
+    terms: Iterable[Expression],
+    *,
+    combine_terms: bool,
+) -> Expression:
+    evaluated = sum_expr(terms)
+    return evaluated.together() if combine_terms else evaluated
+
+
+def _wilson_line_entry_can_satisfy_projection_requirements(
+    path: WilsonLineTracePath,
+    entry: WilsonLineExpansionPlanEntry,
+    requirements: ProjectionAtomRequirementGroups | None,
+) -> bool:
+    if requirements is None:
+        return True
+    if not requirements:
+        return True
+    static_counts = _projection_atom_counts(_ncm_chain(*path.entries))
+    max_generated_field_strengths = entry.total_order // 2
+    for group in requirements:
+        missing_field_strengths = 0
+        for kind, label, required_count in group:
+            if kind != "field_strength":
+                continue
+            missing_field_strengths += max(0, required_count - static_counts[(kind, label)])
+        if missing_field_strengths <= max_generated_field_strengths:
+            return True
+    return False
 
 
 def _cde_vakint_integral_terms_at_stage(

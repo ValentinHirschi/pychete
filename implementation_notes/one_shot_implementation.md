@@ -946,6 +946,33 @@
   after roughly two minutes without first-trace output, so mixed-trace probes
   must be split and made more target-local before they become routine
   validation checks.
+- The current Wilson-line mixed-trace performance slice refactored selected
+  Wilson-line result assembly so generated terms are built once and then reused
+  for kernel maps, raw vakint topologies, evaluated internal sums, and result
+  metadata. It also adds a pre-generation requirement check: if a trace path
+  and derivative-order entry cannot generate enough field-strength atoms for
+  the projected target, the term generator is skipped before expensive
+  Wilson-term lowering. For the real Singlet `hScalar-lScalar`/`cHW` probe,
+  this keeps only the five total-order-four entries and generates 40 terms in
+  about 22 seconds.
+- `vakint.epsilon_coefficient(...)` now uses Symbolica's native
+  `Expression.series(...)[power]` Laurent coefficient extraction before
+  falling back to `coefficient_list(...)`. This handles epsilon-rational
+  internal-evaluator outputs such as `1/(epsilon*(epsilon-2))` without forcing
+  a full coefficient-list enumeration. In the staged Singlet `hScalar-lScalar`
+  probe, the 40 termwise tensor reductions/evaluations completed in about
+  31 seconds, finite extraction in about 21 seconds, and final target-local
+  projection in about 38 seconds.
+- Wilson-line hybrid internal pole/finite assembly now reuses the component
+  interaction-power and selected Wilson-line pole/finite expressions instead
+  of recomputing Laurent coefficients from the full hybrid aggregate. The real
+  fixture-level Singlet `hScalar-lScalar`/`cHW` gap-report probe now returns
+  under the 30 GiB watchdog in about 153 seconds with one projected candidate
+  and one reference condition. They are still different, and a direct selected
+  finite-source probe gives `cHW = 0` for `hScalar-lScalar` alone. This makes
+  the mixed-trace path bounded but confirms that exact Matchete parity still
+  needs the missing source/convention/basis reductions rather than only a
+  performance fix.
 - 30 GiB memory-watch typing gate after the NCM/projection guard slice:
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
   passed.
@@ -986,11 +1013,12 @@
   field-strength-bearing terms for the Singlet `cHW` target subset, but the
   final projected public `cHW` coefficient comparison is not yet reproduced.
   Backend normalization now exposes a nonzero partial `hScalar` contribution,
-  but the reference `A^2*gL^2/M^4` coefficient needs the mixed scalar
-  Wilson-line source families, finite/pole convention cleanup, and subsequent
-  basis/on-shell reduction. The remaining blocker is source coverage plus
-  target-local mixed-trace performance, not the absence of Wilson-line
-  field-strength source terms.
+  and the selected `hScalar-lScalar` route is bounded enough to measure, but
+  the mixed-trace finite projection is currently zero. The reference
+  `A^2*gL^2/M^4` coefficient needs the remaining scalar trace source families,
+  finite/pole convention cleanup, and subsequent basis/on-shell reduction. The
+  remaining blocker is source coverage plus projection/convention correctness,
+  not the absence of Wilson-line field-strength source terms.
 
 ## Next Work
 
