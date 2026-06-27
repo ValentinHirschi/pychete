@@ -1738,6 +1738,48 @@
   `9`. Therefore the next localized blocker is the pre-Wilson
   tensor-reduction/WilsonTerm metric-contraction representation, not the local
   scalar Green-bilinear field-strength identity.
+- Current debugging policy for this blocker: keep Matchete in the loop at
+  intermediate stages. Use focused WolframScript dumps and minimal
+  `GreensSimplify`/supertrace probes to capture Matchete's derivative-bilinear,
+  Wilson-line, propagator-order, loop-integration, and saved-validation
+  normal forms, then compare pychete's corresponding raw Wilson term,
+  pre-Wilson tensor-reduced, post-Wilson tensor-reduced, evaluated, and
+  projected stages. The intended milestone is to find the first stage where
+  term 4/path 0 differs from Matchete, not to patch the final `cHW`
+  coefficient directly.
+- New focused comparison result: `debug_singlet_wilson_trace.wls` now dumps
+  per-insertion validation-simplified summaries and the selected prop-order
+  simplified input form. Rerunning prop-order 4 under the watchdog showed that
+  the isolated Matchete `GreensSimplify` call aborts for this slice; a
+  zero-looking term count in that summary must therefore not be interpreted as
+  a proven cancellation. The reliable Matchete comparison points for this
+  slice are the raw `EvaluateSTr`, `post_index_group_cleanup`, and
+  `eps_expanded_relabelled` samples.
+- The Matchete prop-order-4 samples are now explicit enough to compare:
+  insertion 1 gives `Bar[H] * D^4 H`, insertion 2 gives
+  `D^4 Bar[H] * H`. At `post_index_group_cleanup`, Matchete has a direct
+  `aabb` derivative word plus `SymGammaFactor[1,4]` and
+  `SymGammaFactor[2,4]` contributions that generate the `aabb`, `abab`, and
+  `abba` derivative words after epsilon expansion. This is the key
+  intermediate structure to match before comparing the final `cHW`.
+- A pychete termwise diagnostic with the same selected
+  `hScalar-lScalar#wilson14_o4_0` plan shows that the pre-Wilson and
+  post-Wilson tensor-reduction routes assign the nonzero projected topology to
+  opposite orientations, but their selected `(4,0)` totals agree. Correcting
+  the diagnostic for barred-field pattern overcounting shows pychete's raw
+  orientations are clean: path 0 carries `D^4 Bar[H]`, and path 2 carries
+  `D^4 H`.
+- The remaining localized mismatch is not endpoint conjugation. It is the
+  tensor-reduced Green-normal-form layer: pychete's `(5,1)` and `(4,1)`
+  power classes, corresponding to Matchete's `SymGammaFactor` loop-momentum
+  pieces, generate field-strength-bearing expressions but still project to
+  zero because derivative Higgs slots remain unreduced to the registered
+  `H^\dagger H W_{\mu\nu} W^{\mu\nu}` target. Conversely, the direct
+  grouped `(3,1)` `aabb` class can project nonzero in one post-Wilson route,
+  even though the standalone Matchete Green-bilinear probe assigns grouped
+  `aabb` zero. The next correction should therefore target the generic
+  SymGammaFactor/tensor-reduced scalar Green-bilinear normal form, not the
+  final `cHW` coefficient and not a path-orientation patch.
 
 ## Next Work
 

@@ -677,3 +677,9 @@ without Warsaw-specific core assumptions.
   coverage. The selected Singlet trace still disagrees afterward, now
   localized more tightly to the pre-Wilson tensor-reduction/WilsonTerm
   metric-contraction representation.
+- Latest debugging instruction: for the active Singlet
+  `hScalar-lScalar -> cHW` milestone, keep dumping as many useful
+  Matchete-side intermediate results as possible with focused WolframScripts
+  and compare them against pychete stages. The goal is to identify the first
+  representation/source/coefficient stage where Matchete and pychete diverge,
+  instead of only comparing the final projected matching condition.

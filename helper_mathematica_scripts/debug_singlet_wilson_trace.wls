@@ -165,7 +165,8 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
     integrated,
     post,
     eps,
-    evaluated
+    evaluated,
+    validationSimplified
   },
 
   substituted = factor gen /. replacement /. Matchete`PackageScope`$Xsubs /.
@@ -200,6 +201,7 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
     propTypes,
     Matchete`Matching
   ];
+  validationSimplified = validationTraceSimplify[preFactor evaluated];
 
   <|
     "factor_input_form" -> toInputString[factor],
@@ -216,8 +218,11 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
       stageSummary["loop_integrated", integrated],
       stageSummary["post_index_group_cleanup", post],
       stageSummary["eps_expanded_relabelled", eps],
-      stageSummary["evaluate_str_reference", evaluated]
+      stageSummary["evaluate_str_reference", evaluated],
+      stageSummary["validation_simplified_prefactored_evaluate_str", validationSimplified]
     },
+    "validation_simplified_prefactored_evaluate_str_input_form" ->
+      shortInputString[validationSimplified],
     "manual_minus_evaluate_str_input_form" -> If[
       eps === $Aborted || eps === $Failed || evaluated === $Aborted || evaluated === $Failed,
       toInputString[{eps, evaluated}],
@@ -306,6 +311,8 @@ data = <|
     "selected_prop_order_validation_simplified",
     selectedPropOrderValidationSimplified
   ],
+  "selected_prop_order_validation_simplified_input_form" ->
+    shortInputString[selectedPropOrderValidationSimplified],
   "full_power_type_trace_summary" -> stageSummary[
     "full_power_type_trace_all_prop_orders",
     powerTypeTrace
