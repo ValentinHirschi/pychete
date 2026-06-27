@@ -3542,6 +3542,62 @@ def test_matching_projection_normalizes_field_strength_target_denominators_befor
     assert_expr_equal(projected["cHW"], coefficient * theory.coupling_handle("gL")() ** 2)
 
 
+def test_matching_projection_normalizes_negative_powers_in_canonized_exact_path(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_setup_project_canonized_negative_power")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    target = smeft_warsaw_operator(theory, "cHW")
+    assert target is not None
+    coefficient = S("canonized_negative_power_projection_coefficient")
+    source_higgs_index = theory.index("source_higgs", fund)
+    source_adjoint = theory.index("source_adjoint", adj)
+    source_mu = theory.index("source_mu")
+    source_nu = theory.index("source_nu")
+    source_operator = (
+        s.Bar(higgs(source_higgs_index))
+        * higgs(source_higgs_index)
+        * s.FieldStrength(
+            theory.field_handle("W").label,
+            s.List(source_mu, source_nu),
+            s.List(source_adjoint),
+            s.List(),
+        )
+        ** 2
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    def disable_target_local_wildcard(*_args: object, **_kwargs: object) -> Expression | None:
+        return None
+
+    def fail_generic_projection(*_args: object, **_kwargs: object) -> Expression:
+        raise AssertionError("canonized exact projection should handle negative target powers")
+
+    monkeypatch.setattr(
+        matching_results_module,
+        "_target_local_wildcard_projection_coefficient",
+        disable_target_local_wildcard,
+    )
+    monkeypatch.setattr(
+        matching_results_module,
+        "_source_is_small_enough_for_generic_projection",
+        lambda _source: False,
+    )
+    monkeypatch.setattr(matching_results_module, "_matching_projection_coefficient", fail_generic_projection)
+
+    projected = result.project_matching_conditions({"cHW": target}, expand_source=False)
+
+    assert_expr_equal(projected["cHW"], coefficient * theory.coupling_handle("gL")() ** 2)
+
+
 def test_matching_projection_simplifies_target_local_field_strength_group_structures() -> None:
     theory = Theory("one_loop_setup_project_field_strength_group_local")
     theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")

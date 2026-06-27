@@ -1268,9 +1268,10 @@ def _raw_exact_projection_coefficient(
     projection_expression: Expression,
 ) -> Expression:
     coefficients = (
-        _projection_derivative_compatible_source(term, projection_expression)
-        .coefficient(projection_expression)
-        .expand()
+        _native_exact_projection_coefficient(
+            _projection_derivative_compatible_source(term, projection_expression),
+            projection_expression,
+        )
         for term in _projection_filtered_terms_for_expressions(extractor, (projection_expression,))
     )
     return sum_expr(coefficients).expand()
@@ -1478,12 +1479,37 @@ def _negative_power_normalized_target(target: Expression) -> tuple[Expression, E
 
 
 def _wildcard_index_projection_coefficient(source: Expression, target: Expression) -> Expression | None:
+    numeric_normalized = _numeric_factor_normalized_target(target)
+    if numeric_normalized is not None:
+        normalized_target, numeric_factor = numeric_normalized
+        coefficient = _wildcard_index_projection_coefficient(source, normalized_target)
+        return None if coefficient is None else (coefficient / numeric_factor).expand()
+    normalized = _negative_power_normalized_target(target)
+    if normalized is not None:
+        normalized_target, denominator = normalized
+        coefficient = _wildcard_index_projection_coefficient(source, normalized_target)
+        return None if coefficient is None else (coefficient * denominator).expand()
+
     pattern = _canonized_index_wildcard_projection_pattern(source, target)
     if pattern is None:
         return None
     marker = Expression.symbol("pychete::matching_projection_target")
     rewritten = source.replace(pattern, marker, rhs_cache_size=0)
     return rewritten.coefficient(marker).expand()
+
+
+def _native_exact_projection_coefficient(source: Expression, target: Expression) -> Expression:
+    numeric_normalized = _numeric_factor_normalized_target(target)
+    if numeric_normalized is not None:
+        normalized_target, numeric_factor = numeric_normalized
+        coefficient = _native_exact_projection_coefficient(source, normalized_target)
+        return (coefficient / numeric_factor).expand()
+    normalized = _negative_power_normalized_target(target)
+    if normalized is not None:
+        normalized_target, denominator = normalized
+        coefficient = _native_exact_projection_coefficient(source, normalized_target)
+        return (coefficient * denominator).expand()
+    return source.coefficient(target).expand()
 
 
 def _canonized_index_wildcard_projection_pattern(source: Expression, target: Expression) -> Expression | None:

@@ -1540,6 +1540,26 @@
   validation diagnostic mismatch where bounded Singlet Wilson-line probes could
   project a direct-preview source that had not received the public matcher's
   heavy-scalar on-shell reduction.
+- Latest projection slice: target-local exact matching now normalizes numeric
+  factors and negative coupling powers before calling native
+  `Expression.coefficient(...)`, and wildcard-index projection does the same
+  before building Symbolica replacement patterns. This fixes the direct
+  selected Singlet `cHW` diagnostic where the registered Warsaw operator is
+  stored as `H^\dagger H W^2/gL^2`: after heavy-scalar substitution and
+  target-local tensor canonicalization, compact `H^\dagger H W^2` terms were
+  present but termwise exact projection returned zero because it bypassed the
+  negative-power normalization used by the generic extractor. A focused
+  regression now forces the canonized exact path with the generic fallback
+  disabled.
+- Remeasurement after that fix: the bounded selected `hScalar-lScalar`
+  Wilson-line direct preview with heavy-scalar substitution, `all_distinct`
+  commutators, scalar-bilinear exposure, internal analytic evaluation,
+  Matchete evaluated-hbar normalization, and `mu_r^2=M^2` now projects
+  `cHW = -1/8*hbar*A^2*gL^2/M^4` instead of zero. The Matchete fixture expects
+  `1/12*hbar*A^2*gL^2/M^4`, so the first full one-loop integration target is
+  still not green. The active blocker has moved back to the Wilson-line
+  coefficient/sign/finite-part normal-form frontier rather than projection
+  returning zero.
 
 ## Next Work
 

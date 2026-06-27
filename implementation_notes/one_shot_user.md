@@ -623,3 +623,11 @@ without Warsaw-specific core assumptions.
   future bounded Singlet Wilson-line diagnostics able to apply the same
   existing heavy-scalar on-shell reduction machinery before projection, but it
   does not by itself complete the first Matchete one-loop integration target.
+- Projection progress after that: target-local exact and wildcard-index
+  coefficient extraction now normalize inverse coupling powers in registered
+  Wilson operators before delegating to Symbolica. The selected Singlet
+  `hScalar-lScalar -> cHW` diagnostic now projects a nonzero
+  `-1/8*hbar*A^2*gL^2/M^4` instead of zero after heavy-scalar substitution.
+  The Matchete fixture still expects `1/12*hbar*A^2*gL^2/M^4`, so the first
+  full Matchete one-loop integration target remains incomplete; the next
+  blocker is the Wilson-line coefficient/sign/finite-part normal-form layer.
