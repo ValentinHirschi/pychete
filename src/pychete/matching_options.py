@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any, Mapping, Sequence, TypeAlias
+from typing import Any, Literal, Mapping, Sequence, TypeAlias
 
 from symbolica import Expression, Replacement
 
@@ -75,6 +75,7 @@ OnShellReplacementInput: TypeAlias = Mapping[Expression, Expression] | Sequence[
 TensorComponentInput: TypeAlias = Expression | int | float | complex
 BosonicCDEExpansionInput: TypeAlias = Mapping[str, Sequence[Sequence[Expression]]] | None
 WilsonLineExpansionInput: TypeAlias = Mapping[str, Sequence[Sequence[Expression]]] | None
+CovariantDerivativeCommutatorModeInput: TypeAlias = Literal["inversions", "all_distinct"]
 
 
 @dataclass(frozen=True, slots=True)
@@ -172,6 +173,11 @@ class OneLoopMatchOptions:
     Wilson-line numerators after open derivatives and WilsonTerm lowering.
     Use these for current-Matchete Wilson-line parity probes that need
     derivative-slot commutators lowered to registered ``FieldStrength`` atoms.
+    ``wilson_line_covariant_derivative_commutator_mode`` selects the local
+    emitter policy. The default ``"inversions"`` keeps the stable
+    canonical-order rewrite. ``"all_distinct"`` emits the Matchete
+    ``CommuteCDs`` adjacent-pair identity for the first distinct neighboring
+    derivative pair and is limited to one pass.
     For generated Wilson-line plans, set ``wilson_line_max_total_order`` and
     optionally ``wilson_line_trace_names``/``wilson_line_max_slot_order``.
     This is the preferred convenience route for new Matchete parity probes
@@ -238,6 +244,7 @@ class OneLoopMatchOptions:
     wilson_line_act_open_derivatives: bool = False
     wilson_line_emit_covariant_derivative_commutators: bool = False
     wilson_line_emit_covariant_derivative_commutator_passes: int = 1
+    wilson_line_covariant_derivative_commutator_mode: CovariantDerivativeCommutatorModeInput = "inversions"
     wilson_line_expand_covariant_derivative_commutators: bool = False
     wilson_line_max_derivative_order: int = 4
     wilson_line_filter_terms_by_matching_targets: bool = False

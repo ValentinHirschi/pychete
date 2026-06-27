@@ -2141,7 +2141,8 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
             integral_backend=OneLoopIntegralBackend.VAKINT,
             wilson_line_expansion_indices_by_trace=expansion,
             wilson_line_emit_covariant_derivative_commutators=True,
-            wilson_line_emit_covariant_derivative_commutator_passes=3,
+            wilson_line_emit_covariant_derivative_commutator_passes=1,
+            wilson_line_covariant_derivative_commutator_mode="all_distinct",
             wilson_line_expand_covariant_derivative_commutators=True,
             truncate_eft_result=False,
         ),
@@ -2154,11 +2155,13 @@ def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     assert result.metadata["interaction_wilson_line_hybrid"] is True
     assert result.metadata["wilson_line_expansion_enabled"] is True
     assert result.metadata["wilson_line_commutators_emitted"] is True
-    assert result.metadata["wilson_line_commutator_emit_passes"] == 3
+    assert result.metadata["wilson_line_commutator_emit_passes"] == 1
+    assert result.metadata["wilson_line_commutator_emit_mode"] == "all_distinct"
     assert result.metadata["wilson_line_commutators_expanded"] is True
     assert result.metadata["bosonic_cde_expansion_enabled"] is False
     assert result.metadata["interaction_wilson_line_commutators_emitted"] is True
-    assert result.metadata["interaction_wilson_line_commutator_emit_passes"] == 3
+    assert result.metadata["interaction_wilson_line_commutator_emit_passes"] == 1
+    assert result.metadata["interaction_wilson_line_commutator_emit_mode"] == "all_distinct"
     assert result.metadata["interaction_wilson_line_commutators_expanded"] is True
     assert result.metadata["interaction_wilson_line_term_count"] == 1
     assert result.metadata["interaction_wilson_line_trace_names"] == ("hScalar-lScalar",)

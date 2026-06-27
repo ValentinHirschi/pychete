@@ -579,3 +579,23 @@ without Warsaw-specific core assumptions.
   target is therefore closer, but still incomplete; the active blocker is now
   the order-four Wilson-line/tensor-integral coefficient and finite-part
   convention.
+- Current first-milestone clarification: no full Matchete one-loop matching
+  integration test is green yet. A broader selected Wilson-line plan over
+  `hScalar`, `hScalar-hScalar`, and `hScalar-lScalar` still localizes the only
+  nonzero entrywise `cHW` contribution to the expected `hScalar-lScalar`
+  order-four entry, with the same `7/24` finite coefficient after log
+  cancellation. The aggregate projection can still return zero on the larger
+  combined source, which is a separate projection-scaling guard issue. Reading
+  current Matchete shows `ContractMetric` only substitutes metric-contracted
+  indices; the derivative commutator identities enter later through
+  normal-form / basis simplification. pychete is currently exposing the
+  `H^\dagger H W^2` coefficient too early in the Wilson-line backend, so the
+  next physics slice should implement the generic Matchete-style
+  loop-symmetric commutator and basis-normal-form reduction rather than a
+  `cHW`-specific coefficient patch.
+- Latest user request in this slice: continue as planned, but quickly summarize
+  how far pychete has gotten toward the first Matchete one-loop integration
+  test. The answer remains that no full test is green; the closest target is
+  Singlet `cHW`, with the expected `hScalar-lScalar` Wilson-line entry now
+  projecting nonzero but still giving `7/24` instead of Matchete's `1/12`
+  after the evaluated-hbar normalization and log cancellation.

@@ -506,6 +506,44 @@ def test_emit_covariant_derivative_commutators_rewrites_adjacent_inversions() ->
     )
 
 
+def test_emit_covariant_derivative_commutators_can_emit_matchete_adjacent_identity() -> None:
+    theory = Theory("emit_commutator_all_distinct")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+
+    assert_expr_equal(
+        theory.emit_covariant_derivative_commutators(phi(derivatives=[a, b])),
+        phi(derivatives=[a, b]),
+    )
+
+    emitted = theory.emit_covariant_derivative_commutators(
+        phi(derivatives=[a, b]),
+        mode="all_distinct",
+    )
+    expected = phi(derivatives=[b, a]) + s.CovariantDerivativeCommutator(a, b, phi())
+
+    assert_expr_equal(emitted, expected)
+
+
+def test_emit_covariant_derivative_commutators_all_distinct_skips_equal_neighbors() -> None:
+    theory = Theory("emit_commutator_all_distinct_equal")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+
+    assert_expr_equal(
+        theory.emit_covariant_derivative_commutators(phi(derivatives=[a, a]), mode="all_distinct"),
+        phi(derivatives=[a, a]),
+    )
+
+    try:
+        theory.emit_covariant_derivative_commutators(phi(derivatives=[a, a]), max_passes=2, mode="all_distinct")
+    except ValueError as exc:
+        assert "all_distinct" in str(exc)
+    else:
+        raise AssertionError("all_distinct commutator mode accepted multiple passes")
+
+
 def test_emit_covariant_derivative_commutators_protects_barred_fields_and_prefixes() -> None:
     theory = Theory("emit_barred_commutator")
     phi = theory.define_field("phi", s.Scalar, mass=0)
@@ -587,6 +625,26 @@ def test_emit_covariant_derivative_commutators_rewrites_field_strength_derivativ
         theory.expand_covariant_derivative_commutators(emitted),
         s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(b, c)),
     )
+
+
+def test_emit_covariant_derivative_commutators_all_distinct_supports_field_strength_slots() -> None:
+    theory = Theory("emit_field_strength_commutator_all_distinct")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    vector = theory.field_handle("B")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    a = theory.index("a")
+    b = theory.index("b")
+    rho = theory.index("rho")
+    strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(rho, a, b))
+
+    emitted = theory.emit_covariant_derivative_commutators(strength, mode="all_distinct")
+    expected = (
+        s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(a, rho, b))
+        + s.CovariantDerivativeCommutator(rho, a, s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(b)))
+    )
+
+    assert_expr_equal(emitted, expected)
 
 
 def test_emit_covariant_derivative_commutators_protects_barred_field_strengths_and_prefixes() -> None:

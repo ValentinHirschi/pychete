@@ -4,7 +4,7 @@ import json
 from itertools import count
 from html import escape
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, Literal, Mapping
 
 from symbolica import Expression, Replacement, S
 
@@ -124,6 +124,7 @@ from .theory_metadata import (
 
 _COVARIANT_DERIVATIVE_OUTPUT_INDEX_KIND = 0
 _COVARIANT_DERIVATIVE_ADJOINT_INDEX_KIND = 1
+CovariantDerivativeCommutatorMode = Literal["inversions", "all_distinct"]
 
 
 def _adjacent_covariant_derivative_inversion(derivatives: tuple[Expression, ...]) -> int | None:
@@ -133,6 +134,27 @@ def _adjacent_covariant_derivative_inversion(derivatives: tuple[Expression, ...]
         if canonical_string(left) > canonical_string(right):
             return index
     return None
+
+
+def _adjacent_covariant_derivative_distinct_pair(derivatives: tuple[Expression, ...]) -> int | None:
+    for index, (left, right) in enumerate(zip(derivatives, derivatives[1:], strict=False)):
+        if not is_head(left, s.Index) or not is_head(right, s.Index):
+            continue
+        if not bool(left == right):
+            return index
+    return None
+
+
+def _adjacent_covariant_derivative_swap_position(
+    derivatives: tuple[Expression, ...],
+    *,
+    mode: CovariantDerivativeCommutatorMode,
+) -> int | None:
+    if mode == "inversions":
+        return _adjacent_covariant_derivative_inversion(derivatives)
+    if mode == "all_distinct":
+        return _adjacent_covariant_derivative_distinct_pair(derivatives)
+    raise ValueError(f"unknown covariant derivative commutator mode {mode!r}")
 
 
 class Theory:
@@ -1285,36 +1307,55 @@ class Theory:
 
         return expr.replace(pattern, commutator_replacement, rhs_cache_size=0).expand()
 
-    def emit_covariant_derivative_commutators(self, expr: Expression, *, max_passes: int = 1) -> Expression:
+    def emit_covariant_derivative_commutators(
+        self,
+        expr: Expression,
+        *,
+        max_passes: int = 1,
+        mode: CovariantDerivativeCommutatorMode = "inversions",
+    ) -> Expression:
         """Emit formal commutators by commuting adjacent derivative slots.
 
         Registered ``Field``/``Bar[Field]`` and
         ``FieldStrength``/``Bar[FieldStrength]`` atoms with adjacent
-        covariant derivative indices out of canonical order are rewritten with
+        covariant derivative indices selected by ``mode`` are rewritten with
         the identity ``D_a D_b X = D_b D_a X + [D_a,D_b] X``. The emitted
         ``CovariantDerivativeCommutator`` markers are intentionally left
         formal; call :meth:`expand_covariant_derivative_commutators` to lower
         field-body markers to ``FieldStrength`` insertions. Prefix derivatives
         are kept as explicit ``CD(...)`` wrappers so existing Symbolica
         replacement passes can apply product rules later without forcing a
-        global expansion here. ``max_passes`` bounds repeated adjacent swaps;
-        the default performs one local commute, while larger values can
-        canonicalize longer derivative lists without enabling an unbounded
-        expression-growth loop.
+        global expansion here.
+
+        The default ``mode="inversions"`` only commutes adjacent indices that
+        are out of canonical order, so repeated passes safely canonicalize
+        longer derivative lists. ``mode="all_distinct"`` mirrors Matchete's
+        ``CommuteCDs`` identity source for adjacent distinct covariant
+        derivative pairs and is intentionally limited to one pass to avoid
+        immediately commuting the same pair back on the next pass.
         """
 
         self._validate_registered_expression(expr)
         if max_passes < 0:
             raise ValueError("max_passes must be non-negative")
+        if mode not in ("inversions", "all_distinct"):
+            raise ValueError(f"unknown covariant derivative commutator mode {mode!r}")
+        if mode == "all_distinct" and max_passes > 1:
+            raise ValueError('mode="all_distinct" supports only one bounded pass')
         out = expr
         for _ in range(max_passes):
-            updated = self._emit_covariant_derivative_commutator_pass(out)
+            updated = self._emit_covariant_derivative_commutator_pass(out, mode=mode)
             if bool(updated == out):
                 return updated
             out = updated
         return out
 
-    def _emit_covariant_derivative_commutator_pass(self, expr: Expression) -> Expression:
+    def _emit_covariant_derivative_commutator_pass(
+        self,
+        expr: Expression,
+        *,
+        mode: CovariantDerivativeCommutatorMode,
+    ) -> Expression:
         field_pat = field_pattern()
         bar_pat = bar_field_pattern()
         strength_pat = field_strength_pattern()
@@ -1351,22 +1392,22 @@ class Theory:
             key = s.CovariantDerivativeProtectedBar(Expression.num(len(restore_bar_replacements)))
             protect_bar_replacements.append(Replacement(atom, key))
             restore_bar_replacements.append(
-                Replacement(key, self._commuted_covariant_derivative_atom(atom, conjugate_field=True))
+                Replacement(key, self._commuted_covariant_derivative_atom(atom, conjugate_field=True, mode=mode))
             )
         for atom in matching_subexpressions(out, bar_strength_pat, strength_label_is_tagged):
             key = s.CovariantDerivativeProtectedBar(Expression.num(len(restore_bar_replacements)))
             protect_bar_replacements.append(Replacement(atom, key))
             restore_bar_replacements.append(
-                Replacement(key, self._commuted_covariant_derivative_atom(atom, conjugate_field=True))
+                Replacement(key, self._commuted_covariant_derivative_atom(atom, conjugate_field=True, mode=mode))
             )
 
         def field_replacement(match: dict[Expression, Expression]) -> Expression:
             atom = field_pat.replace_wildcards(match)
-            return self._commuted_covariant_derivative_atom(atom, conjugate_field=False)
+            return self._commuted_covariant_derivative_atom(atom, conjugate_field=False, mode=mode)
 
         def strength_replacement(match: dict[Expression, Expression]) -> Expression:
             atom = strength_pat.replace_wildcards(match)
-            return self._commuted_covariant_derivative_atom(atom, conjugate_field=False)
+            return self._commuted_covariant_derivative_atom(atom, conjugate_field=False, mode=mode)
 
         if protect_bar_replacements:
             out = out.replace_multiple(protect_bar_replacements)
@@ -1378,10 +1419,16 @@ class Theory:
             out = out.replace_multiple(restore_commutator_replacements)
         return out
 
-    def _commuted_covariant_derivative_atom(self, atom: Expression, *, conjugate_field: bool) -> Expression:
+    def _commuted_covariant_derivative_atom(
+        self,
+        atom: Expression,
+        *,
+        conjugate_field: bool,
+        mode: CovariantDerivativeCommutatorMode,
+    ) -> Expression:
         base_atom = self._covariant_derivative_commutator_base_atom(atom, conjugate_field=conjugate_field)
         derivatives = self._covariant_derivative_atom_derivatives(base_atom)
-        swap_position = _adjacent_covariant_derivative_inversion(derivatives)
+        swap_position = _adjacent_covariant_derivative_swap_position(derivatives, mode=mode)
         if swap_position is None:
             return atom
         left_index = derivatives[swap_position]

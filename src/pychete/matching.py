@@ -63,7 +63,7 @@ from .matching_results import (
 )
 from .noncommutative import distribute_ncm_additions, normalize_ncm_chains, scalarize_commutative_ncm_chains
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
-from .theory import Theory
+from .theory import CovariantDerivativeCommutatorMode, Theory
 from .theory_metadata import (
     FieldChirality,
     FieldDefinition,
@@ -925,6 +925,7 @@ class WilsonLineTracePath:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         simplify_pychete_color_algebra: bool = False,
@@ -1003,6 +1004,7 @@ class WilsonLineTracePath:
                 emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                 emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             )
             numerator = _postprocess_wilson_line_numerator(
                 numerator,
@@ -1958,6 +1960,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         simplify_pychete_color_algebra: bool = False,
@@ -1993,6 +1996,7 @@ class OneLoopSetup:
                         act_open_derivatives=act_open_derivatives,
                         emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
                         emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
                         expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                         max_wilson_derivative_order=max_wilson_derivative_order,
                         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2014,6 +2018,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         simplify_pychete_color_algebra: bool = False,
@@ -2029,6 +2034,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2047,6 +2053,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         simplify_pychete_color_algebra: bool = False,
@@ -2062,6 +2069,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2084,6 +2092,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         simplify_pychete_color_algebra: bool = False,
@@ -2099,6 +2108,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2116,6 +2126,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
@@ -2134,6 +2145,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2162,6 +2174,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
@@ -2182,6 +2195,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2194,6 +2208,7 @@ class OneLoopSetup:
             tensor_reduce_engine=tensor_reduce_engine,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             epsilon=epsilon,
@@ -2211,6 +2226,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
@@ -2236,6 +2252,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2315,6 +2332,11 @@ class OneLoopSetup:
                     if emit_covariant_derivative_commutators
                     else None
                 ),
+                "interaction_wilson_line_commutator_emit_mode": (
+                    covariant_derivative_commutator_mode
+                    if emit_covariant_derivative_commutators
+                    else None
+                ),
                 "interaction_wilson_line_commutators_expanded": expand_covariant_derivative_commutators,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2336,6 +2358,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
@@ -2359,6 +2382,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2374,6 +2398,7 @@ class OneLoopSetup:
             tensor_reduce_engine=tensor_reduce_engine,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             epsilon=epsilon,
@@ -2457,6 +2482,11 @@ class OneLoopSetup:
                     if emit_covariant_derivative_commutators
                     else None
                 ),
+                "interaction_wilson_line_commutator_emit_mode": (
+                    covariant_derivative_commutator_mode
+                    if emit_covariant_derivative_commutators
+                    else None
+                ),
                 "interaction_wilson_line_commutators_expanded": expand_covariant_derivative_commutators,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2480,6 +2510,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
@@ -2503,6 +2534,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2518,6 +2550,7 @@ class OneLoopSetup:
             tensor_reduce_engine=tensor_reduce_engine,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             epsilon=epsilon,
@@ -2603,6 +2636,11 @@ class OneLoopSetup:
                     if emit_covariant_derivative_commutators
                     else None
                 ),
+                "interaction_wilson_line_commutator_emit_mode": (
+                    covariant_derivative_commutator_mode
+                    if emit_covariant_derivative_commutators
+                    else None
+                ),
                 "interaction_wilson_line_commutators_expanded": expand_covariant_derivative_commutators,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2629,6 +2667,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         vakint_engine: Any | None = None,
@@ -2652,6 +2691,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
@@ -2720,6 +2760,11 @@ class OneLoopSetup:
                     if emit_covariant_derivative_commutators
                     else None
                 ),
+                "interaction_wilson_line_commutator_emit_mode": (
+                    covariant_derivative_commutator_mode
+                    if emit_covariant_derivative_commutators
+                    else None
+                ),
                 "interaction_wilson_line_commutators_expanded": expand_covariant_derivative_commutators,
                 "interaction_wilson_line_max_derivative_order": max_wilson_derivative_order,
                 "on_shell_reduced": False,
@@ -2746,6 +2791,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         vakint_stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
@@ -2785,6 +2831,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             vakint_stage=vakint_stage,
@@ -2843,6 +2890,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
@@ -2878,6 +2926,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             tensor_reduce=tensor_reduce,
@@ -2928,6 +2977,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
@@ -2951,6 +3001,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             tensor_reduce=tensor_reduce,
@@ -2994,6 +3045,7 @@ class OneLoopSetup:
         act_open_derivatives: bool = False,
         emit_covariant_derivative_commutators: bool = False,
         emit_covariant_derivative_commutator_passes: int = 1,
+        covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         vakint_engine: Any | None = None,
@@ -3031,6 +3083,7 @@ class OneLoopSetup:
             act_open_derivatives=act_open_derivatives,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             max_wilson_derivative_order=max_wilson_derivative_order,
             vakint_engine=vakint_engine,
@@ -6655,11 +6708,13 @@ def _postprocess_bosonic_cde_numerator(
     emit_covariant_derivative_commutators: bool,
     emit_covariant_derivative_commutator_passes: int,
     expand_covariant_derivative_commutators: bool,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
 ) -> Expression:
     if emit_covariant_derivative_commutators:
         numerator = theory.emit_covariant_derivative_commutators(
             numerator,
             max_passes=emit_covariant_derivative_commutator_passes,
+            mode=covariant_derivative_commutator_mode,
         )
     if expand_covariant_derivative_commutators:
         numerator = theory.expand_covariant_derivative_commutators(
@@ -6700,6 +6755,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     emit_covariant_derivative_commutator_passes: int,
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
 ) -> Expression:
     """Normalize tensor-reduced Wilson-line expressions before scalar evaluation."""
 
@@ -6715,6 +6771,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
                 updated = theory.emit_covariant_derivative_commutators(
                     updated,
                     max_passes=emit_covariant_derivative_commutator_passes,
+                    mode=covariant_derivative_commutator_mode,
                 )
             if expand_covariant_derivative_commutators:
                 updated = theory.expand_covariant_derivative_commutators(
@@ -7293,6 +7350,7 @@ def _wilson_line_internal_integral_sum_from_terms(
     tensor_reduce_engine: Any | None,
     emit_covariant_derivative_commutators: bool,
     emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
     epsilon: Expression | None,
@@ -7306,6 +7364,7 @@ def _wilson_line_internal_integral_sum_from_terms(
         tensor_reduce_engine=tensor_reduce_engine,
         emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
         emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
         expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
         epsilon=epsilon,
@@ -7322,6 +7381,7 @@ def _wilson_line_internal_evaluated_terms_from_terms(
     tensor_reduce_engine: Any | None,
     emit_covariant_derivative_commutators: bool,
     emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
     epsilon: Expression | None,
@@ -7335,6 +7395,7 @@ def _wilson_line_internal_evaluated_terms_from_terms(
         tensor_reduce_engine=tensor_reduce_engine,
         emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
         emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
         expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
         epsilon=epsilon,
@@ -7351,6 +7412,7 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
     tensor_reduce_engine: Any | None,
     emit_covariant_derivative_commutators: bool,
     emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
     expand_covariant_derivative_commutators: bool,
     simplify_pychete_color_algebra: bool,
     epsilon: Expression | None,
@@ -7378,6 +7440,7 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
                         emit_covariant_derivative_commutator_passes=(
                             emit_covariant_derivative_commutator_passes
                         ),
+                        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
                         expand_covariant_derivative_commutators=(
                             expand_covariant_derivative_commutators
                         ),
@@ -7999,6 +8062,9 @@ def match_one_loop(
             emit_covariant_derivative_commutator_passes=(
                 options.wilson_line_emit_covariant_derivative_commutator_passes
             ),
+            covariant_derivative_commutator_mode=(
+                options.wilson_line_covariant_derivative_commutator_mode
+            ),
             expand_covariant_derivative_commutators=(
                 options.wilson_line_expand_covariant_derivative_commutators
             ),
@@ -8027,6 +8093,9 @@ def match_one_loop(
             emit_covariant_derivative_commutators=options.wilson_line_emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=(
                 options.wilson_line_emit_covariant_derivative_commutator_passes
+            ),
+            covariant_derivative_commutator_mode=(
+                options.wilson_line_covariant_derivative_commutator_mode
             ),
             expand_covariant_derivative_commutators=(
                 options.wilson_line_expand_covariant_derivative_commutators
@@ -8057,6 +8126,9 @@ def match_one_loop(
             emit_covariant_derivative_commutator_passes=(
                 options.wilson_line_emit_covariant_derivative_commutator_passes
             ),
+            covariant_derivative_commutator_mode=(
+                options.wilson_line_covariant_derivative_commutator_mode
+            ),
             expand_covariant_derivative_commutators=(
                 options.wilson_line_expand_covariant_derivative_commutators
             ),
@@ -8082,6 +8154,9 @@ def match_one_loop(
             emit_covariant_derivative_commutators=options.wilson_line_emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=(
                 options.wilson_line_emit_covariant_derivative_commutator_passes
+            ),
+            covariant_derivative_commutator_mode=(
+                options.wilson_line_covariant_derivative_commutator_mode
             ),
             expand_covariant_derivative_commutators=(
                 options.wilson_line_expand_covariant_derivative_commutators
@@ -8342,6 +8417,11 @@ def match_one_loop(
                 options.wilson_line_emit_covariant_derivative_commutator_passes
                 if options.wilson_line_emit_covariant_derivative_commutators
                 else 0
+            ),
+            "wilson_line_commutator_emit_mode": (
+                options.wilson_line_covariant_derivative_commutator_mode
+                if options.wilson_line_emit_covariant_derivative_commutators
+                else None
             ),
             "wilson_line_commutators_expanded": options.wilson_line_expand_covariant_derivative_commutators,
             "wilson_line_max_derivative_order": options.wilson_line_max_derivative_order,

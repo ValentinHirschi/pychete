@@ -546,6 +546,16 @@ producing two field strengths from those four derivatives. Implement that as a
 native Symbolica/idenso/vakint-backed stage, using Matchete's
 `EvaluateSymmetricLorentzInds`/`CommuteCDs` behavior as reference; do not
 paper over it with SMEFT-specific `cHW` replacements or coefficient patches.
+For local covariant-derivative commutator emission, use
+`Theory.emit_covariant_derivative_commutators(..., mode="inversions")` for the
+stable canonical-order rewrite and
+`Theory.emit_covariant_derivative_commutators(..., mode="all_distinct")` only
+for the bounded Matchete `CommuteCDs` adjacent-pair identity. The
+`all_distinct` mode intentionally supports one pass only; do not run it in a
+repeat-to-fixed-point loop, because adjacent derivative swaps would otherwise
+commute the same pair back and grow the expression. Public Wilson-line parity
+probes should select it through
+`OneLoopMatchOptions.wilson_line_covariant_derivative_commutator_mode`.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result
