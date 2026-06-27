@@ -541,3 +541,16 @@ without Warsaw-specific core assumptions.
   still not reproduced; the active blocker is now specifically
   Matchete-equivalent `hScalar-lScalar` Wilson-line source generation and
   background-heavy-scalar elimination before target-local projection.
+- Latest Wilson-line `NCM` linearity update: generated Wilson-line chains now
+  distribute additive operands inside `NCM(...)` before and after open
+  covariant derivatives act. This keeps additive heavy-light entries such as
+  `A*H + kappa*phi*H` as separate ordered chains before symmetry pruning and
+  target filtering, matching Matchete's termwise noncommutative processing
+  more closely. Focused noncommutative and Wilson-line tests pass. The Singlet
+  `cHW` milestone is still not green: diagnostics now show the pure `A^2`
+  `hScalar-lScalar` terms reach the pre-commutator stage as loop-momentum
+  tensors multiplying four covariant derivatives on a charged Higgs, but the
+  current commutator lowering can produce only one field strength. The next
+  required stage is a Matchete-style loop-symmetric multi-commutator lowering
+  tied to tensor-reduced/symmetric loop-momentum structures, not another
+  projection or heavy-scalar-substitution fix.

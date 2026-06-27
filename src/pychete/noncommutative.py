@@ -15,6 +15,8 @@ from .expr import (
     is_zero,
     matching_subexpressions,
     product_expr,
+    sum_expr,
+    terms,
 )
 from .symbols import s
 
@@ -58,6 +60,36 @@ def scalarize_commutative_ncm_chains(expr: Expression) -> Expression:
     if not _contains_ncm(expr):
         return expr
     return normalize_ncm_chains(expr).replace_multiple(_scalar_ncm_replacements()).expand()
+
+
+def distribute_ncm_additions(
+    expr: Expression,
+    *,
+    max_passes: int = 8,
+    max_operand_terms: int = 32,
+) -> Expression:
+    """Distribute additive operands inside pychete ``NCM`` chains.
+
+    Symbolica does not treat pychete's ``NCM`` head as multiplication, so a
+    chain such as ``NCM(a + b, OpenCD(mu), x)`` must be linearized explicitly
+    before open-derivative and Wilson-line pruning passes can operate on the
+    individual source terms. Bounded Symbolica replacement rules find the
+    chains; Python only chooses one matched additive operand at a time.
+    """
+
+    if max_passes < 0:
+        raise ValueError("max_passes must be non-negative")
+    if max_operand_terms < 2:
+        raise ValueError("max_operand_terms must be at least two")
+    if not _contains_ncm(expr):
+        return expr
+    out = expr
+    for _ in range(max_passes):
+        updated = out.replace_multiple(_distribute_ncm_replacements(max_operand_terms)).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
 
 
 @cache
@@ -157,6 +189,56 @@ def _scalar_ncm_replacement(
     return replace_chain
 
 
+@cache
+def _distribute_ncm_replacements(max_operand_terms: int) -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_SCALAR_NCM_ARITY + 1):
+        wildcards = _ncm_operand_wildcards(arity)
+        pattern = s.NCM(*wildcards)
+        replacements.append(
+            Replacement(
+                pattern,
+                _distribute_ncm_replacement(pattern, wildcards, max_operand_terms=max_operand_terms),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _distribute_ncm_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+    *,
+    max_operand_terms: int,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_chain(match: dict[Expression, Expression]) -> Expression:
+        operands = tuple(match[wildcard] for wildcard in wildcards)
+        for position, operand in enumerate(operands):
+            operand_terms = terms(operand)
+            if len(operand_terms) <= 1:
+                continue
+            if len(operand_terms) > max_operand_terms:
+                return pattern.replace_wildcards(match)
+            return sum_expr(
+                _ncm_from_operands((*operands[:position], term, *operands[position + 1 :]))
+                for term in operand_terms
+            )
+        return pattern.replace_wildcards(match)
+
+    return replace_chain
+
+
+def _ncm_from_operands(operands: tuple[Expression, ...]) -> Expression:
+    kept = tuple(operand for operand in operands if not is_zero(operand) and not bool(operand == Expression.num(1)))
+    if len(kept) != len(operands) and any(is_zero(operand) for operand in operands):
+        return Expression.num(0)
+    if not kept:
+        return Expression.num(1)
+    if len(kept) == 1:
+        return kept[0]
+    return s.NCM(*kept)
+
+
 def _is_commutative_ncm_operand(expr: Expression) -> bool:
     if _contains_noncommutative_marker(expr):
         return False
@@ -212,4 +294,4 @@ def _ncm_operand_wildcards(arity: int) -> tuple[Expression, ...]:
     return tuple(s.head(f"scalar_ncm_operand_{arity}_{index}_") for index in range(arity))
 
 
-__all__ = ["normalize_ncm_chains", "scalarize_commutative_ncm_chains"]
+__all__ = ["distribute_ncm_additions", "normalize_ncm_chains", "scalarize_commutative_ncm_chains"]

@@ -60,7 +60,7 @@ from .matching_results import (
     _resolve_matching_condition_targets,
     matching_condition_targets as structured_matching_condition_targets,
 )
-from .noncommutative import normalize_ncm_chains, scalarize_commutative_ncm_chains
+from .noncommutative import distribute_ncm_additions, normalize_ncm_chains, scalarize_commutative_ncm_chains
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
 from .theory import Theory
 from .theory_metadata import (
@@ -984,10 +984,12 @@ class WilsonLineTracePath:
                 powers.append(expansion.denominator_power)
             operands.append(self.wilson_term_expression())
             numerator = (prefactor * loop_numerator * _ncm_chain(*operands)).expand()
+            numerator = distribute_ncm_additions(numerator)
             if act_open_derivatives:
                 # Explicit Wilson-line chains already close on the final WilsonTerm;
                 # Matchete's ActWithOpenCDs acts only on factors to the right here.
                 numerator = act_with_open_covariant_derivatives(numerator)
+                numerator = distribute_ncm_additions(numerator)
             numerator = remove_loop_momentum_symmetry_vanishing_wilson_terms(numerator, loop_momentum_indices)
             numerator = expand_wilson_terms(
                 self.theory,

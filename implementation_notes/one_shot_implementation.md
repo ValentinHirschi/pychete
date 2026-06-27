@@ -1336,6 +1336,33 @@
   `hScalar-lScalar` Wilson-line source generation and the stage at which
   background-heavy scalar fields are eliminated before target-local Wilson
   projection.
+- Current Wilson-line `NCM` linearity slice: generated ordered chains now run
+  through `distribute_ncm_additions(...)` before and after explicit
+  Wilson-line `ActWithOpenCDs`. This bounded Symbolica replacement-rule pass
+  linearizes additive operands such as `NCM(A*H + kappa*phi*H, OpenCD(...),
+  ...)` into separate ordered chains before Wilson-term symmetry pruning and
+  target-local filtering. This matches Matchete's termwise `NCM` processing
+  more closely and prevents aggregate additive entries from being treated as a
+  single noncommutative object.
+- Focused validation for the `NCM` linearity slice: `pytest
+  tests/unit/functional/test_noncommutative.py -q` passed with `6 passed`;
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line and not slow" -q` passed with `16 passed, 87 deselected`.
+- Current Singlet `cHW` diagnostic after `NCM` linearity: additive
+  linearization is necessary but not sufficient. Direct term-level probes show
+  that applying the existing heavy-scalar solution rules to generated
+  `hScalar-lScalar` numerators turns `phi`-bearing near-misses into higher
+  Higgs powers, not the reference `H^2 W^2` structure. The pure `A^2`
+  `hScalar-lScalar` terms are present before commutator lowering as
+  loop-momentum tensors multiplying four covariant derivatives on a charged
+  Higgs. Running the current inversion-only commutator pass before tensor
+  reduction, forcing it to commute adjacent canonical pairs, or tensor-reducing
+  first and then applying that pass still produces at most one field-strength
+  insertion. The remaining first-milestone blocker is therefore a genuine
+  Matchete-style loop-symmetric multi-commutator lowering stage, tied to
+  `EvaluateSymmetricLorentzInds`/`CommuteCDs` behavior, not target filtering,
+  post-result heavy-scalar substitution, additive `NCM` linearization, or a
+  simple tensor-reduction ordering change.
 
 ## Next Work
 

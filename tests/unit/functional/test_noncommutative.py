@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from pychete import Theory, s
 from pychete.cde import open_covariant_derivative
-from pychete.noncommutative import normalize_ncm_chains, scalarize_commutative_ncm_chains
+from pychete.noncommutative import distribute_ncm_additions, normalize_ncm_chains, scalarize_commutative_ncm_chains
 
 from tests.conftest import assert_expr_equal
 
@@ -32,6 +32,33 @@ def test_normalize_ncm_chains_flattens_nested_chains_and_hoists_scalars() -> Non
     expected = y() * s.Bar(y()) * s.NCM(s.Bar(psi()), s.PR, s.PL, psi(), s.PR, s.PL)
 
     assert_expr_equal(normalize_ncm_chains(expr), expected)
+
+
+def test_distribute_ncm_additions_linearizes_additive_operands_before_open_cd() -> None:
+    theory = Theory("distribute_ncm_additive_operands")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    chi = theory.define_field("chi", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.lorentz_index("mu")
+
+    expr = s.NCM(phi() + chi(), open_covariant_derivative(mu), phi())
+    expected = s.NCM(phi(), open_covariant_derivative(mu), phi()) + s.NCM(
+        chi(),
+        open_covariant_derivative(mu),
+        phi(),
+    )
+
+    assert_expr_equal(distribute_ncm_additions(expr), expected)
+
+
+def test_distribute_ncm_additions_respects_operand_term_guard() -> None:
+    theory = Theory("distribute_ncm_additive_guard")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    chi = theory.define_field("chi", s.Scalar, self_conjugate=True, mass=0)
+    eta = theory.define_field("eta", s.Scalar, self_conjugate=True, mass=0)
+
+    expr = s.NCM(phi() + chi() + eta(), phi())
+
+    assert_expr_equal(distribute_ncm_additions(expr, max_operand_terms=2), expr)
 
 
 def test_scalarize_commutative_ncm_chains_preserves_fermion_chains() -> None:

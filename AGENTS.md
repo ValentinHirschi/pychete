@@ -508,6 +508,14 @@ delegate compact projector/gamma words to
 chains. This mirrors Matchete's `NCM`/`DiracProduct` cleanup while keeping the
 actual gamma algebra in the native backend; do not leave generated
 Wilson-line terms with `NCM(..., NCM(...), ...)` nesting that blocks idenso.
+Before applying open covariant derivatives, Wilson-line symmetry pruning, or
+target-local filtering to generated `NCM(...)` chains, linearize additive
+operands with `distribute_ncm_additions(...)`. Matchete's noncommutative
+products are effectively processed termwise in these stages; pychete's custom
+`NCM` head is not native multiplication, so `NCM(A + B, OpenCD(mu), X)` must
+be represented as the sum of separate ordered chains before pruning/filtering.
+Keep this as bounded Symbolica replacement-rule orchestration and do not
+replace it with a global Python expression walker.
 When `OneLoopMatchOptions.simplify_pychete_color_algebra` is enabled, generated
 Wilson-line numerators must also pass through
 `idenso.simplify_pychete_color_algebra(...)` after supported `WilsonTerm`
@@ -528,6 +536,16 @@ traces can introduce `Metric(mu,nu)` factors that must contract with
 `LoopMomentum(mu) LoopMomentum(nu)` to `LoopMomentumSquared`; do not leave
 those contractions for a Python-side vacuum-integral parser or projection-time
 special cases.
+The remaining Singlet `cHW` frontier is not solved by target filtering,
+post-result heavy-scalar substitution, or additive `NCM` linearization alone.
+Pure `A^2` `hScalar-lScalar` Wilson-line terms reach the pre-commutator stage
+as loop-momentum tensors multiplying four covariant derivatives on a charged
+Higgs. The missing Matchete-parity step is loop-symmetric multi-commutator
+lowering tied to tensor-reduced/symmetric loop-momentum structures, capable of
+producing two field strengths from those four derivatives. Implement that as a
+native Symbolica/idenso/vakint-backed stage, using Matchete's
+`EvaluateSymmetricLorentzInds`/`CommuteCDs` behavior as reference; do not
+paper over it with SMEFT-specific `cHW` replacements or coefficient patches.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result
