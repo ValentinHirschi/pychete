@@ -97,6 +97,34 @@ over process-management commands that may require sandbox approval: remove any
 stale `stop.order` before launching the workload, and create/touch
 `stop.order` to ask the wrapper to terminate the wrapped process group.
 
+## Sandbox And Listener Workflow
+
+Do not let work stall on sandbox approval prompts. The expected workflow is:
+
+1. Run ordinary read-only shell commands and ordinary tests directly.
+2. If a necessary direct command fails with `Operation not permitted`, a
+   sandbox write restriction, or the known read-only `.git` metadata failure,
+   do not request an escalation prompt. Immediately use the user-started
+   `listener.py` route.
+3. Queue exactly one command by writing it to `run.order`, then read
+   `run.output` for its exit code and output. The listener clears `run.order`
+   itself and appends history to `run.log`.
+
+Typical listener usage:
+
+```sh
+printf 'git commit -F /tmp/commit-message\n' > run.order
+sleep 1
+tail -200 run.output
+```
+
+Use the listener for any `.git` metadata writes that fail in the sandbox,
+including `git commit`, `git rebase`, `git merge`, lock cleanup, and similarly
+blocked repository-maintenance commands. For long or memory-sensitive
+Python/test/matching workloads, still use
+`scripts/run_with_memory_watch.py --limit-gb 30`; the listener is a
+sandbox-dispatch fallback, not a replacement for the memory watchdog.
+
 ## Logging And Progress Output
 
 Use pychete's package logging layer for user-facing progress and debugging

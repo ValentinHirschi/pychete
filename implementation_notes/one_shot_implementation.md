@@ -56,6 +56,15 @@
   `stop.order` before launching long work, and create/touch it to terminate the
   wrapped process group without relying on sandboxed process-management
   permissions.
+- Sandbox-blocked shell commands must not stall on approval prompts. Run normal
+  commands directly first; if a necessary command fails with
+  `Operation not permitted`, a sandbox write restriction, or the known
+  read-only `.git` metadata failure, immediately queue that command through the
+  user-started `listener.py` by writing it to `run.order` and reading
+  `run.output`. This is mandatory for blocked `.git` writes such as commits,
+  rebases, merges, lock cleanup, or similar repository-maintenance commands.
+  The listener is the sandbox-dispatch fallback; keep using the 30 GiB watchdog
+  for long or memory-sensitive Python/test/matching workloads.
 
 ## History Files
 
