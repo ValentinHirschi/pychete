@@ -6,7 +6,7 @@ from functools import cache
 from itertools import count
 from typing import Any
 
-from symbolica import Expression, Replacement
+from symbolica import Expression, PatternRestriction, Replacement
 from symbolica.core import AtomType
 
 from .common import import_backend
@@ -15,12 +15,14 @@ from ..expr import (
     as_int,
     cg_tensor_pattern,
     factors,
+    field_strength_pattern,
     field_strength_with_derivatives,
     field_with_derivatives,
     is_head,
     list_items,
     product_expr,
     sum_expr,
+    terms,
 )
 from ..symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, symbol_data
 from ..theory_metadata import GroupKind
@@ -198,9 +200,65 @@ def _pychete_delta_cg_contraction_replacements() -> tuple[Replacement, ...]:
         return matched if contracted is None else contracted
 
     return (
-        Replacement(direct_pattern, direct_contract, cg_label.req_tag(SymbolRole.CG_TENSOR.value)),
-        Replacement(conjugate_pattern, conjugate_contract, cg_label.req_tag(SymbolRole.CG_TENSOR.value)),
+        Replacement(
+            direct_pattern,
+            direct_contract,
+            cg_label.req_tag(SymbolRole.CG_TENSOR.value)
+            & _delta_cg_contractible_restriction(
+                cg_label=cg_label,
+                cg_indices=cg_indices,
+                first_label=left_label,
+                second_label=right_label,
+                representation=representation,
+                direct=True,
+            ),
+        ),
+        Replacement(
+            conjugate_pattern,
+            conjugate_contract,
+            cg_label.req_tag(SymbolRole.CG_TENSOR.value)
+            & _delta_cg_contractible_restriction(
+                cg_label=cg_label,
+                cg_indices=cg_indices,
+                first_label=left_label,
+                second_label=right_label,
+                representation=representation,
+                direct=False,
+            ),
+        ),
     )
+
+
+def _delta_cg_contractible_restriction(
+    *,
+    cg_label: Expression,
+    cg_indices: Expression,
+    first_label: Expression,
+    second_label: Expression,
+    representation: Expression,
+    direct: bool,
+) -> PatternRestriction:
+    required = (cg_label, cg_indices, first_label, second_label, representation)
+
+    def contractible(match: dict[Expression, Expression]) -> int:
+        if any(wildcard not in match for wildcard in required):
+            return 0
+        return (
+            1
+            if _contract_delta_match_into_cg(
+                match,
+                cg_label=cg_label,
+                cg_indices=cg_indices,
+                first_label=first_label,
+                second_label=second_label,
+                representation=representation,
+                direct=direct,
+            )
+            is not None
+            else -1
+        )
+
+    return PatternRestriction.req_matches(contractible)
 
 
 def _contract_delta_match_into_cg(
@@ -397,10 +455,15 @@ def simplify_su2_field_strength_generator_bilinears(theory: Any, expr: Expressio
         coefficient = _su2_field_strength_generator_bilinear_coefficient(theory, group)
         if coefficient is None:
             continue
-        result = result.replace_multiple(
-            _su2_field_strength_generator_bilinear_replacements(theory, group, coefficient),
-            repeat=True,
-        ).expand()
+        replacements = _su2_field_strength_generator_bilinear_replacements(theory, group, coefficient)
+        if not replacements:
+            continue
+        result = _replace_candidate_terms(
+            result,
+            replacements,
+            candidate=_su2_field_strength_generator_bilinear_candidate(theory, group),
+            repeat=False,
+        )
     return result
 
 
@@ -437,13 +500,22 @@ def simplify_su2_u1_field_strength_generator_bilinears(theory: Any, expr: Expres
                 symbol_data(u1_symbol, SymbolDataKey.GROUP_ABELIAN, 0)
             ):
                 continue
-            result = result.replace_multiple(
-                _su2_u1_field_strength_generator_bilinear_replacements(
+            replacements = _su2_u1_field_strength_generator_bilinear_replacements(
+                theory,
+                su2_group,
+                u1_group,
+            )
+            if not replacements:
+                continue
+            result = _replace_candidate_terms(
+                result,
+                replacements,
+                candidate=_su2_u1_field_strength_generator_bilinear_candidate(
                     theory,
                     su2_group,
                     u1_group,
                 ),
-                repeat=True,
+                repeat=False,
             ).expand()
     return result
 
@@ -465,6 +537,81 @@ def simplify_pychete_field_strength_group_algebra(theory: Any, expr: Expression)
     return simplify_su2_u1_field_strength_generator_bilinears(theory, result)
 
 
+def _replace_candidate_terms(
+    expr: Expression,
+    replacements: tuple[Replacement, ...],
+    *,
+    candidate: Callable[[Expression], bool],
+    repeat: bool,
+) -> Expression:
+    changed = False
+    updated_terms: list[Expression] = []
+    for term in terms(expr):
+        if not candidate(term):
+            updated_terms.append(term)
+            continue
+        updated = term.replace_multiple(replacements, repeat=repeat).expand()
+        changed = changed or not bool(updated == term)
+        updated_terms.append(updated)
+    return sum_expr(updated_terms).expand() if changed else expr
+
+
+def _su2_field_strength_generator_bilinear_candidate(theory: Any, group: str) -> Callable[[Expression], bool]:
+    group_symbol = theory.symbol(group, role=SymbolRole.GROUP)
+    vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+    generator_name = f"gen_{group}_fund"
+    if not isinstance(vector_name, str) or vector_name not in theory.fields or generator_name not in theory.cg_tensors:
+        return lambda _term: False
+    generator_pattern = cg_tensor_pattern(theory.cg_tensors[generator_name].label)
+    strength_pattern = field_strength_pattern(theory.fields[vector_name].label)
+
+    def candidate(term: Expression) -> bool:
+        return _has_at_least_matches(term, generator_pattern, 2) and _has_at_least_matches(term, strength_pattern, 2)
+
+    return candidate
+
+
+def _su2_u1_field_strength_generator_bilinear_candidate(
+    theory: Any,
+    su2_group: str,
+    u1_group: str,
+) -> Callable[[Expression], bool]:
+    su2_symbol = theory.symbol(su2_group, role=SymbolRole.GROUP)
+    u1_symbol = theory.symbol(u1_group, role=SymbolRole.GROUP)
+    su2_vector_name = symbol_data(su2_symbol, SymbolDataKey.GROUP_FIELD)
+    u1_vector_name = symbol_data(u1_symbol, SymbolDataKey.GROUP_FIELD)
+    generator_name = f"gen_{su2_group}_fund"
+    if (
+        not isinstance(su2_vector_name, str)
+        or su2_vector_name not in theory.fields
+        or not isinstance(u1_vector_name, str)
+        or u1_vector_name not in theory.fields
+        or generator_name not in theory.cg_tensors
+    ):
+        return lambda _term: False
+    generator_pattern = cg_tensor_pattern(theory.cg_tensors[generator_name].label)
+    su2_strength_pattern = field_strength_pattern(theory.fields[su2_vector_name].label)
+    u1_strength_pattern = field_strength_pattern(theory.fields[u1_vector_name].label)
+
+    def candidate(term: Expression) -> bool:
+        return (
+            _has_at_least_matches(term, generator_pattern, 1)
+            and _has_at_least_matches(term, su2_strength_pattern, 1)
+            and _has_at_least_matches(term, u1_strength_pattern, 1)
+        )
+
+    return candidate
+
+
+def _has_at_least_matches(expr: Expression, pattern: Expression, minimum: int) -> bool:
+    count = 0
+    for _match in expr.match(pattern):
+        count += 1
+        if count >= minimum:
+            return True
+    return False
+
+
 def contract_pychete_deltas_into_cg_tensors(expr: Expression) -> Expression:
     """Contract explicit pychete ``Delta`` factors into registered ``CG`` tensors.
 
@@ -475,7 +622,14 @@ def contract_pychete_deltas_into_cg_tensors(expr: Expression) -> Expression:
     projectors.
     """
 
-    return expr.replace_multiple(_pychete_delta_cg_contraction_replacements(), repeat=True).expand()
+    out = expr
+    replacements = _pychete_delta_cg_contraction_replacements()
+    for _ in range(8):
+        updated = out.replace_multiple(replacements).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
 
 
 def decode_native_color_wrappers_and_simplify_field_strengths(theory: Any, expr: Expression) -> Expression:

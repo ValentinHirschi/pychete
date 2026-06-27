@@ -1392,11 +1392,43 @@
   loop-symmetric double-commutator/basis-identity reduction of the pure `A^2`
   four-derivative Higgs bilinear into `H^\dagger H W^2`. No full Matchete
   one-loop integration test is reproduced yet.
+- Latest Wilson-line namespace/group-algebra progress: vakint tensor reduction
+  can emit pychete-compatible objects with backend-owned
+  `vakint::Delta(...)` factors and generated `vakint::covariant_commutator_*`
+  index labels. The vakint decoder now restores backend deltas to
+  `pychete::Delta(...)` and restores generated covariant-commutator labels to
+  theory-owned index symbols. The idenso bridge now rejects non-contractible
+  `Delta*CG` matches with a Symbolica `PatternRestriction.req_matches(...)`
+  guard, contracts deltas through a bounded replacement loop, and applies the
+  expensive SU(2)/U(1 field-strength generator projectors only to additive
+  terms selected by native Symbolica pattern prefilters. This keeps the
+  Wilson-line path responsive while allowing target-shaped Higgs-line group
+  structures to collapse to singlets.
+- Current Singlet `cHW` status after that normalization: the guarded selected
+  Wilson-line diagnostic no longer projects zero. The entire projected
+  contribution comes from `hScalar-lScalar#wilson14_o4_0`, the expected
+  order-four Wilson-line plan entry. With `mu_r^2=M^2` and Matchete evaluated
+  hbar normalization, the finite piece is currently
+  `7/24*hbar*A^2*gL^2/M^4`, while the Matchete reference fixture expects
+  `1/12*hbar*A^2*gL^2/M^4`. The first full one-loop Matchete integration
+  milestone is therefore still not green, but the blocker has moved from
+  projection plumbing to the order-four Wilson-line/tensor-integral
+  coefficient and finite-part convention. Focused validation passed with
+  `pytest tests/unit/backends/test_idenso_backend.py
+  tests/unit/backends/test_vakint_backend.py -q` (`76 passed`) and
+  `scripts/run_with_memory_watch.py --limit-gb 30 -- pytest
+  tests/integration/matching/test_fluctuation_operator.py -k "wilson_line and
+  not slow" -q` (`17 passed, 87 deselected`).
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
+  - decompose and correct the `hScalar-lScalar#wilson14_o4_0` order-four
+    Wilson-line coefficient against Matchete's `EvaluateSymmetricLorentzInds`,
+    `WilsonTermExpand`, tensor-reduction, and one-loop finite-part
+    conventions; the current normalized finite result is `7/24` where
+    Matchete expects `1/12`;
   - implement the generic loop-symmetric double-commutator/basis-identity
     reduction needed for the pure `A^2` `hScalar-lScalar` four-derivative
     Higgs bilinear, using Symbolica replacement rules and idenso-backed

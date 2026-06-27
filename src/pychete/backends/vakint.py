@@ -449,6 +449,13 @@ def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
             ),
         ),
         Replacement(
+            _vakint_delta_pattern(),
+            lambda match: context.decode_delta(
+                match[_wild("delta_left")],
+                match[_wild("delta_right")],
+            ),
+        ),
+        Replacement(
             _vakint_cg_pattern(),
             lambda match: context.decode_cg(
                 match[_wild("cg_label")],
@@ -562,6 +569,9 @@ class _DecodeContext:
     def decode_metric(self, left: Expression, right: Expression) -> Expression:
         return s.Metric(self.decode_payload(left), self.decode_payload(right))
 
+    def decode_delta(self, left: Expression, right: Expression) -> Expression:
+        return s.Delta(self.decode_payload(left), self.decode_payload(right))
+
     def decode_cg(self, label: Expression, indices: Expression) -> Expression:
         name = _vakint_local_name(label)
         cg_name = self._registered_name(name, self.theory.cg_tensors, self.cg_tensors_by_safe_name)
@@ -593,7 +603,20 @@ class _DecodeContext:
         if is_head(label, symbol("dummy_index")) and len(label) == 1:
             return s.dummy_index(label[0])
         decoded = self.decode_payload(label)
+        generated_index = self._decode_theory_generated_index_label(decoded)
+        if generated_index is not None:
+            return generated_index
         return _decode_generated_backend_index_alias(decoded) or decoded
+
+    def _decode_theory_generated_index_label(self, label: Expression) -> Expression | None:
+        local_name = _symbol_local_name(label)
+        if local_name is None:
+            return None
+        if local_name.startswith("index_covariant_commutator_"):
+            local_name = local_name.removeprefix("index_")
+        if not local_name.startswith("covariant_commutator_"):
+            return None
+        return self.theory.symbol(local_name, role=SymbolRole.INDEX)
 
     def decode_payload(self, expr: Expression) -> Expression:
         safe_loop_index = _decode_backend_safe_loop_momentum_index(expr)
@@ -616,6 +639,8 @@ class _DecodeContext:
             return self.decode_field_strength(expr[0], expr[1], expr[2], expr[3])
         if is_head(expr, symbol("g")) and len(expr) == 2:
             return self.decode_metric(expr[0], expr[1])
+        if is_head(expr, symbol("Delta")) and len(expr) == 2:
+            return self.decode_delta(expr[0], expr[1])
         if is_head(expr, symbol("CG")) and len(expr) == 2:
             return self.decode_cg(expr[0], expr[1])
         if is_head(expr, symbol("CD")) and len(expr) == 2:
@@ -668,6 +693,14 @@ def _vakint_local_name(expr: Expression) -> str | None:
     if not name.startswith(prefix):
         return None
     return name.removeprefix(prefix)
+
+
+def _symbol_local_name(expr: Expression) -> str | None:
+    try:
+        name = expr.get_name()
+    except TypeError:
+        return None
+    return name.rsplit("::", maxsplit=1)[-1]
 
 
 def _is_vakint_symbol(expr: Expression, name: str) -> bool:
@@ -787,6 +820,11 @@ def _vakint_field_strength_pattern() -> Expression:
 @cache
 def _vakint_metric_pattern() -> Expression:
     return symbol("g")(_wild("metric_left"), _wild("metric_right"))
+
+
+@cache
+def _vakint_delta_pattern() -> Expression:
+    return symbol("Delta")(_wild("delta_left"), _wild("delta_right"))
 
 
 @cache

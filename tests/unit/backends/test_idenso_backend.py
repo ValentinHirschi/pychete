@@ -4,7 +4,7 @@ from symbolica import Expression, S
 from symbolica.community import idenso as native_idenso
 
 from pychete import Theory
-from pychete.backends import idenso
+from pychete.backends import idenso, vakint
 from pychete.group_algebra import simplify_color, simplify_gamma, simplify_metrics, simplify_pychete_color
 from pychete.symbols import SymbolRole, canonical_string, s
 
@@ -407,6 +407,65 @@ def test_idenso_bridge_projects_su2_field_strength_bilinear_with_pychete_delta()
 
     assert _same(simplified, expected)
     assert "pychete::Delta" not in canonical_string(simplified)
+    assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_projects_vakint_decoded_wilson_line_su2_bilinear() -> None:
+    theory = Theory("idenso_color_vakint_wilson_line_su2")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    field_index = theory.index("field", fund)
+    bar_index = theory.index(S("vakint::bar_h"), fund)
+    internal_index = theory.index(
+        theory.symbol("covariant_commutator_18_0", role=SymbolRole.INDEX),
+        fund,
+    )
+    internal_dual = theory.index(
+        theory.symbol("covariant_commutator_18_0", role=SymbolRole.INDEX),
+        s.Bar(fund),
+    )
+    adjoint_left = theory.index(
+        theory.symbol("covariant_commutator_4_1", role=SymbolRole.INDEX),
+        adj,
+    )
+    adjoint_right = vakint.symbol("Index")(S("vakint::covariant_commutator_18_1"), adj)
+    right_index = vakint.symbol("Index")(S("vakint::right_h"), fund)
+    right_dual = vakint.symbol("Index")(S("vakint::right_h"), s.Bar(fund))
+    bar_dual = vakint.symbol("Index")(S("vakint::bar_h"), s.Bar(fund))
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    left_strength = s.FieldStrength(
+        theory.field_handle("W").label,
+        s.List(mu, nu),
+        s.List(adjoint_left),
+        s.List(),
+    )
+    right_strength = s.FieldStrength(
+        theory.field_handle("W").label,
+        s.List(mu, nu),
+        s.List(adjoint_right),
+        s.List(),
+    )
+    encoded = (
+        higgs(field_index)
+        * s.Bar(higgs(bar_index))
+        * generator(adjoint_left, field_index, internal_dual)
+        * generator(adjoint_right, internal_index, right_dual)
+        * vakint.symbol("Delta")(bar_dual, right_index)
+        * left_strength
+        * right_strength
+    )
+    decoded = vakint.decode_pychete_namespace(theory, encoded)
+    expected = Expression.num(1) / Expression.num(4) * higgs(field_index) * s.Bar(higgs(field_index)) * left_strength**2
+
+    simplified = idenso.simplify_pychete_field_strength_group_algebra(theory, decoded)
+
+    assert _same(simplified, expected)
+    assert "vakint::Delta" not in canonical_string(simplified)
+    assert "vakint::covariant_commutator" not in canonical_string(simplified)
     assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
 
 

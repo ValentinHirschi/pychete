@@ -8,7 +8,7 @@ from symbolica import Expression, S
 
 from pychete import Theory
 from pychete.backends import idenso, vakint
-from pychete.symbols import canonical_string, s
+from pychete.symbols import SymbolRole, canonical_string, s
 
 
 @dataclass
@@ -170,6 +170,37 @@ def test_vakint_lowers_pychete_loop_momentum_index_wrappers_to_backend_safe_symb
     assert canonical_string(vakint.decode_pychete_namespace(theory, vakint.symbol("g")(safe_index, safe_index))) == (
         canonical_string(s.Metric(mu, mu))
     )
+
+
+def test_vakint_decoder_restores_generated_covariant_commutator_index_labels() -> None:
+    theory = Theory("vakint_covariant_commutator_index_decode")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    adjoint = theory.define_representation("SU2L", "adj")
+    encoded = vakint.symbol("Index")(S("vakint::covariant_commutator_7_1"), adjoint)
+    expected = theory.index(
+        theory.symbol("covariant_commutator_7_1", role=SymbolRole.INDEX),
+        adjoint,
+    )
+
+    decoded = vakint.decode_pychete_namespace(theory, encoded)
+
+    assert canonical_string(decoded) == canonical_string(expected)
+    assert "vakint::covariant_commutator" not in canonical_string(decoded)
+
+
+def test_vakint_decoder_restores_backend_delta_to_pychete_delta() -> None:
+    theory = Theory("vakint_delta_decode")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    left = vakint.symbol("Index")(S("vakint::left"), fund)
+    right = vakint.symbol("Index")(S("vakint::right"), s.Bar(fund))
+    encoded = vakint.symbol("Delta")(left, right)
+    expected = s.Delta(theory.index(S("vakint::left"), fund), theory.index(S("vakint::right"), s.Bar(fund)))
+
+    decoded = vakint.decode_pychete_namespace(theory, encoded)
+
+    assert canonical_string(decoded) == canonical_string(expected)
+    assert "vakint::Delta" not in canonical_string(decoded)
 
 
 def test_vakint_one_loop_vacuum_integral_lowers_pychete_loop_momentum_numerators() -> None:

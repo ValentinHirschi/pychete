@@ -565,3 +565,17 @@ without Warsaw-specific core assumptions.
   one-loop integration test remains unreproduced; the blocker is now the
   generic loop-symmetric double-commutator/basis-identity reduction that turns
   the pure `A^2` four-derivative Higgs bilinear into `H^\dagger H W^2`.
+- Latest Wilson-line projection update: vakint-decoded backend deltas and
+  generated covariant-commutator indices are now normalized into pychete/theory
+  objects before idenso group simplification, and the SU(2) field-strength
+  generator projectors are guarded by native Symbolica prefilters so the
+  selected Wilson-line path remains responsive. The Singlet `cHW` diagnostic
+  now projects a nonzero contribution from the expected
+  `hScalar-lScalar#wilson14_o4_0` order-four entry. It is still not Matchete
+  equal: after the Matchete evaluated-hbar normalization and setting
+  `mu_r^2=M^2`, pychete currently gives
+  `7/24*hbar*A^2*gL^2/M^4` while the reference expects
+  `1/12*hbar*A^2*gL^2/M^4`. The first full Matchete one-loop integration
+  target is therefore closer, but still incomplete; the active blocker is now
+  the order-four Wilson-line/tensor-integral coefficient and finite-part
+  convention.
