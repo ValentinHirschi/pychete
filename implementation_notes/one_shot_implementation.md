@@ -1560,6 +1560,112 @@
   still not green. The active blocker has moved back to the Wilson-line
   coefficient/sign/finite-part normal-form frontier rather than projection
   returning zero.
+- Current quick-status pass: no full Matchete one-loop matching integration
+  test is green yet. The closest first milestone remains the Singlet Scalar
+  Extension selected explicit Wilson-line route for
+  `hScalar-lScalar -> cHW`. Fixture loading, selected Wilson-line planning,
+  target filtering, heavy-scalar substitution, tensor reduction, internal
+  mixed massless/massive integral evaluation, loop normalization, and Wilson
+  projection all run. The remaining mismatch is localized to the generated
+  order-four Wilson-line coefficient/normal-form layer: in the stable
+  inversion commutator mode the selected route gives
+  `+1/8*hbar*A^2*gL^2/M^4`, while the Matchete per-trace and final matching
+  fixture expect `+1/12*hbar*A^2*gL^2/M^4`.
+- The latest diagnostics confirmed that the first milestone is not blocked by
+  broad model loading or trace coverage. After target filtering, only a small
+  heavy-light Wilson-line slice contributes: the relevant nonzero selected
+  entries are the expected `hScalar-lScalar` derivative branches, with the
+  order-four `wilson14_o4_0` entry carrying the direct `cHW` source. The
+  generated numerators still contain heavy `phi` fields before on-shell
+  substitution, matching the intended route in which the heavy scalar solution
+  produces the final `H^\dagger H F^2` operators.
+- Re-reading Matchete's `WilsonTermExpand`, `ActWithOpenCDs`,
+  `EvaluateSymmetricLorentzInds`, and `LoopIntegrate` code did not expose a
+  broad missing API step. pychete's Wilson-term `-I` convention is already
+  carried by `_covariant_derivative_commutator(...)`, the explicit Wilson-line
+  route uses right-acting open derivatives without cyclic wrap, and the
+  internal scalar one-loop backend follows Matchete's single-/multi-scale
+  formulas for the massless-plus-massive topologies probed so far. The next
+  correction should therefore focus on the order-four Wilson-line
+  Lorentz/field-strength/group normal form and loop-symmetric
+  double-commutator reduction, not on a target-specific `cHW` coefficient
+  patch.
+- Latest direct generator probe: constructing the Singlet setup directly and
+  calling `interaction_wilson_line_expansion_terms_by_trace(...)` with only the
+  selected `hScalar-lScalar` Wilson-line plan and the registered `cHW` target
+  filter confirms that only `hScalar-lScalar#wilson14_o4_0` survives. It
+  produces 10 generated terms; their mass slots are `(0, M^2)` and their
+  powers are `(5, 1)`, `(4, 1)`, or `(3, 1)`. A focused end-to-end coefficient
+  probe over just that entry was still too slow before the first print and was
+  stopped through the memory-watch `stop.order` mechanism, so future probes
+  should split the 10 terms by propagator-power class or individual term.
+- Fresh Matchete ordering read: current Matchete applies
+  `GatherLoopMomenta // RemoveSymmetryVanishingWilsonTerms`, then
+  `EvaluateSymmetricLorentzInds // ContractMetric`, and only then
+  `WilsonExpand`. pychete currently expands `WilsonTerm(...)` first and lets
+  vakint tensor reduction introduce metrics afterwards, so metric contractions
+  hit already-expanded `FieldStrength(..., derivatives)` atoms rather than the
+  unexpanded `WilsonTerm` derivative list. The idenso adapter does have
+  post-Wilson metric contraction for field and field-strength derivative slots,
+  but the `1/8` versus `1/12` mismatch indicates this is not yet equivalent to
+  Matchete's pre-Wilson symmetric-index normal form. The next implementation
+  slice should prototype a generic unexpanded-WilsonTerm tensor-reduction path
+  or equivalent pre-Wilson symmetric-loop-momentum reduction, using vakint for
+  the topology-independent tensor factors where possible and only then calling
+  `expand_wilson_terms(...)`.
+- Implemented first Matchete-order Wilson-line tensor-reduction slice:
+  `WilsonLineTraceExpansionTerm` now stores the formal pre-Wilson numerator,
+  vakint namespace decoding recognizes `vakint::WilsonTerm(...)`, and the
+  internal analytic Wilson-line evaluator can opt into
+  `wilson_line_tensor_reduce_before_wilson_expand`. In that mode vakint
+  tensor-reduces the loop momenta while `WilsonTerm(...)` is still formal,
+  pychete contracts emitted `Metric`/`Delta` factors into WilsonTerm
+  derivative slots with Symbolica replacement rules, and only then calls
+  `expand_wilson_terms(...)` plus the existing idenso-backed postprocessing.
+  The option is exposed through `OneLoopMatchOptions` and validation fixture
+  preview/gap-report helpers.
+- Focused validation for this slice is green: `compileall`, `python -m mypy`,
+  `test_vakint_decodes_native_wilson_term_wrapper`,
+  `test_wilson_term_metric_contraction_updates_formal_derivative_slots`,
+  `test_wilson_line_internal_evaluation_can_tensor_reduce_before_wilson_expansion`,
+  `test_wilson_line_tensor_reduced_postprocess_contracts_derivative_metrics`,
+  and the public Wilson-line option forwarding test all pass.
+- A full fixture-level Singlet `cHW` selected-route gap report with the new
+  pre-Wilson tensor-reduction flag was attempted under the 30 GiB watchdog but
+  produced no result after about 90 seconds and was stopped through its
+  `/tmp/pychete_cHW_probe.stop` stop file. The next diagnostic should not
+  start with the whole fixture projection; split the surviving
+  `hScalar-lScalar#wilson14_o4_0` entry by individual generated term or
+  propagator-power class and compare the pre-/post-Wilson reduced finite
+  source before target projection.
+- Follow-up probe and fix: the apparent pre-Wilson slowness was caused by an
+  unbounded `repeat=True` replacement in
+  `contract_wilson_term_derivative_metrics(...)`. When vakint emitted a
+  `Metric * WilsonTerm` product whose metric indices did not occur in the
+  WilsonTerm derivative slots, the replacement returned the original product
+  and Symbolica kept rematching it. The helper now uses a bounded convergence
+  loop, with a regression for nonmatching metrics. After that fix, native
+  vakint tensor reduction of a single formal Wilson numerator piece is fast,
+  and the pre-Wilson contraction/expansion stage completes.
+- Per-term Singlet `cHW` diagnostic after the bounded replacement fix:
+  the surviving selected `hScalar-lScalar#wilson14_o4_0` slice still has 10
+  generated terms. The old post-Wilson tensor-reduction path projects nonzero
+  `cHW` only from terms 4 and 9, both with propagator powers `(3, 1)`. The new
+  pre-Wilson path projects term 4 to zero and keeps term 9, so the selected
+  source is halved relative to the old ordering. The fixture-level selected
+  `cHW` gap report now finishes under the 30 GiB watchdog with
+  `wilson_line_tensor_reduce_before_wilson_expand=True`, but `cHW` remains
+  different from the Matchete reference. This confirms that Matchete-order
+  metric contraction was a real issue, but the first full one-loop integration
+  milestone still needs another generic Wilson-line normal-form/coefficient
+  correction.
+- Latest focused validation: the Wilson metric contraction tests, the
+  pre-Wilson tensor-reduction test, the vakint WilsonTerm decode test, the
+  validation option forwarding test, `python -m mypy`, and a clean selected
+  Singlet `cHW` fixture-status probe all pass. The selected `cHW` report stage
+  is `normalized_interaction_wilson_line_hybrid_internal_minimal_subtraction_result`;
+  it has no accepted common matching condition and one different common
+  matching condition, the external `cHW`.
 
 ## Next Work
 
@@ -1570,6 +1676,14 @@
     `WilsonTermExpand`, tensor-reduction, and one-loop finite-part
     conventions; the current normalized finite result is `7/24` where
     Matchete expects `1/12`;
+  - harden and remeasure the new Matchete-order Wilson-line tensor-reduction
+    mode on the selected Singlet `hScalar-lScalar#wilson14_o4_0` terms,
+    starting from per-term or per-power-class diagnostics rather than a full
+    fixture gap report;
+  - inspect why the pre-Wilson path keeps only the path-2 `(3, 1)` contribution
+    while Matchete expects a smaller nonzero total, focusing on symmetric
+    Wilson-line path pairing/orientation, WilsonTerm endpoint conventions, and
+    generic loop-symmetric double-commutator identities;
   - implement the generic loop-symmetric double-commutator/basis-identity
     reduction needed for the pure `A^2` `hScalar-lScalar` four-derivative
     Higgs bilinear, using Symbolica replacement rules and idenso-backed

@@ -254,6 +254,7 @@ class OneLoopMatchOptions:
     wilson_line_max_derivative_order: int = 4
     wilson_line_filter_terms_by_matching_targets: bool = False
     wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False
+    wilson_line_tensor_reduce_before_wilson_expand: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True

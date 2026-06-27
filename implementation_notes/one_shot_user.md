@@ -631,3 +631,27 @@ without Warsaw-specific core assumptions.
   The Matchete fixture still expects `1/12*hbar*A^2*gL^2/M^4`, so the first
   full Matchete one-loop integration target remains incomplete; the next
   blocker is the Wilson-line coefficient/sign/finite-part normal-form layer.
+- Latest user-facing status request: continue as planned, but give a quick
+  summary of how far pychete is from reproducing at least one Matchete
+  one-loop integration test. Current answer: no full Matchete one-loop test is
+  green; the closest target is still Singlet `hScalar-lScalar -> cHW`, where
+  all broad plumbing is connected but the order-four Wilson-line coefficient
+  remains mismatched.
+- Follow-up implementation progress in response: added an opt-in
+  Matchete-order Wilson-line tensor-reduction path. It stores formal
+  pre-Wilson numerators, lets vakint reduce loop momenta before
+  `WilsonTerm(...)` expansion, decodes `vakint::WilsonTerm(...)`, contracts
+  emitted metrics into formal Wilson derivative slots with Symbolica
+  replacement rules, and exposes the option through `OneLoopMatchOptions` and
+  validation fixture helpers. Focused tests and mypy pass. A full selected
+  Singlet `cHW` fixture probe with the new flag was still too slow for a quick
+  check and was stopped through the watchdog stop file; next diagnostics should
+  split the surviving `hScalar-lScalar#wilson14_o4_0` terms.
+- Follow-up diagnostic result: the pre-Wilson slowdown was a bug in
+  `contract_wilson_term_derivative_metrics(...)`, where `repeat=True` could
+  rematch an unchanged noncontracting `Metric * WilsonTerm` product forever.
+  The helper now uses bounded convergence and has a regression test. With that
+  fixed, the selected Singlet `cHW` fixture-status probe finishes under the
+  30 GiB watchdog. It is still not Matchete-equal: the pre-Wilson path halves
+  the old selected contribution by killing the path-0 `(3, 1)` term, but the
+  external `cHW` condition remains different from the Matchete reference.

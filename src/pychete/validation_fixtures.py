@@ -672,6 +672,7 @@ class ValidationFixture:
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
+        wilson_line_tensor_reduce_before_wilson_expand: bool = False,
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
@@ -801,6 +802,7 @@ class ValidationFixture:
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 tensor_reduce=internal_tensor_reduce,
                 tensor_reduce_engine=vakint_engine,
+                tensor_reduce_before_wilson_expand=wilson_line_tensor_reduce_before_wilson_expand,
                 epsilon=epsilon,
                 mu_r_squared=mu_r_squared,
                 combine_terms=internal_combine_terms,
@@ -833,6 +835,7 @@ class ValidationFixture:
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 tensor_reduce=internal_tensor_reduce,
                 tensor_reduce_engine=vakint_engine,
+                tensor_reduce_before_wilson_expand=wilson_line_tensor_reduce_before_wilson_expand,
                 combine_terms=internal_combine_terms,
                 max_pole_order=internal_max_pole_order,
                 epsilon=epsilon,
@@ -1181,6 +1184,9 @@ class ValidationFixture:
                 ),
                 "wilson_line_commutators_expanded": wilson_line_expand_covariant_derivative_commutators,
                 "wilson_line_max_derivative_order": wilson_line_max_derivative_order,
+                "wilson_line_tensor_reduce_before_wilson_expand": (
+                    wilson_line_tensor_reduce_before_wilson_expand
+                ),
                 "wilson_line_terms_filtered_by_matching_targets": (
                     wilson_line_term_atom_requirements is not None
                 ),
@@ -1271,6 +1277,7 @@ class ValidationFixture:
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
+        wilson_line_tensor_reduce_before_wilson_expand: bool = False,
         simplify_pychete_color_algebra: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         heavy_scalar_solution_lagrangian: Expression | str | None = None,
@@ -1323,6 +1330,10 @@ class ValidationFixture:
         ``wilson_line_expose_scalar_derivative_commutator_bilinears`` forwards
         the opt-in scalar two-derivative commutator-bilinear normal-form pass
         to Wilson-line internal and vakint preview routes.
+        ``wilson_line_tensor_reduce_before_wilson_expand`` forwards the
+        Matchete-order internal Wilson-line path where loop-momentum tensor
+        reduction contracts metrics into formal Wilson terms before supported
+        Wilson-term expansion.
         ``wilson_line_covariant_derivative_commutator_mode`` forwards the
         Wilson-line local commutator identity mode, including the bounded
         Matchete-adjacent ``"all_distinct"`` mode used by current Singlet
@@ -1461,6 +1472,9 @@ class ValidationFixture:
                     wilson_line_expose_scalar_derivative_commutator_bilinears=(
                         wilson_line_expose_scalar_derivative_commutator_bilinears
                     ),
+                    wilson_line_tensor_reduce_before_wilson_expand=(
+                        wilson_line_tensor_reduce_before_wilson_expand
+                    ),
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                     heavy_scalar_solution_lagrangian=resolved_heavy_scalar_solution_lagrangian,
@@ -1569,6 +1583,9 @@ class ValidationFixture:
                 wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
                 wilson_line_expose_scalar_derivative_commutator_bilinears=(
                     wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
+                wilson_line_tensor_reduce_before_wilson_expand=(
+                    wilson_line_tensor_reduce_before_wilson_expand
                 ),
                 matching_condition_targets=projected_targets,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,

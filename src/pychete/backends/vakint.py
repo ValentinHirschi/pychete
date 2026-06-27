@@ -442,6 +442,14 @@ def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
             ),
         ),
         Replacement(
+            _vakint_wilson_term_pattern(),
+            lambda match: context.decode_wilson_term(
+                match[_wild("wilson_term_field")],
+                match[_wild("wilson_term_link_indices")],
+                match[_wild("wilson_term_derivative_indices")],
+            ),
+        ),
+        Replacement(
             _vakint_metric_pattern(),
             lambda match: context.decode_metric(
                 match[_wild("metric_left")],
@@ -551,6 +559,22 @@ class _DecodeContext:
             list_expr(*self.decode_sequence(derivatives)),
         )
 
+    def decode_wilson_term(self, field: Expression, link_indices: Expression, derivatives: Expression) -> Expression:
+        return s.WilsonTerm(
+            self.decode_wilson_field_label(field),
+            list_expr(*self.decode_sequence(link_indices)),
+            list_expr(*self.decode_sequence(derivatives)),
+        )
+
+    def decode_wilson_field_label(self, field: Expression) -> Expression:
+        if is_head(field, symbol("Bar")) and len(field) == 1:
+            return s.Bar(self.decode_wilson_field_label(field[0]))
+        name = _vakint_local_name(field)
+        field_name = self._registered_name(name, self.theory.fields, self.fields_by_safe_name)
+        if field_name is not None:
+            return self.theory.field_handle(field_name).label
+        return self.decode_payload(field)
+
     def decode_coupling(self, label: Expression, indices: Expression, order: Expression) -> Expression:
         name = _vakint_local_name(label)
         coupling_name = self._registered_name(name, self.theory.couplings, self.couplings_by_safe_name)
@@ -637,6 +661,8 @@ class _DecodeContext:
             return self.decode_field(expr[0], expr[1], expr[2], expr[3])
         if is_head(expr, symbol("FieldStrength")) and len(expr) == 4:
             return self.decode_field_strength(expr[0], expr[1], expr[2], expr[3])
+        if is_head(expr, symbol("WilsonTerm")) and len(expr) == 3:
+            return self.decode_wilson_term(expr[0], expr[1], expr[2])
         if is_head(expr, symbol("g")) and len(expr) == 2:
             return self.decode_metric(expr[0], expr[1])
         if is_head(expr, symbol("Delta")) and len(expr) == 2:
@@ -814,6 +840,15 @@ def _vakint_field_strength_pattern() -> Expression:
         _wild("field_strength_lorentz"),
         _wild("field_strength_indices"),
         _wild("field_strength_derivatives"),
+    )
+
+
+@cache
+def _vakint_wilson_term_pattern() -> Expression:
+    return symbol("WilsonTerm")(
+        _wild("wilson_term_field"),
+        _wild("wilson_term_link_indices"),
+        _wild("wilson_term_derivative_indices"),
     )
 
 

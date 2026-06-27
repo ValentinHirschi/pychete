@@ -29,6 +29,7 @@ from pychete import (
     WilsonLineExpansionPlan,
     WilsonLineExpansionPlanEntry,
     canonical_string,
+    contract_wilson_term_derivative_metrics,
     dummy_indices,
     expand_wilson_terms,
     one_loop_normalization_factor,
@@ -2107,6 +2108,93 @@ def test_wilson_line_tensor_reduced_postprocess_contracts_derivative_metrics() -
     )
 
     rendered = canonical_string(processed)
+    assert "pychete::Metric" not in rendered
+    assert "pychete::FieldStrength" in rendered
+
+
+def test_wilson_term_metric_contraction_updates_formal_derivative_slots() -> None:
+    theory = Theory("one_loop_setup_wilson_line_formal_metric_contraction")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    sigma = theory.index("sigma")
+    term = s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, rho))
+    source = s.Metric(mu, nu) * s.Delta(rho, sigma) * term
+
+    contracted = contract_wilson_term_derivative_metrics(source, max_derivative_order=4)
+
+    assert_expr_equal(
+        contracted,
+        s.WilsonTerm(phi.label, s.List(left, right), s.List(nu, sigma)),
+    )
+
+
+def test_wilson_term_metric_contraction_leaves_nonmatching_metrics_bounded() -> None:
+    theory = Theory("one_loop_setup_wilson_line_formal_metric_nonmatch")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    sigma = theory.index("sigma")
+    source = s.Metric(rho, sigma) * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
+
+    contracted = contract_wilson_term_derivative_metrics(source, max_derivative_order=4)
+
+    assert_expr_equal(contracted, source)
+
+
+def test_wilson_line_internal_evaluation_can_tensor_reduce_before_wilson_expansion() -> None:
+    theory = Theory("one_loop_setup_wilson_line_pre_wilson_tensor_reduce")
+    theory.define_gauge_group("SU2L", s.SU(2), "g2", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    mass = theory.define_coupling("M", self_conjugate=True, mass_dimension=1)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    rho = theory.index("rho")
+    formal_numerator = (
+        s.LoopMomentum(mu)
+        * s.LoopMomentum(nu)
+        * s.WilsonTerm(higgs.label, s.List(left, right), s.List(mu, rho))
+    )
+    term = WilsonLineTraceExpansionTerm(
+        theory=theory,
+        trace_name="probe",
+        path_index=0,
+        expansion_indices=((mu, nu),),
+        numerator=Expression.num(0),
+        mass_squareds=(mass() ** 2,),
+        propagator_powers=(3,),
+        pre_wilson_numerator=formal_numerator,
+    )
+
+    evaluated = matching_module._wilson_line_internal_evaluated_terms_from_terms(
+        theory,
+        (term,),
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="inversions",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=False,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+
+    rendered = canonical_string(evaluated[0])
+    assert rendered != "0"
+    assert "pychete::WilsonTerm" not in rendered
     assert "pychete::Metric" not in rendered
     assert "pychete::FieldStrength" in rendered
 

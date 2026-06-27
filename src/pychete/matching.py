@@ -994,6 +994,7 @@ class WilsonLineTracePath:
                 numerator = act_with_open_covariant_derivatives(numerator)
                 numerator = distribute_ncm_additions(numerator)
             numerator = remove_loop_momentum_symmetry_vanishing_wilson_terms(numerator, loop_momentum_indices)
+            pre_wilson_numerator = numerator
             numerator = expand_wilson_terms(
                 self.theory,
                 numerator,
@@ -1029,6 +1030,7 @@ class WilsonLineTracePath:
                     numerator=numerator,
                     mass_squareds=tuple(masses),
                     propagator_powers=tuple(powers),
+                    pre_wilson_numerator=pre_wilson_numerator,
                 )
             )
         return tuple(terms)
@@ -1122,6 +1124,7 @@ class WilsonLineTraceExpansionTerm:
     numerator: Expression
     mass_squareds: tuple[Expression, ...]
     propagator_powers: tuple[int, ...]
+    pre_wilson_numerator: Expression | None = None
 
     def kernel_expression(self, *, loop_momentum_squared: Expression | None = None) -> Expression:
         """Return this term as a pychete ``SupertraceKernel`` expression."""
@@ -1133,13 +1136,18 @@ class WilsonLineTraceExpansionTerm:
         )
         return s.SupertraceKernel(self.numerator, list_expr(*(list_expr(denominator) for denominator in denominators)))
 
-    def vakint_integral_expression(self) -> Expression:
+    def vakint_integral_expression(self, *, use_pre_wilson_numerator: bool = False) -> Expression:
         """Lower this term to the existing one-loop vakint topology representation."""
 
         from .backends import vakint
 
+        numerator = (
+            self.pre_wilson_numerator
+            if use_pre_wilson_numerator and self.pre_wilson_numerator is not None
+            else self.numerator
+        )
         return vakint.one_loop_vacuum_integral(
-            self.numerator,
+            numerator,
             self.mass_squareds,
             powers=self.propagator_powers,
         )
@@ -2192,6 +2200,7 @@ class OneLoopSetup:
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
+        tensor_reduce_before_wilson_expand: bool = False,
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
         combine_terms: bool = False,
@@ -2220,6 +2229,8 @@ class OneLoopSetup:
             _flatten_wilson_line_terms(grouped_terms),
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+            max_wilson_derivative_order=max_wilson_derivative_order,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
@@ -2407,6 +2418,7 @@ class OneLoopSetup:
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
+        tensor_reduce_before_wilson_expand: bool = False,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
@@ -2441,6 +2453,8 @@ class OneLoopSetup:
             grouped_terms,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+            max_wilson_derivative_order=max_wilson_derivative_order,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
@@ -2541,6 +2555,9 @@ class OneLoopSetup:
                 "on_shell_reduced": False,
                 "integral_backend": "pychete_internal",
                 "tensor_reduce": tensor_reduce,
+                "interaction_wilson_line_tensor_reduce_before_wilson_expand": (
+                    tensor_reduce_before_wilson_expand
+                ),
                 "interaction_wilson_line_internal_termwise_evaluation": True,
                 "combine_terms": combine_terms,
                 "uses_interaction_operator": True,
@@ -2564,6 +2581,7 @@ class OneLoopSetup:
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
+        tensor_reduce_before_wilson_expand: bool = False,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
@@ -2598,6 +2616,8 @@ class OneLoopSetup:
             grouped_terms,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+            max_wilson_derivative_order=max_wilson_derivative_order,
             emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
             emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
             covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
@@ -2700,6 +2720,9 @@ class OneLoopSetup:
                 "on_shell_reduced": False,
                 "integral_backend": "pychete_internal",
                 "tensor_reduce": tensor_reduce,
+                "interaction_wilson_line_tensor_reduce_before_wilson_expand": (
+                    tensor_reduce_before_wilson_expand
+                ),
                 "interaction_wilson_line_internal_termwise_evaluation": True,
                 "interaction_wilson_line_internal_termwise_minimal_subtraction": True,
                 "combine_terms": combine_terms,
@@ -2980,6 +3003,7 @@ class OneLoopSetup:
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
+        tensor_reduce_before_wilson_expand: bool = False,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
@@ -3017,6 +3041,7 @@ class OneLoopSetup:
             max_wilson_derivative_order=max_wilson_derivative_order,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
             max_pole_order=max_pole_order,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
@@ -3069,6 +3094,7 @@ class OneLoopSetup:
         max_wilson_derivative_order: int = 4,
         tensor_reduce: bool = True,
         tensor_reduce_engine: Any | None = None,
+        tensor_reduce_before_wilson_expand: bool = False,
         max_pole_order: int = 1,
         epsilon: Expression | None = None,
         mu_r_squared: Expression | None = None,
@@ -3094,6 +3120,7 @@ class OneLoopSetup:
             max_wilson_derivative_order=max_wilson_derivative_order,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
             max_pole_order=max_pole_order,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
@@ -6890,6 +6917,46 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     return scalarize_commutative_ncm_chains(out)
 
 
+def _postprocess_pre_wilson_line_tensor_reduced_expression(
+    theory: Theory,
+    expr: Expression,
+    *,
+    max_wilson_derivative_order: int,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
+    expose_scalar_derivative_commutator_bilinears_option: bool = False,
+) -> Expression:
+    """Normalize tensor-reduced expressions before lowering formal Wilson terms."""
+
+    from .wilson_lines import contract_wilson_term_derivative_metrics, expand_wilson_terms
+
+    out = _restore_theory_owned_generated_lorentz_indices(theory, expr)
+    out = contract_wilson_term_derivative_metrics(
+        out,
+        max_derivative_order=max_wilson_derivative_order,
+    )
+    out = expand_wilson_terms(
+        theory,
+        out,
+        max_derivative_order=max_wilson_derivative_order,
+    )
+    return _postprocess_wilson_line_tensor_reduced_expression(
+        theory,
+        out,
+        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+        expose_scalar_derivative_commutator_bilinears_option=(
+            expose_scalar_derivative_commutator_bilinears_option
+        ),
+    )
+
+
 def _postprocess_wilson_line_vakint_stage_expression(
     theory: Theory,
     expr: Expression,
@@ -7477,6 +7544,8 @@ def _wilson_line_internal_integral_sum_from_terms(
     *,
     tensor_reduce: bool,
     tensor_reduce_engine: Any | None,
+    tensor_reduce_before_wilson_expand: bool,
+    max_wilson_derivative_order: int,
     emit_covariant_derivative_commutators: bool,
     emit_covariant_derivative_commutator_passes: int,
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
@@ -7492,6 +7561,8 @@ def _wilson_line_internal_integral_sum_from_terms(
         terms,
         tensor_reduce=tensor_reduce,
         tensor_reduce_engine=tensor_reduce_engine,
+        tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+        max_wilson_derivative_order=max_wilson_derivative_order,
         emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
         emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
         covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
@@ -7510,6 +7581,8 @@ def _wilson_line_internal_evaluated_terms_from_terms(
     *,
     tensor_reduce: bool,
     tensor_reduce_engine: Any | None,
+    tensor_reduce_before_wilson_expand: bool,
+    max_wilson_derivative_order: int,
     emit_covariant_derivative_commutators: bool,
     emit_covariant_derivative_commutator_passes: int,
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
@@ -7525,6 +7598,8 @@ def _wilson_line_internal_evaluated_terms_from_terms(
         grouped_terms,
         tensor_reduce=tensor_reduce,
         tensor_reduce_engine=tensor_reduce_engine,
+        tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+        max_wilson_derivative_order=max_wilson_derivative_order,
         emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
         emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
         covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
@@ -7543,6 +7618,8 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
     *,
     tensor_reduce: bool,
     tensor_reduce_engine: Any | None,
+    tensor_reduce_before_wilson_expand: bool,
+    max_wilson_derivative_order: int,
     emit_covariant_derivative_commutators: bool,
     emit_covariant_derivative_commutator_passes: int,
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
@@ -7563,26 +7640,52 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
         for entry_label, terms in grouped_terms.items():
             evaluated_terms: list[Expression] = []
             for term in terms:
-                raw = term.vakint_integral_expression()
+                use_pre_wilson_numerator = (
+                    tensor_reduce
+                    and tensor_reduce_before_wilson_expand
+                    and term.pre_wilson_numerator is not None
+                )
+                raw = term.vakint_integral_expression(
+                    use_pre_wilson_numerator=use_pre_wilson_numerator
+                )
                 if tensor_reduce:
                     raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
                     raw = vakint.decode_pychete_namespace(theory, raw)
-                    raw = _postprocess_wilson_line_tensor_reduced_expression(
-                        theory,
-                        raw,
-                        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                        emit_covariant_derivative_commutator_passes=(
-                            emit_covariant_derivative_commutator_passes
-                        ),
-                        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
-                        expand_covariant_derivative_commutators=(
-                            expand_covariant_derivative_commutators
-                        ),
-                        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                        expose_scalar_derivative_commutator_bilinears_option=(
-                            expose_scalar_derivative_commutator_bilinears
-                        ),
-                    )
+                    if use_pre_wilson_numerator:
+                        raw = _postprocess_pre_wilson_line_tensor_reduced_expression(
+                            theory,
+                            raw,
+                            max_wilson_derivative_order=max_wilson_derivative_order,
+                            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                            emit_covariant_derivative_commutator_passes=(
+                                emit_covariant_derivative_commutator_passes
+                            ),
+                            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                            expand_covariant_derivative_commutators=(
+                                expand_covariant_derivative_commutators
+                            ),
+                            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                            expose_scalar_derivative_commutator_bilinears_option=(
+                                expose_scalar_derivative_commutator_bilinears
+                            ),
+                        )
+                    else:
+                        raw = _postprocess_wilson_line_tensor_reduced_expression(
+                            theory,
+                            raw,
+                            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                            emit_covariant_derivative_commutator_passes=(
+                                emit_covariant_derivative_commutator_passes
+                            ),
+                            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                            expand_covariant_derivative_commutators=(
+                                expand_covariant_derivative_commutators
+                            ),
+                            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                            expose_scalar_derivative_commutator_bilinears_option=(
+                                expose_scalar_derivative_commutator_bilinears
+                            ),
+                        )
                 evaluated_terms.append(
                     vacuum_integrals.evaluate_one_loop_vakint_expression(
                         raw,
@@ -8208,6 +8311,9 @@ def match_one_loop(
             max_wilson_derivative_order=options.wilson_line_max_derivative_order,
             tensor_reduce=options.tensor_reduce,
             tensor_reduce_engine=options.tensor_reduce_engine,
+            tensor_reduce_before_wilson_expand=(
+                options.wilson_line_tensor_reduce_before_wilson_expand
+            ),
             max_pole_order=options.max_pole_order,
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
@@ -8243,6 +8349,9 @@ def match_one_loop(
             max_wilson_derivative_order=options.wilson_line_max_derivative_order,
             tensor_reduce=options.tensor_reduce,
             tensor_reduce_engine=options.tensor_reduce_engine,
+            tensor_reduce_before_wilson_expand=(
+                options.wilson_line_tensor_reduce_before_wilson_expand
+            ),
             max_pole_order=options.max_pole_order,
             epsilon=options.epsilon,
             mu_r_squared=options.mu_r_squared,
@@ -8574,6 +8683,9 @@ def match_one_loop(
             ),
             "wilson_line_commutators_expanded": options.wilson_line_expand_covariant_derivative_commutators,
             "wilson_line_max_derivative_order": options.wilson_line_max_derivative_order,
+            "wilson_line_tensor_reduce_before_wilson_expand": (
+                options.wilson_line_tensor_reduce_before_wilson_expand
+            ),
             "wilson_line_terms_filtered_by_matching_targets": (
                 wilson_line_term_atom_requirements is not None
             ),

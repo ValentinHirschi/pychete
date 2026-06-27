@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from collections.abc import Iterator, Sequence
+from collections.abc import Callable, Iterator, Sequence
 from functools import cache
 from itertools import combinations, count, permutations
 from typing import TYPE_CHECKING
 
-from symbolica import Expression
+from symbolica import Expression, Replacement
 
 from .expr import is_head, list_expr, list_items, product_expr, sum_expr, terms, wilson_term_pattern
 from .noncommutative import scalarize_commutative_ncm_chains
@@ -61,6 +61,33 @@ def expand_wilson_terms(
     return scalarize_commutative_ncm_chains(
         expr.replace(pattern, replace_wilson_term, rhs_cache_size=0).expand()
     )
+
+
+def contract_wilson_term_derivative_metrics(
+    expr: Expression,
+    *,
+    max_derivative_order: int = 8,
+) -> Expression:
+    """Contract ``Metric``/``Delta`` factors into formal ``WilsonTerm`` slots.
+
+    This mirrors Matchete's ordering where loop-momentum tensor reduction
+    produces symmetric Lorentz metrics while the Wilson transporter is still a
+    formal object. Discovery and rewriting are delegated to Symbolica wildcard
+    replacement rules; Python only updates the matched derivative-slot tuple.
+    """
+
+    if max_derivative_order < 1:
+        return expr
+    if not bool(expr.matches(wilson_term_pattern())):
+        return expr
+    replacements = _wilson_term_derivative_metric_replacements(max_derivative_order)
+    current = expr
+    for _ in range(max_derivative_order):
+        updated = current.replace_multiple(replacements).expand()
+        if bool(updated == current):
+            return updated
+        current = updated
+    return current
 
 
 def wilson_term_expansion(
@@ -222,6 +249,74 @@ def _wilson_term_expansion(
     if not terms:
         return Expression.num(0)
     return sum(terms, Expression.num(0)).expand()
+
+
+@cache
+def _wilson_term_derivative_metric_replacements(max_derivative_order: int) -> tuple[Replacement, ...]:
+    field = s.head("wilson_term_metric_field_")
+    link_indices = s.head("wilson_term_metric_links_")
+    metric_left = s.head("wilson_term_metric_left_")
+    metric_right = s.head("wilson_term_metric_right_")
+    replacements: list[Replacement] = []
+    for arity in range(1, max_derivative_order + 1):
+        derivative_wildcards = tuple(s.head(f"wilson_term_metric_derivative_{arity}_{index}_") for index in range(arity))
+        term = s.WilsonTerm(field, link_indices, s.List(*derivative_wildcards))
+        for metric_head in (s.Metric, s.Delta):
+            metric = metric_head(metric_left, metric_right)
+            replacements.append(
+                Replacement(
+                    metric * term,
+                    _wilson_term_metric_replacement(
+                        field,
+                        link_indices,
+                        derivative_wildcards,
+                        metric_head,
+                        metric_left,
+                        metric_right,
+                    ),
+                    rhs_cache_size=0,
+                )
+            )
+    return tuple(replacements)
+
+
+def _wilson_term_metric_replacement(
+    field: Expression,
+    link_indices: Expression,
+    derivative_wildcards: tuple[Expression, ...],
+    metric_head: Expression,
+    metric_left: Expression,
+    metric_right: Expression,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replacement(match: dict[Expression, Expression]) -> Expression:
+        derivatives = tuple(match[wildcard] for wildcard in derivative_wildcards)
+        updated = _contract_metric_into_wilson_derivative_slots(
+            derivatives,
+            match[metric_left],
+            match[metric_right],
+        )
+        term = s.WilsonTerm(
+            match[field],
+            match[link_indices],
+            s.List(*(updated if updated is not None else derivatives)),
+        )
+        if updated is None:
+            return metric_head(match[metric_left], match[metric_right]) * term
+        return term
+
+    return replacement
+
+
+def _contract_metric_into_wilson_derivative_slots(
+    derivatives: tuple[Expression, ...],
+    metric_left: Expression,
+    metric_right: Expression,
+) -> tuple[Expression, ...] | None:
+    if any(bool(index == metric_left) for index in derivatives):
+        return tuple(metric_right if bool(index == metric_left) else index for index in derivatives)
+    if any(bool(index == metric_right) for index in derivatives):
+        return tuple(metric_left if bool(index == metric_right) else index for index in derivatives)
+    return None
 
 
 def _wilson_link_labels(link_indices: Expression) -> tuple[Expression, Expression]:
@@ -482,6 +577,7 @@ def _replace_probe_field_by_left_identity(
 
 
 __all__ = [
+    "contract_wilson_term_derivative_metrics",
     "expand_wilson_terms",
     "remove_loop_momentum_symmetry_vanishing_wilson_terms",
     "remove_symmetry_vanishing_wilson_terms",

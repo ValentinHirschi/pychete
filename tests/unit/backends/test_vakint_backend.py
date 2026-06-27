@@ -346,6 +346,26 @@ def test_vakint_decodes_native_pychete_namespace_wrappers() -> None:
     assert canonical_string(decoded) == canonical_string(phi() * kappa())
 
 
+def test_vakint_decodes_native_wilson_term_wrapper() -> None:
+    theory = Theory("vakint_decode_wilson_term")
+    phi = theory.define_field("phi", s.Scalar)
+    left = theory.index("left")
+    right = theory.index("right")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    native = vakint.symbol("WilsonTerm")(
+        vakint.symbol("phi"),
+        vakint.symbol("List")(left, right),
+        vakint.symbol("List")(mu, nu),
+    )
+
+    decoded = vakint.decode_pychete_namespace(theory, native)
+
+    assert canonical_string(decoded) == canonical_string(
+        s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
+    )
+
+
 def test_vakint_tensor_reduction_round_trips_pychete_fields_and_couplings() -> None:
     theory = Theory("vakint_decode_scalar")
     phi = theory.define_field("phi", s.Scalar, mass=("Heavy", "M"))

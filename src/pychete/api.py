@@ -115,6 +115,7 @@ from .validation_fixtures import (
     load_validation_fixture,
 )
 from .wilson_lines import (
+    contract_wilson_term_derivative_metrics,
     expand_wilson_terms,
     remove_loop_momentum_symmetry_vanishing_wilson_terms,
     remove_symmetry_vanishing_wilson_terms,
@@ -188,6 +189,7 @@ __all__ = [
     "canonize_tensor_indices",
     "collect_indices",
     "configure_logging",
+    "contract_wilson_term_derivative_metrics",
     "display_string",
     "disable_logging",
     "dummy_indices",

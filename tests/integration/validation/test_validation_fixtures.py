@@ -1277,6 +1277,7 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
         wilson_line_max_derivative_order=3,
         wilson_line_filter_terms_by_matching_targets=True,
         wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+        wilson_line_tensor_reduce_before_wilson_expand=True,
     )
 
     options = captured["one_loop_options"]
@@ -1292,6 +1293,7 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     assert options.wilson_line_max_derivative_order == 3
     assert options.wilson_line_filter_terms_by_matching_targets is True
     assert options.wilson_line_expose_scalar_derivative_commutator_bilinears is True
+    assert options.wilson_line_tensor_reduce_before_wilson_expand is True
     assert options.bosonic_cde_expansion_indices_by_trace is None
 
 
