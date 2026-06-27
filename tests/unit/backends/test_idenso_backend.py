@@ -318,6 +318,40 @@ def test_idenso_bridge_projects_su2_field_strength_generator_bilinear_to_singlet
     assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
 
 
+def test_idenso_bridge_shared_field_strength_group_helper_projects_su2_bilinear() -> None:
+    theory = Theory("idenso_color_shared_field_strength_group_helper")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    k = theory.index("k", fund)
+    k_dual = theory.index("k", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    field_strength_a = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_a), s.List())
+    field_strength_b = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_b), s.List())
+    expr = (
+        higgs(i)
+        * s.Bar(higgs(j))
+        * generator(adj_a, i, k_dual)
+        * generator(adj_b, k, j_dual)
+        * field_strength_a
+        * field_strength_b
+    )
+    expected = Expression.num(1) / Expression.num(4) * higgs(i) * s.Bar(higgs(i)) * field_strength_a**2
+
+    simplified = idenso.simplify_pychete_field_strength_group_algebra(theory, expr)
+
+    assert _same(simplified, expected)
+    assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
+
+
 def test_idenso_bridge_projects_reversed_su2_field_strength_generator_bilinear_to_singlet() -> None:
     theory = Theory("idenso_color_su2_field_strength_reversed_singlet")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")

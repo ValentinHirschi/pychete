@@ -56,16 +56,18 @@
   `stop.order` before launching long work, and create/touch it to terminate the
   wrapped process group without relying on sandboxed process-management
   permissions.
-- Sandbox-sensitive shell commands must not stall on approval prompts. Use the
-  user-started `listener.py` route immediately for known restricted operations,
-  especially `.git` metadata writes such as commits, rebases, merges, lock
-  cleanup, or similar repository-maintenance commands. Queue exactly one
-  command through `run.order` and read `run.output`. For ordinary direct
-  commands, if one unexpectedly fails with `Operation not permitted`, a
-  sandbox write restriction, or the known read-only `.git` metadata failure,
-  immediately retry through the listener rather than waiting for approval.
-  The listener is the sandbox-dispatch fallback; keep using the 30 GiB watchdog
-  for long or memory-sensitive Python/test/matching workloads.
+- Sandbox-sensitive shell commands must not stall on approval prompts. This is
+  the first shell-operating rule for the one-shot branch: never leave the
+  thread waiting for sandbox approval. Use the user-started `listener.py` route
+  immediately for known restricted operations, especially `.git` metadata
+  writes such as commits, rebases, merges, lock cleanup, or similar
+  repository-maintenance commands. Queue exactly one command through
+  `run.order` and read `run.output`. For ordinary direct commands, if one
+  unexpectedly fails with `Operation not permitted`, a sandbox write
+  restriction, or the known read-only `.git` metadata failure, immediately
+  retry through the listener rather than waiting for approval. The listener is
+  the sandbox-dispatch fallback; keep using the 30 GiB watchdog for long or
+  memory-sensitive Python/test/matching workloads.
 
 ## History Files
 
@@ -1075,6 +1077,26 @@
   A term-level Singlet diagnostic confirmed `filtered_terms=25`,
   `zero_cd_terms=0`, and `field_strength_terms=25` for the commutator-enabled
   `cHW` Wilson-line plan.
+- Current idenso backend-boundary cleanup: the native-color decode plus
+  field-strength/group simplification sequence is now centralized in
+  `idenso.decode_native_color_wrappers_and_simplify_field_strengths(...)` and
+  `idenso.simplify_pychete_field_strength_group_algebra(...)`. Public
+  `Theory.match(...)` reuses that shared helper, and direct
+  `ValidationFixture.one_loop_preview(...)` now applies the same post-result
+  simplification when `simplify_pychete_color_algebra=True`. This keeps
+  direct fixture probes aligned with the public match path for SU(2) and
+  mixed SU(2)-U(1) field-strength generator bilinears instead of relying on a
+  public-match-only cleanup. A targeted generated Singlet term diagnostic
+  showed the helper is not supposed to project pre-tensor-reduction monomials
+  with different Lorentz field-strength pairs; the shared boundary is for
+  decoded/reduced pychete field-strength structures where Lorentz identities
+  have already been exposed.
+- Focused validation for the idenso boundary cleanup used the 30 GiB watchdog
+  wrapper: `pytest tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_shared_field_strength_group_helper_projects_su2_bilinear tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathematica -q`
+  passed with `2 passed`; the broader affected gate
+  `pytest tests/unit/backends/test_idenso_backend.py tests/integration/validation/test_validation_fixtures.py -k "field_strength or wilson_line" -q`
+  passed with `11 passed, 62 deselected`; `python -m mypy` reported no issues;
+  `git diff --check` passed.
 
 ## Next Work
 

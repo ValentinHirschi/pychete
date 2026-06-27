@@ -8137,10 +8137,7 @@ def _decode_result_native_color_wrappers(theory: Theory, result: MatchingResult)
     from .backends import idenso as idenso_backend
 
     def decode_and_simplify(expression: Expression) -> Expression:
-        decoded = idenso_backend.decode_native_color_wrappers(theory, expression)
-        decoded = idenso_backend.simplify_pychete_field_strength_metrics(decoded)
-        decoded = idenso_backend.simplify_su2_field_strength_generator_bilinears(theory, decoded)
-        return idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(theory, decoded)
+        return idenso_backend.decode_native_color_wrappers_and_simplify_field_strengths(theory, expression)
 
     decoded_off_shell = decode_and_simplify(result.off_shell_eft_lagrangian)
     decoded_on_shell = decode_and_simplify(result.on_shell_eft_lagrangian)

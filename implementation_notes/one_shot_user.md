@@ -355,14 +355,16 @@ without Warsaw-specific core assumptions.
   `stop.order` as the user/agent control file to terminate the wrapped process
   group or communicate that the workload should stop.
 - Do not let future work stall on sandbox approval prompts for blocked shell
-  commands either. The user-started `listener.py` route is mandatory for known
-  sandbox-sensitive repository commands, especially `.git` writes such as
-  commits, rebases, merges, lock cleanup, or similar repository-maintenance
-  commands. Queue exactly one command in `run.order` and read `run.output`.
-  For ordinary direct commands, if one unexpectedly fails with
-  `Operation not permitted`, a sandbox write restriction, or the known
-  read-only `.git` metadata failure, immediately retry through the listener
-  rather than waiting for an approval prompt.
+  commands either. The user explicitly reiterated that this must be treated as
+  the first shell-operating rule: never leave the thread waiting for sandbox
+  approval when `listener.py` can dispatch the command. The user-started
+  `listener.py` route is mandatory for known sandbox-sensitive repository
+  commands, especially `.git` writes such as commits, rebases, merges, lock
+  cleanup, or similar repository-maintenance commands. Queue exactly one
+  command in `run.order` and read `run.output`. For ordinary direct commands,
+  if one unexpectedly fails with `Operation not permitted`, a sandbox write
+  restriction, or the known read-only `.git` metadata failure, immediately
+  retry through the listener rather than waiting for an approval prompt.
 - Current Wilson-line direction: order-four `hScalar` Wilson-line generation
   now keeps field-strength-bearing Singlet `cHW` source terms even with
   pychete colour simplification enabled. Exact public projected `cHW` parity
@@ -415,3 +417,9 @@ without Warsaw-specific core assumptions.
   not yet full `cHW` parity; the remaining blockers are still backend finite
   extraction/projection through the full hybrid result, generic on-shell/IBP
   reductions, and group/CG simplification.
+- Latest idenso boundary cleanup: native-color wrapper decoding and
+  field-strength group-bilinear simplification are now centralized in the
+  idenso backend and applied by both public `Theory.match(...)` and direct
+  `ValidationFixture.one_loop_preview(...)` when pychete color simplification
+  is requested. This aligns direct fixture probes with the public match path
+  for SU(2) and mixed SU(2)-U(1) gauge field-strength structures.

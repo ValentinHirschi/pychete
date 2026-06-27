@@ -316,6 +316,27 @@ def simplify_su2_u1_field_strength_generator_bilinears(theory: Any, expr: Expres
     return result
 
 
+def simplify_pychete_field_strength_group_algebra(theory: Any, expr: Expression) -> Expression:
+    """Simplify pychete field-strength metric and supported group bilinears.
+
+    This is the public backend boundary for generated CDE/Wilson-line results
+    that already use pychete ``FieldStrength``/``CG`` atoms. Lorentz metric
+    identities are applied first, then the supported SU(2) and mixed SU(2)-U(1)
+    field-strength generator bilinears are normalized with Symbolica
+    replacement rules backed by idenso colour traces.
+    """
+
+    result = simplify_pychete_field_strength_metrics(expr)
+    result = simplify_su2_field_strength_generator_bilinears(theory, result)
+    return simplify_su2_u1_field_strength_generator_bilinears(theory, result)
+
+
+def decode_native_color_wrappers_and_simplify_field_strengths(theory: Any, expr: Expression) -> Expression:
+    """Decode native idenso/spenso colour wrappers and simplify generated gauge bilinears."""
+
+    return simplify_pychete_field_strength_group_algebra(theory, decode_native_color_wrappers(theory, expr))
+
+
 def to_dots(expr: Expression) -> Expression:
     """Delegate contracted-vector dot-product conversion to idenso."""
 
@@ -1698,6 +1719,7 @@ __all__ = [
     "cook_function",
     "cook_indices",
     "decode_native_color_wrappers",
+    "decode_native_color_wrappers_and_simplify_field_strengths",
     "dirac_adjoint",
     "expand_bis",
     "expand_color",
@@ -1712,6 +1734,7 @@ __all__ = [
     "simplify_metrics",
     "simplify_su2_field_strength_generator_bilinears",
     "simplify_su2_u1_field_strength_generator_bilinears",
+    "simplify_pychete_field_strength_group_algebra",
     "expand_pychete_ncm_powers",
     "simplify_pychete_color_algebra",
     "simplify_pychete_dirac_algebra",

@@ -691,6 +691,9 @@ def test_validation_fixture_preview_can_use_wilson_line_expansion_without_mathem
         color_simplified_preview.metadata["interaction_wilson_line_pychete_color_algebra_simplified"]
         is True
     )
+    assert color_simplified_preview.metadata["native_color_wrappers_decoded"] is True
+    assert color_simplified_preview.metadata["su2_field_strength_generator_bilinears_simplified"] is True
+    assert color_simplified_preview.metadata["su2_u1_field_strength_generator_bilinears_simplified"] is True
     assert_expr_equal(color_simplified_preview.off_shell_eft_lagrangian, expected.off_shell_eft_lagrangian)
 
     generated_plan = setup.interaction_wilson_line_expansion_plan(

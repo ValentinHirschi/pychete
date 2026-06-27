@@ -1020,6 +1020,8 @@ class ValidationFixture:
             and result.metadata.get("loop_normalization_applied") is not True
         ):
             result = result.with_loop_normalization(normalization, hbar=resolved_hbar)
+        if simplify_pychete_color_algebra:
+            result = _decode_preview_native_color_wrappers(theory, result)
         preview = MatchingResult(
             theory=result.theory,
             uv_lagrangian=result.uv_lagrangian,
@@ -1539,6 +1541,28 @@ def load_validation_fixture(path: str | Path) -> ValidationFixture:
     """Load a Mathematica-independent pychete validation fixture."""
 
     return ValidationFixture.read_json(path)
+
+
+def _decode_preview_native_color_wrappers(theory: Theory, result: MatchingResult) -> MatchingResult:
+    from .backends import idenso as idenso_backend
+
+    def simplify(expression: Expression) -> Expression:
+        return idenso_backend.decode_native_color_wrappers_and_simplify_field_strengths(theory, expression)
+
+    return replace(
+        result,
+        off_shell_eft_lagrangian=simplify(result.off_shell_eft_lagrangian),
+        on_shell_eft_lagrangian=simplify(result.on_shell_eft_lagrangian),
+        matching_conditions={name: simplify(expression) for name, expression in result.matching_conditions.items()},
+        supertraces={name: simplify(expression) for name, expression in result.supertraces.items()},
+        metadata={
+            **result.metadata,
+            "native_color_wrappers_decoded": True,
+            "post_decode_field_strength_metric_simplified": True,
+            "su2_field_strength_generator_bilinears_simplified": True,
+            "su2_u1_field_strength_generator_bilinears_simplified": True,
+        },
+    )
 
 
 def _sorted_names(names: Iterable[str]) -> tuple[str, ...]:
