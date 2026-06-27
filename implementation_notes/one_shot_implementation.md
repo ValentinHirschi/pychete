@@ -58,9 +58,12 @@
   permissions.
 - Sandbox-sensitive shell commands must not stall on approval prompts. This is
   the first shell-operating rule for the one-shot branch: never leave the
-  thread waiting for sandbox approval. Use the user-started `listener.py` route
-  immediately for known restricted operations, especially `.git` metadata
-  writes such as commits, rebases, merges, lock cleanup, or similar
+  thread waiting for sandbox approval. The `exec_command` parameter
+  `sandbox_permissions: "require_escalated"` is banned for this repository.
+  Do not set it, do not request escalation, and do not ask the user for
+  permission through the tool approval path. Use the user-started `listener.py`
+  route immediately for known restricted operations, especially `.git`
+  metadata writes such as commits, rebases, merges, lock cleanup, or similar
   repository-maintenance commands. Queue exactly one command through
   `run.order` and read `run.output`. For ordinary direct commands, if one
   unexpectedly fails with `Operation not permitted`, a sandbox write
