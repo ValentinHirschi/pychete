@@ -489,7 +489,12 @@ replace those loop momenta by a Python angular-average formula in this path.
 Derivative-sublist expansion should keep
 using Symbolica replacement callbacks over `WilsonTerm(...)` and theory-owned
 gauge metadata; Python may enumerate derivative-index partitions, but it must
-not inspect expression trees to do group algebra. Non-Abelian vector
+not inspect expression trees to do group algebra. Matchete-style Wilson-line
+field strengths are coupling-free at this boundary: do not multiply generated
+`FieldStrength(...)` insertions by explicit gauge couplings during
+`WilsonTerm(...)` lowering or generated CDE/Wilson-line commutator lowering.
+Warsaw/operator targets and matching-condition normalizations carry their own
+gauge-coupling factors separately. Non-Abelian vector
 `WilsonTerm` expansion has bounded support through the vector field's implicit
 adjoint gauge transporter and the Lorentz endpoint metric; Abelian vector
 derivative terms with no gauge charge lower to zero. `WilsonTerm` atoms above

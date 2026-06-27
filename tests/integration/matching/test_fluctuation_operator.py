@@ -2421,8 +2421,8 @@ def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:
         s.WilsonTerm(s.Bar(phi.label), s.List(left, right), s.List(mu, nu)),
     )
 
-    assert_expr_equal(expanded, -Expression.I * theory.coupling_handle("gY")() * strength)
-    assert_expr_equal(conjugate_expanded, Expression.I * theory.coupling_handle("gY")() * strength)
+    assert_expr_equal(expanded, -Expression.I * strength)
+    assert_expr_equal(conjugate_expanded, Expression.I * strength)
 
 
 def test_expand_wilson_terms_uses_derivative_sublist_partition_for_three_derivatives() -> None:
@@ -2440,12 +2440,10 @@ def test_expand_wilson_terms_uses_derivative_sublist_partition_for_three_derivat
     a = theory.index("a")
     b = theory.index("b")
     c = theory.index("c")
-    coupling = theory.coupling_handle("gY")()
     vector = theory.field_handle("B").label
     expected = (
         -Expression.I
         * Expression.num(2)
-        * coupling
         / 3
         * (
             s.FieldStrength(vector, s.List(b, c), s.List(), s.List(a))
@@ -2494,7 +2492,6 @@ def test_expand_wilson_terms_uses_multi_block_derivative_partitions() -> None:
     b = theory.index("b")
     c = theory.index("c")
     d = theory.index("d")
-    coupling = theory.coupling_handle("gY")()
     vector = theory.field_handle("B").label
 
     def strength(first: Expression, second: Expression, *derivatives: Expression) -> Expression:
@@ -2513,7 +2510,7 @@ def test_expand_wilson_terms_uses_multi_block_derivative_partitions() -> None:
         + strength(b, d, c, a)
         + strength(a, d, c, b)
     )
-    expected = -coupling**2 * pair_partitions / 4 - Expression.I * coupling * full_block / 8
+    expected = -pair_partitions / 4 - Expression.I * full_block / 8
 
     expanded = expand_wilson_terms(theory, s.WilsonTerm(phi.label, s.List(left, right), s.List(a, b, c, d)))
 
@@ -2541,7 +2538,6 @@ def test_expand_wilson_terms_lowers_non_abelian_vector_two_derivative_term() -> 
     expected = (
         -Expression.I
         / 2
-        * theory.coupling_handle("g2")()
         * strength
         * generator(adjoint, output, theory.index(right, adj))
         * s.Delta(theory.index(left, adj), theory.index(output_label, s.Bar(adj)))
@@ -2587,7 +2583,6 @@ def test_expand_wilson_terms_lowers_non_abelian_two_derivative_term() -> None:
     expected = (
         -Expression.I
         / 2
-        * theory.coupling_handle("g2")()
         * strength
         * generator(adjoint, output, theory.index(right, s.Bar(fund)))
         * s.Delta(theory.index(left, fund), theory.index(output_label, s.Bar(fund)))
@@ -2618,7 +2613,6 @@ def test_expand_wilson_terms_lowers_conjugate_non_abelian_two_derivative_term() 
     expected = (
         Expression.I
         / 2
-        * theory.coupling_handle("g2")()
         * strength
         * generator(adjoint, theory.index(right, fund), theory.index(output_label, s.Bar(fund)))
         * s.Delta(theory.index(left, s.Bar(fund)), output)
@@ -3578,7 +3572,10 @@ def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators
         )
         assert_expr_equal(
             lowered.numerator,
-            theory.expand_covariant_derivative_commutators(emitted.numerator),
+            theory.expand_covariant_derivative_commutators(
+                emitted.numerator,
+                include_gauge_coupling=False,
+            ),
         )
     assert any("CovariantDerivativeCommutator" in canonical_string(term.numerator) for term in emitted_terms)
     assert all("CovariantDerivativeCommutator" not in canonical_string(term.numerator) for term in lowered_terms)

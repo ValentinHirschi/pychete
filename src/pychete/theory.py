@@ -1200,6 +1200,7 @@ class Theory:
         conjugate_field: bool,
         index_counter: Iterator[int],
         field_strength_derivatives: Iterable[Expression] = (),
+        include_gauge_coupling: bool = True,
     ) -> Expression:
         derivative_tuple = tuple(field_strength_derivatives)
         definition = self._field_definition_for_label(field_label(base_field))
@@ -1211,6 +1212,7 @@ class Theory:
                 right_index,
                 conjugate_field=conjugate_field,
                 field_strength_derivatives=derivative_tuple,
+                include_gauge_coupling=include_gauge_coupling,
             )
             + self._non_abelian_field_strength_insertions(
                 base_field,
@@ -1219,6 +1221,7 @@ class Theory:
                 conjugate_field=conjugate_field,
                 index_counter=index_counter,
                 field_strength_derivatives=derivative_tuple,
+                include_gauge_coupling=include_gauge_coupling,
             )
         )
         if bool(insertion == Expression.num(0)):
@@ -1226,7 +1229,12 @@ class Theory:
         sign = Expression.I if conjugate_field else -Expression.I
         return (sign * insertion).expand()
 
-    def expand_covariant_derivative_commutators(self, expr: Expression) -> Expression:
+    def expand_covariant_derivative_commutators(
+        self,
+        expr: Expression,
+        *,
+        include_gauge_coupling: bool = True,
+    ) -> Expression:
         """Expand formal covariant-derivative commutators in ``expr``.
 
         The formal head
@@ -1236,7 +1244,9 @@ class Theory:
         :meth:`covariant_derivative_commutator`, producing registered
         ``FieldStrength`` insertions. Non-field bodies are left as formal
         commutators so later product-rule or basis-reduction stages can handle
-        them deliberately.
+        them deliberately. Generated Matchete-style CDE/Wilson-line numerators
+        can set ``include_gauge_coupling=False`` because their field-strength
+        and Warsaw-basis coupling normalizations are carried separately.
         """
 
         self._validate_registered_expression(expr)
@@ -1258,6 +1268,7 @@ class Theory:
                     right_index,
                     conjugate_field=conjugate_field,
                     index_counter=index_counter,
+                    include_gauge_coupling=include_gauge_coupling,
                 )
             if is_head(body, s.FieldStrength) or is_bar_field_strength(body):
                 conjugate_field = is_bar_field_strength(body)
@@ -1268,6 +1279,7 @@ class Theory:
                     right_index,
                     conjugate_field=conjugate_field,
                     index_counter=index_counter,
+                    include_gauge_coupling=include_gauge_coupling,
                 )
             return s.CovariantDerivativeCommutator(left_index, right_index, body)
 
@@ -1441,6 +1453,7 @@ class Theory:
         *,
         conjugate_field: bool,
         field_strength_derivatives: Iterable[Expression],
+        include_gauge_coupling: bool = True,
     ) -> Expression:
         field_factor = s.Bar(field) if conjugate_field else field
         derivative_tuple = tuple(field_strength_derivatives)
@@ -1476,7 +1489,8 @@ class Theory:
                 list_expr(),
                 list_expr(*derivative_tuple),
             )
-            terms.append(charge[0] * self.coupling_handle(coupling_name)() * strength * field_factor)
+            coupling = self.coupling_handle(coupling_name)() if include_gauge_coupling else Expression.num(1)
+            terms.append(charge[0] * coupling * strength * field_factor)
         return sum_expr(terms).expand()
 
     def _non_abelian_field_strength_insertions(
@@ -1488,6 +1502,7 @@ class Theory:
         conjugate_field: bool,
         index_counter: Iterator[int],
         field_strength_derivatives: Iterable[Expression],
+        include_gauge_coupling: bool = True,
     ) -> Expression:
         derivative_tuple = tuple(field_strength_derivatives)
         terms: list[Expression] = []
@@ -1556,8 +1571,9 @@ class Theory:
                 output_index,
                 conjugate_field=conjugate_field,
             )
+            coupling = self.coupling_handle(coupling_name)() if include_gauge_coupling else Expression.num(1)
             terms.append(
-                self.coupling_handle(coupling_name)()
+                coupling
                 * strength
                 * generator_factor
                 * field_factor
@@ -1573,6 +1589,7 @@ class Theory:
         conjugate_field: bool,
         index_counter: Iterator[int],
         field_strength_derivatives: Iterable[Expression] = (),
+        include_gauge_coupling: bool = True,
     ) -> Expression:
         insertion = self._field_strength_adjoint_insertions(
             base_strength,
@@ -1581,6 +1598,7 @@ class Theory:
             conjugate_field=conjugate_field,
             index_counter=index_counter,
             field_strength_derivatives=field_strength_derivatives,
+            include_gauge_coupling=include_gauge_coupling,
         )
         if bool(insertion == Expression.num(0)):
             return insertion
@@ -1596,6 +1614,7 @@ class Theory:
         conjugate_field: bool,
         index_counter: Iterator[int],
         field_strength_derivatives: Iterable[Expression],
+        include_gauge_coupling: bool = True,
     ) -> Expression:
         derivative_tuple = tuple(field_strength_derivatives)
         definition = self._field_definition_for_label(field_strength_label(strength))
@@ -1676,8 +1695,9 @@ class Theory:
                 output_index,
                 conjugate_field=conjugate_field,
             )
+            coupling = self.coupling_handle(coupling_name)() if include_gauge_coupling else Expression.num(1)
             terms.append(
-                self.coupling_handle(coupling_name)()
+                coupling
                 * source_strength
                 * generator_factor
                 * strength_factor

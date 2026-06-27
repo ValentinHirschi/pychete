@@ -6645,7 +6645,10 @@ def _postprocess_bosonic_cde_numerator(
             max_passes=emit_covariant_derivative_commutator_passes,
         )
     if expand_covariant_derivative_commutators:
-        numerator = theory.expand_covariant_derivative_commutators(numerator)
+        numerator = theory.expand_covariant_derivative_commutators(
+            numerator,
+            include_gauge_coupling=False,
+        )
     return simplify_trivial_cd_operators(numerator)
 
 

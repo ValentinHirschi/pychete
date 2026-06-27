@@ -505,3 +505,14 @@ without Warsaw-specific core assumptions.
   projected entrywise total remains the spurious
   `-hbar*gL^4*kappa/(12*M^2)` pure-heavy contribution, so no full Matchete
   one-loop integration test is reproduced yet.
+- Latest Wilson-line coupling-convention update: Matchete's current
+  Wilson-line route lowers generated Wilson-term field strengths without
+  explicit gauge-coupling factors; operator/Warsaw normalizations carry those
+  factors separately. pychete now supports this through
+  `Theory.expand_covariant_derivative_commutators(..., include_gauge_coupling=False)`
+  for generated CDE/Wilson-line numerator postprocessing while preserving the
+  public coupled default for ordinary covariant-derivative expansion. This
+  fixes a convention mismatch but does not yet make the first full Matchete
+  one-loop integration target pass: `Singlet_Scalar_Extension` `cHW` remains
+  the active milestone, with selected mixed `hScalar-lScalar` order-four
+  entries still projecting to zero.

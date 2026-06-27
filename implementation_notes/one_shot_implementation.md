@@ -1268,6 +1268,26 @@
   tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_path_expands_propagator_terms_without_cde_result_object
   -q` passed with `6 passed`; `python -m mypy` reported no issues; and
   `git diff --check` passed.
+- Current Wilson-line coupling-convention follow-up: re-reading Matchete's
+  current `WilsonTermExpand`/`GAction` route showed that Wilson-line-generated
+  field-strength insertions are coupling-free at the derivative-commutator
+  lowering boundary; the Warsaw/operator target normalization carries the
+  explicit gauge-coupling factors separately. `Theory.expand_covariant_derivative_commutators(...)`
+  now has an `include_gauge_coupling` flag, and generated CDE/Wilson-line
+  numerator postprocessing sets it to `False`, while the public default remains
+  `True` for ordinary covariant-derivative expansion semantics.
+- First-milestone status after this pass: still no complete Matchete one-loop
+  model integration test is green. The closest target remains
+  `Singlet_Scalar_Extension` `cHW`. The current implementation can load the
+  fixture, build selected explicit Wilson-line plans, filter target-compatible
+  terms, reduce/evaluate entry-level finite pieces, and project bounded
+  entrywise sources. The active gap is now the generated Wilson-line
+  source/algebra/reduction path from those terms to the Matchete
+  `+hbar*A^2*gL^2/(12*M^4)` condition. The long public cHW-only report still
+  exceeded the quick-check budget and was stopped with `stop.order`, so the
+  reliable measurement remains the entrywise probe: all currently selected
+  mixed `hScalar-lScalar` order-four entries project to zero after the latest
+  convention change.
 
 ## Next Work
 

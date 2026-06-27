@@ -415,6 +415,8 @@ def _wilson_derivative_block_action(
         left_index = perm[-1]
         right_index = block[-1]
         field_strength_derivatives = perm[:-1]
+        # Matchete's Wilson-line field strengths are coupling-free; Warsaw
+        # targets carry the gauge-coupling normalization separately.
         terms.append(
             prefactor
             * theory._covariant_derivative_commutator(
@@ -424,6 +426,7 @@ def _wilson_derivative_block_action(
                 conjugate_field=conjugated,
                 index_counter=index_counter,
                 field_strength_derivatives=field_strength_derivatives,
+                include_gauge_coupling=False,
             )
         )
     return sum(terms, Expression.num(0)).expand()
