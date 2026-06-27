@@ -693,3 +693,14 @@ without Warsaw-specific core assumptions.
   post-Wilson projection comes from term 4/path 0, pre-Wilson projection comes
   from term 9/path 2, and both give the same finite selected total, still
   mismatched against Matchete's saved `+1/12*hbar*A^2*gL^2/M^4`.
+- Latest user instruction: explicitly confirm and continue the policy of
+  running focused debug WolframScripts and dissecting as many Matchete
+  intermediate results as practical for the active Singlet
+  `hScalar-lScalar -> cHW` disagreement. Response and implementation status:
+  yes, the active workflow is paired Matchete/pychete debug dumping, not just
+  final Wilson-coefficient comparison. The Matchete dump now records
+  derivative-word and `SymGammaFactor` histograms at order four, the pychete
+  dump records matching derivative histograms and native Symbolica coefficient
+  slices, and the current comparison narrows the remaining mismatch to
+  Wilson-line derivative/tensor/Green-normal-form weighting rather than broad
+  trace selection or final target projection.

@@ -20,6 +20,7 @@
 		"open_cds":80,
 		"loop_momenta":44,
 		"propagators":40,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":0,
@@ -55,6 +56,18 @@
 				"count":5
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=none;field=none",
+				"count":20
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":20
+			}
+		],
 		"sample_terms_input_form":[
 			"Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]",
 			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3440, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3440, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]",
@@ -67,15 +80,7 @@
 			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3455, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3454, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3455, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^2",
 			"16*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3446, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3447, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3448, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3449, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3446, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3447, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3448, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3449, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^2",
 			"Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^3",
-			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^3",
-			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^3",
-			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3457, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3456, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3457, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^3",
-			"16*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3455, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3457, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3454, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3455, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3456, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3457, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^3",
-			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^4",
-			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^4",
-			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^4",
-			"16*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3453, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3452, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3453, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^4",
-			"16*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3445, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3444, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3445, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^5"
+			"-4*Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]^3"
 		]
 	},
 	"insertion_count":2,
@@ -97,6 +102,7 @@
 					"open_cds":80,
 					"loop_momenta":44,
 					"propagators":40,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -132,6 +138,18 @@
 							"count":5
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":20
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":20
+						}
+					],
 					"sample_terms_input_form":[
 						"Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
 						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3440, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3440, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
@@ -144,15 +162,7 @@
 						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3455, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3454, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3455, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2",
 						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3446, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3447, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3448, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3449, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3446, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3447, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3448, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3449, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2",
 						"Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3457, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3456, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3457, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3455, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3457, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3454, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3455, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3456, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3457, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3453, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3452, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3453, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3445, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3444, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3445, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^5"
+						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3"
 					]
 				},
 				{
@@ -167,6 +177,7 @@
 					"open_cds":0,
 					"loop_momenta":44,
 					"propagators":40,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -202,6 +213,62 @@
 							"count":31
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abbc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=aabc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcd",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abb",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=aab",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=abc",
+							"count":8
+						},
+						{
+							"signature":"bar=0;field=aa",
+							"count":6
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":21
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":28
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":20
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":96
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -214,15 +281,7 @@
 						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz]}]",
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3441, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3441, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz], Index[mu3447, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3446, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3449, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3446, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3449, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]"
+						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]"
 					]
 				},
 				{
@@ -237,6 +296,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":187,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -261,6 +321,62 @@
 							"count":5
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abbc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=aabc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcd",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abb",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=aab",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=abc",
+							"count":8
+						},
+						{
+							"signature":"bar=0;field=aa",
+							"count":6
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":21
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":28
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":20
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":96
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -273,15 +389,7 @@
 						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz]}]",
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3441, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3441, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz], Index[mu3447, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]"
+						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]"
 					]
 				},
 				{
@@ -296,6 +404,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":101,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -320,6 +429,58 @@
 							"count":3
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abbc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=aabc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcd",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abb",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=aab",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abc",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":9
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":18
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":52
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -332,15 +493,7 @@
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -355,6 +508,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":101,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -379,6 +533,58 @@
 							"count":3
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abbc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=aabc",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcd",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abb",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=aab",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abc",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":9
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":18
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":52
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -391,15 +597,7 @@
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -414,6 +612,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":91,
+					"sym_gamma_factors":37,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -435,6 +634,58 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":1,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abcd",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abb",
+							"count":2
+						},
+						{
+							"signature":"bar=0;field=aab",
+							"count":2
+						},
+						{
+							"signature":"bar=0;field=aba",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":7
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":15
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":10
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":36
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
 							"count":3
 						}
 					],
@@ -450,15 +701,7 @@
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3449, Lorentz], Index[mu3447, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -473,6 +716,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":95,
+					"sym_gamma_factors":39,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -497,6 +741,58 @@
 							"count":3
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":2
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=abb",
+							"count":2
+						},
+						{
+							"signature":"bar=0;field=aab",
+							"count":2
+						},
+						{
+							"signature":"bar=0;field=aba",
+							"count":1
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":7
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":15
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":10
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":36
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":3
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -509,15 +805,7 @@
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3449, Lorentz], Index[mu3447, Lorentz]}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -532,6 +820,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":85,
+					"sym_gamma_factors":36,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -556,6 +845,46 @@
 							"count":6
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":7
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":30
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":15
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":2
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":1
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":11
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":45
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":3
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
 						"(-2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
@@ -568,15 +897,7 @@
 						"((-3*I)\/4)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2",
 						"-1\/2*(Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3443, Lorentz]}, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3)",
 						"((-3*I)\/4)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3442, Lorentz], Index[mu3443, Lorentz], Index[mu3443, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(8*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(4*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]^2*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(4*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3440, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(8*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3440, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3440, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]"
+						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]"
 					]
 				},
 				{
@@ -591,6 +912,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":48,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -602,6 +924,46 @@
 							"loop_momenta":0,
 							"propagators":0,
 							"count":101
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":8
+						},
+						{
+							"signature":"bar=0;field=ab",
+							"count":14
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":46
+						},
+						{
+							"signature":"bar=0;field=a",
+							"count":27
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":2
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":20
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":75
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":6
 						}
 					],
 					"sample_terms_input_form":[
@@ -616,15 +978,7 @@
 						"(-3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}])\/(4*\\[Epsilon]*Coupling[M, {}, 0]^4)",
 						"I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-						"(4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/3",
-						"(4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/3",
-						"(3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/4",
-						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3456, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {2, 2}]",
-						"(4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3454, Lorentz]}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {2, 2}])\/3",
-						"(3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {2, 2}])\/4",
-						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3443, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {3, 1}]",
-						"(3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3442, Lorentz], Index[mu3443, Lorentz], Index[mu3443, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {3, 1}])\/4"
+						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {1, 3}]"
 					]
 				},
 				{
@@ -639,6 +993,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":10,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -650,6 +1005,34 @@
 							"loop_momenta":0,
 							"propagators":0,
 							"count":12
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":6
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":4
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":2
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":4
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":6
 						}
 					],
 					"sample_terms_input_form":[
@@ -679,6 +1062,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -689,6 +1073,26 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":3
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":9
 						}
 					],
@@ -716,6 +1120,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -726,6 +1131,26 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":3
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":9
 						}
 					],
@@ -755,7 +1180,10 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[],
+					"h_derivative_word_histogram":[],
+					"sym_gamma_histogram":[],
 					"sample_terms_input_form":[]
 				}
 			],
@@ -779,6 +1207,7 @@
 					"open_cds":80,
 					"loop_momenta":44,
 					"propagators":40,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -814,6 +1243,18 @@
 							"count":5
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":20
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":20
+						}
+					],
 					"sample_terms_input_form":[
 						"Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
 						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3438, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3439, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3440, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3440, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
@@ -826,15 +1267,7 @@
 						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3455, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3454, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3455, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2",
 						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3446, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3447, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3448, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3449, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3446, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3447, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3448, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3449, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2",
 						"Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3457, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3456, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3457, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3454, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3455, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3456, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3457, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3454, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3455, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3456, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3457, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3453, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3452, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3453, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^4",
-						"16*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3442, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3443, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3444, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3445, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3442, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3443, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3444, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3445, Lorentz]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^5"
+						"-4*Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`OpenCD[{Index[mu3450, Lorentz]}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`OpenCD[{Index[mu3451, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`OpenCD[{Index[mu3452, Lorentz]}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`LoopMom[Index[mu3450, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3451, Lorentz]]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3"
 					]
 				},
 				{
@@ -849,6 +1282,7 @@
 					"open_cds":0,
 					"loop_momenta":44,
 					"propagators":40,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -884,6 +1318,62 @@
 							"count":31
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abbc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=aabc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcd;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abb;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=aab;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=abc;field=0",
+							"count":8
+						},
+						{
+							"signature":"bar=aa;field=0",
+							"count":6
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":21
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":28
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":20
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":96
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -896,15 +1386,7 @@
 						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz]}]",
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3441, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3440, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3441, Lorentz]]*Matchete`PackageScope`Prop[0]^5*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3441, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz], Index[mu3447, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3446, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3449, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3446, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3449, Lorentz]]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]"
+						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`LoopMom[Index[mu3438, Lorentz]]*Matchete`PackageScope`LoopMom[Index[mu3439, Lorentz]]*Matchete`PackageScope`Prop[0]^4*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]"
 					]
 				},
 				{
@@ -919,6 +1401,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":187,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -943,6 +1426,62 @@
 							"count":5
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abbc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=aabc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcd;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abb;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=aab;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=abc;field=0",
+							"count":8
+						},
+						{
+							"signature":"bar=aa;field=0",
+							"count":6
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":21
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":28
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":20
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":96
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -955,15 +1494,7 @@
 						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz]}]",
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3441, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3441, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3441, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz], Index[mu3447, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3449, Lorentz]}]"
+						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]"
 					]
 				},
 				{
@@ -978,6 +1509,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":101,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1002,6 +1534,58 @@
 							"count":3
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abbc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=aabc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcd;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abb;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=aab;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abc;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":9
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":18
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":52
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -1014,15 +1598,7 @@
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -1037,6 +1613,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":101,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1061,6 +1638,58 @@
 							"count":3
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abbc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=aabc;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcd;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abb;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=aab;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abc;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":9
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":18
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":52
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -1073,15 +1702,7 @@
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3438, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3446, Lorentz], Index[mu3447, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3446, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3446, Lorentz], Index[mu3449, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymmetricLorentzInds[Index[mu3438, Lorentz], Index[mu3439, Lorentz]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -1096,6 +1717,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":91,
+					"sym_gamma_factors":37,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1117,6 +1739,58 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":1,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abcd;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abb;field=0",
+							"count":2
+						},
+						{
+							"signature":"bar=aab;field=0",
+							"count":2
+						},
+						{
+							"signature":"bar=aba;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":7
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":15
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":10
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":36
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
 							"count":3
 						}
 					],
@@ -1132,15 +1806,7 @@
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3449, Lorentz], Index[mu3447, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -1155,6 +1821,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":95,
+					"sym_gamma_factors":39,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1179,6 +1846,58 @@
 							"count":3
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":2
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=abb;field=0",
+							"count":2
+						},
+						{
+							"signature":"bar=aab;field=0",
+							"count":2
+						},
+						{
+							"signature":"bar=aba;field=0",
+							"count":1
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":7
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":15
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":15
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":10
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":36
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":3
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
 						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]",
@@ -1191,15 +1910,7 @@
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
 						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]",
-						"4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-16*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3449, Lorentz], Index[mu3447, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3447, Lorentz], Index[mu3449, Lorentz]}]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]"
+						"-8*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {Index[mu3440, Lorentz]}]"
 					]
 				},
 				{
@@ -1214,6 +1925,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":85,
+					"sym_gamma_factors":36,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1238,6 +1950,46 @@
 							"count":6
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":7
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":30
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":15
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":2
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":1
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":11
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":45
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":3
+						}
+					],
 					"sample_terms_input_form":[
 						"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
 						"(-2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]",
@@ -1250,15 +2002,7 @@
 						"((-3*I)\/4)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^2*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^2",
 						"-1\/2*(Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3443, Lorentz]}, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3)",
 						"((-3*I)\/4)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3442, Lorentz], Index[mu3443, Lorentz], Index[mu3443, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]^3",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3440, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(8*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(4*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]^2*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(4*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3440, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"(8*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3440, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3440, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]",
-						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3439, Lorentz], Index[mu3440, Lorentz]}, {}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3440, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]"
+						"-4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz], Index[mu3439, Lorentz], Index[mu3440, Lorentz], Index[mu3440, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]^3*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`SymGammaFactor[1, 4]"
 					]
 				},
 				{
@@ -1273,6 +2017,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":48,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1284,6 +2029,46 @@
 							"loop_momenta":0,
 							"propagators":0,
 							"count":101
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":8
+						},
+						{
+							"signature":"bar=ab;field=0",
+							"count":14
+						},
+						{
+							"signature":"bar=0;field=0",
+							"count":46
+						},
+						{
+							"signature":"bar=a;field=0",
+							"count":27
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":2
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":20
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":75
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":6
 						}
 					],
 					"sample_terms_input_form":[
@@ -1298,15 +2083,7 @@
 						"(-3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}])\/(4*\\[Epsilon]*Coupling[M, {}, 0]^4)",
 						"I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
 						"2*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz], Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-						"(4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3439, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/3",
-						"(4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3438, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/3",
-						"(3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3438, Lorentz], Index[mu3439, Lorentz], Index[mu3439, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/4",
-						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3456, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {2, 2}]",
-						"(4*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {Index[mu3454, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {2, 2}])\/3",
-						"(3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3454, Lorentz], Index[mu3454, Lorentz], Index[mu3456, Lorentz], Index[mu3456, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {2, 2}])\/4",
-						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3443, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {3, 1}]",
-						"(3*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3442, Lorentz], Index[mu3442, Lorentz], Index[mu3443, Lorentz], Index[mu3443, Lorentz]}, {}, {}]*LF[{Coupling[M, {}, 0]}, {3, 1}])\/4"
+						"(-1\/2*I)*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[{Index[mu3438, Lorentz], Index[mu3439, Lorentz]}, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {1, 3}]"
 					]
 				},
 				{
@@ -1321,6 +2098,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":10,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1332,6 +2110,34 @@
 							"loop_momenta":0,
 							"propagators":0,
 							"count":12
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":6
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":4
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":2
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						},
+						{
+							"factors_input_form":"{{1, 4}}",
+							"count":4
+						},
+						{
+							"factors_input_form":"{{2, 4}}",
+							"count":6
 						}
 					],
 					"sample_terms_input_form":[
@@ -1361,6 +2167,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1371,6 +2178,26 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":3
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":9
 						}
 					],
@@ -1398,6 +2225,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1408,6 +2236,26 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":3
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":9
 						}
 					],
@@ -1437,7 +2285,10 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[],
+					"h_derivative_word_histogram":[],
+					"sym_gamma_histogram":[],
 					"sample_terms_input_form":[]
 				}
 			],
@@ -1457,6 +2308,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -1467,6 +2319,38 @@
 				"open_cds":0,
 				"loop_momenta":0,
 				"propagators":0,
+				"count":18
+			}
+		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=aabb;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abab;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abba;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=aabb",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abab",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abba",
+				"count":3
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
 				"count":18
 			}
 		],
@@ -1482,13 +2366,7 @@
 			"(((5*I)\/9)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/Coupling[M, {}, 0]^4",
 			"(((2*I)\/3)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
 			"((I\/18)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/Coupling[M, {}, 0]^4",
-			"((-1\/3*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"(-1\/3*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-			"((2*I)\/3)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-			"(-1\/3*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-			"(-1\/3*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-			"((2*I)\/3)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]*LF[{Coupling[M, {}, 0]}, {1, 3}]",
-			"(-1\/3*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]*LF[{Coupling[M, {}, 0]}, {1, 3}]"
+			"((-1\/3*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
 		]
 	},
 	"power_prefactor_input_form":"(-1\/2*I)*hbar",
@@ -1504,6 +2382,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -1514,6 +2393,38 @@
 				"open_cds":0,
 				"loop_momenta":0,
 				"propagators":0,
+				"count":18
+			}
+		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=aabb;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abab;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abba;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=aabb",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abab",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abba",
+				"count":3
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
 				"count":18
 			}
 		],
@@ -1529,13 +2440,7 @@
 			"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)",
 			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(3*\\[Epsilon]*Coupling[M, {}, 0]^4)",
 			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)",
-			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/3",
-			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 3}])",
-			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]*LF[{Coupling[M, {}, 0]}, {1, 3}])",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]*LF[{Coupling[M, {}, 0]}, {1, 3}])\/3",
-			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]*LF[{Coupling[M, {}, 0]}, {1, 3}])"
+			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
 		]
 	},
 	"selected_prop_order_validation_simplified_summary":{
@@ -1552,7 +2457,10 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[],
+		"h_derivative_word_histogram":[],
+		"sym_gamma_histogram":[],
 		"sample_terms_input_form":[]
 	},
 	"selected_prop_order_validation_simplified_input_form":"$Aborted",
@@ -1568,6 +2476,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -1603,6 +2512,94 @@
 				"count":6
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=0;field=0",
+				"count":2
+			},
+			{
+				"signature":"bar=aabb;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abab;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abba;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=aa;field=0",
+				"count":1
+			},
+			{
+				"signature":"bar=0;field=aa",
+				"count":1
+			},
+			{
+				"signature":"bar=0;field=aabb",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abab",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abba",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,0",
+				"count":2
+			},
+			{
+				"signature":"bar=aa,0;field=0,0",
+				"count":1
+			},
+			{
+				"signature":"bar=0,0;field=aa,0",
+				"count":1
+			},
+			{
+				"signature":"bar=a,a;field=0,0",
+				"count":1
+			},
+			{
+				"signature":"bar=a,0;field=0,a",
+				"count":1
+			},
+			{
+				"signature":"bar=0,a;field=a,0",
+				"count":1
+			},
+			{
+				"signature":"bar=0,0;field=a,a",
+				"count":1
+			},
+			{
+				"signature":"bar=0,aa;field=0,0",
+				"count":3
+			},
+			{
+				"signature":"bar=0,a;field=0,a",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,aa",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0,0;field=0,0,0",
+				"count":6
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":45
+			}
+		],
 		"sample_terms_input_form":[
 			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
 			"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
@@ -1615,15 +2612,7 @@
 			"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/Coupling[M, {}, 0]^2",
 			"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)",
 			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(3*\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)",
-			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^2)",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+			"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
 		]
 	},
 	"full_trace_validation_simplified_summary":{
@@ -1640,7 +2629,10 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[],
+		"h_derivative_word_histogram":[],
+		"sym_gamma_histogram":[],
 		"sample_terms_input_form":[]
 	},
 	"previous_validation_file":"\/Users\/vjhirsch\/HEP_programs\/pychete\/mathematica_reference\/Matchete\/Validation\/MatchingResults\/previous\/Singlet_Scalar_Extension-EFT.m",
@@ -1656,6 +2648,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -1702,6 +2695,54 @@
 				"count":8
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=0;field=0",
+				"count":6
+			},
+			{
+				"signature":"bar=a;field=a",
+				"count":1
+			},
+			{
+				"signature":"bar=aa;field=aa",
+				"count":1
+			},
+			{
+				"signature":"bar=0,aa;field=0,0",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,0",
+				"count":3
+			},
+			{
+				"signature":"bar=a,0;field=a,0",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,aa",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0,0;field=0,0,0",
+				"count":6
+			},
+			{
+				"signature":"bar=a;field=0",
+				"count":6
+			},
+			{
+				"signature":"bar=0;field=a",
+				"count":6
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":38
+			}
+		],
 		"sample_terms_input_form":[
 			"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]",
 			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
@@ -1714,17 +2755,9 @@
 			"(4*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^4",
 			"(4*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
 			"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)",
-			"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"(3*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^4",
-			"(3*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"-((hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^3*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^6)",
-			"-((hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^3*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^6))",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*FieldStrength[B, {Index[d$$1, Lorentz], Index[d$$2, Lorentz]}, {}, {}]^2)\/(12*Coupling[M, {}, 0]^4)",
-			"(((17*I)\/72)*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*FieldStrength[B, {Index[d$$1, Lorentz], Index[d$$2, Lorentz]}, {}, {Index[d$$2, Lorentz]}])\/Coupling[M, {}, 0]^4",
-			"((I\/12)*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*FieldStrength[B, {Index[d$$1, Lorentz], Index[d$$2, Lorentz]}, {}, {Index[d$$2, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"(((-17*I)\/72)*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*FieldStrength[B, {Index[d$$1, Lorentz], Index[d$$2, Lorentz]}, {}, {Index[d$$2, Lorentz]}])\/Coupling[M, {}, 0]^4"
+			"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
 		]
 	},
 	"previous_validation_cHW_condition_input_form":"{(hbar*Coupling[A, {}, 0]^2*Coupling[gL, {}, 0]^2)\/(12*Coupling[M, {}, 0]^4)}",
-	"full_power_minus_selected_prop_order_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon] - (2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) + (5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(3*\\[Epsilon]*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(4*Coupling[M, {}, 0]^2) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/(4*Coupling[M, {}, 0]^2) - (2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], ..."
+	"full_power_minus_selected_prop_order_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon] - (2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) + (5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(3*\\[Epsilon]*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(4*Coupling[M, {}, 0]^2) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/(4*Coupling[M, {}, 0]^2) - (2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) + (5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(3*\\[Epsilon]*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) - (2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^2) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d..."
 }

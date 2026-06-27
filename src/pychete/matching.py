@@ -35,6 +35,7 @@ from .functional import (
     eom_replacement_rules_for_expression,
     expose_scalar_derivative_commutator_bilinears,
     expand_cd_operators,
+    normalize_conjugate_scalar_field_slots,
     partial_functional_derivative,
     simplify_trivial_cd_operators,
 )
@@ -6882,6 +6883,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
 
     out = idenso.simplify_pychete_field_derivative_metrics(expr)
     out = _restore_theory_owned_generated_lorentz_indices(theory, out)
+    out = normalize_conjugate_scalar_field_slots(theory, out)
     if expose_scalar_derivative_commutator_bilinears_option:
         out = expose_scalar_derivative_commutator_bilinears(
             theory,

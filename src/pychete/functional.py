@@ -23,6 +23,7 @@ from .expr import (
     is_bar_field,
     is_head,
     is_zero,
+    list_expr,
     list_items,
     matching_subexpressions,
     product_expr,
@@ -39,6 +40,7 @@ from .theory_metadata import (
     FieldHandle,
     FieldVariation,
     coupling_self_conjugate_from_label,
+    field_indices_from_label,
     field_self_conjugate_from_label,
 )
 
@@ -150,6 +152,7 @@ def expose_scalar_derivative_commutator_bilinears(
     if max_candidates < 0:
         raise ValueError("max_candidates must be non-negative")
     theory._validate_registered_expression(expr)
+    expr = normalize_conjugate_scalar_field_slots(theory, expr)
     field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=2)
     barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=2)
     one_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=1)
@@ -314,6 +317,49 @@ def expose_scalar_derivative_commutator_bilinears(
                 expand_commutators=expand_commutators,
             )
     return out.expand()
+
+
+def normalize_conjugate_scalar_field_slots(theory: Theory, expr: Expression) -> Expression:
+    """Rewrite dual-index scalar fields as explicit ``Bar(Field(...))`` atoms.
+
+    Matchete model conversion can encode a conjugate scalar component either as
+    ``Bar(Field(...))`` or as a field carrying the dual representation index,
+    e.g. ``Field(H, [Bar(fund)])``.  The Green-bilinear and commutator passes
+    operate on the explicit ``Bar(Field(...))`` representation, so normalize
+    the dual-index form with a Symbolica field-pattern replacement before those
+    passes run.
+    """
+
+    theory._validate_registered_expression(expr)
+    pattern = field_pattern()
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+
+    def normalize_match(match: dict[Expression, Expression]) -> Expression:
+        atom = pattern.replace_wildcards(match)
+        return _explicit_bar_scalar_field(atom) or atom
+
+    return expr.replace(pattern, normalize_match, label_is_tagged, rhs_cache_size=0)
+
+
+def _explicit_bar_scalar_field(atom: Expression) -> Expression | None:
+    if not bool(field_type(atom) == s.Scalar):
+        return None
+    label = field_label(atom)
+    if field_self_conjugate_from_label(label):
+        return None
+    expected_representations = field_indices_from_label(label)
+    actual_indices = list_items(atom[2])
+    if not expected_representations or len(actual_indices) != len(expected_representations):
+        return None
+    base_indices: list[Expression] = []
+    for actual_index, expected_representation in zip(actual_indices, expected_representations, strict=True):
+        if not is_head(actual_index, s.Index):
+            return None
+        if not bool(actual_index[1] == s.Bar(expected_representation)):
+            return None
+        base_indices.append(s.Index(actual_index[0], expected_representation))
+    base = s.Field(label, field_type(atom), list_expr(*base_indices), atom[3])
+    return s.Bar(base)
 
 
 def _scalar_derivative_field_atoms(expr: Expression, *, derivative_count: int) -> tuple[Expression, ...]:

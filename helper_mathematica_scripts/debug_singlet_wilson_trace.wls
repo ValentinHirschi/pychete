@@ -104,6 +104,73 @@ signatureHistogram[terms_List] := Module[{counts},
   ] /@ counts)
 ];
 
+derivativeWord[inds_List] := Module[{keys = {}, word = {}, key, pos},
+  If[Length[inds] == 0, Return["0"]];
+  Do[
+    key = toInputString[ind];
+    pos = FirstPosition[keys, key, Missing["NotFound"], {1}, Heads -> False];
+    If[pos === Missing["NotFound"],
+      AppendTo[keys, key];
+      AppendTo[word, FromCharacterCode[96 + Length[keys]]],
+      AppendTo[word, FromCharacterCode[96 + pos[[1]]]]
+    ],
+    {ind, inds}
+  ];
+  StringJoin[word]
+];
+
+barHDerivativeWords[term_] := derivativeWord /@ Cases[
+  term,
+  Matchete`Bar[Matchete`Field[H, Matchete`Scalar, _, derivs_]] :> derivs,
+  All
+];
+
+hDerivativeWords[term_] := Module[{withoutBars},
+  withoutBars = DeleteCases[
+    term,
+    Matchete`Bar[Matchete`Field[H, Matchete`Scalar, _, _]],
+    All
+  ];
+  derivativeWord /@ Cases[
+    withoutBars,
+    Matchete`Field[H, Matchete`Scalar, _, derivs_] :> derivs,
+    All
+  ]
+];
+
+termDerivativeSignature[term_] := Module[{barWords, hWords},
+  barWords = barHDerivativeWords[term];
+  hWords = hDerivativeWords[term];
+  "bar=" <> If[Length[barWords] == 0, "none", StringRiffle[barWords, ","]] <>
+    ";field=" <> If[Length[hWords] == 0, "none", StringRiffle[hWords, ","]]
+];
+
+derivativeWordHistogram[terms_List] := Module[{counts},
+  counts = Normal @ Counts[termDerivativeSignature /@ terms];
+  (Function[row,
+    <|
+      "signature" -> row[[1]],
+      "count" -> row[[2]]
+    |>
+  ] /@ counts)
+];
+
+symGammaHistogram[terms_List] := Module[{counts},
+  counts = Normal @ Counts[
+    Cases[
+      #,
+      Matchete`PackageScope`SymGammaFactor[n_, d_] :> {n, d},
+      All
+    ] & /@ terms
+  ];
+  (Function[row,
+    <|
+      "factors_input_form" -> toInputString[row[[1]]],
+      "count" -> row[[2]]
+    |>
+  ] /@ counts)
+];
+
 stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
   If[expr === $Aborted || expr === $Failed,
     Return @ <|
@@ -120,7 +187,10 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
       "open_cds" -> 0,
       "loop_momenta" -> 0,
       "propagators" -> 0,
+      "sym_gamma_factors" -> 0,
       "signature_histogram" -> {},
+      "h_derivative_word_histogram" -> {},
+      "sym_gamma_histogram" -> {},
       "sample_terms_input_form" -> {}
     |>
   ];
@@ -136,7 +206,10 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
     "open_cds" -> Length @ Cases[expr, Matchete`PackageScope`OpenCD[__], All],
     "loop_momenta" -> Length @ Cases[expr, Matchete`PackageScope`LoopMom[__], All],
     "propagators" -> Length @ Cases[expr, Matchete`PackageScope`Prop[__], All],
+    "sym_gamma_factors" -> Length @ Cases[expr, Matchete`PackageScope`SymGammaFactor[__], All],
     "signature_histogram" -> signatureHistogram[terms],
+    "h_derivative_word_histogram" -> derivativeWordHistogram[terms],
+    "sym_gamma_histogram" -> symGammaHistogram[terms],
     "sample_terms_input_form" -> (shortInputString /@ Take[terms, UpTo[sampleTerms]])
   |>
 ];

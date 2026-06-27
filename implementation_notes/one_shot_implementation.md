@@ -1843,11 +1843,53 @@
   corresponding order-four structures to `+1/12*hbar*A^2*gL^2/M^4` after
   `GreensSimplify`, while pychete's selected finite normal form remains the
   `-1/8` matching-scale value.
+- Follow-up Matchete dump refinement: the focused WolframScript now records
+  derivative-word histograms and `SymGammaFactor` histograms at the relevant
+  order-four stages. For the active `hScalar-lScalar -> cHW` prop-order-four
+  probe, Matchete's insertion-1 `post_index_group_cleanup` stage contains
+  `bar=0;field=aabb` six times, `bar=0;field=abba` four times, and
+  `bar=0;field=abab` twice, with `SymGammaFactor` classes `{}` twice,
+  `{{1,4}}` four times, and `{{2,4}}` six times. After epsilon expansion and
+  relabelling, the same insertion is balanced into three `aabb`, three `abab`,
+  and three `abba` derivative words. Insertion 2 has the conjugate pattern on
+  the barred Higgs side. These stage summaries are now committed into the
+  Matchete debug JSON so future pychete corrections can be checked against the
+  first derivative/tensor-normal-form divergence instead of only against the
+  final Wilson coefficient.
+- Matching pychete dump refinement: the pychete debug script now records
+  Higgs derivative-word histograms and native Symbolica coefficient slices for
+  the `A^2` and `A^2 gL^2` structures. The remeasurement is unchanged at the
+  final selected level: only `hScalar-lScalar#wilson14_o4_0` contributes, the
+  post-Wilson route projects term 4/path 0, the pre-Wilson route projects
+  term 9/path 2, and both still give
+  `hbar*A^2*gL^2/M^4*(-1/8*log(mursq) + 1/4*log(M) - 1/8)`. Therefore the
+  disagreement is now narrowed to how the order-four Wilson-line
+  derivative/tensor classes are normalized and weighted before or during
+  Green/basis simplification, not to broad trace selection or final target
+  coefficient extraction.
+- Generic structural correction from the paired dumps: Matchete model
+  conversion can encode a conjugate scalar either as `Bar(Field(...))` or as a
+  scalar field carrying the dual representation index, for example
+  `Field(H, [Bar(fund)])`. pychete now has
+  `normalize_conjugate_scalar_field_slots(theory, expr)`, implemented with a
+  Symbolica `field_pattern()` replacement restricted to registered field-label
+  tags, to rewrite the dual-index scalar form into explicit `Bar(Field(...))`
+  before Wilson-line postprocessing and scalar Green-bilinear exposure. Focused
+  unit tests cover direct normalization and the one-sided four-derivative
+  Green-bilinear projection through this dual-index encoding. This is a
+  necessary representation fix, but by itself it does not close the Singlet
+  `cHW` coefficient gap.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
+  - continue the paired Matchete/pychete dump loop for the Singlet
+    `hScalar-lScalar -> cHW` frontier, adding more intermediate Matchete
+    summaries whenever needed and using them to locate the first mismatch in
+    the `aabb`/`abab`/`abba` derivative-word classes, `SymGammaFactor`
+    weights, pre-Wilson tensor-reduction metric contractions, or Green/basis
+    simplification;
   - remeasure the selected Singlet `hScalar-lScalar -> cHW` route after the
     conservative Wilson-line filter fix; focus first on whether derivative-only
     `Bar[H] D^4 H`-type structures now survive to the internal evaluated

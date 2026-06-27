@@ -4,7 +4,7 @@ import pytest
 from symbolica import Expression
 
 from pychete.backends import idenso
-from pychete.functional import expose_scalar_derivative_commutator_bilinears
+from pychete.functional import expose_scalar_derivative_commutator_bilinears, normalize_conjugate_scalar_field_slots
 from pychete.matching_results import MatchingResult
 from pychete.symbols import s
 from pychete.theory import Theory
@@ -71,6 +71,26 @@ def test_scalar_green_bilinear_exposes_one_sided_four_derivative_field_strength_
 
     assert name
     assert_expr_equal(coefficient, expected_weight * theory.coupling_handle("gL")() ** 2)
+
+
+def test_scalar_green_bilinear_normalizes_dual_index_conjugate_scalar_slots() -> None:
+    theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
+    dual_i = theory.index("i", s.Bar(i[1]))
+    source = higgs(dual_i, derivatives=[mu]) * higgs(i)
+
+    normalized = normalize_conjugate_scalar_field_slots(theory, source)
+
+    assert_expr_equal(normalized, s.Bar(higgs(i, derivatives=[mu])) * higgs(i))
+
+
+def test_scalar_green_bilinear_exposes_dual_index_conjugate_one_sided_four_derivative_component() -> None:
+    theory, higgs, target, i, mu, nu = _scalar_su2_probe()
+    dual_i = theory.index("i", s.Bar(i[1]))
+    source = higgs(dual_i, derivatives=[mu, nu, nu, mu]) * higgs(i)
+
+    coefficient = _project_c_hw_like_coefficient(theory, source, target)
+
+    assert_expr_equal(coefficient, theory.coupling_handle("gL")() ** 2 / 4)
 
 
 @pytest.mark.parametrize(

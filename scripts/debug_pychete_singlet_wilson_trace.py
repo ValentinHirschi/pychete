@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import Counter
 from pathlib import Path
 from typing import Any
 
@@ -21,7 +22,10 @@ from pychete.bases.smeft_warsaw import smeft_warsaw_operator
 from pychete.expr import (
     bar_field_pattern,
     field_pattern,
+    field_derivatives,
     field_strength_pattern,
+    is_bar_field,
+    bar_field_inner,
     terms,
     wilson_term_pattern,
 )
@@ -71,6 +75,57 @@ def _match_count(expr: Expression, pattern: Expression) -> int:
     return sum(1 for _ in expr.match(pattern))
 
 
+def _derivative_word(derivatives: tuple[Expression, ...]) -> str:
+    if not derivatives:
+        return "0"
+    labels: dict[str, str] = {}
+    out: list[str] = []
+    for derivative in derivatives:
+        key = canonical_string(derivative)
+        if key not in labels:
+            labels[key] = chr(ord("a") + len(labels))
+        out.append(labels[key])
+    return "".join(out)
+
+
+def _remove_barred_inner_fields(fields: list[Expression], barred: tuple[Expression, ...]) -> list[Expression]:
+    remaining = list(fields)
+    for barred_atom in barred:
+        inner_key = canonical_string(bar_field_inner(barred_atom))
+        for index, field in enumerate(remaining):
+            if canonical_string(field) == inner_key:
+                del remaining[index]
+                break
+    return remaining
+
+
+def _field_derivative_signature(term: Expression, label: Expression) -> str:
+    bar_pattern = bar_field_pattern(label)
+    plain_pattern = field_pattern(label)
+    barred = tuple(bar_pattern.replace_wildcards(match) for match in term.match(bar_pattern))
+    fields = [plain_pattern.replace_wildcards(match) for match in term.match(plain_pattern)]
+    unbarred = _remove_barred_inner_fields(fields, barred)
+    bar_words = tuple(_derivative_word(field_derivatives(bar_field_inner(atom))) for atom in barred if is_bar_field(atom))
+    field_words = tuple(_derivative_word(field_derivatives(atom)) for atom in unbarred)
+    return (
+        "bar="
+        + (",".join(bar_words) if bar_words else "none")
+        + ";field="
+        + (",".join(field_words) if field_words else "none")
+    )
+
+
+def _field_derivative_word_histogram(expr: Expression, label: Expression) -> list[dict[str, Any]]:
+    expanded = expr.expand()
+    if bool(expanded == Expression.num(0)):
+        return []
+    counts = Counter(_field_derivative_signature(term, label) for term in terms(expanded))
+    return [
+        {"signature": signature, "count": count}
+        for signature, count in sorted(counts.items(), key=lambda item: item[0])
+    ]
+
+
 def _expr_summary(name: str, expr: Expression, *, sample_chars: int) -> dict[str, Any]:
     expanded = expr.expand()
     try:
@@ -92,6 +147,22 @@ def _expr_summary(name: str, expr: Expression, *, sample_chars: int) -> dict[str
             s.PropagatorDenominator(s.PowBaseWildcard, s.PowExponentWildcard),
         ),
         "sample_input_form": _short(expr, sample_chars),
+    }
+
+
+def _coefficient_slice_summary(
+    expr: Expression,
+    coefficient: Expression,
+    *,
+    h_label: Expression,
+    name: str,
+    sample_chars: int,
+) -> dict[str, Any]:
+    coefficient_slice = expr.coefficient(coefficient).expand()
+    return {
+        "coefficient": _full(coefficient),
+        "summary": _expr_summary(name, coefficient_slice, sample_chars=sample_chars),
+        "h_derivative_word_histogram": _field_derivative_word_histogram(coefficient_slice, h_label),
     }
 
 
@@ -151,6 +222,8 @@ def _term_row(
     term_index: int,
     term: matching_module.WilsonLineTraceExpansionTerm,
     *,
+    h_label: Expression,
+    coefficient_targets: dict[str, Expression],
     sample_chars: int,
 ) -> dict[str, Any]:
     row: dict[str, Any] = {
@@ -199,6 +272,20 @@ def _term_row(
                 normalized_finite,
                 sample_chars=sample_chars,
             ),
+            "finite_h_derivative_word_histogram": _field_derivative_word_histogram(
+                normalized_finite,
+                h_label,
+            ),
+            "finite_coefficient_slices": {
+                coefficient_name: _coefficient_slice_summary(
+                    normalized_finite,
+                    coefficient,
+                    h_label=h_label,
+                    name=f"{stage_name}.finite.coefficient.{coefficient_name}",
+                    sample_chars=sample_chars,
+                )
+                for coefficient_name, coefficient in coefficient_targets.items()
+            },
             "cHW_projection": _full(projection),
             "cHW_projection_sample_input_form": _short(projection, sample_chars),
             "cHW_projection_is_zero": bool(projection.expand() == Expression.num(0)),
@@ -219,6 +306,12 @@ def main() -> int:
         raise ValueError(f"unknown SMEFT Warsaw target {args.target!r}")
     hbar = theory.external_handle("hbar")() if "hbar" in theory.externals else s.HBar
     normalization_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+    h_label = theory.field_handle("H").label
+    coefficient_targets: dict[str, Expression] = {}
+    if "A" in theory.couplings:
+        coefficient_targets["A2"] = theory.coupling_handle("A")() ** 2
+    if "A" in theory.couplings and "gL" in theory.couplings:
+        coefficient_targets["A2_gL2"] = theory.coupling_handle("A")() ** 2 * theory.coupling_handle("gL")() ** 2
 
     setup = theory.one_loop_setup(
         lagrangian,
@@ -262,6 +355,8 @@ def main() -> int:
                 entry_label,
                 term_index,
                 term,
+                h_label=h_label,
+                coefficient_targets=coefficient_targets,
                 sample_chars=args.sample_chars,
             )
             if (
@@ -300,6 +395,10 @@ def main() -> int:
         "nonempty_grouped_entries": {label: len(entry_terms) for label, entry_terms in grouped.items() if entry_terms},
         "normalization": "matchete_evaluated_hbar",
         "normalization_factor": _full(normalization_factor),
+        "h_field_label": _full(h_label),
+        "coefficient_targets": {
+            coefficient_name: _full(coefficient) for coefficient_name, coefficient in coefficient_targets.items()
+        },
         "rows": rows,
         "total_projections": {
             stage_name: _full(_project_chw(theory, target, expr))
@@ -307,6 +406,23 @@ def main() -> int:
         },
         "total_summaries": {
             stage_name: _expr_summary(stage_name, expr, sample_chars=args.sample_chars)
+            for stage_name, expr in totals.items()
+        },
+        "total_h_derivative_word_histograms": {
+            stage_name: _field_derivative_word_histogram(expr, h_label)
+            for stage_name, expr in totals.items()
+        },
+        "total_coefficient_slices": {
+            stage_name: {
+                coefficient_name: _coefficient_slice_summary(
+                    expr,
+                    coefficient,
+                    h_label=h_label,
+                    name=f"{stage_name}.coefficient.{coefficient_name}",
+                    sample_chars=args.sample_chars,
+                )
+                for coefficient_name, coefficient in coefficient_targets.items()
+            }
             for stage_name, expr in totals.items()
         },
     }
