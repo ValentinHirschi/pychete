@@ -7,7 +7,7 @@ import pytest
 from symbolica import Expression, S
 
 from pychete import Theory
-from pychete.backends import vakint
+from pychete.backends import idenso, vakint
 from pychete.symbols import canonical_string, s
 
 
@@ -374,6 +374,46 @@ def test_vakint_decodes_native_metric_and_cg_wrappers() -> None:
     assert "vakint::g" not in canonical_string(decoded)
     assert "vakint::CG" not in canonical_string(decoded)
     assert canonical_string(decoded) == canonical_string(s.Metric(mu, nu) * gen(a, i, j))
+
+
+def test_vakint_decodes_generated_metric_indices_for_field_strength_simplification() -> None:
+    theory = Theory("vakint_decode_generated_metric_indices")
+    theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")
+    vector = theory.field_handle("W")
+    mu = s.Index(vakint.symbol("mu"), s.Lorentz)
+    right = s.Index(S("pychete::wilson_line_probe_1"), s.Lorentz)
+    expected_strength = s.FieldStrength(vector.label, s.List(right, mu), s.List(), s.List())
+    native = vakint.symbol("g")(
+        vakint.symbol("Index")(
+            S(f"{theory.name}::index_wilson_line_probe_0"),
+            vakint.symbol("Lorentz"),
+        ),
+        vakint.symbol("Index")(
+            S(f"{theory.name}::index_wilson_line_probe_1"),
+            vakint.symbol("Lorentz"),
+        ),
+    ) * vakint.symbol("FieldStrength")(
+        vakint.symbol("W"),
+        vakint.symbol("List")(
+            vakint.symbol("Index")(vakint.symbol("wilson_line_probe_0"), vakint.symbol("Lorentz")),
+            vakint.symbol("Index")(vakint.symbol("mu"), vakint.symbol("Lorentz")),
+        ),
+        vakint.symbol("List"),
+        vakint.symbol("List"),
+    ) * vakint.symbol("FieldStrength")(
+        vakint.symbol("W"),
+        vakint.symbol("List")(
+            vakint.symbol("Index")(vakint.symbol("wilson_line_probe_1"), vakint.symbol("Lorentz")),
+            vakint.symbol("Index")(vakint.symbol("mu"), vakint.symbol("Lorentz")),
+        ),
+        vakint.symbol("List"),
+        vakint.symbol("List"),
+    )
+
+    decoded = vakint.decode_pychete_namespace(theory, native)
+    simplified = idenso.simplify_pychete_field_strength_metrics(decoded)
+
+    assert canonical_string(simplified) == canonical_string(expected_strength**2)
 
 
 def test_vakint_decodes_native_ncm_wrappers_before_projection() -> None:

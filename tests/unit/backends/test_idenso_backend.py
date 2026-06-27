@@ -318,6 +318,40 @@ def test_idenso_bridge_projects_su2_field_strength_generator_bilinear_to_singlet
     assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
 
 
+def test_idenso_bridge_projects_reversed_su2_field_strength_generator_bilinear_to_singlet() -> None:
+    theory = Theory("idenso_color_su2_field_strength_reversed_singlet")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    generator = theory.cg_tensor_handle("gen_SU2L_fund")
+    adj_a = theory.index("A", adj)
+    adj_b = theory.index("B", adj)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    k = theory.index("k", fund)
+    k_dual = theory.index("k", s.Bar(fund))
+    j_dual = theory.index("j", s.Bar(fund))
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    field_strength_a = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_a), s.List())
+    field_strength_b = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adj_b), s.List())
+    expr = (
+        higgs(i)
+        * s.Bar(higgs(j))
+        * generator(adj_a, k, j_dual)
+        * generator(adj_b, i, k_dual)
+        * field_strength_a
+        * field_strength_b
+    )
+    expected = Expression.num(1) / Expression.num(4) * higgs(i) * s.Bar(higgs(i)) * field_strength_b**2
+
+    simplified = idenso.simplify_su2_field_strength_generator_bilinears(theory, expr)
+
+    assert _same(simplified, expected)
+    assert "cg_tensor_gen_SU2L_fund" not in canonical_string(simplified)
+
+
 def test_idenso_bridge_canonicalizes_mixed_su2_u1_field_strength_generator_bilinear() -> None:
     theory = Theory("idenso_color_su2_u1_field_strength_mixed")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
@@ -386,6 +420,27 @@ def test_idenso_bridge_simplifies_pychete_field_strength_metrics() -> None:
         ),
         -strength,
     )
+
+
+def test_idenso_bridge_simplifies_generated_field_strength_metric_aliases() -> None:
+    theory = Theory("idenso_generated_field_strength_metric_aliases")
+    vector = theory.define_field("V", s.Vector, self_conjugate=True, mass=0)
+    mu = s.Index(S("vakint::mu"), s.Lorentz)
+    left = s.Index(S("vakint::wilson_line_probe_0"), s.Lorentz)
+    right = s.Index(S("vakint::wilson_line_probe_1"), s.Lorentz)
+    canonical_right = s.Index(S("pychete::wilson_line_probe_1"), s.Lorentz)
+    metric_left = s.Index(S(f"{theory.name}::index_wilson_line_probe_0"), s.Lorentz)
+    metric_right = s.Index(S(f"{theory.name}::index_wilson_line_probe_1"), s.Lorentz)
+    expr = (
+        s.Metric(metric_left, metric_right)
+        * s.FieldStrength(vector.label, s.List(left, mu), s.List(), s.List())
+        * s.FieldStrength(vector.label, s.List(right, mu), s.List(), s.List())
+    )
+    expected = s.FieldStrength(vector.label, s.List(canonical_right, mu), s.List(), s.List()) ** 2
+
+    simplified = idenso.simplify_pychete_field_strength_metrics(expr)
+
+    assert _same(simplified, expected)
 
 
 def test_idenso_pipeline_simplifies_cde_field_strength_metric_trace() -> None:

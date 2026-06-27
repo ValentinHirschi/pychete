@@ -7985,32 +7985,18 @@ def _simplify_result_field_strength_metrics(result: MatchingResult) -> MatchingR
 def _decode_result_native_color_wrappers(theory: Theory, result: MatchingResult) -> MatchingResult:
     from .backends import idenso as idenso_backend
 
-    decoded_off_shell = idenso_backend.decode_native_color_wrappers(theory, result.off_shell_eft_lagrangian)
-    decoded_off_shell = idenso_backend.simplify_su2_field_strength_generator_bilinears(theory, decoded_off_shell)
-    decoded_off_shell = idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(theory, decoded_off_shell)
-    decoded_on_shell = idenso_backend.decode_native_color_wrappers(theory, result.on_shell_eft_lagrangian)
-    decoded_on_shell = idenso_backend.simplify_su2_field_strength_generator_bilinears(theory, decoded_on_shell)
-    decoded_on_shell = idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(theory, decoded_on_shell)
+    def decode_and_simplify(expression: Expression) -> Expression:
+        decoded = idenso_backend.decode_native_color_wrappers(theory, expression)
+        decoded = idenso_backend.simplify_pychete_field_strength_metrics(decoded)
+        decoded = idenso_backend.simplify_su2_field_strength_generator_bilinears(theory, decoded)
+        return idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(theory, decoded)
+
+    decoded_off_shell = decode_and_simplify(result.off_shell_eft_lagrangian)
+    decoded_on_shell = decode_and_simplify(result.on_shell_eft_lagrangian)
     decoded_matching_conditions = {
-        name: idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(
-            theory,
-            idenso_backend.simplify_su2_field_strength_generator_bilinears(
-                theory,
-                idenso_backend.decode_native_color_wrappers(theory, expression),
-            ),
-        )
-        for name, expression in result.matching_conditions.items()
+        name: decode_and_simplify(expression) for name, expression in result.matching_conditions.items()
     }
-    decoded_supertraces = {
-        name: idenso_backend.simplify_su2_u1_field_strength_generator_bilinears(
-            theory,
-            idenso_backend.simplify_su2_field_strength_generator_bilinears(
-                theory,
-                idenso_backend.decode_native_color_wrappers(theory, expression),
-            ),
-        )
-        for name, expression in result.supertraces.items()
-    }
+    decoded_supertraces = {name: decode_and_simplify(expression) for name, expression in result.supertraces.items()}
     return replace(
         result,
         off_shell_eft_lagrangian=decoded_off_shell,
@@ -8020,6 +8006,7 @@ def _decode_result_native_color_wrappers(theory: Theory, result: MatchingResult)
         metadata={
             **result.metadata,
             "native_color_wrappers_decoded": True,
+            "post_decode_field_strength_metric_simplified": True,
             "su2_field_strength_generator_bilinears_simplified": True,
             "su2_u1_field_strength_generator_bilinears_simplified": True,
         },

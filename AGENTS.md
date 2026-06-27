@@ -619,6 +619,15 @@ Symbolica's `Expression.I` and `Expression.PI`; pychete-owned analytic
 evaluators should use those native Symbolica constants directly. Do not let
 native vakint tensor, derivative, or number-constant wrappers leak into
 matching-condition projection or public EFT Lagrangians.
+Generated Wilson-line/CDE Lorentz index labels are pychete dummy-index data,
+not vakint-owned public symbols. When vakint or native tensor reduction emits
+labels such as `vakint::wilson_line_*`, `vakint::cde_*`, or metric aliases
+such as `index_wilson_line_*`/`index_cde_*`, normalize them to one pychete
+generated namespace before idenso metric contraction or matching projection.
+The normalization belongs in backend decode/simplification adapters through
+Symbolica replacement rules; do not preserve `vakint::wilson_line_*` labels in
+public pychete expressions, and do not compensate later with Wilson-specific
+projection hacks.
 Vakint topology expressions must collect propagators with identical
 edge/momentum/mass signatures into a single `vakint::prop(...)` with the summed
 power. Use `pychete.backends.vakint.collect_identical_propagators(...)` rather

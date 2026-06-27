@@ -566,7 +566,8 @@ class _DecodeContext:
     def decode_index_label(self, label: Expression) -> Expression:
         if is_head(label, symbol("dummy_index")) and len(label) == 1:
             return s.dummy_index(label[0])
-        return self.decode_payload(label)
+        decoded = self.decode_payload(label)
+        return _decode_generated_backend_index_alias(decoded) or decoded
 
     def decode_payload(self, expr: Expression) -> Expression:
         safe_loop_index = _decode_backend_safe_loop_momentum_index(expr)
@@ -689,6 +690,21 @@ def _backend_safe_loop_momentum_index(index: Expression) -> Expression:
 
 def _decode_backend_safe_loop_momentum_index(expr: Expression) -> Expression | None:
     return _LOOP_MOMENTUM_INDEX_BY_SAFE_SYMBOL.get(_safe_symbol_name(expr))
+
+
+def _decode_generated_backend_index_alias(expr: Expression) -> Expression | None:
+    try:
+        full_name = expr.get_name()
+    except TypeError:
+        return None
+    local_name = full_name.rsplit("::", maxsplit=1)[-1]
+    for prefix in ("index_wilson_line_", "index_cde_"):
+        if local_name.startswith(prefix):
+            return Expression.symbol(f"pychete::{local_name.removeprefix('index_')}")
+    for prefix in ("wilson_line_", "cde_"):
+        if local_name.startswith(prefix):
+            return Expression.symbol(f"pychete::{local_name}")
+    return None
 
 
 def _safe_symbol_name(expr: Expression) -> str:

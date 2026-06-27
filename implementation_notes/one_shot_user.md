@@ -358,3 +358,13 @@ without Warsaw-specific core assumptions.
   now keeps field-strength-bearing Singlet `cHW` source terms even with
   pychete colour simplification enabled. Exact public projected `cHW` parity
   remains a later projection/evaluation slice.
+- Latest status clarification: the current active Matchete integration target
+  is `Singlet_Scalar_Extension`, specifically the SMEFT `cHW` one-loop matching
+  condition. This is not yet a full passing Matchete integration test. The
+  latest backend work normalizes generated Wilson-line/CDE Lorentz index
+  aliases to a pychete namespace before idenso field-strength metric
+  contraction, making the selected `hScalar` Wilson-line contribution project
+  nonzero. The projected partial contribution is still not the Matchete
+  reference `hbar*A^2*gL^2/(12*M^4)`, so the next work is mixed scalar trace
+  source coverage, finite/pole convention cleanup, and target-local
+  performance for those mixed traces.

@@ -926,6 +926,26 @@
   `eft_order=6` returned in about 0.07 seconds with a zero coefficient.
   This confirms the performance guard prevents the previous memory-limit kill,
   while leaving exact `cHW` parity as future work.
+- The current Singlet `cHW` backend-normalization follow-up found the concrete
+  reason the order-four `hScalar` source stayed trapped behind CG tensors:
+  native tensor reduction emitted field-strength Lorentz slots as
+  `vakint::wilson_line_*`, while metric tensors carried theory-owned
+  `index_wilson_line_*` aliases. `decode_pychete_namespace(...)` and
+  `idenso.simplify_pychete_field_strength_metrics(...)` now normalize generated
+  Wilson-line/CDE Lorentz labels to a pychete-generated namespace before
+  idenso metric contractions. This is a backend-boundary rule, not a
+  Wilson-specific projection workaround.
+- After that alias normalization, the selected Singlet `hScalar` order-four
+  Wilson-line probe shrank from 556 source nodes / 263 CG-bearing terms to 373
+  source nodes / 127 CG-bearing terms, and projected `cHW` became nonzero:
+  `-I*gL^4*kappa/(64*pi^2*M^2) - I*gL^4*kappa/(48*pi^2*(-2+epsilon)*M^2)`.
+  This is still not the Matchete reference
+  `hbar*A^2*gL^2/(12*M^4)`; it is only a partial `hScalar` contribution and
+  exposes the next source-coverage/evaluation gap. A combined exploratory
+  probe over `hScalar-lScalar`, `hScalar-hScalar`, and `hScalar` was stopped
+  after roughly two minutes without first-trace output, so mixed-trace probes
+  must be split and made more target-local before they become routine
+  validation checks.
 - 30 GiB memory-watch typing gate after the NCM/projection guard slice:
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
   passed.
@@ -965,9 +985,12 @@
 - Explicit Wilson-line order-four `hScalar` generation now produces
   field-strength-bearing terms for the Singlet `cHW` target subset, but the
   final projected public `cHW` coefficient comparison is not yet reproduced.
-  The remaining blocker is projection/evaluation scalability and subsequent
-  basis/on-shell reduction, not the absence of Wilson-line field-strength
-  source terms.
+  Backend normalization now exposes a nonzero partial `hScalar` contribution,
+  but the reference `A^2*gL^2/M^4` coefficient needs the mixed scalar
+  Wilson-line source families, finite/pole convention cleanup, and subsequent
+  basis/on-shell reduction. The remaining blocker is source coverage plus
+  target-local mixed-trace performance, not the absence of Wilson-line
+  field-strength source terms.
 
 ## Next Work
 

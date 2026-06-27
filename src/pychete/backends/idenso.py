@@ -241,7 +241,9 @@ def simplify_pychete_loop_momentum_metrics(expr: Expression) -> Expression:
 def simplify_pychete_field_strength_metrics(expr: Expression) -> Expression:
     """Simplify metric contractions and Lorentz antisymmetry of field strengths."""
 
-    result = expr.replace_multiple(_field_strength_metric_trace_replacements(), repeat=True)
+    result = expr.replace_multiple(_field_strength_lorentz_index_alias_replacements())
+    result = result.replace_multiple(_field_strength_metric_index_alias_replacements())
+    result = result.replace_multiple(_field_strength_metric_trace_replacements(), repeat=True)
     result = result.replace_multiple(_field_strength_metric_slot_replacements(), repeat=True)
     return result.replace_multiple(_field_strength_lorentz_antisymmetry_replacements()).expand()
 
@@ -378,6 +380,86 @@ def _loop_momentum_metric_replacements() -> tuple[Replacement, ...]:
             )
         )
     return tuple(replacements)
+
+
+def _normalize_generated_lorentz_index(index: Expression) -> Expression:
+    if not is_head(index, s.Index) or len(index) != 2 or not bool(index[1] == s.Lorentz):
+        return index
+    normalized = _generated_backend_index_alias(index[0])
+    if normalized is None:
+        return index
+    return s.Index(normalized, s.Lorentz)
+
+
+@cache
+def _field_strength_lorentz_index_alias_replacements() -> tuple[Replacement, ...]:
+    label = s.head("field_strength_lorentz_alias_label_")
+    indices = s.head("field_strength_lorentz_alias_indices_")
+    derivatives = s.head("field_strength_lorentz_alias_derivatives_")
+    first = s.head("field_strength_lorentz_alias_first_")
+    second = s.head("field_strength_lorentz_alias_second_")
+    strength = s.FieldStrength(label, s.List(first, second), indices, derivatives)
+
+    def normalize(match: dict[Expression, Expression]) -> Expression:
+        first_index = _normalize_generated_lorentz_index(match[first])
+        second_index = _normalize_generated_lorentz_index(match[second])
+        return s.FieldStrength(match[label], s.List(first_index, second_index), match[indices], match[derivatives])
+
+    return (Replacement(strength, normalize, label.req_tag(SymbolRole.FIELD.value), rhs_cache_size=0),)
+
+
+@cache
+def _field_strength_metric_index_alias_replacements() -> tuple[Replacement, ...]:
+    label = s.head("field_strength_metric_alias_label_")
+    indices = s.head("field_strength_metric_alias_indices_")
+    derivatives = s.head("field_strength_metric_alias_derivatives_")
+    first = s.head("field_strength_metric_alias_first_")
+    second = s.head("field_strength_metric_alias_second_")
+    metric_left = s.head("field_strength_metric_alias_metric_left_")
+    metric_right = s.head("field_strength_metric_alias_metric_right_")
+    strength = s.FieldStrength(label, s.List(first, second), indices, derivatives)
+
+    def normalize_metric(
+        match: dict[Expression, Expression],
+        *,
+        metric_head: Expression,
+    ) -> Expression:
+        left = _normalize_generated_lorentz_index(match[metric_left])
+        right = _normalize_generated_lorentz_index(match[metric_right])
+        return metric_head(left, right) * strength.replace_wildcards(match)
+
+    def normalize_metric_for(metric_head: Expression) -> Callable[[dict[Expression, Expression]], Expression]:
+        def normalize(match: dict[Expression, Expression]) -> Expression:
+            return normalize_metric(match, metric_head=metric_head)
+
+        return normalize
+
+    replacements: list[Replacement] = []
+    for metric_head in (s.Metric, s.Delta):
+        replacements.append(
+            Replacement(
+                metric_head(metric_left, metric_right) * strength,
+                normalize_metric_for(metric_head),
+                label.req_tag(SymbolRole.FIELD.value),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _generated_backend_index_alias(label: Expression) -> Expression | None:
+    try:
+        full_name = label.get_name()
+    except TypeError:
+        return None
+    local_name = full_name.rsplit("::", maxsplit=1)[-1]
+    for prefix in ("index_wilson_line_", "index_cde_"):
+        if local_name.startswith(prefix):
+            return Expression.symbol(f"pychete::{local_name.removeprefix('index_')}")
+    for prefix in ("wilson_line_", "cde_"):
+        if local_name.startswith(prefix):
+            return Expression.symbol(f"pychete::{local_name}")
+    return None
 
 
 @cache
@@ -1396,27 +1478,36 @@ def _su2_field_strength_generator_bilinear_replacements(
     right_strength = s.FieldStrength(vector_label, lorentz_indices, s.List(adjoint_right), s.List())
     left_generator = s.CG(generator_label, s.List(adjoint_left, field_index, internal_dual_index))
     right_generator = s.CG(generator_label, s.List(adjoint_right, internal_index, bar_dual_index))
-    pattern = field * barred_field * left_generator * right_generator * left_strength * right_strength
+    reversed_left_generator = s.CG(generator_label, s.List(adjoint_left, internal_index, bar_dual_index))
+    reversed_right_generator = s.CG(generator_label, s.List(adjoint_right, field_index, internal_dual_index))
+    patterns = (
+        field * barred_field * left_generator * right_generator * left_strength * right_strength,
+        field * barred_field * reversed_left_generator * reversed_right_generator * left_strength * right_strength,
+    )
 
-    def project(match: dict[Expression, Expression], *, pattern: Expression = pattern) -> Expression:
-        matched = pattern.replace_wildcards(match)
-        label = match[field_label]
-        if not _is_single_fund_scalar_field_label(theory, label, fund):
-            return matched
-        singlet_index = s.Index(match[field_index_label], fund)
-        adjoint_index = s.Index(match[adjoint_left_label], adj)
-        singlet_field = s.Field(label, s.Scalar, s.List(singlet_index), s.List())
-        singlet_bar = s.Bar(s.Field(label, s.Scalar, s.List(singlet_index), s.List()))
-        singlet_strength = s.FieldStrength(vector_label, match[lorentz_indices], s.List(adjoint_index), s.List())
-        return (coefficient * singlet_field * singlet_bar * singlet_strength * singlet_strength).expand()
+    def project_for_pattern(pattern: Expression) -> Callable[[dict[Expression, Expression]], Expression]:
+        def project(match: dict[Expression, Expression]) -> Expression:
+            matched = pattern.replace_wildcards(match)
+            label = match[field_label]
+            if not _is_single_fund_scalar_field_label(theory, label, fund):
+                return matched
+            singlet_index = s.Index(match[field_index_label], fund)
+            adjoint_index = s.Index(match[adjoint_left_label], adj)
+            singlet_field = s.Field(label, s.Scalar, s.List(singlet_index), s.List())
+            singlet_bar = s.Bar(s.Field(label, s.Scalar, s.List(singlet_index), s.List()))
+            singlet_strength = s.FieldStrength(vector_label, match[lorentz_indices], s.List(adjoint_index), s.List())
+            return (coefficient * singlet_field * singlet_bar * singlet_strength * singlet_strength).expand()
 
-    return (
+        return project
+
+    return tuple(
         Replacement(
             pattern,
-            project,
+            project_for_pattern(pattern),
             field_label.req_tag(SymbolRole.FIELD.value),
             rhs_cache_size=0,
-        ),
+        )
+        for pattern in patterns
     )
 
 
