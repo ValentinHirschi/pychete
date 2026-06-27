@@ -734,6 +734,14 @@ The normalization belongs in backend decode/simplification adapters through
 Symbolica replacement rules; do not preserve `vakint::wilson_line_*` labels in
 public pychete expressions, and do not compensate later with Wilson-specific
 projection hacks.
+Before any tensor-reduced Wilson-line expression is handed back to
+`Theory`-owned derivative routines, generated `pychete::wilson_line_*` and
+`pychete::cde_*` Lorentz labels must be restored to theory-owned
+`Theory.symbol(..., role=SymbolRole.INDEX)` labels. Use this restored form for
+`Theory._validate_registered_expression(...)`,
+`emit_covariant_derivative_commutators(...)`, and
+`expand_covariant_derivative_commutators(...)`; otherwise backend-generated
+dummy labels can trip the structural symbol-data guarantees.
 Vakint topology expressions must collect propagators with identical
 edge/momentum/mass signatures into a single `vakint::prop(...)` with the summed
 power. Use `pychete.backends.vakint.collect_identical_propagators(...)` rather

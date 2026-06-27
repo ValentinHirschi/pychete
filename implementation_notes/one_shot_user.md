@@ -554,3 +554,14 @@ without Warsaw-specific core assumptions.
   required stage is a Matchete-style loop-symmetric multi-commutator lowering
   tied to tensor-reduced/symmetric loop-momentum structures, not another
   projection or heavy-scalar-substitution fix.
+- Latest post-tensor Wilson-line cleanup update: pychete now contracts
+  vakint-generated `Metric`/`Delta` tensors into derivative slots on
+  `Field(...)` and `FieldStrength(...)` atoms before internal scalar integral
+  evaluation, and it restores generated Wilson-line/CDE Lorentz labels to
+  theory-owned index symbols before calling `Theory` derivative routines.
+  Focused backend and Wilson-line tests pass, and the guarded Singlet `cHW`
+  diagnostic now runs through this stage without generated-index validation
+  errors. The diagnostic still projects `cHW = 0`, so the first full Matchete
+  one-loop integration test remains unreproduced; the blocker is now the
+  generic loop-symmetric double-commutator/basis-identity reduction that turns
+  the pure `A^2` four-derivative Higgs bilinear into `H^\dagger H W^2`.

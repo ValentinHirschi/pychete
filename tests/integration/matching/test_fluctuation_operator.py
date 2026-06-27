@@ -2083,6 +2083,34 @@ def test_wilson_line_expansion_drops_odd_loop_rank_after_open_derivatives() -> N
     assert kernels == {}
 
 
+def test_wilson_line_tensor_reduced_postprocess_contracts_derivative_metrics() -> None:
+    theory = Theory("one_loop_setup_wilson_line_tensor_reduced_derivatives")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    higgs = theory.define_field(
+        "H",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        mass=0,
+    )
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+    source = s.Metric(a, c) * higgs() * s.Bar(higgs(derivatives=[c, b, a]))
+
+    processed = matching_module._postprocess_wilson_line_tensor_reduced_expression(
+        theory,
+        source,
+        emit_covariant_derivative_commutators=True,
+        emit_covariant_derivative_commutator_passes=2,
+        expand_covariant_derivative_commutators=True,
+        simplify_pychete_color_algebra=False,
+    )
+
+    rendered = canonical_string(processed)
+    assert "pychete::Metric" not in rendered
+    assert "pychete::FieldStrength" in rendered
+
+
 def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:
     theory = Theory("one_loop_match_wilson_line_expansion")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

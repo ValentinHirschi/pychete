@@ -1363,11 +1363,45 @@
   `EvaluateSymmetricLorentzInds`/`CommuteCDs` behavior, not target filtering,
   post-result heavy-scalar substitution, additive `NCM` linearization, or a
   simple tensor-reduction ordering change.
+- Current post-tensor Wilson-line cleanup slice: vakint tensor reduction now
+  has a pychete-side cleanup boundary for generated Wilson-line expressions
+  before internal scalar vacuum-integral evaluation. The idenso bridge gained
+  `simplify_pychete_field_derivative_metrics(...)`, a Symbolica
+  replacement-rule pass that contracts `Metric`/`Delta` factors into
+  derivative slots of `Field(...)`, `Bar(Field(...))`, `FieldStrength(...)`,
+  and `Bar(FieldStrength(...))` atoms. The matching boundary then restores
+  generated `pychete::wilson_line_*`/`pychete::cde_*` Lorentz labels to their
+  theory-owned `Index(...)` symbols before calling `Theory` derivative
+  routines, avoiding unregistered-symbol failures after vakint namespace
+  decoding.
+- The Wilson-line internal backend now applies that post-tensor cleanup after
+  `vakint.tensor_reduce(...)` and `vakint.decode_pychete_namespace(...)`,
+  then reuses the existing bounded covariant-derivative commutator emission,
+  commutator expansion, explicit `CD(...)` expansion, field-strength/group
+  simplification, and optional colour simplification. Focused validation
+  passed with `pytest tests/unit/backends/test_idenso_backend.py -q`
+  (`35 passed`), `pytest
+  tests/integration/matching/test_fluctuation_operator.py -k "wilson_line and
+  not slow" -q` (`17 passed, 87 deselected`), and `git diff --check`.
+  A guarded Singlet `cHW` diagnostic now completes without the previous
+  generated-index validation error, but still projects `cHW = 0`.
+- Updated first-milestone frontier: the new post-tensor cleanup is a necessary
+  prerequisite, not the missing physics reduction. It can remove tensor
+  metrics from derivative slots and expose single commutator field-strength
+  insertions, but the Singlet `cHW` reference requires a genuine
+  loop-symmetric double-commutator/basis-identity reduction of the pure `A^2`
+  four-derivative Higgs bilinear into `H^\dagger H W^2`. No full Matchete
+  one-loop integration test is reproduced yet.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
+  - implement the generic loop-symmetric double-commutator/basis-identity
+    reduction needed for the pure `A^2` `hScalar-lScalar` four-derivative
+    Higgs bilinear, using Symbolica replacement rules and idenso-backed
+    Lorentz/field-strength/group simplification rather than target-specific
+    `cHW` patching;
   - Wilson-line source/simplification work for Singlet `cHW`: inspect the
     11 nonzero entrywise finite sources that now project boundedly to zero and
     identify which generated structures fail to reduce to the registered

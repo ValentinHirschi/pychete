@@ -33,6 +33,7 @@ from .expr import (
 from .functional import (
     derive_eom,
     eom_replacement_rules_for_expression,
+    expand_cd_operators,
     partial_functional_derivative,
     simplify_trivial_cd_operators,
 )
@@ -2191,6 +2192,10 @@ class OneLoopSetup:
             _flatten_wilson_line_terms(grouped_terms),
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
             combine_terms=combine_terms,
@@ -2367,6 +2372,10 @@ class OneLoopSetup:
             grouped_terms,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
         )
@@ -2507,6 +2516,10 @@ class OneLoopSetup:
             grouped_terms,
             tensor_reduce=tensor_reduce,
             tensor_reduce_engine=tensor_reduce_engine,
+            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             epsilon=epsilon,
             mu_r_squared=mu_r_squared,
         )
@@ -6679,6 +6692,77 @@ def _postprocess_wilson_line_numerator(
     return scalarize_commutative_ncm_chains(simplified)
 
 
+def _postprocess_wilson_line_tensor_reduced_expression(
+    theory: Theory,
+    expr: Expression,
+    *,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
+) -> Expression:
+    """Normalize tensor-reduced Wilson-line expressions before scalar evaluation."""
+
+    from .backends import idenso
+
+    out = idenso.simplify_pychete_field_derivative_metrics(expr)
+    out = _restore_theory_owned_generated_lorentz_indices(theory, out)
+    if emit_covariant_derivative_commutators or expand_covariant_derivative_commutators:
+        max_cycles = max(1, min(8, emit_covariant_derivative_commutator_passes + 1))
+        for _ in range(max_cycles):
+            updated = out
+            if emit_covariant_derivative_commutators:
+                updated = theory.emit_covariant_derivative_commutators(
+                    updated,
+                    max_passes=emit_covariant_derivative_commutator_passes,
+                )
+            if expand_covariant_derivative_commutators:
+                updated = theory.expand_covariant_derivative_commutators(
+                    updated,
+                    include_gauge_coupling=False,
+                )
+                updated = expand_cd_operators(updated)
+            updated = simplify_trivial_cd_operators(updated)
+            if bool(updated == out):
+                out = updated
+                break
+            out = updated
+    out = simplify_trivial_cd_operators(out)
+    out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
+    if simplify_pychete_color_algebra:
+        out = idenso.simplify_pychete_color_algebra(theory, out)
+    return scalarize_commutative_ncm_chains(out)
+
+
+def _restore_theory_owned_generated_lorentz_indices(theory: Theory, expr: Expression) -> Expression:
+    label = s.head("generated_lorentz_label_")
+    index = s.Index(label, s.Lorentz)
+
+    def replace_index(match: dict[Expression, Expression]) -> Expression:
+        replacement = _theory_owned_generated_lorentz_index(theory, match[label])
+        return index.replace_wildcards(match) if replacement is None else replacement
+
+    return expr.replace(index, replace_index, rhs_cache_size=0).expand()
+
+
+def _theory_owned_generated_lorentz_index(theory: Theory, label: Expression) -> Expression | None:
+    try:
+        full_name = label.get_name()
+    except TypeError:
+        return None
+    if not full_name.startswith("pychete::"):
+        return None
+    local_name = full_name.rsplit("::", maxsplit=1)[-1]
+    for prefix in ("wilson_line_", "cde_"):
+        if local_name.startswith(prefix):
+            return theory.index(theory.symbol(local_name, role=SymbolRole.INDEX), s.Lorentz)
+    for prefix in ("index_wilson_line_", "index_cde_"):
+        if local_name.startswith(prefix):
+            label_name = local_name.removeprefix("index_")
+            return theory.index(theory.symbol(label_name, role=SymbolRole.INDEX), s.Lorentz)
+    return None
+
+
 def _contains_registered_fermion_field(expr: Expression) -> bool:
     label = s.head("fermion_field_label_")
     indices = s.head("fermion_field_indices_")
@@ -7207,6 +7291,10 @@ def _wilson_line_internal_integral_sum_from_terms(
     *,
     tensor_reduce: bool,
     tensor_reduce_engine: Any | None,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
     epsilon: Expression | None,
     mu_r_squared: Expression | None,
     combine_terms: bool,
@@ -7216,6 +7304,10 @@ def _wilson_line_internal_integral_sum_from_terms(
         terms,
         tensor_reduce=tensor_reduce,
         tensor_reduce_engine=tensor_reduce_engine,
+        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
         epsilon=epsilon,
         mu_r_squared=mu_r_squared,
     )
@@ -7228,6 +7320,10 @@ def _wilson_line_internal_evaluated_terms_from_terms(
     *,
     tensor_reduce: bool,
     tensor_reduce_engine: Any | None,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
     epsilon: Expression | None,
     mu_r_squared: Expression | None,
 ) -> tuple[Expression, ...]:
@@ -7237,6 +7333,10 @@ def _wilson_line_internal_evaluated_terms_from_terms(
         grouped_terms,
         tensor_reduce=tensor_reduce,
         tensor_reduce_engine=tensor_reduce_engine,
+        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
         epsilon=epsilon,
         mu_r_squared=mu_r_squared,
     )
@@ -7249,6 +7349,10 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
     *,
     tensor_reduce: bool,
     tensor_reduce_engine: Any | None,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
     epsilon: Expression | None,
     mu_r_squared: Expression | None,
 ) -> dict[str, tuple[Expression, ...]]:
@@ -7267,6 +7371,18 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
                 if tensor_reduce:
                     raw = vakint.tensor_reduce(raw, engine=tensor_reduce_engine)
                     raw = vakint.decode_pychete_namespace(theory, raw)
+                    raw = _postprocess_wilson_line_tensor_reduced_expression(
+                        theory,
+                        raw,
+                        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                        emit_covariant_derivative_commutator_passes=(
+                            emit_covariant_derivative_commutator_passes
+                        ),
+                        expand_covariant_derivative_commutators=(
+                            expand_covariant_derivative_commutators
+                        ),
+                        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                    )
                 evaluated_terms.append(
                     vacuum_integrals.evaluate_one_loop_vakint_expression(
                         raw,

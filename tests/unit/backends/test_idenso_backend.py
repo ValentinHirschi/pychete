@@ -490,6 +490,19 @@ def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
     )
 
 
+def test_idenso_bridge_contracts_pychete_metrics_into_field_derivative_slots() -> None:
+    theory = Theory("idenso_field_derivative_metrics")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    mu = s.Index(S(f"{theory.name}::index_wilson_line_mu"), s.Lorentz)
+    nu = s.Index(S(f"{theory.name}::index_wilson_line_nu"), s.Lorentz)
+    rho = theory.index("rho")
+    expr = s.Metric(mu, nu) * s.Bar(phi(derivatives=[mu, rho]))
+
+    simplified = idenso.simplify_pychete_field_derivative_metrics(expr)
+
+    assert _same(simplified, s.Bar(phi(derivatives=[nu, rho])))
+
+
 def test_idenso_bridge_simplifies_pychete_field_strength_metrics() -> None:
     theory = Theory("idenso_field_strength_metrics")
     vector = theory.define_field("V", s.Vector, self_conjugate=True, mass=0)

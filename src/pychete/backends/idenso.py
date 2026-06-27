@@ -10,7 +10,18 @@ from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .common import import_backend
-from ..expr import args, as_int, cg_tensor_pattern, factors, is_head, list_items, product_expr, sum_expr
+from ..expr import (
+    args,
+    as_int,
+    cg_tensor_pattern,
+    factors,
+    field_strength_with_derivatives,
+    field_with_derivatives,
+    is_head,
+    list_items,
+    product_expr,
+    sum_expr,
+)
 from ..symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, symbol_data
 from ..theory_metadata import GroupKind
 
@@ -349,6 +360,26 @@ def simplify_pychete_field_strength_metrics(expr: Expression) -> Expression:
     return result.replace_multiple(_field_strength_lorentz_antisymmetry_replacements()).expand()
 
 
+def simplify_pychete_field_derivative_metrics(expr: Expression) -> Expression:
+    """Contract pychete metrics into field and field-strength derivative slots.
+
+    Vakint tensor reduction emits metric tensors for loop-momentum numerators.
+    In Wilson-line expressions those metrics can contract covariant-derivative
+    slots on ``Field``/``FieldStrength`` atoms. Keep this normalization as a
+    Symbolica replacement pass so only local metric-slot contractions are
+    performed here; commutator expansion remains owned by ``Theory``.
+    """
+
+    out = expr
+    replacements = _field_derivative_metric_slot_replacements()
+    for _ in range(16):
+        updated = out.replace_multiple(replacements).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
+
+
 def simplify_su2_field_strength_generator_bilinears(theory: Any, expr: Expression) -> Expression:
     """Project symmetric SU(2) field-strength generator bilinears to singlets.
 
@@ -427,7 +458,8 @@ def simplify_pychete_field_strength_group_algebra(theory: Any, expr: Expression)
     replacement rules backed by idenso colour traces.
     """
 
-    result = contract_pychete_deltas_into_cg_tensors(expr)
+    result = simplify_pychete_field_derivative_metrics(expr)
+    result = contract_pychete_deltas_into_cg_tensors(result)
     result = simplify_pychete_field_strength_metrics(result)
     result = simplify_su2_field_strength_generator_bilinears(theory, result)
     return simplify_su2_u1_field_strength_generator_bilinears(theory, result)
@@ -491,9 +523,11 @@ def simplify_index_algebra(
     if color:
         result = simplify_color(result)
     if metrics:
+        result = simplify_pychete_field_derivative_metrics(result)
         result = simplify_pychete_loop_momentum_metrics(result)
         result = simplify_pychete_field_strength_metrics(result)
         result = simplify_metrics(result)
+        result = simplify_pychete_field_derivative_metrics(result)
         result = simplify_pychete_loop_momentum_metrics(result)
         result = simplify_pychete_field_strength_metrics(result)
     if dots:
@@ -692,6 +726,139 @@ def _field_strength_lorentz_antisymmetry_replacements() -> tuple[Replacement, ..
             rhs_cache_size=0,
         ),
     )
+
+
+@cache
+def _field_derivative_metric_slot_replacements() -> tuple[Replacement, ...]:
+    label = s.head("field_derivative_metric_label_")
+    type_expr = s.head("field_derivative_metric_type_")
+    indices = s.head("field_derivative_metric_indices_")
+    strength_lorentz = s.head("field_derivative_metric_strength_lorentz_")
+    metric_left = s.head("field_derivative_metric_left_")
+    metric_right = s.head("field_derivative_metric_right_")
+    label_is_field = label.req_tag(SymbolRole.FIELD.value)
+
+    def contract_field_like(
+        match: dict[Expression, Expression],
+        *,
+        body: Expression,
+        derivative_wildcards: tuple[Expression, ...],
+        metric_head: Expression,
+        constructor: Callable[[Expression, tuple[Expression, ...]], Expression],
+    ) -> Expression:
+        updated_derivatives = _contract_metric_into_derivative_slots(
+            tuple(match[wildcard] for wildcard in derivative_wildcards),
+            match[metric_left],
+            match[metric_right],
+        )
+        if updated_derivatives is None:
+            return metric_head(match[metric_left], match[metric_right]) * body.replace_wildcards(match)
+        return constructor(body.replace_wildcards(match), updated_derivatives)
+
+    def bar_field_with_derivatives(matched: Expression, updated: tuple[Expression, ...]) -> Expression:
+        return s.Bar(field_with_derivatives(matched, updated))
+
+    def bar_strength_with_derivatives(matched: Expression, updated: tuple[Expression, ...]) -> Expression:
+        return s.Bar(field_strength_with_derivatives(matched, updated))
+
+    def make_contract_replacement(
+        *,
+        body: Expression,
+        derivative_wildcards: tuple[Expression, ...],
+        metric_head: Expression,
+        constructor: Callable[[Expression, tuple[Expression, ...]], Expression],
+    ) -> Callable[[dict[Expression, Expression]], Expression]:
+        def replacement(match: dict[Expression, Expression]) -> Expression:
+            return contract_field_like(
+                match,
+                body=body,
+                derivative_wildcards=derivative_wildcards,
+                metric_head=metric_head,
+                constructor=constructor,
+            )
+
+        return replacement
+
+    replacements: list[Replacement] = []
+    for arity in range(1, 9):
+        derivative_wildcards = tuple(
+            s.head(f"field_derivative_metric_derivative_{arity}_{index}_") for index in range(arity)
+        )
+        field = s.Field(label, type_expr, indices, s.List(*derivative_wildcards))
+        strength = s.FieldStrength(label, strength_lorentz, indices, s.List(*derivative_wildcards))
+        for metric_head in (s.Metric, s.Delta):
+            metric = metric_head(metric_left, metric_right)
+            replacements.extend(
+                (
+                    Replacement(
+                        metric * field,
+                        make_contract_replacement(
+                            body=field,
+                            derivative_wildcards=derivative_wildcards,
+                            metric_head=metric_head,
+                            constructor=field_with_derivatives,
+                        ),
+                        label_is_field,
+                        rhs_cache_size=0,
+                    ),
+                    Replacement(
+                        metric * s.Bar(field),
+                        make_contract_replacement(
+                            body=field,
+                            derivative_wildcards=derivative_wildcards,
+                            metric_head=metric_head,
+                            constructor=bar_field_with_derivatives,
+                        ),
+                        label_is_field,
+                        rhs_cache_size=0,
+                    ),
+                    Replacement(
+                        metric * strength,
+                        make_contract_replacement(
+                            body=strength,
+                            derivative_wildcards=derivative_wildcards,
+                            metric_head=metric_head,
+                            constructor=field_strength_with_derivatives,
+                        ),
+                        label_is_field,
+                        rhs_cache_size=0,
+                    ),
+                    Replacement(
+                        metric * s.Bar(strength),
+                        make_contract_replacement(
+                            body=strength,
+                            derivative_wildcards=derivative_wildcards,
+                            metric_head=metric_head,
+                            constructor=bar_strength_with_derivatives,
+                        ),
+                        label_is_field,
+                        rhs_cache_size=0,
+                    ),
+                )
+            )
+    return tuple(replacements)
+
+
+def _contract_metric_into_derivative_slots(
+    derivatives: tuple[Expression, ...],
+    metric_left: Expression,
+    metric_right: Expression,
+) -> tuple[Expression, ...] | None:
+    derivative_items = tuple(derivatives)
+    normalized_items = tuple(_normalize_generated_lorentz_index(index) for index in derivative_items)
+    left = _normalize_generated_lorentz_index(metric_left)
+    right = _normalize_generated_lorentz_index(metric_right)
+    if any(bool(index == left) for index in normalized_items):
+        return tuple(
+            metric_right if bool(index == left) else original
+            for original, index in zip(derivative_items, normalized_items, strict=True)
+        )
+    if any(bool(index == right) for index in normalized_items):
+        return tuple(
+            metric_left if bool(index == right) else original
+            for original, index in zip(derivative_items, normalized_items, strict=True)
+        )
+    return None
 
 
 def _projector_power_replacement(
@@ -1855,6 +2022,7 @@ __all__ = [
     "simplify_pychete_color_algebra",
     "simplify_pychete_dirac_algebra",
     "trace_pychete_closed_dirac_chains",
+    "simplify_pychete_field_derivative_metrics",
     "simplify_pychete_field_strength_metrics",
     "simplify_pychete_open_dirac_chains",
     "simplify_pychete_dirac_projectors",
