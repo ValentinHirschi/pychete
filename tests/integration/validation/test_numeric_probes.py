@@ -1107,6 +1107,89 @@ def test_matching_result_projection_skips_factor_fallback_for_large_expression_s
     assert_expr_equal(projected["h6"], Expression.num(0))
 
 
+def test_matching_result_projection_skips_collect_fallback_for_large_expression_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("condition_projection_skip_large_byte_collect")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    bilinear = s.Bar(higgs(i)) * higgs(i)
+    target = bilinear**3
+    source = S("condition_projection_skip_large_byte_collect") * bilinear**2
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+
+    def fail_collected_source(
+        self: object,
+        source: Expression,
+    ) -> Expression:
+        raise AssertionError("large-byte filtered projection sources should not be globally collected")
+
+    monkeypatch.setattr(matching_results_module, "_MAX_PROJECTION_COLLECT_TERMS", 1_000)
+    monkeypatch.setattr(matching_results_module, "_MAX_PROJECTION_COLLECT_BYTES", 1)
+    monkeypatch.setattr(
+        matching_results_module._ProjectionCoefficientExtractor,
+        "_collected_source",
+        fail_collected_source,
+    )
+
+    projected = result.project_matching_conditions({"h6": target}, expand_source=False)
+
+    assert_expr_equal(projected["h6"], Expression.num(0))
+
+
+def test_matching_result_projection_skips_generic_fallback_for_large_canonized_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("condition_projection_skip_large_canonized_generic")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.dummy_index(1, fund)
+    bilinear = s.Bar(higgs(i)) * higgs(i)
+    target = bilinear**3
+    source = S("condition_projection_skip_large_canonized_generic") * bilinear**2
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+
+    def fail_generic_projection(
+        extractor: object,
+        projection_expression: Expression,
+        ibp_aliases: object,
+    ) -> Expression:
+        raise AssertionError("large tensor-canonized projection sources should skip the generic fallback")
+
+    def fail_termwise_exact_projection(
+        extractor: object,
+        projection_expression: Expression,
+        ibp_aliases: object,
+    ) -> Expression:
+        raise AssertionError("large tensor-canonized projection sources should skip termwise exact fallback")
+
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_GENERIC_TERMS", 1_000)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_GENERIC_BYTES", 1)
+    monkeypatch.setattr(matching_results_module, "_matching_projection_coefficient", fail_generic_projection)
+    monkeypatch.setattr(
+        matching_results_module,
+        "_termwise_exact_matching_projection_coefficient",
+        fail_termwise_exact_projection,
+    )
+
+    projected = result.project_matching_conditions({"h6": target}, expand_source=False)
+
+    assert_expr_equal(projected["h6"], Expression.num(0))
+
+
 def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd() -> None:
     coefficient = S("condition_projection_chd_current_coefficient")
     theory = _singlet_scalar_extension_theory()

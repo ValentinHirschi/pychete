@@ -182,18 +182,26 @@ extractor, because many Wilson targets filter the same source. Do not expand
 the filtered source subset just to hand it to native coefficient extraction;
 let the subsequent `Expression.coefficient(...)`, `collect_factors(...)`, and
 `factor(...)` fallbacks do the symbolic work on the smaller selected source.
-Do not call native `Expression.factor()` on large filtered projection sources:
-even Rust-backed global factorization can dominate matching-condition
-projection. Gate this fallback with Symbolica's native expression size
-information, such as `len(expr)` and `Expression.get_byte_size()`, and fall
-through to the indexed wildcard projection path when the filtered source is
-too large. This is a performance guard around a native fallback, not an excuse
-to add Python-side algebra. A similarly guarded target-local
-`Expression.expand()` fallback is allowed only after native coefficient,
-collect, and factor routes fail; its purpose is to expose small hidden additive
-factors introduced by replacement-rule outputs such as order-by-order heavy
-scalar solutions while preserving `matching_condition_expand_source=False` for
-the full matching source.
+Do not call native `Expression.collect_factors()` or `Expression.factor()` on
+large filtered projection sources: even Rust-backed global collection and
+factorization can dominate matching-condition projection. Gate these fallbacks
+with Symbolica's native expression size information, such as `len(expr)` and
+`Expression.get_byte_size()`, and fall through to the indexed wildcard
+projection path when the filtered source is too large. This is a performance
+guard around native fallbacks, not an excuse to add Python-side algebra. A
+similarly guarded target-local `Expression.expand()` fallback is allowed only
+after native coefficient, collect, and factor routes fail; its purpose is to
+expose small hidden additive factors introduced by replacement-rule outputs
+such as order-by-order heavy scalar solutions while preserving
+`matching_condition_expand_source=False` for the full matching source.
+After a target-local tensor-canonicalized projection source is built, use an
+even stricter term/byte guard before entering the generic full-source
+coefficient fallback or termwise exact fallback. If raw exact projection,
+powered-index wildcard projection, and target-local tensor canonicalization do
+not expose a bounded match, return zero for that oversized target-local source
+rather than letting one Wilson condition trigger unbounded native collection or
+coefficient extraction. This is a temporary performance frontier marker, not a
+claim that the missing Wilson coefficient has been physically shown to vanish.
 For simple registered `Coupling(label, indices, order)` matching targets, also
 prefilter source terms with a native Symbolica `Coupling(label, _, _)` pattern
 before coefficient extraction. This is a conservative label-presence filter:

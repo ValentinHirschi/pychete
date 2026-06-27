@@ -376,6 +376,27 @@ def test_vakint_decodes_native_metric_and_cg_wrappers() -> None:
     assert canonical_string(decoded) == canonical_string(s.Metric(mu, nu) * gen(a, i, j))
 
 
+def test_vakint_decodes_native_ncm_wrappers_before_projection() -> None:
+    theory = Theory("vakint_decode_ncm")
+    phi = theory.define_field("phi", s.Scalar)
+    kappa = theory.define_coupling("kappa")
+    native = vakint.symbol("NCM")(
+        vakint.symbol("Field")(
+            vakint.symbol("phi"),
+            vakint.symbol("Scalar"),
+            vakint.symbol("List"),
+            vakint.symbol("List"),
+        ),
+        vakint.symbol("Coupling")(vakint.symbol("kappa"), vakint.symbol("List"), 0),
+    )
+
+    decoded = vakint.decode_pychete_namespace(theory, native)
+
+    assert "vakint::NCM" not in canonical_string(decoded)
+    assert "pychete::NCM" not in canonical_string(decoded)
+    assert canonical_string(decoded) == canonical_string(phi() * kappa())
+
+
 def test_vakint_decodes_native_covariant_derivative_wrappers() -> None:
     theory = Theory("vakint_decode_cd")
     theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")

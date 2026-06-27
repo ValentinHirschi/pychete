@@ -70,6 +70,10 @@ _DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES = {
 
 _MAX_PROJECTION_FACTOR_TERMS = 64
 _MAX_PROJECTION_FACTOR_BYTES = 16_384
+_MAX_PROJECTION_COLLECT_TERMS = _MAX_PROJECTION_FACTOR_TERMS
+_MAX_PROJECTION_COLLECT_BYTES = _MAX_PROJECTION_FACTOR_BYTES
+_MAX_CANONIZED_PROJECTION_GENERIC_TERMS = 16
+_MAX_CANONIZED_PROJECTION_GENERIC_BYTES = 8_192
 _MAX_PROJECTION_EXPAND_TERMS = 128
 _MAX_PROJECTION_EXPAND_BYTES = 32_768
 
@@ -383,6 +387,7 @@ class MatchingResult:
             target_extractor = coefficient_extractor
             target_projection_expression = projection_expression
             target_ibp_aliases = ibp_aliases
+            target_local_canonized = False
             coefficient: Expression | None = None
             if canonize_indices:
                 raw_extractor = _without_wildcard_index_projection(coefficient_extractor)
@@ -408,6 +413,21 @@ class MatchingResult:
                                 ibp_aliases,
                             )
                         )
+                        target_local_canonized = target_extractor is not coefficient_extractor
+            if (
+                coefficient is None
+                and target_local_canonized
+                and not _source_is_small_enough_for_generic_projection(target_extractor.source)
+            ):
+                coefficient = Expression.num(0)
+            if coefficient is None and target_local_canonized:
+                exact_coefficient = _termwise_exact_matching_projection_coefficient(
+                    _without_wildcard_index_projection(target_extractor),
+                    target_projection_expression,
+                    target_ibp_aliases,
+                )
+                if not is_zero(exact_coefficient):
+                    coefficient = exact_coefficient
             if coefficient is None:
                 coefficient = _matching_projection_coefficient(
                     target_extractor,
@@ -955,22 +975,23 @@ class _ProjectionCoefficientExtractor:
         additive_coefficient = self._additive_target_coefficient(source, target)
         if additive_coefficient is not None:
             return additive_coefficient
-        collected = self._collected_source(source)
-        coefficient = collected.coefficient(target).expand()
-        if not is_zero(coefficient):
-            return coefficient
-        factored_target = target.factor()
-        coefficient = collected.coefficient(factored_target).expand()
-        if not is_zero(coefficient):
-            return coefficient
-        if _source_is_small_enough_to_factor(source):
-            factored = self._factored_source(source)
-            coefficient = factored.coefficient(target).expand()
+        if _source_is_small_enough_to_collect(source):
+            collected = self._collected_source(source)
+            coefficient = collected.coefficient(target).expand()
             if not is_zero(coefficient):
                 return coefficient
-            coefficient = factored.coefficient(factored_target).expand()
+            factored_target = target.factor()
+            coefficient = collected.coefficient(factored_target).expand()
             if not is_zero(coefficient):
                 return coefficient
+            if _source_is_small_enough_to_factor(source):
+                factored = self._factored_source(source)
+                coefficient = factored.coefficient(target).expand()
+                if not is_zero(coefficient):
+                    return coefficient
+                coefficient = factored.coefficient(factored_target).expand()
+                if not is_zero(coefficient):
+                    return coefficient
         expanded_coefficient = _expanded_projection_coefficient(
             source,
             target,
@@ -1105,10 +1126,24 @@ def _source_is_small_enough_to_factor(source: Expression) -> bool:
     )
 
 
+def _source_is_small_enough_to_collect(source: Expression) -> bool:
+    return (
+        len(source) <= _MAX_PROJECTION_COLLECT_TERMS
+        and source.get_byte_size() <= _MAX_PROJECTION_COLLECT_BYTES
+    )
+
+
 def _source_is_small_enough_to_expand(source: Expression) -> bool:
     return (
         len(source) <= _MAX_PROJECTION_EXPAND_TERMS
         and source.get_byte_size() <= _MAX_PROJECTION_EXPAND_BYTES
+    )
+
+
+def _source_is_small_enough_for_generic_projection(source: Expression) -> bool:
+    return (
+        len(source) <= _MAX_CANONIZED_PROJECTION_GENERIC_TERMS
+        and source.get_byte_size() <= _MAX_CANONIZED_PROJECTION_GENERIC_BYTES
     )
 
 
@@ -1434,6 +1469,22 @@ def _matching_projection_coefficient(
         return coefficient
     alias_contributions = (
         weight * extractor.coefficient(alias)
+        for alias, weight in ibp_aliases
+        if not is_zero(alias)
+    )
+    return sum_expr(alias_contributions).expand()
+
+
+def _termwise_exact_matching_projection_coefficient(
+    extractor: _ProjectionCoefficientExtractor,
+    projection_expression: Expression,
+    ibp_aliases: Sequence[tuple[Expression, Expression]],
+) -> Expression:
+    coefficient = _raw_exact_projection_coefficient(extractor, projection_expression)
+    if not ibp_aliases or not is_zero(coefficient):
+        return coefficient
+    alias_contributions = (
+        weight * _raw_exact_projection_coefficient(extractor, alias)
         for alias, weight in ibp_aliases
         if not is_zero(alias)
     )

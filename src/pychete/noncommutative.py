@@ -131,7 +131,7 @@ def _normalize_ncm_operand(operand: Expression) -> tuple[Expression, tuple[Expre
 @cache
 def _scalar_ncm_replacements() -> tuple[Replacement, ...]:
     replacements: list[Replacement] = []
-    for arity in range(2, _MAX_SCALAR_NCM_ARITY + 1):
+    for arity in range(1, _MAX_SCALAR_NCM_ARITY + 1):
         wildcards = _ncm_operand_wildcards(arity)
         pattern = s.NCM(*wildcards)
         replacements.append(

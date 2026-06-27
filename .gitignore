@@ -13,3 +13,8 @@ dependencies/wheels/
 Mathematica_reference/Matchete/
 
 .DS_Store
+
+# Local command-listener control files.
+run.order
+run.output
+run.log

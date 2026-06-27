@@ -2,18 +2,20 @@ from __future__ import annotations
 
 from hashlib import sha256
 from functools import cache
-from typing import Any, Mapping, Sequence
+from typing import Any, Callable, Mapping, Sequence
 
 from symbolica import Expression, Replacement, S
 
 from ..expr import args, as_int, factors, is_head, list_expr, pow_parts, product_expr, sum_expr
 from ..logging import get_logger, progress
+from ..noncommutative import scalarize_commutative_ncm_chains
 from ..symbols import SymbolRole, canonical_string, s, safe_symbol_name
 from .common import import_backend
 
 _LOGGER = get_logger("backends.vakint")
 _LOOP_MOMENTUM_INDEX_SYMBOLS_BY_INDEX: dict[str, Expression] = {}
 _LOOP_MOMENTUM_INDEX_BY_SAFE_SYMBOL: dict[str, Expression] = {}
+_MAX_VAKINT_NCM_DECODE_ARITY = 16
 
 
 def native_module():
@@ -427,9 +429,10 @@ def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
                 match[_wild("cg_indices")],
             ),
         ),
+        *_vakint_ncm_replacements(context),
     )
     decoded = expr.replace_multiple(namespace_replacements)
-    return decoded.replace_multiple(
+    decoded = decoded.replace_multiple(
         (
             Replacement(
                 _vakint_cd_pattern(),
@@ -440,6 +443,31 @@ def decode_pychete_namespace(theory: Any, expr: Expression) -> Expression:
             ),
         )
     )
+    return scalarize_commutative_ncm_chains(decoded)
+
+
+def _vakint_ncm_replacements(context: _DecodeContext) -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_VAKINT_NCM_DECODE_ARITY + 1):
+        wildcards = tuple(_wild(f"ncm_operand_{arity}_{index}") for index in range(arity))
+        replacements.append(
+            Replacement(
+                symbol("NCM")(*wildcards),
+                _vakint_ncm_replacement(context, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _vakint_ncm_replacement(
+    context: _DecodeContext,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[Mapping[Expression, Expression]], Expression]:
+    def replacement(match: Mapping[Expression, Expression]) -> Expression:
+        return s.NCM(*(decode_pychete_namespace(context.theory, match[wildcard]) for wildcard in wildcards))
+
+    return replacement
 
 
 class _DecodeContext:

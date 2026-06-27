@@ -875,6 +875,30 @@
   - The memory wrapper now supports file-based termination through `stop.order`
     and has a unit regression for that stop-file path, avoiding future stalls
     on sandboxed permission requests for process management.
+- The current Wilson-line projection-performance follow-up found that native
+  vakint can return `vakint::NCM(...)` wrappers around decoded pychete atoms.
+  Leaving those wrappers formal hides field/field-strength atoms from the
+  target-local projection filter, so `decode_pychete_namespace(...)` now
+  decodes bounded-arity native `NCM` wrappers recursively and then scalarizes
+  fully commutative pychete `NCM(...)` chains, including one-operand chains.
+- After that decode fix, Singlet `hScalar` order-four Wilson-line probes expose
+  target-compatible `cHW` source terms to the projection filter. The remaining
+  stall moved to the final generic coefficient fallback after raw exact,
+  wildcard-index, and tensor-canonicalized target-local projections had already
+  failed. Projection now treats `Expression.collect_factors()` like
+  `Expression.factor()` and `Expression.expand()`: still native Symbolica, but
+  only attempted on target-local filtered sources below explicit term/byte
+  thresholds. Oversized sources fall through to the existing wildcard/normalized
+  fallback path instead of spending unbounded time in global collection.
+- The same slice adds a stricter threshold for the final generic fallback after
+  target-local tensor canonicalization. In the real Singlet `cHW` Wilson-line
+  probe, the filtered/canonized source has 21 terms and roughly 14 KiB of
+  Symbolica payload; this was still small enough for the older collect/factor
+  guard but large enough to enter an expensive full-source coefficient path.
+  The stricter guard makes the public `project_matching_conditions(...,
+  eft_order=6)` probe return in about 0.07 seconds after the Wilson-line source
+  is built. The coefficient is still zero in this bounded path, so this is a
+  projection-performance safety fix, not a completed `cHW` parity result.
 - 30 GiB memory-watch stop-file wrapper gate:
   `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/unit/dependencies/test_memory_watch.py -q`
   passed.
@@ -889,6 +913,22 @@
   passed.
 - `git diff --check` passed after the Wilson-line commutator/color-fallback
   and stop-file wrapper slice.
+- 30 GiB memory-watch NCM/projection guard gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/unit/functional/test_noncommutative.py tests/unit/backends/test_vakint_backend.py tests/integration/validation/test_numeric_probes.py -k "projection" -q`
+  passed with 21 tests and 74 deselected.
+- 30 GiB memory-watch Wilson-line guard gate:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py tests/integration/validation/test_validation_fixtures.py -k "wilson_line or forwards_pychete_color_to_public_match_api" -q`
+  passed with 16 tests and 122 deselected.
+- 30 GiB memory-watch real Singlet `cHW` projection probe:
+  building the selected `hScalar` order-four Wilson-line hybrid internal
+  minimal-subtraction result produced a 556-node, 243407-byte source, and
+  projecting the selected `cHW` target with `expand_source=False` and
+  `eft_order=6` returned in about 0.07 seconds with a zero coefficient.
+  This confirms the performance guard prevents the previous memory-limit kill,
+  while leaving exact `cHW` parity as future work.
+- 30 GiB memory-watch typing gate after the NCM/projection guard slice:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m mypy`
+  passed.
 
 ## Current Validation Frontier
 
@@ -936,7 +976,8 @@
   - target-local Wilson-line projection-performance work for Singlet `cHW`:
     process/evaluate generated order-four `hScalar` terms in smaller batches,
     keep the source filtered by field/field-strength requirements, and avoid
-    global expansion/factorization before native coefficient extraction;
+    global collection/expansion/factorization before native coefficient
+    extraction;
   - explicit Wilson-line style supertrace representation and metadata, using
     current Matchete behavior as the reference direction rather than expanding
     the legacy CDE route;

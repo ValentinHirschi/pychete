@@ -350,6 +350,10 @@ without Warsaw-specific core assumptions.
   remove stale `stop.order` before launching long work, and touch/create
   `stop.order` to terminate the wrapped process group without needing
   sandboxed process-management permissions.
+- Do not let future work stall on sandbox permission prompts for process
+  management. For long-running tests/probes, run through the watchdog and use
+  `stop.order` as the user/agent control file to terminate the wrapped process
+  group or communicate that the workload should stop.
 - Current Wilson-line direction: order-four `hScalar` Wilson-line generation
   now keeps field-strength-bearing Singlet `cHW` source terms even with
   pychete colour simplification enabled. Exact public projected `cHW` parity

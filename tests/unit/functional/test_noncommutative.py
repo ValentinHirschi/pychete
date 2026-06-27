@@ -16,6 +16,7 @@ def test_scalarize_commutative_ncm_chains_multiplies_scalar_operands() -> None:
     expr = s.NCM(-y() * phi(), chi())
 
     assert_expr_equal(scalarize_commutative_ncm_chains(expr), -y() * phi() * chi())
+    assert_expr_equal(scalarize_commutative_ncm_chains(s.NCM(phi() + chi())), phi() + chi())
 
 
 def test_normalize_ncm_chains_flattens_nested_chains_and_hoists_scalars() -> None:
