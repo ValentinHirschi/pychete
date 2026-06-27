@@ -70,6 +70,8 @@ from .theory_metadata import (
     FieldMassKind,
     FieldRole,
     FieldVariation,
+    GroupKind,
+    field_charges_from_label,
     field_chirality_from_label,
     field_mass_expr_from_label,
     field_mass_kind_from_label,
@@ -7133,16 +7135,84 @@ def _wilson_line_entry_can_satisfy_projection_requirements(
     if not requirements:
         return True
     static_counts = _projection_atom_counts(_ncm_chain(*path.entries))
+    possible_generated_strength_labels = _wilson_line_path_generated_field_strength_labels(path)
     max_generated_field_strengths = entry.total_order // 2
     for group in requirements:
-        missing_field_strengths = 0
+        satisfiable = True
         for kind, label, required_count in group:
-            if kind != "field_strength":
-                continue
-            missing_field_strengths += max(0, required_count - static_counts[(kind, label)])
-        if missing_field_strengths <= max_generated_field_strengths:
+            available = static_counts[(kind, label)]
+            if kind == "field_strength" and label in possible_generated_strength_labels:
+                available += max_generated_field_strengths
+            if available < required_count:
+                satisfiable = False
+                break
+        if satisfiable:
             return True
     return False
+
+
+def _wilson_line_path_generated_field_strength_labels(path: WilsonLineTracePath) -> frozenset[str]:
+    """Return field-strength labels that this Wilson-line path can generate.
+
+    The expensive generated-term filter still uses Symbolica pattern counts on
+    actual numerators. This pre-generation check is deliberately conservative:
+    it only rules out a requested field-strength label when none of the
+    registered fields carried by the ordered path can produce that gauge
+    strength through covariant-derivative commutators.
+    """
+
+    labels: set[str] = set()
+    field_pat = field_pattern()
+    bar_pat = bar_field_pattern()
+    field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    for entry in path.entries:
+        for match in entry.match(field_pat, field_label_is_tagged):
+            labels.update(_field_generated_field_strength_labels(path.theory, match[s.FieldLabelWildcard]))
+        for match in entry.match(bar_pat, field_label_is_tagged):
+            labels.update(_field_generated_field_strength_labels(path.theory, match[s.FieldLabelWildcard]))
+    closing_label = path.closing_field_label[0] if is_head(path.closing_field_label, s.Bar) else path.closing_field_label
+    labels.update(_field_generated_field_strength_labels(path.theory, closing_label))
+    return frozenset(labels)
+
+
+def _field_generated_field_strength_labels(theory: Theory, label: Expression) -> frozenset[str]:
+    labels: set[str] = set()
+    for charge in field_charges_from_label(label):
+        group_symbol = theory._group_symbol_for_charge(charge)
+        if group_symbol is None:
+            continue
+        group_kind = GroupKind.from_user(
+            str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+        )
+        if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+            continue
+        labels.update(_group_vector_field_label_key(theory, group_symbol))
+
+    representations = list(field_indices_from_label(label))
+    field_type = field_type_from_label(label)
+    if is_head(field_type, s.Vector) and len(field_type) == 1:
+        representations.append(field_type[0](s.adj))
+    for representation_expr in representations:
+        try:
+            representation = theory.representation_definition(representation_expr)
+        except KeyError:
+            continue
+        group_entry = theory.groups.get(representation.group)
+        if group_entry is None:
+            continue
+        group_kind = GroupKind.from_user(str(group_entry.get("kind", GroupKind.GLOBAL.value)))
+        if group_kind is not GroupKind.GAUGE or bool(group_entry.get("abelian", False)):
+            continue
+        group_symbol = theory.symbol(representation.group, role=SymbolRole.GROUP)
+        labels.update(_group_vector_field_label_key(theory, group_symbol))
+    return frozenset(labels)
+
+
+def _group_vector_field_label_key(theory: Theory, group_symbol: Expression) -> tuple[str, ...]:
+    vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+    if not isinstance(vector_name, str) or vector_name not in theory.fields:
+        return ()
+    return (canonical_string(theory.fields[vector_name].label),)
 
 
 def _cde_vakint_integral_terms_at_stage(

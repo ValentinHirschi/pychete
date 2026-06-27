@@ -2011,6 +2011,45 @@ def test_public_wilson_line_can_filter_terms_by_matching_targets() -> None:
     assert not bool(filtered.matching_conditions[target].expand() == Expression.num(0))
 
 
+def test_wilson_line_target_filter_skips_impossible_entries_before_generation(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("one_loop_setup_wilson_line_filter_impossible_strength")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=(FieldMassKind.LIGHT, "m"))
+    y = theory.define_coupling("y", self_conjugate=True)
+    define_smeft_wilson_coefficient(theory, "cHW")
+    lagrangian = theory.free_lag(heavy) + theory.free_lag(light) - y() * heavy() * light() ** 2 / 2
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=4,
+        max_slot_order=4,
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(theory, "registered_wilsons")
+    assert requirements is not None
+
+    def fail_generation(*_args: object, **_kwargs: object) -> tuple[WilsonLineTraceExpansionTerm, ...]:
+        raise AssertionError("impossible target-local entries should be skipped before term generation")
+
+    monkeypatch.setattr(
+        matching_module.WilsonLineTracePath,
+        "propagator_expansion_terms",
+        fail_generation,
+    )
+
+    grouped = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        term_atom_requirements=requirements,
+    )
+
+    assert grouped
+    assert all(terms == () for terms in grouped.values())
+
+
 def test_wilson_line_expansion_drops_odd_loop_rank_after_open_derivatives() -> None:
     theory = Theory("one_loop_setup_wilson_line_odd_loop_rank")
     heavy = theory.define_field("H", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))

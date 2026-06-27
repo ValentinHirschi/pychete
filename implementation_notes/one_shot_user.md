@@ -423,3 +423,10 @@ without Warsaw-specific core assumptions.
   `ValidationFixture.one_loop_preview(...)` when pychete color simplification
   is requested. This aligns direct fixture probes with the public match path
   for SU(2) and mixed SU(2)-U(1) gauge field-strength structures.
+- Latest Wilson-line target-filter update: the pre-generation filter now uses
+  theory-owned Symbolica field/gauge metadata to skip Wilson-line plan entries
+  that cannot possibly generate a requested field-strength label or required
+  field content. This keeps impossible target-local probes from entering
+  Wilson-term lowering, commutator expansion, tensor reduction, or integral
+  evaluation. It is a scaling improvement for the Singlet `cHW` frontier and
+  broader Wilson-line fixture probes, not a full `cHW` parity result yet.

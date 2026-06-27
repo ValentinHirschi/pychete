@@ -1097,6 +1097,29 @@
   `pytest tests/unit/backends/test_idenso_backend.py tests/integration/validation/test_validation_fixtures.py -k "field_strength or wilson_line" -q`
   passed with `11 passed, 62 deselected`; `python -m mypy` reported no issues;
   `git diff --check` passed.
+- Current Wilson-line target-prefilter slice: the selected Wilson-line
+  pre-generation filter is now label-aware for requested field-strength
+  targets. It uses theory-owned Symbolica metadata for field charges,
+  representation indices, gauge groups, and vector-field labels to prove when
+  no registered field in an ordered Wilson-line path can generate a requested
+  gauge `FieldStrength(...)` through covariant-derivative commutators. It also
+  treats required ordinary field atoms as static path requirements, because
+  Wilson-term expansion can add field strengths but cannot invent missing
+  light-field operator content. This keeps the filter conservative: possible
+  paths still go through generated-term Symbolica pattern filtering, while
+  impossible plan entries are skipped before expensive Wilson-term lowering,
+  commutator expansion, tensor reduction, or integral evaluation. This is
+  aimed at making real Singlet `cHW` and broader Wilson-line fixture probes
+  scale better; it is not yet a full `cHW = hbar*A^2*gL^2/(12*M^4)` parity
+  result.
+- Focused validation for this slice used the 30 GiB watchdog wrapper:
+  `pytest tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_target_filter_skips_impossible_entries_before_generation -q`
+  passed with `1 passed`; `pytest
+  tests/integration/matching/test_fluctuation_operator.py -k "wilson_line and
+  filter" -q` passed with `2 passed, 98 deselected`; the broader matching gate
+  `pytest tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line or projection_atom_filter or field_strength_powers" -q` passed
+  with `17 passed, 83 deselected`; and `python -m mypy` reported no issues.
 
 ## Next Work
 
