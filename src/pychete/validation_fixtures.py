@@ -11,6 +11,7 @@ from symbolica import Expression
 
 from .logging import get_logger, progress
 from .matching_options import (
+    CovariantDerivativeCommutatorModeInput,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
     OneLoopNormalization,
@@ -665,6 +666,7 @@ class ValidationFixture:
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_emit_covariant_derivative_commutators: bool = False,
         wilson_line_emit_covariant_derivative_commutator_passes: int = 1,
+        wilson_line_covariant_derivative_commutator_mode: CovariantDerivativeCommutatorModeInput = "inversions",
         wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
@@ -782,6 +784,9 @@ class ValidationFixture:
                 emit_covariant_derivative_commutator_passes=(
                     wilson_line_emit_covariant_derivative_commutator_passes
                 ),
+                covariant_derivative_commutator_mode=(
+                    wilson_line_covariant_derivative_commutator_mode
+                ),
                 expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 tensor_reduce=internal_tensor_reduce,
@@ -810,6 +815,9 @@ class ValidationFixture:
                 emit_covariant_derivative_commutators=wilson_line_emit_covariant_derivative_commutators,
                 emit_covariant_derivative_commutator_passes=(
                     wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                covariant_derivative_commutator_mode=(
+                    wilson_line_covariant_derivative_commutator_mode
                 ),
                 expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
@@ -841,6 +849,9 @@ class ValidationFixture:
                 emit_covariant_derivative_commutator_passes=(
                     wilson_line_emit_covariant_derivative_commutator_passes
                 ),
+                covariant_derivative_commutator_mode=(
+                    wilson_line_covariant_derivative_commutator_mode
+                ),
                 expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
                 vakint_engine=vakint_engine,
@@ -867,6 +878,9 @@ class ValidationFixture:
                 emit_covariant_derivative_commutators=wilson_line_emit_covariant_derivative_commutators,
                 emit_covariant_derivative_commutator_passes=(
                     wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                covariant_derivative_commutator_mode=(
+                    wilson_line_covariant_derivative_commutator_mode
                 ),
                 expand_covariant_derivative_commutators=wilson_line_expand_covariant_derivative_commutators,
                 max_wilson_derivative_order=wilson_line_max_derivative_order,
@@ -1104,6 +1118,11 @@ class ValidationFixture:
                     if wilson_line_emit_covariant_derivative_commutators
                     else 0
                 ),
+                "wilson_line_commutator_emit_mode": (
+                    wilson_line_covariant_derivative_commutator_mode
+                    if wilson_line_emit_covariant_derivative_commutators
+                    else None
+                ),
                 "wilson_line_commutators_expanded": wilson_line_expand_covariant_derivative_commutators,
                 "wilson_line_max_derivative_order": wilson_line_max_derivative_order,
                 "wilson_line_terms_filtered_by_matching_targets": (
@@ -1191,6 +1210,7 @@ class ValidationFixture:
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_emit_covariant_derivative_commutators: bool = False,
         wilson_line_emit_covariant_derivative_commutator_passes: int = 1,
+        wilson_line_covariant_derivative_commutator_mode: CovariantDerivativeCommutatorModeInput = "inversions",
         wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
@@ -1245,6 +1265,10 @@ class ValidationFixture:
         ``wilson_line_expose_scalar_derivative_commutator_bilinears`` forwards
         the opt-in scalar two-derivative commutator-bilinear normal-form pass
         to Wilson-line internal and vakint preview routes.
+        ``wilson_line_covariant_derivative_commutator_mode`` forwards the
+        Wilson-line local commutator identity mode, including the bounded
+        Matchete-adjacent ``"all_distinct"`` mode used by current Singlet
+        frontier probes.
         Prefer the ``wilson_line_*`` options for current-Matchete-style
         selected trace expansion. They route through the hybrid Wilson-line
         matcher and are mutually exclusive with the legacy ``bosonic_cde_*``
@@ -1359,6 +1383,9 @@ class ValidationFixture:
                     wilson_line_emit_covariant_derivative_commutator_passes=(
                         wilson_line_emit_covariant_derivative_commutator_passes
                     ),
+                    wilson_line_covariant_derivative_commutator_mode=(
+                        wilson_line_covariant_derivative_commutator_mode
+                    ),
                     wilson_line_expand_covariant_derivative_commutators=(
                         wilson_line_expand_covariant_derivative_commutators
                     ),
@@ -1462,6 +1489,9 @@ class ValidationFixture:
                 ),
                 wilson_line_emit_covariant_derivative_commutator_passes=(
                     wilson_line_emit_covariant_derivative_commutator_passes
+                ),
+                wilson_line_covariant_derivative_commutator_mode=(
+                    wilson_line_covariant_derivative_commutator_mode
                 ),
                 wilson_line_expand_covariant_derivative_commutators=(
                     wilson_line_expand_covariant_derivative_commutators

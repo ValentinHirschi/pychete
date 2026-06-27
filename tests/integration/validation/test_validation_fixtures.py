@@ -879,11 +879,15 @@ def test_validation_fixture_preview_forwards_wilson_line_scalar_derivative_bilin
         max_trace_order=1,
         integral_backend=OneLoopIntegralBackend.VAKINT,
         wilson_line_expansion_indices_by_trace={"hScalar-lScalar": ((), ())},
+        wilson_line_emit_covariant_derivative_commutators=True,
+        wilson_line_covariant_derivative_commutator_mode="all_distinct",
         wilson_line_expose_scalar_derivative_commutator_bilinears=True,
     )
 
     assert preview.metadata["stage"] == "fixture_fake_wilson_line_hybrid_vakint"
     assert preview.metadata["fixture"] == fixture.name
+    assert preview.metadata["wilson_line_commutator_emit_mode"] == "all_distinct"
+    assert captured_hybrid_kwargs["covariant_derivative_commutator_mode"] == "all_distinct"
     assert preview.metadata["wilson_line_scalar_derivative_commutator_bilinears_exposed"] is True
     assert captured_hybrid_kwargs["expose_scalar_derivative_commutator_bilinears"] is True
 
@@ -1168,8 +1172,11 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
         wilson_line_max_slot_order=1,
         wilson_line_index_prefix="forwarded_wilson",
         wilson_line_act_open_derivatives=True,
+        wilson_line_emit_covariant_derivative_commutators=True,
+        wilson_line_covariant_derivative_commutator_mode="all_distinct",
         wilson_line_max_derivative_order=3,
         wilson_line_filter_terms_by_matching_targets=True,
+        wilson_line_expose_scalar_derivative_commutator_bilinears=True,
     )
 
     options = captured["one_loop_options"]
@@ -1180,8 +1187,11 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     assert options.wilson_line_max_slot_order == 1
     assert options.wilson_line_index_prefix == "forwarded_wilson"
     assert options.wilson_line_act_open_derivatives is True
+    assert options.wilson_line_emit_covariant_derivative_commutators is True
+    assert options.wilson_line_covariant_derivative_commutator_mode == "all_distinct"
     assert options.wilson_line_max_derivative_order == 3
     assert options.wilson_line_filter_terms_by_matching_targets is True
+    assert options.wilson_line_expose_scalar_derivative_commutator_bilinears is True
     assert options.bosonic_cde_expansion_indices_by_trace is None
 
 

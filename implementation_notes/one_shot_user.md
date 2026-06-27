@@ -610,3 +610,11 @@ without Warsaw-specific core assumptions.
   previews/gap reports. This makes the same generic normal-form switch usable
   in the Singlet `cHW` frontier probes that go through VAKINT/evaluated-hbar
   paths, but it is not yet a full `cHW` parity result.
+- Latest validation-facing option parity update: fixture previews and gap
+  reports now also forward
+  `wilson_line_covariant_derivative_commutator_mode`, including the bounded
+  `all_distinct` mode used by the Singlet Wilson-line diagnostics. A bounded
+  selected `hScalar-lScalar` internal probe with that mode and scalar-bilinear
+  exposure active still projects zero for `cHW`, confirming the next blocker is
+  the remaining heavy-scalar on-shell/basis/source reduction work rather than
+  missing option plumbing.

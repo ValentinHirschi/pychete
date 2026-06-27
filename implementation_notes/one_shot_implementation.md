@@ -1502,6 +1502,25 @@
   one validation-fixture direct-preview forwarding test; full scalar functional
   unit tests; and mypy for `matching.py`, `validation_fixtures.py`, and
   `matching_options.py`.
+- Current validation-facing option parity follow-up: fixture previews and gap
+  reports now also expose
+  `wilson_line_covariant_derivative_commutator_mode`, forwarding it to direct
+  Wilson-line preview backends and to public `Theory.match(...)`. This closes
+  the validation API gap that prevented Singlet frontier probes from selecting
+  the bounded Matchete-adjacent `all_distinct` commutator mode.
+- Remeasurement after that forwarding: a 30 GiB-watchdog selected
+  `hScalar-lScalar` internal Wilson-line probe with `max_total_order=4`,
+  `all_distinct`, scalar-bilinear exposure, colour simplification, Matchete
+  evaluated-hbar normalization, and `mu_r^2=M^2` built 15 plan entries and
+  16 generated terms. The nonempty entries were `wilson0_o0_0`,
+  `wilson5_o2_0`, and `wilson14_o4_0`, with 10 terms in the order-four entry.
+  Direct projection of the selected source onto `cHW` still returned zero
+  against the Matchete reference
+  `hbar*A^2*gL^2/(12*M^4)`. This is consistent with earlier entrywise
+  diagnostics: the selected source still contains heavy `phi` structures and
+  needs the remaining heavy-scalar on-shell, basis, and Wilson-line
+  source/sign/combinatoric reductions before the first full Matchete
+  integration target can go green.
 - Current first-milestone status remains unchanged: no full Matchete one-loop
   matching integration test is green yet. The closest target is still the
   Singlet `cHW` Wilson-line route, where the expected `hScalar-lScalar`
