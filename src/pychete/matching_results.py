@@ -414,12 +414,6 @@ class MatchingResult:
                             )
                         )
                         target_local_canonized = target_extractor is not coefficient_extractor
-            if (
-                coefficient is None
-                and target_local_canonized
-                and not _source_is_small_enough_for_generic_projection(target_extractor.source)
-            ):
-                coefficient = Expression.num(0)
             if coefficient is None and target_local_canonized:
                 exact_coefficient = _termwise_exact_matching_projection_coefficient(
                     _without_wildcard_index_projection(target_extractor),
@@ -428,6 +422,12 @@ class MatchingResult:
                 )
                 if not is_zero(exact_coefficient):
                     coefficient = exact_coefficient
+            if (
+                coefficient is None
+                and target_local_canonized
+                and not _source_is_small_enough_for_generic_projection(target_extractor.source)
+            ):
+                coefficient = Expression.num(0)
             if coefficient is None:
                 coefficient = _matching_projection_coefficient(
                     target_extractor,

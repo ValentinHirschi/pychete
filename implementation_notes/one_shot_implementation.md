@@ -1023,11 +1023,38 @@
   final projected public `cHW` coefficient comparison is not yet reproduced.
   Backend normalization now exposes a nonzero partial `hScalar` contribution,
   and the selected `hScalar-lScalar` route is bounded enough to measure, but
-  the mixed-trace finite projection is currently zero. The reference
-  `A^2*gL^2/M^4` coefficient needs the remaining scalar trace source families,
-  finite/pole convention cleanup, and subsequent basis/on-shell reduction. The
-  remaining blocker is source coverage plus projection/convention correctness,
-  not the absence of Wilson-line field-strength source terms.
+  before the conjugate-propagator correction its selected finite projection
+  was zero because the explicit entry paths produced same-orientation
+  `H H`/`Bar(H) Bar(H)` source factors. The Wilson-line and matrix trace path
+  builders now insert the free-propagator field-space pairing between
+  interaction entries, so complex scalar and fermion paths close through the
+  conjugate mode. A Singlet fixture zero-order source probe now produces
+  indexed mixed `H_i Bar(H_j)` bilinears with the expected `A^2` pieces. The
+  full `cHW = hbar*A^2*gL^2/(12*M^4)` comparison is still not reproduced: the
+  next blockers are the order-four finite/pole convention through the full
+  hybrid result, generic basis/on-shell/IBP reductions, and idenso/spenso
+  group/CG simplifications.
+- Validation for the conjugate-propagator slice:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -k "supertrace_plan or one_loop_setup_prepares or wilson_line or projector or hFermion" -q`
+  passed with 22 selected tests; `dependencies/.venv/bin/python
+  scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python
+  -m mypy` passed; `git diff --check` passed. The follow-up CDE/projection
+  slice moved the canonized target-local exact extraction before the generic
+  projection size guard, so registered Wilson projection can recover focused
+  complex-Higgs CDE coefficients such as `cHD` and heavy-solution `cH` without
+  opening the expensive collect/factor fallback on large sources. The
+  conjugate charged-field commutator primitive is now tested directly, while
+  the full CDE commutator route no longer asserts that antisymmetric
+  field-strength pieces survive after loop-momentum symmetry cleanup.
+- Additional validation after the CDE/projection follow-up:
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/matching/test_fluctuation_operator.py -q`
+  passed with 99 tests; the targeted validation-fixture gate
+  `dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 -- dependencies/.venv/bin/python -m pytest tests/integration/validation/test_validation_fixtures.py -k "one_loop_preview or bosonic_cde or wilson_line or projected_condition or matching_condition" -q`
+  passed with 8 selected tests. The validation auto-probe builder now gathers
+  numeric evaluator parameters from the same tensor-canonized expressions that
+  `MatchingResult.compare_to(...)` probes, so canonized dummy labels inside
+  function atoms such as `Yd[d2, index_i2]` are included in the Symbolica
+  evaluator parameter map.
 
 ## Next Work
 

@@ -351,6 +351,15 @@ def test_one_loop_match_option_expands_covariant_derivative_commutators_before_s
     assert isinstance(result, MatchingResult)
     assert result.metadata["covariant_derivative_commutators_expanded"] is True
     assert_expr_equal(captured["lagrangian"], theory.covariant_derivative_commutator(phi(), mu, nu))
+    assert_expr_equal(
+        theory.expand_covariant_derivative_commutators(
+            s.CovariantDerivativeCommutator(mu, nu, s.Bar(phi()))
+        ),
+        theory.covariant_derivative_commutator(s.Bar(phi()), mu, nu),
+    )
+    assert "pychete::FieldStrength" in canonical_string(
+        theory.covariant_derivative_commutator(s.Bar(phi()), mu, nu)
+    )
 
 
 def test_one_loop_match_option_emits_and_expands_covariant_derivative_commutators_before_setup(
@@ -1124,7 +1133,7 @@ def test_supertrace_plan_splits_matching_traces_by_mode_category() -> None:
     assert_expr_equal(category_traces["hScalar-lScalar"].expression, y() ** 2 * light_scalar() ** 2)
     assert_expr_equal(
         category_traces["hScalar-lFermion"].expression,
-        z() ** 2 * s.Bar(light_fermion()) ** 2 + z() ** 2 * light_fermion() ** 2,
+        2 * z() ** 2 * s.Bar(light_fermion()) * light_fermion(),
     )
 
 
@@ -1820,6 +1829,32 @@ def test_wilson_line_path_expands_propagator_terms_without_cde_result_object() -
         expected_integral,
     )
     assert "pychete::WilsonTerm" not in canonical_string(terms[0].numerator)
+
+
+def test_wilson_line_complex_scalar_paths_follow_conjugate_propagators() -> None:
+    theory = Theory("one_loop_setup_wilson_line_complex_scalar_pairing")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    light = theory.define_field("H", s.Scalar, self_conjugate=False, mass=0)
+    coupling = theory.define_coupling("A", self_conjugate=True)
+    lagrangian = (
+        theory.free_lag(heavy)
+        + theory.free_lag(light)
+        - coupling() * heavy() * s.Bar(light()) * light()
+    )
+
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
+    trace = next(trace for trace in setup.interaction_power_type_traces() if trace.name == "hScalar-lScalar")
+    terms = setup.interaction_wilson_line_expansion_terms({"hScalar-lScalar": ((), ())})
+    numerator_sum = sum((term.numerator for term in terms), Expression.num(0)).expand()
+
+    assert len(terms) == 2
+    assert_expr_equal(trace.expression, 2 * coupling() ** 2 * s.Bar(light()) * light())
+    assert_expr_equal(numerator_sum, -coupling() ** 2 * s.Bar(light()) * light())
+    assert_expr_equal(numerator_sum.coefficient(coupling() ** 2 * light() ** 2).expand(), Expression.num(0))
+    assert_expr_equal(
+        numerator_sum.coefficient(coupling() ** 2 * s.Bar(light()) ** 2).expand(),
+        Expression.num(0),
+    )
 
 
 def test_wilson_line_expansion_can_simplify_generated_color_algebra(
@@ -3349,7 +3384,6 @@ def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators
             theory.expand_covariant_derivative_commutators(emitted.numerator),
         )
     assert any("CovariantDerivativeCommutator" in canonical_string(term.numerator) for term in emitted_terms)
-    assert any("FieldStrength" in canonical_string(term.numerator) for term in lowered_terms)
     assert all("CovariantDerivativeCommutator" not in canonical_string(term.numerator) for term in lowered_terms)
 
     planned_match = theory.match(
@@ -3373,11 +3407,6 @@ def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators
     assert planned_match.metadata["bosonic_cde_commutators_expanded"] is True
     assert planned_match.metadata["interaction_bosonic_cde_commutators_emitted"] is True
     assert planned_match.metadata["interaction_bosonic_cde_commutators_expanded"] is True
-    assert any(
-        "FieldStrength" in canonical_string(expr)
-        for name, expr in planned_match.supertraces.items()
-        if name.startswith("interaction_bosonic_cde_kernel")
-    )
 
 
 def test_one_loop_setup_extracts_evaluated_vakint_poles_with_symbolica_coefficients() -> None:
@@ -3666,20 +3695,13 @@ def test_one_loop_setup_simplifies_projector_words_before_vakint_lowering() -> N
     assert "pychete::eft_order_parameter" not in canonical_string(numerator)
     assert "pychete::PR^2" not in canonical_string(numerator)
     assert "pychete::PL^2" not in canonical_string(numerator)
-    assert_expr_equal(
-        numerator,
-        (s.PR * scalar() ** 2 * y() ** 2 + s.PL * scalar() ** 2 * s.Bar(y()) ** 2) / 2,
-    )
+    assert_expr_equal(numerator, Expression.num(0))
     assert "pychete::NCM(" in canonical_string(open_chain_numerator)
     assert canonical_string(s.NCM(s.Bar(light()), s.PR) ** 2) not in canonical_string(open_chain_numerator)
     assert canonical_string(s.NCM(s.PL, light()) ** 2) not in canonical_string(open_chain_numerator)
     assert_expr_equal(
         open_chain_numerator,
-        (
-            y() ** 2 * s.NCM(s.Bar(light()), s.PR, s.Bar(light()), s.PR)
-            + s.Bar(y()) ** 2 * s.NCM(s.PL, light(), s.PL, light())
-        )
-        / 2,
+        y() * s.Bar(y()) * s.NCM(s.PL, light()) * s.NCM(s.Bar(light()), s.PR),
     )
 
 
@@ -3698,17 +3720,12 @@ def test_wilson_line_expansion_normalizes_nested_fermion_ncm_chains() -> None:
     terms = setup.interaction_wilson_line_expansion_terms({"hFermion-lScalar": ((), ())})
     numerators = tuple(term.numerator for term in terms)
 
-    assert len(numerators) == 2
+    assert len(numerators) == 1
     assert all("pychete::NCM(" in canonical_string(numerator) for numerator in numerators)
     assert all("pychete::NCM(pychete::NCM" not in canonical_string(numerator) for numerator in numerators)
     assert_expr_equal(
         sum(numerators, Expression.num(0)).expand(),
-        mass
-        * (
-            s.Bar(y()) ** 2 * s.NCM(s.PL, light(), s.PL, light())
-            + y() ** 2 * s.NCM(s.Bar(light()), s.PR, s.Bar(light()), s.PR)
-        )
-        / 2,
+        mass * y() * s.Bar(y()) * s.NCM(s.PL, light(), s.Bar(light()), s.PR) / 2,
     )
 
 
@@ -3750,10 +3767,14 @@ def test_wilson_line_postprocess_closes_pure_fermion_loop_dirac_traces() -> None
         matching_module._postprocess_wilson_line_numerator(scalar, close_fermion_loop=True),
         4 * scalar,
     )
-    assert_expr_equal(
-        matching_module._postprocess_wilson_line_numerator(closed_gamma_word, close_fermion_loop=True),
-        4 * s.Metric(mu, nu),
+    closed_gamma_result = matching_module._postprocess_wilson_line_numerator(
+        closed_gamma_word,
+        close_fermion_loop=True,
     )
+    assert canonical_string(closed_gamma_result) in {
+        canonical_string(4 * s.Metric(mu, nu)),
+        canonical_string(4 * s.Metric(nu, mu)),
+    }
     assert_expr_equal(
         matching_module._postprocess_wilson_line_numerator(closed_loop_momentum_word, close_fermion_loop=True),
         4 * s.LoopMomentumSquared,

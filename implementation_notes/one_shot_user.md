@@ -387,3 +387,22 @@ without Warsaw-specific core assumptions.
   30 GiB watchdog in about 153 seconds with one candidate and one reference
   condition, still different; the selected mixed-trace finite projection alone
   is currently zero.
+- Latest structural fix in progress: Wilson-line and supertrace matrix paths
+  now insert the free-propagator field-space pairing between interaction
+  entries. Complex scalar and fermion traces therefore close through conjugate
+  modes instead of reusing the same basis mode index. This fixes the immediate
+  Singlet mixed-scalar source problem where `hScalar-lScalar` zero-order terms
+  were `H H`/`Bar(H) Bar(H)` rather than mixed `H_i Bar(H_j)`. No full Matchete
+  one-loop integration test is reproduced yet; the first milestone remains
+  Singlet `cHW`, with order-four Wilson-line finite/pole conventions,
+  basis/on-shell/IBP reduction, and idenso/spenso group simplification still
+  ahead.
+- Follow-up projection fix: target-local tensor-canonized exact coefficient
+  extraction now runs before the large-source generic projection guard, so
+  focused complex-Higgs CDE projections such as `cHD` and heavy-solution `cH`
+  remain nonzero without enabling expensive collect/factor fallbacks. Numeric
+  validation probes now build Symbolica evaluator parameters from the same
+  tensor-canonized expressions that are actually compared, avoiding missing
+  function-atom parameters after dummy-index canonicalization. Full
+  `tests/integration/matching/test_fluctuation_operator.py` now passes locally
+  under the 30 GiB watchdog.

@@ -22,6 +22,7 @@ from .matching import BosonicCDEExpansionPlan, WilsonLineExpansionPlan, _term_at
 from .matching_results import (
     MatchingConditionTarget,
     MatchingResult,
+    _canonize_comparison_indices,
     registered_wilson_matching_condition_targets,
 )
 from .state import PycheteState
@@ -1750,17 +1751,34 @@ def _probe_plan_for_names(
     exclude_symbols: Sequence[Expression],
     parameter_mode: ProbeParameterMode,
     expression_transform: Callable[[Expression], Expression] | None = None,
+    canonize_indices: bool = True,
 ) -> NumericProbePlan:
     expressions: list[Expression] = []
     for name in names:
-        for result in (candidate, reference):
-            try:
-                expression = result.expression(name)
-            except KeyError:
-                continue
-            if expression_transform is not None:
-                expression = expression_transform(expression)
-            expressions.append(expression)
+        try:
+            candidate_expression = candidate.expression(name)
+        except KeyError:
+            candidate_expression = None
+        try:
+            reference_expression = reference.expression(name)
+        except KeyError:
+            reference_expression = None
+        if expression_transform is not None:
+            if candidate_expression is not None:
+                candidate_expression = expression_transform(candidate_expression)
+            if reference_expression is not None:
+                reference_expression = expression_transform(reference_expression)
+        if canonize_indices and candidate_expression is not None and reference_expression is not None:
+            candidate_canonized, reference_canonized = _canonize_comparison_indices(
+                candidate_expression,
+                reference_expression,
+            )
+            expressions.extend((candidate_canonized.expression, reference_canonized.expression))
+            continue
+        if candidate_expression is not None:
+            expressions.append(candidate_expression)
+        if reference_expression is not None:
+            expressions.append(reference_expression)
     return build_numeric_probe_plan(
         expressions,
         exclude_symbols=exclude_symbols,
@@ -1863,6 +1881,7 @@ def _gap_report(
             exclude_symbols=probe_exclude_symbols,
             parameter_mode=probe_parameter_mode,
             expression_transform=comparison_expression_transform,
+            canonize_indices=comparison_canonize_indices,
         )
         supertrace_probe_parameters = supertrace_plan.parameters
         supertrace_probe_samples = supertrace_plan.samples
@@ -1925,6 +1944,7 @@ def _gap_report(
             exclude_symbols=probe_exclude_symbols,
             parameter_mode=probe_parameter_mode,
             expression_transform=comparison_expression_transform,
+            canonize_indices=comparison_canonize_indices,
         )
         condition_probe_parameters = condition_plan.parameters
         condition_probe_samples = condition_plan.samples

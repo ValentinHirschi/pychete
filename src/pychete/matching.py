@@ -82,7 +82,6 @@ from .tree_matching import (
 )
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
-ExpressionMatrix: TypeAlias = tuple[tuple[Expression, ...], ...]
 ProjectionAtomRequirement: TypeAlias = tuple[str, str, int]
 ProjectionAtomRequirementGroups: TypeAlias = tuple[tuple[ProjectionAtomRequirement, ...], ...]
 _LOGGER = get_logger("matching")
@@ -7342,6 +7341,18 @@ def _mode_keys(modes: tuple[FluctuationMode, ...]) -> tuple[str, ...]:
     return tuple(canonical_string(mode.field) for mode in modes)
 
 
+def _propagated_mode_key(mode: FluctuationMode) -> str:
+    """Return the row-mode key reached after this mode's free propagator."""
+
+    if mode.self_conjugate:
+        return canonical_string(mode.field)
+    return canonical_string(_conjugate_fluctuation_field(mode.field))
+
+
+def _mode_index_by_key(modes: tuple[FluctuationMode, ...]) -> dict[str, int]:
+    return {canonical_string(mode.field): index for index, mode in enumerate(modes)}
+
+
 def _sector_path_name(path: tuple[FluctuationSector, ...]) -> str:
     return "-".join(sector.value for sector in path)
 
@@ -7369,28 +7380,53 @@ class _SupertraceBlockEntryPath:
 def _supertrace_block_entry_paths(blocks: tuple[FluctuationOperatorBlock, ...]) -> tuple[_SupertraceBlockEntryPath, ...]:
     if not blocks:
         return ()
-    index_ranges = tuple(range(len(block.rows)) for block in blocks)
+    row_index_by_block = tuple(_mode_index_by_key(block.rows) for block in blocks)
     paths: list[_SupertraceBlockEntryPath] = []
-    for row_indices in product(*index_ranges):
-        entries: list[Expression] = []
-        next_modes: list[FluctuationMode] = []
-        valid = True
-        for block_index, block in enumerate(blocks):
-            row_index = row_indices[block_index]
-            column_index = row_indices[(block_index + 1) % len(blocks)]
-            if column_index >= len(block.columns):
-                valid = False
-                break
-            entries.append(block.matrix[row_index][column_index])
-            next_modes.append(block.columns[column_index])
-        if not valid:
-            continue
-        paths.append(
-            _SupertraceBlockEntryPath(
-                sign=blocks[0].rows[row_indices[0]].supertrace_sign,
-                entries=tuple(entries),
-                next_modes=tuple(next_modes),
+
+    def visit(
+        block_index: int,
+        row_index: int,
+        first_row_key: str,
+        first_sign: int,
+        entries: tuple[Expression, ...],
+        next_modes: tuple[FluctuationMode, ...],
+    ) -> None:
+        block = blocks[block_index]
+        for column_index, column_mode in enumerate(block.columns):
+            propagated_key = _propagated_mode_key(column_mode)
+            next_entries = (*entries, block.matrix[row_index][column_index])
+            next_path_modes = (*next_modes, column_mode)
+            if block_index == len(blocks) - 1:
+                if propagated_key != first_row_key:
+                    continue
+                paths.append(
+                    _SupertraceBlockEntryPath(
+                        sign=first_sign,
+                        entries=next_entries,
+                        next_modes=next_path_modes,
+                    )
+                )
+                continue
+            next_row_index = row_index_by_block[block_index + 1].get(propagated_key)
+            if next_row_index is None:
+                continue
+            visit(
+                block_index + 1,
+                next_row_index,
+                first_row_key,
+                first_sign,
+                next_entries,
+                next_path_modes,
             )
+
+    for row_index, mode in enumerate(blocks[0].rows):
+        visit(
+            0,
+            row_index,
+            canonical_string(mode.field),
+            mode.supertrace_sign,
+            (),
+            (),
         )
     return tuple(paths)
 
@@ -7421,37 +7457,34 @@ def _supertrace_block_product(blocks: tuple[FluctuationOperatorBlock, ...]) -> E
 def _supertrace_block_product_matrix(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:
     trace_modes = blocks[0].rows
     product = _block_matrix(blocks[0])
-    for block in blocks[1:]:
-        product = product @ _block_matrix(block)
+    for block, next_block in zip(blocks, blocks[1:], strict=False):
+        product = product @ _propagation_matrix(block.columns, next_block.rows)
+        product = product @ _block_matrix(next_block)
+    product = product @ _propagation_matrix(blocks[-1].columns, blocks[0].rows)
     out = Expression.num(0)
     for index, mode in enumerate(trace_modes):
         out = out + Expression.num(mode.supertrace_sign) * product[index, index].to_expression()
     return out.expand()
 
 
+def _propagation_matrix(columns: tuple[FluctuationMode, ...], rows: tuple[FluctuationMode, ...]) -> Matrix:
+    row_key_to_indices: dict[str, list[int]] = {}
+    for row_index, mode in enumerate(rows):
+        row_key_to_indices.setdefault(canonical_string(mode.field), []).append(row_index)
+    matrix: list[list[Expression]] = []
+    for column in columns:
+        matrix_row = [Expression.num(0) for _ in rows]
+        for row_index in row_key_to_indices.get(_propagated_mode_key(column), ()):
+            matrix_row[row_index] = Expression.num(1)
+        matrix.append(matrix_row)
+    return Matrix.from_nested(tuple(tuple(row) for row in matrix))
+
+
 def _supertrace_block_product_expression(blocks: tuple[FluctuationOperatorBlock, ...]) -> Expression:
-    product_matrix = blocks[0].matrix
-    for block in blocks[1:]:
-        product_matrix = _expression_matrix_multiply(product_matrix, block.matrix)
     return sum_expr(
-        Expression.num(mode.supertrace_sign) * product_matrix[index][index]
-        for index, mode in enumerate(blocks[0].rows)
+        Expression.num(path.sign) * product_expr(path.entries)
+        for path in _supertrace_block_entry_paths(blocks)
     ).expand()
-
-
-def _expression_matrix_multiply(left: ExpressionMatrix, right: ExpressionMatrix) -> ExpressionMatrix:
-    if not left or not right:
-        return ()
-    row_count = len(left)
-    inner_count = len(right)
-    column_count = len(right[0])
-    return tuple(
-        tuple(
-            sum_expr(left[row][inner] * right[inner][column] for inner in range(inner_count)).expand()
-            for column in range(column_count)
-        )
-        for row in range(row_count)
-    )
 
 
 def _block_matrix(block: FluctuationOperatorBlock) -> Matrix:
