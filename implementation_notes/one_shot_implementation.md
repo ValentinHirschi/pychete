@@ -1288,6 +1288,27 @@
   reliable measurement remains the entrywise probe: all currently selected
   mixed `hScalar-lScalar` order-four entries project to zero after the latest
   convention change.
+- Current Wilson-line ordering correction: explicit Wilson-line
+  `ActWithOpenCDs` semantics now use the right-acting Matchete rule instead of
+  the cyclic closed-chain wrapping used by the legacy CDE helper. The closing
+  `WilsonTerm(...)` already represents the trace closure, so generated
+  Wilson-line open derivatives must not wrap back to earlier insertions. A
+  focused Abelian mixed-trace regression now checks that pure one-slot
+  `hScalar` order-four Wilson-line terms vanish, while `hScalar-lScalar`
+  `(4,0)` terms still lower to coupling-free field-strength sources.
+- Singlet `cHW` remeasurement after the right-acting change: target-filtered
+  generation across the selected `hScalar`, `hScalar-hScalar`, and
+  `hScalar-lScalar` order-four Wilson-line plan still has 35 plan entries, but
+  nonzero entries are now restricted to
+  `hScalar-hScalar#wilson5_o0_0`,
+  `hScalar-hScalar#wilson10_o2_0`,
+  `hScalar-hScalar#wilson19_o4_0`,
+  `hScalar-lScalar#wilson20_o0_0`,
+  `hScalar-lScalar#wilson25_o2_0`, and
+  `hScalar-lScalar#wilson34_o4_0`, with 8 `hScalar-hScalar` terms and 16
+  `hScalar-lScalar` terms. The two order-four finite projections still give
+  `cHW = 0`, so this removes non-Matchete cyclic sources but does not yet
+  complete the first Matchete parity milestone.
 
 ## Next Work
 

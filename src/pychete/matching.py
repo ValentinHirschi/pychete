@@ -985,7 +985,9 @@ class WilsonLineTracePath:
             operands.append(self.wilson_term_expression())
             numerator = (prefactor * loop_numerator * _ncm_chain(*operands)).expand()
             if act_open_derivatives:
-                numerator = act_with_open_covariant_derivatives(numerator, cyclic=True)
+                # Explicit Wilson-line chains already close on the final WilsonTerm;
+                # Matchete's ActWithOpenCDs acts only on factors to the right here.
+                numerator = act_with_open_covariant_derivatives(numerator)
             numerator = remove_loop_momentum_symmetry_vanishing_wilson_terms(numerator, loop_momentum_indices)
             numerator = expand_wilson_terms(
                 self.theory,

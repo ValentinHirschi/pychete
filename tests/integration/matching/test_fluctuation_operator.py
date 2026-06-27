@@ -1891,42 +1891,52 @@ def test_wilson_line_expansion_can_simplify_generated_color_algebra(
     assert "generated_wilson_line_color_simplified" in canonical_string(simplified_terms[0].numerator)
 
 
-def test_wilson_line_commutator_terms_survive_color_simplification_with_dummy_indices() -> None:
-    theory = Theory("one_loop_setup_wilson_line_commutator_color_fallback")
-    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
-    fund = theory.define_representation("SU2L", "fund")
+def test_wilson_line_open_derivatives_act_right_without_cyclic_wrap() -> None:
+    theory = Theory("one_loop_setup_wilson_line_right_acting_open_cd")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
     heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
-    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
-    vector = theory.field_handle("W")
-    kappa = theory.define_coupling("kappa", self_conjugate=True)
-    i = theory.dummy_index(1, fund)
+    light = theory.define_field(
+        "H",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", Expression.num(1))],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.define_coupling("A", self_conjugate=True, mass_dimension=1)
     lagrangian = (
         theory.free_lag(heavy)
-        + theory.free_lag(higgs)
+        + theory.free_lag(light)
         + theory.free_lag(vector)
-        - kappa() * heavy() ** 2 * s.Bar(higgs(i)) * higgs(i) / 2
+        - coupling() * heavy() * s.Bar(light()) * light()
     )
-    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=1)
+    setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=2)
     a = theory.index("a")
     b = theory.index("b")
     c = theory.index("c")
     d = theory.index("d")
 
-    terms = setup.interaction_wilson_line_expansion_terms(
+    pure_heavy_terms = setup.interaction_wilson_line_expansion_terms(
         {"hScalar": ((a, b, c, d),)},
         act_open_derivatives=True,
         emit_covariant_derivative_commutators=True,
         emit_covariant_derivative_commutator_passes=4,
         expand_covariant_derivative_commutators=True,
-        simplify_pychete_color_algebra=True,
     )
-    rendered = "\n".join(canonical_string(term.numerator) for term in terms)
+    mixed_terms = setup.interaction_wilson_line_expansion_terms(
+        {"hScalar-lScalar": ((a, b, c, d), ())},
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=True,
+        emit_covariant_derivative_commutator_passes=4,
+        expand_covariant_derivative_commutators=True,
+    )
+    rendered = "\n".join(canonical_string(term.numerator) for term in mixed_terms)
 
-    assert len(terms) == 5
-    assert all("pychete::FieldStrength" in canonical_string(term.numerator) for term in terms)
-    assert all(not bool(term.numerator.matches(s.CD(s.CDIndexWildcard, Expression.num(0)))) for term in terms)
-    assert "pychete::CG" in rendered
-    assert "spenso::" not in rendered
+    assert pure_heavy_terms == ()
+    assert len(mixed_terms) == 10
+    assert "pychete::FieldStrength" in rendered
+    assert "pychete::OpenCD" not in rendered
+    assert "coupling_gY" not in rendered
 
 
 def test_wilson_line_vector_slots_use_matchete_propagator_sign() -> None:

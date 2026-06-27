@@ -516,3 +516,13 @@ without Warsaw-specific core assumptions.
   one-loop integration target pass: `Singlet_Scalar_Extension` `cHW` remains
   the active milestone, with selected mixed `hScalar-lScalar` order-four
   entries still projecting to zero.
+- Latest Wilson-line ordering update: explicit Wilson-line traces now apply
+  open covariant derivatives only to factors on their right, matching
+  Matchete's ordered chain ending in the closing `WilsonTerm(...)`. The legacy
+  cyclic wrapping behavior remains available for CDE-style closed chains but is
+  no longer used by `WilsonLineTracePath.propagator_expansion_terms(...)`.
+  This removes non-Matchete cyclic source terms from the Singlet frontier:
+  selected order-four generation now has no surviving pure `hScalar` entry,
+  only 8 `hScalar-hScalar` terms and 16 `hScalar-lScalar` terms. The surviving
+  order-four finite projections still give `cHW = 0`, so the first full
+  Matchete one-loop integration target remains incomplete.

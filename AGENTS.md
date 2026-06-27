@@ -516,6 +516,11 @@ before generated Wilson-line terms exist, so it is not sufficient for
 Wilson-line-generated CG structures. Keep this as explicit option plumbing into
 `WilsonLineTracePath.propagator_expansion_terms(...)`; do not silently simplify
 raw Wilson-line diagnostics by default.
+For explicit Wilson-line traces, open covariant derivatives act only on factors
+to their right in the ordered chain ending with the closing `WilsonTerm(...)`.
+Do not use the cyclic closed-chain wrapping mode from the legacy CDE path in
+`WilsonLineTracePath.propagator_expansion_terms(...)`; wrapping derivatives
+back onto earlier insertions creates non-Matchete Wilson-line source terms.
 Generated Wilson-line postprocessing must also simplify pychete loop-momentum
 metric contractions and field-strength metric/antisymmetry relations through
 the idenso adapter before vakint/internal integral evaluation. Closed Dirac
