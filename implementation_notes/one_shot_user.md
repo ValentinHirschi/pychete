@@ -1074,3 +1074,10 @@ without Warsaw-specific core assumptions.
   The `cHW`, `cHB`, `cHWB`, and selected four-slot `cHD` checks can now be run
   as targeted partial integration tests, giving fast coefficient-level
   regression scoping before attempting broader Matchete integration parity.
+- Latest public-route update: the selected Singlet `cHW/cHB/cHWB` subset now
+  also passes through the public `Theory.match(...)` route via
+  `ValidationFixture.one_loop_preview_gap_report(..., use_public_match_api=True)`.
+  This is the first public one-loop Wilson-coefficient success surface. A
+  bounded order-one `cHD` probe remains different, so full Singlet `cHD`
+  parity still requires more generated source coverage beyond the current
+  order-one/full-model route.

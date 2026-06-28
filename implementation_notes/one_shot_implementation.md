@@ -599,3 +599,23 @@
   -q` (`4 passed`). The edited broad file also passed collection:
   `tests/integration/matching/test_fluctuation_operator.py --collect-only -q`
   (`114 tests collected`).
+- Latest public-route coefficient slice: the first successful selected
+  Singlet Wilson coefficients now also pass through the public
+  `Theory.match(...)` path as exercised by
+  `ValidationFixture.one_loop_preview_gap_report(..., use_public_match_api=True)`.
+  The new slow partial integration test projects the selected
+  `hScalar-lScalar` Wilson-line subset for `cHW`, `cHB`, and `cHWB` in one
+  report, with target filtering, pre-Wilson tensor reduction, internal
+  minimal subtraction, evaluated-HBAR normalization, and registered-Wilson
+  matching-condition projection all enabled. All three projected coefficients
+  match the committed Matchete fixture.
+- A bounded probe of the order-one full-model `cHD` report with the new
+  on-shell EOM options still disagrees, and the metadata shows no vector-EOM
+  rule or Abelian field-redefinition delta applied at that truncation. This
+  keeps the full Singlet `cHD` frontier honest: the selected four-slot
+  coefficient and reference off-shell-to-on-shell reduction are green, but the
+  full generated model source still needs additional trace/source coverage
+  before the public full-model `cHD` condition can pass.
+- Focused validation for this slice passed under the 30 GiB watchdog:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -q`
+  (`5 passed`).
