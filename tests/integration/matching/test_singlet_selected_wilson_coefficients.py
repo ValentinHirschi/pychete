@@ -593,6 +593,11 @@ def test_selected_chd_four_slot_matchete_fixture_records_scalar_vector_frontier(
     assert debug["prop_order"] == 0
     assert debug["insertion_count"] == 88
     assert debug["detailed_insertion_count"] == 88
+    assert debug["selected_prop_order_target_coefficient_input_form"] == "$Failed"
+    assert "-1/4*" in debug["previous_validation_trace_target_coefficient_input_form"]
+    assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in (
+        debug["previous_validation_trace_target_coefficient_input_form"]
+    )
 
     scalar_vector_orders = debug["selected_scalar_vector_x_orders_input_form"]
     scalar_vector_values = debug["selected_scalar_vector_xterm_values_input_form"]
@@ -620,8 +625,22 @@ def test_selected_chd_four_slot_matchete_fixture_records_scalar_vector_frontier(
         if "(-1/4*" in simplified:
             quarter_insertions.append(insertion["index"])
 
+    target_quarter_insertions = [
+        insertion["index"]
+        for insertion in debug["insertions"]
+        if insertion["validation_simplified_target_coefficient_input_form"].startswith("-1/4*")
+    ]
+    target_quarter_coefficients = {
+        insertion["validation_simplified_target_coefficient_input_form"]
+        for insertion in debug["insertions"]
+        if insertion["index"] in target_quarter_insertions
+    }
+
     assert len(nonzero_a2_gy2_insertions) == 20
     assert quarter_insertions == [1, 3, 12, 14, 45, 47, 56, 58]
+    assert target_quarter_insertions == [1, 3, 12, 14, 45, 47, 56, 58]
+    assert len(target_quarter_coefficients) == 1
+    assert "1 + \\[Epsilon] + \\[Epsilon]*Log" in next(iter(target_quarter_coefficients))
 
 
 def test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates() -> None:

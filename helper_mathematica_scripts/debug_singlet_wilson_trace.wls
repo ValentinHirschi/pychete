@@ -332,6 +332,22 @@ safeEvaluate[expr_] := CheckAbort[Quiet[Check[expr, $Failed]], $Aborted];
 
 failedEvaluationQ[expr_] := expr === $Aborted || expr === $Failed;
 
+operatorForTarget[target_] := Switch[
+  ToString[Unevaluated[target], InputForm],
+  "cHD",
+    Module[{i = Unique["i"], j = Unique["j"], nu = Unique["nu"]},
+      H[i] Matchete`CD[nu, Matchete`Bar[H[i]]] Matchete`Bar[H[j]] Matchete`CD[nu, H[j]]
+    ],
+  _,
+    Missing["UnsupportedTarget", toInputString[target]]
+];
+
+targetCoefficient[expr_] := If[
+  failedEvaluationQ[expr] || MatchQ[targetOperator, _Missing],
+  $Failed,
+  safeEvaluate @ Matchete`GetOperatorCoefficient[expr, targetOperator]
+];
+
 tracePropTypeNames = <|
   "hScalar" -> Matchete`PackageScope`hScalar,
   "lScalar" -> Matchete`PackageScope`lScalar,
@@ -565,9 +581,11 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
 	      hBilinearCoefficientSlices[evaluated],
 	    "prefactored_evaluate_str_reference_h_bilinear_coefficients" ->
 	      hBilinearCoefficientSlices[preFactor evaluated],
-	    "validation_simplification_stage_summaries" -> validationSimplification["stages"],
+    "validation_simplification_stage_summaries" -> validationSimplification["stages"],
 	    "validation_simplified_prefactored_evaluate_str_input_form" ->
 	      shortInputString[validationSimplified],
+	    "validation_simplified_target_coefficient_input_form" ->
+	      toInputString[targetCoefficient[validationSimplified]],
     "manual_minus_evaluate_str_input_form" -> If[
       eps === $Aborted || eps === $Failed || evaluated === $Aborted || evaluated === $Failed,
       toInputString[{eps, evaluated}],
@@ -583,6 +601,7 @@ luv = Matchete`LoadModel["Singlet_Scalar_Extension"];
 lag = Matchete`PackageScope`SetCurrentLagrangian[luv, 1, 6, System`Verbose -> False];
 propTypes = tracePropTypes[traceNameOption];
 propOrder = propOrderOption;
+targetOperator = operatorForTarget[targetOption];
 gen = Matchete`SuperTrace`PackagePrivate`GenericPropagatorExpansion[propTypes, propOrder];
 insertions = Matchete`SuperTrace`PackagePrivate`DeterminePowerInsertions[
   propTypes,
@@ -740,6 +759,8 @@ data = <|
     "selected_prop_order_validation_simplified",
     selectedPropOrderValidationSimplified
   ],
+  "selected_prop_order_target_coefficient_input_form" ->
+    toInputString[targetCoefficient[selectedPropOrderValidationSimplified]],
   "selected_prop_order_validation_stage_summaries" ->
     selectedPropOrderValidationStages["stages"],
   "selected_prop_order_validation_simplified_input_form" ->
@@ -771,6 +792,8 @@ data = <|
     "previous_validation_" <> traceNameOption,
     previousValidationTrace
   ],
+  "previous_validation_trace_target_coefficient_input_form" ->
+    toInputString[targetCoefficient[previousValidationTrace]],
   "previous_validation_hScalar_lScalar_summary" -> If[
     traceNameOption === "hScalar-lScalar",
     stageSummary["previous_validation_hScalar_lScalar", previousValidationTrace],

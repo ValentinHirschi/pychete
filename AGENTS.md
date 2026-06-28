@@ -440,6 +440,12 @@ a current Matchete stage dump for the same trace, target, propagation order,
 and simplification boundary before changing pychete. If Mathematica is
 unavailable, record that limitation in the implementation notes and continue
 with the closest committed Matchete-derived fixtures.
+For the active one-loop frontier, treat debug WolframScript runs and Matchete
+intermediate dissection as routine engineering work, not exceptional
+diagnostics. When pychete and Matchete disagree, refresh the narrowest relevant
+Matchete dump first, compare it with a bounded pychete probe, and only then
+patch the generic pychete algorithm that first diverges from Matchete's stage
+semantics.
 When reporting progress on a mismatch, state which Matchete dump/checkpoint
 and which bounded pychete probe were compared. A statement that a coefficient
 "does not match" is not actionable enough for this port unless it is tied to a

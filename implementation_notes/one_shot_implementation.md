@@ -971,3 +971,39 @@
   deselected`); and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
   passed with no issues. `git diff --check` and `py_compile` for the touched
   Python modules also passed.
+- Latest user reminder recorded again: the active mismatch workflow is to keep
+  running focused debug WolframScripts and dissecting Matchete intermediate
+  results, not to infer fixes from final Wilson coefficients. For the current
+  Singlet `cHD` frontier, the next comparisons should name the refreshed
+  Matchete dump/checkpoint, the paired bounded pychete probe, and the first
+  stage boundary that differs before any pychete algorithm patch is made.
+- Latest `cHD` boundary probe: refreshed the pychete public generated-source
+  check against the committed Matchete `cHD` insertion/EOM fixtures. The
+  watchdog-wrapped pychete probe for the full generated order-zero Wilson-line
+  public route still projects
+  `-1/(2 epsilon) - 1/2 - 1/2 log(mubar2/M^2)`, and its post-heavy source has
+  zero differentiated `FieldStrength(B, ..., {nu})` atoms, so pychete derives
+  zero Abelian vector EOM replacement rules and zero field-redefinition delta.
+  Turning on Wilson-line commutator emission/expansion for the same probe did
+  not change this. By contrast, the converted Matchete reference off-shell
+  source contains differentiated `FieldStrength(B)` and `FieldStrength(W)`
+  atoms, produces one Abelian vector EOM rule, and has a nonzero vector
+  field-redefinition delta. The first current semantic gap is therefore
+  Wilson-line Green/commutator source exposure into Matchete's
+  field-strength-divergence/current representative, not a final projection or
+  EOM-rule plumbing bug.
+- Added a focused Matchete fixture regression on the new
+  `validation_simplified_target_coefficient_input_form` fields emitted by
+  `helper_mathematica_scripts/debug_singlet_wilson_trace.wls`: the full
+  four-slot `cHD` dump records eight insertion-level `GetOperatorCoefficient`
+  quarter checkpoints at insertion indices `1, 3, 12, 14, 45, 47, 56, 58`,
+  while the selected prop-order aggregate coefficient remains `$Failed` in
+  Matchete's direct debug script. This keeps the next source-generation patch
+  tied to Matchete insertion-level evidence.
+- Focused validation for this documentation/debug-fixture slice passed:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "matchete_fixture_records_scalar_vector_frontier"` (`1 passed, 13
+  deselected`); watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "matchete_fixture_records_scalar_vector_frontier or quarter_paths"` (`3
+  passed, 11 deselected`); and `git diff --check` passed.

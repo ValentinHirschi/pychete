@@ -1212,3 +1212,20 @@ without Warsaw-specific core assumptions.
   Matchete has `-5/3`, so the next mismatch slice should target the missing
   source/EOMSimplify/field-redefinition contribution rather than projection
   performance.
+- Latest user reminder recorded again: for every Matchete/pychete mismatch,
+  keep running focused debug WolframScripts and dissect Matchete intermediate
+  stages until the first semantic divergence is identified. The active
+  `cHD` work should continue by comparing refreshed Matchete dumps with
+  bounded pychete probes at source, Wilson expansion, loop integration,
+  Green-basis, EOM/field-redefinition, and projection boundaries before any
+  generic algorithm patch is accepted.
+- Latest `cHD` mismatch-dissection update: the refreshed pychete public
+  generated-source probe confirms the current source has no differentiated
+  Abelian `FieldStrength(B)` atoms, no Abelian vector EOM replacement rule, and
+  no vector field-redefinition delta, even with Wilson-line commutator
+  emission/expansion enabled. The converted Matchete reference off-shell
+  source does contain the differentiated field-strength representative and
+  produces the expected vector-EOM machinery. The next generic fix should
+  therefore target Wilson-line Green/commutator source exposure into
+  Matchete's field-strength-divergence/current form, guided by the committed
+  insertion-level `cHD` debug dump.
