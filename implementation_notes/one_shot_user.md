@@ -772,3 +772,18 @@ without Warsaw-specific core assumptions.
   to Matchete's full prop-order-four `EvaluateSTr` stage is invalid; the next
   fixes must compare full compatible aggregates or add finer Matchete dumps
   before changing pychete.
+- Latest progress following that policy: added a finer Matchete prop-order
+  four slot split to `debug_singlet_wilson_trace.wls` and used it to compare
+  pychete stage-by-stage. After verifying the helper emitted the same
+  Matchete package-scope heads as `GenericPropagatorExpansion`, pychete now
+  matches Matchete through `ActWithOpenCDs` and `GatherLoopMomenta`.
+- Fixed two precise Matchete algorithm mismatches in pychete:
+  `RemoveSymmetryVanishingWilsonTerms` now uses Matchete's containment
+  direction (`wilsonInds` contained in `symInds`) and preserves empty
+  Wilson-term derivative lists, and `EvaluateSymmetricLorentzInds` now
+  contracts top-level metrics before distributing metric-pairing sums. With
+  these fixes, the selected Singlet `hScalar-lScalar -> cHW` order-four
+  checkpoint matches Matchete through
+  `removed_symmetry_vanishing_wilson_terms` and
+  `evaluated_symmetric_lorentz_indices` (49 terms per orientation with
+  matching derivative-word histograms).

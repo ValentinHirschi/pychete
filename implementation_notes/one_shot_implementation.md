@@ -2025,17 +2025,53 @@
   default matching pipeline; the next slice should use it to build a
   Matchete-compatible pre-Wilson diagnostic/evaluation path before replacing
   any existing vakint tensor-reduction behavior.
+- Latest source-level mismatch audit: extended
+  `helper_mathematica_scripts/debug_singlet_wilson_trace.wls` so the
+  Matchete dump records per-slot-order stages for prop order four. After
+  correcting the helper to emit Matchete package-scope `FuncNCM`, `Xop`,
+  `Mop`, and `WilsonLine` heads, the paired pychete/Matchete comparison
+  showed exact agreement through `ActWithOpenCDs` and `GatherLoopMomenta`
+  for `[0,4]`, `[1,3]`, `[2,2]`, `[3,1]`, and `[4,0]`.
+- Fixed the first real stage mismatch in
+  `RemoveSymmetryVanishingWilsonTerms`. The corresponding Matchete rule is
+  `SubsetQ[symInds, wilsonInds]`, and Mathematica interprets this as
+  "`wilsonInds` is contained in `symInds`"; pychete had implemented the
+  reverse containment. Matchete also returns the term unchanged when the
+  matched `WilsonTerm` derivative list is empty. pychete now matches both
+  semantics, with focused regressions for rank-two/rank-four loop-momentum
+  cleanup and empty Wilson transporters.
+- Added `collect_loop_momenta_to_symmetric_lorentz(...)` as a diagnostic
+  Matchete-order `LoopMoms`/`GatherLoopMomenta` helper and
+  `contract_lorentz_metrics(...)` as a Matchete-style single-term metric
+  contraction helper. `evaluate_symmetric_lorentz_indices(...)` now performs
+  the same ordering as Matchete's `EvaluateSymmetricLorentzInds`: replace
+  `SymmetricLorentzInds`, apply single-term top-level metric contraction
+  before distributing metric-pairing sums, then expand. This reproduces
+  Matchete's selected Singlet order-four `evaluated_symmetric_lorentz_indices`
+  checkpoint: 49 terms per orientation with matching derivative-word
+  histograms.
+- Current verified Singlet `hScalar-lScalar -> cHW` checkpoint: pychete now
+  matches Matchete at the selected order-four source stages
+  `acted_open_cds`, `gathered_loop_momenta`,
+  `removed_symmetry_vanishing_wilson_terms`, and
+  `evaluated_symmetric_lorentz_indices`. The next unmatched stages to compare
+  are Matchete's subsequent `contracted_metric`, `wilson_expanded`,
+  `loop_integrated`, post-index/group cleanup, and Green/on-shell
+  simplification.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - implement a generic tensor-index/metric-normal-form correction for
-    Wilson-line scalar derivative bilinears so pychete collapses the relevant
-    generated Lorentz contractions to Matchete-like two-dummy derivative words
-    (`aabb`, `abab`, `abba`) before Green/basis projection. Use Symbolica
-    tensor canonicalization and idenso-backed metric contraction rather than
-    string-based derivative-word manipulation;
+  - continue the matched-stage Singlet comparison at Matchete's
+    `contracted_metric`, `wilson_expanded`, `loop_integrated`, and
+    post-index/group cleanup checkpoints, using the newly matched
+    `evaluated_symmetric_lorentz_indices` output as the starting point;
+  - implement any remaining tensor-index/metric-normal-form correction only
+    after the corresponding Matchete stage has been inspected. Use Symbolica
+    tensor canonicalization and idenso-backed metric/group simplification
+    where they match Matchete's stage semantics; preserve Matchete ordering
+    when it intentionally contracts before distributing products;
   - continue the paired Matchete/pychete dump loop for the Singlet
     `hScalar-lScalar -> cHW` frontier, adding more intermediate Matchete
     summaries whenever needed and using them to locate the first mismatch in

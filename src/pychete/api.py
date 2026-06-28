@@ -33,6 +33,8 @@ from .indices import (
     tensor_index_specs,
 )
 from .loop_integration import (
+    collect_loop_momenta_to_symmetric_lorentz,
+    contract_lorentz_metrics,
     evaluate_sym_gamma_factors,
     evaluate_symmetric_lorentz_indices,
     symmetric_lorentz_gamma_factor,
@@ -193,7 +195,9 @@ __all__ = [
     "canonize_loop_function",
     "canonize_loop_functions",
     "canonize_tensor_indices",
+    "collect_loop_momenta_to_symmetric_lorentz",
     "collect_indices",
+    "contract_lorentz_metrics",
     "configure_logging",
     "contract_wilson_term_derivative_metrics",
     "display_string",

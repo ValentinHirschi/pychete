@@ -269,6 +269,81 @@ validationTraceStages[expr_] := Module[
 
 validationTraceSimplify[expr_] := validationTraceStages[expr]["result"];
 
+Begin["Matchete`SuperTrace`PackagePrivate`"];
+GenericPropagatorExpansionForOrderTuple[propTypes_List, orders_List] := Module[
+    {gaugeCouplings, genInds, n, masses, props, Xops, types, propNo = Length @ propTypes},
+  genInds = Table[Symbol["$i" <> ToString @ n], {n, propNo + 1}];
+  Xops = MapThread[Matchete`PackageScope`Xop,
+    {Partition[propTypes, 2, 1, 1], Partition[genInds, 2, 1], Table[n, {n, propNo}]}];
+  AppendTo[Xops, Matchete`PackageScope`WilsonLine[First @ propTypes, genInds[[{-1, 1}]]]];
+  types = RotateLeft[propTypes];
+  masses = MapThread[Matchete`PackageScope`Mop, {types, genInds[[2 ;;]], Table[n, {n, propNo}]}];
+  gaugeCouplings = Times @@ Table[
+    If[types[[n]] === Matchete`PackageScope`lVector, Matchete`PackageScope`GaugeCop[n], 1],
+    {n, propNo}
+  ];
+  props = MapThread[PropAtOrder, {types, masses, orders}];
+  gaugeCouplings * Matchete`PackageScope`FuncNCM @@ (Riffle[Xops, props] /. PropAtOrder -> PropExpand) // Expand
+];
+End[];
+
+evaluateEarlyStages[gen_, insertion_] := Module[
+  {
+    factor = insertion[[1]],
+    replacement = insertion[[2]],
+    substituted,
+    acted,
+    gathered,
+    removed
+  },
+
+  substituted = factor gen /. replacement /. Matchete`PackageScope`$Xsubs /.
+    Matchete`PackageScope`$Msubs /. Matchete`PackageScope`$Gsubs;
+  acted = Matchete`PackageScope`ActWithOpenCDs[substituted] /.
+    Matchete`PackageScope`FuncNCM -> Matchete`NCM;
+  gathered = Matchete`PackageScope`GatherLoopMomenta[acted];
+  removed = Matchete`PackageScope`RemoveSymmetryVanishingWilsonTerms[gathered];
+
+  <|
+    "factor_input_form" -> toInputString[factor],
+    "replacement_input_form" -> toInputString[replacement],
+    "stages" -> {
+      stageSummary["slot_substituted", substituted],
+      stageSummary["slot_acted_open_cds", acted],
+      stageSummary["slot_gathered_loop_momenta", gathered],
+      stageSummary["slot_removed_symmetry_vanishing_wilson_terms", removed]
+    }
+  |>
+];
+
+orderTupleStageSummaries[propTypes_, propOrder_, insertions_] := Module[
+  {orderTuples, tupleGen},
+  orderTuples = Matchete`PackageScope`IntegerSets[propOrder, Length @ propTypes];
+  Map[
+    Function[orders,
+      tupleGen = Matchete`SuperTrace`PackagePrivate`GenericPropagatorExpansionForOrderTuple[
+        propTypes,
+        orders
+      ];
+      <|
+        "slot_orders" -> orders,
+        "generator_summary" -> stageSummary[
+          "generic_propagator_expansion_slot_" <> toInputString[orders],
+          tupleGen
+        ],
+        "insertions" -> MapIndexed[
+          Join[
+            <|"index" -> First[#2]|>,
+            evaluateEarlyStages[tupleGen, #1]
+          ] &,
+          insertions
+        ]
+      |>
+    ],
+    orderTuples
+  ]
+];
+
 evaluateStages[gen_, insertion_, propTypes_] := Module[
   {
     factor = insertion[[1]],
@@ -417,6 +492,7 @@ data = <|
     ]
   ],
   "propagator_expansion_summary" -> stageSummary["generic_propagator_expansion", gen],
+  "slot_order_stage_summaries" -> orderTupleStageSummaries[propTypes, propOrder, insertions],
   "insertion_count" -> Length[insertions],
   "insertions" -> MapIndexed[
     Join[

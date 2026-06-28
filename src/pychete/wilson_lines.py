@@ -111,8 +111,9 @@ def remove_symmetry_vanishing_wilson_terms(expr: Expression) -> Expression:
     """Drop additive terms whose ``WilsonTerm`` derivatives vanish by symmetry.
 
     This mirrors the current Matchete Wilson-line stage that removes Wilson
-    terms whose derivative indices are fully contained in a symmetric Lorentz
-    loop-integration marker, or whose two derivative indices are identical.
+    terms whose Wilson-derivative indices are fully contained in a symmetric
+    Lorentz loop-integration marker, or whose two derivative indices are
+    identical.
     Discovery of both markers and Wilson terms is done through Symbolica
     pattern matching; Python only applies the term-level zeroing policy.
     """
@@ -168,14 +169,14 @@ def _symmetry_vanishes_wilson_term(
     symmetric_pattern: Expression,
     wilson_pattern: Expression,
 ) -> bool:
-    wilson_groups = tuple(_wilson_derivative_groups(expr, wilson_pattern))
+    wilson_groups = tuple(group for group in _wilson_derivative_groups(expr, wilson_pattern) if group)
     if not wilson_groups:
         return False
     if any(_has_repeated_wilson_pair(group) for group in wilson_groups):
         return True
     symmetric_groups = tuple(_symmetric_lorentz_index_groups(expr, symmetric_pattern))
     return any(
-        _is_subset_exprs(symmetric_group, wilson_group)
+        _is_subset_exprs(wilson_group, symmetric_group)
         for symmetric_group in symmetric_groups
         for wilson_group in wilson_groups
     )

@@ -2717,10 +2717,18 @@ def test_remove_symmetry_vanishing_wilson_terms_uses_loop_symmetry_markers() -> 
     vanishing = symmetric_marker * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
     repeated = s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, mu))
     survivor = symmetric_marker * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, rho))
+    matchete_subset_survivor = symmetric_marker * s.WilsonTerm(
+        phi.label,
+        s.List(left, right),
+        s.List(mu, nu, rho, rho),
+    )
+    empty_wilson_survivor = symmetric_marker * s.WilsonTerm(phi.label, s.List(left, right), s.List())
 
     assert_expr_equal(remove_symmetry_vanishing_wilson_terms(vanishing), Expression.num(0))
     assert_expr_equal(remove_symmetry_vanishing_wilson_terms(repeated), Expression.num(0))
     assert_expr_equal(remove_symmetry_vanishing_wilson_terms(vanishing + survivor), survivor)
+    assert_expr_equal(remove_symmetry_vanishing_wilson_terms(matchete_subset_survivor), matchete_subset_survivor)
+    assert_expr_equal(remove_symmetry_vanishing_wilson_terms(empty_wilson_survivor), empty_wilson_survivor)
     assert_expr_equal(expand_wilson_terms(theory, vanishing), Expression.num(0))
 
 
@@ -2736,15 +2744,26 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
     numerator = s.LoopMomentum(mu) * s.LoopMomentum(nu)
     vanishing = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, nu))
     survivor = numerator * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu, rho))
-    four_derivative_vanishing = numerator * s.WilsonTerm(
+    four_derivative_survivor = numerator * s.WilsonTerm(
         phi.label,
         s.List(left, right),
         s.List(mu, nu, rho, sigma),
     )
-    four_derivative_survivor = numerator * s.WilsonTerm(
+    rank_four_numerator = s.LoopMomentum(mu) * s.LoopMomentum(nu) * s.LoopMomentum(rho) * s.LoopMomentum(sigma)
+    rank_four_vanishing = rank_four_numerator * s.WilsonTerm(
+        phi.label,
+        s.List(left, right),
+        s.List(mu, nu),
+    )
+    rank_four_survivor = rank_four_numerator * s.WilsonTerm(
         phi.label,
         s.List(left, right),
         s.List(mu, rho, sigma, theory.index("lambda")),
+    )
+    rank_four_empty_wilson_survivor = rank_four_numerator * s.WilsonTerm(
+        phi.label,
+        s.List(left, right),
+        s.List(),
     )
     odd = s.LoopMomentum(mu) * s.WilsonTerm(phi.label, s.List(left, right), s.List(mu))
 
@@ -2760,12 +2779,23 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
         remove_loop_momentum_symmetry_vanishing_wilson_terms(survivor, (mu, nu))
     )
     assert_expr_equal(
-        remove_loop_momentum_symmetry_vanishing_wilson_terms(four_derivative_vanishing, (mu, nu)),
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(four_derivative_survivor, (mu, nu)),
+        four_derivative_survivor,
+    )
+    assert_expr_equal(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(rank_four_vanishing, (mu, nu, rho, sigma)),
         Expression.num(0),
     )
     assert_expr_equal(
-        remove_loop_momentum_symmetry_vanishing_wilson_terms(four_derivative_survivor, (mu, nu)),
-        four_derivative_survivor,
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(rank_four_survivor, (mu, nu, rho, sigma)),
+        rank_four_survivor,
+    )
+    assert_expr_equal(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(
+            rank_four_empty_wilson_survivor,
+            (mu, nu, rho, sigma),
+        ),
+        rank_four_empty_wilson_survivor,
     )
     assert_expr_equal(remove_loop_momentum_symmetry_vanishing_wilson_terms(odd, (mu,)), Expression.num(0))
 
