@@ -619,3 +619,30 @@
 - Focused validation for this slice passed under the 30 GiB watchdog:
   `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -q`
   (`5 passed`).
+- Latest public selected-`cHD` slice: the public `Theory.match(...)` route now
+  also reproduces the selected Singlet
+  `hScalar-lScalar-lVector-lScalar -> cHD` coefficient with Wilson-line target
+  filtering enabled. The mismatch was in the pre-generation Wilson-line entry
+  filter: it rewrote individual insertion entries whenever any projection
+  alias involved a field strength. Registered `cHD` has field-strength EOM
+  aliases, but also has a pure field/derivative target group; heavy-mediated
+  terms must be allowed to combine across the whole Wilson-line path before
+  generated-term filtering. The entry rewrite is now restricted to target
+  requirement sets where every requirement group is field-strength-local.
+  The path-level impossible-entry guard and generated-term filter remain in
+  place.
+- Added a public selected-four-slot `cHD` regression to
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py`.
+  It calls `Theory.match(...)` with selected
+  `hScalar-lScalar-lVector-lScalar`, target filtering, pre-Wilson tensor
+  reduction, internal minimal subtraction, evaluated-HBAR normalization, and
+  registered-Wilson projection. It checks the Matchete-selected coefficient
+  `hbar*A^2*gY^2/M^4*(log(M) - log(vakint::mursq)/2 - 1/2)`.
+- Focused validation for this slice passed under the 30 GiB watchdog:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -q`
+  (`6 passed`), and
+  `tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line_target_filter or singlet_wilson_line_target_prefilter or
+  public_wilson_line_can_filter_terms_by_matching_targets" -q`
+  (`3 passed, 111 deselected`). `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` also passed.

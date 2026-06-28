@@ -9,6 +9,7 @@ from symbolica import Expression, S
 from pychete import (
     MatchingResult,
     OneLoopIntegralBackend,
+    OneLoopMatchOptions,
     OneLoopNormalization,
     Theory,
     canonical_string,
@@ -186,6 +187,68 @@ def test_public_match_selected_higgs_gauge_wilson_subset_matches_matchete_fixtur
     assert report.reference_matching_condition_names == expected_names
     assert report.accepted_common_wilson_matching_condition_names == expected_names
     assert report.different_after_probe_common_wilson_matching_condition_names == ()
+
+
+@pytest.mark.slow
+def test_public_match_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    registered_targets = matching_results_module.registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    condition_name, target = next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+    hbar = theory.external_handle("hbar")()
+
+    result = theory.match(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=4,
+            integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+            normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+            hbar=hbar,
+            wilson_line_trace_names=("hScalar-lScalar-lVector-lScalar",),
+            wilson_line_max_total_order=0,
+            wilson_line_max_slot_order=0,
+            wilson_line_index_prefix="public_singlet_cHD_four_slot",
+            wilson_line_act_open_derivatives=True,
+            wilson_line_emit_covariant_derivative_commutators=False,
+            wilson_line_emit_covariant_derivative_commutator_passes=1,
+            wilson_line_covariant_derivative_commutator_mode="all_distinct",
+            wilson_line_expand_covariant_derivative_commutators=False,
+            wilson_line_max_derivative_order=4,
+            wilson_line_filter_terms_by_matching_targets=True,
+            wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+            wilson_line_tensor_reduce_before_wilson_expand=True,
+            simplify_pychete_color_algebra=True,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={condition_name: target},
+        matching_condition_source="on_shell_eft_lagrangian",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        matching_condition_drop_zero=False,
+    )
+    projected = result.matching_conditions[condition_name]
+    mass = theory.coupling_handle("M")()
+    expected = (
+        hbar
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (mass.log() - S("vakint::mursq").log() / 2 - Expression.num(1) / 2)
+        / mass**4
+    )
+
+    assert result.metadata["wilson_line_terms_filtered_by_matching_targets"] is True
+    assert result.metadata["interaction_wilson_line_term_count"] == 4
+    assert result.metadata["interaction_wilson_line_plan_entry_count"] == 1
+    assert result.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0",
+    )
+    assert_expr_equal((projected - expected).expand(), Expression.num(0))
 
 
 def test_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> None:

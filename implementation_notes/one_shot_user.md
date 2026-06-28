@@ -1081,3 +1081,10 @@ without Warsaw-specific core assumptions.
   bounded order-one `cHD` probe remains different, so full Singlet `cHD`
   parity still requires more generated source coverage beyond the current
   order-one/full-model route.
+- Latest selected-`cHD` update: the public `Theory.match(...)` route now also
+  reproduces the selected Singlet
+  `hScalar-lScalar-lVector-lScalar -> cHD` coefficient with target filtering
+  enabled. The fix keeps pre-generation Wilson-line entry filtering only for
+  purely field-strength-local target requirements; mixed/pure field targets
+  like registered `cHD` are filtered after full Wilson-line term generation so
+  heavy-mediated path products are not removed too early.

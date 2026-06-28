@@ -7527,7 +7527,7 @@ def _wilson_line_path_with_projection_filtered_entries(
     path: WilsonLineTracePath,
     requirements: ProjectionAtomRequirementGroups | None,
 ) -> WilsonLineTracePath:
-    if not requirements:
+    if not requirements or not _projection_requirements_are_field_strength_local(requirements):
         return path
     filtered_entries = tuple(
         _filter_wilson_line_entry_expression_by_projection_requirements(path.theory, entry, requirements)
@@ -7536,6 +7536,12 @@ def _wilson_line_path_with_projection_filtered_entries(
     if all(bool(filtered == original) for filtered, original in zip(filtered_entries, path.entries, strict=True)):
         return path
     return replace(path, entries=filtered_entries)
+
+
+def _projection_requirements_are_field_strength_local(
+    requirements: ProjectionAtomRequirementGroups,
+) -> bool:
+    return all(any(kind == "field_strength" for kind, _label, _count in group) for group in requirements)
 
 
 def _filter_wilson_line_entry_expression_by_projection_requirements(

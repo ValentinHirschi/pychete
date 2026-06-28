@@ -2115,8 +2115,13 @@ def test_singlet_wilson_line_target_prefilter_matches_matchete_order_four_insert
     )
     requirements = matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
     assert requirements is not None
-    paths = setup.interaction_wilson_line_trace_paths_by_trace(trace_names=("hScalar-lScalar",))["hScalar-lScalar"]
     phi_pattern = field_pattern(theory.field_handle("phi").label)
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=False,
+        max_wilson_derivative_order=4,
+        term_atom_requirements=requirements,
+    )
 
     counts_by_slot_order: dict[tuple[int, ...], int] = {}
     expanded_counts_by_slot_order: dict[tuple[int, ...], int] = {}
@@ -2124,22 +2129,7 @@ def test_singlet_wilson_line_target_prefilter_matches_matchete_order_four_insert
     for entry in plan.entries:
         if entry.total_order != 4:
             continue
-        entry_terms: list[WilsonLineTraceExpansionTerm] = []
-        for path in paths:
-            if not matching_module._wilson_line_entry_can_satisfy_projection_requirements(
-                path,
-                entry,
-                requirements,
-            ):
-                continue
-            filtered_path = matching_module._wilson_line_path_with_projection_filtered_entries(path, requirements)
-            entry_terms.extend(
-                filtered_path.propagator_expansion_terms(
-                    entry.expansion_indices,
-                    act_open_derivatives=False,
-                    max_wilson_derivative_order=4,
-                )
-            )
+        entry_terms = tuple(grouped_terms[entry.label])
         counts_by_slot_order[entry.slot_orders] = len(entry_terms)
         expanded_count = 0
         for term in entry_terms:
