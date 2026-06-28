@@ -43,6 +43,11 @@
   the first generic algorithm boundary where they diverged. The goal is to
   port the relevant Matchete algorithm through Symbolica/idenso/spenso/vakint,
   not to infer fixes from final Wilson-coefficient disagreement.
+- Before accepting a patch motivated by a Matchete disagreement, complete the
+  mismatch checklist in these notes: name the Matchete debug script or
+  committed fixture, name the bounded pychete probe or pytest fixture, state
+  the first stage boundary that differs, and explain why the runtime change is
+  a generic Matchete-algorithm port rather than a coefficient-specific repair.
 - Use larger coherent implementation slices. Run focused tests while building a
   slice, grouped targeted tests before a green milestone, and full/slow tests
   only when the milestone justifies the cost.
@@ -1007,3 +1012,36 @@
   `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
   "matchete_fixture_records_scalar_vector_frontier or quarter_paths"` (`3
   passed, 11 deselected`); and `git diff --check` passed.
+- Latest Matchete-mismatch checklist for the scalar Green source-exposure
+  slice: the Matchete evidence is the committed
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`
+  insertion dump plus `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`
+  showing differentiated field-strength representatives and vector-EOM
+  machinery. The paired bounded pychete probes were
+  `/tmp/probe_singlet_chd_source_structure.py`,
+  `/tmp/probe_singlet_chd_derivative_terms.py`, and
+  `/tmp/probe_singlet_chd_eom_boundary_safe.py`. The first semantic boundary
+  was source exposure after Wilson-line/integral evaluation and scalar Green
+  representative selection: pychete had three-plus-one scalar derivative
+  bilinears but did not lower them into Matchete's
+  `J_mu D_nu F_{nu mu}`/`F_{nu mu} D_nu J_mu` family.
+- Implemented the generic part of that boundary in
+  `expose_scalar_derivative_commutator_bilinears(...)`: bounded
+  three-plus-one scalar derivative monomials are now sent through the existing
+  Symbolica-backed Green normal-form/commutator exposure path rather than a
+  coefficient-specific repair. A watchdog rerun of
+  `/tmp/probe_singlet_chd_eom_boundary_safe.py` now shows two differentiated
+  Abelian `FieldStrength(B)` atoms and two vector EOM rules in the full
+  generated public `cHD` source. The public projected coefficient is still the
+  previous `-1/2` pole/log result, and applying the current vector
+  field-redefinition delta naively produces an `A*muphi` contribution, so the
+  next mismatch boundary is the larger Matchete-style source scoping and
+  EOM/field-redefinition ordering, not this local Green exposure itself.
+- Focused validation for this slice passed:
+  `tests/unit/functional/test_scalar_green_bilinears.py -q` (`22 passed`);
+  watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "public_match_selected_chd_four_slot_wilson_coefficient or selected_chd_four_slot_wilson_coefficient" -q`
+  (`2 passed, 12 deselected`); `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
+  passed.

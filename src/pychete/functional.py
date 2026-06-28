@@ -163,11 +163,16 @@ def expose_scalar_derivative_commutator_bilinears(
     barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=2)
     one_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=1)
     one_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=1)
+    three_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=3)
+    three_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=3)
     four_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=4)
     four_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=4)
     zero_field_atoms = _scalar_derivative_field_atoms(expr, derivative_count=0)
     zero_barred_atoms = _scalar_derivative_barred_field_atoms(expr, derivative_count=0)
     has_two_derivative_bilinears = bool(field_atoms and barred_atoms)
+    has_three_plus_one_derivative_bilinears = bool(
+        (three_field_atoms and one_barred_atoms) or (three_barred_atoms and one_field_atoms)
+    )
     has_one_sided_four_derivative_bilinears = bool(
         (four_field_atoms and zero_barred_atoms) or (four_barred_atoms and zero_field_atoms)
     )
@@ -175,6 +180,7 @@ def expose_scalar_derivative_commutator_bilinears(
     has_first_derivative_field_strength_bilinears = bool(one_field_atoms and one_barred_atoms)
     if not (
         has_two_derivative_bilinears
+        or has_three_plus_one_derivative_bilinears
         or has_one_sided_four_derivative_bilinears
         or has_mixed_field_strength_bilinears
         or has_first_derivative_field_strength_bilinears
@@ -216,6 +222,58 @@ def expose_scalar_derivative_commutator_bilinears(
                 barred_base,
                 field,
                 canonical_pair,
+                include_gauge_coupling=include_gauge_coupling,
+                expand_commutators=expand_commutators,
+            )
+    for barred in three_barred_atoms:
+        barred_base = bar_field_inner(barred)
+        barred_key = canonical_string(field_with_derivatives(barred_base, ()))
+        barred_derivatives = field_derivatives(barred_base)
+        partner_derivative = _three_plus_one_partner_derivative(barred_derivatives)
+        if partner_derivative is None:
+            continue
+        for field in one_field_atoms:
+            if canonical_string(field_with_derivatives(field, ())) != barred_key:
+                continue
+            field_derivatives_ = field_derivatives(field)
+            if len(field_derivatives_) != 1 or not bool(field_derivatives_[0] == partner_derivative):
+                continue
+            candidate_count += 1
+            if candidate_count > max_candidates:
+                return out
+            out = _expose_scalar_three_plus_one_green_bilinear_candidate(
+                theory,
+                out,
+                barred_base,
+                field,
+                barred_derivatives,
+                field_derivatives_,
+                include_gauge_coupling=include_gauge_coupling,
+                expand_commutators=expand_commutators,
+            )
+    for field in three_field_atoms:
+        field_key = canonical_string(field_with_derivatives(field, ()))
+        field_derivatives_ = field_derivatives(field)
+        partner_derivative = _three_plus_one_partner_derivative(field_derivatives_)
+        if partner_derivative is None:
+            continue
+        for barred in one_barred_atoms:
+            barred_base = bar_field_inner(barred)
+            if canonical_string(field_with_derivatives(barred_base, ())) != field_key:
+                continue
+            barred_derivatives = field_derivatives(barred_base)
+            if len(barred_derivatives) != 1 or not bool(barred_derivatives[0] == partner_derivative):
+                continue
+            candidate_count += 1
+            if candidate_count > max_candidates:
+                return out
+            out = _expose_scalar_three_plus_one_green_bilinear_candidate(
+                theory,
+                out,
+                barred_base,
+                field,
+                barred_derivatives,
+                field_derivatives_,
                 include_gauge_coupling=include_gauge_coupling,
                 expand_commutators=expand_commutators,
             )
@@ -784,6 +842,8 @@ def _is_scalar_derivative_field(atom: Expression, *, derivative_count: int) -> b
         return _canonical_distinct_derivative_pair(derivatives) is not None
     if derivative_count == 1:
         return True
+    if derivative_count == 3:
+        return _three_plus_one_partner_derivative(derivatives) is not None
     if derivative_count == 4:
         return _four_derivative_pair_order(derivatives) is not None
     return derivative_count == 0
@@ -874,6 +934,101 @@ def _expose_scalar_one_sided_four_derivative_green_bilinear_candidate(
         expand_commutators=expand_commutators,
     )
     return (expr - coefficient * source + coefficient * replacement).expand()
+
+
+def _expose_scalar_three_plus_one_green_bilinear_candidate(
+    theory: Theory,
+    expr: Expression,
+    barred_base: Expression,
+    field_base: Expression,
+    barred_derivatives: tuple[Expression, ...],
+    field_derivatives_: tuple[Expression, ...],
+    *,
+    include_gauge_coupling: bool,
+    expand_commutators: bool,
+) -> Expression:
+    if not _is_three_plus_one_derivative_pair(barred_derivatives, field_derivatives_):
+        return expr
+    source = s.Bar(field_with_derivatives(barred_base, barred_derivatives)) * field_with_derivatives(
+        field_base,
+        field_derivatives_,
+    )
+    coefficient = expr.coefficient(source).expand()
+    if is_zero(coefficient):
+        return expr
+    replacement = _scalar_three_plus_one_green_replacement(
+        theory,
+        source,
+        include_gauge_coupling=include_gauge_coupling,
+        expand_commutators=expand_commutators,
+    )
+    return (expr - coefficient * source + coefficient * replacement).expand()
+
+
+def _scalar_three_plus_one_green_replacement(
+    theory: Theory,
+    source: Expression,
+    *,
+    include_gauge_coupling: bool,
+    expand_commutators: bool,
+) -> Expression:
+    try:
+        replacement = scalar_derivative_green_normal_form(
+            theory,
+            source,
+            max_basis_terms=64,
+            max_identities=128,
+            max_rounds=2,
+        )
+    except ValueError:
+        return source
+    if expand_commutators:
+        replacement = theory.expand_covariant_derivative_commutators(
+            replacement,
+            include_gauge_coupling=include_gauge_coupling,
+        )
+    replacement = expand_cd_operators(replacement)
+    replacement = simplify_trivial_cd_operators(replacement)
+    replacement = expose_scalar_derivative_commutator_bilinears(
+        theory,
+        replacement,
+        include_gauge_coupling=include_gauge_coupling,
+        expand_commutators=expand_commutators,
+    )
+    return replacement.expand()
+
+
+def _is_three_plus_one_derivative_pair(
+    first_derivatives: tuple[Expression, ...],
+    second_derivatives: tuple[Expression, ...],
+) -> bool:
+    if len(first_derivatives) == 3 and len(second_derivatives) == 1:
+        partner = _three_plus_one_partner_derivative(first_derivatives)
+        return partner is not None and bool(partner == second_derivatives[0])
+    if len(second_derivatives) == 3 and len(first_derivatives) == 1:
+        partner = _three_plus_one_partner_derivative(second_derivatives)
+        return partner is not None and bool(partner == first_derivatives[0])
+    return False
+
+
+def _three_plus_one_partner_derivative(derivatives: tuple[Expression, ...]) -> Expression | None:
+    if len(derivatives) != 3:
+        return None
+    counts: dict[str, tuple[Expression, int]] = {}
+    for derivative in derivatives:
+        key = canonical_string(derivative)
+        if key in counts:
+            original, count = counts[key]
+            counts[key] = (original, count + 1)
+        else:
+            counts[key] = (derivative, 1)
+    if len(counts) != 2:
+        return None
+    singles = [derivative for derivative, count in counts.values() if count == 1]
+    doubles = [derivative for derivative, count in counts.values() if count == 2]
+    if len(singles) != 1 or len(doubles) != 1:
+        return None
+    return singles[0]
 
 
 def _expose_scalar_mixed_field_strength_green_bilinear_candidate(

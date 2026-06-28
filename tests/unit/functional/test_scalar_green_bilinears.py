@@ -297,6 +297,58 @@ def test_scalar_green_bilinear_ibp_exposes_first_derivative_field_strength_compo
     assert_expr_equal(coefficient, expected_weight)
 
 
+def test_scalar_green_bilinear_exposes_three_plus_one_field_strength_divergence_component() -> None:
+    coefficient = S("scalar_green_three_plus_one_coefficient")
+    theory, phi, _strength, _target, mu, nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    source = coefficient * s.Bar(phi(derivatives=[mu, nu, nu])) * phi(derivatives=[mu])
+    divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    target = Expression.I * s.Bar(phi()) * phi(derivatives=[mu]) * divergence
+
+    normalized = expose_scalar_derivative_commutator_bilinears(
+        theory,
+        source,
+        include_gauge_coupling=False,
+        expand_commutators=True,
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized.expand(),
+    )
+
+    projected = result.project_matching_conditions({"current_divergence": target}, expand_source=False)
+
+    assert_expr_equal(projected["current_divergence"], coefficient)
+
+
+def test_scalar_green_bilinear_keeps_unmatched_three_plus_one_ordering_bounded() -> None:
+    coefficient = S("scalar_green_unmatched_three_plus_one_coefficient")
+    theory, phi, _strength, _target, mu, nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    source = coefficient * s.Bar(phi(derivatives=[nu, nu, mu])) * phi(derivatives=[mu])
+    divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    target = Expression.I * s.Bar(phi()) * phi(derivatives=[mu]) * divergence
+
+    normalized = expose_scalar_derivative_commutator_bilinears(
+        theory,
+        source,
+        include_gauge_coupling=False,
+        expand_commutators=True,
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized.expand(),
+    )
+
+    projected = result.project_matching_conditions({"current_divergence": target}, expand_source=False)
+
+    assert_expr_equal(projected["current_divergence"], Expression.num(0))
+
+
 def _project_c_hw_like_coefficient(theory: Theory, source: Expression, target: Expression) -> Expression:
     normalized = expose_scalar_derivative_commutator_bilinears(
         theory,

@@ -1229,3 +1229,19 @@ without Warsaw-specific core assumptions.
   therefore target Wilson-line Green/commutator source exposure into
   Matchete's field-strength-divergence/current form, guided by the committed
   insertion-level `cHD` debug dump.
+- Latest persistent-guidance reinforcement: the requested workflow is now
+  recorded as a mandatory mismatch checklist in `AGENTS.md` and the live
+  implementation notes. For any Matchete/pychete disagreement, future patches
+  must name the Matchete debug script or fixture, the paired bounded pychete
+  probe, the first differing stage boundary, and why the change is a generic
+  Matchete-algorithm port rather than a coefficient-specific repair.
+- Latest scalar Green source-exposure progress: following the Matchete-dump
+  workflow, pychete now lowers bounded three-plus-one scalar derivative
+  bilinears through the existing Green normal-form/commutator path, exposing
+  the differentiated Abelian field-strength representative seen in the
+  committed Matchete `cHD` dumps. A watchdog cHD boundary probe now finds two
+  differentiated `FieldStrength(B)` atoms and two vector EOM rules in the
+  generated public source. This is still not a full Matchete one-loop model
+  pass: the public projected coefficient remains at the old `-1/2` pole/log
+  value, and the next issue is Matchete-style source scoping plus
+  EOM/field-redefinition ordering.

@@ -456,6 +456,14 @@ WolframScript checkpoint used, the corresponding bounded pychete probe, and the
 first generic algorithm boundary where they differ. This keeps the port aligned
 with Matchete's algorithms while still implementing them through Symbolica,
 idenso, spenso, and vakint rather than final-coefficient patching.
+Before accepting any pychete patch motivated by a Matchete disagreement,
+complete this mismatch checklist in the implementation notes: identify the
+Matchete debug script or committed fixture used, identify the matching bounded
+pychete probe or pytest fixture, state the first stage boundary where the two
+objects differ, and explain why the patch ports a generic Matchete algorithm
+rather than repairing a single coefficient. If the checklist cannot yet be
+completed, add more Matchete-side dumps or finer pychete probes before changing
+runtime code.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by
