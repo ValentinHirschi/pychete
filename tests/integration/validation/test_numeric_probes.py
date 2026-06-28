@@ -736,6 +736,32 @@ def test_matching_result_projection_can_use_ibp_scalar_bilinear_aliases() -> Non
     assert normalized.metadata["matching_condition_projection_normalize_ibp_scalar_bilinears"] is True
 
 
+def test_matching_result_projection_uses_scalar_derivative_slot_ibp_alias() -> None:
+    coefficient = S("condition_projection_ibp_derivative_slot_coefficient")
+    theory = Theory("condition_projection_ibp_derivative_slot")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    target = s.Bar(phi()) * phi(derivatives=[mu, nu])
+    source_operator = -s.Bar(phi(derivatives=[mu])) * phi(derivatives=[nu])
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * source_operator,
+    )
+
+    raw = result.project_matching_conditions({"slot": target}, expand_source=False)
+    projected = result.project_matching_conditions(
+        {"slot": target},
+        expand_source=False,
+        normalize_ibp_scalar_bilinears=True,
+    )
+
+    assert_expr_equal(raw["slot"], Expression.num(0))
+    assert_expr_equal(projected["slot"], coefficient)
+
+
 def test_matching_result_projection_factors_composite_smeft_hbox_targets() -> None:
     coefficient = S("condition_projection_hbox_factor_coefficient")
     theory = _singlet_scalar_extension_theory()

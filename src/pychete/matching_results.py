@@ -84,6 +84,7 @@ _MAX_PROJECTION_EXPAND_TERMS = 128
 _MAX_PROJECTION_EXPAND_BYTES = 32_768
 _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_TERMS = 512
 _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_BYTES = 512_000
+_MAX_PROJECTION_IBP_DERIVATIVE_SLOT_ALIASES = 64
 
 LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE = "loop_only_off_shell_projection_source"
 LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE = "loop_only_on_shell_projection_source"
@@ -1816,7 +1817,7 @@ def _projection_aliases_for_target(
     aliases: list[tuple[Expression, Expression]] = []
     if normalize_ibp_scalar_bilinears or _uses_registered_wilson_operator_aliases(target):
         aliases.extend(_ibp_scalar_bilinear_projection_aliases(projection_expression))
-        aliases.extend(_ibp_scalar_first_derivative_projection_aliases(projection_expression))
+        aliases.extend(_ibp_scalar_derivative_slot_projection_aliases(projection_expression))
     if _uses_registered_wilson_operator_aliases(target):
         aliases.extend(_abelian_gauge_eom_projection_aliases(theory, target, projection_expression))
     return tuple(_deduplicated_projection_aliases(aliases))
@@ -1853,37 +1854,68 @@ def _ibp_scalar_bilinear_projection_aliases(target: Expression) -> tuple[tuple[E
     return tuple(aliases)
 
 
-def _ibp_scalar_first_derivative_projection_aliases(target: Expression) -> tuple[tuple[Expression, Expression], ...]:
-    """Return projection-only aliases for ``A * D_mu(phi)`` total derivatives."""
+def _ibp_scalar_derivative_slot_projection_aliases(target: Expression) -> tuple[tuple[Expression, Expression], ...]:
+    """Return projection-only aliases for scalar derivative slots.
 
+    Matchete's ``IdentitiesIBP`` generates one identity for the outermost
+    derivative on every differentiated field.  This bounded target-local
+    version exposes the direct scalar member
+    ``A * D_mu D_rest(phi) -> -D_mu(A) * D_rest(phi)`` without running a
+    global Green-basis row reduction.  Composite ``CD`` targets such as
+    ``CD(mu, CD(mu, Hbar H))`` stay with the existing bilinear alias path, so
+    this helper does not double count additive total-derivative identities.
+    """
+
+    if not _target_allows_scalar_derivative_slot_aliases(target):
+        return ()
     normalized_target = expand_cd_operators(target)
+    if normalized_target.get_type() is AtomType.Add:
+        return ()
     aliases: list[tuple[Expression, Expression]] = []
     seen: set[str] = set()
     for atom in (
-        *_scalar_first_derivative_field_atoms(normalized_target),
-        *_scalar_first_derivative_barred_field_atoms(normalized_target),
+        *_scalar_derivative_slot_field_atoms(normalized_target),
+        *_scalar_derivative_slot_barred_field_atoms(normalized_target),
     ):
-        base_atom, derivative = _scalar_first_derivative_base(atom)
+        base_atom, outer_derivative, remaining_derivatives = _scalar_derivative_slot_base(atom)
         spectator = normalized_target.coefficient(atom).expand()
         if is_zero(spectator):
             continue
-        alias = (-apply_cd([derivative], spectator) * base_atom).expand()
+        reduced_atom = _with_scalar_derivative_slot_base_derivatives(base_atom, remaining_derivatives)
+        alias = (-apply_cd([outer_derivative], spectator) * reduced_atom).expand()
         key = canonical_string(alias)
         if key in seen:
             continue
         seen.add(key)
         aliases.append((alias, Expression.num(1)))
+        if len(aliases) >= _MAX_PROJECTION_IBP_DERIVATIVE_SLOT_ALIASES:
+            break
     return tuple(aliases)
 
 
-def _scalar_first_derivative_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+def _target_allows_scalar_derivative_slot_aliases(target: Expression) -> bool:
+    """Return whether direct derivative-slot IBP aliases are sound for target."""
+
+    for cd_expr in matching_subexpressions(target, cd_pattern()):
+        match = _single_cd_match(cd_expr)
+        if match is None:
+            return False
+        if len(_cd_match_indices(match)) != 1:
+            return False
+        body = match[s.CDBodyWildcard]
+        if not (is_head(body, s.Field) or is_bar_field(body)):
+            return False
+    return True
+
+
+def _scalar_derivative_slot_field_atoms(expr: Expression) -> tuple[Expression, ...]:
     pattern = field_pattern()
     label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
     atoms: list[Expression] = []
     seen: set[str] = set()
     for match in expr.match(pattern, label_is_tagged):
         atom = pattern.replace_wildcards(match)
-        if not _is_scalar_first_derivative_field(atom):
+        if not _is_scalar_derivative_slot_field(atom):
             continue
         key = canonical_string(atom)
         if key in seen:
@@ -1893,7 +1925,7 @@ def _scalar_first_derivative_field_atoms(expr: Expression) -> tuple[Expression, 
     return tuple(atoms)
 
 
-def _scalar_first_derivative_barred_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+def _scalar_derivative_slot_barred_field_atoms(expr: Expression) -> tuple[Expression, ...]:
     pattern = bar_field_pattern()
     label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
     atoms: list[Expression] = []
@@ -1902,7 +1934,7 @@ def _scalar_first_derivative_barred_field_atoms(expr: Expression) -> tuple[Expre
         atom = pattern.replace_wildcards(match)
         if not is_bar_field(atom):
             continue
-        if not _is_scalar_first_derivative_field(bar_field_inner(atom)):
+        if not _is_scalar_derivative_slot_field(bar_field_inner(atom)):
             continue
         key = canonical_string(atom)
         if key in seen:
@@ -1912,18 +1944,28 @@ def _scalar_first_derivative_barred_field_atoms(expr: Expression) -> tuple[Expre
     return tuple(atoms)
 
 
-def _is_scalar_first_derivative_field(atom: Expression) -> bool:
-    return bool(field_type(atom) == s.Scalar) and len(field_derivatives(atom)) == 1
+def _is_scalar_derivative_slot_field(atom: Expression) -> bool:
+    return bool(field_type(atom) == s.Scalar) and len(field_derivatives(atom)) > 0
 
 
-def _scalar_first_derivative_base(atom: Expression) -> tuple[Expression, Expression]:
+def _scalar_derivative_slot_base(atom: Expression) -> tuple[Expression, Expression, tuple[Expression, ...]]:
     conjugated = is_bar_field(atom)
     base_field = bar_field_inner(atom) if conjugated else atom
     derivatives = field_derivatives(base_field)
-    if len(derivatives) != 1:
-        raise ValueError(f"Expected one scalar derivative slot, got {canonical_string(atom)}")
+    if not derivatives:
+        raise ValueError(f"Expected scalar derivative slots, got {canonical_string(atom)}")
     base_atom = field_with_derivatives(base_field, ())
-    return (s.Bar(base_atom) if conjugated else base_atom), derivatives[0]
+    return (s.Bar(base_atom) if conjugated else base_atom), derivatives[0], derivatives[1:]
+
+
+def _with_scalar_derivative_slot_base_derivatives(
+    base_atom: Expression,
+    derivatives: tuple[Expression, ...],
+) -> Expression:
+    conjugated = is_bar_field(base_atom)
+    base_field = bar_field_inner(base_atom) if conjugated else base_atom
+    updated = field_with_derivatives(base_field, derivatives)
+    return s.Bar(updated) if conjugated else updated
 
 
 def _abelian_gauge_eom_projection_aliases(

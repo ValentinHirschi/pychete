@@ -112,6 +112,12 @@
   `-D_mu(A) * phi`, discovered with Symbolica field patterns and differentiated
   through `apply_cd(...)`. This is generic Green-basis projection support and
   not tied to the SMEFT `cHD` name.
+- The scalar derivative-slot projection alias now covers the direct Matchete
+  `IdentitiesIBP` member
+  `A * D_mu D_rest(phi) -> -D_mu(A) * D_rest(phi)` for simple scalar
+  derivative target monomials. It is bounded, uses Symbolica pattern discovery
+  and native coefficient extraction, and skips additive/composite `CD` targets
+  so it does not double count the existing scalar-box bilinear alias path.
 
 ## Current Frontier
 
@@ -163,10 +169,29 @@
   smoke still returns zero, so the mismatch is not only projection of this
   first-derivative IBP family; the higher-derivative selected-source
   normal-form gap remains.
+- The direct higher-derivative scalar derivative-slot projection alias closes
+  a smaller structural mismatch with Matchete's `IdentitiesIBP`, but it is not
+  a recursive/additive substitute for Matchete's row-reduced Green-basis
+  identities. In particular, pychete still needs the explicit
+  `IdentitiesCDCommutation` plus row-reduction semantics before interpreting
+  partial pieces of total-derivative identities as selected Singlet `cHD`.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py -q` passed
+  (`61 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py -k
+  "projection and (ibp or chd or hbox)" -q` passed (`10 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py -k
+  "ibp_scalar_bilinear or derivative_slot or hbox_ibp or registered_hbox_ibp
+  or first_derivative_ibp or gauge_eom" -q` passed (`6 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_scalar_green_bilinears.py -q` passed
+  (`15 passed`).
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/functional/test_scalar_green_bilinears.py
   tests/integration/validation/test_numeric_probes.py -k

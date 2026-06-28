@@ -893,3 +893,10 @@ without Warsaw-specific core assumptions.
   source `-D_mu(A) * phi`. This remains generic and Symbolica-pattern-driven;
   the selected Singlet order-zero `cHD` smoke still projects zero, so the next
   mismatch remains the higher-derivative selected-source normal form.
+- Latest continuation instruction: continue as planned, and for every precise
+  mismatch carefully review the corresponding Matchete algorithms before
+  patching pychete. Applied to the scalar derivative frontier by comparing
+  pychete's target-local IBP projection aliases against Matchete
+  `IdentitiesIBP`: Matchete generates an identity for the outermost derivative
+  on every differentiated scalar field, while pychete only covered
+  first-derivative slots and explicit scalar-box bilinears.
