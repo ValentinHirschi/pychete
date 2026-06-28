@@ -1316,11 +1316,25 @@ without Warsaw-specific core assumptions.
   checkpoint, the paired pychete probe, and the current suspected stage
   boundary so the port keeps following Matchete's algorithms rather than
   fitting final coefficients.
+- Latest user reinforcement recorded again: this paired-debug workflow is now
+  an acceptance gate for mismatch-driven runtime changes. Each such change
+  must name the current Matchete WolframScript/fixture checkpoint, the bounded
+  pychete probe, and the first differing semantic boundary; if that evidence
+  is not available, continue dumping/dissecting Matchete intermediates before
+  patching runtime code.
 - Latest cHD source/path comparison: the pychete boundary fixture now records
   Matchete's eight quarter insertion checkpoints for
   `hScalar-lScalar-lVector-lScalar -> cHD` alongside pychete's four nonzero
-  Wilson-line paths. The path-level projections show paths `0`, `2`, and `26`
-  with the expected `-1/4` sign and path `24` with the opposite sign; the
-  aggregate still has the `-1/2` pole/log weight instead of Matchete's `-3/2`.
-  The next mismatch slice should therefore target generic source/path
-  coverage and scalar-vector branch sign handling before EOM.
+  Wilson-line paths. A focused comparison of Matchete scalar-vector `Xterm`
+  values with pychete implicit Abelian scalar-vector differential entries
+  exposed a generic derivative/OpenCD sign mismatch. After the fix, paths
+  `0`, `2`, `24`, and `26` all project with the Matchete `-1/4` sign, and the
+  selected aggregate moved from `-1/2` to the `-1` pole/log weight. The
+  remaining gap to Matchete's `-3/2` selected trace/off-shell checkpoint is now
+  source/path coverage or component-index delta handling before EOM.
+- The paired pychete source-only debug fixture for the same narrowed trace and
+  target is now kept under
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.source.debug.json`
+  and has a cheap pytest assertion. It records the current four-term filtered
+  pychete source frontier so future comparisons can distinguish source
+  generation changes from post-evaluation/EOM projection changes.

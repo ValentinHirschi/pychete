@@ -222,25 +222,25 @@ def test_matchete_implicit_abelian_scalar_kinetic_generates_scalar_vector_xterms
     assert_expr_equal(
         operator.differential_entry(s.Bar(phi()), vector()),
         Expression.I * phi() * coupling() * s.DifferentialOperator(s.List(mu))
-        + 2 * Expression.I * phi(derivatives=[mu]) * coupling()
+        - 2 * Expression.I * phi(derivatives=[mu]) * coupling()
         - Expression.I * coupling() * s.NCM(phi(), s.OpenCD(s.List(mu))),
     )
     assert_expr_equal(
         operator.differential_entry(vector(), phi()),
         Expression.I * coupling() * s.Bar(phi()) * s.DifferentialOperator(s.List(mu))
-        - Expression.I * coupling() * s.Bar(phi(derivatives=[mu]))
-        + Expression.I * coupling() * s.NCM(s.Bar(phi()), s.OpenCD(s.List(mu))),
+        + Expression.I * coupling() * s.Bar(phi(derivatives=[mu]))
+        - Expression.I * coupling() * s.NCM(s.Bar(phi()), s.OpenCD(s.List(mu))),
     )
     assert_expr_equal(
         operator.differential_entry(phi(), vector()),
         -Expression.I * coupling() * s.Bar(phi()) * s.DifferentialOperator(s.List(mu))
-        - 2 * Expression.I * coupling() * s.Bar(phi(derivatives=[mu]))
-        - Expression.I * coupling() * s.NCM(s.Bar(phi()), s.OpenCD(s.List(mu))),
+        + 2 * Expression.I * coupling() * s.Bar(phi(derivatives=[mu]))
+        + Expression.I * coupling() * s.NCM(s.Bar(phi()), s.OpenCD(s.List(mu))),
     )
     assert_expr_equal(
         operator.differential_entry(vector(), s.Bar(phi())),
         -Expression.I * phi() * coupling() * s.DifferentialOperator(s.List(mu))
-        + Expression.I * phi(derivatives=[mu]) * coupling()
+        - Expression.I * phi(derivatives=[mu]) * coupling()
         + Expression.I * coupling() * s.NCM(phi(), s.OpenCD(s.List(mu))),
     )
     assert_expr_equal(

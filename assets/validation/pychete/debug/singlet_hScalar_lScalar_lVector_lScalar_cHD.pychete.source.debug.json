@@ -1,0 +1,430 @@
+{
+  "filter_terms_by_matching_targets": true,
+  "fixture": "assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json",
+  "generator": "debug_pychete_singlet_wilson_trace.py",
+  "mode": "source_only",
+  "model": "Singlet_Scalar_Extension_model_definition",
+  "nonempty_grouped_entries": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 4
+  },
+  "nonempty_grouped_entry_orders": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
+      "slot_orders": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "total_order": 0
+    }
+  },
+  "plan_entries": [
+    {
+      "label": "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0",
+      "slot_orders": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "total_order": 0,
+      "trace_name": "hScalar-lScalar-lVector-lScalar"
+    }
+  ],
+  "plan_entry_count": 1,
+  "postfinal_filter_dropped_term_count_by_entry": {},
+  "preaction_prefilter_nonempty_grouped_entries": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 4
+  },
+  "preaction_prefilter_nonempty_grouped_entry_orders": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
+      "slot_orders": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "total_order": 0
+    }
+  },
+  "preaction_prefilter_numerator_summaries_by_total_order": {
+    "0": {
+      "pre_wilson_numerator": {
+        "h_derivative_signature_samples": [
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pych...",
+            "signature": "bar=0,0;field=0,0"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1/2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::Ba...",
+            "signature": "bar=0,0;field=0,a"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),-1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete...",
+            "signature": "bar=0,0;field=a,0"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),-1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete...",
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1/2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::Ba...",
+            "signature": "bar=0,a;field=0,0"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),-1\ud835\udc56*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete...",
+            "signature": "bar=0,a;field=a,0"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::Bar...",
+            "signature": "bar=a,0;field=0,0"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::Bar...",
+            "signature": "bar=a,0;field=0,a"
+          },
+          {
+            "sample_input_form": "1/2*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::Bar...",
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "h_derivative_word_histogram": [
+          {
+            "count": 64,
+            "signature": "bar=0,0;field=0,0"
+          },
+          {
+            "count": 16,
+            "signature": "bar=0,0;field=0,a"
+          },
+          {
+            "count": 16,
+            "signature": "bar=0,0;field=a,0"
+          },
+          {
+            "count": 4,
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "count": 16,
+            "signature": "bar=0,a;field=0,0"
+          },
+          {
+            "count": 4,
+            "signature": "bar=0,a;field=a,0"
+          },
+          {
+            "count": 16,
+            "signature": "bar=a,0;field=0,0"
+          },
+          {
+            "count": 4,
+            "signature": "bar=a,0;field=0,a"
+          },
+          {
+            "count": 4,
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "summary": {
+          "bar_field_atoms": 288,
+          "byte_size": 107767,
+          "field_atoms": 720,
+          "field_strength_atoms": 0,
+          "loop_momenta": 96,
+          "name": "order0.pre_wilson_numerator",
+          "node_count": 144,
+          "propagator_denominators": 0,
+          "sample_input_form": "1/2*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pych...",
+          "term_count": 144,
+          "wilson_terms": 144
+        }
+      },
+      "wilson_expanded_numerator": {
+        "h_derivative_signature_samples": [
+          {
+            "sample_input_form": "-1/4*pychete::loop_momentum_squared*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(202000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*py...",
+            "signature": "bar=0,0;field=0,0"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,0;field=0,a"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),...",
+            "signature": "bar=0,0;field=a,0"
+          },
+          {
+            "sample_input_form": "-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(202000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(201001),pyche...",
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,a;field=0,0"
+          },
+          {
+            "sample_input_form": "1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(202000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::cou...",
+            "signature": "bar=0,a;field=0,a"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::Co...",
+            "signature": "bar=a,0;field=0,0"
+          },
+          {
+            "sample_input_form": "-1/2*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_...",
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "h_derivative_word_histogram": [
+          {
+            "count": 60,
+            "signature": "bar=0,0;field=0,0"
+          },
+          {
+            "count": 20,
+            "signature": "bar=0,0;field=0,a"
+          },
+          {
+            "count": 8,
+            "signature": "bar=0,0;field=a,0"
+          },
+          {
+            "count": 3,
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "count": 20,
+            "signature": "bar=0,a;field=0,0"
+          },
+          {
+            "count": 6,
+            "signature": "bar=0,a;field=0,a"
+          },
+          {
+            "count": 8,
+            "signature": "bar=a,0;field=0,0"
+          },
+          {
+            "count": 3,
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "summary": {
+          "bar_field_atoms": 256,
+          "byte_size": 82299,
+          "field_atoms": 624,
+          "field_strength_atoms": 0,
+          "loop_momenta": 56,
+          "name": "order0.wilson_expanded_numerator",
+          "node_count": 128,
+          "propagator_denominators": 0,
+          "sample_input_form": "-1/4*pychete::loop_momentum_squared*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(202000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*py...",
+          "term_count": 128,
+          "wilson_terms": 0
+        }
+      }
+    }
+  },
+  "preaction_prefilter_term_counts_by_total_order": {
+    "0": 4
+  },
+  "prefinal_nonempty_grouped_entries": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 4
+  },
+  "prefinal_nonempty_grouped_entry_orders": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
+      "slot_orders": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "total_order": 0
+    }
+  },
+  "prefinal_numerator_summaries_by_total_order": {
+    "0": {
+      "pre_wilson_numerator": {
+        "h_derivative_signature_samples": [
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,0;field=0,0"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,0;field=0,a"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,0;field=0,ab"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),...",
+            "signature": "bar=0,0;field=a,0"
+          },
+          {
+            "sample_input_form": "-1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)))...",
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,a;field=0,0"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,a;field=0,a"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())),pychete::Delta(pychete::Index(pychete::dummy_index(200000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),...",
+            "signature": "bar=0,a;field=a,0"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),pychete::Bar(p...",
+            "signature": "bar=0,ab;field=0,0"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::Co...",
+            "signature": "bar=a,0;field=0,0"
+          },
+          {
+            "sample_input_form": "-1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::C...",
+            "signature": "bar=a,0;field=0,a"
+          },
+          {
+            "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::Co...",
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "h_derivative_word_histogram": [
+          {
+            "count": 104,
+            "signature": "bar=0,0;field=0,0"
+          },
+          {
+            "count": 80,
+            "signature": "bar=0,0;field=0,a"
+          },
+          {
+            "count": 16,
+            "signature": "bar=0,0;field=0,ab"
+          },
+          {
+            "count": 20,
+            "signature": "bar=0,0;field=a,0"
+          },
+          {
+            "count": 8,
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "count": 80,
+            "signature": "bar=0,a;field=0,0"
+          },
+          {
+            "count": 32,
+            "signature": "bar=0,a;field=0,a"
+          },
+          {
+            "count": 8,
+            "signature": "bar=0,a;field=a,0"
+          },
+          {
+            "count": 16,
+            "signature": "bar=0,ab;field=0,0"
+          },
+          {
+            "count": 20,
+            "signature": "bar=a,0;field=0,0"
+          },
+          {
+            "count": 8,
+            "signature": "bar=a,0;field=0,a"
+          },
+          {
+            "count": 8,
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "summary": {
+          "bar_field_atoms": 800,
+          "byte_size": 285312,
+          "field_atoms": 2040,
+          "field_strength_atoms": 0,
+          "loop_momenta": 160,
+          "name": "order0.pre_wilson_numerator",
+          "node_count": 400,
+          "propagator_denominators": 0,
+          "sample_input_form": "1\ud835\udc56/4*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)*pychete::NCM(-pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0),pychete::Delta(pychete::Index(pychete::dummy_index(200000),Singlet_Scalar_Extension::group_SU2L(pychete::fund)),pychete::Index(pychete::dummy_index(201000),pychete::Bar(Singlet_Scalar_Extension::group_SU2L(pychete::fund)))),1\ud835\udc56*pychete::Co...",
+          "term_count": 400,
+          "wilson_terms": 400
+        }
+      },
+      "wilson_expanded_numerator": {
+        "h_derivative_signature_samples": [
+          {
+            "sample_input_form": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(201001),pychete::Lorentz)))*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::...",
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "sample_input_form": "pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::couplin...",
+            "signature": "bar=0,a;field=0,a"
+          },
+          {
+            "sample_input_form": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Exte...",
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "h_derivative_word_histogram": [
+          {
+            "count": 3,
+            "signature": "bar=0,0;field=a,a"
+          },
+          {
+            "count": 6,
+            "signature": "bar=0,a;field=0,a"
+          },
+          {
+            "count": 3,
+            "signature": "bar=a,a;field=0,0"
+          }
+        ],
+        "summary": {
+          "bar_field_atoms": 24,
+          "byte_size": 5351,
+          "field_atoms": 56,
+          "field_strength_atoms": 0,
+          "loop_momenta": 0,
+          "name": "order0.wilson_expanded_numerator",
+          "node_count": 12,
+          "propagator_denominators": 0,
+          "sample_input_form": "-pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Exte...",
+          "term_count": 12,
+          "wilson_terms": 0
+        }
+      }
+    }
+  },
+  "prefinal_term_counts_by_total_order": {
+    "0": 4
+  },
+  "runtime_internal_nonempty_grouped_entries": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 4
+  },
+  "runtime_internal_nonempty_grouped_entry_orders": {
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
+      "slot_orders": [
+        0,
+        0,
+        0,
+        0
+      ],
+      "total_order": 0
+    }
+  },
+  "runtime_internal_term_counts_by_total_order": {
+    "0": 4
+  },
+  "schema_version": 1,
+  "target": "cHD",
+  "trace_name": "hScalar-lScalar-lVector-lScalar"
+}

@@ -66,6 +66,12 @@
   refreshing debug WolframScripts often, dissect Matchete intermediates as far
   as needed, and only patch the first generic algorithm divergence through
   Symbolica/idenso/spenso/vakint.
+- Latest user reinforcement, 2026-06-28: this paired-debug cadence is an
+  acceptance gate, not only a reporting style. Whenever pychete and Matchete
+  disagree, keep refreshing focused Matchete WolframScript dumps and comparing
+  them with bounded pychete probes until the first differing semantic boundary
+  is explicit in these notes. Runtime changes motivated by the disagreement
+  should only port that generic Matchete algorithm boundary.
 - Current concrete objective reminder: the active Singlet `cHD`
   EOM/on-shell frontier must keep
   `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
@@ -1203,12 +1209,32 @@
 - Boundary result: the Matchete selected trace/off-shell checkpoint and the
   Matchete `EOMSimplify` off-shell coefficient agree exactly:
   `-1/4*hbar*A^2*gY^2*(6+5 eps+6 eps log(mu^2/M^2))/(eps*M^4)`.
-  The pychete selected normalized unrenormalized source has only the
-  `-1/2` pole/log weight, and the post-Green/post-heavy stages leave that
-  projection unchanged. Therefore the first current divergence is already
+  After the scalar-vector X-term sign correction, the pychete selected
+  normalized unrenormalized source has the `-1` pole/log weight, and the
+  post-Green/post-heavy stages leave that projection unchanged. Therefore the
+  first current divergence remains
   `selected_wilson_line_source_or_green_projection_before_eom`, not the
   systematic `FieldRedef.m` stage. The next runtime patch should return to
   Matchete's selected insertion/Xterm/WilsonExpand/GreensSimplify behavior for
   this trace and explain why the missing effective two-quarter contribution is
-  a generic Wilson-line source/Green-basis issue before attempting new
-  EOM-field-redefinition code.
+  a generic Wilson-line source/Green-basis or component-index-delta issue
+  before attempting new EOM-field-redefinition code.
+- Latest scalar-vector sign checkpoint: the paired Matchete dump
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`
+  exposes scalar-vector `Xterm` values for `{H,B}`, `{B,H}`,
+  `{Conj[H],B}`, and `{B,Conj[H]}`. Comparing those values with the bounded
+  pychete `FluctuationOperator.differential_entry(...)` probe showed the first
+  generic disagreement in implicit Abelian scalar-vector derivative/OpenCD
+  signs. pychete now flips only the one-derivative scalar atoms discovered by
+  Symbolica field-pattern matches and uses Matchete's uniform OpenCD sign.
+  The regenerated pychete boundary fixture records four nonzero paths
+  `0`, `2`, `24`, and `26`, all projecting with the Matchete `-1/4` sign; the
+  remaining `cHD` source mismatch is missing path/component coverage before
+  EOM, not a path-sign issue.
+- The paired bounded pychete source probe
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.source.debug.json`
+  is now committed as source-only evidence for the same narrowed trace/target.
+  It records the target-filtered `hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0`
+  entry with four terms through preaction, prefinal, and runtime-internal
+  checkpoints, matching the current pychete path frontier without executing
+  Mathematica at pytest time.

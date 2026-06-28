@@ -319,11 +319,12 @@ def main() -> int:
         },
         "first_differing_boundary": (
             "selected_wilson_line_source_or_green_projection_before_eom; "
-            "pychete selected normalized source has the -1/2 pole/log weight, "
+            "pychete selected normalized source has the -1 pole/log weight, "
             "while Matchete's selected trace/off-shell checkpoint has -3/2. "
             "The paired insertion/path checkpoint records eight Matchete "
-            "quarter insertions but four pychete nonzero Wilson-line paths, "
-            "so the next comparison is source/path coverage before EOM."
+            "quarter insertions and four pychete nonzero Wilson-line paths "
+            "whose individual signs now agree at -1/4, so the next comparison "
+            "is source/path coverage or component-index delta handling before EOM."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

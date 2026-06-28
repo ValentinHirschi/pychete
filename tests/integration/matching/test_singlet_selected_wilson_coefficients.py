@@ -37,6 +37,9 @@ _SINGLET_CHD_FOUR_SLOT_FULL_DEBUG = Path(
 _SINGLET_CHD_PYCHETE_EOM_BOUNDARY_DEBUG = Path(
     "assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json"
 )
+_SINGLET_CHD_PYCHETE_SOURCE_DEBUG = Path(
+    "assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.source.debug.json"
+)
 
 _MATHEMATICA_XTERM_PATTERN = re.compile(
     r"Xterm\["
@@ -479,7 +482,7 @@ def test_public_match_selected_higgs_gauge_partial_wilson_coefficient_is_accepte
 
 
 @pytest.mark.slow
-def test_public_match_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> None:
+def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_source_frontier() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
     registered_targets = matching_results_module.registered_wilson_matching_condition_targets(theory, basis="SMEFT")
@@ -527,7 +530,7 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_matches_matchete
         hbar
         * theory.coupling_handle("A")() ** 2
         * theory.coupling_handle("gY")() ** 2
-        * (mass.log() - S("vakint::mursq").log() / 2 - Expression.num(1) / 2)
+        * (2 * mass.log() - S("vakint::mursq").log() - Expression.num(1))
         / mass**4
     )
 
@@ -572,15 +575,14 @@ def test_selected_chd_four_slot_post_heavy_path_projection_map_records_frontier(
     }
     assert_expr_equal((projections[0] - expected_quarter).expand(), Expression.num(0))
     assert_expr_equal((projections[2] - expected_quarter).expand(), Expression.num(0))
-    assert_expr_equal((projections[24] + expected_quarter).expand(), Expression.num(0))
+    assert_expr_equal((projections[24] - expected_quarter).expand(), Expression.num(0))
     assert_expr_equal((projections[26] - expected_quarter).expand(), Expression.num(0))
 
     # Matchete records eight equivalent quarter checkpoints in the full
-    # insertion dump. pychete generates the four scalar-vector OpenCD path
-    # families and, after bounded OpenCD action over the longer Wilson-line NCM
-    # chains, paths 0/2/26 project to the finite quarter coefficient while
-    # the opposite scalar orientation path 24 carries the compensating sign
-    # needed by the aggregate selected Matchete coefficient.
+    # insertion dump. pychete currently generates four scalar-vector OpenCD
+    # path families, and all four now project with the same Matchete `-1/4`
+    # sign. The remaining selected-source mismatch is therefore path/component
+    # coverage before EOM, not the path-24 scalar orientation sign.
     quarter_insertions = [
         insertion["index"]
         for insertion in debug["insertions"]
@@ -676,12 +678,36 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert debug["evaluated_term_counts_by_path"] == {"path0": 1, "path2": 1, "path24": 1, "path26": 1}
     assert debug["path_stage_projections"]["path0"].startswith("-1/4*")
     assert debug["path_stage_projections"]["path2"].startswith("-1/4*")
-    assert debug["path_stage_projections"]["path24"].startswith("1/4*")
+    assert debug["path_stage_projections"]["path24"].startswith("-1/4*")
     assert debug["path_stage_projections"]["path26"].startswith("-1/4*")
-    assert "-1/2*" in projections["selected_normalized_pole_part"]
+    assert "pychete selected normalized source has the -1 pole/log weight" in debug["first_differing_boundary"]
+    assert projections["selected_normalized_pole_part"].startswith("-Singlet_Scalar_Extension::external_hbar*")
     assert "vakint::ε" in projections["selected_normalized_pole_part"]
     assert projections["selected_normalized_evaluated"] == projections["selected_post_heavy_green"]
     assert projections["selected_normalized_evaluated"] != references["pychete_reference_off_shell"]
+
+
+def test_selected_chd_pychete_source_fixture_records_filtered_frontier() -> None:
+    debug = json.loads(_SINGLET_CHD_PYCHETE_SOURCE_DEBUG.read_text(encoding="utf-8"))
+    entry = "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"
+
+    assert debug["generator"] == "debug_pychete_singlet_wilson_trace.py"
+    assert debug["mode"] == "source_only"
+    assert debug["trace_name"] == "hScalar-lScalar-lVector-lScalar"
+    assert debug["target"] == "cHD"
+    assert debug["filter_terms_by_matching_targets"] is True
+    assert debug["plan_entry_count"] == 1
+    assert debug["plan_entries"] == [
+        {
+            "label": entry,
+            "slot_orders": [0, 0, 0, 0],
+            "total_order": 0,
+            "trace_name": "hScalar-lScalar-lVector-lScalar",
+        },
+    ]
+    assert debug["preaction_prefilter_nonempty_grouped_entries"] == {entry: 4}
+    assert debug["prefinal_nonempty_grouped_entries"] == {entry: 4}
+    assert debug["runtime_internal_nonempty_grouped_entries"] == {entry: 4}
 
 
 def test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates() -> None:
@@ -708,7 +734,7 @@ def test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates() -
     assert (("field", phi_label, 1), ("field_strength", b_label, 1)) in requirements
 
 
-def test_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> None:
+def test_selected_chd_four_slot_wilson_coefficient_records_current_source_frontier() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
     condition_name, target = _selected_chd_four_slot_target(theory)
@@ -787,7 +813,7 @@ def test_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> 
         hbar
         * theory.coupling_handle("A")() ** 2
         * theory.coupling_handle("gY")() ** 2
-        * (mass.log() - S("vakint::mursq").log() / 2 - Expression.num(1) / 2)
+        * (2 * mass.log() - S("vakint::mursq").log() - Expression.num(1))
         / mass**4
     )
 

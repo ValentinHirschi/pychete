@@ -6600,8 +6600,33 @@ def _implicit_abelian_scalar_vector_differential_entry(
         - Expression.I * charge_connection * vector * s.Bar(scalar_derivative) * scalar_base
     ).expand()
     entry = _fluctuation_differential_entry_from_lagrangian(theory, interaction_lagrangian, row, column)
+    entry = _matchete_implicit_scalar_vector_derivative_signs(entry, field_label(scalar_base))
     open_cd_entry = _implicit_abelian_scalar_vector_open_cd_entry(entry, field_label(scalar_base))
     return (entry + open_cd_entry).expand()
+
+
+def _matchete_implicit_scalar_vector_derivative_signs(entry: Expression, scalar_label: Expression) -> Expression:
+    """Align implicit scalar-vector derivative atoms with Matchete ``Xterm`` signs."""
+
+    derivative_terms: list[Expression] = []
+    seen_fields: set[str] = set()
+    for pattern in (field_pattern(scalar_label), bar_field_pattern(scalar_label)):
+        for match in entry.match(pattern):
+            field_atom = pattern.replace_wildcards(match)
+            base_field = bar_field_inner(field_atom) if is_bar_field(field_atom) else field_atom
+            if len(field_derivatives(base_field)) != 1:
+                continue
+            field_key = canonical_string(field_atom)
+            if field_key in seen_fields:
+                continue
+            seen_fields.add(field_key)
+            coefficient = entry.coefficient(field_atom).expand()
+            if is_zero(coefficient):
+                continue
+            derivative_terms.append(coefficient * field_atom)
+    if not derivative_terms:
+        return entry
+    return (entry - 2 * sum_expr(derivative_terms)).expand()
 
 
 def _implicit_abelian_scalar_vector_open_cd_entry(entry: Expression, scalar_label: Expression) -> Expression:
@@ -6660,8 +6685,7 @@ def _implicit_abelian_scalar_vector_open_cd_terms_from_coefficient(
             scalar_coefficient = coefficient.coefficient(field_atom).expand()
             if is_zero(scalar_coefficient):
                 continue
-            sign = Expression.num(1) if is_bar_field(field_atom) else Expression.num(-1)
-            terms_out.append(sign * scalar_coefficient * s.NCM(field_atom, open_cd))
+            terms_out.append(-scalar_coefficient * s.NCM(field_atom, open_cd))
     return sum_expr(terms_out).expand()
 
 

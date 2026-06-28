@@ -464,6 +464,13 @@ WolframScript/fixture checkpoint, name the bounded pychete probe or fixture
 being compared to it, and state the stage boundary currently under suspicion.
 If no fresh WolframScript run was possible, say which committed Matchete dump is
 being used instead and record that limitation in the implementation notes.
+Treat this as a hard acceptance gate for mismatch-driven runtime patches:
+there must be an explicit, current Matchete intermediate dump or committed
+Matchete-derived fixture, a bounded pychete probe at the same semantic stage,
+and a recorded first-differing boundary before the patch is considered ready.
+Keep running or refreshing focused debug WolframScripts during mismatch work
+until that boundary is narrow enough to justify a generic port of Matchete's
+algorithm.
 Every mismatch-fix note should explicitly name the Matchete dump or
 WolframScript checkpoint used, the corresponding bounded pychete probe, and the
 first generic algorithm boundary where they differ. This keeps the port aligned
