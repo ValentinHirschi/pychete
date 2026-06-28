@@ -321,6 +321,32 @@ def test_scalar_derivative_green_normal_form_can_prefer_formal_eom_representativ
     assert_expr_equal(reduced, expected)
 
 
+def test_scalar_derivative_green_standard_form_eom_ignores_interaction_terms() -> None:
+    coefficient = S("scalar_derivative_green_standard_eom_coefficient")
+    theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
+    quartic = theory.define_coupling("lambda_H", self_conjugate=True)
+    eom_lagrangian = (
+        theory.free_lag(higgs)
+        - quartic() * (s.Bar(higgs(i)) * higgs(i)) ** 2
+    )
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, mu])
+    expected = -coefficient * s.Bar(higgs(i)) * s.EOM(higgs(i))
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        coefficient * source,
+        include_ibp=False,
+        include_commutators=False,
+        include_eom=True,
+        eom_lagrangian=eom_lagrangian,
+        eom_fields=[higgs],
+        eom_standard_form_only=True,
+        max_rounds=1,
+    )
+
+    assert_expr_equal(reduced, expected)
+
+
 def test_scalar_derivative_green_normal_form_by_operator_class_keeps_basis_local() -> None:
     coefficient = S("scalar_derivative_green_classwise_coefficient")
     theory, higgs, _target, i, mu, nu = _scalar_su2_probe()

@@ -586,6 +586,18 @@ Laplacian atoms with Symbolica patterns, extracts coefficients with native
 field-redefinition consumer. Keep validating this against the Matchete
 `debug_singlet_eom_simplify.wls` / `singlet_eom_cHD.debug.json` checkpoints
 before using it as evidence for full Singlet `cHD` on-shell parity.
+For Wilson-line `InternalSimplify`-style formal scalar EOM exposure, use
+Matchete `EoMStandardForm` semantics: relate scalar Laplacians to formal
+`EOM(...)` atoms without expanding the full interacting Euler-Lagrange
+equation from the source Lagrangian. In pychete this means
+`scalar_eom_identities(..., eom_standard_form_only=True)` and
+`scalar_derivative_green_normal_form(..., eom_standard_form_only=True)` or
+`scalar_derivative_green_normal_form_by_operator_class(...,
+eom_standard_form_only=True)` for the exposure phase. The lower-order source
+Lagrangian is consumed later by
+`systematic_scalar_eom_field_redefinition_delta(...)`; do not mix those two
+Matchete stages by inserting interaction terms into the Green-basis identity
+neighborhood.
 When `OneLoopMatchOptions.wilson_line_expose_scalar_eom_terms` is enabled,
 the Wilson-line finalization path must also run the exposed formal scalar EOM
 source through `systematic_scalar_eom_field_redefinition_delta(...)`, using

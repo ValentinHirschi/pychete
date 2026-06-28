@@ -918,10 +918,10 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert eom_probe == {
         "entry_count": 10,
         "field_strength_count": 0,
-        "nonzero_scalar_eom_field_redefinition_delta_entry_count": 0,
+        "nonzero_scalar_eom_field_redefinition_delta_entry_count": 4,
         "nonzero_vector_eom_current_exposed_delta_entry_count": 0,
         "nonzero_vector_field_redefinition_delta_entry_count": 0,
-        "scalar_eom_exposed_formal_eom_count": 0,
+        "scalar_eom_exposed_formal_eom_count": 20,
         "scalar_eom_exposure_error_count": 6,
         "scalar_eom_field_redefinition_delta_error_count": 0,
         "scalar_eom_identity_count": 28,
@@ -939,7 +939,17 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert {
         row["scalar_eom_field_redefinition_delta_is_zero"]
         for row in debug["eom_exposure_probe_by_entry"].values()
-    } == {True}
+    } == {False, True}
+    assert {
+        entry
+        for entry, row in debug["eom_exposure_probe_by_entry"].items()
+        if row["scalar_eom_exposed_formal_eom_count"]
+    } == {
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0",
+        "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0",
+        "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0",
+        "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0",
+    }
     assert debug["eom_exposure_probe_by_entry"]["hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"][
         "scalar_eom_identity_count"
     ] == 0

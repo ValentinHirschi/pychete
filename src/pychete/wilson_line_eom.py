@@ -51,6 +51,7 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
             out,
             include_eom=True,
             eom_lagrangian=eom_lagrangian,
+            eom_standard_form_only=True,
             max_basis_terms=256,
             max_identities=512,
             max_rounds=4,

@@ -470,13 +470,17 @@ def scalar_eom_identities(
     expr: Expression,
     *,
     fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    eom_standard_form_only: bool = False,
     max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
 ) -> tuple[Expression, ...]:
     """Return local formal scalar-EOM identities for Green-basis reduction.
 
-    For every linear scalar Laplacian atom in ``expr`` this builds the local
-    identity ``coefficient * (EOM(field) - derive_eom(eom_lagrangian, field))``.
-    The atom discovery and coefficient extraction are Symbolica-native.  The
+    For every linear scalar Laplacian atom in ``expr`` this builds a local
+    formal-EOM identity.  With ``eom_standard_form_only=True`` it mirrors
+    Matchete ``Operator`` / ``EoMStandardForm`` and only relates the Laplacian
+    to the formal ``EOM(field)`` object.  Otherwise it uses
+    ``derive_eom(eom_lagrangian, field)`` for the full local EOM relation.  The
+    atom discovery and coefficient extraction are Symbolica-native.  The
     result is the bounded exposure stage needed before
     :func:`scalar_eom_field_redefinition_delta` can consume formal EOM terms.
     """
@@ -499,7 +503,13 @@ def scalar_eom_identities(
             continue
         if not is_zero(coefficient.coefficient(atom)):
             continue
-        identity = _scalar_eom_identity_for_atom(theory, eom_lagrangian, coefficient, atom)
+        identity = _scalar_eom_identity_for_atom(
+            theory,
+            eom_lagrangian,
+            coefficient,
+            atom,
+            eom_standard_form_only=eom_standard_form_only,
+        )
         if is_zero(identity):
             continue
         key = canonical_string(identity)
@@ -570,6 +580,7 @@ def scalar_derivative_green_normal_form(
     include_eom: bool = False,
     eom_lagrangian: Expression | None = None,
     eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    eom_standard_form_only: bool = False,
     max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
     max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
     max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
@@ -612,6 +623,7 @@ def scalar_derivative_green_normal_form(
         include_eom=include_eom,
         eom_lagrangian=eom_lagrangian,
         eom_fields=eom_fields,
+        eom_standard_form_only=eom_standard_form_only,
         max_basis_terms=max_basis_terms,
         max_identities=max_identities,
         max_rounds=max_rounds,
@@ -648,6 +660,7 @@ def scalar_derivative_green_normal_form_by_operator_class(
     include_eom: bool = False,
     eom_lagrangian: Expression | None = None,
     eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    eom_standard_form_only: bool = False,
     max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
     max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
     max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
@@ -678,6 +691,7 @@ def scalar_derivative_green_normal_form_by_operator_class(
             include_eom=include_eom,
             eom_lagrangian=eom_lagrangian,
             eom_fields=eom_fields,
+            eom_standard_form_only=eom_standard_form_only,
             max_basis_terms=max_basis_terms,
             max_identities=max_identities,
             max_rounds=max_rounds,
@@ -699,6 +713,7 @@ def scalar_derivative_green_normal_form_by_operator_class(
                 include_eom=include_eom,
                 eom_lagrangian=eom_lagrangian,
                 eom_fields=eom_fields,
+                eom_standard_form_only=eom_standard_form_only,
                 max_basis_terms=max_basis_terms,
                 max_identities=max_identities,
                 max_rounds=max_rounds,
@@ -759,6 +774,7 @@ def _scalar_derivative_green_identities(
     include_eom: bool,
     eom_lagrangian: Expression | None,
     eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,
+    eom_standard_form_only: bool,
     max_basis_terms: int,
     max_identities: int,
     max_rounds: int,
@@ -788,6 +804,7 @@ def _scalar_derivative_green_identities(
                 include_eom=include_eom,
                 eom_lagrangian=eom_lagrangian,
                 eom_fields=eom_fields,
+                eom_standard_form_only=eom_standard_form_only,
                 max_identities=max_identities,
             ):
                 identity_key = canonical_string(identity)
@@ -823,6 +840,7 @@ def _scalar_derivative_identity_sources(
     include_eom: bool,
     eom_lagrangian: Expression | None,
     eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,
+    eom_standard_form_only: bool,
     max_identities: int,
 ) -> tuple[Expression, ...]:
     identities: list[Expression] = []
@@ -847,6 +865,7 @@ def _scalar_derivative_identity_sources(
                 eom_lagrangian,
                 expr,
                 fields=eom_fields,
+                eom_standard_form_only=eom_standard_form_only,
                 max_identities=max_identities,
             )
         )
@@ -1159,6 +1178,8 @@ def _scalar_eom_identity_for_atom(
     eom_lagrangian: Expression,
     coefficient: Expression,
     atom: Expression,
+    *,
+    eom_standard_form_only: bool,
 ) -> Expression:
     base_atom = bar_field_inner(atom) if is_bar_field(atom) else atom
     derivatives = field_derivatives(base_atom)
@@ -1166,6 +1187,8 @@ def _scalar_eom_identity_for_atom(
         return Expression.num(0)
     base = field_with_derivatives(base_atom, ())
     formal_target = s.Bar(base) if is_bar_field(atom) else base
+    if eom_standard_form_only:
+        return (coefficient * (s.EOM(formal_target) + atom)).expand()
     eom = _derive_scalar_eom_for_atom(theory, eom_lagrangian, atom)
     return (coefficient * (s.EOM(formal_target) - eom)).expand()
 

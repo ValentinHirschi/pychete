@@ -70,17 +70,18 @@ Active pychete checkpoint:
 
 Latest finding: pychete now records scalar-EOM exposure attempts for each of
 the 10 nonzero selected `hScalar-lScalar-lVector-lScalar` Wilson-line entries.
-After the first class-wise scalar Green pass, four former exposure-cap failures
-clear, but six high-order entries still fail before formal scalar `EOM(...)`
-atoms are generated. Those failures are split between:
+After switching Wilson-line exposure to Matchete `EoMStandardForm` semantics,
+four lower-order entries expose 20 formal scalar `EOM(...)` atoms total and
+produce nonzero scalar field-redefinition deltas. Six high-order entries still
+fail before formal scalar `EOM(...)` atoms are generated. Those failures are
+split between:
 
 - `Green-basis reduction discovered more than 256 basis terms`
 - `scalar Green-basis reduction generated more than 512 identities`
 
-No formal scalar EOM atoms and no scalar field-redefinition deltas are exposed
-yet in the selected order-2 fixture. The next generic algorithm work is still
-Matchete `InternalSimplify` operator-class / identity-neighborhood control,
-not final `cHD` coefficient tuning.
+The next generic algorithm work is still Matchete `InternalSimplify`
+operator-class / identity-neighborhood control for the high-order entries, not
+final `cHD` coefficient tuning.
 
 ## Current Implementation Slice
 
@@ -91,9 +92,10 @@ not final `cHD` coefficient tuning.
 - Refactored Wilson-line scalar EOM postprocessing out of
   `matching.py` into `src/pychete/wilson_line_eom.py`.
 - Refreshed the Singlet `cHD` pychete boundary fixture. The class-wise pass
-  clears four former exposure-cap failures, but six high-order selected
-  entries still exceed bounded scalar Green-basis exposure limits before
-  formal scalar EOM terms appear.
+  plus `EoMStandardForm`-only exposure now exposes formal scalar EOM terms and
+  nonzero scalar field-redefinition deltas for four lower-order selected
+  entries, but six high-order selected entries still exceed bounded scalar
+  Green-basis exposure limits before formal scalar EOM terms appear.
 - Focused validation passed for the two scalar Green tests, the Singlet `cHD`
   debug-fixture regression, py_compile on changed files, targeted mypy, and
   `git diff --check`.
@@ -105,6 +107,7 @@ Run after completing the slice:
 ```sh
 source "$HOME/.bashrc"
 dependencies/.venv/bin/python -m pytest \
+  tests/unit/functional/test_scalar_green_bilinears.py::test_scalar_derivative_green_standard_form_eom_ignores_interaction_terms \
   tests/unit/functional/test_scalar_green_bilinears.py::test_scalar_derivative_green_normal_form_by_operator_class_keeps_basis_local \
   tests/unit/functional/test_scalar_green_bilinears.py::test_wilson_line_scalar_green_hook_closes_four_derivative_formal_eom_neighborhood \
   tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap -q
