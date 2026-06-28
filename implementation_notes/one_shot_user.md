@@ -729,3 +729,14 @@ without Warsaw-specific core assumptions.
   not change the selected `cHW` value, so the next implementation target is a
   generic post-index/group and Green-normal-form reduction, not a final
   coefficient patch.
+- Latest continuation: confirmed the workflow explicitly and ran additional
+  Matchete WolframScript dumps for prop orders `0`, `2`, and `6` under the
+  30 GiB watchdog, alongside the existing order-4 dump. The key correction is
+  that the isolated order-4 pychete row should not be compared directly to the
+  final Matchete `+1/12 cHW` condition. Matchete's final condition comes from
+  the full `hScalar-lScalar` trace after validation/on-shell simplification:
+  order `0` gives threshold `H^\dagger H` terms, order `2` gives
+  two-derivative Higgs bilinears, order `4` gives four-derivative Higgs
+  bilinears, and order `6` is empty. The next milestone is therefore full
+  selected Wilson-line trace aggregation plus Green/on-shell projection, with
+  the prop-order dumps used as intermediate checkpoints.

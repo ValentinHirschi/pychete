@@ -20,6 +20,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":2,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":0,
@@ -30,6 +31,24 @@
 				"open_cds":0,
 				"loop_momenta":0,
 				"propagators":2,
+				"count":1
+			}
+		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=none;field=none",
+				"count":1
+			}
+		],
+		"h_derivative_signature_samples":[
+			{
+				"signature":"bar=none;field=none",
+				"sample_input_form":"Matchete`PackageScope`FuncNCM[Matchete`PackageScope`Xop[{Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar}, {$i1, $i2}, 1], Matchete`PackageScope`Xop[{Matchete`PackageScope`lScalar, Matchete`PackageScope`hScalar}, {$i2, $i3}, 2], Matchete`PackageScope`WilsonLine[Matchete`PackageScope`hScalar, {$i3, $i1}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Matchete`PackageScope`Mop[Matchete`PackageScope`hScalar, $i3, 2]]"
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
 				"count":1
 			}
 		],
@@ -56,6 +75,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -66,6 +86,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -85,6 +123,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -95,6 +134,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -114,6 +171,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -124,6 +182,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -143,6 +219,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -153,6 +230,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -172,6 +267,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -182,6 +278,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -201,6 +315,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -211,6 +326,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -230,6 +363,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -240,6 +374,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -259,6 +411,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -269,6 +422,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -288,6 +459,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -298,6 +470,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -318,6 +508,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -328,6 +519,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -348,6 +557,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -358,6 +568,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -378,6 +606,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -391,12 +620,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2008,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*(Coupling[A, {}, 0]^2\/2 + Coupling[A, {}, 0]^2\/(2*\\[Epsilon]) + (Coupling[A, {}, 0]^2*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
 		{
@@ -416,6 +713,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -426,6 +724,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Field[\\[Phi], Scalar, {}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -445,6 +761,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -455,6 +772,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -474,6 +809,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -484,6 +820,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -503,6 +857,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -513,6 +868,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -532,6 +905,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -542,6 +916,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -561,6 +953,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -571,6 +964,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -590,6 +1001,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -600,6 +1012,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -619,6 +1049,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -629,6 +1060,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -648,6 +1097,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -658,6 +1108,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -678,6 +1146,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -688,6 +1157,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -708,6 +1195,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -718,6 +1206,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -738,6 +1244,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -751,12 +1258,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2336,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":1,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":1,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*((Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/2 + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/(2*\\[Epsilon]) + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
 		{
@@ -776,6 +1351,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -786,6 +1362,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[\\[Phi], Scalar, {}, {}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -805,6 +1399,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -815,6 +1410,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -834,6 +1447,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -844,6 +1458,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -863,6 +1495,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -873,6 +1506,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -892,6 +1543,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -902,6 +1554,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -921,6 +1591,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -931,6 +1602,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -950,6 +1639,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -960,6 +1650,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -979,6 +1687,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -989,6 +1698,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1008,6 +1735,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1018,6 +1746,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1038,6 +1784,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1048,6 +1795,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1068,6 +1833,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1078,6 +1844,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1098,6 +1882,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1111,12 +1896,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2336,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":1,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":1,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*((Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/2 + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/(2*\\[Epsilon]) + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
 		{
@@ -1136,6 +1989,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1146,6 +2000,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[\\[Kappa], {}, 0]^2*Matchete`PackageScope`FuncNCM[Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[\\[Phi], Scalar, {}, {}], Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Field[\\[Phi], Scalar, {}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1165,6 +2037,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1175,6 +2048,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1194,6 +2085,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1204,6 +2096,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1223,6 +2133,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1233,6 +2144,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1252,6 +2181,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1262,6 +2192,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1281,6 +2229,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1291,6 +2240,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1310,6 +2277,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1320,6 +2288,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1339,6 +2325,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1349,6 +2336,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1368,6 +2373,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1378,6 +2384,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1398,6 +2422,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1408,6 +2433,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1428,6 +2471,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1438,6 +2482,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1458,6 +2520,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1471,12 +2534,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2240,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":1,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":1,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*(Coupling[\\[Kappa], {}, 0]^2\/2 + Coupling[\\[Kappa], {}, 0]^2\/(2*\\[Epsilon]) + (Coupling[\\[Kappa], {}, 0]^2*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
 		{
@@ -1496,6 +2627,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1506,6 +2638,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[A, {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1525,6 +2675,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1535,6 +2686,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1554,6 +2723,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1564,6 +2734,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1583,6 +2771,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1593,6 +2782,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1612,6 +2819,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1622,6 +2830,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1641,6 +2867,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1651,6 +2878,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1670,6 +2915,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1680,6 +2926,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1699,6 +2963,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1709,6 +2974,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1728,6 +3011,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1738,6 +3022,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1758,6 +3060,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1768,6 +3071,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1788,6 +3109,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1798,6 +3120,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -1818,6 +3158,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1831,12 +3172,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2008,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*(Coupling[A, {}, 0]^2\/2 + Coupling[A, {}, 0]^2\/(2*\\[Epsilon]) + (Coupling[A, {}, 0]^2*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
 		{
@@ -1856,6 +3265,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1866,6 +3276,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[\\[Phi], Scalar, {}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1885,6 +3313,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1895,6 +3324,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1914,6 +3361,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1924,6 +3372,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1943,6 +3409,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1953,6 +3420,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -1972,6 +3457,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -1982,6 +3468,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2001,6 +3505,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2011,6 +3516,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2030,6 +3553,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2040,6 +3564,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2059,6 +3601,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2069,6 +3612,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2088,6 +3649,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2098,6 +3660,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2118,6 +3698,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2128,6 +3709,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2148,6 +3747,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2158,6 +3758,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2178,6 +3796,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2191,12 +3810,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2336,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":1,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":1,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*((Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/2 + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/(2*\\[Epsilon]) + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
 		{
@@ -2216,6 +3903,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2226,6 +3914,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Field[\\[Phi], Scalar, {}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2245,6 +3951,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2255,6 +3962,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2274,6 +3999,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2284,6 +4010,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2303,6 +4047,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2313,6 +4058,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2332,6 +4095,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2342,6 +4106,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2361,6 +4143,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2371,6 +4154,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2390,6 +4191,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2400,6 +4202,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2419,6 +4239,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2429,6 +4250,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2448,6 +4287,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2458,6 +4298,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2478,6 +4336,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2488,6 +4347,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2508,6 +4385,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2518,6 +4396,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2538,6 +4434,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2551,12 +4448,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2336,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":1,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":1,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*((Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/2 + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/(2*\\[Epsilon]) + (Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
 		{
@@ -2576,6 +4541,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2586,6 +4552,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Coupling[\\[Kappa], {}, 0]^2*Matchete`PackageScope`FuncNCM[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}], Field[\\[Phi], Scalar, {}, {}], Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]], Field[\\[Phi], Scalar, {}, {}], Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]]*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2605,6 +4589,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2615,6 +4600,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2634,6 +4637,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2644,6 +4648,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2663,6 +4685,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2673,6 +4696,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2692,6 +4733,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2702,6 +4744,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2721,6 +4781,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2731,6 +4792,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2750,6 +4829,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2760,6 +4840,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]*Matchete`PackageScope`WilsonTerm[\\[Phi], {$i3, $i1}, {}]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2779,6 +4877,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":2,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2789,6 +4888,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":2,
+							"count":1
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":1
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*Matchete`PackageScope`Prop[0]*Matchete`PackageScope`Prop[Coupling[M, {}, 0]]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":1
 						}
 					],
@@ -2808,6 +4925,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2818,6 +4936,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[$i2, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2838,6 +4974,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2848,6 +4985,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2868,6 +5023,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2878,6 +5034,24 @@
 							"open_cds":0,
 							"loop_momenta":0,
 							"propagators":0,
+							"count":2
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
 							"count":2
 						}
 					],
@@ -2898,6 +5072,7 @@
 					"open_cds":0,
 					"loop_momenta":0,
 					"propagators":0,
+					"sym_gamma_factors":0,
 					"signature_histogram":[
 						{
 							"h_atoms":2,
@@ -2911,12 +5086,80 @@
 							"count":2
 						}
 					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":2
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":2
+						}
+					],
 					"sample_terms_input_form":[
 						"(I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]",
 						"I*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*LF[{Coupling[M, {}, 0]}, {1, 1}]"
 					]
+				},
+				{
+					"name":"validation_simplified_prefactored_evaluate_str",
+					"byte_count":2240,
+					"term_count":3,
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":1,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":1,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":3
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/2"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":3
+						}
+					],
+					"sample_terms_input_form":[
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/2",
+						"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/(2*\\[Epsilon])"
+					]
 				}
 			],
+			"validation_simplified_prefactored_evaluate_str_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*(Coupling[\\[Kappa], {}, 0]^2\/2 + Coupling[\\[Kappa], {}, 0]^2\/(2*\\[Epsilon]) + (Coupling[\\[Kappa], {}, 0]^2*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])\/2)",
 			"manual_minus_evaluate_str_input_form":"0"
 		}
 	],
@@ -2932,6 +5175,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -2956,11 +5200,27 @@
 				"count":4
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=0;field=0",
+				"count":6
+			}
+		],
+		"h_derivative_signature_samples":[
+			{
+				"signature":"bar=0;field=0",
+				"sample_input_form":"((2*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":6
+			}
+		],
 		"sample_terms_input_form":[
 			"((2*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
-			"((4*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]",
-			"((2*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]",
-			"(2*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
+			"((4*I)*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
 		]
 	},
 	"power_prefactor_input_form":"(-1\/2*I)*hbar",
@@ -2976,6 +5236,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -3000,11 +5261,27 @@
 				"count":4
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=0;field=0",
+				"count":6
+			}
+		],
+		"h_derivative_signature_samples":[
+			{
+				"signature":"bar=0;field=0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":6
+			}
+		],
 		"sample_terms_input_form":[
 			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
-			"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2)\/\\[Epsilon]",
-			"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*LF[{Coupling[M, {}, 0]}, {1, 1}]"
+			"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
 		]
 	},
 	"selected_prop_order_validation_simplified_summary":{
@@ -3019,6 +5296,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -3043,13 +5321,30 @@
 				"count":6
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=0;field=0",
+				"count":9
+			}
+		],
+		"h_derivative_signature_samples":[
+			{
+				"signature":"bar=0;field=0",
+				"sample_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]"
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":9
+			}
+		],
 		"sample_terms_input_form":[
 			"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
-			"2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]",
-			"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}])\/\\[Epsilon]"
+			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
 		]
 	},
+	"selected_prop_order_validation_simplified_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*(Coupling[A, {}, 0]^2 + Coupling[A, {}, 0]^2\/\\[Epsilon] + Coupling[A, {}, 0]^2*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]*(2*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0] + (2*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0])\/\\[Epsilon] + 2*Coupling[A, {}, 0]*Coupling[\\[Kappa], {}, 0]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[\\[Phi], Scalar, {}, {}]^2*(Coupling[\\[Kappa], {}, 0]^2 + Coupling[\\[Kappa], {}, 0]^2\/\\[Epsilon] + Coupling[\\[Kappa], {}, 0]^2*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2])",
 	"full_power_type_trace_summary":{
 		"name":"full_power_type_trace_all_prop_orders",
 		"byte_count":80720,
@@ -3062,6 +5357,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -3097,11 +5393,179 @@
 				"count":6
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=0;field=0",
+				"count":2
+			},
+			{
+				"signature":"bar=aabb;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abab;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=abba;field=0",
+				"count":3
+			},
+			{
+				"signature":"bar=aa;field=0",
+				"count":1
+			},
+			{
+				"signature":"bar=0;field=aa",
+				"count":1
+			},
+			{
+				"signature":"bar=0;field=aabb",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abab",
+				"count":3
+			},
+			{
+				"signature":"bar=0;field=abba",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,0",
+				"count":2
+			},
+			{
+				"signature":"bar=aa,0;field=0,0",
+				"count":1
+			},
+			{
+				"signature":"bar=0,0;field=aa,0",
+				"count":1
+			},
+			{
+				"signature":"bar=a,a;field=0,0",
+				"count":1
+			},
+			{
+				"signature":"bar=a,0;field=0,a",
+				"count":1
+			},
+			{
+				"signature":"bar=0,a;field=a,0",
+				"count":1
+			},
+			{
+				"signature":"bar=0,0;field=a,a",
+				"count":1
+			},
+			{
+				"signature":"bar=0,aa;field=0,0",
+				"count":3
+			},
+			{
+				"signature":"bar=0,a;field=0,a",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,aa",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0,0;field=0,0,0",
+				"count":6
+			}
+		],
+		"h_derivative_signature_samples":[
+			{
+				"signature":"bar=0;field=0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+			},
+			{
+				"signature":"bar=aabb;field=0",
+				"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=abab;field=0",
+				"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=abba;field=0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=aa;field=0",
+				"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^2"
+			},
+			{
+				"signature":"bar=0;field=aa",
+				"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/Coupling[M, {}, 0]^2"
+			},
+			{
+				"signature":"bar=0;field=aabb",
+				"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0;field=abab",
+				"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0;field=abba",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,0;field=0,0",
+				"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3509, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3509, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^2)"
+			},
+			{
+				"signature":"bar=aa,0;field=0,0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3510, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3510, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,0;field=aa,0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3511, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3511, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=a,a;field=0,0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3512, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3512, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=a,0;field=0,a",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3513, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3513, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,a;field=a,0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3514, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3514, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,0;field=a,a",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3515, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3515, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,aa;field=0,0",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3516, SU2L[fund]]}, {Index[u3517, Lorentz], Index[u3517, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3516, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,a;field=0,a",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3518, SU2L[fund]]}, {Index[u3519, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3518, SU2L[fund]]}, {Index[u3519, Lorentz]}])\/Coupling[M, {}, 0]^4"
+			},
+			{
+				"signature":"bar=0,0;field=0,aa",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3520, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3520, SU2L[fund]]}, {Index[u3521, Lorentz], Index[u3521, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,0,0;field=0,0,0",
+				"sample_input_form":"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3522, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3523, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3522, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3523, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":45
+			}
+		],
 		"sample_terms_input_form":[
 			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
-			"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
-			"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-			"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+			"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
 		]
 	},
 	"full_trace_validation_simplified_summary":{
@@ -3118,7 +5582,11 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[],
+		"h_derivative_word_histogram":[],
+		"h_derivative_signature_samples":[],
+		"sym_gamma_histogram":[],
 		"sample_terms_input_form":[]
 	},
 	"previous_validation_file":"\/Users\/vjhirsch\/HEP_programs\/pychete\/mathematica_reference\/Matchete\/Validation\/MatchingResults\/previous\/Singlet_Scalar_Extension-EFT.m",
@@ -3134,6 +5602,7 @@
 		"open_cds":0,
 		"loop_momenta":0,
 		"propagators":0,
+		"sym_gamma_factors":0,
 		"signature_histogram":[
 			{
 				"h_atoms":2,
@@ -3180,13 +5649,101 @@
 				"count":8
 			}
 		],
+		"h_derivative_word_histogram":[
+			{
+				"signature":"bar=0;field=0",
+				"count":6
+			},
+			{
+				"signature":"bar=a;field=a",
+				"count":1
+			},
+			{
+				"signature":"bar=aa;field=aa",
+				"count":1
+			},
+			{
+				"signature":"bar=0,aa;field=0,0",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,0",
+				"count":3
+			},
+			{
+				"signature":"bar=a,0;field=a,0",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0;field=0,aa",
+				"count":3
+			},
+			{
+				"signature":"bar=0,0,0;field=0,0,0",
+				"count":6
+			},
+			{
+				"signature":"bar=a;field=0",
+				"count":6
+			},
+			{
+				"signature":"bar=0;field=a",
+				"count":6
+			}
+		],
+		"h_derivative_signature_samples":[
+			{
+				"signature":"bar=0;field=0",
+				"sample_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]"
+			},
+			{
+				"signature":"bar=a;field=a",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^2)"
+			},
+			{
+				"signature":"bar=aa;field=aa",
+				"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(6*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,aa;field=0,0",
+				"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,0;field=0,0",
+				"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^2"
+			},
+			{
+				"signature":"bar=a,0;field=a,0",
+				"sample_input_form":"(4*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^4"
+			},
+			{
+				"signature":"bar=0,0;field=0,aa",
+				"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"signature":"bar=0,0,0;field=0,0,0",
+				"sample_input_form":"(3*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$3, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^4"
+			},
+			{
+				"signature":"bar=a;field=0",
+				"sample_input_form":"(((17*I)\/72)*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*FieldStrength[B, {Index[d$$1, Lorentz], Index[d$$2, Lorentz]}, {}, {Index[d$$2, Lorentz]}])\/Coupling[M, {}, 0]^4"
+			},
+			{
+				"signature":"bar=0;field=a",
+				"sample_input_form":"(((-17*I)\/72)*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*FieldStrength[B, {Index[d$$1, Lorentz], Index[d$$2, Lorentz]}, {}, {Index[d$$2, Lorentz]}])\/Coupling[M, {}, 0]^4"
+			}
+		],
+		"sym_gamma_histogram":[
+			{
+				"factors_input_form":"{}",
+				"count":38
+			}
+		],
 		"sample_terms_input_form":[
 			"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^2)",
-			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(6*Coupling[M, {}, 0]^4)"
+			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
 		]
 	},
 	"previous_validation_cHW_condition_input_form":"{(hbar*Coupling[A, {}, 0]^2*Coupling[gL, {}, 0]^2)\/(12*Coupling[M, {}, 0]^4)}",
-	"full_power_minus_selected_prop_order_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon] - (2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) + (5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(3*\\[Epsilon]*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(6*\\[..."
+	"full_power_minus_selected_prop_order_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon] - (2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4) - (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(6*\\[Epsilon]*Coupling[M, {}, 0]^4) + (5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(3*\\[Epsilon]*Coupling[M, {}, 0]^4) + (hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$..."
 }

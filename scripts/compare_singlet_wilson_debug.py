@@ -16,12 +16,29 @@ from typing import Any
 
 DEFAULT_MATCHETE = Path("assets/validation/matchete/debug/singlet_hScalar_lScalar_cHW.debug.json")
 DEFAULT_PYCHETE = Path("assets/validation/pychete/debug/singlet_hScalar_lScalar_cHW.pychete.fullrows.debug.json")
+DEFAULT_MATCHETE_PROP_ORDERS = {
+    0: Path("assets/validation/matchete/debug/singlet_hScalar_lScalar_cHW.prop0.debug.json"),
+    2: Path("assets/validation/matchete/debug/singlet_hScalar_lScalar_cHW.prop2.debug.json"),
+    4: DEFAULT_MATCHETE,
+    6: Path("assets/validation/matchete/debug/singlet_hScalar_lScalar_cHW.prop6.debug.json"),
+}
 
 
 def _parse_args() -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--matchete", type=Path, default=DEFAULT_MATCHETE)
     parser.add_argument("--pychete", type=Path, default=DEFAULT_PYCHETE)
+    parser.add_argument(
+        "--matchete-prop-order",
+        action="append",
+        metavar="ORDER=PATH",
+        help="Additional or replacement Matchete prop-order dump to summarize.",
+    )
+    parser.add_argument(
+        "--no-default-prop-orders",
+        action="store_true",
+        help="Only summarize prop-order dumps passed through --matchete-prop-order.",
+    )
     parser.add_argument("--sample-chars", type=int, default=180)
     return parser.parse_args()
 
@@ -46,6 +63,52 @@ def _short(value: str, max_chars: int) -> str:
 
 def _stage_by_name(stages: list[dict[str, Any]], name: str) -> dict[str, Any] | None:
     return next((stage for stage in stages if stage.get("name") == name), None)
+
+
+def _parse_prop_order_spec(spec: str) -> tuple[int, Path]:
+    if "=" not in spec:
+        raise ValueError(f"expected ORDER=PATH for --matchete-prop-order, got {spec!r}")
+    order, path = spec.split("=", 1)
+    return int(order), Path(path)
+
+
+def _prop_order_paths(args: argparse.Namespace) -> dict[int, Path]:
+    paths: dict[int, Path] = {} if args.no_default_prop_orders else dict(DEFAULT_MATCHETE_PROP_ORDERS)
+    for spec in args.matchete_prop_order or ():
+        order, path = _parse_prop_order_spec(spec)
+        paths[order] = path
+    return paths
+
+
+def _stage_terms_and_hist(stage: dict[str, Any] | None) -> str:
+    if stage is None:
+        return "<missing>"
+    return f"terms={stage.get('term_count')} " + _signature_counts(stage.get("h_derivative_word_histogram"))
+
+
+def _print_matchete_prop_order_summary(paths: dict[int, Path]) -> None:
+    if not paths:
+        return
+    print("Matchete prop-order sweep")
+    previous_chw: str | None = None
+    for order, path in sorted(paths.items()):
+        if not path.exists():
+            print(f"  order {order}: missing {path}")
+            continue
+        data = _load_json(path)
+        if previous_chw is None:
+            previous_chw = str(data.get("previous_validation_cHW_condition_input_form", ""))
+        raw = data.get("raw_insertion_sum_summary")
+        prefactored = data.get("power_prefactor_times_raw_sum_summary")
+        selected = data.get("selected_prop_order_validation_simplified_summary")
+        selected_input = str(data.get("selected_prop_order_validation_simplified_input_form", ""))
+        selected_status = "$Aborted" if selected_input.startswith("$Aborted") else "ok"
+        print(f"  order {order}: insertions={data.get('insertion_count')} selected_status={selected_status}")
+        print(f"    raw: {_stage_terms_and_hist(raw if isinstance(raw, dict) else None)}")
+        print(f"    prefactored: {_stage_terms_and_hist(prefactored if isinstance(prefactored, dict) else None)}")
+        print(f"    selected_validation: {_stage_terms_and_hist(selected if isinstance(selected, dict) else None)}")
+    if previous_chw:
+        print(f"  saved validation cHW: {previous_chw}")
 
 
 def _print_matchete_summary(data: dict[str, Any]) -> None:
@@ -124,6 +187,18 @@ def _print_pychete_stage_summary(row: dict[str, Any], stage_key: str, *, sample_
 
 
 def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
+    total_projections = data.get("total_projections", {})
+    if isinstance(total_projections, dict) and total_projections:
+        print("pychete selected-total projections")
+        for name in (
+            "post_wilson_tensor_reduced_finite",
+            "pre_wilson_tensor_reduced_finite",
+            "post_wilson_tensor_reduced_unrenormalized",
+            "pre_wilson_tensor_reduced_unrenormalized",
+        ):
+            if name in total_projections:
+                print(f"  {name}: {_short(str(total_projections[name]), sample_chars)}")
+        print()
     print("pychete nonzero rows")
     rows = _nonzero_pychete_rows(data)
     if not rows:
@@ -145,6 +220,8 @@ def main() -> int:
     pychete = _load_json(args.pychete)
     print(f"Matchete dump: {args.matchete}")
     print(f"pychete dump:  {args.pychete}")
+    print()
+    _print_matchete_prop_order_summary(_prop_order_paths(args))
     print()
     _print_matchete_summary(matchete)
     print()

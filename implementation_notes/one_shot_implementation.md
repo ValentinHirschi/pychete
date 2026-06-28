@@ -1925,6 +1925,20 @@
   does not change the selected `cHW` value, so the next real implementation
   target is a generic Matchete-style post-index/group cleanup and
   Green-normal-form reduction, not tensor canonicalization alone.
+- Latest Matchete-dissection correction: after the user's explicit reminder,
+  ran additional focused WolframScript dumps under the 30 GiB watchdog for
+  prop orders `0`, `2`, and `6` in addition to the existing order `4`, and
+  extended `scripts/compare_singlet_wilson_debug.py` to summarize this
+  prop-order sweep. The important correction is that the current pychete
+  mismatch must not be interpreted as "the isolated order-4 selected row should
+  equal the final Matchete `+1/12 cHW` coefficient." Matchete's order-0 slice
+  carries the `H^\dagger H` threshold terms, order-2 carries two-derivative
+  Higgs bilinears, order-4 carries four-derivative Higgs bilinears, and order
+  `6` is empty for this trace. The saved Matchete validation `cHW` condition
+  is a full `hScalar-lScalar` trace/on-shell simplification result. The next
+  pychete target is therefore full selected Wilson-line trace aggregation plus
+  Matchete-like Green/on-shell projection, using the prop-order dumps only as
+  intermediate checkpoints.
 
 ## Next Work
 
@@ -1942,6 +1956,11 @@
     the `aabb`/`abab`/`abba` derivative-word classes, `SymGammaFactor`
     weights, pre-Wilson tensor-reduction metric contractions, or Green/basis
     simplification;
+  - remeasure the full selected `hScalar-lScalar` Wilson-line aggregate across
+    prop orders `0`, `2`, and `4` before comparing to the saved Matchete
+    `cHW` condition. Use the order-specific Matchete dumps as checkpoints, but
+    compare the final `cHW` only after full-trace aggregation and
+    Green/on-shell projection;
   - remeasure the selected Singlet `hScalar-lScalar -> cHW` route after the
     conservative Wilson-line filter fix; focus first on whether derivative-only
     `Bar[H] D^4 H`-type structures now survive to the internal evaluated
