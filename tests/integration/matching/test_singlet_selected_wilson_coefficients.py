@@ -34,6 +34,12 @@ _SINGLET_CHD_FOUR_SLOT_DEBUG = Path(
 _SINGLET_CHD_FOUR_SLOT_FULL_DEBUG = Path(
     "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json"
 )
+_SINGLET_CHD_FOUR_SLOT_PROP1_DEBUG = Path(
+    "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop1.debug.json"
+)
+_SINGLET_CHD_FOUR_SLOT_PROP2_DEBUG = Path(
+    "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop2.debug.json"
+)
 _SINGLET_CHD_PYCHETE_EOM_BOUNDARY_DEBUG = Path(
     "assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json"
 )
@@ -325,6 +331,128 @@ def _selected_chd_four_slot_quarter_finite_expected(theory: Theory) -> Expressio
     )
 
 
+def _selected_chd_four_slot_order_one_finite_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (S("vakint::mursq").log() - 2 * mass.log() + Expression.num(3) / 2)
+        / mass**4
+    )
+
+
+def _selected_chd_four_slot_order_two_finite_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (mass.log() - S("vakint::mursq").log() / 2 - Expression.num(3) / 4)
+        / mass**4
+    )
+
+
+@cache
+def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
+    Theory,
+    dict[int, Expression],
+    dict[int, dict[str, int]],
+]:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    condition_name, target = _selected_chd_four_slot_target(theory)
+    hbar = theory.external_handle("hbar")()
+    lagrangian = fixture.expression("lagrangian")
+    setup = theory.one_loop_setup(
+        lagrangian,
+        eft_order=6,
+        max_trace_order=4,
+    )
+    heavy_scalar_solutions = matching_module.solve_heavy_scalar_eoms(
+        theory,
+        lagrangian,
+        eft_order=6,
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(
+        theory,
+        {condition_name: target},
+        heavy_scalar_solutions=heavy_scalar_solutions,
+    )
+    full_plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar-lVector-lScalar",),
+        max_total_order=2,
+        max_slot_order=2,
+        index_prefix="singlet_chd_order12",
+    )
+    entries = tuple(entry for entry in full_plan.entries if entry.total_order in (1, 2))
+    plan = matching_module.WilsonLineExpansionPlan(
+        theory=full_plan.theory,
+        entries=entries,
+        trace_names=full_plan.trace_names,
+        max_total_order=2,
+        max_slot_order=2,
+    )
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        term_atom_requirements=requirements,
+    )
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped_terms,
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    order_by_entry = {entry.label: entry.total_order for entry in entries}
+    counts_by_order: dict[int, dict[str, int]] = {1: {}, 2: {}}
+    finite_by_order: dict[int, Expression] = {}
+    normalization = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+    for entry_label, entry_terms in evaluated_by_entry.items():
+        if not entry_terms:
+            continue
+        order = order_by_entry[entry_label]
+        counts_by_order[order][entry_label] = len(entry_terms)
+        finite = (normalization * vakint_backend.finite_part(sum(entry_terms, Expression.num(0)))).expand()
+        finite_by_order[order] = (finite_by_order.get(order, Expression.num(0)) + finite).expand()
+
+    projections: dict[int, Expression] = {}
+    for order, finite in finite_by_order.items():
+        post_commutator = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+            theory,
+            finite,
+        )
+        result = MatchingResult(
+            theory=theory,
+            uv_lagrangian=Expression.num(0),
+            off_shell_eft_lagrangian=Expression.num(0),
+            on_shell_eft_lagrangian=post_commutator,
+        )
+        projections[order] = result.project_matching_conditions(
+            {condition_name: target},
+            expand_source=False,
+            normalize_derivative_operators=True,
+            eft_order=6,
+        )[condition_name]
+    return theory, projections, counts_by_order
+
+
 @cache
 def _selected_chd_four_slot_post_heavy_path_projection_map() -> tuple[
     Theory,
@@ -428,6 +556,17 @@ def _matchete_xterm_signatures(replacement: str) -> tuple[tuple[str, int, int, i
         )
         for fields, base_order, momentum_order, open_cd_order in _MATHEMATICA_XTERM_PATTERN.findall(replacement)
     )
+
+
+def _matchete_nonzero_target_insertion_indices(debug: dict[str, object]) -> list[int]:
+    insertions = debug["insertions"]
+    assert isinstance(insertions, list)
+    return [
+        insertion["index"]
+        for insertion in insertions
+        if isinstance(insertion, dict)
+        and insertion.get("validation_simplified_target_coefficient_input_form") not in ("0", "$Failed")
+    ]
 
 
 @pytest.mark.parametrize(
@@ -651,6 +790,59 @@ def test_selected_chd_four_slot_matchete_fixture_records_scalar_vector_frontier(
     assert target_quarter_insertions == [1, 3, 12, 14, 45, 47, 56, 58]
     assert len(target_quarter_coefficients) == 1
     assert "1 + \\[Epsilon] + \\[Epsilon]*Log" in next(iter(target_quarter_coefficients))
+
+
+@pytest.mark.slow
+def test_selected_chd_four_slot_prop_order_one_two_match_matchete_dumps() -> None:
+    prop1_debug = json.loads(_SINGLET_CHD_FOUR_SLOT_PROP1_DEBUG.read_text(encoding="utf-8"))
+    prop2_debug = json.loads(_SINGLET_CHD_FOUR_SLOT_PROP2_DEBUG.read_text(encoding="utf-8"))
+    theory, projections, counts = _selected_chd_four_slot_finite_projection_by_total_order()
+
+    assert prop1_debug["trace_name"] == "hScalar-lScalar-lVector-lScalar"
+    assert prop1_debug["target"] == "cHD"
+    assert prop1_debug["prop_order"] == 1
+    assert prop1_debug["insertion_count"] == 40
+    assert _matchete_nonzero_target_insertion_indices(prop1_debug) == [
+        1,
+        2,
+        4,
+        6,
+        7,
+        9,
+        21,
+        22,
+        24,
+        26,
+        27,
+        29,
+    ]
+    assert prop2_debug["trace_name"] == "hScalar-lScalar-lVector-lScalar"
+    assert prop2_debug["target"] == "cHD"
+    assert prop2_debug["prop_order"] == 2
+    assert prop2_debug["insertion_count"] == 8
+    assert _matchete_nonzero_target_insertion_indices(prop2_debug) == [1, 2, 5, 6]
+
+    assert counts[1] == {
+        "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 8,
+    }
+    assert counts[2] == {
+        "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 16,
+    }
+    assert_expr_equal(
+        (projections[1] - _selected_chd_four_slot_order_one_finite_expected(theory)).expand(),
+        Expression.num(0),
+    )
+    assert_expr_equal(
+        (projections[2] - _selected_chd_four_slot_order_two_finite_expected(theory)).expand(),
+        Expression.num(0),
+    )
 
 
 def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:

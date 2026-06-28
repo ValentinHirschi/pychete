@@ -1358,3 +1358,16 @@ without Warsaw-specific core assumptions.
   compare them against bounded pychete probes at the same stage, and patch only
   the first generic Matchete algorithm boundary through
   Symbolica/idenso/spenso/vakint rather than final-coefficient fitting.
+- Latest selected `cHD` propagation-order update: the requested
+  Matchete-intermediate workflow was applied again with refreshed
+  `debug_singlet_wilson_trace.wls` dumps for
+  `hScalar-lScalar-lVector-lScalar -> cHD` at propagation orders 1 and 2.
+  Comparing those dumps to bounded pychete total-order probes showed that the
+  saved Matchete selected trace is prop-order 0 + 1 + 2. pychete now matches
+  the selected finite projection for all three pieces individually. The two
+  generic fixes were Wilson-line loop-symmetry pruning over explicit loop
+  momenta plus uncontracted `DifferentialOperator(...)` Xterm slots, and
+  d-dimensional closed Lorentz metric traces `Metric(mu,mu) -> 4 - 2 epsilon`
+  before finite Laurent extraction. The remaining first full-matching
+  frontier is broader Green/EOM/on-shell/full-model parity, not this selected
+  four-slot trace aggregation.

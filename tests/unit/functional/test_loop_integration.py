@@ -4,13 +4,16 @@ from symbolica import Expression, S
 
 from pychete import (
     collect_loop_momenta_to_symmetric_lorentz,
+    contract_lorentz_metric_traces,
     contract_lorentz_metrics,
     evaluate_sym_gamma_factors,
     evaluate_symmetric_lorentz_indices,
+    lorentz_dimension,
     symmetric_lorentz_gamma_factor,
     symmetric_lorentz_tensor,
     s,
 )
+from pychete.backends import vakint
 from tests.conftest import assert_expr_equal
 
 
@@ -65,6 +68,37 @@ def test_contract_lorentz_metrics_replaces_indices_inside_ncm_derivative_slots()
     assert_expr_equal(
         contract_lorentz_metrics(expr),
         S("c") * s.NCM(s.Field(S("phi"), s.Scalar, s.List(), s.List(nu, rho))),
+    )
+
+
+def test_contract_lorentz_metric_traces_uses_dimensional_regulator() -> None:
+    mu = s.Index(S("mu"), s.Lorentz)
+    nu = s.Index(S("nu"), s.Lorentz)
+    epsilon = S("eps")
+    expr = S("c") * s.Metric(mu, mu) + s.Metric(mu, nu)
+
+    assert_expr_equal(
+        lorentz_dimension(epsilon=epsilon),
+        Expression.num(4) - 2 * epsilon,
+    )
+    assert_expr_equal(
+        contract_lorentz_metric_traces(expr, epsilon=epsilon),
+        S("c") * (Expression.num(4) - 2 * epsilon) + s.Metric(mu, nu),
+    )
+
+
+def test_contract_lorentz_metric_traces_keeps_epsilon_pole_finite_shift() -> None:
+    mu = s.Index(S("mu"), s.Lorentz)
+    epsilon = S("eps")
+    pole = S("pole")
+    finite = S("finite")
+    expr = s.Metric(mu, mu) * (pole / epsilon + finite)
+
+    contracted = contract_lorentz_metric_traces(expr, epsilon=epsilon)
+
+    assert_expr_equal(
+        vakint.finite_part(contracted, epsilon=epsilon),
+        4 * finite - 2 * pole,
     )
 
 

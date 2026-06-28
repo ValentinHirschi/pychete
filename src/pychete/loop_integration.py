@@ -189,6 +189,42 @@ def contract_lorentz_metrics(expr: Expression) -> Expression:
     return sum_expr(_contract_lorentz_metrics_single_term(term) for term in terms(expr)).expand()
 
 
+def lorentz_dimension(*, epsilon: Expression | None = None) -> Expression:
+    """Return the dimensional-regularization Lorentz dimension ``4 - 2 eps``."""
+
+    regulator = S("vakint::ε") if epsilon is None else epsilon
+    return (Expression.num(4) - 2 * regulator).expand()
+
+
+def contract_lorentz_metric_traces(
+    expr: Expression,
+    *,
+    epsilon: Expression | None = None,
+) -> Expression:
+    """Replace closed Lorentz metric traces by ``d = 4 - 2 epsilon``.
+
+    Matchete keeps the epsilon-suppressed part of ``Metric(mu, mu)`` because it
+    can multiply a loop pole and contribute to the finite result. The
+    replacement is a native Symbolica wildcard rule; Python only checks whether
+    the two matched metric slots are identical.
+    """
+
+    metric_left = s.head("contract_lorentz_trace_left_")
+    metric_right = s.head("contract_lorentz_trace_right_")
+    metric_pattern = s.Metric(metric_left, metric_right)
+    if not bool(expr.matches(metric_pattern)):
+        return expr
+    dimension = lorentz_dimension(epsilon=epsilon)
+
+    def replace_trace(match: dict[Expression, Expression]) -> Expression:
+        matched = metric_pattern.replace_wildcards(match)
+        if bool(match[metric_left] == match[metric_right]):
+            return dimension
+        return matched
+
+    return expr.replace(metric_pattern, replace_trace, rhs_cache_size=0).expand()
+
+
 def _contract_lorentz_metrics_single_term(term: Expression) -> Expression:
     metric_pairs: list[tuple[Expression, Expression]] = []
     remaining_factors: list[Expression] = []
@@ -279,9 +315,11 @@ def _harmonic_number(n: int) -> Expression:
 
 __all__ = [
     "collect_loop_momenta_to_symmetric_lorentz",
+    "contract_lorentz_metric_traces",
     "contract_lorentz_metrics",
     "evaluate_sym_gamma_factors",
     "evaluate_symmetric_lorentz_indices",
+    "lorentz_dimension",
     "symmetric_lorentz_gamma_factor",
     "symmetric_lorentz_tensor",
 ]

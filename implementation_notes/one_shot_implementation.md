@@ -1281,3 +1281,44 @@
   (`10 passed, 8 deselected`); `python -m py_compile
   scripts/debug_pychete_singlet_eom_boundary.py`; `python -m mypy`; and
   `git diff --check`.
+- Latest selected cHD propagation-order checkpoint: refreshed Matchete-side
+  evidence with `helper_mathematica_scripts/debug_singlet_wilson_trace.wls`
+  for
+  `hScalar-lScalar-lVector-lScalar -> cHD` at propagation orders 1 and 2,
+  committed as
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop1.debug.json`
+  and
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop2.debug.json`.
+  Those dumps show the saved selected trace/off-shell coefficient is the sum
+  of propagation orders 0, 1, and 2, not only prop-order zero: prop-order zero
+  gives the `-2` pole/log weight, prop-order one gives `+1`, and prop-order
+  two gives `-1/2`, totaling Matchete's `-3/2` pole/log weight.
+- Paired pychete probes for the same trace/target/propagation-order boundary
+  exposed two generic stage differences. First, total-order-one pychete terms
+  vanished because Wilson-line loop-symmetry pruning counted only the
+  propagator-expansion loop-momentum metadata and missed loop-rank information
+  still represented as uncontracted `DifferentialOperator(...)` Xterm slots.
+  The runtime fix now applies the Matchete symmetry rule term-by-term using
+  Symbolica `matches`/`match` over explicit `LoopMomentum(...)` and
+  `DifferentialOperator(...)` atoms. Second, total-order-two reached the right
+  pole/log structure but kept closed `Metric(mu,mu)` traces formal; replacing
+  those traces by `d = 4 - 2*epsilon` before finite Laurent extraction gives
+  the required epsilon-times-pole finite shift and matches Matchete's
+  prop-order-two constant.
+- Current cHD selected-trace status: pychete now matches Matchete's selected
+  four-slot Wilson-line finite projections for propagation/total orders 0, 1,
+  and 2 individually. The remaining full one-loop-matching frontier is no
+  longer this selected-trace aggregation boundary; it shifts back to broader
+  selected-source coverage, Green/EOM/on-shell reduction, and eventually full
+  Singlet model matching-condition parity.
+- Focused validation for this propagation-order slice passed:
+  `tests/unit/functional/test_loop_integration.py -q` (`12 passed`);
+  `tests/integration/matching/test_fluctuation_operator.py -k
+  "open_differential_operator_loop_rank or
+  loop_momentum_symmetry_cleanup_preserves_backend_numerators" -q`
+  (`1 passed, 114 deselected`); watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_selected_chd_four_slot_prop_order_one_two_match_matchete_dumps
+  -q` (`1 passed`); watchdog-wrapped `pytest -m "not slow"
+  tests/integration/matching/test_singlet_selected_wilson_coefficients.py -q`
+  (`13 passed, 6 deselected`); `python -m mypy`; and `python -m py_compile`
+  on the touched source/test files.

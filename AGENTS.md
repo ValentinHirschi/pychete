@@ -500,6 +500,19 @@ EOM/field redefinition, and final projection. Only after the first stage
 boundary is identified should runtime pychete code be changed, and the change
 must be a generic Symbolica/idenso/spenso/vakint port of that Matchete
 algorithm.
+For selected Wilson-line trace disagreements, decompose the comparison by
+Matchete propagation order and pychete Wilson-line total order before touching
+projection code. The Singlet `hScalar-lScalar-lVector-lScalar -> cHD` frontier
+showed why this is mandatory: Matchete's saved selected trace is the sum of
+propagation orders 0, 1, and 2, and the first two runtime fixes came from
+stage-local comparisons against
+`debug_singlet_wilson_trace.wls` prop-order dumps, not from the final
+coefficient. The generic rules found there are now part of the port:
+loop-symmetry pruning must count explicit `LoopMomentum(...)` factors and
+uncontracted `DifferentialOperator(...)` slots term-by-term, and closed
+Lorentz metric traces from tensor reduction must be contracted as
+`d = 4 - 2*epsilon` before finite Laurent extraction so epsilon-suppressed
+trace pieces multiply loop poles correctly.
 For the active Singlet `cHD` EOM/on-shell frontier, keep
 `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and its committed
 JSON fixture current as the Matchete `EOMSimplify`/`FieldRedef.m`

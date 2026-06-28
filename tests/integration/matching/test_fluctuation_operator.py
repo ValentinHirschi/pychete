@@ -2880,6 +2880,24 @@ def test_loop_momentum_symmetry_cleanup_preserves_backend_numerators() -> None:
     assert_expr_equal(remove_loop_momentum_symmetry_vanishing_wilson_terms(odd, (mu,)), Expression.num(0))
 
 
+def test_wilson_line_loop_symmetry_pruning_counts_open_differential_operator_rank() -> None:
+    theory = Theory("wilson_line_open_differential_operator_loop_rank")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    left = theory.symbol("wilson_left", role=SymbolRole.INDEX)
+    right = theory.symbol("wilson_right", role=SymbolRole.INDEX)
+    mu = theory.index("mu")
+    expr = s.DifferentialOperator(s.List(mu)) * s.WilsonTerm(
+        phi.label,
+        s.List(left, right),
+        s.List(),
+    )
+
+    assert_expr_equal(
+        matching_module._remove_wilson_line_loop_momentum_symmetry_vanishing_terms(expr, ()),
+        Expression.num(0),
+    )
+
+
 def test_expand_wilson_terms_lowers_abelian_two_derivative_term() -> None:
     theory = Theory("wilson_term_abelian_two_derivative")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")

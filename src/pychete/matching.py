@@ -1017,7 +1017,10 @@ class WilsonLineTracePath:
                 # Matchete's ActWithOpenCDs acts only on factors to the right here.
                 numerator = act_with_open_covariant_derivatives(numerator)
                 numerator = distribute_ncm_additions(numerator)
-            numerator = remove_loop_momentum_symmetry_vanishing_wilson_terms(numerator, loop_momentum_indices)
+            numerator = _remove_wilson_line_loop_momentum_symmetry_vanishing_terms(
+                numerator,
+                loop_momentum_indices,
+            )
             pre_wilson_numerator = numerator
             numerator = expand_wilson_terms(
                 self.theory,
@@ -1070,6 +1073,70 @@ def _fresh_trace_entry_dummy_indices(entry: Expression, slot_index: int) -> Expr
     """Make dummy contractions local to one ordered trace insertion."""
 
     return relabel_dummy_indices(entry, start=200_000 + 1_000 * slot_index)
+
+
+def _remove_wilson_line_loop_momentum_symmetry_vanishing_terms(
+    expr: Expression,
+    loop_momentum_indices: Sequence[Expression],
+) -> Expression:
+    """Drop loop-symmetry-vanishing Wilson terms with pychete Xterm momenta.
+
+    Matchete's Xterm substitutions already contain the ``OpenCD - I LoopMom``
+    split when ``RemoveSymmetryVanishingWilsonTerms`` sees the expression.
+    pychete keeps the momentum part of differential Xterms as
+    ``DifferentialOperator(...)`` until the backend lowering stage. Include
+    those uncontracted differential slots in the loop-momentum rank used for
+    the Wilson-term symmetry rule, without lowering the expression early.
+    """
+
+    from .wilson_lines import remove_loop_momentum_symmetry_vanishing_wilson_terms
+
+    base_indices = tuple(loop_momentum_indices)
+    loop_momentum_pattern = s.LoopMomentum(s.LoopMomentumIndexWildcard)
+    if (
+        not base_indices
+        and not bool(expr.matches(loop_momentum_pattern))
+        and not bool(expr.matches(s.DifferentialOperator(s.FieldDerivativesWildcard)))
+    ):
+        return expr
+    return sum_expr(
+        remove_loop_momentum_symmetry_vanishing_wilson_terms(
+            term,
+            _term_loop_symmetry_indices(term, base_indices),
+        )
+        for term in terms(expr)
+    ).expand()
+
+
+def _term_loop_symmetry_indices(
+    term: Expression,
+    fallback_loop_momentum_indices: tuple[Expression, ...],
+) -> tuple[Expression, ...]:
+    actual_loop_indices = _explicit_loop_momentum_indices(term)
+    return (
+        (*actual_loop_indices, *_differential_operator_free_loop_indices(term))
+        if actual_loop_indices
+        else (*fallback_loop_momentum_indices, *_differential_operator_free_loop_indices(term))
+    )
+
+
+def _explicit_loop_momentum_indices(expr: Expression) -> tuple[Expression, ...]:
+    pattern = s.LoopMomentum(s.LoopMomentumIndexWildcard)
+    if not bool(expr.matches(pattern)):
+        return ()
+    return tuple(match[s.LoopMomentumIndexWildcard] for match in expr.match(pattern))
+
+
+def _differential_operator_free_loop_indices(expr: Expression) -> tuple[Expression, ...]:
+    pattern = s.DifferentialOperator(s.FieldDerivativesWildcard)
+    if not bool(expr.matches(pattern)):
+        return ()
+    indices: list[Expression] = []
+    for match in expr.match(pattern):
+        derivatives = list_items(match[s.FieldDerivativesWildcard])
+        if _contracted_derivative_pair_power(derivatives) is None:
+            indices.extend(derivatives)
+    return tuple(indices)
 
 
 def _fresh_fluctuation_propagation_pairing(
@@ -2189,6 +2256,7 @@ class OneLoopSetup:
         expand_covariant_derivative_commutators: bool = False,
         max_wilson_derivative_order: int = 4,
         stage: VakintIntegralStage | str = VakintIntegralStage.RAW,
+        epsilon: Expression | None = None,
         short_form: bool | None = None,
         engine: Any | None = None,
         simplify_pychete_color_algebra: bool = False,
@@ -2233,6 +2301,7 @@ class OneLoopSetup:
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
+            epsilon=epsilon,
         )
 
     def interaction_wilson_line_internal_integral_sum(
@@ -2359,6 +2428,7 @@ class OneLoopSetup:
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                 expose_scalar_derivative_commutator_bilinears=False,
+                epsilon=epsilon,
             )
         named_integrals = {
             name: _postprocess_wilson_line_vakint_stage_expression(
@@ -2377,6 +2447,7 @@ class OneLoopSetup:
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                 expose_scalar_derivative_commutator_bilinears=False,
+                epsilon=epsilon,
             )
             for name, expr in raw_named_integrals.items()
         }
@@ -2869,6 +2940,7 @@ class OneLoopSetup:
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=False,
+            epsilon=epsilon,
         )
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
@@ -2900,6 +2972,7 @@ class OneLoopSetup:
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                 expose_scalar_derivative_commutator_bilinears=False,
+                epsilon=epsilon,
             )
             for name, expr in raw_named_integrals.items()
         }
@@ -7183,10 +7256,12 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     simplify_pychete_color_algebra: bool,
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
     expose_scalar_derivative_commutator_bilinears_option: bool = False,
+    epsilon: Expression | None = None,
 ) -> Expression:
     """Normalize tensor-reduced Wilson-line expressions before scalar evaluation."""
 
     from .backends import idenso
+    from .loop_integration import contract_lorentz_metric_traces
 
     out = idenso.simplify_pychete_field_derivative_metrics(expr)
     out = _restore_theory_owned_generated_lorentz_indices(theory, out)
@@ -7220,6 +7295,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
     if simplify_pychete_color_algebra:
         out = idenso.simplify_pychete_color_algebra(theory, out)
+    out = contract_lorentz_metric_traces(out, epsilon=epsilon)
     return scalarize_commutative_ncm_chains(out)
 
 
@@ -7269,6 +7345,7 @@ def _postprocess_pre_wilson_line_tensor_reduced_expression(
     simplify_pychete_color_algebra: bool,
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
     expose_scalar_derivative_commutator_bilinears_option: bool = False,
+    epsilon: Expression | None = None,
 ) -> Expression:
     """Normalize tensor-reduced expressions before lowering formal Wilson terms."""
 
@@ -7295,6 +7372,7 @@ def _postprocess_pre_wilson_line_tensor_reduced_expression(
         expose_scalar_derivative_commutator_bilinears_option=(
             expose_scalar_derivative_commutator_bilinears_option
         ),
+        epsilon=epsilon,
     )
 
 
@@ -7309,6 +7387,7 @@ def _postprocess_wilson_line_vakint_stage_expression(
     simplify_pychete_color_algebra: bool,
     covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode = "inversions",
     expose_scalar_derivative_commutator_bilinears: bool = False,
+    epsilon: Expression | None = None,
 ) -> Expression:
     """Normalize Wilson-line vakint tensor-reduced or evaluated expressions."""
 
@@ -7325,6 +7404,7 @@ def _postprocess_wilson_line_vakint_stage_expression(
         expose_scalar_derivative_commutator_bilinears_option=(
             expose_scalar_derivative_commutator_bilinears
         ),
+        epsilon=epsilon,
     )
 
 
@@ -8240,6 +8320,7 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
                         ),
                         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                         expose_scalar_derivative_commutator_bilinears_option=False,
+                        epsilon=epsilon,
                     )
                 evaluated_terms.append(
                     vacuum_integrals.evaluate_one_loop_vakint_expression(
@@ -8308,6 +8389,7 @@ def _wilson_line_matchete_order_pre_wilson_integral_expression(
         expose_scalar_derivative_commutator_bilinears_option=(
             expose_scalar_derivative_commutator_bilinears
         ),
+        epsilon=epsilon,
     )
     return _wilson_line_matchete_order_numerator_to_vakint_integral(
         numerator,

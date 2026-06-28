@@ -46,9 +46,11 @@ from .indices import (
 )
 from .loop_integration import (
     collect_loop_momenta_to_symmetric_lorentz,
+    contract_lorentz_metric_traces,
     contract_lorentz_metrics,
     evaluate_sym_gamma_factors,
     evaluate_symmetric_lorentz_indices,
+    lorentz_dimension,
     symmetric_lorentz_gamma_factor,
     symmetric_lorentz_tensor,
 )
@@ -209,6 +211,7 @@ __all__ = [
     "canonize_tensor_indices",
     "collect_loop_momenta_to_symmetric_lorentz",
     "collect_indices",
+    "contract_lorentz_metric_traces",
     "contract_lorentz_metrics",
     "configure_logging",
     "contract_wilson_term_derivative_metrics",
@@ -245,6 +248,7 @@ __all__ = [
     "linear_identity_basis_terms",
     "linear_identity_normal_form",
     "linear_identity_normal_form_from_identities",
+    "lorentz_dimension",
     "open_indices",
     "operator_basis_names",
     "operator_dimension",
