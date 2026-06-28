@@ -34,6 +34,9 @@ _SINGLET_CHD_FOUR_SLOT_DEBUG = Path(
 _SINGLET_CHD_FOUR_SLOT_FULL_DEBUG = Path(
     "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json"
 )
+_SINGLET_CHD_PYCHETE_EOM_BOUNDARY_DEBUG = Path(
+    "assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json"
+)
 
 _MATHEMATICA_XTERM_PATTERN = re.compile(
     r"Xterm\["
@@ -641,6 +644,26 @@ def test_selected_chd_four_slot_matchete_fixture_records_scalar_vector_frontier(
     assert target_quarter_insertions == [1, 3, 12, 14, 45, 47, 56, 58]
     assert len(target_quarter_coefficients) == 1
     assert "1 + \\[Epsilon] + \\[Epsilon]*Log" in next(iter(target_quarter_coefficients))
+
+
+def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
+    debug = json.loads(_SINGLET_CHD_PYCHETE_EOM_BOUNDARY_DEBUG.read_text(encoding="utf-8"))
+    references = debug["reference_projections"]
+    projections = debug["selected_stage_projections"]
+
+    assert debug["generator"] == "scripts/debug_pychete_singlet_eom_boundary.py"
+    assert debug["target"] == "cHD"
+    assert debug["term_counts_by_entry"] == {
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 4,
+    }
+    assert references["matchete_trace_off_shell_input_form"] == references["matchete_eom_off_shell_input_form"]
+    assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
+    assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
+    assert "selected_wilson_line_source_or_green_projection_before_eom" in debug["first_differing_boundary"]
+    assert "-1/2*" in projections["selected_normalized_pole_part"]
+    assert "vakint::ε" in projections["selected_normalized_pole_part"]
+    assert projections["selected_normalized_evaluated"] == projections["selected_post_heavy_green"]
+    assert projections["selected_normalized_evaluated"] != references["pychete_reference_off_shell"]
 
 
 def test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates() -> None:

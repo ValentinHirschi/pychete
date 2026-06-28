@@ -1300,3 +1300,12 @@ without Warsaw-specific core assumptions.
   `EOMSimplify` land exactly on the saved on-shell coefficient. The next
   runtime patch should therefore compare pychete's generated pre-EOM source to
   this raw/internal/on-shell sequence, not fit the final coefficient.
+- Latest paired pychete boundary update: added a pychete-side debug script and
+  committed JSON fixture for the Singlet `cHD` pre-EOM selected Wilson-line
+  boundary. The comparison now shows that pychete's selected normalized
+  unrenormalized source already has only the `-1/2` pole/log weight, while
+  Matchete's selected trace/off-shell checkpoint has the `-3/2` pole/log
+  weight. The immediate first divergence is therefore before EOM, in selected
+  Wilson-line source/Green-basis coverage; the next runtime patch should
+  revisit Matchete's insertion/Xterm/WilsonExpand/GreensSimplify behavior for
+  this trace before adding broader field-redefinition machinery.

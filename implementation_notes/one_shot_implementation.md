@@ -1171,3 +1171,25 @@
   sequence; the first differing boundary to investigate is pychete's generated
   full source plus Green/internal simplification before matter-field
   redefinitions, not final Wilson projection.
+- Latest paired pychete boundary probe: added
+  `scripts/debug_pychete_singlet_eom_boundary.py` and generated
+  `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`.
+  This is the pychete-side counterpart to the Matchete dumps
+  `singlet_eom_cHD.debug.json` and
+  `singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`.
+  It uses the same lower-level selected Wilson-line path as the existing
+  partial `cHD` tests, projects the unrenormalized normalized source, pole,
+  finite, post-Green, post-heavy, and post-heavy-Green stages, and records the
+  committed Matchete off-shell/on-shell coefficients in the same artifact.
+- Boundary result: the Matchete selected trace/off-shell checkpoint and the
+  Matchete `EOMSimplify` off-shell coefficient agree exactly:
+  `-1/4*hbar*A^2*gY^2*(6+5 eps+6 eps log(mu^2/M^2))/(eps*M^4)`.
+  The pychete selected normalized unrenormalized source has only the
+  `-1/2` pole/log weight, and the post-Green/post-heavy stages leave that
+  projection unchanged. Therefore the first current divergence is already
+  `selected_wilson_line_source_or_green_projection_before_eom`, not the
+  systematic `FieldRedef.m` stage. The next runtime patch should return to
+  Matchete's selected insertion/Xterm/WilsonExpand/GreensSimplify behavior for
+  this trace and explain why the missing effective two-quarter contribution is
+  a generic Wilson-line source/Green-basis issue before attempting new
+  EOM-field-redefinition code.
