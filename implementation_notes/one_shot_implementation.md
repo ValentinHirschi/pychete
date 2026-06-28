@@ -1990,6 +1990,41 @@
   broad trace/source selection, but the Matchete-style Wilson-line
   tensor/symmetric-loop/Wilson expansion cleanup and subsequent
   Green-normal-form reduction for the surviving order-four Higgs branch.
+- Current mismatch-audit refinement: re-read Matchete `SuperTrace.m` and
+  `LoopIntegration.m` around `GenericPropagatorExpansion`, `PropBosonExpand`,
+  `EvaluateSTr`, `ActWithOpenCDs`, `GatherLoopMomenta`, `LoopMoms`,
+  `RemoveSymmetryVanishingWilsonTerms`, `EvaluateSymmetricLorentzInds`,
+  `ContractMetric`, `WilsonExpand`, `LoopIntegrate`, `LFFull2LF`,
+  `EvaluateLoopFunctions`, `SimplifyMassFunction`, and `EpsExpand` before
+  changing pychete. The relevant Matchete ordering is:
+  `ActWithOpenCDs -> GatherLoopMomenta -> RemoveSymmetryVanishingWilsonTerms
+  -> CloseFermionLoop -> EvaluateSymmetricLorentzInds -> ContractMetric
+  -> WilsonExpand -> LoopIntegrate -> RelabelIndices/ExpandGenFSs/ContractCGs
+  -> MatchReduce/GreensSimplify -> EpsExpand`. This confirmed that any
+  future correction must preserve the explicit Wilson-line route and must not
+  repair the final `cHW` coefficient directly.
+- Important comparison correction from the same audit: a pychete isolated
+  `hScalar-lScalar#wilson14_o4_0` row or slot-distribution aggregate must not
+  be compared directly to Matchete's full prop-order-four insertion stage.
+  Matchete's `GenericPropagatorExpansion[propOrder=4]` contains all slot
+  distributions and only later exposes which pieces survive the current
+  target and Green/on-shell simplification. pychete's target-local debug view
+  currently keeps only the `[4,0]` post-Wilson branch for `cHW`; this remains a
+  useful diagnostic but is not a proof that `[1,3]`, `[2,2]`, or `[3,1]`
+  agree with Matchete unless a finer Matchete dump or a full compatible
+  aggregate comparison is used.
+- Implemented the first generic Matchete-order loop-symmetric tensor helper
+  in `src/pychete/loop_integration.py`. It adds formal `SymGammaFactor`
+  support, `symmetric_lorentz_tensor(...)`,
+  `evaluate_symmetric_lorentz_indices(...)`, and
+  `evaluate_sym_gamma_factors(...)`. These helpers use Symbolica wildcard
+  replacement for expression-wide rewrites and reproduce Matchete's
+  `Gamma[d/2]/(2^n Gamma[d/2+n])` expansion at `d = 4 - 2 epsilon` through
+  the linear epsilon term, which is needed when symmetric-tensor factors
+  multiply loop-function poles. This is deliberately not yet wired into the
+  default matching pipeline; the next slice should use it to build a
+  Matchete-compatible pre-Wilson diagnostic/evaluation path before replacing
+  any existing vakint tensor-reduction behavior.
 
 ## Next Work
 

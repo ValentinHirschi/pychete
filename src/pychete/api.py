@@ -32,6 +32,12 @@ from .indices import (
     relabel_dummy_indices,
     tensor_index_specs,
 )
+from .loop_integration import (
+    evaluate_sym_gamma_factors,
+    evaluate_symmetric_lorentz_indices,
+    symmetric_lorentz_gamma_factor,
+    symmetric_lorentz_tensor,
+)
 from .logging import configure_logging, disable_logging, get_logger
 from .matching import (
     BosonicCDEExpansionPlan,
@@ -198,6 +204,8 @@ __all__ = [
     "define_wilson_coefficient_from_basis",
     "define_wilson_coefficient_from_registered_basis",
     "evaluator_probe_equal",
+    "evaluate_sym_gamma_factors",
+    "evaluate_symmetric_lorentz_indices",
     "evaluate_loop_functions",
     "evaluate_one_loop_single_scale_vakint_expression",
     "evaluate_one_loop_single_scale_vacuum_integral",
@@ -233,6 +241,8 @@ __all__ = [
     "series_eft",
     "simplify_loop_functions",
     "simplify_pychete_color",
+    "symmetric_lorentz_gamma_factor",
+    "symmetric_lorentz_tensor",
     "tensor_index_specs",
     "wilson_term_expansion",
 ]

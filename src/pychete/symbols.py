@@ -337,6 +337,15 @@ def _print_symmetric_lorentz_indices(expr: Expression, mode: PrintMode, kwargs: 
     return _call("SymmetricLorentzInds", args, mode)
 
 
+def _print_sym_gamma_factor(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex and args:
+        return rf"\mathcal{{G}}_{{{args[0]}}}"
+    if mode is PrintMode.Mathematica:
+        return f"SymGammaFactor[{_join(args, mode)}]"
+    return _call("SymGammaFactor", args, mode)
+
+
 def _print_loop_function(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
     masses = _format_child(expr[0], mode, kwargs) if len(expr) > 0 else "{}"
     powers = _format_child(expr[1], mode, kwargs) if len(expr) > 1 else "{}"
@@ -390,6 +399,7 @@ def _print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | No
         "WilsonLine": lambda: _print_wilson_line(expr, mode, kwargs),
         "WilsonTerm": lambda: _print_wilson_term(expr, mode, kwargs),
         "SymmetricLorentzInds": lambda: _print_symmetric_lorentz_indices(expr, mode, kwargs),
+        "SymGammaFactor": lambda: _print_sym_gamma_factor(expr, mode, kwargs),
         "LoopFunction": lambda: _print_loop_function(expr, mode, kwargs),
         "Vector": lambda: _call("Vector", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "SU": lambda: _call("SU", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -607,6 +617,7 @@ class SymbolStore:
         "WilsonLine",
         "WilsonTerm",
         "SymmetricLorentzInds",
+        "SymGammaFactor",
         "LoopFunction",
         "CovariantDerivativeProtectedBar",
         "CovariantDerivativeProtectedCommutator",
@@ -810,6 +821,10 @@ class SymbolStore:
     @cached_property
     def SymmetricLorentzInds(self) -> Expression:
         return self.head("SymmetricLorentzInds")
+
+    @cached_property
+    def SymGammaFactor(self) -> Expression:
+        return self.head("SymGammaFactor")
 
     @cached_property
     def LoopFunction(self) -> Expression:

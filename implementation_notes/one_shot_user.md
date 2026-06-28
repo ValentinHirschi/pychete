@@ -765,3 +765,10 @@ without Warsaw-specific core assumptions.
   `cHW` candidate. The updated debug artifacts also distinguish the
   Matchete-comparable pre-action prefilter checkpoint from the later
   post-action/post-Wilson filtering checkpoint.
+- Continuation of that instruction: when a newly spotted mismatch seems
+  precise, first verify that the compared objects are the same Matchete
+  algorithmic stage and the same prop-order/slot aggregate. A fresh audit
+  showed that comparing pychete's isolated `[4,0]` Wilson-line row directly
+  to Matchete's full prop-order-four `EvaluateSTr` stage is invalid; the next
+  fixes must compare full compatible aggregates or add finer Matchete dumps
+  before changing pychete.
