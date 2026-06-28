@@ -1309,3 +1309,18 @@ without Warsaw-specific core assumptions.
   Wilson-line source/Green-basis coverage; the next runtime patch should
   revisit Matchete's insertion/Xterm/WilsonExpand/GreensSimplify behavior for
   this trace before adding broader field-redefinition machinery.
+- Latest user reinforcement recorded: when pychete and Matchete disagree,
+  continue running or refreshing focused debug WolframScripts and compare as
+  many Matchete intermediate stages as practical against bounded pychete
+  probes. Future mismatch updates should explicitly name the Matchete
+  checkpoint, the paired pychete probe, and the current suspected stage
+  boundary so the port keeps following Matchete's algorithms rather than
+  fitting final coefficients.
+- Latest cHD source/path comparison: the pychete boundary fixture now records
+  Matchete's eight quarter insertion checkpoints for
+  `hScalar-lScalar-lVector-lScalar -> cHD` alongside pychete's four nonzero
+  Wilson-line paths. The path-level projections show paths `0`, `2`, and `26`
+  with the expected `-1/4` sign and path `24` with the opposite sign; the
+  aggregate still has the `-1/2` pole/log weight instead of Matchete's `-3/2`.
+  The next mismatch slice should therefore target generic source/path
+  coverage and scalar-vector branch sign handling before EOM.

@@ -660,6 +660,24 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
     assert "selected_wilson_line_source_or_green_projection_before_eom" in debug["first_differing_boundary"]
+    assert debug["matchete_quarter_insertion_count"] == 8
+    assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
+        1,
+        3,
+        12,
+        14,
+        45,
+        47,
+        56,
+        58,
+    ]
+    assert debug["pychete_nonzero_path_count"] == 4
+    assert debug["term_counts_by_path"] == {"path0": 1, "path2": 1, "path24": 1, "path26": 1}
+    assert debug["evaluated_term_counts_by_path"] == {"path0": 1, "path2": 1, "path24": 1, "path26": 1}
+    assert debug["path_stage_projections"]["path0"].startswith("-1/4*")
+    assert debug["path_stage_projections"]["path2"].startswith("-1/4*")
+    assert debug["path_stage_projections"]["path24"].startswith("1/4*")
+    assert debug["path_stage_projections"]["path26"].startswith("-1/4*")
     assert "-1/2*" in projections["selected_normalized_pole_part"]
     assert "vakint::ε" in projections["selected_normalized_pole_part"]
     assert projections["selected_normalized_evaluated"] == projections["selected_post_heavy_green"]

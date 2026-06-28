@@ -12,6 +12,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 from typing import Any
 
@@ -27,6 +28,10 @@ from pychete import (
 )
 from pychete.backends import vakint as vakint_backend
 from pychete.matching_results import registered_wilson_matching_condition_targets
+
+_MATHEMATICA_XTERM_PATTERN = re.compile(
+    r"Xterm\[\{([^}]*)\},\s*\{[^}]*\},\s*(\d+),\s*(\d+),\s*(\d+)\]"
+)
 
 
 def _parse_args() -> argparse.Namespace:
@@ -98,6 +103,40 @@ def _projection_strings(
     }
 
 
+def _matchete_xterm_signatures(replacement: str) -> list[dict[str, Any]]:
+    return [
+        {
+            "fields": fields.replace("Matchete`PackageScope`", "").replace("\\[Phi]", "phi"),
+            "base_order": int(base_order),
+            "momentum_order": int(momentum_order),
+            "open_cd_order": int(open_cd_order),
+        }
+        for fields, base_order, momentum_order, open_cd_order in _MATHEMATICA_XTERM_PATTERN.findall(replacement)
+    ]
+
+
+def _matchete_quarter_insertions(debug: dict[str, Any]) -> list[dict[str, Any]]:
+    insertions = debug.get("insertions", ())
+    if not isinstance(insertions, list):
+        return []
+    rows: list[dict[str, Any]] = []
+    for insertion in insertions:
+        if not isinstance(insertion, dict):
+            continue
+        coefficient = str(insertion.get("validation_simplified_target_coefficient_input_form", ""))
+        if not coefficient.startswith("-1/4*"):
+            continue
+        replacement = str(insertion.get("replacement_input_form", ""))
+        rows.append(
+            {
+                "index": insertion.get("index"),
+                "xterm_signatures": _matchete_xterm_signatures(replacement),
+                "target_coefficient_input_form": coefficient,
+            }
+        )
+    return rows
+
+
 def main() -> int:
     args = _parse_args()
     fixture = load_validation_fixture(args.fixture)
@@ -135,9 +174,17 @@ def main() -> int:
         simplify_pychete_color_algebra=True,
         term_atom_requirements=requirements,
     )
+    terms_by_path_lists: dict[str, list[Any]] = {}
+    for entry_terms in grouped_terms.values():
+        for term in entry_terms:
+            terms_by_path_lists.setdefault(f"path{term.path_index}", []).append(term)
+    terms_by_path = {
+        path: tuple(terms)
+        for path, terms in terms_by_path_lists.items()
+    }
     evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
         theory,
-        grouped_terms,
+        terms_by_path,
         tensor_reduce=True,
         tensor_reduce_engine=None,
         tensor_reduce_before_wilson_expand=True,
@@ -185,6 +232,20 @@ def main() -> int:
         "selected_post_heavy": post_heavy,
         "selected_post_heavy_green": post_heavy_green,
     }
+    path_stage_expressions = {
+        path: (
+            one_loop_normalization_factor(
+                OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+                hbar=theory.external_handle("hbar")(),
+            )
+            * sum(evaluated_terms, Expression.num(0))
+        ).expand()
+        for path, evaluated_terms in evaluated_by_entry.items()
+    }
+    path_finite_stage_expressions = {
+        path: vakint_backend.finite_part(expr)
+        for path, expr in path_stage_expressions.items()
+    }
     reference_off_shell = reference.project_matching_conditions(
         {condition_name: target},
         source="off_shell_eft_lagrangian",
@@ -192,6 +253,7 @@ def main() -> int:
         normalize_derivative_operators=True,
         eft_order=6,
     )[condition_name]
+    matchete_quarter_insertions = _matchete_quarter_insertions(matchete_trace_debug)
     payload = {
         "schema_version": 1,
         "generator": "scripts/debug_pychete_singlet_eom_boundary.py",
@@ -213,15 +275,34 @@ def main() -> int:
             "normalization": "matchete_evaluated_hbar",
         },
         "term_counts_by_entry": {entry: len(terms) for entry, terms in grouped_terms.items()},
+        "term_counts_by_path": {path: len(terms) for path, terms in sorted(terms_by_path.items())},
         "evaluated_term_counts_by_entry": {
-            entry: len(terms) for entry, terms in evaluated_by_entry.items()
+            entry: sum(len(terms) for terms in evaluated_by_entry.values()) for entry in grouped_terms
         },
+        "evaluated_term_counts_by_path": {
+            path: len(terms) for path, terms in sorted(evaluated_by_entry.items())
+        },
+        "matchete_quarter_insertions": matchete_quarter_insertions,
+        "matchete_quarter_insertion_count": len(matchete_quarter_insertions),
+        "pychete_nonzero_path_count": len(terms_by_path),
         "heavy_scalar_solution_count": len(heavy_solutions),
         "selected_stage_projections": _projection_strings(
             theory,
             condition_name,
             target,
             stage_expressions,
+        ),
+        "path_stage_projections": _projection_strings(
+            theory,
+            condition_name,
+            target,
+            path_stage_expressions,
+        ),
+        "path_finite_stage_projections": _projection_strings(
+            theory,
+            condition_name,
+            target,
+            path_finite_stage_expressions,
         ),
         "reference_projections": {
             "matchete_trace_off_shell_input_form": matchete_trace_debug[
@@ -239,7 +320,10 @@ def main() -> int:
         "first_differing_boundary": (
             "selected_wilson_line_source_or_green_projection_before_eom; "
             "pychete selected normalized source has the -1/2 pole/log weight, "
-            "while Matchete's selected trace/off-shell checkpoint has -3/2."
+            "while Matchete's selected trace/off-shell checkpoint has -3/2. "
+            "The paired insertion/path checkpoint records eight Matchete "
+            "quarter insertions but four pychete nonzero Wilson-line paths, "
+            "so the next comparison is source/path coverage before EOM."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

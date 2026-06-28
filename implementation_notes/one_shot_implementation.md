@@ -59,6 +59,13 @@
   trace/target/stage, compare them directly with bounded pychete probes, and
   add checkpoints until the first divergence is located before patching
   runtime pychete.
+- Latest user reinforcement, 2026-06-28: every mismatch continuation/status
+  must explicitly name the Matchete WolframScript or committed fixture
+  checkpoint, the bounded pychete probe or fixture being compared, and the
+  current suspected stage boundary. The active cadence is to keep running or
+  refreshing debug WolframScripts often, dissect Matchete intermediates as far
+  as needed, and only patch the first generic algorithm divergence through
+  Symbolica/idenso/spenso/vakint.
 - Current concrete objective reminder: the active Singlet `cHD`
   EOM/on-shell frontier must keep
   `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
@@ -473,6 +480,18 @@
   heavy-scalar substitution and post-finite scalar commutator-bilinear
   exposure using the registered Wilson target. This is still a selected-trace
   milestone, not yet a full Singlet model integration-test reproduction.
+- Latest paired source/path checkpoint: the pychete-side boundary fixture now
+  records the Matchete quarter insertion rows from
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`
+  next to pychete's path-level selected projections. The Matchete dump has
+  eight target-contributing quarter insertions
+  `[1, 3, 12, 14, 45, 47, 56, 58]`, while pychete has four nonzero
+  Wilson-line paths `{0, 2, 24, 26}`. Paths `0`, `2`, and `26` project with
+  the expected `-1/4` sign, path `24` projects with the opposite sign, and the
+  aggregate remains the recorded `-1/2` pole/log weight instead of Matchete's
+  `-3/2`. The next generic comparison should therefore focus on
+  insertion/source coverage and scalar-vector branch signs before EOM, not on
+  final-condition repair.
 - Added a Matchete debug checkpoint for the next full-model `cHD` boundary:
   `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` writes
   `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, recording the

@@ -458,6 +458,12 @@ and which bounded pychete probe were compared. A statement that a coefficient
 "does not match" is not actionable enough for this port unless it is tied to a
 specific stage boundary such as source generation, Wilson expansion, loop
 integration, Green-basis simplification, EOM reduction, or projection.
+For every continuation or status update during mismatch work, explicitly
+confirm the paired-debug workflow in concrete terms: name the current Matchete
+WolframScript/fixture checkpoint, name the bounded pychete probe or fixture
+being compared to it, and state the stage boundary currently under suspicion.
+If no fresh WolframScript run was possible, say which committed Matchete dump is
+being used instead and record that limitation in the implementation notes.
 Every mismatch-fix note should explicitly name the Matchete dump or
 WolframScript checkpoint used, the corresponding bounded pychete probe, and the
 first generic algorithm boundary where they differ. This keeps the port aligned
