@@ -70,6 +70,57 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
   |>
 ];
 
+fieldsToShiftPreparation[expr_] := Module[{fields, freeL, list, shiftFields, prepared},
+  fields = DeleteDuplicates @ Cases[expr, HoldPattern @ Matchete`Field[a_, __] :> a, Infinity];
+  freeL = Matchete`PackageScope`InternalSimplify @ Total[Matchete`FreeLag[#] & /@ fields];
+  prepared = Collect[expr - freeL, _Matchete`PackageScope`Operator];
+  prepared = prepared - Matchete`SelectOperatorClass[prepared, {}, 4];
+  list = Cases[
+    Matchete`PackageScope`TermsToList @ prepared,
+    x_ /; MemberQ[x, Matchete`PackageScope`EoM[___], {0, Infinity}]
+  ];
+  shiftFields = DeleteDuplicates @ Cases[
+    list,
+    Matchete`PackageScope`EoM[Matchete`Field[f_, ___]] |
+      Matchete`PackageScope`EoM[Matchete`Bar @ Matchete`Field[f_, ___]] |
+      Matchete`PackageScope`EoM[Matchete`Transp @ Matchete`Field[f_, ___]] :> f,
+    Infinity
+  ];
+  <|
+    "input_field_labels_input_form" -> toInputString[fields],
+    "eom_term_count" -> Length[list],
+    "eom_field_labels_input_form" -> toInputString[shiftFields],
+    "sample_eom_terms_input_form" -> (shortInputString /@ Take[list, UpTo[5]])
+  |>
+];
+
+higgsScalarShiftSummary[expr_] := Module[
+  {fields, hField, real, type, freeL, prepared, hTerms, hEomTerms, rules},
+  fields = DeleteDuplicates @ Cases[expr, HoldPattern @ Matchete`Field[a_, __] :> a, Infinity];
+  hField = FirstCase[fields, f_ /; SymbolName[Unevaluated[f]] === "H", Missing["NotFound"]];
+  If[hField === Missing["NotFound"], Return[<|"available" -> False|>]];
+  {real, type} = Lookup[Matchete`PackageScope`$FieldAssociation @ hField, {Matchete`SelfConjugate, Matchete`Type}];
+  freeL = Matchete`PackageScope`InternalSimplify @ Total[Matchete`FreeLag[#] & /@ fields];
+  prepared = Collect[expr - freeL, _Matchete`PackageScope`Operator];
+  prepared = prepared - Matchete`SelectOperatorClass[prepared, {}, 4];
+  hTerms = Select[Matchete`PackageScope`TermsToList @ prepared, Not @* FreeQ[hField]];
+  hEomTerms = Select[hTerms, MemberQ[#, Matchete`PackageScope`EoM[___], {0, Infinity}] &];
+  rules = If[
+    hEomTerms === {},
+    {},
+    Matchete`FieldRedef`PackagePrivate`ScalarShift[Plus @@ hEomTerms, hField, real]
+  ];
+  <|
+    "available" -> True,
+    "field_type_input_form" -> toInputString[type],
+    "self_conjugate" -> TrueQ[real],
+    "terms_containing_h_count" -> Length[hTerms],
+    "eom_terms_containing_h_count" -> Length[hEomTerms],
+    "sample_h_eom_terms_input_form" -> (shortInputString /@ Take[hEomTerms, UpTo[3]]),
+    "rules_input_form" -> shortInputString[rules]
+  |>
+];
+
 operatorForTarget["cHD"] := Module[{i = Unique["i"], j = Unique["j"], nu = Unique["nu"]},
   H[i] Matchete`CD[nu, Matchete`Bar[H[i]]] Matchete`Bar[H[j]] Matchete`CD[nu, H[j]]
 ];
@@ -95,6 +146,8 @@ offShell = previousValidationResult["Off-shell EFT Lagrangian"];
 onShell = previousValidationResult["On-shell EFT Lagrangian"];
 operator = operatorForTarget[targetOption];
 fieldsToShift = Matchete`PackageScope`FieldsToShift[offShell];
+fieldsToShiftPrep = fieldsToShiftPreparation[offShell];
+higgsShift = higgsScalarShiftSummary[offShell];
 
 offCoefficient = Matchete`GetOperatorCoefficient[offShell, operator];
 onCoefficient = Matchete`GetOperatorCoefficient[onShell, operator];
@@ -111,6 +164,8 @@ data = <|
   "on_shell_coefficient_input_form" -> toInputString[onCoefficient],
   "on_minus_off_coefficient_input_form" -> toInputString[deltaCoefficient],
   "fields_to_shift_input_form" -> toInputString[fieldsToShift],
+  "fields_to_shift_preparation" -> fieldsToShiftPrep,
+  "higgs_scalar_shift_summary" -> higgsShift,
   "off_shell_summary" -> stageSummary["off_shell_eft_lagrangian", offShell],
   "on_shell_summary" -> stageSummary["on_shell_eft_lagrangian", onShell],
   "on_minus_off_summary" -> stageSummary["on_minus_off_eft_lagrangian", onShell - offShell]

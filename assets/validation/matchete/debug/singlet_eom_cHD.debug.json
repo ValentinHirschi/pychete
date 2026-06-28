@@ -9,6 +9,29 @@
 	"on_shell_coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
 	"on_minus_off_coefficient_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
 	"fields_to_shift_input_form":"{{d, 4}, {e, 4}, {H, 4}, {l, 4}, {q, 4}, {u, 4}}",
+	"fields_to_shift_preparation":{
+		"input_field_labels_input_form":"{H, d, q, u, e, l}",
+		"eom_term_count":6,
+		"eom_field_labels_input_form":"{d, e, l, q, u, H}",
+		"sample_eom_terms_input_form":[
+			"(-I)*Matchete`PackageScope`Operator[NCM[Bar[Field[d, Fermion, {Index[d$$1, SU3c[fund]], Index[d$$2, Flavor]}, {}]], DiracProduct[Proj[-1]], Matchete`PackageScope`EoM[Field[d, Fermion, {Index[d$$1, SU3c[fund]], Index[d$$2, Flavor]}, {}]]]]",
+			"(-I)*Matchete`PackageScope`Operator[NCM[Bar[Field[e, Fermion, {Index[d$$2, Flavor]}, {}]], DiracProduct[Proj[-1]], Matchete`PackageScope`EoM[Field[e, Fermion, {Index[d$$2, Flavor]}, {}]]]]",
+			"(-I)*Matchete`PackageScope`Operator[NCM[Bar[Field[l, Fermion, {Index[d$$1, SU2L[fund]], Index[d$$2, Flavor]}, {}]], DiracProduct[Proj[1]], Matchete`PackageScope`EoM[Field[l, Fermion, {Index[d$$1, SU2L[fund]], Index[d$$2, Flavor]}, {}]]]]",
+			"(-I)*Matchete`PackageScope`Operator[NCM[Bar[Field[q, Fermion, {Index[d$$1, SU3c[fund]], Index[d$$1, SU2L[fund]], Index[d$$2, Flavor]}, {}]], DiracProduct[Proj[1]], Matchete`PackageScope`EoM[Field[q, Fermion, {Index[d$$1, SU3c[fund]], Index[d$$1, SU2L[fund]], Index[d$$2, Flavor]}, {}]]]]",
+			"(-I)*Matchete`PackageScope`Operator[NCM[Bar[Field[u, Fermion, {Index[d$$1, SU3c[fund]], Index[d$$2, Flavor]}, {}]], DiracProduct[Proj[-1]], Matchete`PackageScope`EoM[Field[u, Fermion, {Index[d$$1, SU3c[fund]], Index[d$$2, Flavor]}, {}]]]]"
+		]
+	},
+	"higgs_scalar_shift_summary":{
+		"available":true,
+		"field_type_input_form":"Scalar",
+		"self_conjugate":false,
+		"terms_containing_h_count":293,
+		"eom_terms_containing_h_count":1,
+		"sample_h_eom_terms_input_form":[
+			"Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]]"
+		],
+		"rules_input_form":"{Field[{H, _, 0}, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$5620_, SU2L[fund]]}, Matchete`FieldRedef`PackagePrivate`devPat$5619_] :> RelabelIndices[CD[Matchete`FieldRedef`PackagePrivate`devPat$5619, Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$5620, SU2L[fund]]}, {}]\/2], Unique -> True], Field[{H, _, 1}, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$5620_, SU2L[fund]]}, Matchete`FieldRedef`PackagePrivate`devPat$5619_] :> RelabelIndices[CD[Matchete`FieldRedef`PackagePrivate`devPat$5619, 0], Unique -> True]}"
+	},
 	"off_shell_summary":{
 		"name":"off_shell_eft_lagrangian",
 		"byte_count":251656,

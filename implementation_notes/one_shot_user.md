@@ -1268,3 +1268,15 @@ without Warsaw-specific core assumptions.
   `EOMSimplify` shift, while preserving those aliases for on-shell projection
   and conservative Wilson-line filtering. Focused `cHD` fixture, selected
   coefficient, projection-alias, mypy, and diff checks passed.
+- Latest confirmation and debug update: yes, the active mismatch workflow is
+  to keep running focused debug WolframScripts, dissect Matchete intermediate
+  stages, compare them with bounded pychete probes, and patch only the first
+  generic algorithm boundary that diverges. This was reinforced again in
+  `AGENTS.md` and the live objective notes. The Singlet `cHD`
+  EOMSimplify dump now uses Matchete's real package-scope `EoM`, `Operator`,
+  `TermsToList`, `InternalSimplify`, and `$FieldAssociation` symbols, and the
+  regenerated JSON fixture records six prepared EOM terms for
+  `{d, e, l, q, u, H}` plus a Higgs `ScalarShift` checkpoint. The next
+  implementation frontier remains the generic Matchete-style systematic
+  matter-field redefinition/source-scoping step, not a coefficient-specific
+  `cHD` repair.

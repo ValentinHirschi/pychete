@@ -475,6 +475,21 @@ EOM/field redefinition, and final projection. Only after the first stage
 boundary is identified should runtime pychete code be changed, and the change
 must be a generic Symbolica/idenso/spenso/vakint port of that Matchete
 algorithm.
+For the active Singlet `cHD` EOM/on-shell frontier, keep
+`helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and its committed
+JSON fixture current as the Matchete `EOMSimplify`/`FieldRedef.m`
+checkpoint. That dump should record the real package-scope Matchete stages,
+including `FieldsToShift`, the prepared EOM-term list, field-specific
+`ScalarShift`/`FermionShift`/`VectorShift` data when relevant, and the saved
+off-shell/on-shell projection delta. When extending this or similar
+WolframScript dumps, qualify Matchete package-scope heads such as
+``Matchete`PackageScope`EoM``, ``Matchete`PackageScope`Operator``,
+``Matchete`PackageScope`TermsToList``,
+``Matchete`PackageScope`InternalSimplify``, and
+``Matchete`PackageScope`$FieldAssociation``; otherwise the script may create
+inert lookalike symbols and report misleading checkpoints. Pair each refreshed
+Matchete EOM dump with a bounded pychete probe of the corresponding
+source/EOM/field-redefinition boundary before changing runtime code.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

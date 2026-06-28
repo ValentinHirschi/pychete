@@ -53,6 +53,13 @@
   WolframScripts and dissect Matchete intermediates until the first mismatching
   semantic boundary is located. Record the Matchete stage dump, the bounded
   pychete probe, and the stage comparison before accepting runtime changes.
+- Current concrete objective reminder: the active Singlet `cHD`
+  EOM/on-shell frontier must keep
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json` current as
+  Matchete `EOMSimplify`/`FieldRedef.m` evidence. Any runtime patch motivated
+  by this frontier should first compare a refreshed Matchete dump with a
+  bounded pychete probe at the same source/EOM/field-redefinition boundary.
 - Use larger coherent implementation slices. Run focused tests while building a
   slice, grouped targeted tests before a green milestone, and full/slow tests
   only when the milestone justifies the cost.
@@ -1107,3 +1114,15 @@
   (`3 passed, 61 deselected`); `PYTHONPATH=src
   dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
   passed.
+- Latest debug-fixture refinement: the Singlet `cHD` EOMSimplify
+  WolframScript now qualifies package-scope Matchete symbols when reproducing
+  `FieldRedef.m` internals, including ``Matchete`PackageScope`EoM``,
+  ``Matchete`PackageScope`Operator``,
+  ``Matchete`PackageScope`TermsToList``, and
+  ``Matchete`PackageScope`$FieldAssociation``. Without those qualifications
+  the script can create inert lookalike symbols and report misleading EOM
+  counts. The regenerated JSON fixture now records six prepared EOM terms with
+  field labels `{d, e, l, q, u, H}` and a Higgs `ScalarShift` checkpoint with
+  one Higgs EOM term. This confirms the next generic frontier is systematic
+  matter-field redefinition/source scoping, especially the Higgs/matter path,
+  not a final `cHD` coefficient patch.

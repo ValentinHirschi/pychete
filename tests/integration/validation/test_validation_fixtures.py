@@ -1652,9 +1652,20 @@ def test_singlet_reference_chd_debug_records_matchete_fields_to_shift() -> None:
         Path("assets/validation/matchete/debug/singlet_eom_cHD.debug.json").read_text(encoding="utf-8")
     )
     fields_to_shift = debug["fields_to_shift_input_form"]
+    preparation = debug["fields_to_shift_preparation"]
+    higgs_shift = debug["higgs_scalar_shift_summary"]
 
     assert "{H, 4}" in fields_to_shift
     assert "{B, 4}" not in fields_to_shift
+    assert preparation["eom_term_count"] == 6
+    for label in ("d", "e", "l", "q", "u", "H"):
+        assert label in preparation["eom_field_labels_input_form"]
+    assert higgs_shift["available"] is True
+    assert higgs_shift["field_type_input_form"] == "Scalar"
+    assert higgs_shift["self_conjugate"] is False
+    assert higgs_shift["eom_terms_containing_h_count"] == 1
+    assert "Matchete`PackageScope`EoM[Field[H" in "".join(higgs_shift["sample_h_eom_terms_input_form"])
+    assert "Field[{H, _, 0}" in higgs_shift["rules_input_form"]
 
 
 def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:
