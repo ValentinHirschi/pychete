@@ -1425,3 +1425,28 @@
   `src/pychete/matching_options.py`, `src/pychete/validation_fixtures.py`,
   and `src/pychete/api.py` (`Success: no issues found`); and
   `git diff --check`.
+- Current Singlet `cHD` paired-debug update: the Matchete checkpoint remains
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` /
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, especially
+  the `raw_lagrangian_eft_eom_boundary` replay where
+  `after_shift_dim6_dev3` creates the on-shell delta. The paired pychete
+  checkpoint `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`
+  now records an explicit EOM-exposure probe over the selected
+  `hScalar-lScalar-lVector-lScalar` entries after pole+finite extraction:
+  10 selected entries, zero field-strength atoms, zero Abelian
+  field-strength-divergence targets, zero nonzero vector field-redefinition
+  deltas, and 28 scalar Laplacian EOM identities in the higher-derivative
+  entries. This narrows the first current mismatch to the
+  representative-conversion boundary before field redefinition: Matchete's
+  `InternalSimplify` exposes EOM-proportional structures feeding
+  `PerformSystematicFieldRedefs`, while pychete's selected source still sits
+  in scalar-derivative representatives that project to `cHD` but do not expose
+  the Abelian vector-EOM normal form. The next runtime slice should port that
+  generic Green/InternalSimplify representative conversion, not add a direct
+  `cHD` coefficient patch.
+- Focused validation for this boundary-probe checkpoint passed:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "matchete_eom_dump_records_dim6_dev3_shift_boundary or
+  pychete_boundary_fixture_records_pre_eom_gap" -q` (`2 passed, 18
+  deselected`); `python -m py_compile
+  scripts/debug_pychete_singlet_eom_boundary.py`; and `git diff --check`.

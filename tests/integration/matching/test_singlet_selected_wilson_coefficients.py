@@ -884,6 +884,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     references = debug["reference_projections"]
     projections = debug["selected_stage_projections"]
     projections_by_order = debug["selected_stage_projections_by_total_order"]
+    eom_probe = debug["eom_exposure_probe_summary"]
 
     assert debug["generator"] == "scripts/debug_pychete_singlet_eom_boundary.py"
     assert debug["target"] == "cHD"
@@ -912,7 +913,20 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert references["matchete_trace_off_shell_input_form"] == references["matchete_eom_off_shell_input_form"]
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
-    assert "selected_wilson_line_trace_generation_now_matches" in debug["first_differing_boundary"]
+    assert "representative-conversion boundary" in debug["first_differing_boundary"]
+    assert eom_probe == {
+        "entry_count": 10,
+        "field_strength_count": 0,
+        "nonzero_vector_field_redefinition_delta_entry_count": 0,
+        "scalar_eom_identity_count": 28,
+        "vector_field_strength_divergence_count": 0,
+    }
+    assert debug["eom_exposure_probe_by_entry"]["hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"][
+        "scalar_eom_identity_count"
+    ] == 0
+    assert debug["eom_exposure_probe_by_entry"]["hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0"][
+        "scalar_eom_identity_count"
+    ] == 10
     assert debug["matchete_quarter_insertion_count"] == 8
     assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
         1,

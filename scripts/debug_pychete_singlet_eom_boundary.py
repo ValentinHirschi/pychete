@@ -27,6 +27,14 @@ from pychete import (
     one_loop_normalization_factor,
 )
 from pychete.backends import vakint as vakint_backend
+from pychete.expr import (
+    field_strength_derivatives,
+    field_strength_label,
+    field_strength_pattern,
+    list_items,
+    matching_subexpressions,
+)
+from pychete.functional import scalar_eom_identities
 from pychete.matching_results import registered_wilson_matching_condition_targets
 
 _MATHEMATICA_XTERM_PATTERN = re.compile(
@@ -146,6 +154,70 @@ def _projected_stage_order_map(
             )
             projected[stage_name][order] = _projection_sum(theory, condition_name, target, expressions)
     return projected
+
+
+def _field_strength_divergence_count(theory: Any, expr: Expression, *, field_name: str) -> int:
+    label = theory.field_handle(field_name).label
+    count = 0
+    for atom in matching_subexpressions(expr, field_strength_pattern()):
+        if not bool(field_strength_label(atom) == label):
+            continue
+        lorentz = list_items(atom[1])
+        derivatives = field_strength_derivatives(atom)
+        if len(lorentz) != 2 or len(derivatives) != 1:
+            continue
+        if bool(derivatives[0] == lorentz[0]) or bool(derivatives[0] == lorentz[1]):
+            count += 1
+    return count
+
+
+def _eom_exposure_probe(
+    theory: Any,
+    lagrangian: Expression,
+    entry_expressions: dict[str, Expression],
+    *,
+    vector_field: str,
+    scalar_field: str,
+) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
+    by_entry: dict[str, dict[str, Any]] = {}
+    for entry_label, expr in entry_expressions.items():
+        vector_delta = theory.abelian_vector_eom_field_redefinition_delta(
+            lagrangian,
+            expr,
+            fields=[vector_field],
+            strict=True,
+        )
+        scalar_identities = scalar_eom_identities(
+            theory,
+            lagrangian,
+            expr,
+            fields=[scalar_field],
+            max_identities=512,
+        )
+        by_entry[entry_label] = {
+            "byte_count": expr.get_byte_size(),
+            "field_strength_count": len(matching_subexpressions(expr, field_strength_pattern())),
+            "vector_field_strength_divergence_count": _field_strength_divergence_count(
+                theory,
+                expr,
+                field_name=vector_field,
+            ),
+            "scalar_eom_identity_count": len(scalar_identities),
+            "vector_field_redefinition_delta_is_zero": bool(vector_delta == Expression.num(0)),
+            "vector_field_redefinition_delta_byte_count": vector_delta.get_byte_size(),
+        }
+    summary = {
+        "entry_count": len(by_entry),
+        "field_strength_count": sum(row["field_strength_count"] for row in by_entry.values()),
+        "vector_field_strength_divergence_count": sum(
+            row["vector_field_strength_divergence_count"] for row in by_entry.values()
+        ),
+        "scalar_eom_identity_count": sum(row["scalar_eom_identity_count"] for row in by_entry.values()),
+        "nonzero_vector_field_redefinition_delta_entry_count": sum(
+            not row["vector_field_redefinition_delta_is_zero"] for row in by_entry.values()
+        ),
+    }
+    return by_entry, summary
 
 
 def _projection_strings_from_order_map(
@@ -308,10 +380,14 @@ def main() -> int:
     stage_expression_parts_by_order: dict[str, dict[int, list[Expression]]] = {
         stage_name: {} for stage_name in stage_names
     }
+    pole_finite_expression_by_entry: dict[str, Expression] = {}
     for entry_label, evaluated_terms in evaluated_by_entry.items():
         if not evaluated_terms:
             continue
         normalized = (normalization * sum(evaluated_terms, Expression.num(0))).expand()
+        pole_finite_expression_by_entry[entry_label] = (
+            vakint_backend.pole_part(normalized) + vakint_backend.finite_part(normalized)
+        ).expand()
         entry_stage_expressions = {
             "selected_normalized_evaluated": normalized,
             "selected_normalized_pole_part": vakint_backend.pole_part(normalized),
@@ -352,6 +428,13 @@ def main() -> int:
         eft_order=6,
     )[condition_name]
     matchete_quarter_insertions = _matchete_quarter_insertions(matchete_trace_debug)
+    eom_probe_by_entry, eom_probe_summary = _eom_exposure_probe(
+        theory,
+        lagrangian,
+        pole_finite_expression_by_entry,
+        vector_field="B",
+        scalar_field="H",
+    )
     payload = {
         "schema_version": 1,
         "generator": "scripts/debug_pychete_singlet_eom_boundary.py",
@@ -395,6 +478,8 @@ def main() -> int:
             for order in sorted({entry.total_order for entry in plan.entries})
         },
         "evaluated_term_counts_by_path": {},
+        "eom_exposure_probe_by_entry": eom_probe_by_entry,
+        "eom_exposure_probe_summary": eom_probe_summary,
         "matchete_quarter_insertions": matchete_quarter_insertions,
         "matchete_quarter_insertion_count": len(matchete_quarter_insertions),
         "pychete_nonzero_path_count": len(terms_by_path),
@@ -420,10 +505,12 @@ def main() -> int:
             "selected_wilson_line_trace_generation_now_matches_the_Matchete_"
             "propagation_order_0_1_2_selected_trace_checkpoint. Projections are "
             "computed entry/order-locally before summing to avoid the known "
-            "large aggregate projection cost. The next comparison is the "
-            "broader Green/EOM/on-shell route against Matchete's raw "
-            "LagrangianEFT/InternalSimplify/PerformSystematicFieldRedefs "
-            "boundary, not this selected four-slot trace aggregation."
+            "large aggregate projection cost. The current narrowed mismatch is "
+            "the representative-conversion boundary before field redefinition: "
+            "Matchete's InternalSimplify exposes EOM-proportional structures "
+            "that feed PerformSystematicFieldRedefs, while pychete's selected "
+            "source still contains scalar-derivative representatives with no "
+            "Abelian field-strength-divergence targets."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
