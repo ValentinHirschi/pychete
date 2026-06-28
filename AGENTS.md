@@ -398,6 +398,14 @@ one-loop implementation slices should instead extend the explicit Wilson-line
 path, including fermion-loop closure, Wilson-term expansion, index/gamma/group
 algebra, tensor reduction, integral evaluation, and matching-condition
 projection from the Wilson-line representation.
+Whenever a precise Matchete-parity mismatch is identified, first review the
+corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
+side by side before patching pychete. Use intermediate-stage dumps and focused
+probes to locate the first semantic difference. Do not infer the fix only from
+the final Wilson coefficient, and do not add model- or Warsaw-specific
+coefficient patches when the mismatch belongs to a generic stage such as
+Wilson-line expansion, Green-basis reduction, EOM simplification, tensor
+reduction, or projection.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by
@@ -581,12 +589,19 @@ extraction, while deliberately skipping nonlinear repeated atom occurrences
 until a full operator-class row-reduction representation owns that case.
 For bounded Green-basis normal-form experiments, use
 `linear_identity_normal_form(...)` or
-`Theory.covariant_derivative_commutator_normal_form(...)`. These helpers encode
-explicit operator-basis monomials as temporary Symbolica variables and delegate
-the linear solve to Symbolica's native `Expression.solve_linear_system(...)`;
-do not implement row reduction or Gaussian elimination in Python. The basis is
-currently explicit by design: do not guess Matchete's full operator-class
-scoring or preferred representatives from strings or ad hoc term walks.
+`Theory.covariant_derivative_commutator_normal_form(...)` when the local basis
+is explicit. Use `linear_identity_basis_terms(...)`,
+`linear_identity_normal_form_from_identities(...)`, or
+`Theory.covariant_derivative_commutator_local_normal_form(...)` when the local
+basis should be collected from the source plus generated identities. These
+helpers encode operator-basis monomials as temporary Symbolica variables and
+delegate the linear solve to Symbolica's native
+`Expression.solve_linear_system(...)`; do not implement row reduction or
+Gaussian elimination in Python. The automatic collector only separates local
+operator factors from scalar coefficients in a bounded expression/identity
+neighborhood. Preferred representatives remain explicit by design: do not
+guess Matchete's full operator-class scoring from strings or ad hoc global
+expression walks.
 For scalar derivative-bilinear normal forms, use the generic
 `expose_scalar_derivative_commutator_bilinears(theory, expr, ...)` helper
 rather than adding projection-specific replacements. It collects tagged scalar

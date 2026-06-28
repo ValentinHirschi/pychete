@@ -4,7 +4,17 @@ from collections.abc import Sequence
 
 from symbolica import Expression, Replacement
 
-from .expr import is_zero
+from .expr import (
+    cg_tensor_pattern,
+    covariant_derivative_commutator_pattern,
+    factors,
+    field_pattern,
+    field_strength_pattern,
+    is_zero,
+    matching_subexpressions,
+    product_expr,
+    terms,
+)
 from .symbols import canonical_string
 
 _DEFAULT_MAX_GREEN_BASIS_TERMS = 64
@@ -70,6 +80,83 @@ def linear_identity_normal_form(
     return encoded_expr.replace_multiple(solution_rules).replace_multiple(decode_rules).expand()
 
 
+def linear_identity_basis_terms(
+    expressions: Sequence[Expression],
+    *,
+    max_basis_terms: int = _DEFAULT_MAX_GREEN_BASIS_TERMS,
+    operator_patterns: Sequence[Expression] | None = None,
+) -> tuple[Expression, ...]:
+    """Collect a bounded local operator basis from expressions.
+
+    Matchete first separates coefficients from ``Operator[...]`` objects and
+    only maps the operator monomials into the row-reduction vector space. This
+    helper performs the corresponding bounded pychete split for local
+    Green-basis reductions: expanded additive terms are scanned, scalar
+    coefficient factors are discarded, and factors containing registered
+    field-like/tensor atoms are kept as the operator monomial.
+
+    The symbolic heavy lifting still happens in Symbolica. This function is
+    only local orchestration for building the explicit basis handed to
+    :func:`linear_identity_normal_form`.
+    """
+
+    if max_basis_terms < 0:
+        raise ValueError("max_basis_terms must be non-negative")
+    patterns = tuple(operator_patterns) if operator_patterns is not None else _default_operator_patterns()
+    out: list[Expression] = []
+    seen: set[str] = set()
+    for expression in expressions:
+        for term in terms(expression.expand()):
+            basis_term = _operator_basis_term(term, patterns)
+            if basis_term is None or is_zero(basis_term):
+                continue
+            key = canonical_string(basis_term)
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append(basis_term)
+            if len(out) > max_basis_terms:
+                raise ValueError(f"Green-basis reduction discovered more than {max_basis_terms} basis terms")
+    return tuple(out)
+
+
+def linear_identity_normal_form_from_identities(
+    expr: Expression,
+    identities: Sequence[Expression],
+    *,
+    preferred: Sequence[Expression] = (),
+    max_basis_terms: int = _DEFAULT_MAX_GREEN_BASIS_TERMS,
+    max_identities: int = _DEFAULT_MAX_GREEN_BASIS_IDENTITIES,
+    operator_patterns: Sequence[Expression] | None = None,
+) -> Expression:
+    """Reduce ``expr`` after constructing a local basis from identities.
+
+    This is the next bounded layer toward Matchete's ``GreensSimplify``: the
+    caller still chooses the local identity source and preferred
+    representatives, but pychete discovers the local operator monomials from
+    ``expr`` plus those identities before delegating the solve to Symbolica.
+    """
+
+    identity_terms = tuple(identity for identity in identities if not is_zero(identity))
+    if not identity_terms:
+        return expr
+    patterns = tuple(operator_patterns) if operator_patterns is not None else _default_operator_patterns()
+    basis = linear_identity_basis_terms(
+        (expr, *identity_terms),
+        max_basis_terms=max_basis_terms,
+        operator_patterns=patterns,
+    )
+    preferred_terms = _preferred_operator_terms(preferred, patterns)
+    return linear_identity_normal_form(
+        expr,
+        identity_terms,
+        basis=basis,
+        preferred=preferred_terms,
+        max_basis_terms=max_basis_terms,
+        max_identities=max_identities,
+    )
+
+
 def _deduplicated_expressions(expressions: Sequence[Expression]) -> tuple[Expression, ...]:
     deduplicated: dict[str, Expression] = {}
     for expression in expressions:
@@ -105,4 +192,52 @@ def _sorted_for_encoding(
     )
 
 
-__all__ = ["linear_identity_normal_form"]
+def _default_operator_patterns() -> tuple[Expression, ...]:
+    return (
+        field_pattern(),
+        field_strength_pattern(),
+        covariant_derivative_commutator_pattern(),
+        cg_tensor_pattern(),
+    )
+
+
+def _operator_basis_term(
+    term: Expression,
+    operator_patterns: Sequence[Expression],
+) -> Expression | None:
+    operator_factors = tuple(
+        factor for factor in factors(term) if _contains_operator_factor(factor, operator_patterns)
+    )
+    if not operator_factors:
+        return None
+    return product_expr(operator_factors)
+
+
+def _contains_operator_factor(
+    factor: Expression,
+    operator_patterns: Sequence[Expression],
+) -> bool:
+    return any(matching_subexpressions(factor, pattern) for pattern in operator_patterns)
+
+
+def _preferred_operator_terms(
+    preferred: Sequence[Expression],
+    operator_patterns: Sequence[Expression],
+) -> tuple[Expression, ...]:
+    out: list[Expression] = []
+    for expression in preferred:
+        expanded_terms = tuple(term for term in terms(expression.expand()) if not is_zero(term))
+        if len(expanded_terms) != 1:
+            raise ValueError("preferred Green-basis representatives must be single operator terms")
+        basis_term = _operator_basis_term(expanded_terms[0], operator_patterns)
+        if basis_term is None:
+            raise ValueError("preferred Green-basis representative has no operator factors")
+        out.append(basis_term)
+    return _deduplicated_expressions(out)
+
+
+__all__ = [
+    "linear_identity_basis_terms",
+    "linear_identity_normal_form",
+    "linear_identity_normal_form_from_identities",
+]

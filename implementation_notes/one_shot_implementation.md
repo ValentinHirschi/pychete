@@ -24,7 +24,8 @@
   integral evaluator for single-scale, zero-mass, and mixed-mass cases.
 - When a precise mismatch is identified, first inspect the corresponding
   Matchete Mathematica algorithm and compare stage semantics before patching
-  pychete. Do not repair a disagreement from the final coefficient alone.
+  pychete. Do not repair a disagreement from the final coefficient alone; use
+  intermediate dumps/probes to locate the first semantic difference.
 - Use larger coherent implementation slices. Run focused tests while building a
   slice, grouped targeted tests before a green milestone, and full/slow tests
   only when the milestone justifies the cost.
@@ -135,6 +136,14 @@
   the result is decoded back to pychete expressions. The basis and preferred
   representatives remain explicit so this does not guess Matchete's full
   operator-class scoring rules in Python.
+- pychete now also has a bounded automatic local-basis layer for this path:
+  `linear_identity_basis_terms(...)`,
+  `linear_identity_normal_form_from_identities(...)`, and
+  `Theory.covariant_derivative_commutator_local_normal_form(...)`. These
+  helpers collect operator monomials from an expression plus generated
+  identities, strip scalar coefficients in the local Matchete
+  `cpl * Operator[...]` sense, and still delegate row reduction to Symbolica.
+  Preferred representatives remain explicit.
 
 ## Current Frontier
 
@@ -197,77 +206,27 @@
   linear field-like atoms. These identities now have a Symbolica-backed
   explicit-basis solver boundary; what remains is the bounded automatic
   operator-class vector-space construction around them.
-- The latest normal-form slice now feeds explicit local bases and generated
-  commutator identities into Symbolica's linear solver. This is enough to
-  reduce synthetic composite operator monomials such as
+- The latest normal-form slices now feed local bases and generated commutator
+  identities into Symbolica's linear solver. The new automatic local-basis
+  builder is enough to reduce synthetic composite operator monomials such as
   `Bar(phi) D_a D_b phi` to preferred `Bar(phi) D_b D_a phi` plus commutator
-  representatives. The remaining cHD work is automatic operator-class
-  discovery/scoring, basis construction for the higher-derivative Singlet
-  source, and integration with the selected Wilson-line Green-basis stage.
+  representatives without a hand-supplied basis list. The remaining cHD work
+  is automatic operator-class discovery/scoring for larger local classes,
+  basis construction for the higher-derivative Singlet source, and integration
+  with the selected Wilson-line Green-basis stage.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/definitions/test_theory_definitions.py
-  tests/unit/definitions/test_public_api.py -q` passed (`66 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/definitions/test_theory_definitions.py -k
-  "green_basis or commutator" -q` passed (`21 passed`).
+  "green_basis or commutator" -q` passed (`22 passed`).
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/definitions/test_public_api.py -q` passed (`8 passed`).
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/definitions/test_theory_definitions.py
-  tests/unit/definitions/test_public_api.py -q` passed (`64 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/definitions/test_theory_definitions.py -k "commutator" -q`
-  passed (`20 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/definitions/test_public_api.py -q` passed (`8 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/integration/validation/test_numeric_probes.py -q` passed
-  (`61 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/integration/validation/test_numeric_probes.py -k
-  "projection and (ibp or chd or hbox)" -q` passed (`10 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/integration/validation/test_numeric_probes.py -k
-  "ibp_scalar_bilinear or derivative_slot or hbox_ibp or registered_hbox_ibp
-  or first_derivative_ibp or gauge_eom" -q` passed (`6 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/functional/test_scalar_green_bilinears.py -q` passed
-  (`15 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/functional/test_scalar_green_bilinears.py
-  tests/integration/validation/test_numeric_probes.py -k
-  "scalar_laplacian_ibp or chd" -q` passed (`5 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/integration/validation/test_numeric_probes.py -k
-  "chd and (gauge_eom or current or first_derivative_ibp)" -q` passed
-  (`3 passed`).
-- Watchdog-wrapped selected Singlet `hScalar-lScalar -> cHD` order-zero smoke
-  with scalar-Laplacian and scalar-first-derivative IBP support still returned
-  projected coefficient `0`.
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/functional/test_scalar_green_bilinears.py -q` passed
-  (`15 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/integration/validation/test_numeric_probes.py -k
-  "chd and (gauge_eom or current)" -q` passed (`2 passed`).
-- Watchdog-wrapped
-  `dependencies/.venv/bin/python -m pytest
-  tests/integration/validation/test_validation_fixtures.py -k
-  "pre_eom_terms_for_derivative_higgs_target" -q` passed.
-- Watchdog-wrapped selected Singlet `hScalar-lScalar -> cHD` order-zero smoke
-  with the scalar-Laplacian IBP pass ran and still returned projected
-  coefficient `0`.
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/integration/validation/test_numeric_probes.py -k "chd and gauge_eom"
-  -q` passed.
+  tests/unit/definitions/test_public_api.py -q` passed (`69 passed`).
 - `git diff --check` passed.
-- Previous watchdog-wrapped focused checks for the same slice passed:
-  the cHD Wilson-line filter regression and the Wilson-line target-filter
-  regression group.
 
 ## Next Work
 
@@ -285,8 +244,9 @@
   `CommuteCDs` plus row-reduced Green-basis representative for the local
   four-derivative scalar terms, then rerun a reduced selected-trace cHD smoke
   under the 30 GiB watchdog.
-- With explicit-basis linear normal form now available, the next implementation
-  step is bounded automatic basis construction for scalar derivative classes:
-  collect the source monomial, its generated IBP/commutator identity terms, and
-  a preferred representative ordering, then call `linear_identity_normal_form`
-  rather than adding another projection-only alias.
+- With bounded automatic local-basis construction now available for generated
+  identities, the next implementation step is to extend the same Green-basis
+  boundary from commutator-only identities to the combined scalar derivative
+  class: collect source monomials plus generated IBP/commutator identity
+  terms, provide a generic preferred representative ordering, and apply the
+  normal form before rerunning the reduced selected Singlet `cHD` smoke.

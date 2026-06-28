@@ -21,7 +21,9 @@ from pychete import (
     collect_indices,
     define_wilson_coefficient_from_basis,
     define_wilson_coefficient_from_registered_basis,
+    linear_identity_basis_terms,
     linear_identity_normal_form,
+    linear_identity_normal_form_from_identities,
     matching_condition_targets,
     registered_operator_basis,
     register_operator_basis,
@@ -652,6 +654,48 @@ def test_linear_identity_normal_form_reduces_composite_basis_terms_with_symbolic
     assert_expr_equal(reduced, 2 * coefficient * swapped + 2 * coefficient * commutator + untouched)
 
 
+def test_linear_identity_basis_terms_strip_coefficients_and_normalize_signs() -> None:
+    coefficient = S("green_basis_auto_basis_coefficient")
+    theory = Theory("green_basis_auto_basis")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    source = s.Bar(phi()) * phi(derivatives=[a, b])
+    swapped = s.Bar(phi()) * phi(derivatives=[b, a])
+    commutator = s.Bar(phi()) * s.CovariantDerivativeCommutator(a, b, phi())
+    identity = coefficient * (swapped + commutator - source)
+
+    basis = linear_identity_basis_terms((2 * coefficient * source, identity))
+
+    assert canonical_string(basis[0]) == canonical_string(source)
+    assert {canonical_string(term) for term in basis} == {
+        canonical_string(source),
+        canonical_string(swapped),
+        canonical_string(commutator),
+    }
+
+
+def test_linear_identity_normal_form_from_identities_discovers_local_basis() -> None:
+    coefficient = S("green_basis_auto_solver_coefficient")
+    untouched = S("green_basis_auto_solver_untouched")
+    theory = Theory("green_basis_auto_solver")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    source = s.Bar(phi()) * phi(derivatives=[a, b])
+    swapped = s.Bar(phi()) * phi(derivatives=[b, a])
+    commutator = s.Bar(phi()) * s.CovariantDerivativeCommutator(a, b, phi())
+    identity = coefficient * (swapped + commutator - source)
+
+    reduced = linear_identity_normal_form_from_identities(
+        2 * coefficient * source + untouched,
+        (identity,),
+        preferred=(coefficient * swapped, coefficient * commutator),
+    )
+
+    assert_expr_equal(reduced, 2 * coefficient * swapped + 2 * coefficient * commutator + untouched)
+
+
 def test_covariant_derivative_commutator_normal_form_uses_generated_identities() -> None:
     coefficient = S("green_basis_commutator_normal_form_coefficient")
     theory = Theory("green_basis_commutator_normal_form")
@@ -665,6 +709,24 @@ def test_covariant_derivative_commutator_normal_form_uses_generated_identities()
     reduced = theory.covariant_derivative_commutator_normal_form(
         coefficient * source,
         basis=(source, swapped, commutator),
+        preferred=(swapped, commutator),
+    )
+
+    assert_expr_equal(reduced, coefficient * swapped + coefficient * commutator)
+
+
+def test_covariant_derivative_commutator_local_normal_form_discovers_basis() -> None:
+    coefficient = S("green_basis_commutator_local_normal_form_coefficient")
+    theory = Theory("green_basis_commutator_local_normal_form")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    source = s.Bar(phi()) * phi(derivatives=[a, b])
+    swapped = s.Bar(phi()) * phi(derivatives=[b, a])
+    commutator = s.Bar(phi()) * s.CovariantDerivativeCommutator(a, b, phi())
+
+    reduced = theory.covariant_derivative_commutator_local_normal_form(
+        coefficient * source,
         preferred=(swapped, commutator),
     )
 

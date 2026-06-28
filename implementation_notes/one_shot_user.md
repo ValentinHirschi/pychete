@@ -915,3 +915,12 @@ without Warsaw-specific core assumptions.
   `Theory.covariant_derivative_commutator_normal_form(...)` for local
   `CommuteCDs` identities, but the full automatic Matchete operator-class
   discovery/scoring layer is still future work.
+- Latest continuation instruction: continue as planned, and whenever a precise
+  mismatch is identified, carefully review the corresponding relevant Matchete
+  algorithms before patching pychete. Applied to the current Green-basis slice
+  by rereading `Simplifications.m` around `ConstructOperatorIdentities`,
+  `IdentitiesIBP`, `IdentitiesCDCommutation`, `IBPSimplify`, and
+  `GreensSimplify` before adding a local automatic basis-construction helper.
+  pychete now has bounded local basis discovery for expression-plus-identity
+  neighborhoods, while preferred Green-basis representatives remain explicit
+  until Matchete's operator-class scoring is ported generically.

@@ -1398,6 +1398,38 @@ class Theory:
             max_identities=max_identities,
         )
 
+    def covariant_derivative_commutator_local_normal_form(
+        self,
+        expr: Expression,
+        *,
+        preferred: Sequence[Expression] = (),
+        max_basis_terms: int = 64,
+        max_identities: int = 128,
+    ) -> Expression:
+        """Reduce ``expr`` with generated commutator identities and a local basis.
+
+        This is the bounded automatic-basis counterpart of
+        :meth:`covariant_derivative_commutator_normal_form`. It generates
+        Matchete-style adjacent-pair commutator identities for ``expr``,
+        collects the local operator monomials appearing in ``expr`` and those
+        identities, and delegates the linear solve to Symbolica.
+
+        ``preferred`` still remains explicit; this helper does not try to
+        reproduce Matchete's full Green-basis scoring policy in Python.
+        """
+
+        from .green_basis import linear_identity_normal_form_from_identities
+
+        self._validate_registered_expression(expr)
+        identities = self.covariant_derivative_commutator_identities(expr)
+        return linear_identity_normal_form_from_identities(
+            expr,
+            identities,
+            preferred=preferred,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+        )
+
     def _covariant_derivative_identity_atoms(self, expr: Expression) -> tuple[tuple[Expression, bool], ...]:
         field_pat = field_pattern()
         bar_pat = bar_field_pattern()
