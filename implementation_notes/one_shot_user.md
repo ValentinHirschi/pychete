@@ -1115,3 +1115,11 @@ without Warsaw-specific core assumptions.
   scalar-vector `LoopMom`/`OpenCD` Xterm decomposition and its Green-basis
   projection behavior, not the already-green loop integration or projection
   machinery for paths 0 and 26.
+- Latest partial-success update: pychete now mirrors Matchete's `FuncNCM`
+  flattening before acting with open covariant derivatives, so nested
+  Wilson-line `NCM(..., OpenCD, ...)` terms are handled correctly. The first
+  selected one-loop Wilson-coefficient successes are also split into
+  single-target partial integration tests: `cHW`, `cHB`, and `cHWB` each run
+  with only their requested projection target and assert the exact filtered
+  Wilson-line source size, making future coefficient regressions faster and
+  easier to localize.

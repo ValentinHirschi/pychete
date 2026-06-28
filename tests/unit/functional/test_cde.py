@@ -27,6 +27,19 @@ def test_open_covariant_derivative_acts_on_all_factors_to_its_right() -> None:
     assert_expr_equal(act_with_open_covariant_derivatives(expr), expected)
 
 
+def test_open_covariant_derivative_flattens_nested_ncm_before_acting() -> None:
+    theory = Theory("open_cd_nested_ncm")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    chi = theory.define_field("chi", s.Scalar, self_conjugate=True, mass=0)
+    eta = theory.define_field("eta", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.lorentz_index("mu")
+
+    expr = s.NCM(phi(), s.NCM(chi(), open_covariant_derivative(mu)), eta())
+    expected = s.NCM(phi(), chi(), eta(derivatives=[mu]))
+
+    assert_expr_equal(act_with_open_covariant_derivatives(expr), expected)
+
+
 def test_open_covariant_derivative_acts_from_the_rightmost_open_operator_first() -> None:
     theory = Theory("open_cd_nested")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

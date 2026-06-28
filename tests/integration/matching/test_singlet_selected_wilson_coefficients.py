@@ -44,15 +44,17 @@ _MATHEMATICA_XTERM_PATTERN = re.compile(
 
 
 @cache
-def _selected_higgs_gauge_projection() -> tuple[Theory, dict[str, Expression]]:
+def _selected_higgs_gauge_projection(
+    condition_names: tuple[str, ...] = ("cHW", "cHB", "cHWB"),
+) -> tuple[Theory, dict[str, Expression], dict[str, int | tuple[str, ...]]]:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
     targets = {
         target_name: target
-        for target_name in ("cHW", "cHB", "cHWB")
+        for target_name in condition_names
         if (target := smeft_warsaw_operator(theory, target_name)) is not None
     }
-    assert set(targets) == {"cHW", "cHB", "cHWB"}
+    assert set(targets) == set(condition_names)
     hbar = theory.external_handle("hbar")()
     setup = theory.one_loop_setup(
         fixture.expression("lagrangian"),
@@ -77,6 +79,8 @@ def _selected_higgs_gauge_projection() -> tuple[Theory, dict[str, Expression]]:
         simplify_pychete_color_algebra=True,
         term_atom_requirements=requirements,
     )
+    nonzero_plan_entries = tuple(entry for entry, terms in grouped_terms.items() if terms)
+    term_count = sum(len(terms) for terms in grouped_terms.values())
     evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
         theory,
         grouped_terms,
@@ -118,7 +122,13 @@ def _selected_higgs_gauge_projection() -> tuple[Theory, dict[str, Expression]]:
         normalize_derivative_operators=True,
         eft_order=6,
     )
-    return theory, dict(projected)
+    metadata: dict[str, int | tuple[str, ...]] = {
+        "plan_entry_count": len(grouped_terms),
+        "nonzero_plan_entry_count": len(nonzero_plan_entries),
+        "term_count": term_count,
+        "nonzero_plan_entries": nonzero_plan_entries,
+    }
+    return theory, dict(projected), metadata
 
 
 def _selected_higgs_gauge_expected(theory: Theory, condition_name: str) -> Expression:
@@ -249,11 +259,26 @@ def _matchete_xterm_signatures(replacement: str) -> tuple[tuple[str, int, int, i
     )
 
 
-@pytest.mark.parametrize("condition_name", ("cHW", "cHB", "cHWB"))
-def test_selected_higgs_gauge_wilson_coefficient_matches_matchete_subset(condition_name: str) -> None:
-    theory, projected = _selected_higgs_gauge_projection()
+@pytest.mark.parametrize(
+    ("condition_name", "expected_term_count", "expected_nonzero_entries"),
+    (
+        ("cHW", 10, ("hScalar-lScalar#wilson14_o4_0",)),
+        ("cHB", 10, ("hScalar-lScalar#wilson14_o4_0",)),
+        ("cHWB", 14, ("hScalar-lScalar#wilson5_o2_0", "hScalar-lScalar#wilson14_o4_0")),
+    ),
+)
+def test_selected_higgs_gauge_partial_wilson_coefficient_matches_matchete_subset(
+    condition_name: str,
+    expected_term_count: int,
+    expected_nonzero_entries: tuple[str, ...],
+) -> None:
+    theory, projected, metadata = _selected_higgs_gauge_projection((condition_name,))
 
-    assert set(projected) == {"cHW", "cHB", "cHWB"}
+    assert set(projected) == {condition_name}
+    assert metadata["plan_entry_count"] == 15
+    assert metadata["nonzero_plan_entry_count"] == len(expected_nonzero_entries)
+    assert metadata["term_count"] == expected_term_count
+    assert metadata["nonzero_plan_entries"] == expected_nonzero_entries
     assert_expr_equal(projected[condition_name], _selected_higgs_gauge_expected(theory, condition_name))
 
 

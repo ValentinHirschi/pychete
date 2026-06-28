@@ -8,6 +8,7 @@ from symbolica import Expression, Replacement
 
 from .expr import is_head, is_zero, list_expr, list_items, product_expr, sum_expr
 from .functional import apply_cd
+from .noncommutative import normalize_ncm_chains
 from .symbols import s
 
 _MAX_OPEN_CD_CHAIN_ARITY = 8
@@ -234,7 +235,7 @@ def act_with_open_covariant_derivatives(
         return expr
 
     replacements = _open_cd_chain_replacements(max_chain_arity, cyclic)
-    out = expr
+    out = normalize_ncm_chains(expr)
     for _ in range(max_passes):
         updated = out.replace_multiple(replacements).expand()
         if bool(updated == out):

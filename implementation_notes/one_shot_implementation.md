@@ -730,3 +730,27 @@
   -k "matchete_fixture_records_scalar_vector_frontier or chd_four_slot" -q`
   (`5 passed, 4 deselected`), and the full selected coefficient file passed
   (`9 passed`).
+- Latest OpenCD/scoped-coefficient slice: reviewed Matchete's
+  `ActWithOpenCDs` boundary and `FuncNCM` flattening semantics before editing
+  pychete. `act_with_open_covariant_derivatives(...)` now normalizes nested
+  pychete `NCM(...)` chains before applying the bounded Symbolica replacement
+  rules for open covariant derivatives. This keeps generated scalar-vector
+  `FuncNCM[field, OpenCD]`-style terms visible to the OpenCD action even when
+  they are embedded inside a larger Wilson-line chain.
+- Added a focused CDE unit regression proving that
+  `NCM(phi, NCM(chi, OpenCD(mu)), eta)` is flattened before acting and
+  produces `NCM(phi, chi, D_mu eta)`, matching the relevant Matchete
+  noncommutative-product behavior without adding a Python expression walker.
+- The first successful selected one-loop Wilson coefficients are now also
+  scoped as genuinely single-target partial integration tests. The
+  `hScalar-lScalar -> cHW/cHB/cHWB` checks request and project one Wilson
+  coefficient at a time, and assert the exact filtered Wilson-line source
+  shape: `cHW` and `cHB` each keep one nonzero plan entry with 10 terms, while
+  `cHWB` keeps two nonzero plan entries with 14 terms. The slower public
+  all-three check remains as the broader route guard, but future regressions
+  can now reproduce one coefficient/source-filter mismatch directly.
+- Focused validation for this slice passed: `tests/unit/functional/test_cde.py
+  -q` (`14 passed`); watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -q` (`9 passed`); `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  passed; and `git diff --check` passed.
