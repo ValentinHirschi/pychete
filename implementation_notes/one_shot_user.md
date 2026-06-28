@@ -1131,3 +1131,9 @@ without Warsaw-specific core assumptions.
   checkpoints still pass; the post-heavy selected `cHD` projection is now
   correctly exposed as the next Green-basis/projection frontier instead of
   being hidden by the previous source-incomplete checkpoint.
+- Latest public partial-test update: the public selected Singlet
+  `Theory.match(...)` route for the first successful Higgs-gauge Wilson
+  coefficients is now split into coefficient-specific pytest nodes for
+  `cHW`, `cHB`, and `cHWB`. One cached public selected-source run backs those
+  checks, so future regressions can identify the failing public coefficient
+  without recomputing the slow selected matching route three times.

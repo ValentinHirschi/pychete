@@ -785,3 +785,14 @@
   `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
   -q` (`9 passed`); `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
   passed; and `git diff --check` passed.
+- Latest public partial-test scoping slice: the public
+  `Theory.match(...)`/`ValidationFixture.one_loop_preview_gap_report(...)`
+  selected Singlet Higgs-gauge route now has per-coefficient pytest nodes for
+  `cHW`, `cHB`, and `cHWB`, backed by one cached public selected-source run.
+  The broad all-three public-route guard remains, but future regressions now
+  identify the failing public Wilson coefficient directly without paying for
+  three independent public matching runs.
+- Focused validation for this slice passed under the 30 GiB watchdog:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -q` (`12 passed`). `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  also passed with no issues.

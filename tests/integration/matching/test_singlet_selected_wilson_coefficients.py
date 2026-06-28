@@ -10,6 +10,7 @@ from symbolica import Expression, S
 
 from pychete import (
     MatchingResult,
+    MatchingFixtureGapReport,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
     OneLoopNormalization,
@@ -144,6 +145,62 @@ def _selected_higgs_gauge_expected(theory: Theory, condition_name: str) -> Expre
     if condition_name == "cHWB":
         return hbar * source**2 * g_l * g_y / (6 * mass**4)
     raise ValueError(f"Unknown selected Singlet Higgs-gauge coefficient {condition_name!r}")
+
+
+def _registered_wilson_condition_name(theory: Theory, external_name: str) -> str:
+    handle = theory.external_handle(external_name)
+    return canonical_string(
+        s.Coupling(
+            handle.label,
+            s.List(*handle.definition.index_exprs),
+            Expression.num(0),
+        )
+    )
+
+
+@cache
+def _public_selected_higgs_gauge_gap_report() -> tuple[Theory, MatchingFixtureGapReport, dict[str, str]]:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = fixture.theory()
+    condition_names = {
+        target_name: _registered_wilson_condition_name(theory, target_name)
+        for target_name in ("cHW", "cHB", "cHWB")
+    }
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+        normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+        hbar=theory.external_handle("hbar")(),
+        wilson_line_trace_names=("hScalar-lScalar",),
+        wilson_line_max_total_order=4,
+        wilson_line_max_slot_order=4,
+        wilson_line_index_prefix="public_singlet_higgs_gauge_subset_gap",
+        wilson_line_act_open_derivatives=True,
+        wilson_line_emit_covariant_derivative_commutators=False,
+        wilson_line_emit_covariant_derivative_commutator_passes=1,
+        wilson_line_covariant_derivative_commutator_mode="all_distinct",
+        wilson_line_expand_covariant_derivative_commutators=False,
+        wilson_line_max_derivative_order=4,
+        wilson_line_filter_terms_by_matching_targets=True,
+        wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+        wilson_line_tensor_reduce_before_wilson_expand=True,
+        simplify_pychete_color_algebra=True,
+        project_reference_matching_conditions=True,
+        matching_condition_projection_names=tuple(condition_names),
+        matching_condition_projection_source="on_shell_eft_lagrangian",
+        matching_condition_projection_expand_source=False,
+        matching_condition_projection_truncate_eft=True,
+        matching_condition_projection_drop_zero=False,
+        use_public_match_api=True,
+        truncate_eft_result=False,
+    )
+    return theory, report, condition_names
 
 
 def _selected_chd_four_slot_target(theory: Theory) -> tuple[str, Expression]:
@@ -284,54 +341,8 @@ def test_selected_higgs_gauge_partial_wilson_coefficient_matches_matchete_subset
 
 @pytest.mark.slow
 def test_public_match_selected_higgs_gauge_wilson_subset_matches_matchete_fixture() -> None:
-    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
-    reference = load_validation_fixture(
-        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
-    ).matching_result("matchete_previous")
-    theory = fixture.theory()
-    expected_names = tuple(
-        sorted(
-            canonical_string(
-                s.Coupling(
-                    theory.external_handle(target_name).label,
-                    s.List(*theory.external_handle(target_name).definition.index_exprs),
-                    Expression.num(0),
-                )
-            )
-            for target_name in ("cHW", "cHB", "cHWB")
-        )
-    )
-
-    report = fixture.one_loop_preview_gap_report(
-        reference,
-        reference_name="Singlet_Scalar_Extension.matchete_previous",
-        max_trace_order=2,
-        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
-        normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
-        hbar=theory.external_handle("hbar")(),
-        wilson_line_trace_names=("hScalar-lScalar",),
-        wilson_line_max_total_order=4,
-        wilson_line_max_slot_order=4,
-        wilson_line_index_prefix="public_singlet_higgs_gauge_subset_gap",
-        wilson_line_act_open_derivatives=True,
-        wilson_line_emit_covariant_derivative_commutators=False,
-        wilson_line_emit_covariant_derivative_commutator_passes=1,
-        wilson_line_covariant_derivative_commutator_mode="all_distinct",
-        wilson_line_expand_covariant_derivative_commutators=False,
-        wilson_line_max_derivative_order=4,
-        wilson_line_filter_terms_by_matching_targets=True,
-        wilson_line_expose_scalar_derivative_commutator_bilinears=True,
-        wilson_line_tensor_reduce_before_wilson_expand=True,
-        simplify_pychete_color_algebra=True,
-        project_reference_matching_conditions=True,
-        matching_condition_projection_names=("cHW", "cHB", "cHWB"),
-        matching_condition_projection_source="on_shell_eft_lagrangian",
-        matching_condition_projection_expand_source=False,
-        matching_condition_projection_truncate_eft=True,
-        matching_condition_projection_drop_zero=False,
-        use_public_match_api=True,
-        truncate_eft_result=False,
-    )
+    _, report, condition_names = _public_selected_higgs_gauge_gap_report()
+    expected_names = tuple(sorted(condition_names.values()))
 
     assert report.candidate_stage == "normalized_interaction_wilson_line_hybrid_internal_minimal_subtraction_result"
     assert report.candidate_metadata["fixture_preview_source"] == "public_match_api"
@@ -343,6 +354,21 @@ def test_public_match_selected_higgs_gauge_wilson_subset_matches_matchete_fixtur
     assert report.reference_matching_condition_names == expected_names
     assert report.accepted_common_wilson_matching_condition_names == expected_names
     assert report.different_after_probe_common_wilson_matching_condition_names == ()
+
+
+@pytest.mark.slow
+@pytest.mark.parametrize("condition_name", ("cHW", "cHB", "cHWB"))
+def test_public_match_selected_higgs_gauge_partial_wilson_coefficient_is_accepted(
+    condition_name: str,
+) -> None:
+    _, report, condition_names = _public_selected_higgs_gauge_gap_report()
+    target_condition = condition_names[condition_name]
+
+    assert report.candidate_metadata["fixture_preview_source"] == "public_match_api"
+    assert target_condition in report.candidate_matching_condition_names
+    assert target_condition in report.reference_matching_condition_names
+    assert target_condition in report.accepted_common_wilson_matching_condition_names
+    assert target_condition not in report.different_after_probe_common_wilson_matching_condition_names
 
 
 @pytest.mark.slow
