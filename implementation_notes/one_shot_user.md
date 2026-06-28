@@ -1245,3 +1245,26 @@ without Warsaw-specific core assumptions.
   pass: the public projected coefficient remains at the old `-1/2` pole/log
   value, and the next issue is Matchete-style source scoping plus
   EOM/field-redefinition ordering.
+- Latest user reminder reinforced again: whenever Matchete and pychete results
+  disagree, the active workflow is to dump and dissect as many focused
+  Matchete intermediate stages as possible with debug WolframScripts, compare
+  them to bounded pychete probes at the same semantic boundaries, and patch
+  only the first generic algorithm divergence. This has been made explicit in
+  `AGENTS.md` and the live implementation objective notes so future slices keep
+  following Matchete's algorithms rather than fitting final coefficients.
+- Latest Matchete EOMSimplify dissection: the Singlet `cHD` debug WolframScript
+  and JSON fixture now record Matchete's `FieldsToShift[offShell]` output.
+  Matchete shifts matter fields including `H` at EFT order 4 and does not list
+  `B` at this checkpoint. A pychete public-route probe shows the current EOM
+  pass runs before late scalar commutator exposure and therefore applies zero
+  rules, while a manual post-exposure probe finds vector EOM rules whose
+  companion projects into `A*muphi*gY^2`, not the saved Matchete `A^2*gY^2`
+  `cHD` delta. The next implementation work should therefore port the
+  Matchete-style systematic matter-field redefinition/source-scoping step
+  rather than simply reordering the existing vector-only helper.
+- Latest projection fix: registered-Wilson Abelian vector-EOM projection
+  aliases are now on-shell scoped. This prevents explicit off-shell reference
+  projections and source-map diagnostics from absorbing part of Matchete's
+  `EOMSimplify` shift, while preserving those aliases for on-shell projection
+  and conservative Wilson-line filtering. Focused `cHD` fixture, selected
+  coefficient, projection-alias, mypy, and diff checks passed.

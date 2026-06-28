@@ -464,6 +464,17 @@ objects differ, and explain why the patch ports a generic Matchete algorithm
 rather than repairing a single coefficient. If the checklist cannot yet be
 completed, add more Matchete-side dumps or finer pychete probes before changing
 runtime code.
+For the current Singlet `cHD` frontier and later one-loop frontiers, assume the
+first useful debugging artifact is a Matchete-side intermediate dump, not
+another final-coefficient probe. When a pychete coefficient disagrees with
+Matchete, run or refresh focused WolframScript dumps as often as practical and
+dissect the Matchete stages until there are enough checkpoints to compare
+against pychete: insertion metadata, Xterm replacements, open-derivative
+action, Wilson expansion, tensor/integral stages, Green simplification,
+EOM/field redefinition, and final projection. Only after the first stage
+boundary is identified should runtime pychete code be changed, and the change
+must be a generic Symbolica/idenso/spenso/vakint port of that Matchete
+algorithm.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

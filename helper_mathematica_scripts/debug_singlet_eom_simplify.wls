@@ -94,6 +94,7 @@ previousValidationResult = Get[previousValidationFile];
 offShell = previousValidationResult["Off-shell EFT Lagrangian"];
 onShell = previousValidationResult["On-shell EFT Lagrangian"];
 operator = operatorForTarget[targetOption];
+fieldsToShift = Matchete`PackageScope`FieldsToShift[offShell];
 
 offCoefficient = Matchete`GetOperatorCoefficient[offShell, operator];
 onCoefficient = Matchete`GetOperatorCoefficient[onShell, operator];
@@ -109,6 +110,7 @@ data = <|
   "off_shell_coefficient_input_form" -> toInputString[offCoefficient],
   "on_shell_coefficient_input_form" -> toInputString[onCoefficient],
   "on_minus_off_coefficient_input_form" -> toInputString[deltaCoefficient],
+  "fields_to_shift_input_form" -> toInputString[fieldsToShift],
   "off_shell_summary" -> stageSummary["off_shell_eft_lagrangian", offShell],
   "on_shell_summary" -> stageSummary["on_shell_eft_lagrangian", onShell],
   "on_minus_off_summary" -> stageSummary["on_minus_off_eft_lagrangian", onShell - offShell]

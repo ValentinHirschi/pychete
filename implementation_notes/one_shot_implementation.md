@@ -48,6 +48,11 @@
   committed fixture, name the bounded pychete probe or pytest fixture, state
   the first stage boundary that differs, and explain why the runtime change is
   a generic Matchete-algorithm port rather than a coefficient-specific repair.
+- User reinforcement, 2026-06-28: for every current and future
+  Matchete/pychete disagreement, keep running or refreshing focused debug
+  WolframScripts and dissect Matchete intermediates until the first mismatching
+  semantic boundary is located. Record the Matchete stage dump, the bounded
+  pychete probe, and the stage comparison before accepting runtime changes.
 - Use larger coherent implementation slices. Run focused tests while building a
   slice, grouped targeted tests before a green milestone, and full/slow tests
   only when the milestone justifies the cost.
@@ -1043,5 +1048,62 @@
   `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
   "public_match_selected_chd_four_slot_wilson_coefficient or selected_chd_four_slot_wilson_coefficient" -q`
   (`2 passed, 12 deselected`); `PYTHONPATH=src
+  dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
+  passed.
+- Latest user reminder captured for the active objective: while the selected
+  `cHD` public coefficient still disagrees with Matchete, the next
+  implementation slices must continue the Matchete-first debug loop. The
+  immediate comparisons should use the committed
+  `singlet_hScalar_lScalar_lVector_lScalar_cHD` insertion dumps plus any
+  refreshed focused WolframScript checkpoints needed to compare
+  source-generation, Wilson expansion, loop integration, Green simplification,
+  EOM/field-redefinition, and projection boundaries against bounded pychete
+  probes.
+- Latest Matchete EOMSimplify checkpoint: refreshed
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json` so the dump now
+  records ``Matchete`PackageScope`FieldsToShift[offShell]``. For the saved
+  Singlet off-shell result Matchete reports
+  `{{d, 4}, {e, 4}, {H, 4}, {l, 4}, {q, 4}, {u, 4}}`, i.e. the systematic
+  field-redefinition frontier includes the Higgs and fermion matter fields but
+  does not list the Abelian vector `B` as a field-to-shift at this checkpoint.
+  This is important for the next `cHD` slice: pychete's bounded vector-EOM
+  replacement/delta helper remains useful for the committed off-shell
+  reference, but the full generated-source mismatch should now be treated as a
+  missing Matchete-style matter-field redefinition/source-scoping algorithm,
+  not as a naive reorder of the vector-only EOM pass.
+- Bounded pychete probes paired with that Matchete checkpoint:
+  `/tmp/probe_singlet_chd_public_eom_after_patch.py` confirms the public route
+  currently applies zero EOM rules because scalar commutator-bilinear exposure
+  happens after the EOM pass, while `/tmp/probe_singlet_chd_eom_boundary_safe.py`
+  confirms the exposed aggregate source has two differentiated Abelian
+  field-strength atoms and two vector EOM rules. Applying the current bounded
+  vector companion naively projects an `A*muphi*gY^2` family, not Matchete's
+  saved `A^2*gY^2` on-shell `cHD` delta. The first semantic boundary is
+  therefore EOMSimplify/source-scoped field redefinitions after Greens
+  simplification, not a final-coefficient normalization issue.
+- Runtime projection fix from the same checklist: registered-Wilson Abelian
+  vector-EOM projection aliases are now scoped to on-shell projection sources
+  (`on_shell_eft_lagrangian`, loop-only on-shell, or tree-level on-shell).
+  They remain available to Wilson-line target filtering as conservative
+  requirements, but explicit off-shell projections and source-map diagnostics
+  no longer absorb EOM/on-shell aliases. This restores the committed Matchete
+  off-shell `cHD` coefficient while keeping on-shell alias coverage for
+  generated or reduced on-shell sources.
+- Focused validation for this slice passed:
+  watchdog-wrapped
+  `tests/integration/validation/test_validation_fixtures.py -k
+  "reference_chd_records or fields_to_shift or
+  reference_chd_vector_eom_field_redefinition" -q` (`3 passed`);
+  watchdog-wrapped
+  `tests/integration/validation/test_validation_fixtures.py -k
+  "singlet_reference_chd" -q` (`4 passed, 50 deselected`);
+  watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "chd_four_slot or higgs_gauge" -q` (`13 passed, 1 deselected`);
+  watchdog-wrapped
+  `tests/integration/validation/test_numeric_probes.py -k
+  "on_shell_scoped or gauge_eom_current_alias or gauge_eom_ibp_alias" -q`
+  (`3 passed, 61 deselected`); `PYTHONPATH=src
   dependencies/.venv/bin/python -m mypy` passed; and `git diff --check`
   passed.

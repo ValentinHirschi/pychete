@@ -7736,6 +7736,7 @@ def _term_atom_requirements_for_targets(
                 target,
                 projection_expression,
                 normalize_ibp_scalar_bilinears=False,
+                include_eom_projection_aliases=True,
             )
         )
     requirements = _projection_atom_requirement_groups_for_expressions(projection_expressions)

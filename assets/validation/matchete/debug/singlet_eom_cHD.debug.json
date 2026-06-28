@@ -8,6 +8,7 @@
 	"off_shell_coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
 	"on_shell_coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
 	"on_minus_off_coefficient_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+	"fields_to_shift_input_form":"{{d, 4}, {e, 4}, {H, 4}, {l, 4}, {q, 4}, {u, 4}}",
 	"off_shell_summary":{
 		"name":"off_shell_eft_lagrangian",
 		"byte_count":251656,

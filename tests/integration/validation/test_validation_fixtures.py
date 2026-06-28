@@ -1647,6 +1647,16 @@ def test_singlet_reference_chd_records_matchete_eom_simplify_delta() -> None:
     assert_expr_equal((on_shell - reference.matching_conditions[condition_name]).collect_factors(), Expression.num(0))
 
 
+def test_singlet_reference_chd_debug_records_matchete_fields_to_shift() -> None:
+    debug = json.loads(
+        Path("assets/validation/matchete/debug/singlet_eom_cHD.debug.json").read_text(encoding="utf-8")
+    )
+    fields_to_shift = debug["fields_to_shift_input_form"]
+
+    assert "{H, 4}" in fields_to_shift
+    assert "{B, 4}" not in fields_to_shift
+
+
 def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:
     reference = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")

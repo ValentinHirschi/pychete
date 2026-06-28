@@ -365,6 +365,9 @@ class MatchingResult:
         instruction. Raw expression targets still require the explicit flag.
         This is intentionally limited to projection onto known targets rather
         than a global IBP simplifier.
+        Registered Wilson targets also have bounded vector-EOM aliases, but
+        only when projecting an on-shell source. Off-shell sources and
+        source-map diagnostics must preserve Matchete's off-shell coefficients.
         """
 
         expr = self.expression(source)
@@ -378,6 +381,7 @@ class MatchingResult:
                 target,
                 projection_expression,
                 normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
+                include_eom_projection_aliases=_source_allows_eom_projection_aliases(source),
             )
             for target, projection_expression in zip(structured_targets, projection_expressions, strict=True)
         )
@@ -1940,14 +1944,25 @@ def _projection_aliases_for_target(
     projection_expression: Expression,
     *,
     normalize_ibp_scalar_bilinears: bool,
+    include_eom_projection_aliases: bool,
 ) -> tuple[tuple[Expression, Expression], ...]:
     aliases: list[tuple[Expression, Expression]] = []
     if normalize_ibp_scalar_bilinears or _uses_registered_wilson_operator_aliases(target):
         aliases.extend(_ibp_scalar_bilinear_projection_aliases(projection_expression))
         aliases.extend(_ibp_scalar_derivative_slot_projection_aliases(projection_expression))
-    if _uses_registered_wilson_operator_aliases(target):
+    if include_eom_projection_aliases and _uses_registered_wilson_operator_aliases(target):
         aliases.extend(_abelian_gauge_eom_projection_aliases(theory, target, projection_expression))
     return tuple(_deduplicated_projection_aliases(aliases))
+
+
+def _source_allows_eom_projection_aliases(source: str) -> bool:
+    """Return whether vector-EOM aliases are appropriate for this projection source."""
+
+    return source in {
+        "on_shell_eft_lagrangian",
+        LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE,
+        TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
+    }
 
 
 def _uses_registered_wilson_operator_aliases(target: MatchingConditionTarget) -> bool:

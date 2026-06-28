@@ -1423,6 +1423,61 @@ def test_registered_wilson_projection_uses_abelian_gauge_eom_current_alias_for_c
     assert_expr_equal(projected["cHD"], 2 * coefficient * hypercharge() ** 2)
 
 
+def test_registered_wilson_abelian_gauge_eom_alias_is_on_shell_scoped_for_chd() -> None:
+    coefficient = S("condition_projection_chd_gauge_eom_scoped_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    wilson_target = next(
+        target
+        for key, target in registered_wilson_matching_condition_targets(theory, basis="SMEFT").items()
+        if "external_cHD" in key
+    )
+    higgs = theory.field_handle("H")
+    hypercharge = theory.coupling_handle("gY")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_chd_gauge_eom_scoped_i"), fund)
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    current = (
+        Expression.I * s.Bar(higgs(i)) * s.CD(mu, higgs(i))
+        - Expression.I * s.CD(mu, s.Bar(higgs(i))) * higgs(i)
+    )
+    standard_divergence = s.FieldStrength(
+        theory.field_handle("B").label,
+        s.List(nu, mu),
+        s.List(),
+        s.List(nu),
+    )
+    opposite_divergence = s.FieldStrength(
+        theory.field_handle("B").label,
+        s.List(mu, nu),
+        s.List(),
+        s.List(nu),
+    )
+    source = coefficient * expand_cd_operators(
+        (current * standard_divergence + 3 * current * opposite_divergence).expand()
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=source,
+        on_shell_eft_lagrangian=source,
+    )
+
+    off_shell = result.project_matching_conditions(
+        {"cHD": wilson_target},
+        source="off_shell_eft_lagrangian",
+        expand_source=False,
+    )
+    on_shell = result.project_matching_conditions(
+        {"cHD": wilson_target},
+        source="on_shell_eft_lagrangian",
+        expand_source=False,
+    )
+
+    assert_expr_equal(off_shell["cHD"], Expression.num(0))
+    assert_expr_equal(on_shell["cHD"], 2 * coefficient * hypercharge() ** 2)
+
+
 def test_registered_wilson_projection_uses_abelian_gauge_eom_ibp_alias_for_chd() -> None:
     coefficient = S("condition_projection_chd_gauge_eom_ibp_coefficient")
     theory = _singlet_scalar_extension_theory()
