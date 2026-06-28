@@ -581,6 +581,7 @@ def scalar_derivative_green_normal_form(
     eom_lagrangian: Expression | None = None,
     eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
     eom_standard_form_only: bool = False,
+    identity_generation: str = "closure",
     max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
     max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
     max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
@@ -614,31 +615,50 @@ def scalar_derivative_green_normal_form(
     theory._validate_registered_expression(expr)
     if eom_lagrangian is not None:
         theory._validate_registered_expression(eom_lagrangian)
+    identity_generation = _validate_scalar_green_identity_generation(identity_generation)
     normalized = normalize_conjugate_scalar_field_slots(theory, expr)
-    identities = _scalar_derivative_green_identities(
-        theory,
-        normalized,
-        include_ibp=include_ibp,
-        include_commutators=include_commutators,
-        include_eom=include_eom,
-        eom_lagrangian=eom_lagrangian,
-        eom_fields=eom_fields,
-        eom_standard_form_only=eom_standard_form_only,
-        max_basis_terms=max_basis_terms,
-        max_identities=max_identities,
-        max_rounds=max_rounds,
-    )
+    operator_patterns = _scalar_derivative_green_operator_patterns(include_eom=include_eom)
+    if identity_generation == "operator_basis":
+        identities, basis = _scalar_derivative_green_operator_basis_identities(
+            theory,
+            normalized,
+            include_ibp=include_ibp,
+            include_commutators=include_commutators,
+            include_eom=include_eom,
+            eom_lagrangian=eom_lagrangian,
+            eom_fields=eom_fields,
+            eom_standard_form_only=eom_standard_form_only,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+            max_rounds=max_rounds,
+            operator_patterns=operator_patterns,
+        )
+    else:
+        identities = _scalar_derivative_green_identities(
+            theory,
+            normalized,
+            include_ibp=include_ibp,
+            include_commutators=include_commutators,
+            include_eom=include_eom,
+            eom_lagrangian=eom_lagrangian,
+            eom_fields=eom_fields,
+            eom_standard_form_only=eom_standard_form_only,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+            max_rounds=max_rounds,
+        )
+        basis = ()
     if not identities:
         return normalized
 
     from .green_basis import linear_identity_basis_terms, linear_identity_normal_form
 
-    operator_patterns = _scalar_derivative_green_operator_patterns(include_eom=include_eom)
-    basis = linear_identity_basis_terms(
-        (normalized, *identities),
-        max_basis_terms=max_basis_terms,
-        operator_patterns=operator_patterns,
-    )
+    if not basis:
+        basis = linear_identity_basis_terms(
+            (normalized, *identities),
+            max_basis_terms=max_basis_terms,
+            operator_patterns=operator_patterns,
+        )
     preferred_terms = tuple(preferred) or _scalar_derivative_green_preferred_terms(basis)
     return linear_identity_normal_form(
         normalized,
@@ -661,6 +681,7 @@ def scalar_derivative_green_normal_form_by_operator_class(
     eom_lagrangian: Expression | None = None,
     eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
     eom_standard_form_only: bool = False,
+    identity_generation: str = "closure",
     max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
     max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
     max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
@@ -679,6 +700,7 @@ def scalar_derivative_green_normal_form_by_operator_class(
     theory._validate_registered_expression(expr)
     if eom_lagrangian is not None:
         theory._validate_registered_expression(eom_lagrangian)
+    identity_generation = _validate_scalar_green_identity_generation(identity_generation)
     normalized = normalize_conjugate_scalar_field_slots(theory, expr)
     class_groups = _scalar_derivative_green_class_groups(normalized, include_eom=include_eom)
     if len(class_groups) <= 1:
@@ -692,6 +714,7 @@ def scalar_derivative_green_normal_form_by_operator_class(
             eom_lagrangian=eom_lagrangian,
             eom_fields=eom_fields,
             eom_standard_form_only=eom_standard_form_only,
+            identity_generation=identity_generation,
             max_basis_terms=max_basis_terms,
             max_identities=max_identities,
             max_rounds=max_rounds,
@@ -714,12 +737,19 @@ def scalar_derivative_green_normal_form_by_operator_class(
                 eom_lagrangian=eom_lagrangian,
                 eom_fields=eom_fields,
                 eom_standard_form_only=eom_standard_form_only,
+                identity_generation=identity_generation,
                 max_basis_terms=max_basis_terms,
                 max_identities=max_identities,
                 max_rounds=max_rounds,
             )
         )
     return sum_expr(reduced).expand()
+
+
+def _validate_scalar_green_identity_generation(value: str) -> str:
+    if value not in {"closure", "operator_basis"}:
+        raise ValueError("identity_generation must be 'closure' or 'operator_basis'")
+    return value
 
 
 def normalize_conjugate_scalar_field_slots(theory: Theory, expr: Expression) -> Expression:
@@ -829,6 +859,88 @@ def _scalar_derivative_green_identities(
             break
         frontier = tuple(new_sources)
     return tuple(identities)
+
+
+def _scalar_derivative_green_operator_basis_identities(
+    theory: Theory,
+    expr: Expression,
+    *,
+    include_ibp: bool,
+    include_commutators: bool,
+    include_eom: bool,
+    eom_lagrangian: Expression | None,
+    eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,
+    eom_standard_form_only: bool,
+    max_basis_terms: int,
+    max_identities: int,
+    max_rounds: int,
+    operator_patterns: Sequence[Expression],
+) -> tuple[tuple[Expression, ...], tuple[Expression, ...]]:
+    """Generate Green identities from finite operator-basis representatives.
+
+    Matchete's ``IBPSimplify`` registers operators by class and constructs
+    identities from those operator representatives.  This avoids deriving
+    total-derivative identities from large expression coefficients, which can
+    create a much larger identity universe than the finite class actually
+    needs.
+    """
+
+    if not include_ibp and not include_commutators and not include_eom:
+        return (), ()
+
+    from .green_basis import linear_identity_basis_terms
+
+    source_basis = linear_identity_basis_terms(
+        (expr,),
+        max_basis_terms=max_basis_terms,
+        operator_patterns=operator_patterns,
+    )
+    identities: list[Expression] = []
+    seen_identities: set[str] = set()
+    processed_sources: set[str] = set()
+    basis_terms = source_basis
+    frontier = source_basis
+    for _ in range(max(1, max_rounds)):
+        new_identity = False
+        for source in frontier:
+            source_key = canonical_string(source)
+            if source_key in processed_sources:
+                continue
+            processed_sources.add(source_key)
+            for identity in _scalar_derivative_identity_sources(
+                theory,
+                source,
+                include_ibp=include_ibp,
+                include_commutators=include_commutators,
+                include_eom=include_eom,
+                eom_lagrangian=eom_lagrangian,
+                eom_fields=eom_fields,
+                eom_standard_form_only=eom_standard_form_only,
+                max_identities=max_identities,
+            ):
+                identity_key = canonical_string(identity)
+                if identity_key in seen_identities:
+                    continue
+                seen_identities.add(identity_key)
+                identities.append(identity)
+                new_identity = True
+                if len(identities) > max_identities:
+                    raise ValueError(f"scalar Green-basis reduction generated more than {max_identities} identities")
+        if not new_identity:
+            break
+        basis_terms = linear_identity_basis_terms(
+            (*source_basis, *identities),
+            max_basis_terms=max_basis_terms,
+            operator_patterns=operator_patterns,
+        )
+        frontier = tuple(
+            basis_term
+            for basis_term in basis_terms
+            if canonical_string(basis_term) not in processed_sources
+        )
+        if not frontier:
+            break
+    return tuple(identities), basis_terms
 
 
 def _scalar_derivative_identity_sources(

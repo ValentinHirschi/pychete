@@ -19,6 +19,8 @@ from .functional import (
 from .noncommutative import scalarize_commutative_ncm_chains
 from .theory import Theory
 
+_WILSON_LINE_SCALAR_EOM_CLOSURE_BYTE_LIMIT = 50_000
+
 
 def _apply_wilson_line_scalar_green_normal_form(theory: Theory, expr: Expression) -> Expression:
     out = scalar_derivative_green_normal_form(theory, expr)
@@ -46,15 +48,24 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
         raise ValueError("eom_lagrangian must be provided when expose_scalar_eom_terms=True")
     out = normalize_conjugate_scalar_field_slots(theory, expr)
     if expose_scalar_eom_terms:
+        if out.get_byte_size() <= _WILSON_LINE_SCALAR_EOM_CLOSURE_BYTE_LIMIT:
+            max_basis_terms = 256
+            max_identities = 512
+            max_rounds = 4
+        else:
+            max_basis_terms = 1536
+            max_identities = 4096
+            max_rounds = 1
         out = scalar_derivative_green_normal_form_by_operator_class(
             theory,
             out,
             include_eom=True,
             eom_lagrangian=eom_lagrangian,
             eom_standard_form_only=True,
-            max_basis_terms=256,
-            max_identities=512,
-            max_rounds=4,
+            identity_generation="operator_basis",
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+            max_rounds=max_rounds,
         )
     out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
     out = expand_cd_operators(out)

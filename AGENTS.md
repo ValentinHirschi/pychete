@@ -538,6 +538,14 @@ WolframScript dumps, qualify Matchete package-scope heads such as
 inert lookalike symbols and report misleading checkpoints. Pair each refreshed
 Matchete EOM dump with a bounded pychete probe of the corresponding
 source/EOM/field-redefinition boundary before changing runtime code.
+Performance parity is part of Matchete parity: intermediate pychete probes
+used for side-by-side comparison must not grow a larger operator/identity
+universe than the corresponding Matchete stage. When a pychete probe is slower
+or broader than Matchete, first look for an algorithmic classing, scoring, or
+pruning difference before increasing caps. Record the performance budget in
+the committed pychete debug fixture whenever practical, and keep large
+matching/debug workloads behind
+`scripts/run_with_memory_watch.py --limit-gb 30`.
 The current narrowed Singlet `cHD` EOM boundary is the internal-simplified
 source replay through Matchete `PerformSystematicFieldRedefs`: matter
 renormalization and shifts through `after_shift_dim6_dev4` leave the `cHD`
@@ -615,6 +623,16 @@ scalar EOM factors through the Symbolica-backed local identity solver before
 the field-redefinition consumer runs. Keep this bounded and target-local; do
 not replace it with a Python tree walker or coefficient-specific projection
 alias.
+For large Wilson-line scalar EOM exposure inputs, do not recurse the Green
+identity closure until it discovers unbounded basis terms. Use the finite
+operator-basis identity generation mode
+`scalar_derivative_green_normal_form_by_operator_class(...,
+identity_generation="operator_basis")`, and keep the Wilson-line hook's
+hybrid policy: small expressions may use a deeper closure to preserve local
+four-derivative representatives, while large expressions use one finite
+Matchete-style operator-class pass with a documented basis budget. This keeps
+the symbolic row reduction in Symbolica while avoiding a pychete-only
+identity-universe blow-up.
 Use `expose_abelian_vector_eom_currents(...)` /
 `Theory.expose_abelian_vector_eom_currents(...)` only as a bounded exact
 source-side bridge for Abelian vector-EOM current-current products. It

@@ -71,17 +71,18 @@ Active pychete checkpoint:
 Latest finding: pychete now records scalar-EOM exposure attempts for each of
 the 10 nonzero selected `hScalar-lScalar-lVector-lScalar` Wilson-line entries.
 After switching Wilson-line exposure to Matchete `EoMStandardForm` semantics,
-four lower-order entries expose 20 formal scalar `EOM(...)` atoms total and
-produce nonzero scalar field-redefinition deltas. Six high-order entries still
-fail before formal scalar `EOM(...)` atoms are generated. Those failures are
-split between:
+and adding the performance-safe hybrid scalar Green pass, all 10 selected
+entries now expose formal scalar `EOM(...)` atoms without Green-basis cap
+errors. The refreshed probe records 40 formal scalar EOM atoms total. The four
+lower-order entries still produce nonzero scalar field-redefinition deltas;
+the six high-order entries expose formal EOM atoms but their current pychete
+field-redefinition deltas are still zero.
 
-- `Green-basis reduction discovered more than 256 basis terms`
-- `scalar Green-basis reduction generated more than 512 identities`
-
-The next generic algorithm work is still Matchete `InternalSimplify`
-operator-class / identity-neighborhood control for the high-order entries, not
-final `cHD` coefficient tuning.
+The next generic algorithm work is therefore no longer basic high-order EOM
+exposure. It is the Matchete `PerformSystematicFieldRedefs` / scalar shift
+boundary for the high-order exposed terms, and any remaining
+`InternalSimplify` operator-scoring difference that prevents those terms from
+feeding the same `after_shift_dim6_dev3` delta.
 
 ## Current Implementation Slice
 
@@ -94,10 +95,13 @@ final `cHD` coefficient tuning.
 - Refreshed the Singlet `cHD` pychete boundary fixture. The class-wise pass
   plus `EoMStandardForm`-only exposure now exposes formal scalar EOM terms and
   nonzero scalar field-redefinition deltas for four lower-order selected
-  entries, but six high-order selected entries still exceed bounded scalar
-  Green-basis exposure limits before formal scalar EOM terms appear.
-- Focused validation passed for the two scalar Green tests, the Singlet `cHD`
-  debug-fixture regression, py_compile on changed files, targeted mypy, and
+  entries. The hybrid finite operator-basis path now also exposes formal
+  scalar EOM terms for the six high-order selected entries without recursive
+  Green-basis cap failures, but those high-order exposed terms still produce
+  zero scalar field-redefinition deltas.
+- Focused validation passed for the scalar Green/operator-basis tests, the
+  Wilson-line scalar EOM hook tests, the Singlet `cHD` debug-fixture
+  regression, py_compile on changed files, targeted mypy, and
   `git diff --check`.
 
 ## Focused Tests For This Slice

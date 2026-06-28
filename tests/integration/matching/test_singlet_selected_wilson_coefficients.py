@@ -914,15 +914,15 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
     assert "representative-conversion boundary" in debug["first_differing_boundary"]
-    assert "bounded scalar Green-basis exposure limits" in debug["first_differing_boundary"]
+    assert "high-order selected entries expose formal scalar EOM terms" in debug["first_differing_boundary"]
     assert eom_probe == {
         "entry_count": 10,
         "field_strength_count": 0,
         "nonzero_scalar_eom_field_redefinition_delta_entry_count": 4,
         "nonzero_vector_eom_current_exposed_delta_entry_count": 0,
         "nonzero_vector_field_redefinition_delta_entry_count": 0,
-        "scalar_eom_exposed_formal_eom_count": 20,
-        "scalar_eom_exposure_error_count": 6,
+        "scalar_eom_exposed_formal_eom_count": 40,
+        "scalar_eom_exposure_error_count": 0,
         "scalar_eom_field_redefinition_delta_error_count": 0,
         "scalar_eom_identity_count": 28,
         "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -932,10 +932,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         row["scalar_eom_exposure_error"]
         for row in debug["eom_exposure_probe_by_entry"].values()
         if row["scalar_eom_exposure_error"] is not None
-    } == {
-        "Green-basis reduction discovered more than 256 basis terms",
-        "scalar Green-basis reduction generated more than 512 identities",
-    }
+    } == set()
     assert {
         row["scalar_eom_field_redefinition_delta_is_zero"]
         for row in debug["eom_exposure_probe_by_entry"].values()
@@ -946,9 +943,15 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         if row["scalar_eom_exposed_formal_eom_count"]
     } == {
         "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0",
+        "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0",
+        "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0",
+        "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0",
+        "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0",
         "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0",
         "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0",
         "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0",
+        "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0",
+        "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0",
     }
     assert debug["eom_exposure_probe_by_entry"]["hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"][
         "scalar_eom_identity_count"
