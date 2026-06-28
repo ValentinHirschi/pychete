@@ -188,6 +188,144 @@ def _stage_snapshot(name: str, expr: Expression, *, h_label: Expression, sample_
     }
 
 
+def _pipeline_summary(expr: Expression, *, h_label: Expression, sample_chars: int, name: str) -> dict[str, Any]:
+    return {
+        "summary": _expr_summary(name, expr, sample_chars=sample_chars),
+        "h_derivative_word_histogram": _field_derivative_word_histogram(expr, h_label),
+        "h_derivative_signature_samples": _field_derivative_signature_samples(
+            expr,
+            h_label,
+            sample_chars=sample_chars,
+        ),
+    }
+
+
+def _empty_pipeline_aggregate() -> dict[str, Expression]:
+    return {}
+
+
+def _add_pipeline_aggregate(
+    aggregate: dict[str, Expression],
+    stage_expressions: dict[str, Expression],
+) -> None:
+    for name, expr in stage_expressions.items():
+        aggregate[name] = (aggregate.get(name, Expression.num(0)) + expr).expand()
+
+
+def _pipeline_aggregate_summaries(
+    aggregate: dict[str, Expression],
+    *,
+    h_label: Expression,
+    sample_chars: int,
+) -> dict[str, dict[str, Any]]:
+    return {
+        name: _pipeline_summary(expr, h_label=h_label, sample_chars=sample_chars, name=name)
+        for name, expr in aggregate.items()
+    }
+
+
+def _prefinal_wilson_line_terms_by_trace(
+    setup: Any,
+    plan: Any,
+    *,
+    act_open_derivatives: bool,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: str,
+    expand_covariant_derivative_commutators: bool,
+    max_wilson_derivative_order: int,
+    simplify_pychete_color_algebra: bool,
+    term_atom_requirements: Any,
+) -> dict[str, tuple[matching_module.WilsonLineTraceExpansionTerm, ...]]:
+    paths_by_trace = setup.interaction_wilson_line_trace_paths_by_trace(trace_names=plan.trace_names)
+    grouped: dict[str, tuple[matching_module.WilsonLineTraceExpansionTerm, ...]] = {}
+    for entry in plan.entries:
+        entry_terms: list[matching_module.WilsonLineTraceExpansionTerm] = []
+        for path in paths_by_trace[entry.trace_name]:
+            if not matching_module._wilson_line_entry_can_satisfy_projection_requirements(
+                path,
+                entry,
+                term_atom_requirements,
+            ):
+                continue
+            filtered_path = matching_module._wilson_line_path_with_projection_filtered_entries(
+                path,
+                term_atom_requirements,
+            )
+            entry_terms.extend(
+                filtered_path.propagator_expansion_terms(
+                    entry.expansion_indices,
+                    act_open_derivatives=act_open_derivatives,
+                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                    covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                    max_wilson_derivative_order=max_wilson_derivative_order,
+                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                )
+            )
+        grouped[entry.label] = tuple(entry_terms)
+    return grouped
+
+
+def _grouped_entry_orders(
+    grouped: dict[str, tuple[matching_module.WilsonLineTraceExpansionTerm, ...]],
+    plan_entries_by_label: dict[str, Any],
+) -> dict[str, dict[str, Any]]:
+    return {
+        label: {
+            "total_order": plan_entries_by_label[label].total_order,
+            "slot_orders": list(plan_entries_by_label[label].slot_orders),
+        }
+        for label, entry_terms in grouped.items()
+        if entry_terms
+    }
+
+
+def _term_counts_by_total_order(
+    grouped: dict[str, tuple[matching_module.WilsonLineTraceExpansionTerm, ...]],
+    plan_entries_by_label: dict[str, Any],
+) -> dict[str, int]:
+    counts: Counter[int] = Counter()
+    for label, entry_terms in grouped.items():
+        counts[plan_entries_by_label[label].total_order] += len(entry_terms)
+    return {str(order): count for order, count in sorted(counts.items()) if count}
+
+
+def _aggregate_numerator_summaries_by_total_order(
+    grouped: dict[str, tuple[matching_module.WilsonLineTraceExpansionTerm, ...]],
+    plan_entries_by_label: dict[str, Any],
+    *,
+    h_label: Expression,
+    sample_chars: int,
+) -> dict[str, dict[str, dict[str, Any]]]:
+    aggregates: dict[int, dict[str, Expression]] = {}
+    for label, entry_terms in grouped.items():
+        order = plan_entries_by_label[label].total_order
+        order_aggregate = aggregates.setdefault(
+            order,
+            {
+                "pre_wilson_numerator": Expression.num(0),
+                "wilson_expanded_numerator": Expression.num(0),
+            },
+        )
+        for term in entry_terms:
+            if term.pre_wilson_numerator is not None:
+                order_aggregate["pre_wilson_numerator"] = (
+                    order_aggregate["pre_wilson_numerator"] + term.pre_wilson_numerator
+                ).expand()
+            order_aggregate["wilson_expanded_numerator"] = (
+                order_aggregate["wilson_expanded_numerator"] + term.numerator
+            ).expand()
+    return {
+        str(order): {
+            name: _pipeline_summary(expr, h_label=h_label, sample_chars=sample_chars, name=f"order{order}.{name}")
+            for name, expr in order_aggregate.items()
+        }
+        for order, order_aggregate in sorted(aggregates.items())
+    }
+
+
 def _coefficient_slice_summary(
     expr: Expression,
     coefficient: Expression,
@@ -228,52 +366,41 @@ def _processed_stage_with_debug(
     h_label: Expression,
     sample_chars: int,
 ) -> tuple[Expression, list[dict[str, Any]]]:
-    stage_prefix = "pre_wilson" if use_pre_wilson else "post_wilson"
-    snapshots = [
-        _stage_snapshot(
-            f"{stage_prefix}.raw_vakint_integral",
-            raw,
-            h_label=h_label,
-            sample_chars=sample_chars,
-        )
+    stage_expressions = _pipeline_stage_expressions(theory, raw, use_pre_wilson=use_pre_wilson)
+    processed = stage_expressions[
+        ("pre_wilson" if use_pre_wilson else "post_wilson") + ".postprocessed_with_scalar_bilinears"
     ]
+    snapshots = [
+        _stage_snapshot(name, expr, h_label=h_label, sample_chars=sample_chars)
+        for name, expr in stage_expressions.items()
+    ]
+    return processed, snapshots
+
+
+def _pipeline_stage_expressions(
+    theory: Any,
+    raw: Expression,
+    *,
+    use_pre_wilson: bool,
+) -> dict[str, Expression]:
+    stage_prefix = "pre_wilson" if use_pre_wilson else "post_wilson"
+    stage_expressions: dict[str, Expression] = {f"{stage_prefix}.raw_vakint_integral": raw}
     reduced = vakint.tensor_reduce(raw)
     reduced = vakint.decode_pychete_namespace(theory, reduced)
-    snapshots.append(
-        _stage_snapshot(
-            f"{stage_prefix}.tensor_reduced_decoded",
-            reduced,
-            h_label=h_label,
-            sample_chars=sample_chars,
-        )
-    )
+    stage_expressions[f"{stage_prefix}.tensor_reduced_decoded"] = reduced
     if use_pre_wilson:
         restored = matching_module._restore_theory_owned_generated_lorentz_indices(theory, reduced)
         contracted = contract_wilson_term_derivative_metrics(
             restored,
             max_derivative_order=4,
         )
-        snapshots.append(
-            _stage_snapshot(
-                f"{stage_prefix}.formal_metric_contracted",
-                contracted,
-                h_label=h_label,
-                sample_chars=sample_chars,
-            )
-        )
+        stage_expressions[f"{stage_prefix}.formal_metric_contracted"] = contracted
         lowered = expand_wilson_terms(
             theory,
             contracted,
             max_derivative_order=4,
         )
-        snapshots.append(
-            _stage_snapshot(
-                f"{stage_prefix}.wilson_terms_expanded",
-                lowered,
-                h_label=h_label,
-                sample_chars=sample_chars,
-            )
-        )
+        stage_expressions[f"{stage_prefix}.wilson_terms_expanded"] = lowered
     else:
         lowered = reduced
 
@@ -287,13 +414,8 @@ def _processed_stage_with_debug(
         simplify_pychete_color_algebra=True,
         expose_scalar_derivative_commutator_bilinears_option=False,
     )
-    snapshots.append(
-        _stage_snapshot(
-            f"{stage_prefix}.postprocessed_without_scalar_bilinears",
-            postprocessed_without_scalar_bilinears,
-            h_label=h_label,
-            sample_chars=sample_chars,
-        )
+    stage_expressions[f"{stage_prefix}.postprocessed_without_scalar_bilinears"] = (
+        postprocessed_without_scalar_bilinears
     )
     processed = matching_module._postprocess_wilson_line_tensor_reduced_expression(
         theory,
@@ -305,15 +427,8 @@ def _processed_stage_with_debug(
         simplify_pychete_color_algebra=True,
         expose_scalar_derivative_commutator_bilinears_option=True,
     )
-    snapshots.append(
-        _stage_snapshot(
-            f"{stage_prefix}.postprocessed_with_scalar_bilinears",
-            processed,
-            h_label=h_label,
-            sample_chars=sample_chars,
-        )
-    )
-    return processed, snapshots
+    stage_expressions[f"{stage_prefix}.postprocessed_with_scalar_bilinears"] = processed
+    return stage_expressions
 
 
 def _processed_stage(
@@ -460,7 +575,20 @@ def main() -> int:
         if args.no_filter_by_target
         else matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
     )
-    grouped = setup.interaction_wilson_line_expansion_terms_by_trace(
+    preaction_prefilter_grouped = _prefinal_wilson_line_terms_by_trace(
+        setup,
+        plan,
+        act_open_derivatives=False,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=False,
+        term_atom_requirements=requirements,
+    )
+    prefinal_grouped = _prefinal_wilson_line_terms_by_trace(
+        setup,
         plan,
         act_open_derivatives=True,
         emit_covariant_derivative_commutators=True,
@@ -471,6 +599,10 @@ def main() -> int:
         simplify_pychete_color_algebra=True,
         term_atom_requirements=requirements,
     )
+    grouped = {
+        label: matching_module._filter_wilson_line_terms_by_projection_requirements(entry_terms, requirements)
+        for label, entry_terms in prefinal_grouped.items()
+    }
 
     rows: list[dict[str, Any]] = []
     plan_entries_by_label = {entry.label: entry for entry in plan.entries}
@@ -482,14 +614,27 @@ def main() -> int:
     }
     totals_by_entry: dict[str, dict[str, Expression]] = {}
     totals_by_order: dict[int, dict[str, Expression]] = {}
+    pipeline_by_entry: dict[str, dict[str, dict[str, Expression]]] = {}
+    pipeline_by_order: dict[int, dict[str, dict[str, Expression]]] = {}
     for entry_label, entry_terms in grouped.items():
         if args.entry_contains and args.entry_contains not in entry_label:
             continue
         entry = plan_entries_by_label[entry_label]
         totals_by_entry[entry_label] = {stage_name: Expression.num(0) for stage_name in totals}
+        pipeline_by_entry[entry_label] = {
+            "post_wilson_tensor_reduced": _empty_pipeline_aggregate(),
+            "pre_wilson_tensor_reduced": _empty_pipeline_aggregate(),
+        }
         order_totals = totals_by_order.setdefault(
             entry.total_order,
             {stage_name: Expression.num(0) for stage_name in totals},
+        )
+        order_pipelines = pipeline_by_order.setdefault(
+            entry.total_order,
+            {
+                "post_wilson_tensor_reduced": _empty_pipeline_aggregate(),
+                "pre_wilson_tensor_reduced": _empty_pipeline_aggregate(),
+            },
         )
         for term_index, term in enumerate(entry_terms):
             row = _term_row(
@@ -516,7 +661,13 @@ def main() -> int:
                 if use_pre_wilson and term.pre_wilson_numerator is None:
                     continue
                 raw = term.vakint_integral_expression(use_pre_wilson_numerator=use_pre_wilson)
-                processed = _processed_stage(theory, raw, use_pre_wilson=use_pre_wilson)
+                pipeline_expressions = _pipeline_stage_expressions(theory, raw, use_pre_wilson=use_pre_wilson)
+                pipeline_prefix = "pre_wilson" if use_pre_wilson else "post_wilson"
+                processed = pipeline_expressions[
+                    pipeline_prefix + ".postprocessed_with_scalar_bilinears"
+                ]
+                _add_pipeline_aggregate(pipeline_by_entry[entry_label][stage_name], pipeline_expressions)
+                _add_pipeline_aggregate(order_pipelines[stage_name], pipeline_expressions)
                 evaluated = vacuum_integrals.evaluate_one_loop_vakint_expression(
                     processed,
                     combine_terms=False,
@@ -560,15 +711,47 @@ def main() -> int:
             for entry in plan.entries
         ],
         "filter_terms_by_matching_targets": requirements is not None,
-        "nonempty_grouped_entries": {label: len(entry_terms) for label, entry_terms in grouped.items() if entry_terms},
-        "nonempty_grouped_entry_orders": {
-            label: {
-                "total_order": plan_entries_by_label[label].total_order,
-                "slot_orders": list(plan_entries_by_label[label].slot_orders),
-            }
-            for label, entry_terms in grouped.items()
-            if entry_terms
+        "preaction_prefilter_nonempty_grouped_entries": {
+            label: len(entry_terms) for label, entry_terms in preaction_prefilter_grouped.items() if entry_terms
         },
+        "preaction_prefilter_nonempty_grouped_entry_orders": _grouped_entry_orders(
+            preaction_prefilter_grouped,
+            plan_entries_by_label,
+        ),
+        "preaction_prefilter_term_counts_by_total_order": _term_counts_by_total_order(
+            preaction_prefilter_grouped,
+            plan_entries_by_label,
+        ),
+        "preaction_prefilter_numerator_summaries_by_total_order": _aggregate_numerator_summaries_by_total_order(
+            preaction_prefilter_grouped,
+            plan_entries_by_label,
+            h_label=h_label,
+            sample_chars=args.sample_chars,
+        ),
+        "prefinal_nonempty_grouped_entries": {
+            label: len(entry_terms) for label, entry_terms in prefinal_grouped.items() if entry_terms
+        },
+        "prefinal_nonempty_grouped_entry_orders": _grouped_entry_orders(
+            prefinal_grouped,
+            plan_entries_by_label,
+        ),
+        "prefinal_term_counts_by_total_order": _term_counts_by_total_order(
+            prefinal_grouped,
+            plan_entries_by_label,
+        ),
+        "prefinal_numerator_summaries_by_total_order": _aggregate_numerator_summaries_by_total_order(
+            prefinal_grouped,
+            plan_entries_by_label,
+            h_label=h_label,
+            sample_chars=args.sample_chars,
+        ),
+        "postfinal_filter_dropped_term_count_by_entry": {
+            label: len(prefinal_grouped[label]) - len(entry_terms)
+            for label, entry_terms in grouped.items()
+            if len(prefinal_grouped[label]) - len(entry_terms)
+        },
+        "nonempty_grouped_entries": {label: len(entry_terms) for label, entry_terms in grouped.items() if entry_terms},
+        "nonempty_grouped_entry_orders": _grouped_entry_orders(grouped, plan_entries_by_label),
         "normalization": "matchete_evaluated_hbar",
         "normalization_factor": _full(normalization_factor),
         "h_field_label": _full(h_label),
@@ -626,6 +809,17 @@ def main() -> int:
             }
             for stage_name in totals
         },
+        "entry_pipeline_summaries": {
+            stage_name: {
+                entry_label: _pipeline_aggregate_summaries(
+                    entry_pipelines[stage_name],
+                    h_label=h_label,
+                    sample_chars=args.sample_chars,
+                )
+                for entry_label, entry_pipelines in pipeline_by_entry.items()
+            }
+            for stage_name in ("post_wilson_tensor_reduced", "pre_wilson_tensor_reduced")
+        },
         "order_projections": {
             stage_name: {
                 str(total_order): _full(_project_chw(theory, target, order_totals[stage_name]))
@@ -650,6 +844,17 @@ def main() -> int:
                 for total_order, order_totals in sorted(totals_by_order.items())
             }
             for stage_name in totals
+        },
+        "order_pipeline_summaries": {
+            stage_name: {
+                str(total_order): _pipeline_aggregate_summaries(
+                    order_pipelines[stage_name],
+                    h_label=h_label,
+                    sample_chars=args.sample_chars,
+                )
+                for total_order, order_pipelines in sorted(pipeline_by_order.items())
+            }
+            for stage_name in ("post_wilson_tensor_reduced", "pre_wilson_tensor_reduced")
         },
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

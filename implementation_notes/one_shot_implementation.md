@@ -1955,6 +1955,41 @@
   implementation fix should concentrate on the order-four Wilson-line
   Green/on-shell normal form and coefficient weighting, while keeping the
   lower-order checkpoints available for future EOM/projection regressions.
+- Current Matchete-vs-pychete dissection slice: reviewed Matchete's
+  `SuperTrace.m` and `Matching.m` implementation around
+  `GenericPropagatorExpansion`, `DeterminePowerInsertions`, `$XOrders`,
+  `$Xsubs`, `EvaluateSTr`, `ActWithOpenCDs`,
+  `RemoveSymmetryVanishingWilsonTerms`, `LoopMoms`,
+  `EvaluateSymmetricLorentzInds`, and `WilsonExpand`. This clarified that the
+  earlier pychete mismatch was not merely a final projection problem:
+  Matchete samples concrete field degrees of freedom and order-compatible
+  `Xterm` substitutions before `EvaluateSTr`, while pychete was letting full
+  interaction-entry branches reach open-derivative action and only filtering
+  later. Implemented a conservative target-local pre-generation Wilson-line
+  entry filter in `src/pychete/matching.py`: additive entry terms whose field
+  labels are neither required by the target nor able to generate a required
+  field-strength label are removed before propagator expansion and open
+  derivatives act. Added a focused Singlet validation regression asserting
+  the Matchete order-four pre-action checkpoint for `hScalar-lScalar -> cHW`:
+  slot counts `[0,4]=10`, `[1,3]=6`, `[2,2]=8`, `[3,1]=6`, `[4,0]=10`, total
+  40, and zero `phi` field atoms in the candidate pre-Wilson numerators.
+- Extended the paired debug workflow. The Matchete WolframScript now records
+  validation simplification checkpoints through `ContractCGs`, `MatchReduce`,
+  and `GreensSimplify` for both per-insertion `EvaluateSTr` results and
+  selected prop-order/full-trace aggregates. The pychete debug script now
+  records a separate `preaction_prefilter_*` block, preserving the
+  Matchete-comparable pre-`ActWithOpenCDs` checkpoint, plus the existing
+  post-action/pre-final and final projection rows. Regenerated the filtered
+  and unfiltered pychete debug artifacts and the Matchete prop-order artifacts
+  under the 30 GiB watchdog. The latest comparison shows the pre-action
+  pychete checkpoint now matches the expected 40-term order-four structure;
+  after open-derivative action and Wilson expansion, only the `[4,0]` branch
+  remains in pychete's final selected `cHW` projection. A follow-up probe
+  showed the disappearance of `[0,4]` is expected because it closes on the
+  gauge-singlet `phi` Wilson line. The next real mismatch is therefore not
+  broad trace/source selection, but the Matchete-style Wilson-line
+  tensor/symmetric-loop/Wilson expansion cleanup and subsequent
+  Green-normal-form reduction for the surviving order-four Higgs branch.
 
 ## Next Work
 
@@ -1998,10 +2033,14 @@
     `SymGammaFactor`/loop-momentum class, finite integral class, and projected
     coefficient, and only then decide which generic Symbolica/idenso/vakint
     primitive needs to be extended;
-  - inspect why the pre-Wilson path keeps only the path-2 `(3, 1)` contribution
-    while Matchete expects a smaller nonzero total, focusing on symmetric
-    Wilson-line path pairing/orientation, WilsonTerm endpoint conventions, and
-    generic loop-symmetric double-commutator identities;
+  - compare the surviving pychete `[4,0]` Higgs-branch stages directly against
+    Matchete's `acted_open_cds`, `gathered_loop_momenta`,
+    `removed_symmetry_vanishing_wilson_terms`,
+    `evaluated_symmetric_lorentz_indices`, `contracted_metric`, and
+    `wilson_expanded` checkpoints. The `[0,4]` singlet-Wilson branch is now
+    understood to vanish after Wilson expansion; do not chase it as a
+    mismatch unless a future Matchete dump contradicts that stage-level
+    interpretation;
   - implement the generic loop-symmetric double-commutator/basis-identity
     reduction needed for the pure `A^2` `hScalar-lScalar` four-derivative
     Higgs bilinear, using Symbolica replacement rules and idenso-backed

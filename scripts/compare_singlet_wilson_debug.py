@@ -86,6 +86,34 @@ def _stage_terms_and_hist(stage: dict[str, Any] | None) -> str:
     return f"terms={stage.get('term_count')} " + _signature_counts(stage.get("h_derivative_word_histogram"))
 
 
+def _validation_stage_line(stage: dict[str, Any] | None) -> str:
+    if stage is None:
+        return "<missing>"
+    status = " aborted" if stage.get("aborted_or_failed") else ""
+    return f"{stage.get('name')}{status}: " + _stage_terms_and_hist(stage)
+
+
+def _print_validation_stage_summaries(
+    title: str,
+    stages: list[dict[str, Any]] | None,
+    *,
+    indent: str,
+) -> None:
+    if not stages:
+        return
+    print(f"{indent}{title}")
+    wanted = {
+        "validation_input",
+        "validation_contract_cgs",
+        "validation_match_reduce",
+        "validation_greens_simplify",
+    }
+    for stage in stages:
+        if not isinstance(stage, dict) or stage.get("name") not in wanted:
+            continue
+        print(f"{indent}  " + _validation_stage_line(stage))
+
+
 def _print_matchete_prop_order_summary(paths: dict[int, Path]) -> None:
     if not paths:
         return
@@ -107,6 +135,12 @@ def _print_matchete_prop_order_summary(paths: dict[int, Path]) -> None:
         print(f"    raw: {_stage_terms_and_hist(raw if isinstance(raw, dict) else None)}")
         print(f"    prefactored: {_stage_terms_and_hist(prefactored if isinstance(prefactored, dict) else None)}")
         print(f"    selected_validation: {_stage_terms_and_hist(selected if isinstance(selected, dict) else None)}")
+        stage_summaries = data.get("selected_prop_order_validation_stage_summaries")
+        _print_validation_stage_summaries(
+            "selected validation checkpoints:",
+            stage_summaries if isinstance(stage_summaries, list) else None,
+            indent="    ",
+        )
     if previous_chw:
         print(f"  saved validation cHW: {previous_chw}")
 
@@ -135,6 +169,12 @@ def _print_matchete_summary(data: dict[str, Any]) -> None:
                 + f"{name}: terms={stage.get('term_count')} "
                 + _signature_counts(stage.get("h_derivative_word_histogram"))
             )
+        validation_stages = insertion.get("validation_simplification_stage_summaries")
+        _print_validation_stage_summaries(
+            "prefactored EvaluateSTr validation checkpoints:",
+            validation_stages if isinstance(validation_stages, list) else None,
+            indent="    ",
+        )
 
 
 def _nonzero_pychete_rows(data: dict[str, Any]) -> list[dict[str, Any]]:
@@ -186,11 +226,93 @@ def _print_pychete_stage_summary(row: dict[str, Any], stage_key: str, *, sample_
         )
 
 
+def _print_pychete_order_pipeline_summaries(data: dict[str, Any]) -> None:
+    order_pipelines = data.get("order_pipeline_summaries")
+    if not isinstance(order_pipelines, dict) or not order_pipelines:
+        return
+    print("pychete aggregate pipeline snapshots by total order")
+    for stage_name in ("pre_wilson_tensor_reduced", "post_wilson_tensor_reduced"):
+        stage_orders = order_pipelines.get(stage_name)
+        if not isinstance(stage_orders, dict):
+            continue
+        for order, snapshots in sorted(stage_orders.items(), key=lambda item: int(item[0])):
+            if not isinstance(snapshots, dict) or not snapshots:
+                continue
+            print(f"  {stage_name} order {order}")
+            for snapshot_name, snapshot in snapshots.items():
+                if not isinstance(snapshot, dict):
+                    continue
+                summary = snapshot.get("summary", {})
+                if not isinstance(summary, dict):
+                    continue
+                print(
+                    "    "
+                    + f"{snapshot_name}: terms={summary.get('term_count')} "
+                    + _signature_counts(snapshot.get("h_derivative_word_histogram"))
+                )
+    print()
+
+
+def _print_pychete_grouped_candidate_block(data: dict[str, Any], *, prefix: str, title: str) -> None:
+    entry_orders = data.get(f"{prefix}_nonempty_grouped_entry_orders", {})
+    entries = data.get(f"{prefix}_nonempty_grouped_entries", {})
+    if not isinstance(entries, dict) or not entries:
+        return
+    print(title)
+    for label, count in entries.items():
+        order = entry_orders.get(label, {}) if isinstance(entry_orders, dict) else {}
+        print(
+            "  "
+            + f"{label}: terms={count} "
+            + f"order={order.get('total_order', '<unknown>')} "
+            + f"slots={order.get('slot_orders', '<unknown>')}"
+        )
+    counts_by_order = data.get(f"{prefix}_term_counts_by_total_order", {})
+    if isinstance(counts_by_order, dict) and counts_by_order:
+        rendered = ", ".join(
+            f"o{order}={count}" for order, count in sorted(counts_by_order.items(), key=lambda item: int(item[0]))
+        )
+        print(f"  totals by order: {rendered}")
+    if prefix == "prefinal":
+        dropped = data.get("postfinal_filter_dropped_term_count_by_entry", {})
+        if isinstance(dropped, dict) and dropped:
+            print("  dropped by final projection filter:")
+            for label, count in dropped.items():
+                print(f"    {label}: {count}")
+    numerator_summaries = data.get(f"{prefix}_numerator_summaries_by_total_order", {})
+    if isinstance(numerator_summaries, dict) and numerator_summaries:
+        print("  candidate numerator summaries:")
+        for order, summaries in sorted(numerator_summaries.items(), key=lambda item: int(item[0])):
+            if not isinstance(summaries, dict):
+                continue
+            rendered_parts: list[str] = []
+            for name in ("pre_wilson_numerator", "wilson_expanded_numerator"):
+                snapshot = summaries.get(name, {})
+                summary = snapshot.get("summary", {}) if isinstance(snapshot, dict) else {}
+                if isinstance(summary, dict):
+                    rendered_parts.append(
+                        f"{name}=terms:{summary.get('term_count')} "
+                        + _signature_counts(snapshot.get("h_derivative_word_histogram"))
+                    )
+            print(f"    order {order}: " + "; ".join(rendered_parts))
+    print()
+
+
 def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
     print(
         "pychete selection: "
         + f"filter_by_target={data.get('filter_terms_by_matching_targets', '<unknown>')} "
         + f"plan_entries={data.get('plan_entry_count', '<unknown>')}"
+    )
+    _print_pychete_grouped_candidate_block(
+        data,
+        prefix="preaction_prefilter",
+        title="pychete pre-action prefilter entries",
+    )
+    _print_pychete_grouped_candidate_block(
+        data,
+        prefix="prefinal",
+        title="pychete pre-final post-action candidate entries",
     )
     entry_orders = data.get("nonempty_grouped_entry_orders", {})
     nonempty_entries = data.get("nonempty_grouped_entries", {})
@@ -233,6 +355,7 @@ def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
             )
             print(f"  {stage_name}: {rendered}")
         print()
+    _print_pychete_order_pipeline_summaries(data)
     print("pychete nonzero rows")
     rows = _nonzero_pychete_rows(data)
     if not rows:

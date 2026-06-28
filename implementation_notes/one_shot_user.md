@@ -749,3 +749,19 @@ without Warsaw-specific core assumptions.
   This keeps the next fix focused on the order-four Wilson-line
   Green/on-shell normal form and coefficient weighting while preserving
   lower-order checkpoints.
+- Latest user instruction: when a precise mismatch is identified, carefully
+  review the corresponding Matchete algorithms before modifying pychete, so
+  changes are based on an understood algorithmic difference rather than only
+  on final coefficient disagreement. Current response: the active
+  `hScalar-lScalar -> cHW` loop now explicitly audits Matchete
+  `DeterminePowerInsertions`, `EvaluateSTr`, `ActWithOpenCDs`,
+  `RemoveSymmetryVanishingWilsonTerms`, `LoopMoms`/
+  `EvaluateSymmetricLorentzInds`, and `WilsonExpand` against the pychete
+  Wilson-line path. A new focused regression captures the first fixed
+  source-level mismatch: target-local pre-generation filtering now reproduces
+  Matchete's order-four pre-action selected insertion checkpoint with slot
+  counts `[0,4]=10`, `[1,3]=6`, `[2,2]=8`, `[3,1]=6`, `[4,0]=10`, summing to
+  40 candidate terms and with no heavy `phi` branch leaking into the
+  `cHW` candidate. The updated debug artifacts also distinguish the
+  Matchete-comparable pre-action prefilter checkpoint from the later
+  post-action/post-Wilson filtering checkpoint.

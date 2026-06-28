@@ -29,6 +29,7 @@ from .expr import (
     list_items,
     product_expr,
     sum_expr,
+    terms,
 )
 from .functional import (
     derive_eom,
@@ -2000,6 +2001,7 @@ class OneLoopSetup:
                     term_atom_requirements,
                 ):
                     continue
+                path = _wilson_line_path_with_projection_filtered_entries(path, term_atom_requirements)
                 terms.extend(
                     path.propagator_expansion_terms(
                         entry.expansion_indices,
@@ -7279,6 +7281,73 @@ def _filter_wilson_line_terms_by_projection_requirements(
     if not requirements:
         return tuple(terms)
     return tuple(term for term in terms if _wilson_line_term_matches_projection_requirements(term, requirements))
+
+
+def _wilson_line_path_with_projection_filtered_entries(
+    path: WilsonLineTracePath,
+    requirements: ProjectionAtomRequirementGroups | None,
+) -> WilsonLineTracePath:
+    if not requirements:
+        return path
+    filtered_entries = tuple(
+        _filter_wilson_line_entry_expression_by_projection_requirements(path.theory, entry, requirements)
+        for entry in path.entries
+    )
+    if all(bool(filtered == original) for filtered, original in zip(filtered_entries, path.entries, strict=True)):
+        return path
+    return replace(path, entries=filtered_entries)
+
+
+def _filter_wilson_line_entry_expression_by_projection_requirements(
+    theory: Theory,
+    entry: Expression,
+    requirements: ProjectionAtomRequirementGroups,
+) -> Expression:
+    kept: list[Expression] = []
+    for term in terms(entry.expand()):
+        if _wilson_line_entry_term_can_contribute_to_projection_requirements(theory, term, requirements):
+            kept.append(term)
+    return sum_expr(kept).expand()
+
+
+def _wilson_line_entry_term_can_contribute_to_projection_requirements(
+    theory: Theory,
+    term: Expression,
+    requirements: ProjectionAtomRequirementGroups,
+) -> bool:
+    field_labels = _projection_field_labels_in_expression(term)
+    strength_labels = _projection_field_strength_labels_in_expression(term)
+    if not field_labels and not strength_labels:
+        return True
+    for group in requirements:
+        required_fields = {label for kind, label, _count in group if kind == "field"}
+        required_strengths = {label for kind, label, _count in group if kind == "field_strength"}
+        if not strength_labels.issubset(required_strengths):
+            continue
+        if all(
+            label in required_fields
+            or bool(_field_generated_field_strength_labels(theory, label_expr) & required_strengths)
+            for label, label_expr in field_labels.items()
+        ):
+            return True
+    return False
+
+
+def _projection_field_labels_in_expression(expr: Expression) -> dict[str, Expression]:
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    labels: dict[str, Expression] = {}
+    for match in expr.match(field_pattern(), label_is_tagged):
+        label = match[s.FieldLabelWildcard]
+        labels.setdefault(canonical_string(label), label)
+    return labels
+
+
+def _projection_field_strength_labels_in_expression(expr: Expression) -> set[str]:
+    label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    return {
+        canonical_string(match[s.FieldStrengthLabelWildcard])
+        for match in expr.match(field_strength_pattern(), label_is_tagged)
+    }
 
 
 def _cde_term_matches_projection_requirements(

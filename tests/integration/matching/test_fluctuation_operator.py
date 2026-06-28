@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from pathlib import Path
 
 import pytest
 from symbolica import Expression, S
@@ -32,6 +33,7 @@ from pychete import (
     contract_wilson_term_derivative_metrics,
     dummy_indices,
     expand_wilson_terms,
+    load_validation_fixture,
     one_loop_normalization_factor,
     remove_loop_momentum_symmetry_vanishing_wilson_terms,
     remove_symmetry_vanishing_wilson_terms,
@@ -44,6 +46,7 @@ from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals as vacuum_integrals_backend
 from pychete.backends import vakint as vakint_backend
 from pychete.bases.smeft_warsaw import define_smeft_wilson_coefficient, smeft_warsaw_operator
+from pychete.expr import field_pattern, terms as expression_terms
 from pychete.matching import _lower_differential_operators_to_momentum
 
 from tests.conftest import assert_expr_equal
@@ -2059,6 +2062,71 @@ def test_wilson_line_target_filter_skips_impossible_entries_before_generation(
 
     assert grouped
     assert all(terms == () for terms in grouped.values())
+
+
+def test_singlet_wilson_line_target_prefilter_matches_matchete_order_four_insertions() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    target = smeft_warsaw_operator(theory, "cHW")
+    assert target is not None
+    setup = theory.one_loop_setup(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        max_trace_order=2,
+    )
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=4,
+        max_slot_order=4,
+        index_prefix="singlet_prefilter",
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
+    assert requirements is not None
+    paths = setup.interaction_wilson_line_trace_paths_by_trace(trace_names=("hScalar-lScalar",))["hScalar-lScalar"]
+    phi_pattern = field_pattern(theory.field_handle("phi").label)
+
+    counts_by_slot_order: dict[tuple[int, ...], int] = {}
+    expanded_counts_by_slot_order: dict[tuple[int, ...], int] = {}
+    phi_atom_count = 0
+    for entry in plan.entries:
+        if entry.total_order != 4:
+            continue
+        entry_terms: list[WilsonLineTraceExpansionTerm] = []
+        for path in paths:
+            if not matching_module._wilson_line_entry_can_satisfy_projection_requirements(
+                path,
+                entry,
+                requirements,
+            ):
+                continue
+            filtered_path = matching_module._wilson_line_path_with_projection_filtered_entries(path, requirements)
+            entry_terms.extend(
+                filtered_path.propagator_expansion_terms(
+                    entry.expansion_indices,
+                    act_open_derivatives=False,
+                    max_wilson_derivative_order=4,
+                )
+            )
+        counts_by_slot_order[entry.slot_orders] = len(entry_terms)
+        expanded_count = 0
+        for term in entry_terms:
+            pre_wilson_numerator = term.pre_wilson_numerator
+            assert pre_wilson_numerator is not None
+            expanded_count += len(expression_terms(pre_wilson_numerator.expand()))
+            phi_atom_count += sum(1 for _match in pre_wilson_numerator.match(phi_pattern))
+        expanded_counts_by_slot_order[entry.slot_orders] = expanded_count
+
+    expected_counts = {
+        (0, 4): 10,
+        (1, 3): 6,
+        (2, 2): 8,
+        (3, 1): 6,
+        (4, 0): 10,
+    }
+    assert counts_by_slot_order == expected_counts
+    assert expanded_counts_by_slot_order == expected_counts
+    assert sum(counts_by_slot_order.values()) == 40
+    assert phi_atom_count == 0
 
 
 def test_wilson_line_expansion_drops_odd_loop_rank_after_open_derivatives() -> None:

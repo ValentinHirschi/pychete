@@ -1451,6 +1451,227 @@
 					"sample_terms_input_form":[]
 				}
 			],
+			"validation_simplification_stage_summaries":[
+				{
+					"name":"validation_input",
+					"byte_count":13400,
+					"term_count":9,
+					"h_atoms":18,
+					"bar_h_atoms":9,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=aabb",
+							"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":9
+						}
+					],
+					"sample_terms_input_form":[
+						"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)",
+						"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+						"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+					]
+				},
+				{
+					"name":"validation_contract_cgs",
+					"byte_count":12952,
+					"term_count":9,
+					"h_atoms":18,
+					"bar_h_atoms":9,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=aabb",
+							"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":9
+						}
+					],
+					"sample_terms_input_form":[
+						"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)",
+						"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+						"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+					]
+				},
+				{
+					"name":"validation_match_reduce",
+					"byte_count":13504,
+					"term_count":9,
+					"h_atoms":18,
+					"bar_h_atoms":9,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=0;field=aabb",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"count":3
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=0;field=aabb",
+							"sample_input_form":"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=0;field=abab",
+							"sample_input_form":"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=0;field=abba",
+							"sample_input_form":"(-5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":9
+						}
+					],
+					"sample_terms_input_form":[
+						"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)",
+						"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+						"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+					]
+				},
+				{
+					"name":"validation_greens_simplify",
+					"aborted_or_failed":true,
+					"input_form":"$Aborted",
+					"byte_count":0,
+					"term_count":0,
+					"h_atoms":0,
+					"bar_h_atoms":0,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[],
+					"h_derivative_word_histogram":[],
+					"h_derivative_signature_samples":[],
+					"sym_gamma_histogram":[],
+					"sample_terms_input_form":[]
+				}
+			],
 			"validation_simplified_prefactored_evaluate_str_input_form":"$Aborted",
 			"manual_minus_evaluate_str_input_form":"0"
 		},
@@ -2823,6 +3044,227 @@
 					"sample_terms_input_form":[]
 				}
 			],
+			"validation_simplification_stage_summaries":[
+				{
+					"name":"validation_input",
+					"byte_count":13400,
+					"term_count":9,
+					"h_atoms":18,
+					"bar_h_atoms":9,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=aabb;field=0",
+							"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":9
+						}
+					],
+					"sample_terms_input_form":[
+						"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
+						"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+						"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+					]
+				},
+				{
+					"name":"validation_contract_cgs",
+					"byte_count":12952,
+					"term_count":9,
+					"h_atoms":18,
+					"bar_h_atoms":9,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=aabb;field=0",
+							"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":9
+						}
+					],
+					"sample_terms_input_form":[
+						"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
+						"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+						"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+					]
+				},
+				{
+					"name":"validation_match_reduce",
+					"byte_count":13504,
+					"term_count":9,
+					"h_atoms":18,
+					"bar_h_atoms":9,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[
+						{
+							"h_atoms":2,
+							"bar_h_atoms":1,
+							"phi_atoms":0,
+							"w_field_strength_atoms":0,
+							"wilson_terms":0,
+							"open_cds":0,
+							"loop_momenta":0,
+							"propagators":0,
+							"count":9
+						}
+					],
+					"h_derivative_word_histogram":[
+						{
+							"signature":"bar=aabb;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"count":3
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"count":3
+						}
+					],
+					"h_derivative_signature_samples":[
+						{
+							"signature":"bar=aabb;field=0",
+							"sample_input_form":"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=abab;field=0",
+							"sample_input_form":"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+						},
+						{
+							"signature":"bar=abba;field=0",
+							"sample_input_form":"(-5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+						}
+					],
+					"sym_gamma_histogram":[
+						{
+							"factors_input_form":"{}",
+							"count":9
+						}
+					],
+					"sample_terms_input_form":[
+						"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)",
+						"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+						"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+					]
+				},
+				{
+					"name":"validation_greens_simplify",
+					"aborted_or_failed":true,
+					"input_form":"$Aborted",
+					"byte_count":0,
+					"term_count":0,
+					"h_atoms":0,
+					"bar_h_atoms":0,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"sym_gamma_factors":0,
+					"signature_histogram":[],
+					"h_derivative_word_histogram":[],
+					"h_derivative_signature_samples":[],
+					"sym_gamma_histogram":[],
+					"sample_terms_input_form":[]
+				}
+			],
 			"validation_simplified_prefactored_evaluate_str_input_form":"$Aborted",
 			"manual_minus_evaluate_str_input_form":"0"
 		}
@@ -3029,6 +3471,299 @@
 		"sym_gamma_histogram":[],
 		"sample_terms_input_form":[]
 	},
+	"selected_prop_order_validation_stage_summaries":[
+		{
+			"name":"validation_input",
+			"byte_count":26600,
+			"term_count":18,
+			"h_atoms":36,
+			"bar_h_atoms":18,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[
+				{
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":18
+				}
+			],
+			"h_derivative_word_histogram":[
+				{
+					"signature":"bar=aabb;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"count":3
+				}
+			],
+			"h_derivative_signature_samples":[
+				{
+					"signature":"bar=aabb;field=0",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+				}
+			],
+			"sym_gamma_histogram":[
+				{
+					"factors_input_form":"{}",
+					"count":18
+				}
+			],
+			"sample_terms_input_form":[
+				"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
+				"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+			]
+		},
+		{
+			"name":"validation_contract_cgs",
+			"byte_count":25864,
+			"term_count":18,
+			"h_atoms":36,
+			"bar_h_atoms":18,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[
+				{
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":18
+				}
+			],
+			"h_derivative_word_histogram":[
+				{
+					"signature":"bar=aabb;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"count":3
+				}
+			],
+			"h_derivative_signature_samples":[
+				{
+					"signature":"bar=aabb;field=0",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+				}
+			],
+			"sym_gamma_histogram":[
+				{
+					"factors_input_form":"{}",
+					"count":18
+				}
+			],
+			"sample_terms_input_form":[
+				"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
+				"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+			]
+		},
+		{
+			"name":"validation_match_reduce",
+			"byte_count":26968,
+			"term_count":18,
+			"h_atoms":36,
+			"bar_h_atoms":18,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[
+				{
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":18
+				}
+			],
+			"h_derivative_word_histogram":[
+				{
+					"signature":"bar=aabb;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"count":3
+				}
+			],
+			"h_derivative_signature_samples":[
+				{
+					"signature":"bar=aabb;field=0",
+					"sample_input_form":"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"sample_input_form":"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"sample_input_form":"(-5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"sample_input_form":"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"sample_input_form":"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"sample_input_form":"(-5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+				}
+			],
+			"sym_gamma_histogram":[
+				{
+					"factors_input_form":"{}",
+					"count":18
+				}
+			],
+			"sample_terms_input_form":[
+				"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)",
+				"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+			]
+		},
+		{
+			"name":"validation_greens_simplify",
+			"aborted_or_failed":true,
+			"input_form":"$Aborted",
+			"byte_count":0,
+			"term_count":0,
+			"h_atoms":0,
+			"bar_h_atoms":0,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[],
+			"h_derivative_word_histogram":[],
+			"h_derivative_signature_samples":[],
+			"sym_gamma_histogram":[],
+			"sample_terms_input_form":[]
+		}
+	],
 	"selected_prop_order_validation_simplified_input_form":"$Aborted",
 	"full_power_type_trace_summary":{
 		"name":"full_power_type_trace_all_prop_orders",
@@ -3275,6 +4010,701 @@
 		"sym_gamma_histogram":[],
 		"sample_terms_input_form":[]
 	},
+	"full_trace_validation_stage_summaries":[
+		{
+			"name":"validation_input",
+			"byte_count":80720,
+			"term_count":45,
+			"h_atoms":148,
+			"bar_h_atoms":74,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[
+				{
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":22
+				},
+				{
+					"h_atoms":4,
+					"bar_h_atoms":2,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":17
+				},
+				{
+					"h_atoms":6,
+					"bar_h_atoms":3,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":6
+				}
+			],
+			"h_derivative_word_histogram":[
+				{
+					"signature":"bar=0;field=0",
+					"count":2
+				},
+				{
+					"signature":"bar=aabb;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=aa;field=0",
+					"count":1
+				},
+				{
+					"signature":"bar=0;field=aa",
+					"count":1
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"count":3
+				},
+				{
+					"signature":"bar=0,0;field=0,0",
+					"count":2
+				},
+				{
+					"signature":"bar=aa,0;field=0,0",
+					"count":1
+				},
+				{
+					"signature":"bar=0,0;field=aa,0",
+					"count":1
+				},
+				{
+					"signature":"bar=a,a;field=0,0",
+					"count":1
+				},
+				{
+					"signature":"bar=a,0;field=0,a",
+					"count":1
+				},
+				{
+					"signature":"bar=0,a;field=a,0",
+					"count":1
+				},
+				{
+					"signature":"bar=0,0;field=a,a",
+					"count":1
+				},
+				{
+					"signature":"bar=0,aa;field=0,0",
+					"count":3
+				},
+				{
+					"signature":"bar=0,a;field=0,a",
+					"count":3
+				},
+				{
+					"signature":"bar=0,0;field=0,aa",
+					"count":3
+				},
+				{
+					"signature":"bar=0,0,0;field=0,0,0",
+					"count":6
+				}
+			],
+			"h_derivative_signature_samples":[
+				{
+					"signature":"bar=0;field=0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+				},
+				{
+					"signature":"bar=aabb;field=0",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=aa;field=0",
+					"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^2"
+				},
+				{
+					"signature":"bar=0;field=aa",
+					"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/Coupling[M, {}, 0]^2"
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=0,0",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^2)"
+				},
+				{
+					"signature":"bar=aa,0;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=aa,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=a,a;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=a,0;field=0,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,a;field=a,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3534, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3534, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=a,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3535, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3535, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,aa;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3536, SU2L[fund]]}, {Index[u3537, Lorentz], Index[u3537, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3536, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,a;field=0,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3538, SU2L[fund]]}, {Index[u3539, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3538, SU2L[fund]]}, {Index[u3539, Lorentz]}])\/Coupling[M, {}, 0]^4"
+				},
+				{
+					"signature":"bar=0,0;field=0,aa",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3540, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3540, SU2L[fund]]}, {Index[u3541, Lorentz], Index[u3541, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0,0;field=0,0,0",
+					"sample_input_form":"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3542, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3543, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3542, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3543, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+				}
+			],
+			"sym_gamma_histogram":[
+				{
+					"factors_input_form":"{}",
+					"count":45
+				}
+			],
+			"sample_terms_input_form":[
+				"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
+				"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
+				"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+			]
+		},
+		{
+			"name":"validation_contract_cgs",
+			"byte_count":80720,
+			"term_count":45,
+			"h_atoms":148,
+			"bar_h_atoms":74,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[
+				{
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":22
+				},
+				{
+					"h_atoms":4,
+					"bar_h_atoms":2,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":17
+				},
+				{
+					"h_atoms":6,
+					"bar_h_atoms":3,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":6
+				}
+			],
+			"h_derivative_word_histogram":[
+				{
+					"signature":"bar=0;field=0",
+					"count":2
+				},
+				{
+					"signature":"bar=aabb;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=aa;field=0",
+					"count":1
+				},
+				{
+					"signature":"bar=0;field=aa",
+					"count":1
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"count":3
+				},
+				{
+					"signature":"bar=0,0;field=0,0",
+					"count":2
+				},
+				{
+					"signature":"bar=aa,0;field=0,0",
+					"count":1
+				},
+				{
+					"signature":"bar=0,0;field=aa,0",
+					"count":1
+				},
+				{
+					"signature":"bar=a,a;field=0,0",
+					"count":1
+				},
+				{
+					"signature":"bar=a,0;field=0,a",
+					"count":1
+				},
+				{
+					"signature":"bar=0,a;field=a,0",
+					"count":1
+				},
+				{
+					"signature":"bar=0,0;field=a,a",
+					"count":1
+				},
+				{
+					"signature":"bar=0,aa;field=0,0",
+					"count":3
+				},
+				{
+					"signature":"bar=0,a;field=0,a",
+					"count":3
+				},
+				{
+					"signature":"bar=0,0;field=0,aa",
+					"count":3
+				},
+				{
+					"signature":"bar=0,0,0;field=0,0,0",
+					"count":6
+				}
+			],
+			"h_derivative_signature_samples":[
+				{
+					"signature":"bar=0;field=0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]"
+				},
+				{
+					"signature":"bar=aabb;field=0",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=aa;field=0",
+					"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^2"
+				},
+				{
+					"signature":"bar=0;field=aa",
+					"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/Coupling[M, {}, 0]^2"
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(9*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"sample_input_form":"(5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=0,0",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^2)"
+				},
+				{
+					"signature":"bar=aa,0;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=aa,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=a,a;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=a,0;field=0,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,a;field=a,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3534, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3534, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=a,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3535, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3535, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,aa;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3536, SU2L[fund]]}, {Index[u3537, Lorentz], Index[u3537, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3536, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,a;field=0,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3538, SU2L[fund]]}, {Index[u3539, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3538, SU2L[fund]]}, {Index[u3539, Lorentz]}])\/Coupling[M, {}, 0]^4"
+				},
+				{
+					"signature":"bar=0,0;field=0,aa",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3540, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3540, SU2L[fund]]}, {Index[u3541, Lorentz], Index[u3541, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0,0;field=0,0,0",
+					"sample_input_form":"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3542, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3543, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3542, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3543, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+				}
+			],
+			"sym_gamma_histogram":[
+				{
+					"factors_input_form":"{}",
+					"count":45
+				}
+			],
+			"sample_terms_input_form":[
+				"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
+				"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
+				"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+			]
+		},
+		{
+			"name":"validation_match_reduce",
+			"byte_count":97496,
+			"term_count":53,
+			"h_atoms":184,
+			"bar_h_atoms":92,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[
+				{
+					"h_atoms":2,
+					"bar_h_atoms":1,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":23
+				},
+				{
+					"h_atoms":4,
+					"bar_h_atoms":2,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":21
+				},
+				{
+					"h_atoms":6,
+					"bar_h_atoms":3,
+					"phi_atoms":0,
+					"w_field_strength_atoms":0,
+					"wilson_terms":0,
+					"open_cds":0,
+					"loop_momenta":0,
+					"propagators":0,
+					"count":9
+				}
+			],
+			"h_derivative_word_histogram":[
+				{
+					"signature":"bar=0;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=aabb;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"count":3
+				},
+				{
+					"signature":"bar=aa;field=0",
+					"count":1
+				},
+				{
+					"signature":"bar=0;field=aa",
+					"count":1
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"count":3
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"count":3
+				},
+				{
+					"signature":"bar=0,0;field=0,0",
+					"count":3
+				},
+				{
+					"signature":"bar=aa,0;field=0,0",
+					"count":1
+				},
+				{
+					"signature":"bar=0,0;field=aa,0",
+					"count":1
+				},
+				{
+					"signature":"bar=a,a;field=0,0",
+					"count":1
+				},
+				{
+					"signature":"bar=a,0;field=0,a",
+					"count":1
+				},
+				{
+					"signature":"bar=0,a;field=a,0",
+					"count":1
+				},
+				{
+					"signature":"bar=0,0;field=a,a",
+					"count":1
+				},
+				{
+					"signature":"bar=0,aa;field=0,0",
+					"count":4
+				},
+				{
+					"signature":"bar=0,a;field=0,a",
+					"count":4
+				},
+				{
+					"signature":"bar=0,0;field=0,aa",
+					"count":4
+				},
+				{
+					"signature":"bar=0,0,0;field=0,0,0",
+					"count":9
+				}
+			],
+			"h_derivative_signature_samples":[
+				{
+					"signature":"bar=0;field=0",
+					"sample_input_form":"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]"
+				},
+				{
+					"signature":"bar=aabb;field=0",
+					"sample_input_form":"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abab;field=0",
+					"sample_input_form":"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=abba;field=0",
+					"sample_input_form":"(-5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=aa;field=0",
+					"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^2"
+				},
+				{
+					"signature":"bar=0;field=aa",
+					"sample_input_form":"-1\/4*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}])\/Coupling[M, {}, 0]^2"
+				},
+				{
+					"signature":"bar=0;field=aabb",
+					"sample_input_form":"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abab",
+					"sample_input_form":"(11*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz]}])\/(18*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0;field=abba",
+					"sample_input_form":"(-5*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz], Index[d$$1, Lorentz]}])\/(36*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=0,0",
+					"sample_input_form":"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3529, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^2)"
+				},
+				{
+					"signature":"bar=aa,0;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3530, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=aa,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3531, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=a,a;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3532, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=a,0;field=0,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3533, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,a;field=a,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3534, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3534, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0;field=a,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3535, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]*Field[H, Scalar, {Index[u3535, SU2L[fund]]}, {Index[d$$1, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,aa;field=0,0",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3536, SU2L[fund]]}, {Index[u3537, Lorentz], Index[u3537, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3536, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,a;field=0,a",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3538, SU2L[fund]]}, {Index[u3539, Lorentz]}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3538, SU2L[fund]]}, {Index[u3539, Lorentz]}])\/Coupling[M, {}, 0]^4"
+				},
+				{
+					"signature":"bar=0,0;field=0,aa",
+					"sample_input_form":"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3540, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3540, SU2L[fund]]}, {Index[u3541, Lorentz], Index[u3541, Lorentz]}])\/(2*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"signature":"bar=0,0,0;field=0,0,0",
+					"sample_input_form":"(2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3542, SU2L[fund]]}, {}]]*Bar[Field[H, Scalar, {Index[u3543, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Kappa], {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3542, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[u3543, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+				}
+			],
+			"sym_gamma_histogram":[
+				{
+					"factors_input_form":"{}",
+					"count":53
+				}
+			],
+			"sample_terms_input_form":[
+				"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]",
+				"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
+				"(-7*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(18*Coupling[M, {}, 0]^4)"
+			]
+		},
+		{
+			"name":"validation_greens_simplify",
+			"aborted_or_failed":true,
+			"input_form":"$Aborted",
+			"byte_count":0,
+			"term_count":0,
+			"h_atoms":0,
+			"bar_h_atoms":0,
+			"phi_atoms":0,
+			"w_field_strength_atoms":0,
+			"wilson_terms":0,
+			"open_cds":0,
+			"loop_momenta":0,
+			"propagators":0,
+			"sym_gamma_factors":0,
+			"signature_histogram":[],
+			"h_derivative_word_histogram":[],
+			"h_derivative_signature_samples":[],
+			"sym_gamma_histogram":[],
+			"sample_terms_input_form":[]
+		}
+	],
 	"previous_validation_file":"\/Users\/vjhirsch\/HEP_programs\/pychete\/mathematica_reference\/Matchete\/Validation\/MatchingResults\/previous\/Singlet_Scalar_Extension-EFT.m",
 	"previous_validation_hScalar_lScalar_summary":{
 		"name":"previous_validation_hScalar_lScalar",

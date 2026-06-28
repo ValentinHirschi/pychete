@@ -238,11 +238,36 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
 SetAttributes[safeEvaluate, HoldFirst];
 safeEvaluate[expr_] := CheckAbort[Quiet[Check[expr, $Failed]], $Aborted];
 
-validationTraceSimplify[expr_] := safeEvaluate @ Matchete`GreensSimplify[
-  Matchete`PackageScope`MatchReduce[
-    Matchete`ContractCGs[expr]
-  ]
+failedEvaluationQ[expr_] := expr === $Aborted || expr === $Failed;
+
+validationTraceStages[expr_] := Module[
+  {
+    contracted,
+    reduced,
+    simplified
+  },
+  contracted = safeEvaluate @ Matchete`ContractCGs[expr];
+  reduced = If[failedEvaluationQ[contracted],
+    contracted,
+    safeEvaluate @ Matchete`PackageScope`MatchReduce[contracted]
+  ];
+  simplified = If[failedEvaluationQ[reduced],
+    reduced,
+    safeEvaluate @ Matchete`GreensSimplify[reduced]
+  ];
+
+  <|
+    "result" -> simplified,
+    "stages" -> {
+      stageSummary["validation_input", expr],
+      stageSummary["validation_contract_cgs", contracted],
+      stageSummary["validation_match_reduce", reduced],
+      stageSummary["validation_greens_simplify", simplified]
+    }
+  |>
 ];
+
+validationTraceSimplify[expr_] := validationTraceStages[expr]["result"];
 
 evaluateStages[gen_, insertion_, propTypes_] := Module[
   {
@@ -260,6 +285,7 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
     post,
     eps,
     evaluated,
+    validationSimplification,
     validationSimplified
   },
 
@@ -295,7 +321,8 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
     propTypes,
     Matchete`Matching
   ];
-  validationSimplified = validationTraceSimplify[preFactor evaluated];
+  validationSimplification = validationTraceStages[preFactor evaluated];
+  validationSimplified = validationSimplification["result"];
 
   <|
     "factor_input_form" -> toInputString[factor],
@@ -315,6 +342,7 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
       stageSummary["evaluate_str_reference", evaluated],
       stageSummary["validation_simplified_prefactored_evaluate_str", validationSimplified]
     },
+    "validation_simplification_stage_summaries" -> validationSimplification["stages"],
     "validation_simplified_prefactored_evaluate_str_input_form" ->
       shortInputString[validationSimplified],
     "manual_minus_evaluate_str_input_form" -> If[
@@ -345,8 +373,10 @@ rawInsertionSum = safeEvaluate @ Total[
   Matchete`PackageScope`EvaluateSTr[gen, #, propTypes, Matchete`Matching] & /@ insertions
 ];
 powerTypeTrace = safeEvaluate @ Matchete`PackageScope`PowerTypeSTr[propTypes, 6];
-selectedPropOrderValidationSimplified = validationTraceSimplify[preFactor rawInsertionSum];
-fullTraceValidationSimplified = validationTraceSimplify[powerTypeTrace];
+selectedPropOrderValidationStages = validationTraceStages[preFactor rawInsertionSum];
+selectedPropOrderValidationSimplified = selectedPropOrderValidationStages["result"];
+fullTraceValidationStages = validationTraceStages[powerTypeTrace];
+fullTraceValidationSimplified = fullTraceValidationStages["result"];
 previousValidationFile = FileNameJoin[{
   matcheteRoot,
   "Validation",
@@ -405,6 +435,8 @@ data = <|
     "selected_prop_order_validation_simplified",
     selectedPropOrderValidationSimplified
   ],
+  "selected_prop_order_validation_stage_summaries" ->
+    selectedPropOrderValidationStages["stages"],
   "selected_prop_order_validation_simplified_input_form" ->
     shortInputString[selectedPropOrderValidationSimplified],
   "full_power_type_trace_summary" -> stageSummary[
@@ -415,6 +447,8 @@ data = <|
     "full_trace_validation_simplified",
     fullTraceValidationSimplified
   ],
+  "full_trace_validation_stage_summaries" ->
+    fullTraceValidationStages["stages"],
   "previous_validation_file" -> previousValidationFile,
   "previous_validation_hScalar_lScalar_summary" -> stageSummary[
     "previous_validation_hScalar_lScalar",
