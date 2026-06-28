@@ -358,6 +358,123 @@ def _project_chw(theory: Any, target: Expression, expr: Expression) -> Expressio
     )["cHW"].expand()
 
 
+def _sum_expressions(expressions: tuple[Expression, ...] | list[Expression]) -> Expression:
+    total = Expression.num(0)
+    for expr in expressions:
+        total = (total + expr).expand()
+    return total
+
+
+def _runtime_internal_evaluated_summary(
+    theory: Any,
+    target: Expression,
+    normalization_factor: Expression,
+    grouped: dict[str, tuple[matching_module.WilsonLineTraceExpansionTerm, ...]],
+    plan_entries_by_label: dict[str, Any],
+    *,
+    h_label: Expression,
+    coefficient_targets: dict[str, Expression],
+    sample_chars: int,
+) -> dict[str, Any]:
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped,
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=True,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    finite_by_entry = {
+        entry_label: tuple(vakint.finite_part(term) for term in entry_terms)
+        for entry_label, entry_terms in evaluated_by_entry.items()
+    }
+    normalized_finite_by_entry = {
+        entry_label: (normalization_factor * _sum_expressions(tuple(entry_terms))).expand()
+        for entry_label, entry_terms in finite_by_entry.items()
+    }
+    total_finite = _sum_expressions(tuple(normalized_finite_by_entry.values()))
+    normalized_finite_by_order: dict[int, Expression] = {}
+    for entry_label, expr in normalized_finite_by_entry.items():
+        order = plan_entries_by_label[entry_label].total_order
+        normalized_finite_by_order[order] = (
+            normalized_finite_by_order.get(order, Expression.num(0)) + expr
+        ).expand()
+    return {
+        "controls": {
+            "act_open_derivatives": True,
+            "emit_covariant_derivative_commutators": False,
+            "expand_covariant_derivative_commutators": False,
+            "covariant_derivative_commutator_mode": "all_distinct",
+            "max_wilson_derivative_order": 4,
+            "tensor_reduce": True,
+            "tensor_reduce_before_wilson_expand": True,
+            "simplify_pychete_color_algebra": True,
+            "expose_scalar_derivative_commutator_bilinears": True,
+        },
+        "term_counts_by_entry": {
+            entry_label: len(entry_terms) for entry_label, entry_terms in evaluated_by_entry.items()
+        },
+        "term_counts_by_total_order": {
+            str(order): sum(
+                len(evaluated_by_entry[entry_label])
+                for entry_label in evaluated_by_entry
+                if plan_entries_by_label[entry_label].total_order == order
+            )
+            for order in sorted({plan_entries_by_label[label].total_order for label in evaluated_by_entry})
+        },
+        "finite_projection": _full(_project_chw(theory, target, total_finite)),
+        "finite_projection_sample_input_form": _short(_project_chw(theory, target, total_finite), sample_chars),
+        "finite_summary": _expr_summary(
+            "runtime_internal_evaluated.finite",
+            total_finite,
+            sample_chars=sample_chars,
+        ),
+        "finite_h_derivative_word_histogram": _field_derivative_word_histogram(total_finite, h_label),
+        "finite_coefficient_slices": {
+            coefficient_name: _coefficient_slice_summary(
+                total_finite,
+                coefficient,
+                h_label=h_label,
+                name=f"runtime_internal_evaluated.finite.coefficient.{coefficient_name}",
+                sample_chars=sample_chars,
+            )
+            for coefficient_name, coefficient in coefficient_targets.items()
+        },
+        "finite_projection_by_entry": {
+            entry_label: _full(_project_chw(theory, target, expr))
+            for entry_label, expr in sorted(normalized_finite_by_entry.items())
+        },
+        "finite_projection_by_total_order": {
+            str(order): _full(_project_chw(theory, target, expr))
+            for order, expr in sorted(normalized_finite_by_order.items())
+        },
+        "finite_summary_by_entry": {
+            entry_label: _expr_summary(
+                f"runtime_internal_evaluated.finite.{entry_label}",
+                expr,
+                sample_chars=sample_chars,
+            )
+            for entry_label, expr in sorted(normalized_finite_by_entry.items())
+        },
+        "finite_summary_by_total_order": {
+            str(order): _expr_summary(
+                f"runtime_internal_evaluated.finite.order{order}",
+                expr,
+                sample_chars=sample_chars,
+            )
+            for order, expr in sorted(normalized_finite_by_order.items())
+        },
+    }
+
+
 def _processed_stage_with_debug(
     theory: Any,
     raw: Expression,
@@ -603,9 +720,30 @@ def main() -> int:
         label: matching_module._filter_wilson_line_terms_by_projection_requirements(entry_terms, requirements)
         for label, entry_terms in prefinal_grouped.items()
     }
+    runtime_grouped = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        term_atom_requirements=requirements,
+    )
 
     rows: list[dict[str, Any]] = []
     plan_entries_by_label = {entry.label: entry for entry in plan.entries}
+    runtime_internal_evaluated = _runtime_internal_evaluated_summary(
+        theory,
+        target,
+        normalization_factor,
+        runtime_grouped,
+        plan_entries_by_label,
+        h_label=h_label,
+        coefficient_targets=coefficient_targets,
+        sample_chars=args.sample_chars,
+    )
     totals = {
         "post_wilson_tensor_reduced_unrenormalized": Expression.num(0),
         "post_wilson_tensor_reduced_finite": Expression.num(0),
@@ -750,6 +888,18 @@ def main() -> int:
             for label, entry_terms in grouped.items()
             if len(prefinal_grouped[label]) - len(entry_terms)
         },
+        "runtime_internal_nonempty_grouped_entries": {
+            label: len(entry_terms) for label, entry_terms in runtime_grouped.items() if entry_terms
+        },
+        "runtime_internal_nonempty_grouped_entry_orders": _grouped_entry_orders(
+            runtime_grouped,
+            plan_entries_by_label,
+        ),
+        "runtime_internal_term_counts_by_total_order": _term_counts_by_total_order(
+            runtime_grouped,
+            plan_entries_by_label,
+        ),
+        "runtime_internal_evaluated": runtime_internal_evaluated,
         "nonempty_grouped_entries": {label: len(entry_terms) for label, entry_terms in grouped.items() if entry_terms},
         "nonempty_grouped_entry_orders": _grouped_entry_orders(grouped, plan_entries_by_label),
         "normalization": "matchete_evaluated_hbar",

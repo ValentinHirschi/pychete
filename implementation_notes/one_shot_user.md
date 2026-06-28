@@ -821,3 +821,17 @@ without Warsaw-specific core assumptions.
   contraction, numeric projection probes, loop integration, Wilson-line
   tensor reduction, normalization, selected `cHW`, and the legacy CDE
   expectation now passes: 110 tests under the 30 GiB watchdog.
+- Latest validation promotion: the selected Singlet `hScalar-lScalar -> cHW`
+  checkpoint is now exercised through
+  `ValidationFixture.one_loop_preview_gap_report(...)` against the committed
+  Matchete-derived matching fixture, not only through a lower-level unit path.
+  With the current Wilson-line controls, the report accepts the registered
+  `cHW` Wilson condition and the saved Matchete coefficient
+  `hbar*A^2*gL^2/(12*M^4)`. The pychete debug artifact now includes a
+  `runtime_internal_evaluated` section that calls the same runtime helper as
+  the fixture report, and the comparison helper prints that accepted path
+  separately from older manual pipeline diagnostics. Added the slow regression
+  `test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fixture`,
+  which passes under the 30 GiB watchdog. The focused lower-level `cHW`
+  regression, validation Wilson-line preview smoke, and static typing pytest
+  gate also pass for this slice.

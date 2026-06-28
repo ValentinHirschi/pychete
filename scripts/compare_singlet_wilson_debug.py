@@ -253,6 +253,35 @@ def _print_pychete_order_pipeline_summaries(data: dict[str, Any]) -> None:
     print()
 
 
+def _print_pychete_runtime_internal_summary(data: dict[str, Any], *, sample_chars: int) -> None:
+    runtime = data.get("runtime_internal_evaluated")
+    if not isinstance(runtime, dict) or not runtime:
+        return
+    print("pychete runtime internal evaluated path")
+    counts_by_order = runtime.get("term_counts_by_total_order", {})
+    if isinstance(counts_by_order, dict) and counts_by_order:
+        rendered_counts = ", ".join(
+            f"o{order}={count}" for order, count in sorted(counts_by_order.items(), key=lambda item: int(item[0]))
+        )
+        print(f"  evaluated terms by order: {rendered_counts}")
+    print(f"  finite cHW: {_short(str(runtime.get('finite_projection', '<missing>')), sample_chars)}")
+    by_order = runtime.get("finite_projection_by_total_order", {})
+    if isinstance(by_order, dict) and by_order:
+        rendered = ", ".join(
+            f"o{order}={_short(str(value), sample_chars)}"
+            for order, value in sorted(by_order.items(), key=lambda item: int(item[0]))
+        )
+        print(f"  finite cHW by order: {rendered}")
+    by_entry = runtime.get("finite_projection_by_entry", {})
+    if isinstance(by_entry, dict) and by_entry:
+        print("  finite cHW by entry:")
+        for entry, value in sorted(by_entry.items()):
+            print(f"    {entry}: {_short(str(value), sample_chars)}")
+    hist = runtime.get("finite_h_derivative_word_histogram")
+    print(f"  finite derivative signatures: {_signature_counts(hist if isinstance(hist, list) else None)}")
+    print()
+
+
 def _print_pychete_grouped_candidate_block(data: dict[str, Any], *, prefix: str, title: str) -> None:
     entry_orders = data.get(f"{prefix}_nonempty_grouped_entry_orders", {})
     entries = data.get(f"{prefix}_nonempty_grouped_entries", {})
@@ -314,6 +343,12 @@ def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
         prefix="prefinal",
         title="pychete pre-final post-action candidate entries",
     )
+    _print_pychete_grouped_candidate_block(
+        data,
+        prefix="runtime_internal",
+        title="pychete runtime internal candidate entries",
+    )
+    _print_pychete_runtime_internal_summary(data, sample_chars=sample_chars)
     entry_orders = data.get("nonempty_grouped_entry_orders", {})
     nonempty_entries = data.get("nonempty_grouped_entries", {})
     if isinstance(nonempty_entries, dict) and nonempty_entries:

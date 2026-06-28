@@ -1501,6 +1501,71 @@ def test_validation_fixture_gap_report_projects_registered_wilsons_before_refere
         )
 
 
+@pytest.mark.slow
+def test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fixture() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference_fixture = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    )
+    reference = reference_fixture.matching_result("matchete_previous")
+    theory = fixture.theory()
+    hbar = theory.external_handle("hbar")()
+    wilson = theory.external_handle("cHW")
+    chw_name = canonical_string(
+        s.Coupling(wilson.label, s.List(*wilson.definition.index_exprs), Expression.num(0))
+    )
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+        normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+        hbar=hbar,
+        wilson_line_trace_names=("hScalar-lScalar",),
+        wilson_line_max_total_order=4,
+        wilson_line_max_slot_order=4,
+        wilson_line_index_prefix="singlet_chw_gap",
+        wilson_line_act_open_derivatives=True,
+        wilson_line_emit_covariant_derivative_commutators=False,
+        wilson_line_emit_covariant_derivative_commutator_passes=1,
+        wilson_line_covariant_derivative_commutator_mode="all_distinct",
+        wilson_line_expand_covariant_derivative_commutators=False,
+        wilson_line_max_derivative_order=4,
+        wilson_line_filter_terms_by_matching_targets=True,
+        wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+        wilson_line_tensor_reduce_before_wilson_expand=True,
+        simplify_pychete_color_algebra=True,
+        project_reference_matching_conditions=True,
+        matching_condition_projection_names=("cHW",),
+        matching_condition_projection_source="on_shell_eft_lagrangian",
+        matching_condition_projection_expand_source=False,
+        matching_condition_projection_truncate_eft=True,
+        matching_condition_projection_drop_zero=False,
+    )
+
+    reference_chw = reference.matching_conditions[chw_name]
+    expected_chw = (
+        reference.theory.external_handle("hbar")()
+        * reference.theory.coupling_handle("A")() ** 2
+        * reference.theory.coupling_handle("gL")() ** 2
+        / (12 * reference.theory.coupling_handle("M")() ** 4)
+    )
+
+    assert_expr_equal(reference_chw, expected_chw)
+    assert report.candidate_stage == "normalized_interaction_wilson_line_hybrid_internal_minimal_subtraction_result"
+    assert report.candidate_matching_condition_count == 1
+    assert report.reference_matching_condition_count == 1
+    assert report.common_matching_condition_names == (chw_name,)
+    assert report.accepted_common_wilson_matching_condition_names == (chw_name,)
+    assert report.different_after_probe_common_matching_condition_names == ()
+    assert report.matching_condition_projection_registered_wilson_names == (chw_name,)
+    assert report.candidate_metadata["interaction_wilson_line_tensor_reduce_before_wilson_expand"] is True
+    assert report.candidate_metadata["interaction_wilson_line_term_count_by_entry"][
+        "hScalar-lScalar#wilson14_o4_0"
+    ] == 10
+
+
 def test_default_matching_condition_probe_accepts_fixture_function_indeterminates() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference_fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))

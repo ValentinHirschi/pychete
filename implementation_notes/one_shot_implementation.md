@@ -2115,17 +2115,40 @@
   `test_public_bosonic_cde_heavy_solution_projects_ch_muphi_component`, plus
   the focused idenso, numeric-probe, loop-integration, and Wilson-line
   tensor-reduction gate: 110 tests passed.
+- Current validation promotion: the selected Singlet `hScalar-lScalar -> cHW`
+  checkpoint now also passes through
+  `ValidationFixture.one_loop_preview_gap_report(...)` against the committed
+  Mathematica-independent `Singlet_Scalar_Extension.matching_fixture.json`
+  reference. The report uses the current Wilson-line route with internal
+  minimal subtraction, `MATCHETE_EVALUATED_HBAR`, target-local Wilson-line
+  filtering, open derivatives, Matchete-order pre-Wilson tensor reduction,
+  scalar derivative-bilinear exposure, and pychete colour simplification. It
+  accepts the registered `cHW` Wilson target and the saved Matchete reference
+  coefficient `hbar*A^2*gL^2/(12*M^4)`. Added
+  `test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fixture`
+  as a slow fixture-level regression. The pychete Singlet debug script now
+  records a separate `runtime_internal_evaluated` block that calls the same
+  runtime Wilson-line internal-evaluation helper as the fixture report; the
+  comparison helper prints this block so the older manual pipeline diagnostics
+  are no longer confused with the accepted validation path. Regenerated
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_cHW.pychete.debug.json`.
+  Targeted tests passed under the 30 GiB watchdog: the new fixture-level
+  `cHW` report test, the existing lower-level selected `cHW` regression, the
+  validation Wilson-line preview smoke, and `tests/test_static_typing.py`.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - promote the selected Singlet order-four `hScalar-lScalar -> cHW`
-    checkpoint into a broader validation slice: aggregate compatible
-    Wilson-line trace orders, compare against the saved Matchete condition
-    after the same Green/on-shell simplification stages, and only then decide
-    whether the first full Singlet one-loop integration-test fixture is ready
-    or which non-`cHW` Wilson coefficients still lack generic reductions;
+  - broaden the Singlet fixture-level Wilson-line validation beyond the
+    selected `cHW` target. Start with nearby bosonic gauge/Higgs Wilson
+    targets (`cHB`, `cHWB`, `cHD`, `cHBox`, `cH`) and use the gap report to
+    identify the first remaining generic basis/projection or source-generation
+    gap before touching code;
+  - decide whether the selected `cHW` report should also be covered through
+    `use_public_match_api=True`; if it differs from the direct preview route,
+    inspect the public `Theory.match(...)` wiring rather than patching the
+    projection result;
   - update any remaining debug artifacts and scripts so they use the corrected
     evaluated-HBAR bridge consistently, and regenerate pychete debug JSON only
     when the artifact is meant to be committed;
