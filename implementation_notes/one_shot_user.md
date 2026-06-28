@@ -82,6 +82,11 @@ with bounded pychete probes, and record the first semantic divergence before
 runtime patches. The standing repository guidance in `AGENTS.md` has been
 updated so future continuations remember this focus on closely porting
 Matchete algorithms through Symbolica/idenso/spenso/vakint.
+Latest explicit confirmation, 2026-06-28: when a mismatch is active, continue
+to run focused Matchete WolframScripts often and dissect their intermediate
+objects against bounded pychete probes. Each progress note should name the
+Matchete script or committed dump, the paired pychete probe, and the suspected
+generic algorithm boundary before runtime pychete changes are accepted.
 
 ## Approved Plan
 
@@ -1418,3 +1423,13 @@ Matchete algorithms through Symbolica/idenso/spenso/vakint.
   Green/InternalSimplify exposure stage that must turn derivative-source terms
   into explicit formal EOM atoms before the field-redefinition consumer can
   reproduce `after_shift_dim6_dev3`.
+- Latest current-exposure probe: pychete now has
+  `expose_abelian_vector_eom_currents(...)` /
+  `Theory.expose_abelian_vector_eom_currents(...)`, a bounded generic helper
+  for exact Abelian vector-EOM current-current products. The refreshed paired
+  Singlet `cHD` pychete probe compared against
+  `debug_singlet_eom_simplify.wls` still finds zero exposed vector-EOM
+  divergences and zero vector field-redefinition deltas across the selected
+  entries. This confirms the active mismatch is broader Matchete
+  `InternalSimplify`/Green representative conversion, not a simple exact
+  inverse Abelian current-product rewrite.

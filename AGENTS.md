@@ -561,12 +561,30 @@ Laplacian atoms with Symbolica patterns, extracts coefficients with native
 field-redefinition consumer. Keep validating this against the Matchete
 `debug_singlet_eom_simplify.wls` / `singlet_eom_cHD.debug.json` checkpoints
 before using it as evidence for full Singlet `cHD` on-shell parity.
+Use `expose_abelian_vector_eom_currents(...)` /
+`Theory.expose_abelian_vector_eom_currents(...)` only as a bounded exact
+source-side bridge for Abelian vector-EOM current-current products. It
+discovers charged scalar first-derivative currents with Symbolica patterns and
+then uses direct `Expression.coefficient(...)` plus the shared Symbolica-backed
+projection extractor for expanded composite factors. The current Singlet
+`cHD` pychete probe showed zero exposed vector-EOM divergences from this exact
+bridge, so do not treat it as the missing `InternalSimplify`/field-redefinition
+solution for that frontier; the remaining port must cover broader
+Green-representative conversion and scalar/matter shift preparation.
 Latest user reinforcement, 2026-06-28: when a Matchete/pychete mismatch is
 active, repeatedly run or refresh focused debug WolframScripts, dump as many
 Matchete intermediate stages as practical, and compare them against bounded
 pychete probes until the first semantic divergence is located. Confirm this
 paired-debug cadence in progress notes; do not move from a final coefficient
 mismatch directly to a runtime patch.
+Latest explicit confirmation, 2026-06-28: during active mismatch work the
+expected working loop is to run focused Matchete WolframScripts often, dissect
+their intermediate objects, and compare those objects against bounded pychete
+probes at the same stage before changing runtime code. Keep naming the exact
+Matchete script or committed dump, the paired pychete probe, and the suspected
+algorithm boundary in status updates and implementation notes so the port
+closely follows Matchete's algorithms while translating them to
+Symbolica/idenso/spenso/vakint.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

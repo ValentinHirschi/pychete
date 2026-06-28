@@ -917,8 +917,10 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert eom_probe == {
         "entry_count": 10,
         "field_strength_count": 0,
+        "nonzero_vector_eom_current_exposed_delta_entry_count": 0,
         "nonzero_vector_field_redefinition_delta_entry_count": 0,
         "scalar_eom_identity_count": 28,
+        "vector_eom_current_exposed_field_strength_divergence_count": 0,
         "vector_field_strength_divergence_count": 0,
     }
     assert debug["eom_exposure_probe_by_entry"]["hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"][

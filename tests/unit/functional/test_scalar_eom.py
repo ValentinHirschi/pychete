@@ -8,6 +8,7 @@ from pychete.functional import (
     abelian_vector_eom_field_redefinition_delta,
     apply_cd,
     expand_cd_operators,
+    expose_abelian_vector_eom_currents,
     expose_scalar_derivative_commutator_bilinears,
     partial_functional_derivative,
     scalar_eom_field_redefinition_delta,
@@ -215,6 +216,50 @@ def test_abelian_vector_eom_field_redefinition_delta_matches_scalar_current_shif
     )
 
     assert_expr_equal(delta, -2 * coefficient * coupling() ** 2 * current**2)
+
+
+def test_expose_abelian_vector_eom_currents_rewrites_exact_current_product() -> None:
+    coefficient = S("abelian_vector_current_exposure_coefficient")
+    theory = Theory("abelian_vector_current_exposure")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    field = phi()
+    current = expand_cd_operators(
+        Expression.I * s.Bar(field) * s.CD(mu, field)
+        - Expression.I * s.CD(mu, s.Bar(field)) * field
+    ).expand()
+    source = (-2 * coefficient * coupling() ** 2 * current**2).expand()
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+
+    exposed = expose_abelian_vector_eom_currents(theory, source, fields=[vector])
+    rules = theory.eom_replacement_rules_for_expression(
+        lagrangian,
+        exposed,
+        fields=[vector],
+        strict=True,
+    )
+    reduced = expand_cd_operators(exposed.replace_multiple(rules)).expand()
+    delta = expand_cd_operators(
+        theory.abelian_vector_eom_field_redefinition_delta(
+            lagrangian,
+            exposed,
+            fields=[vector],
+            strict=True,
+        )
+    ).expand()
+
+    assert len(rules) == 1
+    assert_expr_equal(reduced, source)
+    assert_expr_equal(delta, source)
 
 
 def test_scalar_eom_field_redefinition_delta_consumes_formal_complex_scalar_eoms() -> None:

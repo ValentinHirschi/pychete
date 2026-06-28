@@ -2348,6 +2348,32 @@ class Theory:
             strict=strict,
         )
 
+    def expose_abelian_vector_eom_currents(
+        self,
+        expression: Expression,
+        *,
+        fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+        max_candidates: int = 128,
+    ) -> Expression:
+        """Expose exact charged-current products as Abelian vector EOM terms.
+
+        This bounded source-side helper rewrites current-current products that
+        are exactly recognized by Symbolica coefficient extraction into the
+        corresponding Abelian field-strength-divergence representative. It is
+        useful before applying the vector field-redefinition consumer, and is
+        deliberately conservative while the broader Matchete ``EOMSimplify``
+        port is being validated.
+        """
+
+        from .functional import expose_abelian_vector_eom_currents
+
+        return expose_abelian_vector_eom_currents(
+            self,
+            expression,
+            fields=fields,
+            max_candidates=max_candidates,
+        )
+
     def scalar_eom_field_redefinition_delta(
         self,
         source_lagrangian: Expression,

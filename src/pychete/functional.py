@@ -53,6 +53,7 @@ _MAX_SCALAR_DERIVATIVE_BILINEAR_CANDIDATES = 128
 _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS = 96
 _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES = 192
 _DEFAULT_SCALAR_GREEN_MAX_ROUNDS = 2
+_DEFAULT_ABELIAN_VECTOR_EOM_CURRENT_CANDIDATES = 128
 
 
 def hermitian_conjugate(expr: Expression) -> Expression:
@@ -1964,6 +1965,97 @@ def abelian_vector_eom_field_redefinition_delta(
     return sum_expr(deltas).expand()
 
 
+def expose_abelian_vector_eom_currents(
+    theory: Theory,
+    expression: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    max_candidates: int = _DEFAULT_ABELIAN_VECTOR_EOM_CURRENT_CANDIDATES,
+) -> Expression:
+    """Expose exact charged-current products as Abelian vector-EOM terms.
+
+    This is the inverse, source-side companion of the bounded Abelian vector
+    EOM replacement rule.  For an Abelian gauge vector with
+    ``D_nu F_{nu mu} -> -g^2 sum_i q_i J_i_mu``, exact products
+    ``-g^2 q_i J_ext_mu J_i_mu`` are rewritten as
+    ``J_ext_mu D_nu F_{nu mu}`` with a fresh dummy ``nu``.  The opposite field
+    strength ordering is handled with the corresponding sign.
+
+    Candidate scalar currents are discovered with Symbolica matches over
+    registered first-derivative scalar ``Field``/``Bar(Field)`` atoms. The
+    actual replacement is gated by direct ``Expression.coefficient(...)`` first
+    and then pychete's shared Symbolica-backed projection extractor for
+    expanded composite factors. If no exact current-current factor is present,
+    the expression is returned in normalized derivative-slot form.
+    """
+
+    if max_candidates < 0:
+        raise ValueError("max_candidates must be non-negative")
+    theory._validate_registered_expression(expression)
+    normalized = expand_cd_operators(normalize_conjugate_scalar_field_slots(theory, expression)).expand()
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    currents = _abelian_scalar_current_terms_from_expression(theory, normalized)
+    if not currents:
+        return normalized
+
+    out = normalized
+    candidate_count = 0
+    seen: set[str] = set()
+    for vector in theory.fields.values():
+        vector_type = vector.type_expr
+        if not is_head(vector_type, s.Vector) or len(vector_type) != 1:
+            continue
+        if allowed_labels is not None and canonical_string(vector.label) not in allowed_labels:
+            continue
+        group_symbol = vector_type[0]
+        group_kind = GroupKind.from_user(
+            str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+        )
+        if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+            continue
+        coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+        if not isinstance(coupling_name, str) or coupling_name not in theory.couplings:
+            continue
+        coupling = theory.coupling_handle(coupling_name)()
+        group_currents = tuple(current for current in currents if bool(current[0] == group_symbol))
+        if not group_currents:
+            continue
+        for external_position, external in enumerate(group_currents):
+            _, _, open_index, external_current = external
+            nu = theory.index(
+                theory.symbol(
+                    f"abelian_vector_eom_exposure_{len(seen)}_{external_position}_nu",
+                    role=SymbolRole.INDEX,
+                ),
+                s.Lorentz,
+            )
+            standard_divergence = s.FieldStrength(vector.label, s.List(nu, open_index), s.List(), s.List(nu))
+            opposite_divergence = s.FieldStrength(vector.label, s.List(open_index, nu), s.List(), s.List(nu))
+            standard_alias = (external_current * standard_divergence).expand()
+            opposite_alias = (external_current * opposite_divergence).expand()
+            for source in group_currents:
+                _, charge, _, source_current = source
+                for reduced, alias in (
+                    ((-coupling**2 * charge * external_current * source_current).expand(), standard_alias),
+                    ((coupling**2 * charge * external_current * source_current).expand(), opposite_alias),
+                ):
+                    key = canonical_string(reduced)
+                    if key in seen:
+                        continue
+                    seen.add(key)
+                    candidate_count += 1
+                    if candidate_count > max_candidates:
+                        raise ValueError(
+                            "Abelian vector-EOM current exposure generated more than "
+                            f"{max_candidates} candidates"
+                        )
+                    coefficient = _expression_coefficient_for_composite(theory, out, reduced)
+                    if is_zero(coefficient):
+                        continue
+                    out = (out - coefficient * reduced + coefficient * alias).expand()
+    return out
+
+
 def scalar_eom_field_redefinition_delta(
     theory: Theory,
     source_lagrangian: Expression,
@@ -2255,6 +2347,75 @@ def _abelian_vector_scalar_current_sum(
                 continue
             currents.append((charge[0] * scalar_abelian_gauge_current(open_index, field)).expand())
     return sum_expr(currents).expand()
+
+
+def _abelian_scalar_current_terms_from_expression(
+    theory: Theory,
+    expression: Expression,
+) -> tuple[tuple[Expression, Expression, Expression, Expression], ...]:
+    pattern = field_pattern()
+    barred_pattern = bar_field_pattern()
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    candidates: dict[str, tuple[Expression, Expression, Expression, Expression]] = {}
+    atoms = (
+        *matching_subexpressions(expression, pattern, label_is_registered_field),
+        *matching_subexpressions(expression, barred_pattern, label_is_registered_field),
+    )
+    for atom in atoms:
+        base = bar_field_inner(atom) if is_bar_field(atom) else atom
+        if not bool(field_type(base) == s.Scalar):
+            continue
+        derivatives = field_derivatives(base)
+        if len(derivatives) != 1:
+            continue
+        definition = theory._field_definition_for_label(field_label(base))
+        if definition.is_self_conjugate:
+            continue
+        field = field_with_derivatives(base, ())
+        open_index = derivatives[0]
+        current = expand_cd_operators(scalar_abelian_gauge_current(open_index, field)).expand()
+        for charge in definition.charge_exprs:
+            group_symbol = theory._group_symbol_for_charge(charge)
+            if group_symbol is None or len(charge) != 1:
+                continue
+            group_kind = GroupKind.from_user(
+                str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+            )
+            if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+                continue
+            key = "|".join(
+                (
+                    canonical_string(group_symbol),
+                    canonical_string(charge[0]),
+                    canonical_string(open_index),
+                    canonical_string(current),
+                )
+            )
+            candidates.setdefault(key, (group_symbol, charge[0], open_index, current))
+    return tuple(
+        candidates[key]
+        for key in sorted(candidates)
+    )
+
+
+def _expression_coefficient_for_composite(theory: Theory, expression: Expression, target: Expression) -> Expression:
+    direct = expression.coefficient(target).expand()
+    if not is_zero(direct):
+        return direct
+
+    from .matching_results import MatchingResult
+
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=expression,
+        on_shell_eft_lagrangian=expression,
+    )
+    return result.project_matching_conditions(
+        {"composite_coefficient": target},
+        expand_source=False,
+        normalize_derivative_operators=False,
+    )["composite_coefficient"].expand()
 
 
 def scalar_abelian_gauge_current(mu: Expression, field: Expression) -> Expression:

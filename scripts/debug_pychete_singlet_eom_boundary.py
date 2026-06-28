@@ -16,7 +16,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-from symbolica import Expression
+from symbolica import Expression, Replacement
 
 import pychete.matching as matching_module
 from pychete import (
@@ -34,7 +34,7 @@ from pychete.expr import (
     list_items,
     matching_subexpressions,
 )
-from pychete.functional import scalar_eom_identities
+from pychete.functional import expose_abelian_vector_eom_currents, scalar_eom_identities
 from pychete.matching_results import registered_wilson_matching_condition_targets
 
 _MATHEMATICA_XTERM_PATTERN = re.compile(
@@ -181,9 +181,20 @@ def _eom_exposure_probe(
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     by_entry: dict[str, dict[str, Any]] = {}
     for entry_label, expr in entry_expressions.items():
+        vector_exposed = expose_abelian_vector_eom_currents(
+            theory,
+            expr,
+            fields=[vector_field],
+        )
         vector_delta = theory.abelian_vector_eom_field_redefinition_delta(
             lagrangian,
             expr,
+            fields=[vector_field],
+            strict=True,
+        )
+        vector_exposed_delta = theory.abelian_vector_eom_field_redefinition_delta(
+            lagrangian,
+            vector_exposed,
             fields=[vector_field],
             strict=True,
         )
@@ -202,9 +213,19 @@ def _eom_exposure_probe(
                 expr,
                 field_name=vector_field,
             ),
+            "vector_eom_current_exposed_byte_count": vector_exposed.get_byte_size(),
+            "vector_eom_current_exposed_field_strength_divergence_count": (
+                _field_strength_divergence_count(
+                    theory,
+                    vector_exposed,
+                    field_name=vector_field,
+                )
+            ),
             "scalar_eom_identity_count": len(scalar_identities),
             "vector_field_redefinition_delta_is_zero": bool(vector_delta == Expression.num(0)),
             "vector_field_redefinition_delta_byte_count": vector_delta.get_byte_size(),
+            "vector_eom_current_exposed_delta_is_zero": bool(vector_exposed_delta == Expression.num(0)),
+            "vector_eom_current_exposed_delta_byte_count": vector_exposed_delta.get_byte_size(),
         }
     summary = {
         "entry_count": len(by_entry),
@@ -212,9 +233,15 @@ def _eom_exposure_probe(
         "vector_field_strength_divergence_count": sum(
             row["vector_field_strength_divergence_count"] for row in by_entry.values()
         ),
+        "vector_eom_current_exposed_field_strength_divergence_count": sum(
+            row["vector_eom_current_exposed_field_strength_divergence_count"] for row in by_entry.values()
+        ),
         "scalar_eom_identity_count": sum(row["scalar_eom_identity_count"] for row in by_entry.values()),
         "nonzero_vector_field_redefinition_delta_entry_count": sum(
             not row["vector_field_redefinition_delta_is_zero"] for row in by_entry.values()
+        ),
+        "nonzero_vector_eom_current_exposed_delta_entry_count": sum(
+            not row["vector_eom_current_exposed_delta_is_zero"] for row in by_entry.values()
         ),
     }
     return by_entry, summary
@@ -366,7 +393,7 @@ def main() -> int:
         "selected_normalized_pole_part",
         "selected_normalized_finite_part",
     ]
-    heavy_replacements = ()
+    heavy_replacements: tuple[Replacement, ...] = ()
     if args.include_green_heavy_stages:
         stage_names.extend([
             "selected_post_green",
@@ -510,7 +537,10 @@ def main() -> int:
             "Matchete's InternalSimplify exposes EOM-proportional structures "
             "that feed PerformSystematicFieldRedefs, while pychete's selected "
             "source still contains scalar-derivative representatives with no "
-            "Abelian field-strength-divergence targets."
+            "Abelian field-strength-divergence targets. The bounded exact "
+            "Abelian current-current exposure probe also finds no vector-EOM "
+            "divergence on this selected source, so the missing conversion is "
+            "broader than a simple inverse vector-EOM current product."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

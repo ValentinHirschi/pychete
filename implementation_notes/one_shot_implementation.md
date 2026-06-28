@@ -78,6 +78,13 @@
   as many relevant Matchete stages as practical, compare those checkpoints with
   bounded pychete probes at the same semantic boundary, and record the first
   divergence before patching runtime code.
+- Latest explicit confirmation, 2026-06-28: the active mismatch workflow is to
+  run focused Matchete WolframScripts often, dissect their intermediate stage
+  objects, and compare them against bounded pychete probes before changing
+  runtime code. Progress notes should keep naming the exact Matchete
+  script/fixture, the paired pychete probe, and the suspected generic
+  algorithm boundary so runtime changes remain true Symbolica/idenso/spenso/
+  vakint ports of Matchete algorithms.
 - Current concrete objective reminder: the active Singlet `cHD`
   EOM/on-shell frontier must keep
   `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
@@ -1450,3 +1457,39 @@
   pychete_boundary_fixture_records_pre_eom_gap" -q` (`2 passed, 18
   deselected`); `python -m py_compile
   scripts/debug_pychete_singlet_eom_boundary.py`; and `git diff --check`.
+- Current paired-debug confirmation, 2026-06-28: the active Matchete
+  checkpoint is still
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` /
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, especially
+  the `raw_lagrangian_eft_eom_boundary` replay through
+  `PerformSystematicFieldRedefs` where `after_shift_dim6_dev3` first changes
+  the `cHD` projection. The paired pychete probe is
+  `scripts/debug_pychete_singlet_eom_boundary.py` writing
+  `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`.
+  This slice added `expose_abelian_vector_eom_currents(...)` /
+  `Theory.expose_abelian_vector_eom_currents(...)`, a bounded generic helper
+  that discovers charged scalar first-derivative currents with Symbolica
+  patterns and exposes exact Abelian vector-EOM current-current products to
+  field-strength-divergence representatives using direct
+  `Expression.coefficient(...)` first and pychete's existing
+  Symbolica-backed projection extractor for expanded composite factors.
+- The refreshed Singlet `cHD` pychete debug fixture now records the helper's
+  negative result explicitly: across the 10 selected
+  `hScalar-lScalar-lVector-lScalar` entries, exact Abelian current-current
+  exposure still produces zero vector-EOM field-strength divergences and zero
+  nonzero vector field-redefinition deltas. This is useful narrowing evidence:
+  the first mismatch is not a simple inverse Abelian vector-EOM current product
+  hiding in pychete's selected source. The remaining generic frontier is still
+  Matchete's broader `InternalSimplify`/Green representative conversion and
+  scalar/matter shift preparation before `PerformSystematicFieldRedefs`.
+- Focused validation for the current current-exposure slice passed:
+  `tests/unit/functional/test_scalar_eom.py` plus
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap`
+  (`28 passed` total); `python -m py_compile
+  scripts/debug_pychete_singlet_eom_boundary.py src/pychete/functional.py
+  src/pychete/theory.py src/pychete/api.py`;
+  `tests/unit/definitions/test_public_api.py -q` (`9 passed`);
+  targeted mypy on `src/pychete/functional.py`, `src/pychete/theory.py`,
+  `src/pychete/api.py`, `tests/unit/functional/test_scalar_eom.py`, and
+  `scripts/debug_pychete_singlet_eom_boundary.py` (`Success: no issues
+  found`); and `git diff --check`.
