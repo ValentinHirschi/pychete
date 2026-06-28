@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-"""Dump pychete intermediates for the Singlet hScalar-lScalar -> cHW frontier.
+"""Dump pychete intermediates for the Singlet hScalar-lScalar frontier.
 
 This development-only helper is the pychete-side counterpart of
 ``helper_mathematica_scripts/debug_singlet_wilson_trace.wls``.  Runtime
@@ -58,6 +58,16 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--entry-contains", default="")
     parser.add_argument("--sample-chars", type=int, default=1200)
     parser.add_argument("--include-zero-terms", action="store_true")
+    parser.add_argument(
+        "--substitute-heavy-scalar-solutions",
+        action="store_true",
+        help="Apply the public one-loop heavy-scalar EOM substitution stage in aggregate summaries.",
+    )
+    parser.add_argument(
+        "--heavy-scalar-solution-expand",
+        action="store_true",
+        help="Expand while applying heavy-scalar solution replacement rules.",
+    )
     parser.add_argument(
         "--no-filter-by-target",
         action="store_true",
@@ -342,7 +352,12 @@ def _coefficient_slice_summary(
     }
 
 
-def _project_chw(theory: Any, target: Expression, expr: Expression) -> Expression:
+def _project_target(
+    theory: Any,
+    target_name: str,
+    target: Expression,
+    expr: Expression,
+) -> Expression:
     result = MatchingResult(
         theory=theory,
         uv_lagrangian=Expression.num(0),
@@ -350,12 +365,59 @@ def _project_chw(theory: Any, target: Expression, expr: Expression) -> Expressio
         on_shell_eft_lagrangian=expr,
     )
     return result.project_matching_conditions(
-        {"cHW": target},
+        {target_name: target},
         expand_source=False,
         normalize_derivative_operators=True,
         eft_order=6,
         drop_zero=False,
-    )["cHW"].expand()
+    )[target_name].expand()
+
+
+def _apply_heavy_scalar_replacements(
+    theory: Any,
+    expr: Expression,
+    replacement_rules: tuple[Any, ...],
+    *,
+    expand: bool,
+) -> Expression:
+    if not replacement_rules:
+        return expr
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=expr,
+    )
+    return result.with_on_shell_reduction(replacement_rules, expand=expand).on_shell_eft_lagrangian
+
+
+def _projection_map(
+    theory: Any,
+    target_name: str,
+    target: Expression,
+    expressions: dict[str, Expression],
+) -> dict[str, str]:
+    return {
+        stage_name: _full(_project_target(theory, target_name, target, expr))
+        for stage_name, expr in expressions.items()
+    }
+
+
+def _summary_map(expressions: dict[str, Expression], *, sample_chars: int) -> dict[str, dict[str, Any]]:
+    return {
+        stage_name: _expr_summary(stage_name, expr, sample_chars=sample_chars)
+        for stage_name, expr in expressions.items()
+    }
+
+
+def _h_derivative_histogram_map(
+    expressions: dict[str, Expression],
+    h_label: Expression,
+) -> dict[str, list[dict[str, Any]]]:
+    return {
+        stage_name: _field_derivative_word_histogram(expr, h_label)
+        for stage_name, expr in expressions.items()
+    }
 
 
 def _sum_expressions(expressions: tuple[Expression, ...] | list[Expression]) -> Expression:
@@ -367,6 +429,7 @@ def _sum_expressions(expressions: tuple[Expression, ...] | list[Expression]) -> 
 
 def _runtime_internal_evaluated_summary(
     theory: Any,
+    target_name: str,
     target: Expression,
     normalization_factor: Expression,
     grouped: dict[str, tuple[matching_module.WilsonLineTraceExpansionTerm, ...]],
@@ -430,8 +493,11 @@ def _runtime_internal_evaluated_summary(
             )
             for order in sorted({plan_entries_by_label[label].total_order for label in evaluated_by_entry})
         },
-        "finite_projection": _full(_project_chw(theory, target, total_finite)),
-        "finite_projection_sample_input_form": _short(_project_chw(theory, target, total_finite), sample_chars),
+        "finite_projection": _full(_project_target(theory, target_name, target, total_finite)),
+        "finite_projection_sample_input_form": _short(
+            _project_target(theory, target_name, target, total_finite),
+            sample_chars,
+        ),
         "finite_summary": _expr_summary(
             "runtime_internal_evaluated.finite",
             total_finite,
@@ -449,11 +515,11 @@ def _runtime_internal_evaluated_summary(
             for coefficient_name, coefficient in coefficient_targets.items()
         },
         "finite_projection_by_entry": {
-            entry_label: _full(_project_chw(theory, target, expr))
+            entry_label: _full(_project_target(theory, target_name, target, expr))
             for entry_label, expr in sorted(normalized_finite_by_entry.items())
         },
         "finite_projection_by_total_order": {
-            str(order): _full(_project_chw(theory, target, expr))
+            str(order): _full(_project_target(theory, target_name, target, expr))
             for order, expr in sorted(normalized_finite_by_order.items())
         },
         "finite_summary_by_entry": {
@@ -566,6 +632,7 @@ def _processed_stage(
 
 def _term_row(
     theory: Any,
+    target_name: str,
     target: Expression,
     normalization_factor: Expression,
     entry_label: str,
@@ -619,8 +686,8 @@ def _term_row(
         finite = vakint.finite_part(evaluated)
         normalized = (normalization_factor * evaluated).expand()
         normalized_finite = (normalization_factor * finite).expand()
-        projection = _project_chw(theory, target, normalized)
-        finite_projection = _project_chw(theory, target, normalized_finite)
+        projection = _project_target(theory, target_name, target, normalized)
+        finite_projection = _project_target(theory, target_name, target, normalized_finite)
         row[stage_name] = {
             "raw_integral": _expr_summary(f"{stage_name}.raw_integral", raw, sample_chars=sample_chars),
             "pipeline_snapshots": pipeline_snapshots,
@@ -649,12 +716,12 @@ def _term_row(
                 )
                 for coefficient_name, coefficient in coefficient_targets.items()
             },
-            "cHW_projection": _full(projection),
-            "cHW_projection_sample_input_form": _short(projection, sample_chars),
-            "cHW_projection_is_zero": bool(projection.expand() == Expression.num(0)),
-            "cHW_projection_finite": _full(finite_projection),
-            "cHW_projection_finite_sample_input_form": _short(finite_projection, sample_chars),
-            "cHW_projection_finite_is_zero": bool(finite_projection.expand() == Expression.num(0)),
+            "target_projection": _full(projection),
+            "target_projection_sample_input_form": _short(projection, sample_chars),
+            "target_projection_is_zero": bool(projection.expand() == Expression.num(0)),
+            "target_projection_finite": _full(finite_projection),
+            "target_projection_finite_sample_input_form": _short(finite_projection, sample_chars),
+            "target_projection_finite_is_zero": bool(finite_projection.expand() == Expression.num(0)),
         }
     return row
 
@@ -670,6 +737,16 @@ def main() -> int:
     hbar = theory.external_handle("hbar")() if "hbar" in theory.externals else s.HBar
     normalization_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
     h_label = theory.field_handle("H").label
+    heavy_scalar_solutions = (
+        matching_module.solve_heavy_scalar_eoms(theory, lagrangian, eft_order=args.eft_order)
+        if args.substitute_heavy_scalar_solutions
+        else {}
+    )
+    heavy_scalar_replacement_rules = (
+        matching_module.heavy_scalar_solution_replacements(heavy_scalar_solutions, fresh_dummy_indices=True)
+        if heavy_scalar_solutions
+        else ()
+    )
     coefficient_targets: dict[str, Expression] = {}
     if "A" in theory.couplings:
         coefficient_targets["A2"] = theory.coupling_handle("A")() ** 2
@@ -690,7 +767,11 @@ def main() -> int:
     requirements = (
         None
         if args.no_filter_by_target
-        else matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
+        else matching_module._term_atom_requirements_for_targets(
+            theory,
+            {args.target: target},
+            heavy_scalar_solutions=heavy_scalar_solutions,
+        )
     )
     preaction_prefilter_grouped = _prefinal_wilson_line_terms_by_trace(
         setup,
@@ -736,6 +817,7 @@ def main() -> int:
     plan_entries_by_label = {entry.label: entry for entry in plan.entries}
     runtime_internal_evaluated = _runtime_internal_evaluated_summary(
         theory,
+        args.target,
         target,
         normalization_factor,
         runtime_grouped,
@@ -777,6 +859,7 @@ def main() -> int:
         for term_index, term in enumerate(entry_terms):
             row = _term_row(
                 theory,
+                args.target,
                 target,
                 normalization_factor,
                 entry_label,
@@ -788,8 +871,9 @@ def main() -> int:
             )
             if (
                 args.include_zero_terms
-                or not row["post_wilson_tensor_reduced"]["cHW_projection_is_zero"]
-                or not row["pre_wilson_tensor_reduced"]["cHW_projection_is_zero"]
+                or args.substitute_heavy_scalar_solutions
+                or not row["post_wilson_tensor_reduced"]["target_projection_is_zero"]
+                or not row["pre_wilson_tensor_reduced"]["target_projection_is_zero"]
             ):
                 rows.append(row)
             for stage_name, use_pre_wilson in (
@@ -831,6 +915,20 @@ def main() -> int:
                     order_totals[f"{stage_name}_finite"] + normalization_factor * vakint.finite_part(evaluated)
                 ).expand()
 
+    heavy_substituted_totals = {
+        stage_name: _apply_heavy_scalar_replacements(
+            theory,
+            expr,
+            heavy_scalar_replacement_rules,
+            expand=args.heavy_scalar_solution_expand,
+        )
+        for stage_name, expr in totals.items()
+    }
+    heavy_substituted_scalar_green_totals = {
+        stage_name: matching_module._apply_wilson_line_scalar_green_normal_form(theory, expr)
+        for stage_name, expr in heavy_substituted_totals.items()
+    }
+
     payload = {
         "schema_version": 1,
         "generator": "debug_pychete_singlet_wilson_trace.py",
@@ -849,6 +947,10 @@ def main() -> int:
             for entry in plan.entries
         ],
         "filter_terms_by_matching_targets": requirements is not None,
+        "substitute_heavy_scalar_solutions": args.substitute_heavy_scalar_solutions,
+        "heavy_scalar_solution_count": len(heavy_scalar_solutions),
+        "heavy_scalar_solution_rule_count": len(heavy_scalar_replacement_rules),
+        "heavy_scalar_solution_expand": args.heavy_scalar_solution_expand,
         "preaction_prefilter_nonempty_grouped_entries": {
             label: len(entry_terms) for label, entry_terms in preaction_prefilter_grouped.items() if entry_terms
         },
@@ -909,18 +1011,37 @@ def main() -> int:
             coefficient_name: _full(coefficient) for coefficient_name, coefficient in coefficient_targets.items()
         },
         "rows": rows,
-        "total_projections": {
-            stage_name: _full(_project_chw(theory, target, expr))
-            for stage_name, expr in totals.items()
-        },
-        "total_summaries": {
-            stage_name: _expr_summary(stage_name, expr, sample_chars=args.sample_chars)
-            for stage_name, expr in totals.items()
-        },
-        "total_h_derivative_word_histograms": {
-            stage_name: _field_derivative_word_histogram(expr, h_label)
-            for stage_name, expr in totals.items()
-        },
+        "total_projections": _projection_map(theory, args.target, target, totals),
+        "total_summaries": _summary_map(totals, sample_chars=args.sample_chars),
+        "total_h_derivative_word_histograms": _h_derivative_histogram_map(totals, h_label),
+        "heavy_substituted_total_projections": _projection_map(
+            theory,
+            args.target,
+            target,
+            heavy_substituted_totals,
+        ),
+        "heavy_substituted_total_summaries": _summary_map(
+            heavy_substituted_totals,
+            sample_chars=args.sample_chars,
+        ),
+        "heavy_substituted_total_h_derivative_word_histograms": _h_derivative_histogram_map(
+            heavy_substituted_totals,
+            h_label,
+        ),
+        "heavy_substituted_scalar_green_total_projections": _projection_map(
+            theory,
+            args.target,
+            target,
+            heavy_substituted_scalar_green_totals,
+        ),
+        "heavy_substituted_scalar_green_total_summaries": _summary_map(
+            heavy_substituted_scalar_green_totals,
+            sample_chars=args.sample_chars,
+        ),
+        "heavy_substituted_scalar_green_total_h_derivative_word_histograms": _h_derivative_histogram_map(
+            heavy_substituted_scalar_green_totals,
+            h_label,
+        ),
         "total_coefficient_slices": {
             stage_name: {
                 coefficient_name: _coefficient_slice_summary(
@@ -936,7 +1057,7 @@ def main() -> int:
         },
         "entry_projections": {
             stage_name: {
-                entry_label: _full(_project_chw(theory, target, entry_totals[stage_name]))
+                entry_label: _full(_project_target(theory, args.target, target, entry_totals[stage_name]))
                 for entry_label, entry_totals in totals_by_entry.items()
             }
             for stage_name in totals
@@ -972,7 +1093,7 @@ def main() -> int:
         },
         "order_projections": {
             stage_name: {
-                str(total_order): _full(_project_chw(theory, target, order_totals[stage_name]))
+                str(total_order): _full(_project_target(theory, args.target, target, order_totals[stage_name]))
                 for total_order, order_totals in sorted(totals_by_order.items())
             }
             for stage_name in totals

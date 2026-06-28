@@ -65,6 +65,23 @@ def _stage_by_name(stages: list[dict[str, Any]], name: str) -> dict[str, Any] | 
     return next((stage for stage in stages if stage.get("name") == name), None)
 
 
+def _target_name(data: dict[str, Any]) -> str:
+    return str(data.get("target", "cHW"))
+
+
+def _projection_is_zero(stage: dict[str, Any]) -> bool:
+    return bool(stage.get("target_projection_finite_is_zero", stage.get("cHW_projection_finite_is_zero", True)))
+
+
+def _projection_sample(stage: dict[str, Any]) -> str:
+    return str(
+        stage.get(
+            "target_projection_finite_sample_input_form",
+            stage.get("cHW_projection_finite_sample_input_form", ""),
+        )
+    )
+
+
 def _parse_prop_order_spec(spec: str) -> tuple[int, Path]:
     if "=" not in spec:
         raise ValueError(f"expected ORDER=PATH for --matchete-prop-order, got {spec!r}")
@@ -118,14 +135,21 @@ def _print_matchete_prop_order_summary(paths: dict[int, Path]) -> None:
     if not paths:
         return
     print("Matchete prop-order sweep")
-    previous_chw: str | None = None
+    previous_target: str | None = None
+    target_name = "cHW"
     for order, path in sorted(paths.items()):
         if not path.exists():
             print(f"  order {order}: missing {path}")
             continue
         data = _load_json(path)
-        if previous_chw is None:
-            previous_chw = str(data.get("previous_validation_cHW_condition_input_form", ""))
+        target_name = str(data.get("target", target_name))
+        if previous_target is None:
+            previous_target = str(
+                data.get(
+                    "previous_validation_target_condition_input_form",
+                    data.get("previous_validation_cHW_condition_input_form", ""),
+                )
+            )
         raw = data.get("raw_insertion_sum_summary")
         prefactored = data.get("power_prefactor_times_raw_sum_summary")
         selected = data.get("selected_prop_order_validation_simplified_summary")
@@ -141,11 +165,18 @@ def _print_matchete_prop_order_summary(paths: dict[int, Path]) -> None:
             stage_summaries if isinstance(stage_summaries, list) else None,
             indent="    ",
         )
-    if previous_chw:
-        print(f"  saved validation cHW: {previous_chw}")
+    if previous_target:
+        print(f"  saved validation {target_name}: {previous_target}")
 
 
 def _print_matchete_summary(data: dict[str, Any]) -> None:
+    target_name = str(data.get("target", "cHW"))
+    previous_target = str(
+        data.get(
+            "previous_validation_target_condition_input_form",
+            data.get("previous_validation_cHW_condition_input_form", ""),
+        )
+    )
     wanted = (
         "contracted_metric",
         "wilson_expanded",
@@ -155,6 +186,8 @@ def _print_matchete_summary(data: dict[str, Any]) -> None:
         "evaluate_str_reference",
     )
     print("Matchete stages")
+    if previous_target:
+        print(f"  saved validation {target_name}: {_short(previous_target, 240)}")
     for insertion in data.get("insertions", []):
         print(f"  insertion {insertion.get('index')}")
         stages = insertion.get("stages", [])
@@ -187,19 +220,25 @@ def _nonzero_pychete_rows(data: dict[str, Any]) -> list[dict[str, Any]]:
             continue
         pre = row.get("pre_wilson_tensor_reduced", {})
         post = row.get("post_wilson_tensor_reduced", {})
-        pre_nonzero = isinstance(pre, dict) and not pre.get("cHW_projection_finite_is_zero", True)
-        post_nonzero = isinstance(post, dict) and not post.get("cHW_projection_finite_is_zero", True)
+        pre_nonzero = isinstance(pre, dict) and not _projection_is_zero(pre)
+        post_nonzero = isinstance(post, dict) and not _projection_is_zero(post)
         if pre_nonzero or post_nonzero:
             selected.append(row)
     return selected
 
 
-def _print_pychete_stage_summary(row: dict[str, Any], stage_key: str, *, sample_chars: int) -> None:
+def _print_pychete_stage_summary(
+    row: dict[str, Any],
+    stage_key: str,
+    *,
+    target_name: str,
+    sample_chars: int,
+) -> None:
     stage = row.get(stage_key)
     if not isinstance(stage, dict):
         return
-    projection = stage.get("cHW_projection_finite_sample_input_form", "")
-    print(f"    {stage_key}: cHW_finite={_short(str(projection), sample_chars)}")
+    projection = _projection_sample(stage)
+    print(f"    {stage_key}: {target_name}_finite={_short(projection, sample_chars)}")
     snapshots = stage.get("pipeline_snapshots", [])
     if not isinstance(snapshots, list):
         return
@@ -257,6 +296,7 @@ def _print_pychete_runtime_internal_summary(data: dict[str, Any], *, sample_char
     runtime = data.get("runtime_internal_evaluated")
     if not isinstance(runtime, dict) or not runtime:
         return
+    target_name = _target_name(data)
     print("pychete runtime internal evaluated path")
     counts_by_order = runtime.get("term_counts_by_total_order", {})
     if isinstance(counts_by_order, dict) and counts_by_order:
@@ -264,21 +304,43 @@ def _print_pychete_runtime_internal_summary(data: dict[str, Any], *, sample_char
             f"o{order}={count}" for order, count in sorted(counts_by_order.items(), key=lambda item: int(item[0]))
         )
         print(f"  evaluated terms by order: {rendered_counts}")
-    print(f"  finite cHW: {_short(str(runtime.get('finite_projection', '<missing>')), sample_chars)}")
+    print(f"  finite {target_name}: {_short(str(runtime.get('finite_projection', '<missing>')), sample_chars)}")
     by_order = runtime.get("finite_projection_by_total_order", {})
     if isinstance(by_order, dict) and by_order:
         rendered = ", ".join(
             f"o{order}={_short(str(value), sample_chars)}"
             for order, value in sorted(by_order.items(), key=lambda item: int(item[0]))
         )
-        print(f"  finite cHW by order: {rendered}")
+        print(f"  finite {target_name} by order: {rendered}")
     by_entry = runtime.get("finite_projection_by_entry", {})
     if isinstance(by_entry, dict) and by_entry:
-        print("  finite cHW by entry:")
+        print(f"  finite {target_name} by entry:")
         for entry, value in sorted(by_entry.items()):
             print(f"    {entry}: {_short(str(value), sample_chars)}")
     hist = runtime.get("finite_h_derivative_word_histogram")
     print(f"  finite derivative signatures: {_signature_counts(hist if isinstance(hist, list) else None)}")
+    print()
+
+
+def _print_projection_block(
+    data: dict[str, Any],
+    key: str,
+    *,
+    title: str,
+    sample_chars: int,
+) -> None:
+    projections = data.get(key, {})
+    if not isinstance(projections, dict) or not projections:
+        return
+    print(title)
+    for name in (
+        "post_wilson_tensor_reduced_finite",
+        "pre_wilson_tensor_reduced_finite",
+        "post_wilson_tensor_reduced_unrenormalized",
+        "pre_wilson_tensor_reduced_unrenormalized",
+    ):
+        if name in projections:
+            print(f"  {name}: {_short(str(projections[name]), sample_chars)}")
     print()
 
 
@@ -328,8 +390,10 @@ def _print_pychete_grouped_candidate_block(data: dict[str, Any], *, prefix: str,
 
 
 def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
+    target_name = _target_name(data)
     print(
         "pychete selection: "
+        + f"target={target_name} "
         + f"filter_by_target={data.get('filter_terms_by_matching_targets', '<unknown>')} "
         + f"plan_entries={data.get('plan_entry_count', '<unknown>')}"
     )
@@ -362,18 +426,24 @@ def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
                 + f"slots={order.get('slot_orders', '<unknown>')}"
             )
         print()
-    total_projections = data.get("total_projections", {})
-    if isinstance(total_projections, dict) and total_projections:
-        print("pychete selected-total projections")
-        for name in (
-            "post_wilson_tensor_reduced_finite",
-            "pre_wilson_tensor_reduced_finite",
-            "post_wilson_tensor_reduced_unrenormalized",
-            "pre_wilson_tensor_reduced_unrenormalized",
-        ):
-            if name in total_projections:
-                print(f"  {name}: {_short(str(total_projections[name]), sample_chars)}")
-        print()
+    _print_projection_block(
+        data,
+        "total_projections",
+        title="pychete selected-total projections",
+        sample_chars=sample_chars,
+    )
+    _print_projection_block(
+        data,
+        "heavy_substituted_total_projections",
+        title="pychete selected-total projections after heavy-scalar substitution",
+        sample_chars=sample_chars,
+    )
+    _print_projection_block(
+        data,
+        "heavy_substituted_scalar_green_total_projections",
+        title="pychete selected-total projections after heavy-scalar substitution and scalar Green normal form",
+        sample_chars=sample_chars,
+    )
     order_projections = data.get("order_projections", {})
     if isinstance(order_projections, dict) and order_projections:
         print("pychete selected projections by total order")
@@ -402,8 +472,18 @@ def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
             + f"{row.get('entry_label')} term={row.get('term_index')} "
             + f"powers={row.get('propagator_powers')} slots={row.get('expansion_slot_lengths')}"
         )
-        _print_pychete_stage_summary(row, "pre_wilson_tensor_reduced", sample_chars=sample_chars)
-        _print_pychete_stage_summary(row, "post_wilson_tensor_reduced", sample_chars=sample_chars)
+        _print_pychete_stage_summary(
+            row,
+            "pre_wilson_tensor_reduced",
+            target_name=target_name,
+            sample_chars=sample_chars,
+        )
+        _print_pychete_stage_summary(
+            row,
+            "post_wilson_tensor_reduced",
+            target_name=target_name,
+            sample_chars=sample_chars,
+        )
 
 
 def main() -> int:

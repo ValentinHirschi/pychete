@@ -948,3 +948,13 @@ without Warsaw-specific core assumptions.
   algorithm and compare it directly with the pychete implementation before
   patching. Use intermediate dumps/probes to find the first semantic
   difference instead of inferring a fix from only the final Wilson coefficient.
+- Latest diagnostic slice: made the Singlet Wilson-line debug scripts
+  target-aware so `cHD` probes no longer reuse `cHW` labels or target-filter
+  requirements. The Matchete dump can now emit the saved reference condition
+  for a requested target, and the pychete dump can apply the public
+  heavy-scalar substitution plus scalar Green normal-form aggregate summaries.
+  Order-zero `hScalar-lScalar -> cHD` with EOM-aware filtering keeps the two
+  pychete terms, but projection stays zero after heavy substitution and scalar
+  Green normal form; the next mismatch comparison should therefore focus on
+  the higher-derivative `wilson14_o4_0` class and Matchete's full
+  operator-class row reduction.

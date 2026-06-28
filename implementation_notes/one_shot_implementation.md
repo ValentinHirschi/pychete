@@ -244,6 +244,18 @@
   unchanged, so the next mismatch investigation still has to compare
   Matchete's full operator-class normal-form/evaluation path against pychete's
   bounded local scalar normal form before another patch.
+- The diagnostic scripts now support target-aware `cHD` comparison. The
+  Matchete Singlet Wilson-line dump accepts `--target` and records the saved
+  reference matching condition for that target. The pychete Singlet debug dump
+  uses the requested target for filtering/projection, can apply the public
+  heavy-scalar solution replacement stage, and reports aggregate projections
+  after heavy substitution and after the scalar Green normal form. A
+  watchdog-wrapped order-zero `cHD` run with EOM-aware target filtering kept
+  the two expected `hScalar-lScalar#wilson0_o0_0` rows, but the aggregate
+  projection remained zero before substitution, after substitution, and after
+  scalar Green normal form. This localizes the next parity comparison away
+  from order-zero filtering and toward the higher-derivative
+  `wilson14_o4_0` operator-class row reduction.
 
 ## Latest Validation
 
@@ -266,6 +278,19 @@
   with the new scalar Green normal form preserved `2` Wilson-line terms in
   `hScalar-lScalar#wilson0_o0_0` and still produced no projected matching
   condition.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m py_compile
+  scripts/debug_pychete_singlet_wilson_trace.py
+  scripts/compare_singlet_wilson_debug.py` passed after the target-aware
+  diagnostic edits.
+- Watchdog-wrapped `wolframscript -file
+  helper_mathematica_scripts/debug_singlet_wilson_trace.wls --target cHD
+  --prop-order 0 ...` produced a Matchete order-zero dump whose saved
+  reference `cHD` condition is nonzero.
+- Watchdog-wrapped `scripts/debug_pychete_singlet_wilson_trace.py --target
+  cHD --max-total-order 0 --max-slot-order 0
+  --substitute-heavy-scalar-solutions ...` produced a pychete dump retaining
+  the two EOM-aware selected rows but still projecting zero after heavy
+  substitution and scalar Green normal form.
 - `git diff --check` passed.
 
 ## Next Work
@@ -284,6 +309,10 @@
   `CommuteCDs` plus row-reduced Green-basis representative for the local
   four-derivative scalar terms, then rerun a reduced selected-trace cHD smoke
   under the 30 GiB watchdog.
+- Use the target-aware Matchete/pychete debug dumps for the next precise
+  comparison, and inspect Matchete's `ConstructOperatorIdentities`/`IBPSimplify`
+  behavior for the exact derivative-class samples before changing runtime
+  matching code.
 - With bounded scalar IBP/commutator normal form now available and wired into
   the opt-in Wilson-line scalar-Green route, the next implementation step is
   to port more of Matchete's operator-class scoring/preferred-representative

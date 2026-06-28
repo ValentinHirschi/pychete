@@ -49,6 +49,7 @@ outFile = If[!absolutePathQ[outFileOption],
 propOrderOption = ToExpression @ optionValue["prop-order", "4"];
 sampleChars = ToExpression @ optionValue["sample-chars", "2500"];
 sampleTerms = ToExpression @ optionValue["sample-terms", "3"];
+targetOption = ToExpression @ optionValue["target", "cHW"];
 
 If[!DirectoryQ[matcheteRoot],
   Print["Matchete checkout not found: ", matcheteRoot];
@@ -579,10 +580,10 @@ previousValidationTrace = If[AssociationQ[previousValidationResult],
   previousValidationResult["SuperTraces"]["hScalar-lScalar"],
   $Failed
 ];
-previousCHWCondition = If[AssociationQ[previousValidationResult],
+previousTargetCondition = If[AssociationQ[previousValidationResult],
   Cases[
     previousValidationResult["Matching Conditions"],
-    Rule[Matchete`Coupling[cHW, {}, 0], rhs_] :> rhs,
+    Rule[Matchete`Coupling[targetOption, {}, 0], rhs_] :> rhs,
     All
   ],
   {}
@@ -599,6 +600,7 @@ data = <|
   "generator" -> "debug_singlet_wilson_trace.wls",
   "model" -> "Singlet_Scalar_Extension",
   "trace_name" -> "hScalar-lScalar",
+  "target" -> toInputString[targetOption],
   "prop_order" -> propOrder,
   "eft_order" -> 6,
   "matchete_root" -> matcheteRoot,
@@ -649,7 +651,12 @@ data = <|
     "previous_validation_hScalar_lScalar",
     previousValidationTrace
   ],
-  "previous_validation_cHW_condition_input_form" -> toInputString[previousCHWCondition],
+  "previous_validation_target_condition_input_form" -> toInputString[previousTargetCondition],
+  "previous_validation_cHW_condition_input_form" -> If[
+    targetOption === cHW,
+    toInputString[previousTargetCondition],
+    "[]"
+  ],
   "full_power_minus_selected_prop_order_input_form" -> shortInputString[
     powerTypeTrace - preFactor rawInsertionSum
   ]
