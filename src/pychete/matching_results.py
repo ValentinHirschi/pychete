@@ -43,6 +43,7 @@ from .supertraces import is_named_supertrace
 from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s, symbol_data
 from .theory_metadata import (
     ExternalKind,
+    GroupKind,
     coupling_mass_dimension_from_label,
     external_basis_from_label,
     external_kind_from_label,
@@ -361,7 +362,8 @@ class MatchingResult:
         structured_targets = matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets))
         projection_expressions = tuple(target.projection_expression for target in structured_targets)
         ibp_projection_aliases = tuple(
-            _ibp_scalar_bilinear_projection_aliases_for_target(
+            _projection_aliases_for_target(
+                self.theory,
                 target,
                 projection_expression,
                 normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
@@ -1799,15 +1801,19 @@ def _expressions_have_indices(expressions: Sequence[Expression]) -> bool:
     return any(any(expression.match(pattern)) for expression in expressions)
 
 
-def _ibp_scalar_bilinear_projection_aliases_for_target(
+def _projection_aliases_for_target(
+    theory: Theory,
     target: MatchingConditionTarget,
     projection_expression: Expression,
     *,
     normalize_ibp_scalar_bilinears: bool,
 ) -> tuple[tuple[Expression, Expression], ...]:
+    aliases: list[tuple[Expression, Expression]] = []
     if normalize_ibp_scalar_bilinears or _uses_registered_wilson_operator_aliases(target):
-        return _ibp_scalar_bilinear_projection_aliases(projection_expression)
-    return ()
+        aliases.extend(_ibp_scalar_bilinear_projection_aliases(projection_expression))
+    if _uses_registered_wilson_operator_aliases(target):
+        aliases.extend(_abelian_gauge_eom_projection_aliases(theory, target, projection_expression))
+    return tuple(_deduplicated_projection_aliases(aliases))
 
 
 def _uses_registered_wilson_operator_aliases(target: MatchingConditionTarget) -> bool:
@@ -1839,6 +1845,156 @@ def _ibp_scalar_bilinear_projection_aliases(target: Expression) -> tuple[tuple[E
         seen.add(key)
         aliases.append((alias, Expression.num(-1)))
     return tuple(aliases)
+
+
+def _abelian_gauge_eom_projection_aliases(
+    theory: Theory,
+    target: MatchingConditionTarget,
+    projection_expression: Expression,
+) -> tuple[tuple[Expression, Expression], ...]:
+    """Return target-local aliases for Abelian light-vector EOM projections.
+
+    Matchete's vector ``EOMSimplify`` path consumes operators proportional to
+    ``EoM[B_mu]``. In normal form that EOM is represented by
+    ``FieldStrength(B, {nu, mu}, {}, {nu})`` and field redefinitions replace
+    it by the charged-matter currents with the inverse gauge-kinetic
+    normalization.  For registered Wilson targets, expose the corresponding
+    current-times-divergence aliases target-locally and compute their weights
+    by projecting the EOM-reduced alias with Symbolica.
+    """
+
+    target_field_labels = {
+        label
+        for (kind, label), count in _projection_atom_counts(projection_expression).items()
+        if kind == "field" and count > 0
+    }
+    if not target_field_labels:
+        return ()
+
+    aliases: list[tuple[Expression, Expression]] = []
+    for definition in theory.fields.values():
+        if canonical_string(definition.label) not in target_field_labels:
+            continue
+        if not bool(definition.type_expr == s.Scalar) or definition.is_self_conjugate:
+            continue
+        field_indices = _projection_alias_field_indices(theory, target, definition.name, definition.indices)
+        eom_field_indices = _projection_alias_field_indices(
+            theory,
+            target,
+            f"{definition.name}_eom",
+            definition.indices,
+        )
+        mu = _projection_alias_index(theory, target, definition.name, "mu", s.Lorentz)
+        nu = _projection_alias_index(theory, target, definition.name, "nu", s.Lorentz)
+        field = definition.expr(*field_indices)
+        eom_field = definition.expr(*eom_field_indices)
+        current = _scalar_abelian_gauge_current(mu, field)
+        eom_current = _scalar_abelian_gauge_current(mu, eom_field)
+        for charge in definition.charge_exprs:
+            group_symbol = theory._group_symbol_for_charge(charge)
+            if group_symbol is None or len(charge) != 1:
+                continue
+            group_kind = GroupKind.from_user(
+                str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value))
+            )
+            if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+                continue
+            coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+            vector_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+            if not isinstance(coupling_name, str) or not isinstance(vector_name, str):
+                continue
+            if coupling_name not in theory.couplings or vector_name not in theory.fields:
+                continue
+            coupling = theory.coupling_handle(coupling_name)()
+            vector = theory.fields[vector_name]
+            standard_divergence = s.FieldStrength(
+                vector.label,
+                s.List(nu, mu),
+                s.List(),
+                s.List(nu),
+            )
+            opposite_divergence = s.FieldStrength(
+                vector.label,
+                s.List(mu, nu),
+                s.List(),
+                s.List(nu),
+            )
+            reduced_standard = (-coupling**2 * charge[0] * current * eom_current).expand()
+            reduced_opposite = (coupling**2 * charge[0] * current * eom_current).expand()
+            standard_alias = (current * standard_divergence).expand()
+            opposite_alias = (current * opposite_divergence).expand()
+            for alias, reduced in (
+                (standard_alias, reduced_standard),
+                (opposite_alias, reduced_opposite),
+            ):
+                weight = _projection_alias_weight(theory, reduced, projection_expression)
+                if not is_zero(weight):
+                    aliases.append((alias, weight))
+    return tuple(_deduplicated_projection_aliases(aliases))
+
+
+def _projection_alias_field_indices(
+    theory: Theory,
+    target: MatchingConditionTarget,
+    field_name: str,
+    representations: Sequence[Expression],
+) -> tuple[Expression, ...]:
+    return tuple(
+        _projection_alias_index(theory, target, field_name, f"i{position}", representation)
+        for position, representation in enumerate(representations)
+    )
+
+
+def _projection_alias_index(
+    theory: Theory,
+    target: MatchingConditionTarget,
+    field_name: str,
+    suffix: str,
+    representation: Expression,
+) -> Expression:
+    symbol = theory.symbol(
+        f"projection_alias_{target.name}_{field_name}_{suffix}",
+        role=SymbolRole.INDEX,
+    )
+    return theory.index(symbol, representation)
+
+
+def _scalar_abelian_gauge_current(mu: Expression, field: Expression) -> Expression:
+    return (Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field).expand()
+
+
+def _projection_alias_weight(
+    theory: Theory,
+    reduced_alias: Expression,
+    projection_expression: Expression,
+) -> Expression:
+    reduced = expand_cd_operators(reduced_alias).expand()
+    target = expand_cd_operators(projection_expression)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=reduced,
+        on_shell_eft_lagrangian=reduced,
+    )
+    return result.project_matching_conditions(
+        {"projection_alias_weight": target},
+        expand_source=False,
+        normalize_derivative_operators=False,
+    )["projection_alias_weight"].expand()
+
+
+def _deduplicated_projection_aliases(
+    aliases: Iterable[tuple[Expression, Expression]],
+) -> tuple[tuple[Expression, Expression], ...]:
+    deduplicated: dict[str, tuple[Expression, Expression]] = {}
+    for alias, weight in aliases:
+        key = canonical_string(alias)
+        if key in deduplicated:
+            previous_alias, previous_weight = deduplicated[key]
+            deduplicated[key] = (previous_alias, (previous_weight + weight).expand())
+        else:
+            deduplicated[key] = (alias, weight)
+    return tuple((alias, weight) for alias, weight in deduplicated.values() if not is_zero(weight))
 
 
 def _cd_box_parts(expr: Expression) -> tuple[Expression, Expression] | None:

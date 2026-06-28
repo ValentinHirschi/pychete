@@ -867,3 +867,17 @@ without Warsaw-specific core assumptions.
   reducer and generated FORM file showed that native user-symbol escaping
   rewrote its internal `vec(...)` helper to `v[e]c(...)` when the model
   contained a short field symbol `e`.
+- Latest cHD mismatch review: Matchete's saved trace pipeline was re-read
+  before patching. `SaveValidationResults` applies
+  `ContractCGs // MatchReduce // GreensSimplify`; `GreensSimplify` builds
+  operator classes, generates IBP and covariant-derivative commutation
+  identities, row-reduces them, and chooses preferred Green-basis
+  representatives; `EOMSimplify` then performs matter/vector field
+  redefinitions with vector EOM normal form
+  `FieldStrength[V,{nu,mu},inds,{nu}]`. pychete now has a registered-Wilson
+  Abelian vector-EOM projection alias and Wilson-line filtering includes
+  projection aliases. Focused checks show the selected
+  `hScalar-lScalar -> cHD` run keeps the same 16 terms with or without target
+  filtering, so the remaining mismatch is not premature filtering or direct
+  coefficient extraction. The next slice should implement a generic bounded
+  scalar Green-basis reduction, not another Warsaw-specific `cHD` patch.

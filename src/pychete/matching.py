@@ -64,6 +64,7 @@ from .matching_results import (
     MatchingResultComparison,
     _projection_atom_counts,
     _projection_atom_requirement_groups_for_expressions,
+    _projection_aliases_for_target,
     _resolve_matching_condition_targets,
     matching_condition_targets as structured_matching_condition_targets,
 )
@@ -7414,11 +7415,21 @@ def _term_atom_requirements_for_targets(
     if targets is None:
         return None
     resolved = _resolve_matching_condition_targets(theory, targets)
-    projection_expressions = tuple(
-        target.projection_expression
-        for target in structured_matching_condition_targets(resolved)
-        if target.projection_expression is not None
-    )
+    projection_expressions: list[Expression] = []
+    for target in structured_matching_condition_targets(resolved):
+        projection_expression = target.projection_expression
+        if projection_expression is None:
+            continue
+        projection_expressions.append(projection_expression)
+        projection_expressions.extend(
+            alias
+            for alias, _weight in _projection_aliases_for_target(
+                theory,
+                target,
+                projection_expression,
+                normalize_ibp_scalar_bilinears=False,
+            )
+        )
     requirements = _projection_atom_requirement_groups_for_expressions(projection_expressions)
     if requirements and heavy_scalar_solutions:
         requirements = _projection_atom_requirements_with_heavy_scalar_solution_relaxations(
