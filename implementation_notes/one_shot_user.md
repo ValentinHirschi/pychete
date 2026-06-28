@@ -908,3 +908,10 @@ without Warsaw-specific core assumptions.
   pair per atom. Added a separate identity-source primitive so future
   Green-basis row reduction can use the correct Matchete-style input without
   changing Wilson-line numerator rewrite semantics.
+- Latest Green-basis row-reduction infrastructure slice: added an explicit
+  basis normal-form helper that encodes composite operator monomials as
+  temporary Symbolica variables and delegates the linear solve to
+  `Expression.solve_linear_system(...)`. This is now wired through
+  `Theory.covariant_derivative_commutator_normal_form(...)` for local
+  `CommuteCDs` identities, but the full automatic Matchete operator-class
+  discovery/scoring layer is still future work.

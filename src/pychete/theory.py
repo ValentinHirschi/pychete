@@ -4,7 +4,7 @@ import json
 from itertools import count
 from html import escape
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Iterable, Iterator, Literal, Mapping
+from typing import TYPE_CHECKING, Any, Iterable, Iterator, Literal, Mapping, Sequence
 
 from symbolica import Expression, Replacement, S
 
@@ -1363,6 +1363,40 @@ class Theory:
                 seen.add(key)
                 identities.append(identity)
         return tuple(identities)
+
+    def covariant_derivative_commutator_normal_form(
+        self,
+        expr: Expression,
+        *,
+        basis: Sequence[Expression],
+        preferred: Sequence[Expression] = (),
+        max_basis_terms: int = 64,
+        max_identities: int = 128,
+    ) -> Expression:
+        """Reduce ``expr`` with local Matchete-style commutator identities.
+
+        This is a bounded Green-basis building block. It generates local
+        adjacent-pair identities with
+        :meth:`covariant_derivative_commutator_identities`, then delegates the
+        linear normal-form solve to Symbolica through
+        :func:`pychete.green_basis.linear_identity_normal_form`. The caller
+        supplies the explicit local operator ``basis`` and any ``preferred``
+        representatives, so pychete does not guess Matchete's full
+        operator-class scoring rules in Python.
+        """
+
+        from .green_basis import linear_identity_normal_form
+
+        self._validate_registered_expression(expr)
+        identities = self.covariant_derivative_commutator_identities(expr)
+        return linear_identity_normal_form(
+            expr,
+            identities,
+            basis=basis,
+            preferred=preferred,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+        )
 
     def _covariant_derivative_identity_atoms(self, expr: Expression) -> tuple[tuple[Expression, bool], ...]:
         field_pat = field_pattern()

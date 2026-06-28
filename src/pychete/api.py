@@ -8,6 +8,7 @@ from .functional import (
     integrate_by_parts_scalar_laplacians,
 )
 from .group_algebra import simplify_pychete_color
+from .green_basis import linear_identity_normal_form
 from .backends.vacuum_integrals import (
     absorb_vakint_scalar_loop_momentum_numerators,
     canonize_loop_function,
@@ -231,6 +232,7 @@ __all__ = [
     "load_validation_fixture",
     "load_state",
     "latex_string",
+    "linear_identity_normal_form",
     "open_indices",
     "operator_basis_names",
     "operator_dimension",

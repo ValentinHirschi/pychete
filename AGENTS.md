@@ -579,6 +579,14 @@ each differentiated field/field-strength atom. The identity helper mirrors
 that source with Symbolica pattern discovery and native coefficient
 extraction, while deliberately skipping nonlinear repeated atom occurrences
 until a full operator-class row-reduction representation owns that case.
+For bounded Green-basis normal-form experiments, use
+`linear_identity_normal_form(...)` or
+`Theory.covariant_derivative_commutator_normal_form(...)`. These helpers encode
+explicit operator-basis monomials as temporary Symbolica variables and delegate
+the linear solve to Symbolica's native `Expression.solve_linear_system(...)`;
+do not implement row reduction or Gaussian elimination in Python. The basis is
+currently explicit by design: do not guess Matchete's full operator-class
+scoring or preferred representatives from strings or ad hoc term walks.
 For scalar derivative-bilinear normal forms, use the generic
 `expose_scalar_derivative_commutator_bilinears(theory, expr, ...)` helper
 rather than adding projection-specific replacements. It collects tagged scalar

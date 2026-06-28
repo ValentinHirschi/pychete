@@ -127,6 +127,14 @@
   tag-restricted matches plus native `Expression.coefficient(...)` extraction,
   and deliberately skips nonlinear repeated atom occurrences until a true
   operator-class row-reduction representation owns them.
+- pychete now has a first bounded Green-basis normal-form boundary:
+  `linear_identity_normal_form(...)` and
+  `Theory.covariant_derivative_commutator_normal_form(...)`. Composite
+  operator monomials are encoded as temporary Symbolica variables, the linear
+  relations are solved with native `Expression.solve_linear_system(...)`, and
+  the result is decoded back to pychete expressions. The basis and preferred
+  representatives remain explicit so this does not guess Matchete's full
+  operator-class scoring rules in Python.
 
 ## Current Frontier
 
@@ -186,14 +194,28 @@
   partial pieces of total-derivative identities as selected Singlet `cHD`.
 - The latest commutator-identity slice closes the identity-source mismatch:
   pychete can now generate all local adjacent-pair `CommuteCDs` identities for
-  linear field-like atoms, but those identities are not yet fed into a
-  Symbolica-backed row-reduction/normal-form solver. The next Green-basis
-  slice should build the bounded operator-class vector space around these
-  identities instead of extending the one-pair emitter.
+  linear field-like atoms. These identities now have a Symbolica-backed
+  explicit-basis solver boundary; what remains is the bounded automatic
+  operator-class vector-space construction around them.
+- The latest normal-form slice now feeds explicit local bases and generated
+  commutator identities into Symbolica's linear solver. This is enough to
+  reduce synthetic composite operator monomials such as
+  `Bar(phi) D_a D_b phi` to preferred `Bar(phi) D_b D_a phi` plus commutator
+  representatives. The remaining cHD work is automatic operator-class
+  discovery/scoring, basis construction for the higher-derivative Singlet
+  source, and integration with the selected Wilson-line Green-basis stage.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_public_api.py -q` passed (`66 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py -k
+  "green_basis or commutator" -q` passed (`21 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_public_api.py -q` passed (`8 passed`).
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/definitions/test_theory_definitions.py
   tests/unit/definitions/test_public_api.py -q` passed (`64 passed`).
@@ -263,3 +285,8 @@
   `CommuteCDs` plus row-reduced Green-basis representative for the local
   four-derivative scalar terms, then rerun a reduced selected-trace cHD smoke
   under the 30 GiB watchdog.
+- With explicit-basis linear normal form now available, the next implementation
+  step is bounded automatic basis construction for scalar derivative classes:
+  collect the source monomial, its generated IBP/commutator identity terms, and
+  a preferred representative ordering, then call `linear_identity_normal_form`
+  rather than adding another projection-only alias.

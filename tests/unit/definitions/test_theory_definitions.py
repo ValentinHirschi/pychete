@@ -21,6 +21,7 @@ from pychete import (
     collect_indices,
     define_wilson_coefficient_from_basis,
     define_wilson_coefficient_from_registered_basis,
+    linear_identity_normal_form,
     matching_condition_targets,
     registered_operator_basis,
     register_operator_basis,
@@ -627,6 +628,47 @@ def test_covariant_derivative_commutator_identities_skip_equal_and_nonlinear_ato
 
     assert theory.covariant_derivative_commutator_identities(phi(derivatives=[a, a])) == ()
     assert theory.covariant_derivative_commutator_identities(coefficient * nonlinear_atom**2) == ()
+
+
+def test_linear_identity_normal_form_reduces_composite_basis_terms_with_symbolica_solver() -> None:
+    coefficient = S("green_basis_linear_solver_coefficient")
+    untouched = S("green_basis_linear_solver_untouched")
+    theory = Theory("green_basis_linear_solver")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    source = s.Bar(phi()) * phi(derivatives=[a, b])
+    swapped = s.Bar(phi()) * phi(derivatives=[b, a])
+    commutator = s.Bar(phi()) * s.CovariantDerivativeCommutator(a, b, phi())
+    identity = coefficient * (swapped + commutator - source)
+
+    reduced = linear_identity_normal_form(
+        2 * coefficient * source + untouched,
+        (identity,),
+        basis=(source, swapped, commutator),
+        preferred=(swapped, commutator),
+    )
+
+    assert_expr_equal(reduced, 2 * coefficient * swapped + 2 * coefficient * commutator + untouched)
+
+
+def test_covariant_derivative_commutator_normal_form_uses_generated_identities() -> None:
+    coefficient = S("green_basis_commutator_normal_form_coefficient")
+    theory = Theory("green_basis_commutator_normal_form")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    source = s.Bar(phi()) * phi(derivatives=[a, b])
+    swapped = s.Bar(phi()) * phi(derivatives=[b, a])
+    commutator = s.Bar(phi()) * s.CovariantDerivativeCommutator(a, b, phi())
+
+    reduced = theory.covariant_derivative_commutator_normal_form(
+        coefficient * source,
+        basis=(source, swapped, commutator),
+        preferred=(swapped, commutator),
+    )
+
+    assert_expr_equal(reduced, coefficient * swapped + coefficient * commutator)
 
 
 def test_emit_covariant_derivative_commutators_protects_existing_commutator_markers() -> None:
