@@ -849,16 +849,36 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     debug = json.loads(_SINGLET_CHD_PYCHETE_EOM_BOUNDARY_DEBUG.read_text(encoding="utf-8"))
     references = debug["reference_projections"]
     projections = debug["selected_stage_projections"]
+    projections_by_order = debug["selected_stage_projections_by_total_order"]
 
     assert debug["generator"] == "scripts/debug_pychete_singlet_eom_boundary.py"
     assert debug["target"] == "cHD"
-    assert debug["term_counts_by_entry"] == {
-        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 8,
+    assert debug["controls"]["max_total_order"] == 2
+    assert debug["controls"]["max_slot_order"] == 2
+    assert debug["controls"]["include_green_heavy_stages"] is False
+    nonzero_entry_counts = {
+        entry: count
+        for entry, count in debug["term_counts_by_entry"].items()
+        if count
     }
+    assert nonzero_entry_counts == {
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 8,
+        "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 16,
+    }
+    assert debug["term_counts_by_total_order"] == {"0": 8, "1": 24, "2": 72}
+    assert debug["evaluated_term_counts_by_total_order"] == {"0": 8, "1": 24, "2": 72}
     assert references["matchete_trace_off_shell_input_form"] == references["matchete_eom_off_shell_input_form"]
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
-    assert "selected_wilson_line_trace_aggregation_or_reduction_before_eom" in debug["first_differing_boundary"]
+    assert "selected_wilson_line_trace_generation_now_matches" in debug["first_differing_boundary"]
     assert debug["matchete_quarter_insertion_count"] == 8
     assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
         1,
@@ -870,28 +890,26 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         56,
         58,
     ]
-    expected_paths = {
-        "path0": 1,
-        "path2": 1,
-        "path12": 1,
-        "path14": 1,
-        "path24": 1,
-        "path26": 1,
-        "path36": 1,
-        "path38": 1,
-    }
+    expected_paths = {f"path{index}": 13 for index in (0, 2, 12, 14, 24, 26, 36, 38)}
     assert debug["pychete_nonzero_path_count"] == 8
     assert debug["term_counts_by_path"] == expected_paths
-    assert debug["evaluated_term_counts_by_path"] == expected_paths
-    for path in expected_paths:
-        assert debug["path_stage_projections"][path].startswith("-1/4*")
-    assert "pychete selected prop-order-zero normalized source now has the -2 pole/log weight" in (
-        debug["first_differing_boundary"]
+    assert debug["evaluated_term_counts_by_path"] == {}
+    assert projections_by_order["selected_normalized_pole_part"]["0"].startswith(
+        "-2*Singlet_Scalar_Extension::external_hbar*"
     )
-    assert projections["selected_normalized_pole_part"].startswith("-2*Singlet_Scalar_Extension::external_hbar*")
+    assert projections_by_order["selected_normalized_pole_part"]["1"].startswith(
+        "Singlet_Scalar_Extension::external_hbar*"
+    )
+    assert projections_by_order["selected_normalized_pole_part"]["2"].startswith(
+        "-1/2*Singlet_Scalar_Extension::external_hbar*"
+    )
+    assert projections["selected_normalized_pole_part"].startswith(
+        "-3/2*Singlet_Scalar_Extension::external_hbar*"
+    )
     assert "vakint::ε" in projections["selected_normalized_pole_part"]
-    assert projections["selected_normalized_evaluated"] == projections["selected_post_heavy_green"]
-    assert projections["selected_normalized_evaluated"] != references["pychete_reference_off_shell"]
+    assert "-5/4*Singlet_Scalar_Extension::external_hbar*" in projections["selected_normalized_finite_part"]
+    assert "selected_post_heavy_green" not in projections
+    assert projections["selected_normalized_evaluated"] != references["pychete_reference_on_shell"]
 
 
 def test_selected_chd_pychete_source_fixture_records_filtered_frontier() -> None:

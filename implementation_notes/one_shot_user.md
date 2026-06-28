@@ -1371,3 +1371,12 @@ without Warsaw-specific core assumptions.
   before finite Laurent extraction. The remaining first full-matching
   frontier is broader Green/EOM/on-shell/full-model parity, not this selected
   four-slot trace aggregation.
+- Latest pychete boundary-fixture refresh: the pychete-side
+  `singlet_eom_cHD.pychete.debug.json` fixture now uses the selected
+  Wilson-line plan through total order 2 and records order-local projections
+  before summing. This confirms the selected four-slot trace now matches
+  Matchete's off-shell checkpoint with pole/log weight `-3/2`. The remaining
+  Singlet `cHD` frontier is the Matchete on-shell/EOM shift to `-5/3`, so the
+  next comparison should target Matchete's raw `LagrangianEFT` /
+  `InternalSimplify` / `PerformSystematicFieldRedefs` sequence rather than
+  selected trace aggregation.

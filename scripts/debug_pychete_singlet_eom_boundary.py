@@ -64,6 +64,14 @@ def _parse_args() -> argparse.Namespace:
         type=Path,
         default=Path("assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json"),
     )
+    parser.add_argument("--max-total-order", type=int, default=2)
+    parser.add_argument("--max-slot-order", type=int, default=2)
+    parser.add_argument("--index-prefix", default="debug_singlet_eom_boundary")
+    parser.add_argument(
+        "--include-green-heavy-stages",
+        action="store_true",
+        help="Also project post-Green and post-heavy selected-trace stages; slower.",
+    )
     return parser.parse_args()
 
 
@@ -100,6 +108,64 @@ def _projection_strings(
     return {
         name: canonical_string(_project(theory, condition_name, target, expr))
         for name, expr in expressions.items()
+    }
+
+
+def _sum_expressions(expressions: list[Expression]) -> Expression:
+    total = Expression.num(0)
+    for expr in expressions:
+        total = (total + expr).expand()
+    return total
+
+
+def _projection_sum(
+    theory: Any,
+    condition_name: str,
+    target: Expression,
+    expressions: list[Expression],
+) -> Expression:
+    return _sum_expressions([
+        _project(theory, condition_name, target, expr)
+        for expr in expressions
+    ])
+
+
+def _projected_stage_order_map(
+    theory: Any,
+    condition_name: str,
+    target: Expression,
+    expressions_by_stage_and_order: dict[str, dict[int, list[Expression]]],
+) -> dict[str, dict[int, Expression]]:
+    projected: dict[str, dict[int, Expression]] = {}
+    for stage_name, expressions_by_order in expressions_by_stage_and_order.items():
+        projected[stage_name] = {}
+        for order, expressions in sorted(expressions_by_order.items()):
+            print(
+                f"Projecting {stage_name} total_order={order} chunks={len(expressions)}",
+                flush=True,
+            )
+            projected[stage_name][order] = _projection_sum(theory, condition_name, target, expressions)
+    return projected
+
+
+def _projection_strings_from_order_map(
+    projected_by_stage_and_order: dict[str, dict[int, Expression]],
+) -> dict[str, str]:
+    return {
+        stage_name: canonical_string(_sum_expressions(list(projections_by_order.values())))
+        for stage_name, projections_by_order in projected_by_stage_and_order.items()
+    }
+
+
+def _projection_order_strings_from_order_map(
+    projected_by_stage_and_order: dict[str, dict[int, Expression]],
+) -> dict[str, dict[str, str]]:
+    return {
+        stage_name: {
+            str(order): canonical_string(expr)
+            for order, expr in sorted(projections_by_order.items())
+        }
+        for stage_name, projections_by_order in projected_by_stage_and_order.items()
     }
 
 
@@ -153,9 +219,9 @@ def main() -> int:
     setup = theory.one_loop_setup(lagrangian, eft_order=6, max_trace_order=4)
     plan = setup.interaction_wilson_line_expansion_plan(
         trace_names=("hScalar-lScalar-lVector-lScalar",),
-        max_total_order=0,
-        max_slot_order=0,
-        index_prefix="debug_singlet_eom_boundary",
+        max_total_order=args.max_total_order,
+        max_slot_order=args.max_slot_order,
+        index_prefix=args.index_prefix,
     )
     heavy_solutions = matching_module.solve_heavy_scalar_eoms(theory, lagrangian, eft_order=6)
     requirements = matching_module._term_atom_requirements_for_targets(
@@ -163,89 +229,121 @@ def main() -> int:
         {condition_name: target},
         heavy_scalar_solutions=heavy_solutions,
     )
-    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
-        plan,
-        act_open_derivatives=True,
-        emit_covariant_derivative_commutators=False,
-        emit_covariant_derivative_commutator_passes=1,
-        covariant_derivative_commutator_mode="all_distinct",
-        expand_covariant_derivative_commutators=False,
-        max_wilson_derivative_order=4,
-        simplify_pychete_color_algebra=True,
-        term_atom_requirements=requirements,
-    )
+    plan_entries_by_label = {entry.label: entry for entry in plan.entries}
+    grouped_terms: dict[str, tuple[Any, ...]] = {}
+    evaluated_by_entry: dict[str, tuple[Expression, ...]] = {}
     terms_by_path_lists: dict[str, list[Any]] = {}
-    for entry_terms in grouped_terms.values():
-        for term in entry_terms:
-            terms_by_path_lists.setdefault(f"path{term.path_index}", []).append(term)
+    for order in sorted({entry.total_order for entry in plan.entries}):
+        order_entries = tuple(entry for entry in plan.entries if entry.total_order == order)
+        order_plan = matching_module.WilsonLineExpansionPlan(
+            theory=plan.theory,
+            entries=order_entries,
+            trace_names=plan.trace_names,
+            max_total_order=plan.max_total_order,
+            max_slot_order=plan.max_slot_order,
+        )
+        print(f"Generating Wilson-line terms for total_order={order}", flush=True)
+        order_grouped = setup.interaction_wilson_line_expansion_terms_by_trace(
+            order_plan,
+            act_open_derivatives=True,
+            emit_covariant_derivative_commutators=False,
+            emit_covariant_derivative_commutator_passes=1,
+            covariant_derivative_commutator_mode="all_distinct",
+            expand_covariant_derivative_commutators=False,
+            max_wilson_derivative_order=4,
+            simplify_pychete_color_algebra=True,
+            term_atom_requirements=requirements,
+        )
+        grouped_terms.update(order_grouped)
+        for entry_terms in order_grouped.values():
+            for term in entry_terms:
+                terms_by_path_lists.setdefault(f"path{term.path_index}", []).append(term)
+        print(
+            "Evaluating Wilson-line terms for total_order="
+            f"{order} terms={sum(len(terms) for terms in order_grouped.values())}",
+            flush=True,
+        )
+        evaluated_by_entry.update(
+            matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+                theory,
+                order_grouped,
+                tensor_reduce=True,
+                tensor_reduce_engine=None,
+                tensor_reduce_before_wilson_expand=True,
+                max_wilson_derivative_order=4,
+                emit_covariant_derivative_commutators=False,
+                emit_covariant_derivative_commutator_passes=1,
+                covariant_derivative_commutator_mode="all_distinct",
+                expand_covariant_derivative_commutators=False,
+                simplify_pychete_color_algebra=True,
+                expose_scalar_derivative_commutator_bilinears=False,
+                epsilon=None,
+                mu_r_squared=None,
+            )
+        )
     terms_by_path = {
         path: tuple(terms)
         for path, terms in terms_by_path_lists.items()
     }
-    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
-        theory,
-        terms_by_path,
-        tensor_reduce=True,
-        tensor_reduce_engine=None,
-        tensor_reduce_before_wilson_expand=True,
-        max_wilson_derivative_order=4,
-        emit_covariant_derivative_commutators=False,
-        emit_covariant_derivative_commutator_passes=1,
-        covariant_derivative_commutator_mode="all_distinct",
-        expand_covariant_derivative_commutators=False,
-        simplify_pychete_color_algebra=True,
-        expose_scalar_derivative_commutator_bilinears=False,
-        epsilon=None,
-        mu_r_squared=None,
+    normalization = one_loop_normalization_factor(
+        OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+        hbar=theory.external_handle("hbar")(),
     )
-    selected = sum(
-        (term for entry_terms in evaluated_by_entry.values() for term in entry_terms),
-        Expression.num(0),
-    )
-    normalized = (
-        one_loop_normalization_factor(
-            OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
-            hbar=theory.external_handle("hbar")(),
-        )
-        * selected
-    ).expand()
-    post_green = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
-        theory,
-        normalized,
-    )
-    post_heavy = post_green.replace_multiple(
-        matching_module.heavy_scalar_solution_replacements(
+    stage_names = [
+        "selected_normalized_evaluated",
+        "selected_normalized_pole_part",
+        "selected_normalized_finite_part",
+    ]
+    heavy_replacements = ()
+    if args.include_green_heavy_stages:
+        stage_names.extend([
+            "selected_post_green",
+            "selected_post_heavy",
+            "selected_post_heavy_green",
+        ])
+        heavy_replacements = matching_module.heavy_scalar_solution_replacements(
             heavy_solutions,
             fresh_dummy_indices=True,
-        ),
-        repeat=False,
-    ).expand()
-    post_heavy_green = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
-        theory,
-        post_heavy,
-    )
-    stage_expressions = {
-        "selected_normalized_evaluated": normalized,
-        "selected_normalized_pole_part": vakint_backend.pole_part(normalized),
-        "selected_normalized_finite_part": vakint_backend.finite_part(normalized),
-        "selected_post_green": post_green,
-        "selected_post_heavy": post_heavy,
-        "selected_post_heavy_green": post_heavy_green,
+        )
+    stage_expression_parts_by_order: dict[str, dict[int, list[Expression]]] = {
+        stage_name: {} for stage_name in stage_names
     }
-    path_stage_expressions = {
-        path: (
-            one_loop_normalization_factor(
-                OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
-                hbar=theory.external_handle("hbar")(),
+    for entry_label, evaluated_terms in evaluated_by_entry.items():
+        if not evaluated_terms:
+            continue
+        normalized = (normalization * sum(evaluated_terms, Expression.num(0))).expand()
+        entry_stage_expressions = {
+            "selected_normalized_evaluated": normalized,
+            "selected_normalized_pole_part": vakint_backend.pole_part(normalized),
+            "selected_normalized_finite_part": vakint_backend.finite_part(normalized),
+        }
+        if args.include_green_heavy_stages:
+            post_green = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                theory,
+                normalized,
             )
-            * sum(evaluated_terms, Expression.num(0))
-        ).expand()
-        for path, evaluated_terms in evaluated_by_entry.items()
-    }
-    path_finite_stage_expressions = {
-        path: vakint_backend.finite_part(expr)
-        for path, expr in path_stage_expressions.items()
-    }
+            post_heavy = post_green.replace_multiple(
+                heavy_replacements,
+                repeat=False,
+            ).expand()
+            post_heavy_green = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                theory,
+                post_heavy,
+            )
+            entry_stage_expressions.update({
+                "selected_post_green": post_green,
+                "selected_post_heavy": post_heavy,
+                "selected_post_heavy_green": post_heavy_green,
+            })
+        order = plan_entries_by_label[entry_label].total_order
+        for stage_name, expr in entry_stage_expressions.items():
+            stage_expression_parts_by_order[stage_name].setdefault(order, []).append(expr)
+    projected_by_stage_and_order = _projected_stage_order_map(
+        theory,
+        condition_name,
+        target,
+        stage_expression_parts_by_order,
+    )
     reference_off_shell = reference.project_matching_conditions(
         {condition_name: target},
         source="off_shell_eft_lagrangian",
@@ -267,42 +365,43 @@ def main() -> int:
         "controls": {
             "trace_names": ["hScalar-lScalar-lVector-lScalar"],
             "max_trace_order": 4,
-            "max_total_order": 0,
-            "max_slot_order": 0,
+            "max_total_order": args.max_total_order,
+            "max_slot_order": args.max_slot_order,
             "act_open_derivatives": True,
             "tensor_reduce_before_wilson_expand": True,
             "simplify_pychete_color_algebra": True,
             "normalization": "matchete_evaluated_hbar",
+            "include_green_heavy_stages": args.include_green_heavy_stages,
         },
         "term_counts_by_entry": {entry: len(terms) for entry, terms in grouped_terms.items()},
+        "term_counts_by_total_order": {
+            str(order): sum(
+                len(grouped_terms[entry.label])
+                for entry in plan.entries
+                if entry.total_order == order
+            )
+            for order in sorted({entry.total_order for entry in plan.entries})
+        },
         "term_counts_by_path": {path: len(terms) for path, terms in sorted(terms_by_path.items())},
         "evaluated_term_counts_by_entry": {
-            entry: sum(len(terms) for terms in evaluated_by_entry.values()) for entry in grouped_terms
+            entry: len(evaluated_by_entry.get(entry, ())) for entry in grouped_terms
         },
-        "evaluated_term_counts_by_path": {
-            path: len(terms) for path, terms in sorted(evaluated_by_entry.items())
+        "evaluated_term_counts_by_total_order": {
+            str(order): sum(
+                len(evaluated_by_entry.get(entry.label, ()))
+                for entry in plan.entries
+                if entry.total_order == order
+            )
+            for order in sorted({entry.total_order for entry in plan.entries})
         },
+        "evaluated_term_counts_by_path": {},
         "matchete_quarter_insertions": matchete_quarter_insertions,
         "matchete_quarter_insertion_count": len(matchete_quarter_insertions),
         "pychete_nonzero_path_count": len(terms_by_path),
         "heavy_scalar_solution_count": len(heavy_solutions),
-        "selected_stage_projections": _projection_strings(
-            theory,
-            condition_name,
-            target,
-            stage_expressions,
-        ),
-        "path_stage_projections": _projection_strings(
-            theory,
-            condition_name,
-            target,
-            path_stage_expressions,
-        ),
-        "path_finite_stage_projections": _projection_strings(
-            theory,
-            condition_name,
-            target,
-            path_finite_stage_expressions,
+        "selected_stage_projections": _projection_strings_from_order_map(projected_by_stage_and_order),
+        "selected_stage_projections_by_total_order": _projection_order_strings_from_order_map(
+            projected_by_stage_and_order
         ),
         "reference_projections": {
             "matchete_trace_off_shell_input_form": matchete_trace_debug[
@@ -318,17 +417,13 @@ def main() -> int:
             "pychete_reference_on_shell": canonical_string(reference.matching_conditions[condition_name]),
         },
         "first_differing_boundary": (
-            "selected_wilson_line_trace_aggregation_or_reduction_before_eom; "
-            "pychete selected prop-order-zero normalized source now has the "
-            "-2 pole/log weight from eight nonzero Wilson-line paths, each "
-            "projecting with the Matchete -1/4 insertion sign. The paired "
-            "Matchete insertion dump also records eight -1/4 insertion "
-            "checkpoints, while Matchete's saved selected trace/off-shell "
-            "checkpoint has -3/2 and the selected prop-order aggregate fields "
-            "in this dump are $Failed/$Aborted. The next comparison is "
-            "Matchete's reduction/aggregation from insertion checkpoints or "
-            "raw selected prop-order data to the saved validation trace, not "
-            "source/path coverage or target filtering."
+            "selected_wilson_line_trace_generation_now_matches_the_Matchete_"
+            "propagation_order_0_1_2_selected_trace_checkpoint. Projections are "
+            "computed entry/order-locally before summing to avoid the known "
+            "large aggregate projection cost. The next comparison is the "
+            "broader Green/EOM/on-shell route against Matchete's raw "
+            "LagrangianEFT/InternalSimplify/PerformSystematicFieldRedefs "
+            "boundary, not this selected four-slot trace aggregation."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

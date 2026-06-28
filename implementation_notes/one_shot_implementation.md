@@ -1322,3 +1322,23 @@
   tests/integration/matching/test_singlet_selected_wilson_coefficients.py -q`
   (`13 passed, 6 deselected`); `python -m mypy`; and `python -m py_compile`
   on the touched source/test files.
+- Latest cHD boundary-fixture refresh: `scripts/debug_pychete_singlet_eom_boundary.py`
+  now defaults to the selected Wilson-line plan with `max_total_order=2` and
+  `max_slot_order=2`, splits generation/evaluation by total order, and
+  projects order-local chunks before summing coefficients. This avoids the
+  large aggregate projection cost while preserving the Matchete
+  propagation-order comparison. The regenerated
+  `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`
+  records `term_counts_by_total_order = {0: 8, 1: 24, 2: 72}` and pole
+  projections `-2 + 1 - 1/2 = -3/2`, matching the Matchete selected
+  trace/off-shell checkpoint.
+- Current first boundary after this refresh: selected four-slot
+  `hScalar-lScalar-lVector-lScalar -> cHD` trace generation and evaluation is
+  no longer the mismatch. The pychete selected trace matches Matchete's
+  off-shell coefficient; Matchete's on-shell checkpoint still shifts the
+  coefficient from `-3/2` to `-5/3` in the pole/log weight. The next runtime
+  slice should therefore compare the full pychete pre-EOM source against the
+  Matchete `raw_lagrangian_eft_eom_boundary` sequence in
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, especially
+  `InternalSimplify` and `PerformSystematicFieldRedefs`, before adding any
+  on-shell field-redefinition code.
