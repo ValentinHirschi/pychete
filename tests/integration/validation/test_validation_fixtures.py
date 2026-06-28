@@ -10,6 +10,7 @@ import pytest
 from pychete import (
     ExternalKind,
     FieldMassKind,
+    FreeLagConvention,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
     OneLoopNormalization,
@@ -954,6 +955,70 @@ def test_validation_fixture_preview_forwards_wilson_line_scalar_derivative_bilin
     assert captured_hybrid_kwargs["expose_scalar_derivative_commutator_bilinears"] is True
 
 
+def test_validation_fixture_preview_applies_abelian_vector_eom_field_redefinition(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("validation_preview_vector_eom_reduction")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    coupling = theory.define_coupling("y", self_conjugate=True)
+    coefficient = theory.define_coupling("c", self_conjugate=True)
+    vector = theory.field_handle("B")
+    gauge = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    field = phi()
+    current = Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field
+    divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    source = (coefficient() * current * divergence).expand()
+    lagrangian = (
+        theory.free_lag(heavy, phi, vector, convention=FreeLagConvention.MATCHETE)
+        - coupling() * heavy() * s.Bar(phi()) * phi()
+    )
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
+    fixture = ValidationFixture(
+        name="validation_preview_vector_eom_reduction",
+        kind="unit",
+        state=state,
+        source={"generator": "pytest"},
+        expression_names=("lagrangian",),
+    )
+
+    def fake_power_type_result(self: OneLoopSetup, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=source,
+            on_shell_eft_lagrangian=source,
+        )
+
+    monkeypatch.setattr(OneLoopSetup, "interaction_power_type_matching_result", fake_power_type_result)
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        on_shell_eom_lagrangian="lagrangian",
+        on_shell_eom_fields=[vector],
+        on_shell_eom_strict=True,
+        on_shell_eom_abelian_vector_field_redefinition=True,
+    )
+
+    assert preview.metadata["on_shell_eom_reduction_requested"] is True
+    assert preview.metadata["on_shell_eom_reduction_rule_count"] == 1
+    assert preview.metadata["on_shell_eom_abelian_vector_field_redefinition"] is True
+    assert preview.metadata["on_shell_eom_abelian_vector_field_redefinition_applied"] is True
+    assert "on_shell_eft_lagrangian_abelian_vector_field_redefinition_delta" in preview.supertraces
+    assert_expr_equal(preview.on_shell_eft_lagrangian, -4 * coefficient() * gauge() ** 2 * current**2)
+
+
 def test_validation_fixture_preview_can_use_vakint_minimal_subtraction_backend_without_mathematica() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/VLF_toy_model.model_fixture.json"))
     eps = vakint_backend.epsilon_symbol()
@@ -1156,6 +1221,12 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
         use_public_match_api=True,
         project_reference_matching_conditions=True,
         simplify_pychete_color_algebra=True,
+        on_shell_eom_lagrangian="lagrangian",
+        on_shell_eom_fields=("B",),
+        on_shell_eom_min_derivative_order=1,
+        on_shell_eom_strict=True,
+        on_shell_eom_abelian_vector_field_redefinition=True,
+        on_shell_replacement_repeat=True,
         substitute_heavy_scalar_solutions=True,
         include_tree_level_matching=True,
         bosonic_cde_expansion_indices_by_trace={"hScalar": ((S("mu"),),)},
@@ -1179,6 +1250,12 @@ def test_validation_fixture_gap_report_forwards_pychete_color_to_public_match_ap
     options = captured["one_loop_options"]
     assert isinstance(options, OneLoopMatchOptions)
     assert options.simplify_pychete_color_algebra is True
+    assert_expr_equal(options.on_shell_eom_lagrangian, fixture.expression("lagrangian"))
+    assert options.on_shell_eom_fields == ("B",)
+    assert options.on_shell_eom_min_derivative_order == 1
+    assert options.on_shell_eom_strict is True
+    assert options.on_shell_eom_abelian_vector_field_redefinition is True
+    assert options.on_shell_replacement_repeat is True
     assert options.substitute_heavy_scalar_solutions is True
     assert options.include_tree_level_matching is True
     assert options.bosonic_cde_expansion_indices_by_trace == {"hScalar": ((S("mu"),),)}
@@ -1225,11 +1302,26 @@ def test_validation_fixture_gap_report_forwards_heavy_scalar_options_to_direct_p
     fixture.one_loop_preview_gap_report(
         reference,
         reference_name="direct_preview_forwarding",
+        on_shell_eom_lagrangian="lagrangian",
+        on_shell_eom_fields=("phi",),
+        on_shell_eom_min_derivative_order=1,
+        on_shell_eom_strict=True,
+        on_shell_eom_abelian_vector_field_redefinition=True,
+        on_shell_replacement_repeat=True,
         substitute_heavy_scalar_solutions=True,
         heavy_scalar_solution_lagrangian="lagrangian",
         heavy_scalar_solution_expand=True,
     )
 
+    assert_expr_equal(
+        captured["on_shell_eom_lagrangian"],
+        fixture.expression("lagrangian"),
+    )
+    assert captured["on_shell_eom_fields"] == ("phi",)
+    assert captured["on_shell_eom_min_derivative_order"] == 1
+    assert captured["on_shell_eom_strict"] is True
+    assert captured["on_shell_eom_abelian_vector_field_redefinition"] is True
+    assert captured["on_shell_replacement_repeat"] is True
     assert captured["substitute_heavy_scalar_solutions"] is True
     assert captured["heavy_scalar_solution_expand"] is True
     assert_expr_equal(

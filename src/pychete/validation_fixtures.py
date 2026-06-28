@@ -680,6 +680,12 @@ class ValidationFixture:
         wilson_line_tensor_reduce_before_wilson_expand: bool = False,
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         simplify_pychete_color_algebra: bool = False,
+        on_shell_eom_lagrangian: Expression | str | None = None,
+        on_shell_eom_fields: Sequence[Any] | None = None,
+        on_shell_eom_min_derivative_order: int = 2,
+        on_shell_eom_strict: bool = False,
+        on_shell_eom_abelian_vector_field_redefinition: bool = False,
+        on_shell_replacement_repeat: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         heavy_scalar_solution_lagrangian: Expression | str | None = None,
         heavy_scalar_solution_expand: bool = False,
@@ -709,6 +715,11 @@ class ValidationFixture:
             self.expression(heavy_scalar_solution_lagrangian)
             if isinstance(heavy_scalar_solution_lagrangian, str)
             else heavy_scalar_solution_lagrangian
+        )
+        resolved_on_shell_eom_lagrangian = (
+            self.expression(on_shell_eom_lagrangian)
+            if isinstance(on_shell_eom_lagrangian, str)
+            else on_shell_eom_lagrangian
         )
         if expand_abelian_covariant_derivatives:
             lagrangian_expr = theory.expand_abelian_covariant_derivatives(lagrangian_expr)
@@ -1125,6 +1136,64 @@ class ValidationFixture:
                     "heavy_scalar_solution_fresh_dummy_indices": False,
                 },
             )
+        if resolved_on_shell_eom_lagrangian is not None:
+            eom_source = result.on_shell_eft_lagrangian
+            eom_rules = theory.eom_replacement_rules_for_expression(
+                resolved_on_shell_eom_lagrangian,
+                eom_source,
+                fields=on_shell_eom_fields,
+                eft_order=eft_order,
+                min_derivative_order=on_shell_eom_min_derivative_order,
+                strict=on_shell_eom_strict,
+            )
+            vector_field_redefinition_delta = Expression.num(0)
+            if on_shell_eom_abelian_vector_field_redefinition:
+                vector_field_redefinition_delta = theory.abelian_vector_eom_field_redefinition_delta(
+                    resolved_on_shell_eom_lagrangian,
+                    eom_source,
+                    fields=on_shell_eom_fields,
+                    strict=on_shell_eom_strict,
+                )
+            if eom_rules:
+                result = result.with_on_shell_reduction(
+                    eom_rules,
+                    repeat=on_shell_replacement_repeat,
+                )
+            if not bool(vector_field_redefinition_delta == Expression.num(0)):
+                before_field_redefinition = result.on_shell_eft_lagrangian
+                after_field_redefinition = (before_field_redefinition + vector_field_redefinition_delta).expand()
+                result = replace(
+                    result,
+                    on_shell_eft_lagrangian=after_field_redefinition,
+                    supertraces={
+                        **result.supertraces,
+                        "on_shell_eft_lagrangian_before_abelian_vector_field_redefinition": (
+                            before_field_redefinition
+                        ),
+                        "on_shell_eft_lagrangian_after_abelian_vector_field_redefinition": (
+                            after_field_redefinition
+                        ),
+                        "on_shell_eft_lagrangian_abelian_vector_field_redefinition_delta": (
+                            vector_field_redefinition_delta
+                        ),
+                    },
+                )
+            result = replace(
+                result,
+                metadata={
+                    **result.metadata,
+                    "on_shell_eom_reduction_requested": True,
+                    "on_shell_eom_reduction_rule_count": len(eom_rules),
+                    "on_shell_eom_min_derivative_order": on_shell_eom_min_derivative_order,
+                    "on_shell_eom_strict": on_shell_eom_strict,
+                    "on_shell_eom_abelian_vector_field_redefinition": (
+                        on_shell_eom_abelian_vector_field_redefinition
+                    ),
+                    "on_shell_eom_abelian_vector_field_redefinition_applied": (
+                        not bool(vector_field_redefinition_delta == Expression.num(0))
+                    ),
+                },
+            )
         if wilson_line_expose_scalar_derivative_commutator_bilinears:
             reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
                 theory,
@@ -1311,6 +1380,12 @@ class ValidationFixture:
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
         wilson_line_tensor_reduce_before_wilson_expand: bool = False,
         simplify_pychete_color_algebra: bool = False,
+        on_shell_eom_lagrangian: Expression | str | None = None,
+        on_shell_eom_fields: Sequence[Any] | None = None,
+        on_shell_eom_min_derivative_order: int = 2,
+        on_shell_eom_strict: bool = False,
+        on_shell_eom_abelian_vector_field_redefinition: bool = False,
+        on_shell_replacement_repeat: bool = False,
         substitute_heavy_scalar_solutions: bool = False,
         heavy_scalar_solution_lagrangian: Expression | str | None = None,
         heavy_scalar_solution_expand: bool = False,
@@ -1371,6 +1446,11 @@ class ValidationFixture:
         Wilson-line local commutator identity mode, including the bounded
         Matchete-adjacent ``"all_distinct"`` mode used by current Singlet
         frontier probes.
+        ``on_shell_eom_lagrangian`` may be a fixture expression name or
+        expression and forwards the public one-loop EOM reduction path. The
+        bounded ``on_shell_eom_abelian_vector_field_redefinition`` option also
+        forwards the current scalar-current Abelian vector field-redefinition
+        companion used by the Singlet ``cHD`` frontier.
         ``substitute_heavy_scalar_solutions`` applies the same heavy-scalar
         on-shell replacement pass as the public one-loop matcher before direct
         preview matching-condition projection. ``heavy_scalar_solution_lagrangian``
@@ -1426,6 +1506,11 @@ class ValidationFixture:
             self.expression(heavy_scalar_solution_lagrangian)
             if isinstance(heavy_scalar_solution_lagrangian, str)
             else heavy_scalar_solution_lagrangian
+        )
+        resolved_on_shell_eom_lagrangian = (
+            self.expression(on_shell_eom_lagrangian)
+            if isinstance(on_shell_eom_lagrangian, str)
+            else on_shell_eom_lagrangian
         )
         if use_public_match_api:
             matched = self.theory().match(
@@ -1509,6 +1594,14 @@ class ValidationFixture:
                         wilson_line_tensor_reduce_before_wilson_expand
                     ),
                     simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                    on_shell_eom_lagrangian=resolved_on_shell_eom_lagrangian,
+                    on_shell_eom_fields=on_shell_eom_fields,
+                    on_shell_eom_min_derivative_order=on_shell_eom_min_derivative_order,
+                    on_shell_eom_strict=on_shell_eom_strict,
+                    on_shell_eom_abelian_vector_field_redefinition=(
+                        on_shell_eom_abelian_vector_field_redefinition
+                    ),
+                    on_shell_replacement_repeat=on_shell_replacement_repeat,
                     substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                     heavy_scalar_solution_lagrangian=resolved_heavy_scalar_solution_lagrangian,
                     heavy_scalar_solution_expand=heavy_scalar_solution_expand,
@@ -1622,6 +1715,14 @@ class ValidationFixture:
                 ),
                 matching_condition_targets=projected_targets,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                on_shell_eom_lagrangian=resolved_on_shell_eom_lagrangian,
+                on_shell_eom_fields=on_shell_eom_fields,
+                on_shell_eom_min_derivative_order=on_shell_eom_min_derivative_order,
+                on_shell_eom_strict=on_shell_eom_strict,
+                on_shell_eom_abelian_vector_field_redefinition=(
+                    on_shell_eom_abelian_vector_field_redefinition
+                ),
+                on_shell_replacement_repeat=on_shell_replacement_repeat,
                 substitute_heavy_scalar_solutions=substitute_heavy_scalar_solutions,
                 heavy_scalar_solution_lagrangian=resolved_heavy_scalar_solution_lagrangian,
                 heavy_scalar_solution_expand=heavy_scalar_solution_expand,

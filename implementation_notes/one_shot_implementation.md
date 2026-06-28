@@ -565,3 +565,23 @@
   `tests/unit/definitions/test_public_api.py -q` (`8 passed`);
   and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no
   issues.
+- Latest validation-plumbing slice: `ValidationFixture.one_loop_preview(...)`
+  and `ValidationFixture.one_loop_preview_gap_report(...)` now expose the
+  on-shell EOM controls that the public matcher uses, including
+  `on_shell_eom_lagrangian`, field filters, derivative-order/strict/repeat
+  settings, and the bounded
+  `on_shell_eom_abelian_vector_field_redefinition` companion. Fixture
+  expression names are resolved before either the direct-preview route or the
+  `use_public_match_api=True` route is called, so committed Matchete-independent
+  gap reports can exercise the same Singlet `cHD` on-shell checkpoint without
+  custom test-only postprocessing.
+- Focused validation for the plumbing slice passed:
+  `tests/integration/validation/test_validation_fixtures.py -k
+  "preview_applies_abelian_vector_eom_field_redefinition or
+  forwards_pychete_color_to_public_match_api or
+  forwards_heavy_scalar_options_to_direct_preview" -q` (`3 passed`);
+  `tests/integration/validation/test_validation_fixtures.py -k
+  "reference_chd_vector_eom_field_redefinition or reference_chd_records or
+  higgs_eom_rules" -q` (`3 passed`);
+  and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no
+  issues.

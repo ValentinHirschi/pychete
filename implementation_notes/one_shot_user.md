@@ -1062,3 +1062,9 @@ without Warsaw-specific core assumptions.
   result. This is still a bounded subset: fermion currents, non-Abelian vector
   shifts, kinetic mixing, anomalies/Jacobians, and full iterative
   `EOMSimplify` remain to be implemented.
+- Latest validation-route update: the same on-shell EOM options, including the
+  Abelian vector field-redefinition companion, are now available through
+  `ValidationFixture.one_loop_preview(...)` and
+  `ValidationFixture.one_loop_preview_gap_report(...)`. This means future
+  Matchete-independent Singlet `cHD` gap reports can use the public validation
+  entry points instead of bespoke postprocessing.
