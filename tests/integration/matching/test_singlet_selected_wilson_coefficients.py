@@ -914,10 +914,12 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
     assert "representative-conversion boundary" in debug["first_differing_boundary"]
-    assert "high-order selected entries expose formal scalar EOM terms" in debug["first_differing_boundary"]
+    assert "dim6/dev3 vector EOM selection over B/W" in debug["first_differing_boundary"]
+    assert "no B formal vector EOM" in debug["first_differing_boundary"]
     assert eom_probe == {
         "entry_count": 10,
         "field_strength_count": 0,
+        "formal_vector_eom_count": 0,
         "nonzero_scalar_eom_field_redefinition_delta_entry_count": 4,
         "nonzero_vector_eom_current_exposed_delta_entry_count": 0,
         "nonzero_vector_field_redefinition_delta_entry_count": 0,

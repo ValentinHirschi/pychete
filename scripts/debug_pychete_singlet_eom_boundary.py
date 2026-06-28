@@ -29,9 +29,12 @@ from pychete import (
 )
 from pychete.backends import vakint as vakint_backend
 from pychete.expr import (
+    field_derivatives,
+    field_pattern,
     field_strength_derivatives,
     field_strength_label,
     field_strength_pattern,
+    is_head,
     list_items,
     matching_subexpressions,
 )
@@ -176,6 +179,18 @@ def _formal_eom_count(expr: Expression) -> int:
     return len(matching_subexpressions(expr, s.EOM(s.CDBodyWildcard)))
 
 
+def _formal_vector_eom_count(theory: Any, expr: Expression, *, field_name: str) -> int:
+    label = theory.field_handle(field_name).label
+    count = 0
+    for atom in matching_subexpressions(expr, s.EOM(field_pattern(label))):
+        body = atom[0]
+        if field_derivatives(body):
+            continue
+        if any(is_head(index, s.Index) and bool(index[1] == s.Lorentz) for index in list_items(body[2])):
+            count += 1
+    return count
+
+
 def _eom_exposure_probe(
     theory: Any,
     lagrangian: Expression,
@@ -240,6 +255,11 @@ def _eom_exposure_probe(
         by_entry[entry_label] = {
             "byte_count": expr.get_byte_size(),
             "field_strength_count": len(matching_subexpressions(expr, field_strength_pattern())),
+            "formal_vector_eom_count": _formal_vector_eom_count(
+                theory,
+                expr,
+                field_name=vector_field,
+            ),
             "vector_field_strength_divergence_count": _field_strength_divergence_count(
                 theory,
                 expr,
@@ -272,6 +292,7 @@ def _eom_exposure_probe(
     summary = {
         "entry_count": len(by_entry),
         "field_strength_count": sum(row["field_strength_count"] for row in by_entry.values()),
+        "formal_vector_eom_count": sum(row["formal_vector_eom_count"] for row in by_entry.values()),
         "vector_field_strength_divergence_count": sum(
             row["vector_field_strength_divergence_count"] for row in by_entry.values()
         ),
@@ -589,19 +610,15 @@ def main() -> int:
             "large aggregate projection cost. The current narrowed mismatch is "
             "the representative-conversion boundary before field redefinition: "
             "Matchete's InternalSimplify exposes EOM-proportional structures "
-            "that feed PerformSystematicFieldRedefs, while pychete's selected "
-            "source now exposes formal scalar EOM terms and nonzero scalar "
-            "field-redefinition deltas for the lower-order selected entries. "
-            "A performance-safe hybrid scalar Green pass now also lets the "
-            "high-order selected entries expose formal scalar EOM terms without "
-            "hitting bounded Green-basis exposure limits, but those high-order "
-            "formal EOM terms still do not feed a nonzero scalar "
-            "field-redefinition delta in pychete. "
-            "The bounded exact Abelian current-current exposure probe also "
-            "finds no vector-EOM divergence on this selected source, so the "
-            "missing conversion is broader than a simple inverse vector-EOM "
-            "current product and should continue targeting Matchete "
-            "InternalSimplify's operator-basis/identity-neighborhood control."
+            "that feed PerformSystematicFieldRedefs. The refreshed Matchete "
+            "replay locates the first nonzero cHD delta at dim6/dev3 vector "
+            "EOM selection over B/W, while pychete's selected source still "
+            "contains no B formal vector EOM and no B field-strength "
+            "divergence. The bounded exact Abelian current-current exposure "
+            "probe also finds no vector-EOM divergence on this selected "
+            "source, so the missing conversion is broader than a simple "
+            "inverse vector-EOM current product and should continue targeting "
+            "Matchete InternalSimplify's vector-EOM producer."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

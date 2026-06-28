@@ -17,6 +17,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
       "byte_count": 25693,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 85111,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposure_error": null,
@@ -35,6 +36,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": {
       "byte_count": 244236,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 270920,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposure_error": null,
@@ -53,6 +55,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": {
       "byte_count": 408210,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 493988,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposure_error": null,
@@ -71,6 +74,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": {
       "byte_count": 371255,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 573946,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposure_error": null,
@@ -89,6 +93,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": {
       "byte_count": 763147,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 1067440,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposure_error": null,
@@ -107,6 +112,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": {
       "byte_count": 20663,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 59410,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposure_error": null,
@@ -125,6 +131,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": {
       "byte_count": 10208,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 51565,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposure_error": null,
@@ -143,6 +150,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": {
       "byte_count": 25759,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 85182,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposure_error": null,
@@ -161,6 +169,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": {
       "byte_count": 251520,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 397458,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposure_error": null,
@@ -179,6 +188,7 @@
     "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": {
       "byte_count": 185622,
       "field_strength_count": 0,
+      "formal_vector_eom_count": 0,
       "scalar_eom_exposed_byte_count": 275164,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposure_error": null,
@@ -198,6 +208,7 @@
   "eom_exposure_probe_summary": {
     "entry_count": 10,
     "field_strength_count": 0,
+    "formal_vector_eom_count": 0,
     "nonzero_scalar_eom_field_redefinition_delta_entry_count": 4,
     "nonzero_vector_eom_current_exposed_delta_entry_count": 0,
     "nonzero_vector_field_redefinition_delta_entry_count": 0,
@@ -231,7 +242,7 @@
     "1": 24,
     "2": 72
   },
-  "first_differing_boundary": "selected_wilson_line_trace_generation_now_matches_the_Matchete_propagation_order_0_1_2_selected_trace_checkpoint. Projections are computed entry/order-locally before summing to avoid the known large aggregate projection cost. The current narrowed mismatch is the representative-conversion boundary before field redefinition: Matchete's InternalSimplify exposes EOM-proportional structures that feed PerformSystematicFieldRedefs, while pychete's selected source now exposes formal scalar EOM terms and nonzero scalar field-redefinition deltas for the lower-order selected entries. A performance-safe hybrid scalar Green pass now also lets the high-order selected entries expose formal scalar EOM terms without hitting bounded Green-basis exposure limits, but those high-order formal EOM terms still do not feed a nonzero scalar field-redefinition delta in pychete. The bounded exact Abelian current-current exposure probe also finds no vector-EOM divergence on this selected source, so the missing conversion is broader than a simple inverse vector-EOM current product and should continue targeting Matchete InternalSimplify's operator-basis/identity-neighborhood control.",
+  "first_differing_boundary": "selected_wilson_line_trace_generation_now_matches_the_Matchete_propagation_order_0_1_2_selected_trace_checkpoint. Projections are computed entry/order-locally before summing to avoid the known large aggregate projection cost. The current narrowed mismatch is the representative-conversion boundary before field redefinition: Matchete's InternalSimplify exposes EOM-proportional structures that feed PerformSystematicFieldRedefs. The refreshed Matchete replay locates the first nonzero cHD delta at dim6/dev3 vector EOM selection over B/W, while pychete's selected source still contains no B formal vector EOM and no B field-strength divergence. The bounded exact Abelian current-current exposure probe also finds no vector-EOM divergence on this selected source, so the missing conversion is broader than a simple inverse vector-EOM current product and should continue targeting Matchete InternalSimplify's vector-EOM producer.",
   "generator": "scripts/debug_pychete_singlet_eom_boundary.py",
   "heavy_scalar_solution_count": 1,
   "matchete_debug_files": {

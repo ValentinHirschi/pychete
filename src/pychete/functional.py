@@ -2364,6 +2364,23 @@ def eom_replacement_rules_for_expression(
         except ValueError as exc:
             if strict:
                 failures.append(str(exc))
+    for target, open_index, sign in _formal_abelian_vector_eom_rule_targets(
+        expression,
+        allowed_labels=allowed_labels,
+    ):
+        try:
+            replacement = _formal_abelian_vector_eom_replacement(
+                theory,
+                lagrangian,
+                target,
+                open_index=open_index,
+                sign=sign,
+            )
+            if replacement is not None:
+                rules.append(replacement)
+        except ValueError as exc:
+            if strict:
+                failures.append(str(exc))
     if failures:
         raise ValueError("; ".join(failures))
     return tuple(rules)
@@ -2398,6 +2415,28 @@ def abelian_vector_eom_field_redefinition_delta(
     for target, open_index, sign in _abelian_vector_eom_rule_targets(expression, allowed_labels=allowed_labels):
         try:
             replacement = _abelian_vector_eom_replacement(
+                theory,
+                lagrangian,
+                target,
+                open_index=open_index,
+                sign=sign,
+            )
+            if replacement is None:
+                continue
+            coefficient = expression.coefficient(target).expand()
+            if is_zero(coefficient):
+                continue
+            replacement_value = target.replace_multiple([replacement]).expand()
+            deltas.append((coefficient * replacement_value).expand())
+        except ValueError as exc:
+            if strict:
+                failures.append(str(exc))
+    for target, open_index, sign in _formal_abelian_vector_eom_rule_targets(
+        expression,
+        allowed_labels=allowed_labels,
+    ):
+        try:
+            replacement = _formal_abelian_vector_eom_replacement(
                 theory,
                 lagrangian,
                 target,
@@ -2514,8 +2553,8 @@ def operator_derivative_count(expr: Expression) -> int:
     """Return Matchete-style derivative count for an operator expression.
 
     This mirrors the derivative-count component of Matchete's
-    ``OpDevsAndDim`` with Symbolica marker replacements. Scalar formal EOMs
-    count as two derivatives, fermion and vector formal EOMs count as one,
+    ``OpDevsAndDim`` with Symbolica marker replacements. Scalar and vector
+    formal EOMs count as two derivatives, fermion formal EOMs count as one,
     field-strength atoms count as one plus explicit derivative slots, and
     ordinary field derivative slots count directly.
     """
@@ -2866,7 +2905,74 @@ def _abelian_vector_eom_replacement(
     open_index: Expression,
     sign: Expression,
 ) -> Replacement | None:
-    definition = theory._field_definition_for_label(field_strength_label(target))
+    return _abelian_vector_eom_replacement_for_label(
+        theory,
+        lagrangian,
+        target,
+        label=field_strength_label(target),
+        open_index=open_index,
+        sign=sign,
+    )
+
+
+def _formal_abelian_vector_eom_rule_targets(
+    expression: Expression,
+    *,
+    allowed_labels: set[str] | None,
+) -> tuple[tuple[Expression, Expression, Expression], ...]:
+    pattern = s.EOM(field_pattern())
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    targets: dict[str, tuple[Expression, Expression, Expression]] = {}
+    for atom in matching_subexpressions(expression, pattern, label_is_registered_field):
+        body = atom[0]
+        if allowed_labels is not None and canonical_string(field_label(body)) not in allowed_labels:
+            continue
+        if not is_head(field_type(body), s.Vector):
+            continue
+        if field_derivatives(body):
+            continue
+        open_indices = tuple(
+            index
+            for index in list_items(body[2])
+            if is_head(index, s.Index) and bool(index[1] == s.Lorentz)
+        )
+        if len(open_indices) != 1:
+            continue
+        targets.setdefault(canonical_string(atom), (atom, open_indices[0], -Expression.num(1)))
+    return tuple(targets.values())
+
+
+def _formal_abelian_vector_eom_replacement(
+    theory: Theory,
+    lagrangian: Expression,
+    target: Expression,
+    *,
+    open_index: Expression,
+    sign: Expression,
+) -> Replacement | None:
+    body = target[0]
+    if not is_head(body, s.Field):
+        return None
+    return _abelian_vector_eom_replacement_for_label(
+        theory,
+        lagrangian,
+        target,
+        label=field_label(body),
+        open_index=open_index,
+        sign=sign,
+    )
+
+
+def _abelian_vector_eom_replacement_for_label(
+    theory: Theory,
+    lagrangian: Expression,
+    target: Expression,
+    *,
+    label: Expression,
+    open_index: Expression,
+    sign: Expression,
+) -> Replacement | None:
+    definition = theory._field_definition_for_label(label)
     type_expr = definition.type_expr
     if not is_head(type_expr, s.Vector) or len(type_expr) != 1:
         return None
@@ -3017,7 +3123,12 @@ def _eom_derivative_count(atom: Expression) -> int:
     base = bar_field_inner(body) if is_bar_field(body) else body
     if not is_head(base, s.Field):
         return 0
-    return 2 if bool(field_type(base) == s.Scalar) else 1
+    base_type = field_type(base)
+    if bool(base_type == s.Fermion):
+        return 1
+    if bool(base_type == s.Scalar) or is_head(base_type, s.Vector) or bool(base_type == s.Vector):
+        return 2
+    return 0
 
 
 def _operator_derivative_weight_replacements() -> tuple[Replacement, ...]:

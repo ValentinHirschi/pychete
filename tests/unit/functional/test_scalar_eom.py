@@ -189,6 +189,46 @@ def test_eom_replacement_rules_collect_opposite_abelian_vector_divergence_sign()
     assert_expr_equal(reduced, 2 * coefficient * coupling() ** 2 * current**2)
 
 
+def test_eom_replacement_rules_collect_formal_abelian_vector_eom_targets() -> None:
+    coefficient = S("formal_abelian_vector_eom_coefficient")
+    theory = Theory("formal_abelian_vector_eom_rules")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    field = phi()
+    current = Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field
+    formal_eom = s.EOM(vector(mu))
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+    source = (coefficient * current * formal_eom).expand()
+
+    rules = theory.eom_replacement_rules_for_expression(
+        lagrangian,
+        source,
+        fields=[vector],
+        strict=True,
+    )
+    reduced = source.replace_multiple(rules).expand()
+    delta = theory.abelian_vector_eom_field_redefinition_delta(
+        lagrangian,
+        source,
+        fields=[vector],
+        strict=True,
+    )
+    expected = -2 * coefficient * coupling() ** 2 * current**2
+
+    assert len(rules) == 1
+    assert_expr_equal(reduced, expected)
+    assert_expr_equal(delta, expected)
+
+
 def test_abelian_vector_eom_field_redefinition_delta_matches_scalar_current_shift() -> None:
     coefficient = S("abelian_vector_field_redefinition_coefficient")
     theory = Theory("abelian_vector_field_redefinition_delta")
@@ -348,6 +388,36 @@ def test_formal_scalar_eom_terms_use_matchete_dimension_and_derivative_count() -
             require_formal_eom=True,
         ),
         dim_four,
+    )
+
+
+def test_formal_vector_eom_terms_use_matchete_dimension_and_derivative_count() -> None:
+    theory = Theory("formal_vector_eom_devs_dim")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    higgs = theory.define_field(
+        "H",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    mu = theory.dummy_index(0)
+    field = higgs()
+    term = s.Bar(field) * s.EOM(vector(mu)) * higgs(derivatives=[mu])
+    expression = (term + s.Bar(field) * s.EOM(vector(mu))).expand()
+
+    assert operator_dimension(term, theory) == 6
+    assert operator_derivative_count(term) == 3
+    assert_expr_equal(
+        select_terms_by_dimension_and_derivatives(
+            theory,
+            expression,
+            dimension=6,
+            derivative_count=3,
+            require_formal_eom=True,
+        ),
+        term,
     )
 
 

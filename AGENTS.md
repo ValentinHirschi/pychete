@@ -550,10 +550,13 @@ The current narrowed Singlet `cHD` EOM boundary is the internal-simplified
 source replay through Matchete `PerformSystematicFieldRedefs`: matter
 renormalization and shifts through `after_shift_dim6_dev4` leave the `cHD`
 projection unchanged, while `after_shift_dim6_dev3` produces the full
-off-shell-to-on-shell delta. Treat this as evidence that the next runtime
-implementation should port generic scalar/matter `DetermineShifts`,
-`ScalarShift`, and source-scoped `ShiftLagrangian` behavior before adding any
-coefficient-specific alias.
+off-shell-to-on-shell delta. The committed
+`debug_singlet_eom_simplify.wls` dump now records the pre-shift selection:
+that first nonzero stage selects 12 dim6/dev3 vector-EOM terms with fields
+`{B, W}` and no Higgs scalar-EOM terms. Treat this as evidence that the next
+runtime implementation should port generic vector `DetermineShifts` /
+`VectorShift` behavior and the `InternalSimplify` producer of formal vector
+EOM terms before adding any coefficient-specific alias.
 Use `scalar_eom_field_redefinition_delta(...)` /
 `Theory.scalar_eom_field_redefinition_delta(...)` as the bounded pychete
 consumer for explicit formal scalar `EOM(Field(...))` and
@@ -569,8 +572,8 @@ Matchete-compatible EFT dimensions in `operator_dimension(...)`: scalar and
 vector EOMs are counted as their field dimension plus two derivatives, and
 fermion EOMs as their field dimension plus one derivative. The derivative
 selector uses Symbolica marker replacements, not Python tree walking: scalar
-EOMs count as two derivatives, fermion/vector EOMs as one, field strengths as
-one plus derivative slots, and fields as their derivative-slot length. This is
+and vector EOMs count as two derivatives, fermion EOMs as one, field strengths
+as one plus derivative slots, and fields as their derivative-slot length. This is
 consumer-side field-redefinition machinery only; the active Singlet `cHD`
 frontier still needs broader `InternalSimplify`/Green representative exposure
 before these helpers can reproduce the Matchete `after_shift_dim6_dev3`
@@ -641,8 +644,16 @@ then uses direct `Expression.coefficient(...)` plus the shared Symbolica-backed
 projection extractor for expanded composite factors. The current Singlet
 `cHD` pychete probe showed zero exposed vector-EOM divergences from this exact
 bridge, so do not treat it as the missing `InternalSimplify`/field-redefinition
-solution for that frontier; the remaining port must cover broader
-Green-representative conversion and scalar/matter shift preparation.
+solution for that frontier; the remaining port must cover the broader
+`InternalSimplify` conversion that creates formal B/W vector-EOM terms and the
+Matchete-style vector shift preparation that consumes them.
+The current bounded Abelian vector-EOM consumer also recognizes formal
+`EOM(Field(B, Vector(...), {mu}, {}))`-style pychete atoms with exactly one
+explicit Lorentz index and routes them through the same scalar-current
+replacement and field-redefinition companion as the
+`FieldStrength(B, {nu, mu}, {}, {nu})` standard form. This is a consumer-side
+bridge for Matchete `VectorShift` parity, not a full formal-vector-EOM
+producer and not non-Abelian `W` support.
 Latest user reinforcement, 2026-06-28: when a Matchete/pychete mismatch is
 active, repeatedly run or refresh focused debug WolframScripts, dump as many
 Matchete intermediate stages as practical, and compare them against bounded

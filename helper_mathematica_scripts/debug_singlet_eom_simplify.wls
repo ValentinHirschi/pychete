@@ -84,8 +84,53 @@ coefficientStageSummary[name_String, expr_, source_, offShellExpr_, targetOperat
   |>
 ];
 
+shiftSelectionSummary[lag_, devs_Integer, dim_Integer] := Module[
+  {eomTerms, fields, hField, hTerms, hEomTerms, real, type, rules},
+  eomTerms = Matchete`FieldRedef`PackagePrivate`SelectOperatorDevsAndDim[lag, devs, dim];
+  fields = DeleteDuplicates @ Cases[
+    eomTerms,
+    Matchete`PackageScope`EoM @ Alternatives[
+      Matchete`Field[lab_, __],
+      _ @ Matchete`Field[lab_, __],
+      _ @ _ @ Matchete`Field[lab_, __]
+    ] :> lab,
+    Infinity
+  ];
+  hField = FirstCase[fields, f_ /; SymbolName[Unevaluated[f]] === "H", Missing["NotFound"]];
+  If[hField === Missing["NotFound"],
+    hTerms = {};
+    hEomTerms = {};
+    rules = {},
+    {real, type} = Lookup[
+      Matchete`PackageScope`$FieldAssociation @ hField,
+      {Matchete`SelfConjugate, Matchete`Type}
+    ];
+    hTerms = Select[Matchete`PackageScope`TermsToList @ eomTerms, Not @* FreeQ[hField]];
+    hEomTerms = Select[
+      hTerms,
+      MemberQ[#, Matchete`PackageScope`EoM[___], {0, Infinity}] &
+    ];
+    rules = If[
+      hEomTerms === {},
+      {},
+      Matchete`FieldRedef`PackagePrivate`ScalarShift[Plus @@ hEomTerms, hField, TrueQ[real]]
+    ];
+  ];
+  <|
+    "dim" -> dim,
+    "devs" -> devs,
+    "selected_term_count" -> Length[termList[eomTerms]],
+    "selected_eom_field_labels_input_form" -> toInputString[fields],
+    "selected_eom_terms_input_form" -> (shortInputString /@ Take[termList[eomTerms], UpTo[5]]),
+    "selected_h_term_count" -> Length[hTerms],
+    "selected_h_eom_term_count" -> Length[hEomTerms],
+    "selected_h_eom_terms_input_form" -> (shortInputString /@ Take[hEomTerms, UpTo[5]]),
+    "selected_h_scalar_shift_rules_input_form" -> shortInputString[rules]
+  |>
+];
+
 fieldRedefReplaySummary[name_String, expr_, offShellExpr_, targetOperator_] := Module[
-  {maxOrder = 6, stages, renormalized, gaugeData, out},
+  {maxOrder = 6, stages, renormalized, gaugeData, out, selection},
   stages = {coefficientStageSummary["source", expr, expr, offShellExpr, targetOperator]};
   renormalized = Matchete`PackageScope`RenormalizeMatterFields[expr, maxOrder, 1];
   AppendTo[
@@ -101,6 +146,7 @@ fieldRedefReplaySummary[name_String, expr_, offShellExpr_, targetOperator_] := M
   gaugeData = Matchete`FieldRedef`PackagePrivate`GaugeFieldNormalization[renormalized, maxOrder];
   out = renormalized;
   Do[
+    selection = shiftSelectionSummary[out, devs, eftOrder];
     out = Matchete`FieldRedef`PackagePrivate`ShiftLagrangian[
       out,
       gaugeData[[1]],
@@ -112,12 +158,15 @@ fieldRedefReplaySummary[name_String, expr_, offShellExpr_, targetOperator_] := M
     ];
     AppendTo[
       stages,
-      coefficientStageSummary[
-        StringJoin["after_shift_dim", ToString[eftOrder], "_dev", ToString[devs]],
-        out,
-        expr,
-        offShellExpr,
-        targetOperator
+      Join[
+        coefficientStageSummary[
+          StringJoin["after_shift_dim", ToString[eftOrder], "_dev", ToString[devs]],
+          out,
+          expr,
+          offShellExpr,
+          targetOperator
+        ],
+        <|"selection_before_shift" -> selection|>
       ]
     ],
     {eftOrder, 5, maxOrder},
