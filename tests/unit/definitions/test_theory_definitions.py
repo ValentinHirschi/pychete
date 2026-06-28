@@ -147,6 +147,36 @@ def test_free_lag_uses_abelian_charge_symbol_data_for_complex_scalar_kinetic() -
     assert_expr_equal(theory.free_lag(phi), expected)
 
 
+def test_free_lag_uses_declared_indices_for_complex_scalar_kinetic() -> None:
+    theory = Theory("indexed_charged_scalar_free")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field(
+        "H",
+        s.Scalar,
+        indices=[fund],
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=(FieldMassKind.LIGHT, "m"),
+    )
+    internal = theory.dummy_index(0, fund)
+    mu = theory.dummy_index(0)
+    field = higgs(internal)
+    derived_field = higgs(internal, derivatives=[mu])
+    connection = theory.coupling_handle("gY")() * theory.field_handle("B")()
+    mass = theory.coupling_handle("m")
+    expected = (
+        s.Bar(derived_field) * derived_field
+        + Expression.I * connection * s.Bar(field) * derived_field
+        - Expression.I * connection * s.Bar(derived_field) * field
+        + connection**2 * s.Bar(field) * field
+        - mass() ** 2 * s.Bar(field) * field
+    )
+
+    assert_expr_equal(theory.free_lag(higgs), expected)
+
+
 def test_expand_abelian_covariant_derivatives_uses_symbolica_replacements() -> None:
     theory = Theory("expand_abelian_covariant_derivatives")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")

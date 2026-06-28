@@ -86,6 +86,37 @@ def test_eom_replacement_rules_for_expression_collects_derivative_targets_with_s
     assert_expr_equal(expression.replace_multiple(rules), phi() * (source() - theory.coupling_handle("m")() ** 2 * phi()) + chi() * ignored)
 
 
+def test_indexed_complex_scalar_eom_uses_conjugate_variation_and_declared_indices() -> None:
+    theory = Theory("indexed_complex_scalar_eom")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    source = theory.define_coupling("J", indices=[fund], self_conjugate=False)
+    internal = theory.dummy_index(0, fund)
+    mu = theory.dummy_index(0)
+    lagrangian = theory.free_lag(higgs) + source(internal) * s.Bar(higgs(internal))
+    target = higgs(internal, derivatives=[mu, mu])
+    expected_eom = -target + source(internal)
+
+    assert_expr_equal(theory.derive_eom(lagrangian, higgs), expected_eom)
+    assert_expr_equal(theory.derive_eom(lagrangian, higgs(internal)), expected_eom)
+
+    rule = theory.eom_replacement_rule(lagrangian, higgs(internal), solve_for=target)
+    reduced = (s.Bar(higgs(internal)) * target).replace_multiple((rule,))
+
+    assert_expr_equal(reduced, s.Bar(higgs(internal)) * source(internal))
+
+    rules = theory.eom_replacement_rules_for_expression(
+        lagrangian,
+        s.Bar(higgs(internal)) * target,
+        fields=[higgs],
+        strict=True,
+    )
+
+    assert len(rules) == 1
+    assert_expr_equal((s.Bar(higgs(internal)) * target).replace_multiple(rules), s.Bar(higgs(internal)) * source(internal))
+
+
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:
     theory = Theory("cd_product_power")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

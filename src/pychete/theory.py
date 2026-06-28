@@ -2169,7 +2169,8 @@ class Theory:
             if not definition.is_propagating:
                 raise ValueError(f"Free Lagrangians are not defined for non-propagating field {definition.name!r}")
             mu = self.dummy_index(0)
-            field_expr = handle()
+            field_indices = self._free_lag_field_indices(definition)
+            field_expr = handle(*field_indices)
             type_expr = definition.type_expr
             is_self_conjugate = definition.is_self_conjugate
             if bool(type_expr == s.Scalar):
@@ -2182,11 +2183,11 @@ class Theory:
                 if is_self_conjugate:
                     if not bool(connection == Expression.num(0)):
                         raise ValueError("self-conjugate scalar fields cannot carry Abelian gauge charges in free_lag")
-                    kinetic = handle(derivatives=[mu]) ** 2 / 2
+                    kinetic = handle(*field_indices, derivatives=[mu]) ** 2 / 2
                     if mass is not None:
                         kinetic = kinetic - mass**2 * field_expr**2 / 2
                 else:
-                    derived_field = handle(derivatives=[mu])
+                    derived_field = handle(*field_indices, derivatives=[mu])
                     barred_derived_field = s.Bar(derived_field)
                     barred_field = s.Bar(field_expr)
                     kinetic = barred_derived_field * derived_field
@@ -2221,7 +2222,7 @@ class Theory:
                 gamma_mu = s.Gamma(mu)
                 if convention_kind is FreeLagConvention.MATCHETE:
                     gamma_mu = s.DiracProduct(gamma_mu)
-                dirac = Expression.I * s.NCM(s.Bar(field_expr), gamma_mu, handle(derivatives=[mu]))
+                dirac = Expression.I * s.NCM(s.Bar(field_expr), gamma_mu, handle(*field_indices, derivatives=[mu]))
                 if not bool(connection == Expression.num(0)):
                     dirac = dirac + connection * s.NCM(s.Bar(field_expr), gamma_mu, field_expr)
                 if mass is not None:
@@ -2230,6 +2231,12 @@ class Theory:
             else:
                 out = out + s.FreeLag(definition.label)
         return out
+
+    def _free_lag_field_indices(self, definition: FieldDefinition) -> tuple[Expression, ...]:
+        return tuple(
+            self.dummy_index(index, representation)
+            for index, representation in enumerate(field_indices_from_label(definition.label))
+        )
 
     def derive_eom(
         self,

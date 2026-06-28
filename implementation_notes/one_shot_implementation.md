@@ -454,6 +454,26 @@
   The test uses the theory-owned `epsilon` and `mubar2` external symbols rather
   than fresh global Symbolica symbols, preserving the structural state-loading
   safety rule around symbol metadata.
+- Fixed the first concrete prerequisite for a generic Matchete-style
+  `EOMSimplify` implementation: `Theory.free_lag(...)` now instantiates every
+  field with its declared internal dummy indices before constructing scalar,
+  fermion, mass, and Abelian-current terms. Previously indexed complex fields
+  such as the SMEFT Higgs were treated as unindexed in free kinetic terms,
+  which made indexed light-field EOM extraction impossible.
+- Fixed complex exact-field EOM variation for indexed fields. Passing
+  `H[i]` to `derive_eom(...)` now uses the conjugate variation `Bar[H[i]]`
+  when the field is not self-conjugate, matching the field-handle behavior and
+  allowing `eom_replacement_rule(...)` /
+  `eom_replacement_rules_for_expression(...)` to isolate indexed scalar
+  Laplacians with Symbolica coefficient extraction.
+- Added unit coverage for indexed complex scalar free kinetic terms and
+  indexed complex scalar EOM replacement rules, plus a Singlet fixture
+  regression proving the model Lagrangian now generates two Higgs EOM rules
+  for the committed off-shell reference Laplacians. Applying those rules to
+  the already-Greens-simplified off-shell reference does not produce the
+  Matchete `cHD` on-shell delta; this confirms the remaining blocker is still
+  the raw-Lagrangian field-redefinition loop, not this indexed-EOM
+  prerequisite.
 - Added a deliberately partial first-success integration regression for the
   selected Singlet Higgs-gauge Wilson subset. The former single `cHW`
   selected-trace test now projects only `cHW`, `cHB`, and `cHWB` from one
@@ -469,3 +489,13 @@
   singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms or
   higgs_gauge_subset or
   singlet_selected_wilson_line_chd_four_slot" -q` (`4 passed`).
+- Latest focused validation for the indexed-EOM prerequisite passed:
+  `tests/unit/functional/test_scalar_eom.py
+  tests/unit/definitions/test_theory_definitions.py -q` (`84 passed`);
+  `tests/integration/validation/test_validation_fixtures.py -k
+  "reference_chd_records or higgs_eom_rules" -q` (`2 passed`);
+  `tests/integration/matching/test_heavy_scalar_tree.py -k
+  "generates_eom_replacements" -q` (`1 passed`); and watchdog-wrapped
+  `tests/integration/matching/test_fluctuation_operator.py -k
+  "higgs_gauge_subset or singlet_selected_wilson_line_chd_four_slot or
+  four_slot_scalar_vector_trace" -q` (`3 passed`).

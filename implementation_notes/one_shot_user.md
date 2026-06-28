@@ -1033,3 +1033,12 @@ without Warsaw-specific core assumptions.
   implementation, while the selected Wilson-line coefficient regressions are
   already scoped and passing for `cHW/cHB/cHWB` and the selected four-slot
   `cHD` contribution.
+- Latest EOM prerequisite fix: pychete now builds free Lagrangians with the
+  declared internal indices of registered fields and derives complex scalar
+  EOMs with the correct conjugate variation for exact indexed fields. This
+  means indexed SMEFT-like fields such as `H[i]` can now produce native
+  Symbolica EOM replacement rules from the model Lagrangian. A Singlet fixture
+  regression confirms two Higgs EOM rules are generated for the committed
+  off-shell reference Laplacians, while also confirming that the remaining
+  full `cHD` on-shell shift still requires the larger Matchete-style
+  raw-Lagrangian field-redefinition loop.

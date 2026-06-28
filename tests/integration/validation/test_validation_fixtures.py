@@ -1554,6 +1554,51 @@ def test_singlet_reference_chd_records_matchete_eom_simplify_delta() -> None:
     assert_expr_equal((on_shell - reference.matching_conditions[condition_name]).collect_factors(), Expression.num(0))
 
 
+def test_singlet_model_higgs_eom_rules_are_available_for_reference_laplacians() -> None:
+    model = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = reference.theory
+    registered_targets = registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    condition_name, target = next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+
+    rules = theory.eom_replacement_rules_for_expression(
+        model.expression("lagrangian"),
+        reference.off_shell_eft_lagrangian,
+        fields=[theory.field_handle("H")],
+        strict=False,
+    )
+    reduced_off_shell = reference.off_shell_eft_lagrangian.replace_multiple(rules).expand()
+    reduced_result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=reference.uv_lagrangian,
+        off_shell_eft_lagrangian=reduced_off_shell,
+        on_shell_eft_lagrangian=reduced_off_shell,
+    )
+    off_shell = reference.project_matching_conditions(
+        {condition_name: target},
+        source="off_shell_eft_lagrangian",
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+    reduced = reduced_result.project_matching_conditions(
+        {condition_name: target},
+        source="on_shell_eft_lagrangian",
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+
+    assert len(rules) == 2
+    assert_expr_equal(reduced, off_shell)
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize(
     ("target_name", "gauge_couplings", "denominator", "expected_term_count"),

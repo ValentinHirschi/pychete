@@ -1374,7 +1374,7 @@ def derive_eom(
         base = bar_field_inner(field) if is_bar_field(field) else field
         if not is_head(base, s.Field):
             raise ValueError(f"Euler-Lagrange variation target must be a Field expression, got {canonical_string(field)}")
-        definition: FieldDefinition | None = None
+        definition = theory._field_definition_for_label(field_label(base))
         exact_base: Expression | None = base
         exact_barred = is_bar_field(field)
     else:
@@ -1390,7 +1390,10 @@ def derive_eom(
     variation_mode = FieldVariation.from_user(variation)
     if variation_mode is FieldVariation.AUTO:
         if exact_base is not None:
-            variation_mode = FieldVariation.BAR if exact_barred else FieldVariation.FIELD
+            if definition is not None and not definition.is_self_conjugate:
+                variation_mode = FieldVariation.FIELD if exact_barred else FieldVariation.BAR
+            else:
+                variation_mode = FieldVariation.FIELD
         elif definition is not None:
             variation_mode = FieldVariation.FIELD if definition.is_self_conjugate else FieldVariation.BAR
 
@@ -1411,7 +1414,7 @@ def derive_eom(
     residual = Expression.num(0)
     if exact_base is None:
         assert definition is not None
-        base = definition.expr()
+        base = definition.expr(*_default_field_indices(theory, definition))
     else:
         base = exact_base
     for derivatives in sorted(derivative_sets, key=lambda d: (len(d), tuple(canonical_string(x) for x in d))):
@@ -1534,6 +1537,13 @@ def _field_label_from_user(theory: Theory, field: FieldHandle | FieldDefinition 
     if not is_head(base, s.Field):
         raise ValueError(f"EOM replacement field filter must be a Field expression, got {canonical_string(field)}")
     return field_label(base)
+
+
+def _default_field_indices(theory: Theory, definition: FieldDefinition) -> tuple[Expression, ...]:
+    return tuple(
+        theory.dummy_index(index, representation)
+        for index, representation in enumerate(field_indices_from_label(definition.label))
+    )
 
 
 def _eom_rule_targets(
