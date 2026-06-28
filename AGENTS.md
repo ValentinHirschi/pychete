@@ -647,11 +647,16 @@ Use `expose_abelian_vector_eom_currents(...)` /
 source-side bridge for Abelian vector-EOM current-current products. It
 discovers charged scalar first-derivative currents with Symbolica patterns and
 then uses direct `Expression.coefficient(...)` plus the shared Symbolica-backed
-projection extractor for expanded composite factors. The current Singlet
-`cHD` pychete probe showed zero exposed vector-EOM divergences from this exact
-bridge, so do not treat it as the missing `InternalSimplify`/field-redefinition
-solution for that frontier; the remaining port must cover the broader
-`InternalSimplify` conversion that creates formal B/W vector-EOM terms and the
+projection extractor for expanded composite factors. If its candidate budget
+is exhausted, it must return the expression accumulated so far instead of
+raising: this is a conservative exact bridge, not an unbounded search over
+all scalar-current products. The Singlet `cHD` pychete probes showed that raw
+selected sources do not expose the needed B/W vector-EOM structures through
+this bridge, and scalar-exposed `wilson13_o1_1_0_0` only reveals a higher-field
+B-divergence that does not project to `cHD`. Do not treat this bridge as the
+missing `InternalSimplify`/field-redefinition solution for that frontier; the
+remaining port must cover the broader `InternalSimplify` conversion that
+creates the Matchete dim6/dev3 formal B/W vector-EOM terms and the
 Matchete-style vector shift preparation that consumes them.
 The current bounded Abelian vector-EOM consumer also recognizes formal
 `EOM(Field(B, Vector(...), {mu}, {}))`-style pychete atoms with exactly one

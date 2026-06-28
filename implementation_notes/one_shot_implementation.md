@@ -99,8 +99,28 @@ companion on the scalar-exposed expression. This is implemented in both
 separate supertraces for the raw scalar-exposed checkpoint and the
 post-vector-EOM checkpoint. The remaining generic work is still the deeper
 `InternalSimplify` producer that exposes the formal B/W vector-EOM terms from
-the selected Singlet source itself; the current exact current-current bridge
-still finds no vector divergence in the selected pychete probe.
+the selected Singlet source itself; the exact current-current bridge still
+finds no useful dim6/dev3 B/W vector-EOM structure in the raw selected pychete
+source.
+
+Latest bounded probes:
+
+- Selected total orders 0 and 1 still have no B field-strength divergence
+  after scalar commutator exposure.
+- In total order 2, `wilson13_o1_1_0_0` has one B field-strength divergence
+  after scalar exposure, and the post-exposure vector-EOM consumer finds one
+  rule plus a nonzero Abelian vector field-redefinition delta. That divergence
+  has four-Higgs/heavy-solution field content and projects to zero for both
+  `cHD` and the simple Matchete dim6/dev3
+  `Bar[D_mu H] H D_nu F_B^{mu nu}` / `Bar[H] D_mu H D_nu F_B^{mu nu}`
+  intermediate operators.
+- `wilson14_o2_0_0_0` creates many field-strength atoms after scalar exposure
+  but no B divergence and no vector-EOM rule.
+- The exact `expose_abelian_vector_eom_currents(...)` bridge can see too many
+  absent current-pair candidates on scalar-exposed expressions; it now returns
+  the accumulated expression when its budget is exhausted instead of raising.
+  This keeps the debug/performance boundary conservative and confirms that the
+  remaining `cHD` gap is not solved by broadening this exact bridge.
 
 ## Current Implementation Slice
 
@@ -118,6 +138,9 @@ still finds no vector divergence in the selected pychete probe.
   scalar-exposed expression and only when the existing on-shell/vector options
   request it. It does not globally expand or reclassify the full one-loop
   source.
+- Tightened `expose_abelian_vector_eom_currents(...)` so candidate-budget
+  exhaustion returns the bounded source instead of raising while probing absent
+  current products. Added a unit regression for the no-rewrite budget path.
 - Focused validation currently passed for the four vector-EOM regression tests,
   py_compile on changed files, and targeted mypy on the changed source
   modules.
@@ -129,15 +152,18 @@ Run after completing the slice:
 ```sh
 source "$HOME/.bashrc"
 dependencies/.venv/bin/python -m pytest \
+  tests/unit/functional/test_scalar_eom.py::test_expose_abelian_vector_eom_currents_rewrites_exact_current_product \
+  tests/unit/functional/test_scalar_eom.py::test_expose_abelian_vector_eom_currents_returns_bounded_source_when_candidate_budget_is_exhausted \
   tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_generates_abelian_vector_eom_replacements \
   tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_applies_vector_eom_after_scalar_commutator_exposure \
   tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_abelian_vector_eom_field_redefinition \
   tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_vector_eom_after_scalar_commutator_exposure -q
 dependencies/.venv/bin/python -m py_compile \
-  src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py \
+  src/pychete/functional.py src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py \
+  tests/unit/functional/test_scalar_eom.py \
   tests/integration/matching/test_heavy_scalar_tree.py \
   tests/integration/validation/test_validation_fixtures.py
 dependencies/.venv/bin/python -m mypy \
-  src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py
+  src/pychete/functional.py src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py
 git diff --check
 ```

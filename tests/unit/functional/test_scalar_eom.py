@@ -305,6 +305,31 @@ def test_expose_abelian_vector_eom_currents_rewrites_exact_current_product() -> 
     assert_expr_equal(delta, source)
 
 
+def test_expose_abelian_vector_eom_currents_returns_bounded_source_when_candidate_budget_is_exhausted() -> None:
+    coefficient = S("abelian_vector_current_budget_coefficient")
+    theory = Theory("abelian_vector_current_budget")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    mu = theory.dummy_index(0)
+    field = phi()
+    current = expand_cd_operators(
+        Expression.I * s.Bar(field) * s.CD(mu, field)
+        - Expression.I * s.CD(mu, s.Bar(field)) * field
+    ).expand()
+    source = (coefficient * current).expand()
+
+    exposed = expose_abelian_vector_eom_currents(theory, source, fields=[vector], max_candidates=0)
+
+    assert_expr_equal(exposed, source)
+
+
 def test_scalar_eom_field_redefinition_delta_consumes_formal_complex_scalar_eoms() -> None:
     theory = Theory("formal_complex_scalar_eom_shift")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=False, mass=0)

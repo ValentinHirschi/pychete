@@ -2479,7 +2479,10 @@ def expose_abelian_vector_eom_currents(
     actual replacement is gated by direct ``Expression.coefficient(...)`` first
     and then pychete's shared Symbolica-backed projection extractor for
     expanded composite factors. If no exact current-current factor is present,
-    the expression is returned in normalized derivative-slot form.
+    the expression is returned in normalized derivative-slot form. If the
+    candidate budget is exhausted, the helper conservatively returns the
+    expression accumulated so far instead of broadening this exact bridge into
+    an unbounded current-pair search.
     """
 
     if max_candidates < 0:
@@ -2538,10 +2541,7 @@ def expose_abelian_vector_eom_currents(
                     seen.add(key)
                     candidate_count += 1
                     if candidate_count > max_candidates:
-                        raise ValueError(
-                            "Abelian vector-EOM current exposure generated more than "
-                            f"{max_candidates} candidates"
-                        )
+                        return out.expand()
                     coefficient = _expression_coefficient_for_composite(theory, out, reduced)
                     if is_zero(coefficient):
                         continue
