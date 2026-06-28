@@ -1068,3 +1068,9 @@ without Warsaw-specific core assumptions.
   `ValidationFixture.one_loop_preview_gap_report(...)`. This means future
   Matchete-independent Singlet `cHD` gap reports can use the public validation
   entry points instead of bespoke postprocessing.
+- Latest partial-test update: the first selected one-loop Wilson-coefficient
+  successes are now isolated in
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py`.
+  The `cHW`, `cHB`, `cHWB`, and selected four-slot `cHD` checks can now be run
+  as targeted partial integration tests, giving fast coefficient-level
+  regression scoping before attempting broader Matchete integration parity.

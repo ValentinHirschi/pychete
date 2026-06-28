@@ -585,3 +585,17 @@
   higgs_eom_rules" -q` (`3 passed`);
   and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no
   issues.
+- Latest partial Wilson-coefficient scoping slice: the first selected
+  one-loop Wilson-coefficient successes now live in the dedicated integration
+  module `tests/integration/matching/test_singlet_selected_wilson_coefficients.py`
+  instead of the broad fluctuation-operator test file. The `cHW`, `cHB`, and
+  `cHWB` checks remain separate parametrized cases, sharing one cached
+  selected `hScalar-lScalar` Wilson-line source inside the pytest process.
+  The selected four-slot `cHD` contribution remains a separate single-target
+  regression. This gives future regressions fast node IDs for individual
+  Wilson coefficients while preserving the existing first-success coverage.
+- Focused validation for the test-scoping slice passed under the 30 GiB
+  watchdog: `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -q` (`4 passed`). The edited broad file also passed collection:
+  `tests/integration/matching/test_fluctuation_operator.py --collect-only -q`
+  (`114 tests collected`).
