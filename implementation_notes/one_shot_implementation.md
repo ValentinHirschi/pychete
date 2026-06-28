@@ -1530,3 +1530,40 @@
   src/pychete/theory.py src/pychete/api.py tests/unit/functional/test_scalar_eom.py
   tests/unit/definitions/test_public_api.py`; targeted mypy on the same
   source/test files (`Success: no issues found`); and `git diff --check`.
+- Current Matchete `EoMSplitter` identity slice, 2026-06-28: the relevant
+  Matchete algorithm is the EOM branch of `IdentitiesIBP` in
+  `Mathematica_reference/Matchete/Package/Simplifications.m`, where
+  `EoMSplitter[mu, Field[..., Scalar, ...]]` returns `CD[mu, field]` and the
+  total derivative `CD[mu, ...]` is added as a Green-basis identity. The paired
+  pychete boundary is `scalar_derivative_green_normal_form(...,
+  include_eom=True)` in `src/pychete/functional.py`.
+- Implemented `scalar_formal_eom_ibp_identities(...)`, exported it through
+  `pychete.api`, and wired it into the scalar Green identity source whenever
+  EOM identities are enabled. The helper discovers formal scalar EOM atoms
+  with Symbolica tag-restricted patterns, replaces one such atom by the scalar
+  splitter `apply_cd([mu], field)`, and builds the total-derivative identity
+  through pychete's existing Symbolica-backed `apply_cd(...)`. This is the
+  scalar-only Matchete `EoMSplitter` subset; fermion/vector EOM splitter
+  support remains future idenso/spenso-backed work.
+- Tightened `systematic_scalar_eom_field_redefinition_delta(...)` so the
+  formal EOM terms that define the shift may be supplied separately from the
+  lower-order source Lagrangian being shifted. This mirrors the Matchete
+  `ShiftLagrangian` distinction and matters for selected one-loop traces,
+  whose high-order EOM terms do not themselves contain the light kinetic/free
+  source terms that get shifted.
+- This slice still does not close Singlet `cHD`: it adds the scalar
+  EOM-splitter identity and source/shift separation needed downstream once
+  `InternalSimplify`/Green representative exposure has produced the formal EOM
+  terms. The active first divergence remains the upstream Matchete
+  `InternalSimplify` exposure from the selected pychete scalar-derivative
+  representatives to the 105 formal EOM terms recorded in
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`.
+- Focused validation for this scalar `EoMSplitter` slice passed:
+  `tests/unit/functional/test_scalar_green_bilinears.py
+  tests/unit/functional/test_scalar_eom.py tests/unit/definitions/test_public_api.py
+  -q` (`65 passed`); `python -m py_compile src/pychete/functional.py
+  src/pychete/theory.py src/pychete/api.py
+  tests/unit/functional/test_scalar_green_bilinears.py
+  tests/unit/functional/test_scalar_eom.py
+  tests/unit/definitions/test_public_api.py`; targeted mypy on the same
+  source/test files (`Success: no issues found`); and `git diff --check`.

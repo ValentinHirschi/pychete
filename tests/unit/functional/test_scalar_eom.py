@@ -382,10 +382,27 @@ def test_systematic_scalar_eom_field_redefinition_delta_selects_dim6_formal_eom_
         fields=[phi],
         strict=True,
     )
+    systematic_separate_source = systematic_scalar_eom_field_redefinition_delta(
+        theory,
+        free,
+        eom_terms_lagrangian=eom_terms,
+        max_order=6,
+        fields=[phi],
+        strict=True,
+    )
 
     assert_expr_equal(selected, eom_terms)
     assert_expr_equal(systematic, direct)
+    assert_expr_equal(systematic_separate_source, direct)
     assert_expr_equal(theory.systematic_scalar_eom_field_redefinition_delta(lagrangian, max_order=6), direct)
+    assert_expr_equal(
+        theory.systematic_scalar_eom_field_redefinition_delta(
+            free,
+            eom_terms_lagrangian=eom_terms,
+            max_order=6,
+        ),
+        direct,
+    )
 
 
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:

@@ -12,14 +12,24 @@ from pychete.functional import (
     scalar_derivative_green_normal_form,
     scalar_derivative_ibp_identities,
     scalar_eom_identities,
+    scalar_formal_eom_ibp_identities,
+)
+from pychete.expr import (
+    bar_field_inner,
+    bar_field_pattern,
+    field_derivatives,
+    field_pattern,
+    matching_subexpressions,
+    terms,
 )
 from pychete.matching_results import MatchingResult
 from pychete.symbols import s
 from pychete.theory import Theory
+from pychete.theory_metadata import FieldHandle
 from tests.conftest import assert_expr_equal
 
 
-def _scalar_su2_probe() -> tuple[Theory, object, Expression, Expression, Expression, Expression]:
+def _scalar_su2_probe() -> tuple[Theory, FieldHandle, Expression, Expression, Expression, Expression]:
     theory = Theory("scalar_green_bilinear_probe")
     theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
     fund = theory.define_representation("SU2L", "fund")
@@ -39,7 +49,7 @@ def _scalar_su2_probe() -> tuple[Theory, object, Expression, Expression, Express
     return theory, higgs, target, i, mu, nu
 
 
-def _scalar_u1_probe() -> tuple[Theory, object, Expression, Expression, Expression, Expression]:
+def _scalar_u1_probe() -> tuple[Theory, FieldHandle, Expression, Expression, Expression, Expression]:
     theory = Theory("scalar_green_mixed_field_strength_probe")
     theory.define_gauge_group("U1Y", s.U1, "gY", "B")
     phi = theory.define_field(
@@ -308,6 +318,71 @@ def test_scalar_derivative_green_normal_form_can_prefer_formal_eom_representativ
     )
 
     assert_expr_equal(reduced, expected)
+
+
+def test_scalar_formal_eom_ibp_identity_matches_matchete_scalar_eom_splitter() -> None:
+    coefficient = S("scalar_formal_eom_ibp_coefficient")
+    theory, higgs, _target, i, _mu, _nu = _scalar_su2_probe()
+    source = coefficient * s.Bar(higgs(i)) * s.EOM(higgs(i))
+
+    identities = scalar_formal_eom_ibp_identities(theory, source, fields=[higgs])
+
+    assert len(identities) == 1
+    identity = identities[0]
+    derivative_atoms = [
+        atom
+        for atom in matching_subexpressions(identity, field_pattern(higgs.definition.label))
+        if len(field_derivatives(atom)) == 1
+    ]
+    laplacian_atoms = [
+        atom
+        for atom in matching_subexpressions(identity, field_pattern(higgs.definition.label))
+        if len(field_derivatives(atom)) == 2
+    ]
+    assert derivative_atoms
+    assert laplacian_atoms
+    assert not bool(identity.matches(s.EOM(s.CDBodyWildcard)))
+
+
+def test_scalar_derivative_green_normal_form_uses_formal_eom_ibp_splitter_identity() -> None:
+    coefficient = S("scalar_derivative_green_formal_eom_ibp_coefficient")
+    theory, higgs, _target, i, _mu, _nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * s.EOM(higgs(i))
+    splitter_identity = scalar_formal_eom_ibp_identities(theory, coefficient * source, fields=[higgs])[0]
+    preferred = next(
+        (
+            field_atoms[0] * bar_atoms[0]
+            for term in terms(splitter_identity.expand())
+            if (
+                field_atoms := [
+                    atom
+                    for atom in matching_subexpressions(term, field_pattern(higgs.definition.label))
+                    if len(field_derivatives(atom)) == 1
+                ]
+            )
+            and (
+                bar_atoms := [
+                    atom
+                    for atom in matching_subexpressions(term, bar_field_pattern(higgs.definition.label))
+                    if len(field_derivatives(bar_field_inner(atom))) == 1
+                ]
+            )
+        ),
+        None,
+    )
+    assert preferred is not None
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        coefficient * source,
+        preferred=(preferred,),
+        include_eom=True,
+        eom_lagrangian=theory.free_lag(higgs),
+        eom_fields=[higgs],
+        max_rounds=3,
+    )
+
+    assert_expr_equal(reduced, coefficient * preferred)
 
 
 def test_wilson_line_scalar_green_hook_can_expose_formal_eom_terms() -> None:

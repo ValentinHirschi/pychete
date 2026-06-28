@@ -512,6 +512,54 @@ def scalar_eom_identities(
     return tuple(identities)
 
 
+def scalar_formal_eom_ibp_identities(
+    theory: Theory,
+    expr: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
+) -> tuple[Expression, ...]:
+    """Return scalar formal-EOM IBP identities from Matchete ``EoMSplitter``.
+
+    For each linear formal scalar ``EOM(field)`` or ``EOM(Bar(field))`` atom,
+    this builds the total-derivative identity obtained by replacing that EOM
+    with ``CD(mu, field)`` and acting with ``CD(mu, ...)`` on the full
+    coefficient times splitter.  This is the scalar subset of Matchete's
+    ``IdentitiesIBP`` EOM branch.
+    """
+
+    if max_identities < 0:
+        raise ValueError("max_identities must be non-negative")
+    theory._validate_registered_expression(expr)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    for position, atom in enumerate(_formal_scalar_eom_atoms(expr, allowed_labels=allowed_labels)):
+        coefficient = expr.coefficient(atom).expand()
+        if is_zero(coefficient):
+            continue
+        if not is_zero(coefficient.coefficient(atom)):
+            continue
+        mu = theory.index(
+            theory.symbol(
+                f"scalar_formal_eom_ibp_{position}_mu",
+                role=SymbolRole.INDEX,
+            ),
+            s.Lorentz,
+        )
+        identity = apply_cd([mu], coefficient * _scalar_eom_splitter(mu, atom[0])).expand()
+        if is_zero(identity):
+            continue
+        key = canonical_string(identity)
+        if key in seen:
+            continue
+        seen.add(key)
+        identities.append(identity)
+        if len(identities) > max_identities:
+            raise ValueError(f"scalar formal-EOM IBP generated more than {max_identities} identities")
+    return tuple(identities)
+
+
 def scalar_derivative_green_normal_form(
     theory: Theory,
     expr: Expression,
@@ -717,6 +765,14 @@ def _scalar_derivative_identity_sources(
         if eom_lagrangian is None:
             raise ValueError("eom_lagrangian must be provided when include_eom=True")
         identities.extend(
+            scalar_formal_eom_ibp_identities(
+                theory,
+                expr,
+                fields=eom_fields,
+                max_identities=max_identities,
+            )
+        )
+        identities.extend(
             scalar_eom_identities(
                 theory,
                 eom_lagrangian,
@@ -773,6 +829,34 @@ def _scalar_derivative_green_score(term: Expression) -> int:
         - derivative_balance_penalty
         - derivative_count_penalty
     )
+
+
+def _formal_scalar_eom_atoms(
+    expr: Expression,
+    *,
+    allowed_labels: set[str] | None,
+) -> tuple[Expression, ...]:
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms = (
+        *matching_subexpressions(expr, s.EOM(field_pattern()), label_is_registered_field),
+        *matching_subexpressions(expr, s.EOM(bar_field_pattern()), label_is_registered_field),
+    )
+    kept: dict[str, Expression] = {}
+    for atom in atoms:
+        if not is_head(atom, s.EOM) or len(atom) != 1:
+            continue
+        body = atom[0]
+        base = bar_field_inner(body) if is_bar_field(body) else body
+        if not is_head(base, s.Field) or not bool(field_type(base) == s.Scalar):
+            continue
+        if allowed_labels is not None and canonical_string(field_label(base)) not in allowed_labels:
+            continue
+        kept.setdefault(canonical_string(atom), atom)
+    return tuple(sorted(kept.values(), key=canonical_string))
+
+
+def _scalar_eom_splitter(mu: Expression, field: Expression) -> Expression:
+    return apply_cd([mu], field)
 
 
 def _scalar_green_derivative_lengths(term: Expression) -> tuple[tuple[Expression, ...], ...]:
@@ -2107,8 +2191,9 @@ def select_terms_by_dimension_and_derivatives(
 
 def systematic_scalar_eom_field_redefinition_delta(
     theory: Theory,
-    lagrangian: Expression,
+    source_lagrangian: Expression,
     *,
+    eom_terms_lagrangian: Expression | None = None,
     max_order: int,
     fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
     strict: bool = False,
@@ -2117,7 +2202,8 @@ def systematic_scalar_eom_field_redefinition_delta(
 
     The helper loops over ``eft_order = 5..max_order`` and descending
     derivative counts exactly like Matchete's ``PerformSystematicFieldRedefs``.
-    It selects explicit formal scalar-EOM terms with
+    It selects explicit formal scalar-EOM terms from ``eom_terms_lagrangian``
+    (or ``source_lagrangian`` when no separate EOM source is provided) with
     :func:`select_terms_by_dimension_and_derivatives`, then delegates the
     actual shift to :func:`scalar_eom_field_redefinition_delta`. It is a
     bounded consumer-side port: it does not expose hidden derivative
@@ -2126,15 +2212,18 @@ def systematic_scalar_eom_field_redefinition_delta(
 
     if max_order < 5:
         return Expression.num(0)
-    theory._validate_registered_expression(lagrangian)
-    out = lagrangian
+    theory._validate_registered_expression(source_lagrangian)
+    eom_source = source_lagrangian if eom_terms_lagrangian is None else eom_terms_lagrangian
+    theory._validate_registered_expression(eom_source)
+    shifted_source = source_lagrangian
+    shifted_eom_source = eom_source
     deltas: list[Expression] = []
     for eft_order in range(5, max_order + 1):
         shift_order = eft_order - 4
         for derivative_count in range(eft_order - 2, 0, -1):
             eom_terms = select_terms_by_dimension_and_derivatives(
                 theory,
-                out,
+                shifted_eom_source,
                 dimension=eft_order,
                 derivative_count=derivative_count,
                 require_formal_eom=True,
@@ -2143,7 +2232,7 @@ def systematic_scalar_eom_field_redefinition_delta(
                 continue
             delta = scalar_eom_field_redefinition_delta(
                 theory,
-                out,
+                shifted_source,
                 eom_terms,
                 fields=fields,
                 max_order=max_order,
@@ -2153,7 +2242,8 @@ def systematic_scalar_eom_field_redefinition_delta(
             if is_zero(delta):
                 continue
             deltas.append(delta)
-            out = (out + delta).expand()
+            shifted_source = (shifted_source + delta).expand()
+            shifted_eom_source = (shifted_eom_source + delta).expand()
     return sum_expr(deltas).expand()
 
 

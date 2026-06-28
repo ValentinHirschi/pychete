@@ -2398,8 +2398,9 @@ class Theory:
 
     def systematic_scalar_eom_field_redefinition_delta(
         self,
-        lagrangian: Expression,
+        source_lagrangian: Expression,
         *,
+        eom_terms_lagrangian: Expression | None = None,
         max_order: int,
         fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
         strict: bool = False,
@@ -2410,7 +2411,8 @@ class Theory:
 
         return systematic_scalar_eom_field_redefinition_delta(
             self,
-            lagrangian,
+            source_lagrangian,
+            eom_terms_lagrangian=eom_terms_lagrangian,
             max_order=max_order,
             fields=fields,
             strict=strict,

@@ -1444,3 +1444,12 @@ generic algorithm boundary before runtime pychete changes are accepted.
   machinery; the active Singlet `cHD` gap remains the upstream
   `InternalSimplify`/Green representative exposure that must generate the
   formal EOM terms feeding Matchete's `after_shift_dim6_dev3` shift.
+- Latest scalar `EoMSplitter` update: pychete now has
+  `scalar_formal_eom_ibp_identities(...)`, the scalar subset of Matchete's
+  `IdentitiesIBP` branch that replaces a formal scalar `EOM(...)` by
+  `CD(mu, field)` and adds the resulting total-derivative identity to the
+  Green-basis system. The systematic scalar field-redefinition helper can now
+  also take separate high-order EOM terms and lower-order source Lagrangian
+  inputs, matching Matchete's `ShiftLagrangian` separation. Fermion/vector EOM
+  splitters and the upstream Singlet `cHD` formal-EOM exposure remain future
+  work.

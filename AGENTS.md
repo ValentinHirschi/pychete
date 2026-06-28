@@ -567,6 +567,16 @@ consumer-side field-redefinition machinery only; the active Singlet `cHD`
 frontier still needs broader `InternalSimplify`/Green representative exposure
 before these helpers can reproduce the Matchete `after_shift_dim6_dev3`
 boundary.
+Use `scalar_formal_eom_ibp_identities(...)` for the scalar subset of
+Matchete's `IdentitiesIBP` EOM branch:
+`EoMSplitter[mu, Field[..., Scalar, ...]] -> CD[mu, field]`. It must generate
+the identity by replacing one formal scalar `EOM(...)` atom with the splitter
+and applying `apply_cd([mu], ...)`, letting the existing Symbolica-backed
+linear Green-basis solver combine that total-derivative relation with
+`scalar_eom_identities(...)`. Keep this as a scalar formal-EOM identity source;
+do not extend it to fermion/vector EOMs without first routing the resulting
+Dirac, field-strength, and group algebra through idenso/spenso-backed
+implementations.
 The first bounded exposure stage is `scalar_eom_identities(...)` plus
 `scalar_derivative_green_normal_form(..., include_eom=True,
 eom_lagrangian=...)`, optionally routed through

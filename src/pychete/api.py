@@ -12,6 +12,7 @@ from .functional import (
     scalar_derivative_green_normal_form,
     scalar_derivative_ibp_identities,
     scalar_eom_identities,
+    scalar_formal_eom_ibp_identities,
     select_terms_by_dimension_and_derivatives,
     systematic_scalar_eom_field_redefinition_delta,
 )
@@ -247,6 +248,7 @@ __all__ = [
     "scalar_derivative_green_normal_form",
     "scalar_derivative_ibp_identities",
     "scalar_eom_identities",
+    "scalar_formal_eom_ibp_identities",
     "select_terms_by_dimension_and_derivatives",
     "loop_function",
     "loop_function_pole_part",
