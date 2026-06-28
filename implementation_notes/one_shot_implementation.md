@@ -152,6 +152,14 @@
   existing opt-in Wilson-line scalar derivative postprocess now uses this
   broader normal form, lowers any generated formal commutators, and then runs
   the existing field-strength exposure helper.
+- When no explicit preference list is supplied, the scalar Green-basis normal
+  form now applies a bounded scalar-local preferred-representative order based
+  on the scalar-relevant Matchete `OpScore` pieces reviewed in
+  `Simplifications.m`: prefer field-strength-like representatives, penalize
+  explicit `CD(...)` wrappers and repeated derivative slots, and prefer
+  derivative-balanced scalar factors over one-sided higher-derivative
+  representatives. This closes a local representative-selection gap without
+  porting Matchete's fermion/CG/Fierz scoring policy into Python.
 
 ## Current Frontier
 
@@ -230,16 +238,21 @@
   milestone. The remaining gap is the larger Matchete operator-class scoring
   and preferred-representative policy for higher-derivative scalar classes,
   not just generation of the first local IBP/commutator identities.
+- The scalar-local preferred-representative score now maps a focused crossed
+  one-sided four-derivative scalar bilinear to the balanced two-derivative
+  bilinear in unit tests. The selected Singlet order-zero `cHD` smoke remains
+  unchanged, so the next mismatch investigation still has to compare
+  Matchete's full operator-class normal-form/evaluation path against pychete's
+  bounded local scalar normal form before another patch.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/functional/test_scalar_green_bilinears.py -q` passed
-  (`19 passed`).
+  (`20 passed`).
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/functional/test_scalar_green_bilinears.py
-  tests/unit/definitions/test_public_api.py -q` passed (`27 passed`).
+  tests/unit/definitions/test_public_api.py -q` passed (`8 passed`).
 - Watchdog-wrapped `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/integration/matching/test_fluctuation_operator.py -k
   "scalar_derivative" -q` passed (`3 passed`).

@@ -260,6 +260,17 @@ def test_scalar_derivative_green_normal_form_closes_local_ibp_neighborhood() -> 
     assert_expr_equal(reduced, coefficient * preferred)
 
 
+def test_scalar_derivative_green_normal_form_auto_prefers_balanced_four_derivative_bilinear() -> None:
+    coefficient = S("scalar_derivative_green_auto_score_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, nu, mu, nu])
+    expected = coefficient * s.Bar(higgs(i, derivatives=[mu, nu])) * higgs(i, derivatives=[mu, nu])
+
+    reduced = scalar_derivative_green_normal_form(theory, coefficient * source)
+
+    assert_expr_equal(reduced, expected)
+
+
 @pytest.mark.parametrize(
     ("barred_derivative", "field_derivative", "expected_weight"),
     (

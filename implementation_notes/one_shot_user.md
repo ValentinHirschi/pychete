@@ -933,3 +933,18 @@ without Warsaw-specific core assumptions.
   order-zero `hScalar-lScalar -> cHD` smoke still preserves two pre-EOM terms
   but projects no matching condition, so the first `cHD` milestone remains
   open at the larger higher-derivative operator-class/scoring layer.
+- Latest scalar Green-basis scoring slice: re-read Matchete `OpScore` and the
+  `ConstructOperatorIdentities` row-reduction ordering before changing
+  pychete. pychete now gives the scalar normal-form solver an automatic local
+  preferred-representative order when no explicit preference is supplied:
+  field-strength-like representatives are preferred, explicit `CD(...)`
+  wrappers and repeated scalar derivative slots are penalized, and
+  derivative-balanced scalar factors are preferred over one-sided
+  higher-derivative representatives. The selected Singlet order-zero `cHD`
+  smoke remains unchanged, so the milestone still requires the larger
+  higher-derivative operator-class policy rather than only this local score.
+- Latest mismatch-debugging instruction: whenever a precise Matchete-parity
+  mismatch is identified, first review the corresponding Matchete Mathematica
+  algorithm and compare it directly with the pychete implementation before
+  patching. Use intermediate dumps/probes to find the first semantic
+  difference instead of inferring a fix from only the final Wilson coefficient.

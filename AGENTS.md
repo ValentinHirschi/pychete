@@ -612,6 +612,14 @@ under explicit bounds, and delegate row reduction to the Green-basis Symbolica
 solver. Do not add more target-specific scalar IBP projection aliases until
 this generic source-side normal form has been checked against the relevant
 Matchete operator class.
+When no explicit scalar Green-basis preferred representatives are supplied,
+`scalar_derivative_green_normal_form(...)` applies only the scalar-relevant
+pieces of Matchete's `OpScore`: prefer field-strength-like representatives,
+penalize explicit `CD(...)` wrappers and repeated derivative slots on the same
+scalar field, and prefer derivative-balanced scalar factors over one-sided
+higher-derivative representatives. Do not extend this local score to
+fermion/CG/Fierz structures without first reviewing Matchete's corresponding
+scoring algorithms and native idenso/spenso capabilities.
 For scalar derivative-bilinear normal forms, use the generic
 `expose_scalar_derivative_commutator_bilinears(theory, expr, ...)` helper
 rather than adding projection-specific replacements. It collects tagged scalar

@@ -1,6 +1,6 @@
 from __future__ import annotations
 
-from collections.abc import Callable, Iterable
+from collections.abc import Callable, Iterable, Sequence
 
 from symbolica import Expression, Replacement
 from symbolica.core import AtomType
@@ -419,8 +419,12 @@ def scalar_derivative_green_normal_form(
     basis terms for a few rounds, and then delegates row reduction to
     Symbolica via :func:`pychete.green_basis.linear_identity_normal_form_from_identities`.
 
-    Preferred representatives remain explicit; this function does not guess
-    Matchete's full Green-basis scoring policy in Python.
+    If ``preferred`` is not supplied, a scalar-only local ordering mirrors the
+    clear scalar pieces of Matchete's ``OpScore``: field-strength-like
+    representatives are preferred to raw derivatives, repeated derivative
+    slots and explicit ``CD`` wrappers are penalized, and derivatives are
+    favored when they are distributed across scalar factors. This does not try
+    to reproduce Matchete's full fermion/CG/Fierz scoring policy in Python.
     """
 
     if max_basis_terms < 0:
@@ -443,12 +447,18 @@ def scalar_derivative_green_normal_form(
     if not identities:
         return normalized
 
-    from .green_basis import linear_identity_normal_form_from_identities
+    from .green_basis import linear_identity_basis_terms, linear_identity_normal_form
 
-    return linear_identity_normal_form_from_identities(
+    basis = linear_identity_basis_terms(
+        (normalized, *identities),
+        max_basis_terms=max_basis_terms,
+    )
+    preferred_terms = tuple(preferred) or _scalar_derivative_green_preferred_terms(basis)
+    return linear_identity_normal_form(
         normalized,
         identities,
-        preferred=tuple(preferred),
+        basis=basis,
+        preferred=preferred_terms,
         max_basis_terms=max_basis_terms,
         max_identities=max_identities,
     )
@@ -569,6 +579,61 @@ def _scalar_derivative_identity_sources(
     if len(identities) > max_identities:
         raise ValueError(f"scalar Green-basis reduction generated more than {max_identities} identities")
     return tuple(identities)
+
+
+def _scalar_derivative_green_preferred_terms(
+    basis: Sequence[Expression],
+) -> tuple[Expression, ...]:
+    return tuple(
+        sorted(
+            basis,
+            key=lambda term: (_scalar_derivative_green_score(term), canonical_string(term)),
+        )
+    )
+
+
+def _scalar_derivative_green_score(term: Expression) -> int:
+    eom_score = 1_000_000 * len(matching_subexpressions(term, s.EOM(s.CDBodyWildcard)))
+    field_strength_score = 10_000 * (
+        len(matching_subexpressions(term, field_strength_pattern()))
+        + len(matching_subexpressions(term, bar_field_strength_pattern()))
+        + len(matching_subexpressions(term, covariant_derivative_commutator_pattern()))
+    )
+    explicit_cd_penalty = 1_000 * len(matching_subexpressions(term, cd_pattern()))
+    derivative_lengths = _scalar_green_derivative_lengths(term)
+    repeated_derivative_penalty = 100 * sum(1 for derivatives in derivative_lengths if _has_repeated_derivative(derivatives))
+    derivative_balance_penalty = 10 * sum(len(derivatives) * len(derivatives) for derivatives in derivative_lengths)
+    derivative_count_penalty = sum(len(derivatives) for derivatives in derivative_lengths)
+    return (
+        eom_score
+        + field_strength_score
+        - explicit_cd_penalty
+        - repeated_derivative_penalty
+        - derivative_balance_penalty
+        - derivative_count_penalty
+    )
+
+
+def _scalar_green_derivative_lengths(term: Expression) -> tuple[tuple[Expression, ...], ...]:
+    field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    derivative_lengths: list[tuple[Expression, ...]] = []
+    for atom in matching_subexpressions(term, bar_field_pattern(), field_label_is_tagged):
+        if is_bar_field(atom) and bool(field_type(bar_field_inner(atom)) == s.Scalar):
+            derivative_lengths.append(field_derivatives(bar_field_inner(atom)))
+    for atom in matching_subexpressions(term, field_pattern(), field_label_is_tagged):
+        if bool(field_type(atom) == s.Scalar):
+            derivative_lengths.append(field_derivatives(atom))
+    return tuple(derivative_lengths)
+
+
+def _has_repeated_derivative(derivatives: Sequence[Expression]) -> bool:
+    seen: set[str] = set()
+    for derivative in derivatives:
+        key = canonical_string(derivative)
+        if key in seen:
+            return True
+        seen.add(key)
+    return False
 
 
 def _scalar_derivative_ibp_atoms(expr: Expression) -> tuple[Expression, ...]:
