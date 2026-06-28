@@ -1414,6 +1414,39 @@ def _projection_derivative_compatible_source(source: Expression, target: Express
     return pruned
 
 
+def _projection_derivative_family_compatible_source(
+    source: Expression,
+    expressions: Sequence[Expression],
+) -> Expression:
+    field_signatures: dict[str, set[tuple[str, ...]]] = {}
+    strength_signatures: dict[str, set[tuple[str, ...]]] = {}
+    for expression in expressions:
+        _merge_projection_derivative_signatures(
+            field_signatures,
+            _projection_field_derivative_signature_shapes(expression),
+        )
+        _merge_projection_derivative_signatures(
+            strength_signatures,
+            _projection_field_strength_derivative_signature_shapes(expression),
+        )
+    if not field_signatures and not strength_signatures:
+        return source
+    pruned = source
+    if field_signatures:
+        pruned = _drop_incompatible_projection_field_derivative_shapes(pruned, field_signatures)
+    if strength_signatures:
+        pruned = _drop_incompatible_projection_field_strength_derivative_shapes(pruned, strength_signatures)
+    return pruned
+
+
+def _merge_projection_derivative_signatures(
+    target: dict[str, set[tuple[str, ...]]],
+    source: Mapping[str, set[tuple[str, ...]]],
+) -> None:
+    for label, signatures in source.items():
+        target.setdefault(label, set()).update(signatures)
+
+
 def _projection_field_derivative_signatures(target: Expression) -> dict[str, set[tuple[str, ...]]]:
     pattern = field_pattern()
     signatures: dict[str, set[tuple[str, ...]]] = {}
@@ -1423,12 +1456,32 @@ def _projection_field_derivative_signatures(target: Expression) -> dict[str, set
     return signatures
 
 
+def _projection_field_derivative_signature_shapes(target: Expression) -> dict[str, set[tuple[str, ...]]]:
+    pattern = field_pattern()
+    signatures: dict[str, set[tuple[str, ...]]] = {}
+    for match in target.match(pattern):
+        label = canonical_string(match[s.FieldLabelWildcard])
+        signatures.setdefault(label, set()).add(_derivative_signature_shape(match[s.FieldDerivativesWildcard]))
+    return signatures
+
+
 def _projection_field_strength_derivative_signatures(target: Expression) -> dict[str, set[tuple[str, ...]]]:
     pattern = field_strength_pattern()
     signatures: dict[str, set[tuple[str, ...]]] = {}
     for match in target.match(pattern):
         label = canonical_string(match[s.FieldStrengthLabelWildcard])
         signatures.setdefault(label, set()).add(_derivative_signature(match[s.FieldStrengthDerivativesWildcard]))
+    return signatures
+
+
+def _projection_field_strength_derivative_signature_shapes(target: Expression) -> dict[str, set[tuple[str, ...]]]:
+    pattern = field_strength_pattern()
+    signatures: dict[str, set[tuple[str, ...]]] = {}
+    for match in target.match(pattern):
+        label = canonical_string(match[s.FieldStrengthLabelWildcard])
+        signatures.setdefault(label, set()).add(
+            _derivative_signature_shape(match[s.FieldStrengthDerivativesWildcard])
+        )
     return signatures
 
 
@@ -1443,6 +1496,24 @@ def _drop_incompatible_projection_field_derivatives(
         label = canonical_string(match[s.FieldLabelWildcard])
         allowed = signatures.get(label)
         if allowed is None or _derivative_signature(match[s.FieldDerivativesWildcard]) in allowed:
+            return pattern.replace_wildcards(match)
+        return Expression.num(0)
+
+    pruned = source.replace(bar_pat, lambda match: replacement(bar_pat, match), rhs_cache_size=0)
+    return pruned.replace(field_pat, lambda match: replacement(field_pat, match), rhs_cache_size=0)
+
+
+def _drop_incompatible_projection_field_derivative_shapes(
+    source: Expression,
+    signatures: Mapping[str, set[tuple[str, ...]]],
+) -> Expression:
+    field_pat = field_pattern()
+    bar_pat = bar_field_pattern()
+
+    def replacement(pattern: Expression, match: dict[Expression, Expression]) -> Expression:
+        label = canonical_string(match[s.FieldLabelWildcard])
+        allowed = signatures.get(label)
+        if allowed is None or _derivative_signature_shape(match[s.FieldDerivativesWildcard]) in allowed:
             return pattern.replace_wildcards(match)
         return Expression.num(0)
 
@@ -1468,10 +1539,38 @@ def _drop_incompatible_projection_field_strength_derivatives(
     return pruned.replace(strength_pat, lambda match: replacement(strength_pat, match), rhs_cache_size=0)
 
 
+def _drop_incompatible_projection_field_strength_derivative_shapes(
+    source: Expression,
+    signatures: Mapping[str, set[tuple[str, ...]]],
+) -> Expression:
+    strength_pat = field_strength_pattern()
+    bar_pat = bar_field_strength_pattern()
+
+    def replacement(pattern: Expression, match: dict[Expression, Expression]) -> Expression:
+        label = canonical_string(match[s.FieldStrengthLabelWildcard])
+        allowed = signatures.get(label)
+        if allowed is None or _derivative_signature_shape(match[s.FieldStrengthDerivativesWildcard]) in allowed:
+            return pattern.replace_wildcards(match)
+        return Expression.num(0)
+
+    pruned = source.replace(bar_pat, lambda match: replacement(bar_pat, match), rhs_cache_size=0)
+    return pruned.replace(strength_pat, lambda match: replacement(strength_pat, match), rhs_cache_size=0)
+
+
 def _derivative_signature(derivatives: Expression) -> tuple[str, ...]:
     if not is_head(derivatives, s.List):
         return (canonical_string(derivatives),)
     return tuple(canonical_string(derivative) for derivative in list_items(derivatives))
+
+
+def _derivative_signature_shape(derivatives: Expression) -> tuple[str, ...]:
+    if not is_head(derivatives, s.List):
+        return (_derivative_index_shape(derivatives),)
+    return tuple(_derivative_index_shape(derivative) for derivative in list_items(derivatives))
+
+
+def _derivative_index_shape(index: Expression) -> str:
+    return canonical_string(index[1]) if is_head(index, s.Index) and len(index) == 2 else canonical_string(index)
 
 
 def _numeric_factor_normalized_target(target: Expression) -> tuple[Expression, Expression] | None:
@@ -1617,6 +1716,7 @@ def _target_local_canonized_projection(
     if not _expressions_have_indices(projection_family):
         return source_extractor, projection_expression, tuple(ibp_aliases)
     filtered_source = source_extractor._filtered_source_for_expressions(projection_family)
+    filtered_source = _projection_derivative_family_compatible_source(filtered_source, projection_family)
     canon_source, canon_projection_expressions, canon_alias_expressions = (
         _canonize_matching_projection_indices_with_aliases(
             filtered_source,

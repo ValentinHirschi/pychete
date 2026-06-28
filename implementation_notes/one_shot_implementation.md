@@ -2166,6 +2166,46 @@
   (`4 passed` under the 30 GiB watchdog), the existing lower-level selected
   `cHW` coefficient regression (`1 passed` under the watchdog),
   `python -m mypy`, and `git diff --check`.
+- Follow-up projection-cost slice: the selected `hScalar-lScalar -> cHD`
+  fixture path now reaches matching-condition projection boundedly instead of
+  stalling. The source after Wilson-line generation plus heavy-scalar EOM
+  substitution has about 1,155 additive terms and roughly 20 MB of Symbolica
+  expression data; the coarse `H^4` atom filter kept 1,092 terms, but the
+  derivative-slot compatibility filter reduces the target-local source to
+  30 terms. The expensive target-local tensor canonicalization was happening
+  before that derivative pruning.
+- Implemented a generic projection fix: target-local tensor canonicalization
+  now first applies a derivative-family compatibility prune over the
+  projection target and its IBP aliases. Because this happens before native
+  Symbolica tensor canonicalization, the prune compares derivative-slot
+  shapes by index type and arity rather than exact dummy-index names; exact
+  derivative-label pruning remains unchanged for later stages. This keeps
+  alpha-equivalent derivative indices projectable while dropping branches such
+  as `D^2 H` before canonicalization for a one-derivative `cHD` target.
+- Remeasured the selected `hScalar-lScalar -> cHD` fixture report after that
+  fix. It now returns in about 25 seconds under the 30 GiB watchdog, keeps the
+  16 selected Wilson-line terms, and projects the selected scalar-only source
+  to zero. The committed Matchete fixture coefficient remains nonzero:
+  `-5/3*hbar*log(mubar2/M^2)*A^2*gY^2/M^4
+  -31/18*hbar*A^2*gY^2/M^4
+  -5/3*hbar*A^2*gY^2/(epsilon*M^4)`. This is now a source-generation or
+  downstream EOM/IBP/basis-reduction gap, not a projection hang.
+- Light-vector trace diagnostics for the same `cHD` frontier: `hScalar-lVector`
+  has zero interaction entries in the Singlet model; selected
+  `hScalar-lScalar-lVector-lScalar` at order zero generated no `cHD` terms;
+  selected order-five two-vector families
+  `hScalar-lScalar-lVector-lVector-lScalar` and
+  `hScalar-lScalar-lVector-lScalar-lVector` also generated no `cHD` terms at
+  propagator order zero when tensor reduction was disabled for the diagnostic.
+  With tensor reduction enabled, those order-five probes currently trigger a
+  vakint/FORM crash (`Illegal use of function arguments`) and need a separate
+  backend-boundary investigation before relying on them for matching parity.
+- Focused checks for this slice passed: the new derivative-prune projection
+  regression plus the existing `cHD` projection canonicalization test
+  (`2 passed`), the selected Singlet pre-EOM filter and accepted gauge-target
+  fixture tests (`6 passed` with the two projection tests under the 30 GiB
+  watchdog), direct bounded `cHD` fixture projection diagnostic, `python -m
+  mypy`, and `git diff --check`.
 
 ## Next Work
 
@@ -2175,9 +2215,11 @@
     accepted selected gauge-strength targets `cHW`, `cHB`, and `cHWB`.
     The first remaining generic frontier is the heavy-EOM derivative/Higgs
     family (`cHD`, `cHBox`, `cH`): source generation now preserves pre-EOM
-    selected terms for `cHD`, but full projected coefficient extraction still
-    needs a bounded stage-by-stage comparison and likely target-local
-    EOM/IBP/projection-cost work;
+    selected terms for `cHD`, and projection is now bounded, but the selected
+    scalar-only result still projects to zero. Next inspect Matchete's
+    `ReplaceHeavyEOM`, `GreensSimplify`, and basis-reduction path for this
+    coefficient and separately investigate the vakint/FORM crash hit by the
+    selected order-five light-vector diagnostic traces;
   - decide whether the selected `cHW` report should also be covered through
     `use_public_match_api=True`; if it differs from the direct preview route,
     inspect the public `Theory.match(...)` wiring rather than patching the

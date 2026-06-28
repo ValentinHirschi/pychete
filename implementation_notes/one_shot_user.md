@@ -846,3 +846,15 @@ without Warsaw-specific core assumptions.
   requirements when `substitute_heavy_scalar_solutions=True`, keeping pre-EOM
   terms such as `H^2 phi` that can become four-Higgs operators after the
   heavy singlet solution is applied.
+- Projection-cost follow-up: selected `hScalar-lScalar -> cHD` no longer
+  stalls in target-local projection. pychete now prunes derivative-slot
+  incompatible branches before native tensor canonicalization, comparing
+  derivative-slot shapes rather than exact dummy-index names at that
+  pre-canonicalization stage. The selected scalar-only `cHD` fixture report
+  now returns boundedly and still projects to zero, while the Matchete fixture
+  coefficient is nonzero; the remaining issue is therefore source generation
+  or downstream `ReplaceHeavyEOM`/`GreensSimplify`/basis reduction, not the
+  projection hang. Initial light-vector trace diagnostics found zero generated
+  `cHD` terms for the simple selected families tested, and the order-five
+  two-vector diagnostics currently expose a separate vakint/FORM tensor
+  reduction crash to investigate.

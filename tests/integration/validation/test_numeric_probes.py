@@ -24,6 +24,7 @@ from pychete import (
 )
 from pychete.backends import vacuum_integrals
 from pychete.bases.smeft_warsaw import smeft_warsaw_operator
+from pychete.expr import field_with_derivatives
 from pychete.functional import expand_cd_operators
 from pychete.validation_fixtures import _gap_report
 from tests.conftest import assert_expr_equal
@@ -920,6 +921,67 @@ def test_matching_result_projection_canonizes_source_once_for_ibp_aliases(
     assert_expr_equal(registered[canonical_string(wilson_target)], coefficient)
     assert source_canonize_count == 1
     assert irrelevant_canonize_count == 0
+
+
+def test_matching_result_projection_prunes_derivative_incompatible_terms_before_canonization(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    coefficient = S("condition_projection_derivative_pruned_coefficient")
+    noise = S("condition_projection_derivative_pruned_noise")
+    theory = _singlet_scalar_extension_theory()
+    target = smeft_warsaw_operator(theory, "cHD")
+    assert target is not None
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_derivative_pruned_i"), fund)
+    j = theory.index(theory.symbol("projection_derivative_pruned_j"), fund)
+    mu = theory.dummy_index(0)
+    valid_source = (
+        s.Bar(higgs(j))
+        * higgs(i)
+        * field_with_derivatives(higgs(j), (mu,))
+        * s.Bar(field_with_derivatives(higgs(i), (mu,)))
+    )
+    derivative_incompatible_noise = (
+        noise
+        * s.Bar(higgs(i))
+        * higgs(i)
+        * field_with_derivatives(higgs(j), (mu, mu))
+        * s.Bar(field_with_derivatives(higgs(j), (mu, mu)))
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * valid_source + derivative_incompatible_noise,
+    )
+    original_canonize_tensor_terms = matching_results_module._canonize_tensor_terms
+    source_canonize_count = 0
+    noise_canonize_count = 0
+
+    def counting_canonize_tensor_terms(
+        expr: Expression,
+        index_specs: Sequence[tuple[Expression, Expression]],
+    ) -> Expression:
+        nonlocal source_canonize_count, noise_canonize_count
+        rendered = canonical_string(expr)
+        if "condition_projection_derivative_pruned_coefficient" in rendered:
+            source_canonize_count += 1
+        if "condition_projection_derivative_pruned_noise" in rendered:
+            noise_canonize_count += 1
+        return original_canonize_tensor_terms(expr, index_specs)
+
+    monkeypatch.setattr(
+        matching_results_module,
+        "_canonize_tensor_terms",
+        counting_canonize_tensor_terms,
+    )
+
+    projected = result.project_matching_conditions({"cHD": target}, expand_source=False)
+
+    assert_expr_equal(projected["cHD"], coefficient)
+    assert source_canonize_count == 1
+    assert noise_canonize_count == 0
 
 
 def test_matching_result_projection_skips_tensor_canonization_for_exact_index_match(
