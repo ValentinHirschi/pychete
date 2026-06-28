@@ -2197,15 +2197,31 @@
   `hScalar-lScalar-lVector-lVector-lScalar` and
   `hScalar-lScalar-lVector-lScalar-lVector` also generated no `cHD` terms at
   propagator order zero when tensor reduction was disabled for the diagnostic.
-  With tensor reduction enabled, those order-five probes currently trigger a
-  vakint/FORM crash (`Illegal use of function arguments`) and need a separate
-  backend-boundary investigation before relying on them for matching parity.
-- Focused checks for this slice passed: the new derivative-prune projection
-  regression plus the existing `cHD` projection canonicalization test
-  (`2 passed`), the selected Singlet pre-EOM filter and accepted gauge-target
-  fixture tests (`6 passed` with the two projection tests under the 30 GiB
-  watchdog), direct bounded `cHD` fixture projection diagnostic, `python -m
-  mypy`, and `git diff --check`.
+  The tensor-reduction-enabled versions no longer crash after the vakint FORM
+  sanitizer fix described below; they complete with zero selected Wilson-line
+  terms and a large hybrid interaction-power remainder.
+- Backend-boundary investigation for that two-vector diagnostic: the crash was
+  not in the selected Wilson-line replacement terms. It occurred in the
+  unselected hybrid interaction-power remainder, first at the
+  `hScalar-lScalar-lScalar-lFermion-lScalar` contribution. Inspecting
+  vakint's tensor-reduction source and generated `run_tensor_reduction.frm`
+  showed the precise native bug: after vakint inserted its internal
+  `vec(k1, idx)` helper, its FORM sanitizer escaped the model's short
+  fermion field symbol `e` by substring replacement and corrupted the helper
+  to `v[e]c(k1, idx)`, producing FORM's `Illegal use of function arguments`.
+  pychete now shields numerator symbols before native tensor reduction using
+  Symbolica `get_all_symbols(...)` and `replace_multiple(...)`, restores them
+  to vakint-local names after the native call, and leaves topology mass
+  metadata untouched. A reproducible dependency patch was added at
+  `dependencies/patches/gammaloop/001-vakint-form-identifier-replacements.patch`
+  so fresh installs also use identifier-bound FORM replacements inside vakint.
+  The focused backend regression covers the short-symbol `e` case, and the
+  public two-vector Singlet preview now completes under the 30 GiB watchdog.
+- Focused checks for this slice passed: the full vakint backend unit file
+  (`42 passed`), the targeted public Singlet two-vector preview that
+  previously triggered the FORM crash (under
+  `scripts/run_with_memory_watch.py --limit-gb 30`, now completing with zero
+  selected Wilson-line terms), `python -m mypy`, and `git diff --check`.
 
 ## Next Work
 
@@ -2218,8 +2234,7 @@
     selected terms for `cHD`, and projection is now bounded, but the selected
     scalar-only result still projects to zero. Next inspect Matchete's
     `ReplaceHeavyEOM`, `GreensSimplify`, and basis-reduction path for this
-    coefficient and separately investigate the vakint/FORM crash hit by the
-    selected order-five light-vector diagnostic traces;
+    coefficient;
   - decide whether the selected `cHW` report should also be covered through
     `use_public_match_api=True`; if it differs from the direct preview route,
     inspect the public `Theory.match(...)` wiring rather than patching the

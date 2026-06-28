@@ -382,6 +382,26 @@ def test_vakint_tensor_reduction_round_trips_pychete_fields_and_couplings() -> N
     assert canonical_string(decoded) == canonical_string(expr)
 
 
+def test_vakint_tensor_reduction_escapes_short_user_symbols_without_corrupting_vec_helper() -> None:
+    theory = Theory("vakint_decode_short_symbol")
+    electron = theory.define_field("e", s.Fermion, mass=0)
+    higgs = theory.define_field("H", s.Scalar, mass=("Heavy", "M"))
+    yukawa = theory.define_coupling("Ye")
+    mu = theory.lorentz_index("mu")
+    mass = theory.mass_expr(higgs.definition)
+    assert mass is not None
+    numerator = yukawa() * s.NCM(s.Bar(electron()), s.PR) * s.NCM(s.PL, electron()) * s.LoopMomentum(mu) ** 2
+    expr = vakint.one_loop_vacuum_integral(numerator, (mass**2,))
+
+    reduced = vakint.tensor_reduce(expr)
+    decoded = vakint.decode_pychete_namespace(theory, reduced)
+
+    assert "v[e]c" not in str(reduced)
+    assert "vakint::Field(vakint::e" in canonical_string(reduced)
+    assert "vakint::Field" not in canonical_string(decoded)
+    assert canonical_string(decoded) != "0"
+
+
 def test_vakint_tensor_reduction_round_trips_indexed_pychete_fields() -> None:
     theory = Theory("vakint_decode_indexed")
     theory.define_gauge_group("SU2L", s.SU(2), coupling="gL", field="W")

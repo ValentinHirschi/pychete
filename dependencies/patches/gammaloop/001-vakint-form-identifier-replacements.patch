@@ -1,0 +1,61 @@
+diff --git a/crates/vakint/src/lib.rs b/crates/vakint/src/lib.rs
+index 9b842cc5..9af038df 100644
+--- a/crates/vakint/src/lib.rs
++++ b/crates/vakint/src/lib.rs
+@@ -4925,7 +4925,7 @@ Evaluated (n_loops=1, mu_r=1) :
+         //processed_str = processed_str.replace("𝑖", " i_");
+         // println!("String replacements: {}", string_replacements.iter().map(|(k,v)| format!("{} -> {}", k, v)).collect::<Vec<_>>().join(", "));
+ 
+-        processed_str = utils::multi_string_replace(processed_str, &string_replacements);
++        processed_str = utils::multi_form_identifier_replace(processed_str, &string_replacements);
+         //println!("form_header_additions: {}", form_header_additions.join("\n"));
+ 
+         Ok((form_header_additions.join("\n"), processed_str, indices))
+diff --git a/crates/vakint/src/utils.rs b/crates/vakint/src/utils.rs
+index c783b651..c485107e 100644
+--- a/crates/vakint/src/utils.rs
++++ b/crates/vakint/src/utils.rs
+@@ -224,6 +224,43 @@ pub fn multi_string_replace(text: String, repls: &HashMap<String, String>) -> St
+     .into_owned()
+ }
+ 
++pub fn multi_form_identifier_replace(text: String, repls: &HashMap<String, String>) -> String {
++    let mut patterns: Vec<String> = repls.keys().cloned().collect();
++    patterns.sort_unstable_by_key(|s| std::cmp::Reverse(s.len()));
++
++    let mut out = String::with_capacity(text.len());
++    let mut position = 0;
++    while position < text.len() {
++        let matched = patterns.iter().find(|pattern| {
++            text[position..].starts_with(pattern.as_str())
++                && form_identifier_boundary(&text, position)
++                && form_identifier_boundary(&text, position + pattern.len())
++        });
++        if let Some(pattern) = matched {
++            out.push_str(&repls[pattern]);
++            position += pattern.len();
++            continue;
++        }
++        let next = text[position..].chars().next().unwrap();
++        out.push(next);
++        position += next.len_utf8();
++    }
++    out
++}
++
++fn form_identifier_boundary(text: &str, position: usize) -> bool {
++    if position == 0 || position == text.len() {
++        return true;
++    }
++    let before = text[..position].chars().next_back().unwrap();
++    let after = text[position..].chars().next().unwrap();
++    !is_form_identifier_char(before) || !is_form_identifier_char(after)
++}
++
++fn is_form_identifier_char(c: char) -> bool {
++    c.is_ascii_alphanumeric() || c == '_'
++}
++
+ pub fn could_match(pattern: &Pattern, target: AtomView) -> bool {
+     target
+         .pattern_match(

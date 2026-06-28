@@ -858,3 +858,12 @@ without Warsaw-specific core assumptions.
   `cHD` terms for the simple selected families tested, and the order-five
   two-vector diagnostics currently expose a separate vakint/FORM tensor
   reduction crash to investigate.
+- Latest instruction: whenever a precise mismatch is identified, carefully
+  review the corresponding Matchete or backend algorithm before changing
+  pychete, and use that comparison to locate the real semantic difference.
+  Applied immediately to the two-vector `cHD` diagnostic crash: the selected
+  Wilson-line terms were zero, while the hybrid interaction-power remainder
+  crashed in native vakint tensor reduction. Inspecting vakint's tensor
+  reducer and generated FORM file showed that native user-symbol escaping
+  rewrote its internal `vec(...)` helper to `v[e]c(...)` when the model
+  contained a short field symbol `e`.

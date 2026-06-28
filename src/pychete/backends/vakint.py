@@ -9,13 +9,14 @@ from symbolica import Expression, Replacement, S
 from ..expr import args, as_int, factors, is_head, list_expr, pow_parts, product_expr, sum_expr
 from ..logging import get_logger, progress
 from ..noncommutative import scalarize_commutative_ncm_chains
-from ..symbols import SymbolRole, canonical_string, s, safe_symbol_name
+from ..symbols import SymbolDataKey, SymbolRole, canonical_string, s, safe_symbol_name, symbol_data
 from .common import import_backend
 
 _LOGGER = get_logger("backends.vakint")
 _LOOP_MOMENTUM_INDEX_SYMBOLS_BY_INDEX: dict[str, Expression] = {}
 _LOOP_MOMENTUM_INDEX_BY_SAFE_SYMBOL: dict[str, Expression] = {}
 _MAX_VAKINT_NCM_DECODE_ARITY = 16
+_FORM_SAFE_SYMBOL_PREFIX = "zzform"
 
 
 def native_module():
@@ -367,8 +368,12 @@ def tensor_reduce(integral_expression: Expression, *, engine: Any | None = None)
     """
 
     integral_expression = _prepare_integral_expression(integral_expression)
+    integral_expression, restore_replacements = _form_safe_integral_expression(integral_expression)
     _LOGGER.debug("tensor-reducing vakint expression with native engine")
-    return _tensor_reduction_engine(engine).tensor_reduce(integral_expression)
+    reduced = _tensor_reduction_engine(engine).tensor_reduce(integral_expression)
+    if restore_replacements:
+        reduced = reduced.replace_multiple(restore_replacements)
+    return reduced
 
 
 def evaluate_integral(integral_expression: Expression, *, engine: Any | None = None) -> Expression:
@@ -879,6 +884,84 @@ def _pychete_loop_momentum_pattern() -> Expression:
 
 def _prepare_integral_expression(integral_expression: Expression) -> Expression:
     return collect_identical_propagators(lower_pychete_loop_momentum_numerators(integral_expression))
+
+
+def _form_safe_integral_expression(
+    integral_expression: Expression,
+) -> tuple[Expression, tuple[Replacement, ...]]:
+    """Temporarily encode user symbols before native FORM tensor reduction.
+
+    Vakint's tensor reducer inserts internal ``vec(...)`` helper functions
+    before its FORM string escaping pass. Current native sanitization performs
+    literal substring replacement for user variables, so a model symbol such as
+    ``e`` can corrupt that helper into ``v[e]c``. Encode concrete user
+    variables into collision-free temporary atoms before the native call, then
+    restore them to the vakint-local names expected by ``decode_pychete_namespace``.
+    """
+
+    form_numerator_source = integral_expression.replace(_topology_pattern(), Expression.num(1))
+    user_symbols = tuple(
+        symbol_expr
+        for symbol_expr in form_numerator_source.get_all_symbols(include_function_symbols=False)
+        if _needs_form_safe_symbol(symbol_expr)
+    )
+    if not user_symbols:
+        return integral_expression, ()
+
+    encode_replacements: list[Replacement] = []
+    restore_replacements: list[Replacement] = []
+    for index, symbol_expr in enumerate(user_symbols):
+        safe_name = _form_safe_symbol_name(symbol_expr, index)
+        safe_symbol = S(safe_name)
+        restore_symbol = _form_safe_restore_symbol(symbol_expr)
+        encode_replacements.append(Replacement(symbol_expr, safe_symbol))
+        restore_replacements.append(Replacement(safe_symbol, restore_symbol))
+        restore_replacements.append(Replacement(symbol(safe_name), restore_symbol))
+    return integral_expression.replace_multiple(encode_replacements), tuple(restore_replacements)
+
+
+def _needs_form_safe_symbol(symbol_expr: Expression) -> bool:
+    display_name = symbol_data(symbol_expr, SymbolDataKey.NAME)
+    if not isinstance(display_name, str) or not display_name:
+        return False
+    local_name = _symbol_local_name(symbol_expr)
+    if local_name is None:
+        return False
+    if _vakint_local_name(symbol_expr) in {
+        "edge",
+        "g",
+        "k",
+        "mursq",
+        "prop",
+        "topo",
+        "ε",
+    }:
+        return False
+    return True
+
+
+def _form_safe_symbol_name(symbol_expr: Expression, index: int) -> str:
+    digest = sha256(canonical_string(symbol_expr).encode("utf-8")).hexdigest()[:12]
+    return f"{_FORM_SAFE_SYMBOL_PREFIX}_{index}_{digest}"
+
+
+def _form_safe_restore_symbol(symbol_expr: Expression) -> Expression:
+    display_name = symbol_data(symbol_expr, SymbolDataKey.NAME)
+    if isinstance(display_name, str) and display_name:
+        return symbol(display_name)
+    local_name = _symbol_local_name(symbol_expr)
+    if local_name in {
+        "AntiGhost",
+        "Fermion",
+        "Ghost",
+        "Lorentz",
+        "Scalar",
+        "Vector",
+        "adj",
+        "fund",
+    }:
+        return symbol(local_name)
+    return symbol_expr
 
 
 def _raise_for_native_analytic_integral_scope(integral_expression: Expression) -> None:
