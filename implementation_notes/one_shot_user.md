@@ -1433,3 +1433,14 @@ generic algorithm boundary before runtime pychete changes are accepted.
   entries. This confirms the active mismatch is broader Matchete
   `InternalSimplify`/Green representative conversion, not a simple exact
   inverse Abelian current-product rewrite.
+- Latest `FieldRedef` consumer update: pychete now has
+  `operator_derivative_count(...)`,
+  `select_terms_by_dimension_and_derivatives(...)`, and
+  `systematic_scalar_eom_field_redefinition_delta(...)`, with matching
+  `Theory` methods, to mirror Matchete's `SelectOperatorDevsAndDim` and
+  scalar formal-EOM `ShiftLagrangian` loop once formal EOM terms have already
+  been exposed. Formal `EOM(Field(...))` atoms now carry Matchete-compatible
+  EFT dimensions for `operator_dimension(...)`. This is still consumer-side
+  machinery; the active Singlet `cHD` gap remains the upstream
+  `InternalSimplify`/Green representative exposure that must generate the
+  formal EOM terms feeding Matchete's `after_shift_dim6_dev3` shift.

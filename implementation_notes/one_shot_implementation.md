@@ -1493,3 +1493,40 @@
   `src/pychete/api.py`, `tests/unit/functional/test_scalar_eom.py`, and
   `scripts/debug_pychete_singlet_eom_boundary.py` (`Success: no issues
   found`); and `git diff --check`.
+- Current Matchete `FieldRedef` control-structure slice, 2026-06-28: the
+  active Matchete checkpoint remains
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` /
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, with the
+  relevant algorithm read directly from
+  `Mathematica_reference/Matchete/Package/FieldRedef.m`:
+  `PerformSystematicFieldRedefs` loops over `eftOrd = 5..maxOrder` and
+  descending derivative counts, `ShiftLagrangian` selects terms with
+  `SelectOperatorDevsAndDim[lag, devs, dim]`, and scalar terms are consumed by
+  `ScalarShift`. The paired pychete boundary is the existing formal-EOM
+  consumer in `src/pychete/functional.py`.
+- Implemented the bounded pychete port of that consumer-side control
+  structure for already-exposed formal scalar EOM terms:
+  `operator_dimension(...)` now assigns formal `EOM(Field(...))` atoms
+  Matchete-compatible dimensions; `operator_derivative_count(...)` uses
+  Symbolica marker replacements to count scalar EOMs as two derivatives,
+  fermion/vector EOMs as one, field strengths as one plus derivative slots,
+  and fields by derivative-slot length; `select_terms_by_dimension_and_derivatives(...)`
+  selects the Matchete `(devs, dim)` slice; and
+  `systematic_scalar_eom_field_redefinition_delta(...)` loops through the
+  Matchete `eftOrd`/`devs` order before delegating each selected scalar formal
+  EOM slice to `scalar_eom_field_redefinition_delta(...)`. These helpers are
+  exposed through `pychete.api` and matching `Theory` methods.
+- This slice does not claim to close the Singlet `cHD` mismatch. It ports the
+  consumer side once formal EOM terms exist. The first active divergence is
+  still upstream: Matchete `InternalSimplify`/Green representative conversion
+  exposes the formal EOM terms that feed the `after_shift_dim6_dev3` scalar
+  shift, while pychete's selected source currently has only the bounded scalar
+  Laplacian identity exposure recorded in the paired pychete debug fixture.
+- Focused validation for this `FieldRedef` control-structure slice passed:
+  `tests/unit/functional/test_scalar_eom.py -q` (`29 passed`);
+  `tests/unit/definitions/test_public_api.py -q` (`9 passed`);
+  `tests/unit/eft/test_eft_counting.py -q` (`7 passed`);
+  `python -m py_compile src/pychete/eft.py src/pychete/functional.py
+  src/pychete/theory.py src/pychete/api.py tests/unit/functional/test_scalar_eom.py
+  tests/unit/definitions/test_public_api.py`; targeted mypy on the same
+  source/test files (`Success: no issues found`); and `git diff --check`.

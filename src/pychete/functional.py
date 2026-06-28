@@ -6,6 +6,7 @@ from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .expr import (
+    as_int,
     args,
     bar_field_inner,
     bar_field_pattern,
@@ -54,6 +55,7 @@ _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS = 96
 _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES = 192
 _DEFAULT_SCALAR_GREEN_MAX_ROUNDS = 2
 _DEFAULT_ABELIAN_VECTOR_EOM_CURRENT_CANDIDATES = 128
+_OPERATOR_DERIVATIVE_COUNT_PARAMETER = s.head("operator_derivative_count_parameter")
 
 
 def hermitian_conjugate(expr: Expression) -> Expression:
@@ -2056,6 +2058,105 @@ def expose_abelian_vector_eom_currents(
     return out
 
 
+def operator_derivative_count(expr: Expression) -> int:
+    """Return Matchete-style derivative count for an operator expression.
+
+    This mirrors the derivative-count component of Matchete's
+    ``OpDevsAndDim`` with Symbolica marker replacements. Scalar formal EOMs
+    count as two derivatives, fermion and vector formal EOMs count as one,
+    field-strength atoms count as one plus explicit derivative slots, and
+    ordinary field derivative slots count directly.
+    """
+
+    weighted = _operator_derivative_weighted_expression(expr).expand()
+    counts = [
+        count
+        for key, coefficient in weighted.coefficient_list(_OPERATOR_DERIVATIVE_COUNT_PARAMETER)
+        if not is_zero(coefficient) and (count := _operator_derivative_marker_key_count(key)) is not None
+    ]
+    return min(counts, default=0)
+
+
+def select_terms_by_dimension_and_derivatives(
+    theory: Theory,
+    expr: Expression,
+    *,
+    dimension: int | float,
+    derivative_count: int,
+    heavy_field_dimension: bool = True,
+    require_formal_eom: bool = False,
+) -> Expression:
+    """Select terms by Matchete-style operator dimension and derivative count."""
+
+    if derivative_count < 0:
+        raise ValueError("derivative_count must be non-negative")
+    theory._validate_registered_expression(expr)
+    from .eft import operator_dimension
+
+    selected: list[Expression] = []
+    for term in terms(expr.expand()):
+        if require_formal_eom and not _contains_formal_eom(term):
+            continue
+        if operator_dimension(term, theory, heavy_field_dimension=heavy_field_dimension) != dimension:
+            continue
+        if operator_derivative_count(term) != derivative_count:
+            continue
+        selected.append(term)
+    return sum_expr(selected).expand()
+
+
+def systematic_scalar_eom_field_redefinition_delta(
+    theory: Theory,
+    lagrangian: Expression,
+    *,
+    max_order: int,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    strict: bool = False,
+) -> Expression:
+    """Apply the scalar formal-EOM part of Matchete's systematic shifts.
+
+    The helper loops over ``eft_order = 5..max_order`` and descending
+    derivative counts exactly like Matchete's ``PerformSystematicFieldRedefs``.
+    It selects explicit formal scalar-EOM terms with
+    :func:`select_terms_by_dimension_and_derivatives`, then delegates the
+    actual shift to :func:`scalar_eom_field_redefinition_delta`. It is a
+    bounded consumer-side port: it does not expose hidden derivative
+    representatives as formal EOMs.
+    """
+
+    if max_order < 5:
+        return Expression.num(0)
+    theory._validate_registered_expression(lagrangian)
+    out = lagrangian
+    deltas: list[Expression] = []
+    for eft_order in range(5, max_order + 1):
+        shift_order = eft_order - 4
+        for derivative_count in range(eft_order - 2, 0, -1):
+            eom_terms = select_terms_by_dimension_and_derivatives(
+                theory,
+                out,
+                dimension=eft_order,
+                derivative_count=derivative_count,
+                require_formal_eom=True,
+            )
+            if is_zero(eom_terms):
+                continue
+            delta = scalar_eom_field_redefinition_delta(
+                theory,
+                out,
+                eom_terms,
+                fields=fields,
+                max_order=max_order,
+                shift_order=shift_order,
+                strict=strict,
+            )
+            if is_zero(delta):
+                continue
+            deltas.append(delta)
+            out = (out + delta).expand()
+    return sum_expr(deltas).expand()
+
+
 def scalar_eom_field_redefinition_delta(
     theory: Theory,
     source_lagrangian: Expression,
@@ -2416,6 +2517,117 @@ def _expression_coefficient_for_composite(theory: Theory, expression: Expression
         expand_source=False,
         normalize_derivative_operators=False,
     )["composite_coefficient"].expand()
+
+
+def _operator_derivative_weighted_expression(expr: Expression) -> Expression:
+    encoded, eom_weight_replacements, eom_decode_replacements = _encode_eom_atoms_for_derivative_weighting(expr)
+    weighted = encoded.replace_multiple(
+        (
+            *eom_weight_replacements,
+            *_operator_derivative_weight_replacements(),
+        )
+    ).expand()
+    if eom_decode_replacements:
+        weighted = weighted.replace_multiple(eom_decode_replacements).expand()
+    return weighted
+
+
+def _encode_eom_atoms_for_derivative_weighting(
+    expr: Expression,
+) -> tuple[Expression, tuple[Replacement, ...], tuple[Replacement, ...]]:
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms = (
+        *matching_subexpressions(expr, s.EOM(field_pattern()), label_is_tagged),
+        *matching_subexpressions(expr, s.EOM(bar_field_pattern()), label_is_tagged),
+    )
+    if not atoms:
+        return expr, (), ()
+
+    encode: list[Replacement] = []
+    weight: list[Replacement] = []
+    decode: list[Replacement] = []
+    for index, atom in enumerate(sorted(set(atoms), key=canonical_string)):
+        temp = s.head(f"operator_derivative_eom_atom_{index}")
+        encode.append(Replacement(atom, temp))
+        weight.append(Replacement(temp, temp * _operator_derivative_marker_power(_eom_derivative_count(atom))))
+        decode.append(Replacement(temp, atom))
+    return expr.replace_multiple(encode), tuple(weight), tuple(decode)
+
+
+def _eom_derivative_count(atom: Expression) -> int:
+    body = atom[0]
+    base = bar_field_inner(body) if is_bar_field(body) else body
+    if not is_head(base, s.Field):
+        return 0
+    return 2 if bool(field_type(base) == s.Scalar) else 1
+
+
+def _operator_derivative_weight_replacements() -> tuple[Replacement, ...]:
+    cd_pat = cd_pattern()
+    bar_pat = bar_field_pattern()
+    field_pat = field_pattern()
+    bar_strength_pat = bar_field_strength_pattern()
+    strength_pat = field_strength_pattern()
+
+    def weighted(atom: Expression, count: int) -> Expression:
+        return atom if count == 0 else atom * _operator_derivative_marker_power(count)
+
+    def cd_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = cd_pat.replace_wildcards(match)
+        indices = list_items(atom[0]) if is_head(atom[0], s.List) else (atom[0],)
+        return weighted(atom, len(indices))
+
+    def bar_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = bar_pat.replace_wildcards(match)
+        return weighted(atom, len(field_derivatives(bar_field_inner(atom))))
+
+    def field_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = field_pat.replace_wildcards(match)
+        return weighted(atom, len(field_derivatives(atom)))
+
+    def bar_strength_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = bar_strength_pat.replace_wildcards(match)
+        return weighted(atom, 1 + len(field_strength_derivatives(bar_field_inner(atom))))
+
+    def strength_weight(match: dict[Expression, Expression]) -> Expression:
+        atom = strength_pat.replace_wildcards(match)
+        return weighted(atom, 1 + len(field_strength_derivatives(atom)))
+
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    strength_label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    return (
+        Replacement(cd_pat, cd_weight),
+        Replacement(bar_strength_pat, bar_strength_weight, strength_label_is_tagged),
+        Replacement(strength_pat, strength_weight, strength_label_is_tagged),
+        Replacement(bar_pat, bar_weight, label_is_tagged),
+        Replacement(field_pat, field_weight, label_is_tagged),
+    )
+
+
+def _operator_derivative_marker_power(count: int) -> Expression:
+    if count == 0:
+        return Expression.num(1)
+    if count == 1:
+        return _OPERATOR_DERIVATIVE_COUNT_PARAMETER
+    return _OPERATOR_DERIVATIVE_COUNT_PARAMETER**count
+
+
+def _operator_derivative_marker_key_count(key: Expression) -> int | None:
+    if bool(key == Expression.num(1)):
+        return 0
+    if bool(key == _OPERATOR_DERIVATIVE_COUNT_PARAMETER):
+        return 1
+    pattern = _OPERATOR_DERIVATIVE_COUNT_PARAMETER ** s.PowExponentWildcard
+    for match in key.match(pattern):
+        return as_int(match[s.PowExponentWildcard])
+    return None
+
+
+def _contains_formal_eom(expr: Expression) -> bool:
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    return bool(expr.matches(s.EOM(field_pattern()), label_is_tagged)) or bool(
+        expr.matches(s.EOM(bar_field_pattern()), label_is_tagged)
+    )
 
 
 def scalar_abelian_gauge_current(mu: Expression, field: Expression) -> Expression:

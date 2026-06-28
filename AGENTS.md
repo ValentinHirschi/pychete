@@ -552,6 +552,21 @@ consumer for explicit formal scalar `EOM(Field(...))` and
 `EOM(Bar(Field(...)))` terms. That helper intentionally assumes a prior
 Green/InternalSimplify-style exposure stage has already produced formal EOM
 atoms; do not pretend it handles arbitrary derivative sources by itself.
+Use `operator_derivative_count(...)`,
+`select_terms_by_dimension_and_derivatives(...)`, and
+`systematic_scalar_eom_field_redefinition_delta(...)` as the bounded
+Matchete `SelectOperatorDevsAndDim` / scalar `ShiftLagrangian` control
+structure for already-exposed formal scalar EOM terms. Formal EOM atoms carry
+Matchete-compatible EFT dimensions in `operator_dimension(...)`: scalar and
+vector EOMs are counted as their field dimension plus two derivatives, and
+fermion EOMs as their field dimension plus one derivative. The derivative
+selector uses Symbolica marker replacements, not Python tree walking: scalar
+EOMs count as two derivatives, fermion/vector EOMs as one, field strengths as
+one plus derivative slots, and fields as their derivative-slot length. This is
+consumer-side field-redefinition machinery only; the active Singlet `cHD`
+frontier still needs broader `InternalSimplify`/Green representative exposure
+before these helpers can reproduce the Matchete `after_shift_dim6_dev3`
+boundary.
 The first bounded exposure stage is `scalar_eom_identities(...)` plus
 `scalar_derivative_green_normal_form(..., include_eom=True,
 eom_lagrangian=...)`, optionally routed through

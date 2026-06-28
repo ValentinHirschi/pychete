@@ -8,9 +8,12 @@ from .functional import (
     expose_scalar_derivative_commutator_bilinears,
     hermitian_conjugate,
     integrate_by_parts_scalar_laplacians,
+    operator_derivative_count,
     scalar_derivative_green_normal_form,
     scalar_derivative_ibp_identities,
     scalar_eom_identities,
+    select_terms_by_dimension_and_derivatives,
+    systematic_scalar_eom_field_redefinition_delta,
 )
 from .group_algebra import simplify_pychete_color
 from .green_basis import (
@@ -240,9 +243,11 @@ __all__ = [
     "hermitian_conjugate",
     "infer_coupling_mass_dimensions",
     "integrate_by_parts_scalar_laplacians",
+    "operator_derivative_count",
     "scalar_derivative_green_normal_form",
     "scalar_derivative_ibp_identities",
     "scalar_eom_identities",
+    "select_terms_by_dimension_and_derivatives",
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",
@@ -272,6 +277,7 @@ __all__ = [
     "series_eft",
     "simplify_loop_functions",
     "simplify_pychete_color",
+    "systematic_scalar_eom_field_redefinition_delta",
     "symmetric_lorentz_gamma_factor",
     "symmetric_lorentz_tensor",
     "tensor_index_specs",

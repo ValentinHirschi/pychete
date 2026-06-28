@@ -3,15 +3,18 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import FieldMassKind, FreeLagConvention, Theory, hermitian_conjugate, s
+from pychete import FieldMassKind, FreeLagConvention, Theory, hermitian_conjugate, operator_dimension, s
 from pychete.functional import (
     abelian_vector_eom_field_redefinition_delta,
     apply_cd,
     expand_cd_operators,
     expose_abelian_vector_eom_currents,
     expose_scalar_derivative_commutator_bilinears,
+    operator_derivative_count,
     partial_functional_derivative,
     scalar_eom_field_redefinition_delta,
+    select_terms_by_dimension_and_derivatives,
+    systematic_scalar_eom_field_redefinition_delta,
 )
 from pychete.symbols import canonical_string
 from pychete.theory_metadata import EXTERNAL_LINEAR_FUNCTION_TAG
@@ -311,6 +314,78 @@ def test_scalar_eom_field_redefinition_delta_scopes_source_by_eft_order() -> Non
     )
 
     assert_expr_equal(delta, expected)
+
+
+def test_formal_scalar_eom_terms_use_matchete_dimension_and_derivative_count() -> None:
+    theory = Theory("formal_scalar_eom_devs_dim")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=False, mass=0)
+    coefficient = theory.define_coupling("formal_scalar_eom_devs_dim_coefficient", self_conjugate=True)
+    mu = theory.dummy_index(0)
+    field = phi()
+    dim_four = s.Bar(field) * s.EOM(field)
+    dim_five = coefficient() * s.Bar(phi(derivatives=[mu])) * s.EOM(field)
+    expression = (dim_four + dim_five).expand()
+
+    assert operator_dimension(dim_four, theory) == 4
+    assert operator_derivative_count(dim_four) == 2
+    assert operator_dimension(dim_five, theory) == 5
+    assert operator_derivative_count(dim_five) == 3
+    assert_expr_equal(
+        select_terms_by_dimension_and_derivatives(
+            theory,
+            expression,
+            dimension=5,
+            derivative_count=3,
+            require_formal_eom=True,
+        ),
+        dim_five,
+    )
+    assert_expr_equal(
+        theory.select_terms_by_dimension_and_derivatives(
+            expression,
+            dimension=4,
+            derivative_count=2,
+            require_formal_eom=True,
+        ),
+        dim_four,
+    )
+
+
+def test_systematic_scalar_eom_field_redefinition_delta_selects_dim6_formal_eom_terms() -> None:
+    theory = Theory("systematic_scalar_eom_shift")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    coefficient = theory.define_coupling("systematic_scalar_eom_shift_coefficient", self_conjugate=True)
+    field = phi()
+    free = theory.free_lag(phi)
+    eom_terms = coefficient() * field**3 * s.EOM(field)
+    lagrangian = (free + eom_terms).expand()
+
+    selected = select_terms_by_dimension_and_derivatives(
+        theory,
+        lagrangian,
+        dimension=6,
+        derivative_count=2,
+        require_formal_eom=True,
+    )
+    direct = scalar_eom_field_redefinition_delta(
+        theory,
+        lagrangian,
+        eom_terms,
+        max_order=6,
+        shift_order=2,
+        strict=True,
+    )
+    systematic = systematic_scalar_eom_field_redefinition_delta(
+        theory,
+        lagrangian,
+        max_order=6,
+        fields=[phi],
+        strict=True,
+    )
+
+    assert_expr_equal(selected, eom_terms)
+    assert_expr_equal(systematic, direct)
+    assert_expr_equal(theory.systematic_scalar_eom_field_redefinition_delta(lagrangian, max_order=6), direct)
 
 
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:

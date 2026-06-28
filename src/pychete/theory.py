@@ -2374,6 +2374,48 @@ class Theory:
             max_candidates=max_candidates,
         )
 
+    def select_terms_by_dimension_and_derivatives(
+        self,
+        expression: Expression,
+        *,
+        dimension: int | float,
+        derivative_count: int,
+        heavy_field_dimension: bool = True,
+        require_formal_eom: bool = False,
+    ) -> Expression:
+        """Select terms by Matchete-style dimension and derivative count."""
+
+        from .functional import select_terms_by_dimension_and_derivatives
+
+        return select_terms_by_dimension_and_derivatives(
+            self,
+            expression,
+            dimension=dimension,
+            derivative_count=derivative_count,
+            heavy_field_dimension=heavy_field_dimension,
+            require_formal_eom=require_formal_eom,
+        )
+
+    def systematic_scalar_eom_field_redefinition_delta(
+        self,
+        lagrangian: Expression,
+        *,
+        max_order: int,
+        fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+        strict: bool = False,
+    ) -> Expression:
+        """Return the systematic scalar formal-EOM field-redefinition delta."""
+
+        from .functional import systematic_scalar_eom_field_redefinition_delta
+
+        return systematic_scalar_eom_field_redefinition_delta(
+            self,
+            lagrangian,
+            max_order=max_order,
+            fields=fields,
+            strict=strict,
+        )
+
     def scalar_eom_field_redefinition_delta(
         self,
         source_lagrangian: Expression,

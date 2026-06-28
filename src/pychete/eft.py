@@ -17,9 +17,11 @@ from .expr import (
     field_pattern,
     field_strength_pattern,
     field_type,
+    is_bar_field,
     is_head,
     is_zero,
     list_items,
+    matching_subexpressions,
     sum_expr,
 )
 from .linear_external import linear_external_function_heads
@@ -82,6 +84,15 @@ def _cd_scaled_dimension(expr: Expression, theory: Theory | None, *, heavy_field
     return _scaled_operator_dimension(expr[1], theory, heavy_field_dimension=heavy_field_dimension) + 2 * len(indices)
 
 
+def _eom_scaled_dimension(expr: Expression, theory: Theory | None, *, heavy_field_dimension: bool) -> int:
+    body = expr[0]
+    base = bar_field_inner(body) if is_bar_field(body) else body
+    if not is_head(base, s.Field):
+        return 0
+    derivative_shift = 2 if bool(field_type(base) == s.Fermion) else 4
+    return _field_scaled_dimension(base, theory, heavy_field_dimension=heavy_field_dimension) + derivative_shift
+
+
 def _eft_weight_replacements(theory: Theory | None, *, heavy_field_dimension: bool) -> tuple[Replacement, ...]:
     cd_pat = cd_pattern()
     bar_pat = bar_field_pattern()
@@ -123,15 +134,58 @@ def _eft_weight_replacements(theory: Theory | None, *, heavy_field_dimension: bo
     )
 
 
+def _encode_eom_atoms_for_eft_weighting(
+    expr: Expression,
+    theory: Theory | None,
+    *,
+    heavy_field_dimension: bool,
+) -> tuple[Expression, tuple[Replacement, ...], tuple[Replacement, ...]]:
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms = (
+        *matching_subexpressions(expr, s.EOM(field_pattern()), label_is_tagged),
+        *matching_subexpressions(expr, s.EOM(bar_field_pattern()), label_is_tagged),
+    )
+    if not atoms:
+        return expr, (), ()
+
+    encode: list[Replacement] = []
+    weight: list[Replacement] = []
+    decode: list[Replacement] = []
+    for index, atom in enumerate(sorted(set(atoms), key=canonical_string)):
+        temp = s.head(f"eft_eom_atom_{index}")
+        encode.append(Replacement(atom, temp))
+        weight.append(
+            Replacement(
+                temp,
+                temp * _marker_power(_eom_scaled_dimension(atom, theory, heavy_field_dimension=heavy_field_dimension)),
+            )
+        )
+        decode.append(Replacement(temp, atom))
+    return expr.replace_multiple(encode), tuple(weight), tuple(decode)
+
+
 def _eft_weighted_expression(
     expr: Expression,
     theory: Theory | None,
     *,
     heavy_field_dimension: bool,
 ) -> Expression:
-    weighted = expr.replace_multiple(_eft_weight_replacements(theory, heavy_field_dimension=heavy_field_dimension))
+    encoded, eom_weight_replacements, eom_decode_replacements = _encode_eom_atoms_for_eft_weighting(
+        expr,
+        theory,
+        heavy_field_dimension=heavy_field_dimension,
+    )
+    weighted = encoded.replace_multiple(
+        (
+            *eom_weight_replacements,
+            *_eft_weight_replacements(theory, heavy_field_dimension=heavy_field_dimension),
+        )
+    )
     weighted = _extract_linear_external_eft_markers(weighted)
-    return _extract_ncm_eft_markers(weighted).expand()
+    weighted = _extract_ncm_eft_markers(weighted).expand()
+    if eom_decode_replacements:
+        weighted = weighted.replace_multiple(eom_decode_replacements).expand()
+    return weighted
 
 
 def _extract_linear_external_eft_markers(expr: Expression) -> Expression:
