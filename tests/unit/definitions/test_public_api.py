@@ -68,6 +68,12 @@ def test_validation_fixture_diagnostics_are_public_api() -> None:
     assert pychete.SupertraceOrderCoverage is api.SupertraceOrderCoverage
 
 
+def test_scalar_green_helpers_are_public_api() -> None:
+    assert pychete.scalar_derivative_green_normal_form is api.scalar_derivative_green_normal_form
+    assert pychete.scalar_derivative_ibp_identities is api.scalar_derivative_ibp_identities
+    assert pychete.scalar_eom_identities is api.scalar_eom_identities
+
+
 def test_public_api_exports_have_docstrings() -> None:
     missing = [
         name

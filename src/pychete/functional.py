@@ -10,6 +10,7 @@ from .expr import (
     bar_field_inner,
     bar_field_pattern,
     bar_field_strength_pattern,
+    cg_tensor_pattern,
     cd_pattern,
     covariant_derivative_commutator_pattern,
     factors,
@@ -460,6 +461,54 @@ def scalar_derivative_ibp_identities(
     return tuple(identities)
 
 
+def scalar_eom_identities(
+    theory: Theory,
+    eom_lagrangian: Expression,
+    expr: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
+) -> tuple[Expression, ...]:
+    """Return local formal scalar-EOM identities for Green-basis reduction.
+
+    For every linear scalar Laplacian atom in ``expr`` this builds the local
+    identity ``coefficient * (EOM(field) - derive_eom(eom_lagrangian, field))``.
+    The atom discovery and coefficient extraction are Symbolica-native.  The
+    result is the bounded exposure stage needed before
+    :func:`scalar_eom_field_redefinition_delta` can consume formal EOM terms.
+    """
+
+    if max_identities < 0:
+        raise ValueError("max_identities must be non-negative")
+    theory._validate_registered_expression(eom_lagrangian)
+    theory._validate_registered_expression(expr)
+    normalized = normalize_conjugate_scalar_field_slots(theory, expr)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    atoms = (*_scalar_laplacian_field_atoms(normalized), *_scalar_laplacian_barred_field_atoms(normalized))
+    for atom in atoms:
+        base_atom = bar_field_inner(atom) if is_bar_field(atom) else atom
+        if allowed_labels is not None and canonical_string(field_label(base_atom)) not in allowed_labels:
+            continue
+        coefficient = normalized.coefficient(atom).expand()
+        if is_zero(coefficient):
+            continue
+        if not is_zero(coefficient.coefficient(atom)):
+            continue
+        identity = _scalar_eom_identity_for_atom(theory, eom_lagrangian, coefficient, atom)
+        if is_zero(identity):
+            continue
+        key = canonical_string(identity)
+        if key in seen:
+            continue
+        seen.add(key)
+        identities.append(identity)
+        if len(identities) > max_identities:
+            raise ValueError(f"scalar Green-basis EOM exposure generated more than {max_identities} identities")
+    return tuple(identities)
+
+
 def scalar_derivative_green_normal_form(
     theory: Theory,
     expr: Expression,
@@ -467,6 +516,9 @@ def scalar_derivative_green_normal_form(
     preferred: Iterable[Expression] = (),
     include_ibp: bool = True,
     include_commutators: bool = True,
+    include_eom: bool = False,
+    eom_lagrangian: Expression | None = None,
+    eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
     max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
     max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
     max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
@@ -475,9 +527,10 @@ def scalar_derivative_green_normal_form(
 
     The helper is a bounded pychete analogue of the scalar-derivative part of
     Matchete's ``GreensSimplify``. It builds a local identity neighborhood from
-    scalar ``IdentitiesIBP`` and covariant-derivative commutation identities,
-    optionally closes that neighborhood over newly discovered local operator
-    basis terms for a few rounds, and then delegates row reduction to
+    scalar ``IdentitiesIBP``, covariant-derivative commutation identities, and
+    optionally scalar formal-EOM identities, closes that neighborhood over
+    newly discovered local operator basis terms for a few rounds, and then
+    delegates row reduction to
     Symbolica via :func:`pychete.green_basis.linear_identity_normal_form_from_identities`.
 
     If ``preferred`` is not supplied, a scalar-only local ordering mirrors the
@@ -494,13 +547,20 @@ def scalar_derivative_green_normal_form(
         raise ValueError("max_identities must be non-negative")
     if max_rounds < 0:
         raise ValueError("max_rounds must be non-negative")
+    if include_eom and eom_lagrangian is None:
+        raise ValueError("eom_lagrangian must be provided when include_eom=True")
     theory._validate_registered_expression(expr)
+    if eom_lagrangian is not None:
+        theory._validate_registered_expression(eom_lagrangian)
     normalized = normalize_conjugate_scalar_field_slots(theory, expr)
     identities = _scalar_derivative_green_identities(
         theory,
         normalized,
         include_ibp=include_ibp,
         include_commutators=include_commutators,
+        include_eom=include_eom,
+        eom_lagrangian=eom_lagrangian,
+        eom_fields=eom_fields,
         max_basis_terms=max_basis_terms,
         max_identities=max_identities,
         max_rounds=max_rounds,
@@ -510,9 +570,11 @@ def scalar_derivative_green_normal_form(
 
     from .green_basis import linear_identity_basis_terms, linear_identity_normal_form
 
+    operator_patterns = _scalar_derivative_green_operator_patterns(include_eom=include_eom)
     basis = linear_identity_basis_terms(
         (normalized, *identities),
         max_basis_terms=max_basis_terms,
+        operator_patterns=operator_patterns,
     )
     preferred_terms = tuple(preferred) or _scalar_derivative_green_preferred_terms(basis)
     return linear_identity_normal_form(
@@ -574,11 +636,14 @@ def _scalar_derivative_green_identities(
     *,
     include_ibp: bool,
     include_commutators: bool,
+    include_eom: bool,
+    eom_lagrangian: Expression | None,
+    eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,
     max_basis_terms: int,
     max_identities: int,
     max_rounds: int,
 ) -> tuple[Expression, ...]:
-    if not include_ibp and not include_commutators:
+    if not include_ibp and not include_commutators and not include_eom:
         return ()
 
     from .green_basis import linear_identity_basis_terms
@@ -587,6 +652,7 @@ def _scalar_derivative_green_identities(
     seen_identities: set[str] = set()
     processed_sources: set[str] = set()
     frontier: tuple[Expression, ...] = (expr,)
+    operator_patterns = _scalar_derivative_green_operator_patterns(include_eom=include_eom)
     for _ in range(max(1, max_rounds)):
         new_sources: list[Expression] = []
         for source in frontier:
@@ -599,6 +665,9 @@ def _scalar_derivative_green_identities(
                 source,
                 include_ibp=include_ibp,
                 include_commutators=include_commutators,
+                include_eom=include_eom,
+                eom_lagrangian=eom_lagrangian,
+                eom_fields=eom_fields,
                 max_identities=max_identities,
             ):
                 identity_key = canonical_string(identity)
@@ -613,6 +682,7 @@ def _scalar_derivative_green_identities(
         basis_terms = linear_identity_basis_terms(
             (expr, *identities),
             max_basis_terms=max_basis_terms,
+            operator_patterns=operator_patterns,
         )
         for basis_term in basis_terms:
             key = canonical_string(basis_term)
@@ -630,6 +700,9 @@ def _scalar_derivative_identity_sources(
     *,
     include_ibp: bool,
     include_commutators: bool,
+    include_eom: bool,
+    eom_lagrangian: Expression | None,
+    eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,
     max_identities: int,
 ) -> tuple[Expression, ...]:
     identities: list[Expression] = []
@@ -637,9 +710,33 @@ def _scalar_derivative_identity_sources(
         identities.extend(scalar_derivative_ibp_identities(theory, expr, max_identities=max_identities))
     if include_commutators:
         identities.extend(theory.covariant_derivative_commutator_identities(expr))
+    if include_eom:
+        if eom_lagrangian is None:
+            raise ValueError("eom_lagrangian must be provided when include_eom=True")
+        identities.extend(
+            scalar_eom_identities(
+                theory,
+                eom_lagrangian,
+                expr,
+                fields=eom_fields,
+                max_identities=max_identities,
+            )
+        )
     if len(identities) > max_identities:
         raise ValueError(f"scalar Green-basis reduction generated more than {max_identities} identities")
     return tuple(identities)
+
+
+def _scalar_derivative_green_operator_patterns(*, include_eom: bool) -> tuple[Expression, ...]:
+    patterns = (
+        field_pattern(),
+        field_strength_pattern(),
+        covariant_derivative_commutator_pattern(),
+        cg_tensor_pattern(),
+    )
+    if include_eom:
+        return (*patterns, s.EOM(s.CDBodyWildcard))
+    return patterns
 
 
 def _scalar_derivative_green_preferred_terms(
@@ -735,6 +832,47 @@ def _scalar_derivative_ibp_identity_for_atom(coefficient: Expression, atom: Expr
     reduced_base = field_with_derivatives(base_atom, derivatives[1:])
     reduced_atom = s.Bar(reduced_base) if is_bar_field(atom) else reduced_base
     return (coefficient * atom + apply_cd([outer_derivative], coefficient) * reduced_atom).expand()
+
+
+def _scalar_eom_identity_for_atom(
+    theory: Theory,
+    eom_lagrangian: Expression,
+    coefficient: Expression,
+    atom: Expression,
+) -> Expression:
+    base_atom = bar_field_inner(atom) if is_bar_field(atom) else atom
+    derivatives = field_derivatives(base_atom)
+    if len(derivatives) != 2 or not bool(derivatives[0] == derivatives[1]):
+        return Expression.num(0)
+    base = field_with_derivatives(base_atom, ())
+    formal_target = s.Bar(base) if is_bar_field(atom) else base
+    eom = _derive_scalar_eom_for_atom(theory, eom_lagrangian, atom)
+    return (coefficient * (s.EOM(formal_target) - eom)).expand()
+
+
+def _derive_scalar_eom_for_atom(theory: Theory, eom_lagrangian: Expression, atom: Expression) -> Expression:
+    source_base = bar_field_inner(atom) if is_bar_field(atom) else atom
+    definition = theory._field_definition_for_label(field_label(source_base))
+    generic_base = definition.expr(*_default_field_indices(theory, definition))
+    generic_target = s.Bar(generic_base) if is_bar_field(atom) else generic_base
+    generic_eom = derive_eom(theory, eom_lagrangian, generic_target)
+    generic_laplacian = _generic_laplacian_atom_for_eom(generic_eom, barred=is_bar_field(atom))
+    if generic_laplacian is None:
+        return generic_eom
+    generic_laplacian_base = bar_field_inner(generic_laplacian) if is_bar_field(generic_laplacian) else generic_laplacian
+    replacements: dict[str, Replacement] = {}
+    for old_index, new_index in zip(list_items(generic_laplacian_base[2]), list_items(source_base[2]), strict=True):
+        replacements.setdefault(canonical_string(old_index), Replacement(old_index, new_index))
+    old_derivatives = field_derivatives(generic_laplacian_base)
+    source_derivatives = field_derivatives(source_base)
+    if old_derivatives and source_derivatives:
+        replacements.setdefault(canonical_string(old_derivatives[0]), Replacement(old_derivatives[0], source_derivatives[0]))
+    return generic_eom.replace_multiple(tuple(replacements.values())).expand()
+
+
+def _generic_laplacian_atom_for_eom(eom: Expression, *, barred: bool) -> Expression | None:
+    atoms = _scalar_laplacian_barred_field_atoms(eom) if barred else _scalar_laplacian_field_atoms(eom)
+    return atoms[0] if atoms else None
 
 
 def _scalar_derivative_field_atoms(expr: Expression, *, derivative_count: int) -> tuple[Expression, ...]:

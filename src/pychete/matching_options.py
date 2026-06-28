@@ -204,6 +204,12 @@ class OneLoopMatchOptions:
     Matchete ordering more closely than a pre-integral Green-basis row
     reduction. It is off by default while the broader Matchete-parity
     normal-form layer is still being validated.
+    ``wilson_line_expose_scalar_eom_terms`` extends that same post-evaluation
+    scalar Green pass with formal scalar EOM identities generated from
+    ``on_shell_eom_lagrangian``. This is the Matchete ``InternalSimplify`` /
+    ``FieldRedef`` bridge for exposing explicit ``EOM(Field(...))`` atoms
+    before field redefinition, and is opt-in while the Singlet ``cHD``
+    boundary is being validated.
     """
 
     max_trace_order: int = 2
@@ -265,6 +271,7 @@ class OneLoopMatchOptions:
     wilson_line_max_derivative_order: int = 4
     wilson_line_filter_terms_by_matching_targets: bool = False
     wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False
+    wilson_line_expose_scalar_eom_terms: bool = False
     wilson_line_tensor_reduce_before_wilson_expand: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None

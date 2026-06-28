@@ -75,6 +75,13 @@ the paired Matchete/pychete debug workflow during the active Singlet frontier.
 When the two systems disagree, refresh focused Matchete WolframScript dumps,
 compare them against bounded pychete probes at matching semantic stages, and
 only patch pychete after the first generic algorithm boundary has been found.
+Latest reinforcement, 2026-06-28: this is an active cadence. Keep running or
+refreshing focused debug WolframScripts often during mismatch work, dump as
+many relevant Matchete intermediate stages as practical, compare them directly
+with bounded pychete probes, and record the first semantic divergence before
+runtime patches. The standing repository guidance in `AGENTS.md` has been
+updated so future continuations remember this focus on closely porting
+Matchete algorithms through Symbolica/idenso/spenso/vakint.
 
 ## Approved Plan
 

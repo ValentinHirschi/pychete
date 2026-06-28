@@ -4,12 +4,14 @@ import pytest
 from symbolica import Expression, S
 
 from pychete.backends import idenso
+import pychete.matching as matching_module
 from pychete.functional import (
     expose_scalar_derivative_commutator_bilinears,
     integrate_by_parts_scalar_laplacians,
     normalize_conjugate_scalar_field_slots,
     scalar_derivative_green_normal_form,
     scalar_derivative_ibp_identities,
+    scalar_eom_identities,
 )
 from pychete.matching_results import MatchingResult
 from pychete.symbols import s
@@ -267,6 +269,59 @@ def test_scalar_derivative_green_normal_form_auto_prefers_balanced_four_derivati
     expected = coefficient * s.Bar(higgs(i, derivatives=[mu, nu])) * higgs(i, derivatives=[mu, nu])
 
     reduced = scalar_derivative_green_normal_form(theory, coefficient * source)
+
+    assert_expr_equal(reduced, expected)
+
+
+def test_scalar_eom_identities_expose_laplacian_as_formal_eom() -> None:
+    coefficient = S("scalar_eom_identity_coefficient")
+    theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, mu])
+    expected = coefficient * s.Bar(higgs(i)) * (s.EOM(higgs(i)) + higgs(i, derivatives=[mu, mu]))
+
+    identities = scalar_eom_identities(
+        theory,
+        theory.free_lag(higgs),
+        coefficient * source,
+        fields=[higgs],
+    )
+
+    assert len(identities) == 1
+    assert_expr_equal(identities[0], expected)
+
+
+def test_scalar_derivative_green_normal_form_can_prefer_formal_eom_representative() -> None:
+    coefficient = S("scalar_derivative_green_eom_coefficient")
+    theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, mu])
+    expected = -coefficient * s.Bar(higgs(i)) * s.EOM(higgs(i))
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        coefficient * source,
+        include_ibp=False,
+        include_commutators=False,
+        include_eom=True,
+        eom_lagrangian=theory.free_lag(higgs),
+        eom_fields=[higgs],
+        max_rounds=1,
+    )
+
+    assert_expr_equal(reduced, expected)
+
+
+def test_wilson_line_scalar_green_hook_can_expose_formal_eom_terms() -> None:
+    coefficient = S("wilson_line_scalar_eom_hook_coefficient")
+    theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, mu])
+    expected = -coefficient * s.Bar(higgs(i)) * s.EOM(higgs(i))
+
+    reduced = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        coefficient * source,
+        eom_lagrangian=theory.free_lag(higgs),
+        expose_scalar_eom_terms=True,
+    )
 
     assert_expr_equal(reduced, expected)
 

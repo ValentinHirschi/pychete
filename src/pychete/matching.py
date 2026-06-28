@@ -7315,12 +7315,24 @@ def _apply_wilson_line_scalar_green_normal_form(theory: Theory, expr: Expression
 def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
     theory: Theory,
     expr: Expression,
+    *,
+    eom_lagrangian: Expression | None = None,
+    expose_scalar_eom_terms: bool = False,
 ) -> Expression:
     """Expose scalar derivative commutator bilinears after finite evaluation."""
 
     from .backends import idenso
 
+    if expose_scalar_eom_terms and eom_lagrangian is None:
+        raise ValueError("eom_lagrangian must be provided when expose_scalar_eom_terms=True")
     out = normalize_conjugate_scalar_field_slots(theory, expr)
+    if expose_scalar_eom_terms:
+        out = scalar_derivative_green_normal_form(
+            theory,
+            out,
+            include_eom=True,
+            eom_lagrangian=eom_lagrangian,
+        )
     out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
     out = expand_cd_operators(out)
     out = simplify_trivial_cd_operators(out)
@@ -9505,6 +9517,7 @@ def match_one_loop(
             "wilson_line_scalar_derivative_commutator_bilinears_exposed": (
                 options.wilson_line_expose_scalar_derivative_commutator_bilinears
             ),
+            "wilson_line_scalar_eom_terms_exposed": options.wilson_line_expose_scalar_eom_terms,
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )
@@ -9663,10 +9676,12 @@ def match_one_loop(
                 ),
             },
         )
-    if options.wilson_line_expose_scalar_derivative_commutator_bilinears:
+    if options.wilson_line_expose_scalar_derivative_commutator_bilinears or options.wilson_line_expose_scalar_eom_terms:
         reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
             theory,
             result.on_shell_eft_lagrangian,
+            eom_lagrangian=options.on_shell_eom_lagrangian,
+            expose_scalar_eom_terms=options.wilson_line_expose_scalar_eom_terms,
         )
         result = replace(
             result,
@@ -9680,7 +9695,10 @@ def match_one_loop(
             },
             metadata={
                 **result.metadata,
-                "wilson_line_scalar_commutator_bilinears_reduced": True,
+                "wilson_line_scalar_commutator_bilinears_reduced": (
+                    options.wilson_line_expose_scalar_derivative_commutator_bilinears
+                ),
+                "wilson_line_scalar_eom_terms_reduced": options.wilson_line_expose_scalar_eom_terms,
             },
         )
     if options.truncate_eft_result:

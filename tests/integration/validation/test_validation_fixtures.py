@@ -24,6 +24,7 @@ from pychete import (
 from pychete.backends import spenso as spenso_backend
 from pychete.backends import vacuum_integrals
 from pychete.backends import vakint as vakint_backend
+from pychete import validation_fixtures as validation_fixtures_module
 from pychete.bases.smeft_warsaw import SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
@@ -398,6 +399,55 @@ def test_validation_fixture_direct_preview_substitutes_heavy_scalar_solutions(
     assert heavy_atom not in reduced_text
     assert canonical_string(light()) in reduced_text
     assert canonical_string(coupling()) in reduced_text
+
+
+def test_validation_fixture_direct_preview_runs_scalar_eom_exposure_without_commutator_flag(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture, _heavy, _light, _coupling = _heavy_scalar_validation_fixture()
+    source = Expression.num(3)
+    marker = S("validation_scalar_eom_exposure_marker")
+    calls: list[tuple[Expression, Expression | None, bool]] = []
+
+    def fake_result(self: OneLoopSetup, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=source,
+            on_shell_eft_lagrangian=source,
+            metadata={"stage": "fake_preview", "loop_order": 1},
+        )
+
+    def fake_scalar_green_hook(
+        _theory: Theory,
+        expr: Expression,
+        *,
+        eom_lagrangian: Expression | None = None,
+        expose_scalar_eom_terms: bool = False,
+    ) -> Expression:
+        calls.append((expr, eom_lagrangian, expose_scalar_eom_terms))
+        return expr + marker
+
+    monkeypatch.setattr(OneLoopSetup, "interaction_power_type_matching_result", fake_result)
+    monkeypatch.setattr(
+        validation_fixtures_module,
+        "_apply_wilson_line_post_integral_scalar_commutator_bilinears",
+        fake_scalar_green_hook,
+    )
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        wilson_line_expose_scalar_eom_terms=True,
+        on_shell_eom_lagrangian="lagrangian",
+    )
+
+    assert len(calls) == 1
+    assert_expr_equal(calls[0][0], source)
+    assert_expr_equal(calls[0][1], fixture.expression("lagrangian"))
+    assert calls[0][2] is True
+    assert_expr_equal(preview.on_shell_eft_lagrangian, source + marker)
+    assert preview.metadata["wilson_line_scalar_commutator_bilinears_reduced"] is False
+    assert preview.metadata["wilson_line_scalar_eom_terms_reduced"] is True
 
 
 def test_validation_fixture_preview_can_evaluate_tensor_networks_with_stored_cg_components(
@@ -1370,7 +1420,9 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
         wilson_line_max_derivative_order=3,
         wilson_line_filter_terms_by_matching_targets=True,
         wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+        wilson_line_expose_scalar_eom_terms=True,
         wilson_line_tensor_reduce_before_wilson_expand=True,
+        on_shell_eom_lagrangian=Expression.num(0),
     )
 
     options = captured["one_loop_options"]
@@ -1386,6 +1438,7 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     assert options.wilson_line_max_derivative_order == 3
     assert options.wilson_line_filter_terms_by_matching_targets is True
     assert options.wilson_line_expose_scalar_derivative_commutator_bilinears is True
+    assert options.wilson_line_expose_scalar_eom_terms is True
     assert options.wilson_line_tensor_reduce_before_wilson_expand is True
     assert options.bosonic_cde_expansion_indices_by_trace is None
 

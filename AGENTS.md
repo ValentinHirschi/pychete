@@ -551,8 +551,22 @@ Use `scalar_eom_field_redefinition_delta(...)` /
 consumer for explicit formal scalar `EOM(Field(...))` and
 `EOM(Bar(Field(...)))` terms. That helper intentionally assumes a prior
 Green/InternalSimplify-style exposure stage has already produced formal EOM
-atoms; do not pretend it handles arbitrary derivative sources until that
-exposure stage is implemented and validated against Matchete dumps.
+atoms; do not pretend it handles arbitrary derivative sources by itself.
+The first bounded exposure stage is `scalar_eom_identities(...)` plus
+`scalar_derivative_green_normal_form(..., include_eom=True,
+eom_lagrangian=...)`, optionally routed through
+`OneLoopMatchOptions.wilson_line_expose_scalar_eom_terms`. It discovers scalar
+Laplacian atoms with Symbolica patterns, extracts coefficients with native
+`Expression.coefficient(...)`, and exposes formal EOM atoms for the subsequent
+field-redefinition consumer. Keep validating this against the Matchete
+`debug_singlet_eom_simplify.wls` / `singlet_eom_cHD.debug.json` checkpoints
+before using it as evidence for full Singlet `cHD` on-shell parity.
+Latest user reinforcement, 2026-06-28: when a Matchete/pychete mismatch is
+active, repeatedly run or refresh focused debug WolframScripts, dump as many
+Matchete intermediate stages as practical, and compare them against bounded
+pychete probes until the first semantic divergence is located. Confirm this
+paired-debug cadence in progress notes; do not move from a final coefficient
+mismatch directly to a runtime patch.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

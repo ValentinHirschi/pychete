@@ -677,6 +677,7 @@ class ValidationFixture:
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
+        wilson_line_expose_scalar_eom_terms: bool = False,
         wilson_line_tensor_reduce_before_wilson_expand: bool = False,
         matching_condition_targets: Mapping[str, Expression] | Iterable[Expression] | str | None = None,
         simplify_pychete_color_algebra: bool = False,
@@ -1194,10 +1195,12 @@ class ValidationFixture:
                     ),
                 },
             )
-        if wilson_line_expose_scalar_derivative_commutator_bilinears:
+        if wilson_line_expose_scalar_derivative_commutator_bilinears or wilson_line_expose_scalar_eom_terms:
             reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
                 theory,
                 result.on_shell_eft_lagrangian,
+                eom_lagrangian=resolved_on_shell_eom_lagrangian,
+                expose_scalar_eom_terms=wilson_line_expose_scalar_eom_terms,
             )
             result = replace(
                 result,
@@ -1211,7 +1214,10 @@ class ValidationFixture:
                 },
                 metadata={
                     **result.metadata,
-                    "wilson_line_scalar_commutator_bilinears_reduced": True,
+                    "wilson_line_scalar_commutator_bilinears_reduced": (
+                        wilson_line_expose_scalar_derivative_commutator_bilinears
+                    ),
+                    "wilson_line_scalar_eom_terms_reduced": wilson_line_expose_scalar_eom_terms,
                 },
             )
         preview = MatchingResult(
@@ -1294,6 +1300,7 @@ class ValidationFixture:
                 "wilson_line_scalar_derivative_commutator_bilinears_exposed": (
                     wilson_line_expose_scalar_derivative_commutator_bilinears
                 ),
+                "wilson_line_scalar_eom_terms_exposed": wilson_line_expose_scalar_eom_terms,
                 "pychete_color_algebra_simplified": simplify_pychete_color_algebra,
             },
         )
@@ -1378,6 +1385,7 @@ class ValidationFixture:
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
+        wilson_line_expose_scalar_eom_terms: bool = False,
         wilson_line_tensor_reduce_before_wilson_expand: bool = False,
         simplify_pychete_color_algebra: bool = False,
         on_shell_eom_lagrangian: Expression | str | None = None,
@@ -1438,6 +1446,9 @@ class ValidationFixture:
         the opt-in post-evaluation scalar two-derivative
         commutator-bilinear exposure pass to Wilson-line internal and vakint
         preview routes.
+        ``wilson_line_expose_scalar_eom_terms`` additionally enables formal
+        scalar-EOM exposure in that Green pass and requires
+        ``on_shell_eom_lagrangian``.
         ``wilson_line_tensor_reduce_before_wilson_expand`` forwards the
         Matchete-order internal Wilson-line path where loop-momentum tensor
         reduction contracts metrics into formal Wilson terms before supported
@@ -1590,6 +1601,7 @@ class ValidationFixture:
                     wilson_line_expose_scalar_derivative_commutator_bilinears=(
                         wilson_line_expose_scalar_derivative_commutator_bilinears
                     ),
+                    wilson_line_expose_scalar_eom_terms=wilson_line_expose_scalar_eom_terms,
                     wilson_line_tensor_reduce_before_wilson_expand=(
                         wilson_line_tensor_reduce_before_wilson_expand
                     ),
@@ -1710,6 +1722,7 @@ class ValidationFixture:
                 wilson_line_expose_scalar_derivative_commutator_bilinears=(
                     wilson_line_expose_scalar_derivative_commutator_bilinears
                 ),
+                wilson_line_expose_scalar_eom_terms=wilson_line_expose_scalar_eom_terms,
                 wilson_line_tensor_reduce_before_wilson_expand=(
                     wilson_line_tensor_reduce_before_wilson_expand
                 ),

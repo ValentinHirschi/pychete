@@ -1392,3 +1392,36 @@
   on `src/pychete/functional.py`, `src/pychete/theory.py`,
   `tests/unit/functional/test_scalar_eom.py`, and
   `tests/unit/definitions/test_public_api.py` (`Success: no issues found`).
+- Current formal-EOM exposure slice: added `scalar_eom_identities(...)` as the
+  bounded Matchete `InternalSimplify`-style scalar Laplacian exposure source,
+  extended `scalar_derivative_green_normal_form(..., include_eom=True,
+  eom_lagrangian=...)`, and wired the opt-in
+  `OneLoopMatchOptions.wilson_line_expose_scalar_eom_terms` through public
+  matching and validation preview/gap-report options. The implementation keeps
+  atom discovery and coefficient extraction in Symbolica patterns and native
+  `Expression.coefficient(...)`, then exposes explicit `EOM(Field(...))` /
+  `EOM(Bar(Field(...)))` atoms for the existing field-redefinition consumer.
+  This slice is paired to the Matchete checkpoint
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` /
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json` and the
+  bounded pychete probes in
+  `tests/unit/functional/test_scalar_green_bilinears.py`. It does not yet
+  claim full Singlet `cHD` on-shell parity; the next probe must apply the
+  exposure plus `scalar_eom_field_redefinition_delta(...)` to the full pychete
+  pre-EOM source and compare stage-by-stage with Matchete
+  `after_shift_dim6_dev3`.
+- Latest user reinforcement, 2026-06-28, has been copied into `AGENTS.md` and
+  remains active here: when pychete disagrees with Matchete, keep running or
+  refreshing focused debug WolframScripts, dump as many relevant Matchete
+  intermediate stages as practical, compare them to bounded pychete probes at
+  the same stage, and only patch the first generic algorithm boundary.
+- Focused validation for the formal-EOM exposure slice passed:
+  `tests/unit/functional/test_scalar_eom.py`,
+  `tests/unit/functional/test_scalar_green_bilinears.py`,
+  `tests/unit/definitions/test_public_api.py`, and the two targeted
+  validation-fixture option plumbing tests (`62 passed`);
+  `tests/test_static_typing.py -m typing` (`1 passed`); source mypy on
+  `src/pychete/functional.py`, `src/pychete/matching.py`,
+  `src/pychete/matching_options.py`, `src/pychete/validation_fixtures.py`,
+  and `src/pychete/api.py` (`Success: no issues found`); and
+  `git diff --check`.

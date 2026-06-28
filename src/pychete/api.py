@@ -9,6 +9,7 @@ from .functional import (
     integrate_by_parts_scalar_laplacians,
     scalar_derivative_green_normal_form,
     scalar_derivative_ibp_identities,
+    scalar_eom_identities,
 )
 from .group_algebra import simplify_pychete_color
 from .green_basis import (
@@ -239,6 +240,7 @@ __all__ = [
     "integrate_by_parts_scalar_laplacians",
     "scalar_derivative_green_normal_form",
     "scalar_derivative_ibp_identities",
+    "scalar_eom_identities",
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",
