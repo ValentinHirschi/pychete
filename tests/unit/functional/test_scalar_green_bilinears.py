@@ -389,7 +389,23 @@ def test_wilson_line_scalar_green_hook_can_expose_formal_eom_terms() -> None:
     coefficient = S("wilson_line_scalar_eom_hook_coefficient")
     theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
     source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, mu])
-    expected = -coefficient * s.Bar(higgs(i)) * s.EOM(higgs(i))
+    expected = -coefficient * higgs(i) * s.EOM(s.Bar(higgs(i)))
+
+    reduced = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        coefficient * source,
+        eom_lagrangian=theory.free_lag(higgs),
+        expose_scalar_eom_terms=True,
+    )
+
+    assert_expr_equal(reduced, expected)
+
+
+def test_wilson_line_scalar_green_hook_closes_four_derivative_formal_eom_neighborhood() -> None:
+    coefficient = S("wilson_line_scalar_eom_hook_four_derivative_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i, derivatives=[mu, mu, nu, nu])) * higgs(i)
+    expected = coefficient * s.EOM(higgs(i)) * s.EOM(s.Bar(higgs(i)))
 
     reduced = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
         theory,

@@ -595,6 +595,14 @@ field-redefinition delta and after-shift expression in result supertraces so
 Matchete `PerformSystematicFieldRedefs` checkpoints can be compared stage by
 stage. Do not treat formal EOM exposure alone as equivalent to Matchete's
 on-shell `FieldRedef` stage.
+The Wilson-line scalar EOM exposure pass should use a deeper but still bounded
+local Green-basis closure than the lightweight default scalar normal form:
+fourth-derivative scalar representatives such as
+`Bar(Field(..., {mu, mu, nu, nu})) * Field(...)` must be able to expose formal
+scalar EOM factors through the Symbolica-backed local identity solver before
+the field-redefinition consumer runs. Keep this bounded and target-local; do
+not replace it with a Python tree walker or coefficient-specific projection
+alias.
 Use `expose_abelian_vector_eom_currents(...)` /
 `Theory.expose_abelian_vector_eom_currents(...)` only as a bounded exact
 source-side bridge for Abelian vector-EOM current-current products. It

@@ -7333,6 +7333,9 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
             out,
             include_eom=True,
             eom_lagrangian=eom_lagrangian,
+            max_basis_terms=256,
+            max_identities=512,
+            max_rounds=4,
         )
     out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
     out = expand_cd_operators(out)

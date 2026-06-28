@@ -1605,3 +1605,36 @@
   A broad mypy invocation on the entire integration test module still hits
   pre-existing test-file typing issues unrelated to this slice, so it was not
   used as the gate.
+- Current scalar Green-closure slice, 2026-06-28: the Matchete checkpoints are
+  still `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` /
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json` plus the
+  corresponding algorithms in
+  `Mathematica_reference/Matchete/Package/Simplifications.m`.
+  `EoMStandardForm` maps scalar formal EOMs to two covariant derivatives, and
+  `IdentitiesIBP`/`EoMSplitter` supplies the total-derivative identities used
+  by `InternalSimplify`. The paired pychete probe was a bounded scalar
+  Green-normal-form check on fourth-derivative representatives such as
+  `Bar(H[{mu, mu, nu, nu}]) H`.
+- Found a generic pychete boundary mismatch: the default scalar
+  Green/EOM closure exposed formal EOMs for simple scalar Laplacians but not
+  for fourth-derivative scalar representatives in the local Wilson-line
+  post-integral hook. With a deeper bounded local closure
+  (`max_basis_terms=256`, `max_identities=512`, `max_rounds=4`) the existing
+  Symbolica-backed identity solver exposes formal scalar EOM factors for the
+  same class of representatives. This is a generic Matchete
+  `InternalSimplify`/Green-basis port, not a `cHD` coefficient repair.
+- Implemented the deeper closure only inside
+  `_apply_wilson_line_post_integral_scalar_commutator_bilinears(...)` when
+  `expose_scalar_eom_terms=True`, so ordinary lightweight scalar normal-form
+  calls keep their existing defaults. Added a focused regression
+  `test_wilson_line_scalar_green_hook_closes_four_derivative_formal_eom_neighborhood`.
+  The closure may choose the conjugate but equivalent complex-scalar formal
+  EOM orientation in some simple cases; the downstream scalar field-shift
+  consumer handles both `Bar(H) EOM(H)` and `H EOM(Bar(H))` orientations.
+- Focused validation for this closure slice passed:
+  `tests/unit/functional/test_scalar_green_bilinears.py -q`
+  (`28 passed`); `python -m py_compile src/pychete/matching.py
+  tests/unit/functional/test_scalar_green_bilinears.py`; targeted mypy on
+  `src/pychete/matching.py` and
+  `tests/unit/functional/test_scalar_green_bilinears.py`
+  (`Success: no issues found in 2 source files`); and `git diff --check`.

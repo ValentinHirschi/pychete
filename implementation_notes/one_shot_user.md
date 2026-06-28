@@ -1463,3 +1463,12 @@ generic algorithm boundary before runtime pychete changes are accepted.
   The remaining Singlet `cHD` blocker is still upstream: pychete must expose
   the same formal EOM terms that Matchete `InternalSimplify` records before
   this consumer can close the on-shell shift.
+- Latest scalar Green-closure update: the Wilson-line scalar EOM exposure hook
+  now uses a deeper bounded local Green-basis closure for formal-EOM exposure.
+  This fixes the generic local boundary where fourth-derivative scalar
+  representatives like `Bar(H[{mu, mu, nu, nu}]) H` failed to expose formal
+  scalar EOM factors under the lightweight default closure. The change is tied
+  to Matchete `Simplifications.m` (`EoMStandardForm` / `IdentitiesIBP` /
+  `EoMSplitter`) and the active Singlet `cHD` EOM debug fixture; it is not a
+  final-coefficient patch. The full Singlet on-shell coefficient still needs
+  broader `InternalSimplify` exposure parity.
