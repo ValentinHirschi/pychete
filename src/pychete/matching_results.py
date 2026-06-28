@@ -82,6 +82,9 @@ _MAX_CANONIZED_PROJECTION_GENERIC_TERMS = 64
 _MAX_CANONIZED_PROJECTION_GENERIC_BYTES = 512_000
 _MAX_CANONIZED_PROJECTION_TERMWISE_TERMS = 512
 _MAX_CANONIZED_PROJECTION_TERMWISE_BYTES = 512_000
+_MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_TERMS = 4_096
+_MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_BYTES = 8_000_000
+_CANONIZED_PROJECTION_TERMWISE_CHUNK_SIZE = 256
 _MAX_PROJECTION_EXPAND_TERMS = 128
 _MAX_PROJECTION_EXPAND_BYTES = 32_768
 _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_TERMS = 512
@@ -430,6 +433,14 @@ class MatchingResult:
             if coefficient is None and target_local_canonized:
                 if _source_is_small_enough_for_termwise_exact_projection(target_extractor.source):
                     exact_coefficient = _termwise_exact_matching_projection_coefficient(
+                        _without_wildcard_index_projection(target_extractor),
+                        target_projection_expression,
+                        target_ibp_aliases,
+                    )
+                    if not is_zero(exact_coefficient):
+                        coefficient = exact_coefficient
+                elif _source_is_small_enough_for_chunked_termwise_exact_projection(target_extractor.source):
+                    exact_coefficient = _chunked_termwise_exact_matching_projection_coefficient(
                         _without_wildcard_index_projection(target_extractor),
                         target_projection_expression,
                         target_ibp_aliases,
@@ -1223,6 +1234,13 @@ def _source_is_small_enough_for_termwise_exact_projection(source: Expression) ->
     )
 
 
+def _source_is_small_enough_for_chunked_termwise_exact_projection(source: Expression) -> bool:
+    return (
+        len(source) <= _MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_TERMS
+        and source.get_byte_size() <= _MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_BYTES
+    )
+
+
 def _source_is_small_enough_for_field_strength_group_simplification(source: Expression) -> bool:
     return (
         len(source) <= _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_TERMS
@@ -1764,6 +1782,45 @@ def _termwise_exact_matching_projection_coefficient(
         if not is_zero(alias)
     )
     return sum_expr(alias_contributions).expand()
+
+
+def _chunked_termwise_exact_matching_projection_coefficient(
+    extractor: _ProjectionCoefficientExtractor,
+    projection_expression: Expression,
+    ibp_aliases: Sequence[tuple[Expression, Expression]],
+) -> Expression:
+    """Project a bounded target-local source by exact coefficients in chunks.
+
+    This keeps projection linear for target-local tensor-canonized sources
+    whose total byte size is too large for the single-pass termwise guard, but
+    whose term count is still small enough that native exact coefficient
+    extraction can be applied chunk by chunk without enabling global
+    collect/factor fallbacks.
+    """
+
+    source_terms = extractor._source_terms()
+    source_term_counts = extractor._source_term_atom_counts()
+    coefficient = Expression.num(0)
+    for start in range(0, len(source_terms), _CANONIZED_PROJECTION_TERMWISE_CHUNK_SIZE):
+        chunk_terms = source_terms[start : start + _CANONIZED_PROJECTION_TERMWISE_CHUNK_SIZE]
+        chunk_counts = source_term_counts[start : start + _CANONIZED_PROJECTION_TERMWISE_CHUNK_SIZE]
+        chunk_source = sum_expr(chunk_terms)
+        chunk_extractor = _ProjectionCoefficientExtractor(
+            chunk_source,
+            theory=extractor.theory,
+            source_terms=chunk_terms,
+            source_term_atom_counts=chunk_counts,
+            wildcard_index_projection=False,
+        )
+        coefficient = (
+            coefficient
+            + _termwise_exact_matching_projection_coefficient(
+                chunk_extractor,
+                projection_expression,
+                ibp_aliases,
+            )
+        ).expand()
+    return coefficient.expand()
 
 
 def _target_local_canonized_projection(

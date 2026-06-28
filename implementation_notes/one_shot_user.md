@@ -1137,3 +1137,11 @@ without Warsaw-specific core assumptions.
   `cHW`, `cHB`, and `cHWB`. One cached public selected-source run backs those
   checks, so future regressions can identify the failing public coefficient
   without recomputing the slow selected matching route three times.
+- Latest selected-`cHD` progress: the post-heavy selected four-slot
+  `hScalar-lScalar-lVector-lScalar -> cHD` aggregate no longer projects to
+  zero. The issue was localized to a projection guard: individual contributing
+  paths were correct, but the target-local tensor-canonized aggregate was just
+  over the old single-pass termwise byte limit. pychete now has a bounded
+  chunked exact projection fallback that preserves linearity without enabling
+  expensive global collect/factor fallbacks, and the selected aggregate keeps
+  the Matchete coefficient after heavy-scalar substitution.

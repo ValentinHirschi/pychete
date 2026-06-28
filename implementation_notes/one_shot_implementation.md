@@ -796,3 +796,32 @@
   `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
   -q` (`12 passed`). `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
   also passed with no issues.
+- Latest selected-`cHD` aggregate projection slice: a bounded path/stage probe
+  showed that Wilson-line paths `0` and `26` still project to the expected
+  quarter contribution after heavy-scalar substitution, while projecting the
+  aggregate post-heavy source returned zero. The mismatch was therefore a
+  target-local projection linearity/guard issue, not a physical cancellation
+  in the generated selected source.
+- `MatchingResult.project_matching_conditions(...)` now has a bounded
+  chunked termwise exact fallback after target-local tensor canonicalization.
+  If the canonicalized source is too large for the old single-pass termwise
+  byte guard but still below explicit chunked term/byte caps, pychete projects
+  exact coefficients in small chunks and sums them. This keeps the expensive
+  global collect/factor fallback disabled while preserving linearity for
+  selected Wilson-line aggregates.
+- The selected Singlet
+  `hScalar-lScalar-lVector-lScalar -> cHD` regression now verifies that the
+  post-heavy/post-commutator aggregate selected source keeps the Matchete
+  selected coefficient
+  `hbar*A^2*gY^2/M^4*(log(M) - log(vakint::mursq)/2 - 1/2)`.
+  Remaining full-model `cHD` parity is still a broader source/EOM coverage
+  problem, not this aggregate projection bug.
+- Focused validation for this slice passed:
+  `tests/integration/validation/test_numeric_probes.py -k
+  "canonized_sources or chunked_termwise" -q` (`2 passed`);
+  watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -q` (`12 passed`);
+  `tests/integration/validation/test_numeric_probes.py -k "projection" -q`
+  (`25 passed`); and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  passed with no issues.

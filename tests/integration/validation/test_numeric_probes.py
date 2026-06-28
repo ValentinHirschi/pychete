@@ -1291,6 +1291,10 @@ def test_matching_result_projection_skips_generic_fallback_for_large_canonized_s
 
     monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_GENERIC_TERMS", 1_000)
     monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_GENERIC_BYTES", 1)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_TERMWISE_TERMS", 1_000)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_TERMWISE_BYTES", 1)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_TERMS", 1_000)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_BYTES", 1)
     monkeypatch.setattr(matching_results_module, "_matching_projection_coefficient", fail_generic_projection)
     monkeypatch.setattr(
         matching_results_module,
@@ -1301,6 +1305,47 @@ def test_matching_result_projection_skips_generic_fallback_for_large_canonized_s
     projected = result.project_matching_conditions({"h6": target}, expand_source=False)
 
     assert_expr_equal(projected["h6"], Expression.num(0))
+
+
+def test_matching_result_projection_uses_chunked_termwise_exact_for_bounded_canonized_sources(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("condition_projection_chunked_canonized_exact")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    target_index = theory.dummy_index(1, fund)
+    source_indices = tuple(theory.dummy_index(n, fund) for n in range(2, 6))
+    target = s.Bar(higgs(target_index)) * higgs(target_index)
+    coefficients = tuple(S(f"condition_projection_chunked_canonized_exact_{n}") for n in range(len(source_indices)))
+    source = sum(
+        coefficient * s.Bar(higgs(index)) * higgs(index)
+        for coefficient, index in zip(coefficients, source_indices, strict=True)
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+
+    def fail_generic_projection(
+        extractor: object,
+        projection_expression: Expression,
+        ibp_aliases: object,
+    ) -> Expression:
+        raise AssertionError("bounded chunked exact projection should not reach generic fallback")
+
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_TERMWISE_TERMS", 1_000)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_TERMWISE_BYTES", 1)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_TERMS", 1_000)
+    monkeypatch.setattr(matching_results_module, "_MAX_CANONIZED_PROJECTION_CHUNKED_TERMWISE_BYTES", 1_000_000)
+    monkeypatch.setattr(matching_results_module, "_CANONIZED_PROJECTION_TERMWISE_CHUNK_SIZE", 2)
+    monkeypatch.setattr(matching_results_module, "_matching_projection_coefficient", fail_generic_projection)
+
+    projected = result.project_matching_conditions({"h2": target}, expand_source=False)
+
+    assert_expr_equal(projected["h2"], sum(coefficients, Expression.num(0)))
 
 
 def test_matching_result_projection_canonicalizes_higgs_derivative_current_to_chd() -> None:
