@@ -23,6 +23,7 @@ from .matching import (
     BosonicCDEExpansionPlan,
     WilsonLineExpansionPlan,
     _apply_wilson_line_post_integral_scalar_commutator_bilinears,
+    _apply_wilson_line_scalar_eom_field_redefinition,
     _term_atom_requirements_for_targets,
 )
 from .matching_results import (
@@ -1196,28 +1197,59 @@ class ValidationFixture:
                 },
             )
         if wilson_line_expose_scalar_derivative_commutator_bilinears or wilson_line_expose_scalar_eom_terms:
+            before_scalar_exposure = result.on_shell_eft_lagrangian
             reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
                 theory,
-                result.on_shell_eft_lagrangian,
+                before_scalar_exposure,
                 eom_lagrangian=resolved_on_shell_eom_lagrangian,
                 expose_scalar_eom_terms=wilson_line_expose_scalar_eom_terms,
             )
+            after_scalar_eom_field_redefinition = reduced_on_shell
+            scalar_eom_field_redefinition_delta = Expression.num(0)
+            if wilson_line_expose_scalar_eom_terms:
+                assert resolved_on_shell_eom_lagrangian is not None
+                scalar_source_lagrangian = (resolved_on_shell_eom_lagrangian + reduced_on_shell).expand()
+                (
+                    after_scalar_eom_field_redefinition,
+                    scalar_eom_field_redefinition_delta,
+                ) = _apply_wilson_line_scalar_eom_field_redefinition(
+                    theory,
+                    reduced_on_shell,
+                    source_lagrangian=scalar_source_lagrangian,
+                    max_order=eft_order,
+                    fields=on_shell_eom_fields,
+                    strict=on_shell_eom_strict,
+                )
+            scalar_supertraces = {
+                **result.supertraces,
+                "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
+                    before_scalar_exposure
+                ),
+                "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": reduced_on_shell,
+            }
+            if wilson_line_expose_scalar_eom_terms:
+                scalar_supertraces = {
+                    **scalar_supertraces,
+                    "on_shell_eft_lagrangian_scalar_eom_field_redefinition_delta": (
+                        scalar_eom_field_redefinition_delta
+                    ),
+                    "on_shell_eft_lagrangian_after_scalar_eom_field_redefinition": (
+                        after_scalar_eom_field_redefinition
+                    ),
+                }
             result = replace(
                 result,
-                on_shell_eft_lagrangian=reduced_on_shell,
-                supertraces={
-                    **result.supertraces,
-                    "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
-                        result.on_shell_eft_lagrangian
-                    ),
-                    "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": reduced_on_shell,
-                },
+                on_shell_eft_lagrangian=after_scalar_eom_field_redefinition,
+                supertraces=scalar_supertraces,
                 metadata={
                     **result.metadata,
                     "wilson_line_scalar_commutator_bilinears_reduced": (
                         wilson_line_expose_scalar_derivative_commutator_bilinears
                     ),
                     "wilson_line_scalar_eom_terms_reduced": wilson_line_expose_scalar_eom_terms,
+                    "wilson_line_scalar_eom_field_redefinition_applied": (
+                        not bool(scalar_eom_field_redefinition_delta == Expression.num(0))
+                    ),
                 },
             )
         preview = MatchingResult(

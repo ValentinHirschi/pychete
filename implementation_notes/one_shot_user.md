@@ -1453,3 +1453,13 @@ generic algorithm boundary before runtime pychete changes are accepted.
   inputs, matching Matchete's `ShiftLagrangian` separation. Fermion/vector EOM
   splitters and the upstream Singlet `cHD` formal-EOM exposure remain future
   work.
+- Latest Wilson-line scalar EOM finalization update: when
+  `wilson_line_expose_scalar_eom_terms=True`, pychete now follows the exposed
+  formal scalar EOM source with the bounded systematic scalar field-redefinition
+  delta, using `on_shell_eom_lagrangian` as the lower-order source and storing
+  the delta/after-shift expressions in supertraces. This is the generic
+  Matchete `PerformSystematicFieldRedefs` consumer wiring for the current
+  `debug_singlet_eom_simplify.wls` / `singlet_eom_cHD.debug.json` checkpoint.
+  The remaining Singlet `cHD` blocker is still upstream: pychete must expose
+  the same formal EOM terms that Matchete `InternalSimplify` records before
+  this consumer can close the on-shell shift.

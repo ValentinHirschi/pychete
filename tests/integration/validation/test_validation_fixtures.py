@@ -404,9 +404,9 @@ def test_validation_fixture_direct_preview_substitutes_heavy_scalar_solutions(
 def test_validation_fixture_direct_preview_runs_scalar_eom_exposure_without_commutator_flag(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    fixture, _heavy, _light, _coupling = _heavy_scalar_validation_fixture()
+    fixture, _heavy, _light, coupling = _heavy_scalar_validation_fixture()
     source = Expression.num(3)
-    marker = S("validation_scalar_eom_exposure_marker")
+    marker = coupling()
     calls: list[tuple[Expression, Expression | None, bool]] = []
 
     def fake_result(self: OneLoopSetup, **_kwargs: object) -> MatchingResult:
@@ -448,6 +448,83 @@ def test_validation_fixture_direct_preview_runs_scalar_eom_exposure_without_comm
     assert_expr_equal(preview.on_shell_eft_lagrangian, source + marker)
     assert preview.metadata["wilson_line_scalar_commutator_bilinears_reduced"] is False
     assert preview.metadata["wilson_line_scalar_eom_terms_reduced"] is True
+    assert preview.metadata["wilson_line_scalar_eom_field_redefinition_applied"] is False
+
+
+def test_validation_fixture_direct_preview_applies_scalar_eom_field_redefinition_after_exposure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("validation_scalar_eom_field_redefinition_preview")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    coefficient = theory.define_coupling("c", self_conjugate=True)
+    lagrangian = theory.free_lag(phi)
+    exposed = coefficient() * phi() ** 3 * s.EOM(phi())
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
+    fixture = ValidationFixture(
+        name="validation_scalar_eom_field_redefinition_preview",
+        kind="unit",
+        state=state,
+        source={"generator": "pytest"},
+        expression_names=("lagrangian",),
+    )
+
+    def fake_result(self: OneLoopSetup, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=Expression.num(0),
+            on_shell_eft_lagrangian=Expression.num(0),
+            metadata={"stage": "fake_preview", "loop_order": 1},
+        )
+
+    def fake_scalar_green_hook(
+        _theory: Theory,
+        expr: Expression,
+        *,
+        eom_lagrangian: Expression | None = None,
+        expose_scalar_eom_terms: bool = False,
+    ) -> Expression:
+        assert_expr_equal(expr, Expression.num(0))
+        assert_expr_equal(eom_lagrangian, lagrangian)
+        assert expose_scalar_eom_terms is True
+        return exposed
+
+    monkeypatch.setattr(OneLoopSetup, "interaction_power_type_matching_result", fake_result)
+    monkeypatch.setattr(
+        validation_fixtures_module,
+        "_apply_wilson_line_post_integral_scalar_commutator_bilinears",
+        fake_scalar_green_hook,
+    )
+
+    expected_delta = theory.systematic_scalar_eom_field_redefinition_delta(
+        lagrangian,
+        eom_terms_lagrangian=exposed,
+        max_order=6,
+        fields=[phi],
+        strict=True,
+    )
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        wilson_line_expose_scalar_eom_terms=True,
+        on_shell_eom_lagrangian="lagrangian",
+        on_shell_eom_fields=[phi],
+        on_shell_eom_strict=True,
+    )
+
+    assert_expr_equal(
+        preview.expression("on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure"),
+        exposed,
+    )
+    assert_expr_equal(
+        preview.expression("on_shell_eft_lagrangian_scalar_eom_field_redefinition_delta"),
+        expected_delta,
+    )
+    assert_expr_equal(preview.on_shell_eft_lagrangian, (exposed + expected_delta).expand())
+    assert preview.metadata["wilson_line_scalar_commutator_bilinears_reduced"] is False
+    assert preview.metadata["wilson_line_scalar_eom_terms_reduced"] is True
+    assert preview.metadata["wilson_line_scalar_eom_field_redefinition_applied"] is True
 
 
 def test_validation_fixture_preview_can_evaluate_tensor_networks_with_stored_cg_components(

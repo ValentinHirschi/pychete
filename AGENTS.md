@@ -586,6 +586,15 @@ Laplacian atoms with Symbolica patterns, extracts coefficients with native
 field-redefinition consumer. Keep validating this against the Matchete
 `debug_singlet_eom_simplify.wls` / `singlet_eom_cHD.debug.json` checkpoints
 before using it as evidence for full Singlet `cHD` on-shell parity.
+When `OneLoopMatchOptions.wilson_line_expose_scalar_eom_terms` is enabled,
+the Wilson-line finalization path must also run the exposed formal scalar EOM
+source through `systematic_scalar_eom_field_redefinition_delta(...)`, using
+the configured `on_shell_eom_lagrangian` as the lower-order source Lagrangian
+and the exposed Wilson-line expression as `eom_terms_lagrangian`. Store the
+field-redefinition delta and after-shift expression in result supertraces so
+Matchete `PerformSystematicFieldRedefs` checkpoints can be compared stage by
+stage. Do not treat formal EOM exposure alone as equivalent to Matchete's
+on-shell `FieldRedef` stage.
 Use `expose_abelian_vector_eom_currents(...)` /
 `Theory.expose_abelian_vector_eom_currents(...)` only as a bounded exact
 source-side bridge for Abelian vector-EOM current-current products. It

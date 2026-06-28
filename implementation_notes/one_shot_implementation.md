@@ -1567,3 +1567,41 @@
   tests/unit/functional/test_scalar_eom.py
   tests/unit/definitions/test_public_api.py`; targeted mypy on the same
   source/test files (`Success: no issues found`); and `git diff --check`.
+- Current Wilson-line scalar EOM finalization slice, 2026-06-28: the
+  Matchete checkpoint remains
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` /
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, especially
+  `raw_lagrangian_eft_eom_boundary.internal_field_redefinition_replay` where
+  `after_shift_dim6_dev3` is the first nonzero scalar shift. The paired
+  pychete boundary is the Wilson-line scalar EOM exposure option plus
+  `systematic_scalar_eom_field_redefinition_delta(...)`.
+- Implemented the generic Wilson-line finalization wiring for that consumer:
+  when `wilson_line_expose_scalar_eom_terms=True`, pychete first runs the
+  existing scalar Green/EOM exposure pass, then computes the bounded scalar
+  `PerformSystematicFieldRedefs` delta with the configured
+  `on_shell_eom_lagrangian` as lower-order source and the exposed Wilson-line
+  expression as `eom_terms_lagrangian`. The result supertraces now record the
+  exposed source, the scalar EOM field-redefinition delta, and the after-shift
+  expression for stage-by-stage Matchete comparison. Validation previews use
+  the same helper, so fixture gap probes follow the public matching path.
+- This still does not close the Singlet `cHD` mismatch by itself: the active
+  first divergence remains upstream formal-EOM exposure. The new wiring means
+  that once the selected Wilson-line source exposes the same formal scalar EOM
+  terms as Matchete `InternalSimplify`, pychete will immediately apply the
+  already-tested scalar `FieldRedef` consumer and record the comparison
+  boundary explicitly.
+- Focused validation so far for this slice passed:
+  `tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_direct_preview_runs_scalar_eom_exposure_without_commutator_flag
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_direct_preview_applies_scalar_eom_field_redefinition_after_exposure
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_direct_preview_substitutes_heavy_scalar_solutions
+  -q` (`3 passed`);
+  `tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api
+  -q` (`1 passed`); `python -m py_compile src/pychete/matching.py
+  src/pychete/validation_fixtures.py
+  tests/integration/validation/test_validation_fixtures.py`;
+  `python -m mypy src/pychete/matching.py
+  src/pychete/validation_fixtures.py src/pychete/matching_options.py`
+  (`Success: no issues found in 3 source files`); and `git diff --check`.
+  A broad mypy invocation on the entire integration test module still hits
+  pre-existing test-file typing issues unrelated to this slice, so it was not
+  used as the gate.

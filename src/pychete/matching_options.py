@@ -208,8 +208,11 @@ class OneLoopMatchOptions:
     scalar Green pass with formal scalar EOM identities generated from
     ``on_shell_eom_lagrangian``. This is the Matchete ``InternalSimplify`` /
     ``FieldRedef`` bridge for exposing explicit ``EOM(Field(...))`` atoms
-    before field redefinition, and is opt-in while the Singlet ``cHD``
-    boundary is being validated.
+    before field redefinition. When formal scalar EOM exposure is enabled,
+    pychete also applies the bounded scalar
+    ``PerformSystematicFieldRedefs`` consumer to the exposed source and stores
+    the scalar field-redefinition delta in the result supertraces. It remains
+    opt-in while the Singlet ``cHD`` boundary is being validated.
     """
 
     max_trace_order: int = 2

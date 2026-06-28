@@ -47,6 +47,7 @@ from .functional import (
     partial_functional_derivative,
     scalar_derivative_green_normal_form,
     simplify_trivial_cd_operators,
+    systematic_scalar_eom_field_redefinition_delta,
 )
 from .indices import collect_indices, relabel_dummy_indices
 from .logging import get_logger, progress
@@ -7346,6 +7347,30 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
     return scalarize_commutative_ncm_chains(out)
 
 
+def _apply_wilson_line_scalar_eom_field_redefinition(
+    theory: Theory,
+    expr: Expression,
+    *,
+    source_lagrangian: Expression,
+    max_order: int,
+    fields: Sequence[Any] | None = None,
+    strict: bool = False,
+) -> tuple[Expression, Expression]:
+    """Apply the scalar ``PerformSystematicFieldRedefs`` consumer to ``expr``."""
+
+    delta = systematic_scalar_eom_field_redefinition_delta(
+        theory,
+        source_lagrangian,
+        eom_terms_lagrangian=expr,
+        max_order=max_order,
+        fields=fields,
+        strict=strict,
+    )
+    if is_zero(delta):
+        return expr, delta
+    return (expr + delta).expand(), delta
+
+
 def _postprocess_pre_wilson_line_tensor_reduced_expression(
     theory: Theory,
     expr: Expression,
@@ -9677,28 +9702,59 @@ def match_one_loop(
             },
         )
     if options.wilson_line_expose_scalar_derivative_commutator_bilinears or options.wilson_line_expose_scalar_eom_terms:
+        before_scalar_exposure = result.on_shell_eft_lagrangian
         reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
             theory,
-            result.on_shell_eft_lagrangian,
+            before_scalar_exposure,
             eom_lagrangian=options.on_shell_eom_lagrangian,
             expose_scalar_eom_terms=options.wilson_line_expose_scalar_eom_terms,
         )
+        after_scalar_eom_field_redefinition = reduced_on_shell
+        scalar_eom_field_redefinition_delta = Expression.num(0)
+        if options.wilson_line_expose_scalar_eom_terms:
+            assert options.on_shell_eom_lagrangian is not None
+            scalar_source_lagrangian = (options.on_shell_eom_lagrangian + reduced_on_shell).expand()
+            (
+                after_scalar_eom_field_redefinition,
+                scalar_eom_field_redefinition_delta,
+            ) = _apply_wilson_line_scalar_eom_field_redefinition(
+                theory,
+                reduced_on_shell,
+                source_lagrangian=scalar_source_lagrangian,
+                max_order=eft_order,
+                fields=options.on_shell_eom_fields,
+                strict=options.on_shell_eom_strict,
+            )
+        scalar_supertraces = {
+            **result.supertraces,
+            "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
+                before_scalar_exposure
+            ),
+            "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": reduced_on_shell,
+        }
+        if options.wilson_line_expose_scalar_eom_terms:
+            scalar_supertraces = {
+                **scalar_supertraces,
+                "on_shell_eft_lagrangian_scalar_eom_field_redefinition_delta": (
+                    scalar_eom_field_redefinition_delta
+                ),
+                "on_shell_eft_lagrangian_after_scalar_eom_field_redefinition": (
+                    after_scalar_eom_field_redefinition
+                ),
+            }
         result = replace(
             result,
-            on_shell_eft_lagrangian=reduced_on_shell,
-            supertraces={
-                **result.supertraces,
-                "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
-                    result.on_shell_eft_lagrangian
-                ),
-                "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": reduced_on_shell,
-            },
+            on_shell_eft_lagrangian=after_scalar_eom_field_redefinition,
+            supertraces=scalar_supertraces,
             metadata={
                 **result.metadata,
                 "wilson_line_scalar_commutator_bilinears_reduced": (
                     options.wilson_line_expose_scalar_derivative_commutator_bilinears
                 ),
                 "wilson_line_scalar_eom_terms_reduced": options.wilson_line_expose_scalar_eom_terms,
+                "wilson_line_scalar_eom_field_redefinition_applied": (
+                    not is_zero(scalar_eom_field_redefinition_delta)
+                ),
             },
         )
     if options.truncate_eft_result:
