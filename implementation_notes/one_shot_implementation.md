@@ -499,3 +499,35 @@
   `tests/integration/matching/test_fluctuation_operator.py -k
   "higgs_gauge_subset or singlet_selected_wilson_line_chd_four_slot or
   four_slot_scalar_vector_trace" -q` (`3 passed`).
+- Latest on-shell EOM slice: `eom_replacement_rules_for_expression(...)` now
+  also collects Abelian vector field-strength divergence targets with
+  Symbolica pattern matches, not only scalar Laplacian targets. For registered
+  Abelian gauge vectors it builds the charged complex-scalar current from
+  theory metadata and applies the Matchete-normalized vector EOM
+  `D_nu F_{nu mu} -> -g^2 J_mu`, with the opposite sign for the reversed
+  field-strength orientation. This is intentionally bounded to scalar
+  Abelian currents for now; fermion currents and non-Abelian vector EOMs
+  remain part of the larger Matchete-style `EOMSimplify`/field-redefinition
+  frontier.
+- Added unit tests for both Abelian vector field-strength divergence
+  orientations and a public `Theory.match(..., loop_order=1)` regression
+  proving that generated EOM rules reduce a loop-source vector divergence
+  before projection. This closes a direct prerequisite for the full Singlet
+  `cHD` on-shell shift, while still leaving the raw-Lagrangian iterative
+  field-redefinition loop open.
+- The selected Singlet Higgs-gauge Wilson coefficient regression is now split
+  into parametrized partial integration tests for `cHW`, `cHB`, and `cHWB`.
+  They reuse one cached selected `hScalar-lScalar` Wilson-line source inside
+  the pytest process, so failures identify the exact coefficient subset
+  without recomputing the expensive source three times. The selected four-slot
+  `cHD` check remains a separate single-coefficient partial regression.
+- Latest focused validation for this slice passed:
+  `tests/unit/functional/test_scalar_eom.py -q` (`22 passed`);
+  `tests/integration/matching/test_heavy_scalar_tree.py -k
+  "vector_eom_replacements or generates_eom_replacements" -q` (`2 passed`);
+  and watchdog-wrapped `tests/integration/matching/test_fluctuation_operator.py
+  -k "higgs_gauge_coefficient_matches_matchete_subset or
+  singlet_selected_wilson_line_chd_four_slot or
+  singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms" -q`
+  (`5 passed`). `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` also
+  passed with no issues.

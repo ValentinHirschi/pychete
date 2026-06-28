@@ -17,6 +17,8 @@ from .expr import (
     field_label,
     field_type,
     field_derivatives,
+    field_strength_derivatives,
+    field_strength_label,
     field_strength_pattern,
     field_strength_with_derivatives,
     field_with_derivatives,
@@ -32,13 +34,14 @@ from .expr import (
     wilson_term_pattern,
 )
 from .linear_external import linear_external_function_heads
-from .symbols import SymbolRole, canonical_string, s
+from .symbols import SymbolDataKey, SymbolRole, canonical_string, s, symbol_data
 from .theory import Theory
 from .theory_metadata import (
     CouplingSelfConjugate,
     FieldDefinition,
     FieldHandle,
     FieldVariation,
+    GroupKind,
     coupling_self_conjugate_from_label,
     field_indices_from_label,
     field_self_conjugate_from_label,
@@ -1512,6 +1515,20 @@ def eom_replacement_rules_for_expression(
         except ValueError as exc:
             if strict:
                 failures.append(str(exc))
+    for target, open_index, sign in _abelian_vector_eom_rule_targets(expression, allowed_labels=allowed_labels):
+        try:
+            replacement = _abelian_vector_eom_replacement(
+                theory,
+                lagrangian,
+                target,
+                open_index=open_index,
+                sign=sign,
+            )
+            if replacement is not None:
+                rules.append(replacement)
+        except ValueError as exc:
+            if strict:
+                failures.append(str(exc))
     if failures:
         raise ValueError("; ".join(failures))
     return tuple(rules)
@@ -1577,6 +1594,103 @@ def _eom_rule_base_field(target: Expression) -> Expression:
     if is_bar_field(target):
         return s.Bar(field_with_derivatives(bar_field_inner(target), ()))
     return field_with_derivatives(target, ())
+
+
+def _abelian_vector_eom_rule_targets(
+    expression: Expression,
+    *,
+    allowed_labels: set[str] | None,
+) -> tuple[tuple[Expression, Expression, Expression], ...]:
+    pattern = field_strength_pattern()
+    label_is_registered_field = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    targets: dict[str, tuple[Expression, Expression, Expression]] = {}
+    for atom in matching_subexpressions(expression, pattern, label_is_registered_field):
+        if allowed_labels is not None and canonical_string(field_strength_label(atom)) not in allowed_labels:
+            continue
+        lorentz = list_items(atom[1])
+        internal = list_items(atom[2])
+        derivatives = field_strength_derivatives(atom)
+        if len(lorentz) != 2 or internal or len(derivatives) != 1:
+            continue
+        derivative = derivatives[0]
+        left, right = lorentz
+        if bool(derivative == left):
+            open_index = right
+            sign = -Expression.num(1)
+        elif bool(derivative == right):
+            open_index = left
+            sign = Expression.num(1)
+        else:
+            continue
+        targets.setdefault(canonical_string(atom), (atom, open_index, sign))
+    return tuple(targets.values())
+
+
+def _abelian_vector_eom_replacement(
+    theory: Theory,
+    lagrangian: Expression,
+    target: Expression,
+    *,
+    open_index: Expression,
+    sign: Expression,
+) -> Replacement | None:
+    definition = theory._field_definition_for_label(field_strength_label(target))
+    type_expr = definition.type_expr
+    if not is_head(type_expr, s.Vector) or len(type_expr) != 1:
+        return None
+    group_symbol = type_expr[0]
+    group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
+    if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+        return None
+    coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+    if not isinstance(coupling_name, str) or coupling_name not in theory.couplings:
+        return None
+    current = _abelian_vector_scalar_current_sum(theory, lagrangian, group_symbol, open_index)
+    if is_zero(current):
+        return None
+    coupling = theory.coupling_handle(coupling_name)()
+    return Replacement(target, (sign * coupling**2 * current).expand())
+
+
+def _abelian_vector_scalar_current_sum(
+    theory: Theory,
+    lagrangian: Expression,
+    group_symbol: Expression,
+    open_index: Expression,
+) -> Expression:
+    currents: list[Expression] = []
+    for definition in theory.fields.values():
+        if not bool(definition.type_expr == s.Scalar) or definition.is_self_conjugate:
+            continue
+        if not _expression_contains_field_label(lagrangian, definition.label):
+            continue
+        indices = _default_field_indices(theory, definition)
+        field = definition.expr(*indices)
+        for charge in definition.charge_exprs:
+            charge_group = theory._group_symbol_for_charge(charge)
+            if charge_group is None or not bool(charge_group == group_symbol):
+                continue
+            if len(charge) != 1:
+                continue
+            currents.append((charge[0] * scalar_abelian_gauge_current(open_index, field)).expand())
+    return sum_expr(currents).expand()
+
+
+def scalar_abelian_gauge_current(mu: Expression, field: Expression) -> Expression:
+    """Return the scalar current used by Abelian vector EOM reductions."""
+
+    return (Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field).expand()
+
+
+def _expression_contains_field_label(expr: Expression, label: Expression) -> bool:
+    label_key = canonical_string(label)
+    for atom in matching_subexpressions(expr, field_pattern(label)):
+        if canonical_string(field_label(atom)) == label_key:
+            return True
+    for atom in matching_subexpressions(expr, bar_field_pattern(label)):
+        if is_bar_field(atom) and canonical_string(field_label(bar_field_inner(atom))) == label_key:
+            return True
+    return False
 
 
 def eom_expression(theory: Theory, lagrangian: Expression, field: FieldHandle | FieldDefinition | str, *, eft_order: int = 6) -> Expression:

@@ -1042,3 +1042,13 @@ without Warsaw-specific core assumptions.
   off-shell reference Laplacians, while also confirming that the remaining
   full `cHD` on-shell shift still requires the larger Matchete-style
   raw-Lagrangian field-redefinition loop.
+- Latest partial-success/test-scoping update: pychete now has bounded
+  Abelian vector EOM replacement support for scalar charged currents,
+  including both `D_nu F_{nu mu}` orientations, and the public one-loop
+  matching path applies those replacements before projection. The first
+  successful selected one-loop Wilson coefficients are also covered by
+  narrower partial integration tests: `cHW`, `cHB`, and `cHWB` are checked as
+  separate parametrized cases from a cached selected `hScalar-lScalar`
+  Wilson-line source, while the selected four-slot `cHD` coefficient remains a
+  separate scoped regression. Full-model Singlet on-shell parity is still open
+  because the generic Matchete-style field-redefinition loop is not complete.

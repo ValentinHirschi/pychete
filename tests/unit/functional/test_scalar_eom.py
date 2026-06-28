@@ -3,7 +3,7 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import FieldMassKind, Theory, hermitian_conjugate, s
+from pychete import FieldMassKind, FreeLagConvention, Theory, hermitian_conjugate, s
 from pychete.functional import (
     apply_cd,
     expand_cd_operators,
@@ -115,6 +115,72 @@ def test_indexed_complex_scalar_eom_uses_conjugate_variation_and_declared_indice
 
     assert len(rules) == 1
     assert_expr_equal((s.Bar(higgs(internal)) * target).replace_multiple(rules), s.Bar(higgs(internal)) * source(internal))
+
+
+def test_eom_replacement_rules_collect_abelian_vector_divergence_targets() -> None:
+    coefficient = S("abelian_vector_eom_coefficient")
+    theory = Theory("abelian_vector_eom_rules")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    field = phi()
+    current = Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field
+    divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+    source = (coefficient * current * divergence).expand()
+
+    rules = theory.eom_replacement_rules_for_expression(
+        lagrangian,
+        source,
+        fields=[vector],
+        strict=True,
+    )
+    reduced = source.replace_multiple(rules).expand()
+
+    assert len(rules) == 1
+    assert_expr_equal(reduced, -2 * coefficient * coupling() ** 2 * current**2)
+
+
+def test_eom_replacement_rules_collect_opposite_abelian_vector_divergence_sign() -> None:
+    coefficient = S("abelian_vector_eom_opposite_coefficient")
+    theory = Theory("abelian_vector_eom_opposite_rules")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    field = phi()
+    current = Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field
+    divergence = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(nu))
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+    source = (coefficient * current * divergence).expand()
+
+    rules = theory.eom_replacement_rules_for_expression(
+        lagrangian,
+        source,
+        fields=[vector],
+        strict=True,
+    )
+    reduced = source.replace_multiple(rules).expand()
+
+    assert len(rules) == 1
+    assert_expr_equal(reduced, 2 * coefficient * coupling() ** 2 * current**2)
 
 
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:

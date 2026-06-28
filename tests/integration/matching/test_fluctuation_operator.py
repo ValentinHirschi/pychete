@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Sequence
+from functools import cache
 from pathlib import Path
 
 import pytest
@@ -2191,7 +2192,8 @@ def test_singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms() -> 
     assert not bool(numerator_sum.coefficient(theory.coupling_handle("gY")() ** 2).expand() == Expression.num(0))
 
 
-def test_singlet_selected_wilson_line_higgs_gauge_subset_matches_matchete_coefficients() -> None:
+@cache
+def _singlet_selected_wilson_line_higgs_gauge_projection() -> tuple[Theory, dict[str, Expression]]:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
     targets = {
@@ -2265,14 +2267,32 @@ def test_singlet_selected_wilson_line_higgs_gauge_subset_matches_matchete_coeffi
         normalize_derivative_operators=True,
         eft_order=6,
     )
+    return theory, dict(projected)
+
+
+def _singlet_selected_higgs_gauge_expected(theory: Theory, condition_name: str) -> Expression:
     mass = theory.coupling_handle("M")()
     source = theory.coupling_handle("A")()
     g_l = theory.coupling_handle("gL")()
     g_y = theory.coupling_handle("gY")()
+    hbar = theory.external_handle("hbar")()
+    if condition_name == "cHW":
+        return hbar * source**2 * g_l**2 / (12 * mass**4)
+    if condition_name == "cHB":
+        return hbar * source**2 * g_y**2 / (12 * mass**4)
+    if condition_name == "cHWB":
+        return hbar * source**2 * g_l * g_y / (6 * mass**4)
+    raise ValueError(f"Unknown selected Singlet Higgs-gauge coefficient {condition_name!r}")
 
-    assert_expr_equal(projected["cHW"], hbar * source**2 * g_l**2 / (12 * mass**4))
-    assert_expr_equal(projected["cHB"], hbar * source**2 * g_y**2 / (12 * mass**4))
-    assert_expr_equal(projected["cHWB"], hbar * source**2 * g_l * g_y / (6 * mass**4))
+
+@pytest.mark.parametrize("condition_name", ("cHW", "cHB", "cHWB"))
+def test_singlet_selected_wilson_line_higgs_gauge_coefficient_matches_matchete_subset(
+    condition_name: str,
+) -> None:
+    theory, projected = _singlet_selected_wilson_line_higgs_gauge_projection()
+
+    assert set(projected) == {"cHW", "cHB", "cHWB"}
+    assert_expr_equal(projected[condition_name], _singlet_selected_higgs_gauge_expected(theory, condition_name))
 
 
 def test_singlet_selected_wilson_line_chd_four_slot_matches_matchete_selected_coefficient() -> None:

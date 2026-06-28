@@ -5,6 +5,7 @@ from symbolica import Expression, S
 
 from pychete import (
     FieldMassKind,
+    FreeLagConvention,
     MatchingResult,
     OneLoopIntegralBackend,
     OneLoopMatchOptions,
@@ -361,6 +362,58 @@ def test_one_loop_match_generates_eom_replacements_before_condition_projection()
     assert_expr_equal(result.off_shell_eft_lagrangian, coefficient() * phi() * derivative_target)
     assert_expr_equal(result.on_shell_eft_lagrangian, coefficient() * phi() * source())
     assert_expr_equal(result.matching_conditions["c_phi"], source())
+
+
+def test_one_loop_match_generates_abelian_vector_eom_replacements() -> None:
+    theory = Theory("one_loop_vector_eom_reduction")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    heavy = theory.define_field("S", s.Scalar, self_conjugate=True, mass=(FieldMassKind.HEAVY, "M"))
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    coupling = theory.define_coupling("y", self_conjugate=True)
+    coefficient = theory.define_coupling("c", self_conjugate=True)
+    vector = theory.field_handle("B")
+    gauge = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    field = phi()
+    current = Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field
+    divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    source = (coefficient() * current * divergence).expand()
+    normalized_source = (-coefficient() * current * s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(nu))).expand()
+    expected = (-2 * coefficient() * gauge() ** 2 * current**2).expand()
+    lagrangian = (
+        theory.free_lag(heavy, phi, vector, convention=FreeLagConvention.MATCHETE)
+        - coupling() * heavy() * s.Bar(phi()) * phi()
+    )
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=FakePoleVakintEngine(source),
+            on_shell_eom_lagrangian=theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE),
+            on_shell_eom_fields=[vector],
+            on_shell_eom_strict=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(result, MatchingResult)
+    assert result.metadata["on_shell_reduced"] is True
+    assert result.metadata["on_shell_eom_reduction_requested"] is True
+    assert result.metadata["on_shell_eom_reduction_rule_count"] == 1
+    assert_expr_equal(result.off_shell_eft_lagrangian, normalized_source)
+    assert_expr_equal(result.on_shell_eft_lagrangian, expected)
 
 
 def test_one_loop_match_truncates_eft_result_before_condition_projection() -> None:
