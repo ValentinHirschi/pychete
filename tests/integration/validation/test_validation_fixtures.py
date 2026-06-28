@@ -1502,7 +1502,20 @@ def test_validation_fixture_gap_report_projects_registered_wilsons_before_refere
 
 
 @pytest.mark.slow
-def test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fixture() -> None:
+@pytest.mark.parametrize(
+    ("target_name", "gauge_couplings", "denominator", "expected_term_count"),
+    [
+        ("cHW", ("gL", "gL"), 12, 10),
+        ("cHB", ("gY", "gY"), 12, 10),
+        ("cHWB", ("gL", "gY"), 6, 14),
+    ],
+)
+def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_against_matchete_fixture(
+    target_name: str,
+    gauge_couplings: tuple[str, ...],
+    denominator: int,
+    expected_term_count: int,
+) -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference_fixture = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
@@ -1510,8 +1523,8 @@ def test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fi
     reference = reference_fixture.matching_result("matchete_previous")
     theory = fixture.theory()
     hbar = theory.external_handle("hbar")()
-    wilson = theory.external_handle("cHW")
-    chw_name = canonical_string(
+    wilson = theory.external_handle(target_name)
+    condition_name = canonical_string(
         s.Coupling(wilson.label, s.List(*wilson.definition.index_exprs), Expression.num(0))
     )
 
@@ -1525,7 +1538,7 @@ def test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fi
         wilson_line_trace_names=("hScalar-lScalar",),
         wilson_line_max_total_order=4,
         wilson_line_max_slot_order=4,
-        wilson_line_index_prefix="singlet_chw_gap",
+        wilson_line_index_prefix=f"singlet_{target_name}_gap",
         wilson_line_act_open_derivatives=True,
         wilson_line_emit_covariant_derivative_commutators=False,
         wilson_line_emit_covariant_derivative_commutator_passes=1,
@@ -1537,33 +1550,74 @@ def test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fi
         wilson_line_tensor_reduce_before_wilson_expand=True,
         simplify_pychete_color_algebra=True,
         project_reference_matching_conditions=True,
-        matching_condition_projection_names=("cHW",),
+        matching_condition_projection_names=(target_name,),
         matching_condition_projection_source="on_shell_eft_lagrangian",
         matching_condition_projection_expand_source=False,
         matching_condition_projection_truncate_eft=True,
         matching_condition_projection_drop_zero=False,
     )
 
-    reference_chw = reference.matching_conditions[chw_name]
-    expected_chw = (
-        reference.theory.external_handle("hbar")()
-        * reference.theory.coupling_handle("A")() ** 2
-        * reference.theory.coupling_handle("gL")() ** 2
-        / (12 * reference.theory.coupling_handle("M")() ** 4)
-    )
+    expected = reference.theory.external_handle("hbar")() * reference.theory.coupling_handle("A")() ** 2
+    for coupling in gauge_couplings:
+        expected *= reference.theory.coupling_handle(coupling)()
+    expected /= denominator * reference.theory.coupling_handle("M")() ** 4
 
-    assert_expr_equal(reference_chw, expected_chw)
+    assert_expr_equal(reference.matching_conditions[condition_name], expected)
     assert report.candidate_stage == "normalized_interaction_wilson_line_hybrid_internal_minimal_subtraction_result"
     assert report.candidate_matching_condition_count == 1
     assert report.reference_matching_condition_count == 1
-    assert report.common_matching_condition_names == (chw_name,)
-    assert report.accepted_common_wilson_matching_condition_names == (chw_name,)
+    assert report.common_matching_condition_names == (condition_name,)
+    assert report.accepted_common_wilson_matching_condition_names == (condition_name,)
     assert report.different_after_probe_common_matching_condition_names == ()
-    assert report.matching_condition_projection_registered_wilson_names == (chw_name,)
+    assert report.matching_condition_projection_registered_wilson_names == (condition_name,)
     assert report.candidate_metadata["interaction_wilson_line_tensor_reduce_before_wilson_expand"] is True
-    assert report.candidate_metadata["interaction_wilson_line_term_count_by_entry"][
-        "hScalar-lScalar#wilson14_o4_0"
-    ] == 10
+    assert sum(report.candidate_metadata["interaction_wilson_line_term_count_by_entry"].values()) == expected_term_count
+
+
+@pytest.mark.slow
+def test_singlet_wilson_line_filter_keeps_pre_eom_terms_for_derivative_higgs_target() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    wilson = theory.external_handle("cHD")
+    condition_name = canonical_string(
+        s.Coupling(wilson.label, s.List(*wilson.definition.index_exprs), Expression.num(0))
+    )
+    targets = {condition_name: registered_wilson_matching_condition_targets(theory)[condition_name]}
+
+    common_options = dict(
+        max_trace_order=2,
+        integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+        normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+        hbar=theory.external_handle("hbar")(),
+        wilson_line_trace_names=("hScalar-lScalar",),
+        wilson_line_max_total_order=0,
+        wilson_line_max_slot_order=0,
+        wilson_line_act_open_derivatives=True,
+        wilson_line_covariant_derivative_commutator_mode="all_distinct",
+        wilson_line_max_derivative_order=4,
+        wilson_line_filter_terms_by_matching_targets=True,
+        wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+        wilson_line_tensor_reduce_before_wilson_expand=True,
+        simplify_pychete_color_algebra=True,
+        matching_condition_targets=targets,
+    )
+    raw = fixture.one_loop_preview(
+        **common_options,
+        wilson_line_index_prefix="singlet_cHD_raw_filter",
+        substitute_heavy_scalar_solutions=False,
+    )
+    eom_aware = fixture.one_loop_preview(
+        **common_options,
+        wilson_line_index_prefix="singlet_cHD_eom_filter",
+        substitute_heavy_scalar_solutions=True,
+    )
+
+    assert raw.metadata["interaction_wilson_line_term_count"] == 0
+    assert eom_aware.metadata["interaction_wilson_line_term_count"] == 2
+    assert eom_aware.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
+        "hScalar-lScalar#wilson0_o0_0",
+    )
+    assert eom_aware.metadata["heavy_scalar_solutions_substituted"] is True
 
 
 def test_default_matching_condition_probe_accepts_fixture_function_indeterminates() -> None:

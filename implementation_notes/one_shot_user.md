@@ -835,3 +835,14 @@ without Warsaw-specific core assumptions.
   which passes under the 30 GiB watchdog. The focused lower-level `cHW`
   regression, validation Wilson-line preview smoke, and static typing pytest
   gate also pass for this slice.
+- Latest continuation under the same mismatch-review policy: the selected
+  Singlet `hScalar-lScalar` fixture route now also accepts `cHB` and `cHWB`
+  against the committed Matchete fixture, using the same Wilson-line controls
+  as the accepted `cHW` checkpoint. The first remaining precise mismatch is
+  the derivative/Higgs family (`cHD`, `cHBox`, `cH`). Matchete's
+  `SuperTrace.m` applies `ReplaceHeavyEOM` after matching-mode supertrace
+  evaluation, while pychete's target filter was running before heavy-scalar
+  EOM substitution. pychete now conservatively relaxes Wilson-line atom
+  requirements when `substitute_heavy_scalar_solutions=True`, keeping pre-EOM
+  terms such as `H^2 phi` that can become four-Higgs operators after the
+  heavy singlet solution is applied.

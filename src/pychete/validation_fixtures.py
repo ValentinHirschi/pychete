@@ -716,6 +716,15 @@ class ValidationFixture:
             )
         if expand_covariant_derivative_commutators:
             lagrangian_expr = theory.expand_covariant_derivative_commutators(lagrangian_expr)
+        heavy_scalar_solutions = None
+        if substitute_heavy_scalar_solutions:
+            solution_lagrangian = (
+                resolved_heavy_scalar_solution_lagrangian
+                if resolved_heavy_scalar_solution_lagrangian is not None
+                else lagrangian_expr
+            )
+            theory._validate_registered_expression(solution_lagrangian)
+            heavy_scalar_solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
         setup = theory.one_loop_setup(
             lagrangian_expr,
             eft_order=eft_order,
@@ -775,7 +784,11 @@ class ValidationFixture:
         if bosonic_cde_expansion_request is not None and wilson_line_expansion_request is not None:
             raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
         wilson_line_term_atom_requirements = (
-            _term_atom_requirements_for_targets(theory, matching_condition_targets)
+            _term_atom_requirements_for_targets(
+                theory,
+                matching_condition_targets,
+                heavy_scalar_solutions=heavy_scalar_solutions,
+            )
             if wilson_line_filter_terms_by_matching_targets and wilson_line_expansion_request is not None
             else None
         )
@@ -1068,13 +1081,7 @@ class ValidationFixture:
         if simplify_pychete_color_algebra:
             result = _decode_preview_native_color_wrappers(theory, result)
         if substitute_heavy_scalar_solutions:
-            solution_lagrangian = (
-                resolved_heavy_scalar_solution_lagrangian
-                if resolved_heavy_scalar_solution_lagrangian is not None
-                else lagrangian_expr
-            )
-            theory._validate_registered_expression(solution_lagrangian)
-            solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
+            solutions = heavy_scalar_solutions or {}
             replacement_rules = heavy_scalar_solution_replacements(solutions, fresh_dummy_indices=True)
             if replacement_rules:
                 _LOGGER.info(

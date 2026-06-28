@@ -7408,6 +7408,8 @@ def _wilson_line_atom_counts_can_satisfy_requirement_group(
 def _term_atom_requirements_for_targets(
     theory: Theory,
     targets: MatchingConditionTargetInput | None,
+    *,
+    heavy_scalar_solutions: Mapping[str, HeavyScalarSolution] | None = None,
 ) -> ProjectionAtomRequirementGroups | None:
     if targets is None:
         return None
@@ -7418,7 +7420,106 @@ def _term_atom_requirements_for_targets(
         if target.projection_expression is not None
     )
     requirements = _projection_atom_requirement_groups_for_expressions(projection_expressions)
+    if requirements and heavy_scalar_solutions:
+        requirements = _projection_atom_requirements_with_heavy_scalar_solution_relaxations(
+            requirements,
+            heavy_scalar_solutions,
+        )
     return requirements or None
+
+
+def _projection_atom_requirements_with_heavy_scalar_solution_relaxations(
+    requirements: ProjectionAtomRequirementGroups,
+    heavy_scalar_solutions: Mapping[str, HeavyScalarSolution],
+) -> ProjectionAtomRequirementGroups:
+    """Return requirements that also keep terms made relevant by heavy EOMs.
+
+    Matchete applies ``ReplaceHeavyEOM`` after evaluating matching-mode
+    supertraces. Wilson-line target filtering therefore has to keep terms that
+    are short of the final operator's light fields only because they still
+    contain a heavy scalar that will be replaced by its EOM solution.
+    """
+
+    relaxed: list[tuple[ProjectionAtomRequirement, ...]] = list(requirements)
+    seen = set(relaxed)
+    for group in requirements:
+        for solution in heavy_scalar_solutions.values():
+            heavy_key = ("field", canonical_string(solution.field.label))
+            for contribution in _heavy_scalar_solution_projection_atom_contribution_groups(solution):
+                max_substitutions = _max_heavy_scalar_filter_substitutions(group, contribution)
+                for count in range(1, max_substitutions + 1):
+                    relaxed_group = _relax_projection_atom_requirement_group(
+                        group,
+                        heavy_key=heavy_key,
+                        contribution=contribution,
+                        count=count,
+                    )
+                    if relaxed_group is None or relaxed_group in seen:
+                        continue
+                    seen.add(relaxed_group)
+                    relaxed.append(relaxed_group)
+    return tuple(relaxed)
+
+
+def _heavy_scalar_solution_projection_atom_contribution_groups(
+    solution: HeavyScalarSolution,
+) -> tuple[Mapping[tuple[str, str], int], ...]:
+    contribution_groups: list[Mapping[tuple[str, str], int]] = []
+    seen: set[tuple[tuple[tuple[str, str], int], ...]] = set()
+    expressions = (solution.inclusive, solution.inclusive_conjugate)
+    for expr in expressions:
+        for term in terms(expr.expand()):
+            counts = _projection_atom_counts(term)
+            if not counts:
+                continue
+            key = tuple(sorted(counts.items()))
+            if key in seen:
+                continue
+            seen.add(key)
+            contribution_groups.append(counts)
+    return tuple(contribution_groups)
+
+
+def _max_heavy_scalar_filter_substitutions(
+    group: Sequence[ProjectionAtomRequirement],
+    contribution: Mapping[tuple[str, str], int],
+) -> int:
+    max_substitutions = 0
+    for kind, label, required_count in group:
+        contribution_count = contribution.get((kind, label), 0)
+        if contribution_count <= 0:
+            continue
+        max_substitutions = max(
+            max_substitutions,
+            (required_count + contribution_count - 1) // contribution_count,
+        )
+    return max_substitutions
+
+
+def _relax_projection_atom_requirement_group(
+    group: Sequence[ProjectionAtomRequirement],
+    *,
+    heavy_key: tuple[str, str],
+    contribution: Mapping[tuple[str, str], int],
+    count: int,
+) -> tuple[ProjectionAtomRequirement, ...] | None:
+    remaining = {(kind, label): required_count for kind, label, required_count in group}
+    changed = False
+    for key, contribution_count in contribution.items():
+        required_count = remaining.get(key)
+        if required_count is None:
+            continue
+        relaxed_count = max(0, required_count - count * contribution_count)
+        if relaxed_count != required_count:
+            changed = True
+        if relaxed_count:
+            remaining[key] = relaxed_count
+        else:
+            remaining.pop(key, None)
+    if not changed:
+        return None
+    remaining[heavy_key] = remaining.get(heavy_key, 0) + count
+    return tuple((kind, label, required_count) for (kind, label), required_count in sorted(remaining.items()))
 
 
 def _combine_bosonic_cde_hybrid_results(
@@ -8494,6 +8595,15 @@ def match_one_loop(
         )
     if options.expand_covariant_derivative_commutators:
         matching_lagrangian = theory.expand_covariant_derivative_commutators(matching_lagrangian)
+    heavy_scalar_solutions: dict[str, HeavyScalarSolution] | None = None
+    if options.substitute_heavy_scalar_solutions:
+        solution_lagrangian = (
+            options.heavy_scalar_solution_lagrangian
+            if options.heavy_scalar_solution_lagrangian is not None
+            else matching_lagrangian
+        )
+        theory._validate_registered_expression(solution_lagrangian)
+        heavy_scalar_solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
     setup = one_loop_setup(
         theory,
         matching_lagrangian,
@@ -8555,7 +8665,11 @@ def match_one_loop(
         else None
     )
     wilson_line_term_atom_requirements = (
-        _term_atom_requirements_for_targets(theory, matching_condition_targets)
+        _term_atom_requirements_for_targets(
+            theory,
+            matching_condition_targets,
+            heavy_scalar_solutions=heavy_scalar_solutions,
+        )
         if options.wilson_line_filter_terms_by_matching_targets and wilson_line_expansion_indices_by_trace is not None
         else None
     )
@@ -8969,13 +9083,7 @@ def match_one_loop(
     if options.simplify_pychete_color_algebra:
         result = _decode_result_native_color_wrappers(theory, result)
     if options.substitute_heavy_scalar_solutions:
-        solution_lagrangian = (
-            options.heavy_scalar_solution_lagrangian
-            if options.heavy_scalar_solution_lagrangian is not None
-            else matching_lagrangian
-        )
-        theory._validate_registered_expression(solution_lagrangian)
-        solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
+        solutions = heavy_scalar_solutions or {}
         replacement_rules = heavy_scalar_solution_replacements(solutions, fresh_dummy_indices=True)
         if replacement_rules:
             _LOGGER.info(

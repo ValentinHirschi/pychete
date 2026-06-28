@@ -2135,16 +2135,49 @@
   Targeted tests passed under the 30 GiB watchdog: the new fixture-level
   `cHW` report test, the existing lower-level selected `cHW` regression, the
   validation Wilson-line preview smoke, and `tests/test_static_typing.py`.
+- Current Singlet Wilson-line target sweep: using the same fixture-level
+  selected `hScalar-lScalar` Wilson-line options as the accepted `cHW`
+  checkpoint, pychete now also accepts the committed Matchete fixture
+  coefficients for `cHB = hbar*A^2*gY^2/(12*M^4)` and
+  `cHWB = hbar*A^2*gL*gY/(6*M^4)`. The slow validation regression was
+  broadened to parameterize `cHW`, `cHB`, and `cHWB`.
+- First precise remaining mismatch in that sweep is the derivative/Higgs
+  family (`cHD`, `cHBox`, `cH`). The initial filtered direct reports produced
+  zero Wilson-line terms for these targets. Following the standing rule to
+  inspect Matchete before patching, `SuperTrace.m` was re-read around
+  `PowerTypeSTr`, `GenericPropagatorExpansion`, `EvaluateSTr`, and
+  `RemoveSymmetryVanishingWilsonTerms`: Matchete evaluates/integrates the
+  supertrace and then applies `ReplaceHeavyEOM` in matching mode. The pychete
+  Wilson-line target filter was running before heavy-scalar EOM substitution
+  and therefore discarded terms such as `H^2 phi` that become four-Higgs
+  operators after the singlet solution `phi -> -A H bar(H)/M^2 + ...`.
+- Implemented an EOM-aware conservative relaxation of Wilson-line projection
+  atom requirements. When `substitute_heavy_scalar_solutions=True`, pychete
+  derives possible field-count contributions from each heavy-scalar solution
+  term with the existing Symbolica-pattern atom-count machinery and adds
+  pre-EOM alternatives such as `H^2 phi` and `phi^2` for a final `H^4`
+  target. The same precomputed heavy-scalar solution is reused for the actual
+  on-shell substitution in both public `match_one_loop(...)` and validation
+  preview paths. A focused slow regression verifies that the order-zero
+  selected `hScalar-lScalar -> cHD` filter keeps two pre-EOM terms only when
+  heavy-scalar solution substitution is enabled.
+- Focused checks for this slice passed: the broadened Singlet fixture-level
+  Wilson-line gauge targets plus the pre-EOM `cHD` filter regression
+  (`4 passed` under the 30 GiB watchdog), the existing lower-level selected
+  `cHW` coefficient regression (`1 passed` under the watchdog),
+  `python -m mypy`, and `git diff --check`.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
-  - broaden the Singlet fixture-level Wilson-line validation beyond the
-    selected `cHW` target. Start with nearby bosonic gauge/Higgs Wilson
-    targets (`cHB`, `cHWB`, `cHD`, `cHBox`, `cH`) and use the gap report to
-    identify the first remaining generic basis/projection or source-generation
-    gap before touching code;
+  - continue the Singlet fixture-level Wilson-line validation beyond the
+    accepted selected gauge-strength targets `cHW`, `cHB`, and `cHWB`.
+    The first remaining generic frontier is the heavy-EOM derivative/Higgs
+    family (`cHD`, `cHBox`, `cH`): source generation now preserves pre-EOM
+    selected terms for `cHD`, but full projected coefficient extraction still
+    needs a bounded stage-by-stage comparison and likely target-local
+    EOM/IBP/projection-cost work;
   - decide whether the selected `cHW` report should also be covered through
     `use_public_match_api=True`; if it differs from the direct preview route,
     inspect the public `Theory.match(...)` wiring rather than patching the
