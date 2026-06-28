@@ -511,6 +511,31 @@ def test_matching_result_projects_alpha_equivalent_conjugate_representation_indi
     assert_expr_equal(projected["cHWB"], coefficient * theory.coupling_handle("gL")() * theory.coupling_handle("gY")() / 2)
 
 
+def test_matching_result_simplifies_projected_closed_dummy_delta_coefficient() -> None:
+    coefficient = S("condition_projection_closed_delta_coefficient")
+    theory = Theory("condition_projection_closed_delta")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    adj = theory.define_representation("SU2L", "adj")
+    mu = theory.index("mu")
+    nu = theory.index("nu")
+    adjoint = theory.index("A", adj)
+    left = theory.dummy_index(1, fund)
+    right = theory.dummy_index(2, s.Bar(fund))
+    strength = s.FieldStrength(theory.field_handle("W").label, s.List(mu, nu), s.List(adjoint), s.List())
+    target = strength**2
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * s.Delta(left, right) * target,
+    )
+
+    projected = result.project_matching_conditions({"cWW": target}, expand_source=False)
+
+    assert_expr_equal(projected["cWW"], 2 * coefficient)
+
+
 def test_matching_result_truncates_projected_coefficients_target_locally() -> None:
     x = S("condition_projection_local_eft_x")
     theory = Theory("condition_projection_local_eft")

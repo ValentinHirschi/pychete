@@ -118,7 +118,7 @@ def simplify_pychete_color_algebra(
 
     from . import spenso
 
-    normalized = contract_pychete_deltas_into_cg_tensors(expr)
+    normalized = contract_pychete_deltas(theory, expr)
     normalized = _replace_adjoint_generators_with_structure_constants(theory, normalized)
     groups = _cg_groups_in_expression(theory, normalized)
     if not groups:
@@ -531,10 +531,11 @@ def simplify_pychete_field_strength_group_algebra(theory: Any, expr: Expression)
     """
 
     result = simplify_pychete_field_derivative_metrics(expr)
-    result = contract_pychete_deltas_into_cg_tensors(result)
+    result = contract_pychete_deltas(theory, result)
     result = simplify_pychete_field_strength_metrics(result)
     result = simplify_su2_field_strength_generator_bilinears(theory, result)
-    return simplify_su2_u1_field_strength_generator_bilinears(theory, result)
+    result = simplify_su2_u1_field_strength_generator_bilinears(theory, result)
+    return contract_pychete_deltas(theory, result)
 
 
 def _replace_candidate_terms(
@@ -630,6 +631,134 @@ def contract_pychete_deltas_into_cg_tensors(expr: Expression) -> Expression:
             return updated
         out = updated
     return out
+
+
+def contract_pychete_deltas(theory: Any, expr: Expression) -> Expression:
+    """Contract explicit pychete ``Delta`` heads using registered index metadata.
+
+    This mirrors the Matchete ``ContractDelta`` stage for non-flavour group
+    indices: deltas are first pushed into neighbouring CG tensors, then
+    remaining explicit deltas are used as native replacement rules over the
+    rest of each product. Closed registered-representation traces reduce to
+    the stored representation dimension.
+    """
+
+    out = contract_pychete_deltas_into_cg_tensors(expr)
+    replacements = _pychete_delta_contraction_replacements(theory)
+    for _ in range(8):
+        updated = out.replace_multiple(replacements).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
+
+
+def _pychete_delta_contraction_replacements(theory: Any) -> tuple[Replacement, ...]:
+    first_label = s.head("pychete_delta_first_label_")
+    second_label = s.head("pychete_delta_second_label_")
+    representation = s.head("pychete_delta_representation_")
+    rest = s.head("pychete_delta_rest_")
+
+    same_rep = s.Delta(
+        s.Index(first_label, representation),
+        s.Index(second_label, representation),
+    )
+    direct_pair = s.Delta(
+        s.Index(first_label, representation),
+        s.Index(second_label, s.Bar(representation)),
+    )
+    conjugate_pair = s.Delta(
+        s.Index(first_label, s.Bar(representation)),
+        s.Index(second_label, representation),
+    )
+
+    def delta_replacement(delta_pattern: Expression) -> Callable[[dict[Expression, Expression]], Expression]:
+        def replace(match: dict[Expression, Expression]) -> Expression:
+            matched = delta_pattern.replace_wildcards(match)
+            dimension = _closed_delta_dimension(theory, match, first_label, second_label, representation)
+            return matched if dimension is None else dimension
+
+        return replace
+
+    def product_replacement(delta_pattern: Expression) -> Callable[[dict[Expression, Expression]], Expression]:
+        product_pattern = delta_pattern * rest
+
+        def replace(match: dict[Expression, Expression]) -> Expression:
+            matched = product_pattern.replace_wildcards(match)
+            rest_expr = match[rest]
+            contracted = _contract_delta_product_rest(
+                theory,
+                rest_expr,
+                match,
+                first_label=first_label,
+                second_label=second_label,
+                representation=representation,
+            )
+            if contracted is not None:
+                return contracted
+            dimension = _closed_delta_dimension(theory, match, first_label, second_label, representation)
+            return matched if dimension is None else (dimension * rest_expr).expand()
+
+        return replace
+
+    replacements: list[Replacement] = []
+    for delta_pattern in (same_rep, direct_pair, conjugate_pair):
+        replacements.append(Replacement(delta_pattern * rest, product_replacement(delta_pattern), rhs_cache_size=0))
+        replacements.append(Replacement(delta_pattern, delta_replacement(delta_pattern), rhs_cache_size=0))
+    return tuple(replacements)
+
+
+def _contract_delta_product_rest(
+    theory: Any,
+    rest: Expression,
+    match: dict[Expression, Expression],
+    *,
+    first_label: Expression,
+    second_label: Expression,
+    representation: Expression,
+) -> Expression | None:
+    rep = match[representation]
+    if _registered_representation_dimension(theory, rep) is None:
+        return None
+    first = match[first_label]
+    second = match[second_label]
+    substitutions = (
+        (s.Index(first, rep), s.Index(second, rep)),
+        (s.Index(second, rep), s.Index(first, rep)),
+        (s.Index(first, s.Bar(rep)), s.Index(second, s.Bar(rep))),
+        (s.Index(second, s.Bar(rep)), s.Index(first, s.Bar(rep))),
+    )
+    for source, target in substitutions:
+        updated = rest.replace(source, target)
+        if not bool(updated == rest):
+            return updated
+    return None
+
+
+def _closed_delta_dimension(
+    theory: Any,
+    match: dict[Expression, Expression],
+    first_label: Expression,
+    second_label: Expression,
+    representation: Expression,
+) -> Expression | None:
+    first = match[first_label]
+    second = match[second_label]
+    if not bool(first == second) and not (_is_dummy_index_label(first) and _is_dummy_index_label(second)):
+        return None
+    dimension = _registered_representation_dimension(theory, match[representation])
+    return None if dimension is None else Expression.num(dimension)
+
+
+def _registered_representation_dimension(theory: Any, representation: Expression) -> int | None:
+    try:
+        return theory.representation_dimension(representation)
+    except (AttributeError, KeyError):
+        return None
+
+
+def _is_dummy_index_label(label: Expression) -> bool:
+    return is_head(label, s.dummy_index)
 
 
 def decode_native_color_wrappers_and_simplify_field_strengths(theory: Any, expr: Expression) -> Expression:
@@ -2155,6 +2284,7 @@ __all__ = [
     "cook_function",
     "cook_indices",
     "contract_pychete_deltas_into_cg_tensors",
+    "contract_pychete_deltas",
     "decode_native_color_wrappers",
     "decode_native_color_wrappers_and_simplify_field_strengths",
     "dirac_adjoint",

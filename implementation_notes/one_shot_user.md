@@ -787,3 +787,37 @@ without Warsaw-specific core assumptions.
   `removed_symmetry_vanishing_wilson_terms` and
   `evaluated_symmetric_lorentz_indices` (49 terms per orientation with
   matching derivative-word histograms).
+- Latest audit under the instruction to review Matchete before patching:
+  after adding generic pychete delta contraction, the selected
+  `hScalar-lScalar -> cHW` projection is a clean sign mismatch rather than a
+  residual-index mismatch. Matchete's `GAction`/`CommuteCDs`,
+  `WilsonExpand`/`DevPreFact`/`ExpandGenFSs`, `SingleScaleIntegral`, and
+  `GreensSimplify`/`IdentitiesCDCommutation` code were inspected, and focused
+  WolframScript probes confirm that Matchete's one-sided four-derivative
+  Higgs Green weights are `aabb -> 0`, `abab -> +1/8`, and
+  `abba`/`baab -> +1/4`, matching pychete's local tests. Disabling pychete's
+  one-sided four-derivative exposure alone restores the log-bearing unexposed
+  projection, while the mixed/first-derivative/two-derivative exposure
+  families do not affect this selected cHW probe. The next fix should compare
+  and correct the Wilson-line `contracted_metric`, `wilson_expanded`,
+  `loop_integrated`, and post-index/group normal form that feeds the
+  one-sided Green reduction, not flip the verified Green weights or add a
+  cHW-specific coefficient patch.
+- Follow-up under the same policy: the precise sign mismatch was then
+  re-audited against Matchete's `SuperTrace.m` and `LoopIntegration.m`
+  conventions before modifying pychete. Matchete's selected X-term insertions
+  are positive, the scalar/vector power-type trace prefactor is
+  `-I hbar/2`, and the loop-integrated `Prop[M] Prop[0]^3` topology supplies
+  the expected `+I LF[{M},{1,3}]` stage before LF evaluation. pychete's
+  Wilson-line trace prefactor remains real `-1/2`, and the internal evaluated
+  integral already contains `+I/(16*pi^2)`, so the global
+  `MATCHETE_EVALUATED_HBAR` bridge was corrected from the old negative sign
+  to `+16*pi^2*i*hbar`. A focused regression now reproduces the selected
+  order-four Singlet `hScalar-lScalar -> cHW` coefficient
+  `hbar*A^2*gL^2/(12*M^4)`, and the normalization plus cHW tests pass under
+  the 30 GiB watchdog. The legacy bosonic-CDE heavy-scalar `cH` expectation
+  was also updated by the same global convention sign because it uses the same
+  evaluated-HBAR bridge. A broader focused gate covering idenso delta
+  contraction, numeric projection probes, loop integration, Wilson-line
+  tensor reduction, normalization, selected `cHW`, and the legacy CDE
+  expectation now passes: 110 tests under the 30 GiB watchdog.

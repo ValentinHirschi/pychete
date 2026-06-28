@@ -130,7 +130,8 @@ class OneLoopMatchOptions:
     Use ``MATCHETE_EVALUATED_HBAR`` instead when the selected backend has
     already evaluated one-loop integrals and therefore already contains the
     explicit ``i/(16*pi^2)`` factor. This maps evaluated internal-backend
-    terms into Matchete's external ``hbar`` loop-counting convention.
+    terms into Matchete's external ``hbar`` loop-counting convention, where
+    scalar/vector power-type traces carry the ``-I hbar/2`` prefactor.
     ``bosonic_cde_expansion_indices_by_trace`` enables the current opt-in CDE
     interaction-supertrace path for explicitly selected trace names. The value
     maps each trace name to one Lorentz-index sequence per propagator slot in
@@ -298,7 +299,7 @@ def one_loop_normalization_factor(
     if selected is OneLoopNormalization.MATCHETE_HBAR:
         return Expression.I * (s.HBar if hbar is None else hbar)
     if selected is OneLoopNormalization.MATCHETE_EVALUATED_HBAR:
-        return -16 * Expression.PI**2 * Expression.I * (s.HBar if hbar is None else hbar)
+        return 16 * Expression.PI**2 * Expression.I * (s.HBar if hbar is None else hbar)
     return Expression.I / (16 * Expression.PI**2)
 
 

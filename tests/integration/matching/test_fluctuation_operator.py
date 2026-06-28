@@ -1647,14 +1647,14 @@ def test_one_loop_setup_builds_interaction_only_fluctuation_traces() -> None:
     )
     assert_expr_equal(
         one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=external_hbar),
-        -16 * Expression.PI**2 * Expression.I * external_hbar,
+        16 * Expression.PI**2 * Expression.I * external_hbar,
     )
     assert_expr_equal(
         (
             one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=external_hbar)
             * (-Expression.I / (192 * Expression.PI**2))
         ).expand(),
-        -external_hbar / 12,
+        external_hbar / 12,
     )
     assert_expr_equal(
         one_loop_normalization_factor(OneLoopNormalization.MATCHETE_LOOP_FACTOR),
@@ -2127,6 +2127,82 @@ def test_singlet_wilson_line_target_prefilter_matches_matchete_order_four_insert
     assert expanded_counts_by_slot_order == expected_counts
     assert sum(counts_by_slot_order.values()) == 40
     assert phi_atom_count == 0
+
+
+def test_singlet_selected_wilson_line_chw_matches_matchete_order_four_coefficient() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    target = smeft_warsaw_operator(theory, "cHW")
+    assert target is not None
+    hbar = theory.external_handle("hbar")()
+    setup = theory.one_loop_setup(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        max_trace_order=2,
+    )
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar",),
+        max_total_order=4,
+        max_slot_order=4,
+        index_prefix="singlet_chw",
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        term_atom_requirements=requirements,
+    )
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped_terms,
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=True,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    selected = sum(
+        (term for entry_terms in evaluated_by_entry.values() for term in entry_terms),
+        Expression.num(0),
+    )
+    normalized_finite = (
+        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+        * vakint_backend.finite_part(selected)
+    ).expand()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized_finite,
+    )
+
+    projected = result.project_matching_conditions(
+        {"cHW": target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )
+
+    assert_expr_equal(
+        projected["cHW"],
+        hbar
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gL")() ** 2
+        / (12 * theory.coupling_handle("M")() ** 4),
+    )
 
 
 def test_wilson_line_expansion_drops_odd_loop_rank_after_open_derivatives() -> None:
@@ -3978,7 +4054,7 @@ def test_public_bosonic_cde_heavy_solution_projects_ch_muphi_component() -> None
 
     assert result.metadata["heavy_scalar_solutions_substituted"] is True
     assert result.metadata["matching_condition_projection_canonize_indices"] is True
-    assert_expr_equal(coefficient, Expression.num(1) / (4 * theory.coupling_handle("M")() ** 4))
+    assert_expr_equal(coefficient, -Expression.num(1) / (4 * theory.coupling_handle("M")() ** 4))
 
 
 def test_planned_bosonic_cde_can_emit_and_lower_covariant_derivative_commutators() -> None:

@@ -245,8 +245,12 @@ choice. Use `OneLoopNormalization.MATCHETE_HBAR` for raw, unevaluated vakint
 supertrace expressions. Use `OneLoopNormalization.MATCHETE_EVALUATED_HBAR` for
 evaluated internal/vakint finite expressions that already contain the explicit
 `i/(16*pi^2)` factor; this applies the central
-`-16*pi^2*i*hbar` conversion to Matchete's external `hbar` loop-counting
-convention. Do not repair this convention later with Wilson-specific
+`+16*pi^2*i*hbar` conversion to Matchete's external `hbar` loop-counting
+convention. The sign is fixed by Matchete's scalar/vector power-type
+supertrace prefactor `-I hbar/2` together with pychete's evaluated-backend
+integral convention, where the scalar integral has already supplied the loop
+`+I/(16*pi^2)` factor. Do not reintroduce the old negative evaluated-hbar
+bridge sign, and do not repair this convention later with Wilson-specific
 projection replacements.
 Before calling native `Expression.coefficient(...)` on large composite
 matching targets, prefilter candidate source terms with Symbolica pattern

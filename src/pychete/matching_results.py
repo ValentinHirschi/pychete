@@ -72,8 +72,8 @@ _MAX_PROJECTION_FACTOR_TERMS = 64
 _MAX_PROJECTION_FACTOR_BYTES = 16_384
 _MAX_PROJECTION_COLLECT_TERMS = _MAX_PROJECTION_FACTOR_TERMS
 _MAX_PROJECTION_COLLECT_BYTES = _MAX_PROJECTION_FACTOR_BYTES
-_MAX_CANONIZED_PROJECTION_GENERIC_TERMS = 16
-_MAX_CANONIZED_PROJECTION_GENERIC_BYTES = 8_192
+_MAX_CANONIZED_PROJECTION_GENERIC_TERMS = 64
+_MAX_CANONIZED_PROJECTION_GENERIC_BYTES = 512_000
 _MAX_PROJECTION_EXPAND_TERMS = 128
 _MAX_PROJECTION_EXPAND_BYTES = 32_768
 _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_TERMS = 512
@@ -417,6 +417,12 @@ class MatchingResult:
                             )
                         )
                         target_local_canonized = target_extractor is not coefficient_extractor
+            if (
+                coefficient is None
+                and target_local_canonized
+                and not _source_is_small_enough_for_generic_projection(target_extractor.source)
+            ):
+                coefficient = Expression.num(0)
             if coefficient is None and target_local_canonized:
                 exact_coefficient = _termwise_exact_matching_projection_coefficient(
                     _without_wildcard_index_projection(target_extractor),
@@ -425,12 +431,6 @@ class MatchingResult:
                 )
                 if not is_zero(exact_coefficient):
                     coefficient = exact_coefficient
-            if (
-                coefficient is None
-                and target_local_canonized
-                and not _source_is_small_enough_for_generic_projection(target_extractor.source)
-            ):
-                coefficient = Expression.num(0)
             if coefficient is None:
                 coefficient = _matching_projection_coefficient(
                     target_extractor,
@@ -450,6 +450,11 @@ class MatchingResult:
                 identity = _tree_level_coupling_identity(self.theory, target)
                 if identity is not None:
                     coefficient = (coefficient + identity).expand()
+            coefficient = _group_simplified_projection_coefficient(
+                self.theory,
+                coefficient,
+                target_projection_expression,
+            )
             if drop_zero and _canonical_expr(coefficient) == "0":
                 continue
             conditions[target.name] = coefficient
@@ -1180,6 +1185,26 @@ def _field_strength_group_simplified_projection_source(
 
     simplified = idenso_backend.simplify_pychete_field_strength_group_algebra(theory, source)
     return simplified if not bool(simplified == source) else source
+
+
+def _group_simplified_projection_coefficient(
+    theory: Theory | None,
+    coefficient: Expression,
+    target: Expression,
+) -> Expression:
+    if theory is None:
+        return coefficient
+    if (
+        not bool(target.matches(field_strength_pattern()))
+        and not bool(coefficient.matches(s.Delta(index_pattern(), index_pattern())))
+    ):
+        return coefficient
+    if not _source_is_small_enough_for_field_strength_group_simplification(coefficient):
+        return coefficient
+    from .backends import idenso as idenso_backend
+
+    simplified = idenso_backend.simplify_pychete_field_strength_group_algebra(theory, coefficient)
+    return simplified if not bool(simplified == coefficient) else coefficient
 
 
 def _expanded_projection_coefficient(

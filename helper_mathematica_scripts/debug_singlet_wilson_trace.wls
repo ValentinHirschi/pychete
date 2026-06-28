@@ -84,7 +84,8 @@ termSignature[term_] := {
   Length @ Cases[term, Matchete`PackageScope`WilsonTerm[__], All],
   Length @ Cases[term, Matchete`PackageScope`OpenCD[__], All],
   Length @ Cases[term, Matchete`PackageScope`LoopMom[__], All],
-  Length @ Cases[term, Matchete`PackageScope`Prop[__], All]
+  Length @ Cases[term, Matchete`PackageScope`Prop[__], All],
+  Length @ Cases[term, Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[__], All]
 };
 
 signatureHistogram[terms_List] := Module[{counts},
@@ -99,6 +100,7 @@ signatureHistogram[terms_List] := Module[{counts},
       "open_cds" -> row[[1, 6]],
       "loop_momenta" -> row[[1, 7]],
       "propagators" -> row[[1, 8]],
+      "fs_wilson_factors" -> row[[1, 9]],
       "count" -> row[[2]]
     |>
   ] /@ counts)
@@ -174,6 +176,48 @@ derivativeSignatureSamples[terms_List] := Module[{samples = <||>, sig},
   ]
 ];
 
+hBilinearFactors[term_] := Module[{barAtoms, withoutBars, hAtoms},
+  barAtoms = Cases[
+    term,
+    Matchete`Bar[Matchete`Field[H, Matchete`Scalar, _, _]],
+    All
+  ];
+  withoutBars = DeleteCases[
+    term,
+    Matchete`Bar[Matchete`Field[H, Matchete`Scalar, _, _]],
+    All
+  ];
+  hAtoms = Cases[
+    withoutBars,
+    Matchete`Field[H, Matchete`Scalar, _, _],
+    All
+  ];
+  {barAtoms, hAtoms}
+];
+
+hBilinearCoefficientSlices[expr_] := Module[
+  {rows = <||>, barAtoms, hAtoms, sig, coeff},
+  If[expr === $Aborted || expr === $Failed, Return[{}]];
+  Do[
+    {barAtoms, hAtoms} = hBilinearFactors[term];
+    If[Length[barAtoms] =!= 1 || Length[hAtoms] =!= 1, Continue[]];
+    sig = termDerivativeSignature[term];
+    coeff = Together[term/(Times @@ barAtoms * Times @@ hAtoms)];
+    rows[sig] = Together[Lookup[rows, sig, 0] + coeff],
+    {term, termList[expr]}
+  ];
+  KeyValueMap[
+    Function[{signature, coefficient},
+      <|
+        "signature" -> signature,
+        "coefficient_input_form" -> toInputString[coefficient],
+        "coefficient_sample_input_form" -> shortInputString[coefficient]
+      |>
+    ],
+    KeySort[rows]
+  ]
+];
+
 symGammaHistogram[terms_List] := Module[{counts},
   counts = Normal @ Counts[
     Cases[
@@ -188,6 +232,38 @@ symGammaHistogram[terms_List] := Module[{counts},
       "count" -> row[[2]]
     |>
   ] /@ counts)
+];
+
+fsWilsonFactorDerivativeHistogram[terms_List] := Module[{counts},
+  counts = Normal @ Counts[
+    {termDerivativeSignature[#],
+      Length @ Cases[#, Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[__], All] > 0} & /@ terms
+  ];
+  (Function[row,
+    <|
+      "signature" -> row[[1, 1]],
+      "has_fs_wilson_factor" -> row[[1, 2]],
+      "count" -> row[[2]]
+    |>
+  ] /@ counts)
+];
+
+noFSWilsonFactorExpression[expr_] := Module[{selected},
+  If[expr === $Aborted || expr === $Failed, Return[expr]];
+  selected = Select[
+    termList[expr],
+    FreeQ[#, Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[__], All] &
+  ];
+  If[Length[selected] == 0, 0, Total[selected]]
+];
+
+withFSWilsonFactorExpression[expr_] := Module[{selected},
+  If[expr === $Aborted || expr === $Failed, Return[expr]];
+  selected = Select[
+    termList[expr],
+    ! FreeQ[#, Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[__], All] &
+  ];
+  If[Length[selected] == 0, 0, Total[selected]]
 ];
 
 stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
@@ -206,11 +282,13 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
       "open_cds" -> 0,
       "loop_momenta" -> 0,
       "propagators" -> 0,
+      "fs_wilson_factors" -> 0,
       "sym_gamma_factors" -> 0,
       "signature_histogram" -> {},
       "h_derivative_word_histogram" -> {},
       "h_derivative_signature_samples" -> {},
       "sym_gamma_histogram" -> {},
+      "fs_wilson_factor_derivative_histogram" -> {},
       "sample_terms_input_form" -> {}
     |>
   ];
@@ -226,11 +304,17 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
     "open_cds" -> Length @ Cases[expr, Matchete`PackageScope`OpenCD[__], All],
     "loop_momenta" -> Length @ Cases[expr, Matchete`PackageScope`LoopMom[__], All],
     "propagators" -> Length @ Cases[expr, Matchete`PackageScope`Prop[__], All],
+    "fs_wilson_factors" -> Length @ Cases[
+      expr,
+      Matchete`SuperTrace`PackagePrivate`FSWilsonFactor[__],
+      All
+    ],
     "sym_gamma_factors" -> Length @ Cases[expr, Matchete`PackageScope`SymGammaFactor[__], All],
     "signature_histogram" -> signatureHistogram[terms],
     "h_derivative_word_histogram" -> derivativeWordHistogram[terms],
     "h_derivative_signature_samples" -> derivativeSignatureSamples[terms],
     "sym_gamma_histogram" -> symGammaHistogram[terms],
+    "fs_wilson_factor_derivative_histogram" -> fsWilsonFactorDerivativeHistogram[terms],
     "sample_terms_input_form" -> (shortInputString /@ Take[terms, UpTo[sampleTerms]])
   |>
 ];
@@ -357,7 +441,11 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
     metric,
     wilson,
     integrated,
+    wilsonNoFS,
+    integratedNoFS,
+    integratedWithFS,
     post,
+    postNoFS,
     eps,
     evaluated,
     validationSimplification,
@@ -375,6 +463,9 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
   metric = Matchete`PackageScope`ContractMetric[symmetric];
   wilson = Matchete`PackageScope`WilsonExpand[metric];
   integrated = Matchete`PackageScope`LoopIntegrate[wilson];
+  wilsonNoFS = noFSWilsonFactorExpression[wilson];
+  integratedNoFS = noFSWilsonFactorExpression[integrated];
+  integratedWithFS = withFSWilsonFactorExpression[integrated];
   post = safeEvaluate @ Matchete`RefineDiracProducts[
     Matchete`PackageScope`ContractDelta[
       Matchete`ContractCGs[
@@ -386,6 +477,7 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
       ]
     ]
   ];
+  postNoFS = noFSWilsonFactorExpression[post];
   eps = If[post === $Aborted || post === $Failed,
     post,
     safeEvaluate @ Matchete`RelabelIndices[Matchete`PackageScope`EpsExpand[post]]
@@ -412,14 +504,34 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
       stageSummary["contracted_metric", metric],
       stageSummary["wilson_expanded", wilson],
       stageSummary["loop_integrated", integrated],
+      stageSummary["wilson_expanded_no_fs_wilson_factor", wilsonNoFS],
+      stageSummary["loop_integrated_no_fs_wilson_factor", integratedNoFS],
+      stageSummary["loop_integrated_with_fs_wilson_factor", integratedWithFS],
       stageSummary["post_index_group_cleanup", post],
+      stageSummary["post_index_group_cleanup_no_fs_wilson_factor", postNoFS],
       stageSummary["eps_expanded_relabelled", eps],
       stageSummary["evaluate_str_reference", evaluated],
       stageSummary["validation_simplified_prefactored_evaluate_str", validationSimplified]
     },
-    "validation_simplification_stage_summaries" -> validationSimplification["stages"],
-    "validation_simplified_prefactored_evaluate_str_input_form" ->
-      shortInputString[validationSimplified],
+    "wilson_expanded_no_fs_wilson_factor_input_form" -> shortInputString[wilsonNoFS],
+	    "loop_integrated_no_fs_wilson_factor_input_form" -> shortInputString[integratedNoFS],
+	    "loop_integrated_with_fs_wilson_factor_input_form" -> shortInputString[integratedWithFS],
+	    "post_index_group_cleanup_no_fs_wilson_factor_input_form" -> shortInputString[postNoFS],
+	    "loop_integrated_no_fs_wilson_factor_h_bilinear_coefficients" ->
+	      hBilinearCoefficientSlices[integratedNoFS],
+	    "post_index_group_cleanup_no_fs_wilson_factor_h_bilinear_coefficients" ->
+	      hBilinearCoefficientSlices[postNoFS],
+	    "eps_expanded_relabelled_h_bilinear_coefficients" ->
+	      hBilinearCoefficientSlices[eps],
+	    "prefactored_eps_expanded_relabelled_h_bilinear_coefficients" ->
+	      hBilinearCoefficientSlices[preFactor eps],
+	    "evaluate_str_reference_h_bilinear_coefficients" ->
+	      hBilinearCoefficientSlices[evaluated],
+	    "prefactored_evaluate_str_reference_h_bilinear_coefficients" ->
+	      hBilinearCoefficientSlices[preFactor evaluated],
+	    "validation_simplification_stage_summaries" -> validationSimplification["stages"],
+	    "validation_simplified_prefactored_evaluate_str_input_form" ->
+	      shortInputString[validationSimplified],
     "manual_minus_evaluate_str_input_form" -> If[
       eps === $Aborted || eps === $Failed || evaluated === $Aborted || evaluated === $Failed,
       toInputString[{eps, evaluated}],
@@ -475,6 +587,12 @@ previousCHWCondition = If[AssociationQ[previousValidationResult],
   ],
   {}
 ];
+selectedXTermValues = safeEvaluate @ {
+  Matchete`PackageScope`Xterm[{\[Phi], H}, {i, j}, 1, 0, 0],
+  Matchete`PackageScope`Xterm[{H, \[Phi]}, {i, j}, 1, 0, 0],
+  Matchete`PackageScope`Xterm[{\[Phi], Matchete`PackageScope`Conj[H]}, {i, j}, 1, 0, 0],
+  Matchete`PackageScope`Xterm[{Matchete`PackageScope`Conj[H], \[Phi]}, {i, j}, 1, 0, 0]
+} /. Matchete`PackageScope`$Xsubs;
 
 data = <|
   "schema_version" -> 1,
@@ -491,6 +609,7 @@ data = <|
       {{\[Phi], H}, {H, \[Phi]}, {\[Phi], Conj[H]}, {Conj[H], \[Phi]}}
     ]
   ],
+  "selected_xterm_values_input_form" -> toInputString[selectedXTermValues],
   "propagator_expansion_summary" -> stageSummary["generic_propagator_expansion", gen],
   "slot_order_stage_summaries" -> orderTupleStageSummaries[propTypes, propOrder, insertions],
   "insertion_count" -> Length[insertions],

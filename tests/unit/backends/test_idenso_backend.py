@@ -139,6 +139,34 @@ def test_idenso_bridge_contracts_pychete_delta_head_into_cg_tensor() -> None:
     assert "pychete::Delta" not in canonical_string(simplified)
 
 
+def test_idenso_bridge_contracts_closed_pychete_dummy_delta_to_representation_dimension() -> None:
+    theory = Theory("idenso_color_su2_closed_pychete_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    left = theory.dummy_index(1, fund)
+    right = theory.dummy_index(2, s.Bar(fund))
+
+    simplified = idenso.contract_pychete_deltas(theory, s.Delta(left, right))
+
+    assert_expr = Expression.num(2)
+    assert _same(simplified, assert_expr)
+
+
+def test_idenso_bridge_contracts_pychete_delta_through_registered_field_index() -> None:
+    theory = Theory("idenso_color_su2_field_pychete_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    left = theory.index("i", fund)
+    right = theory.index("j", s.Bar(fund))
+    expected_index = theory.index("j", fund)
+
+    simplified = idenso.contract_pychete_deltas(theory, s.Delta(left, right) * higgs(left))
+
+    assert _same(simplified, higgs(expected_index))
+    assert "pychete::Delta" not in canonical_string(simplified)
+
+
 def test_idenso_bridge_decodes_uncontracted_pychete_structure_constant() -> None:
     theory = Theory("idenso_color_su3_uncontracted_f")
     theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")

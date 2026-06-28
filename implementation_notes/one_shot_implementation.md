@@ -2058,11 +2058,77 @@
   are Matchete's subsequent `contracted_metric`, `wilson_expanded`,
   `loop_integrated`, post-index/group cleanup, and Green/on-shell
   simplification.
+- Latest mismatch audit after delta-contraction cleanup: the selected
+  `hScalar-lScalar -> cHW` projection no longer contains residual closed
+  SU(2) deltas, but the finite selected order-four coefficient is now a pure
+  sign mismatch (`-1/12` in pychete versus the saved Matchete `+1/12`
+  convention). Before changing pychete, the relevant Matchete algorithms were
+  rechecked:
+  `GAction`/`CommuteCDs` in `CovariantDerivative.m`,
+  `DevPreFact`/`DerivativeSubLists`/`WilsonExpand`/`ExpandGenFSs` in
+  `SuperTrace.m`, `SingleScaleIntegral` in `LoopIntegration.m`, and
+  `IdentitiesCDCommutation`/`GreensSimplify` in `Simplifications.m`.
+  Focused WolframScript probes show Matchete's Green-basis weights for
+  one-sided four-derivative Higgs bilinears are
+  `aabb -> 0`, `abab -> +1/8`, and `abba`/`baab -> +1/4`; these match the
+  pychete unit-level weights, so the local weight table should not be flipped.
+- The remaining precise mismatch is now upstream of that local weight table.
+  In the current pychete selected order-four flow, disabling only
+  `_expose_scalar_one_sided_four_derivative_green_bilinear_candidate` restores
+  the unexposed log-bearing `+7/12` cHW projection, while disabling the
+  mixed-field-strength, first-derivative-IBP, or two-derivative families has
+  no effect on this probe. The no-exposure finite source projects to cHW
+  entirely through direct generated field-strength terms; the one-sided
+  derivative terms project only after the Green-bilinear rewrite. By contrast,
+  Matchete's selected validation summaries expose a compact derivative-word
+  `aabb/abab/abba` source before final `GreensSimplify`. The next code change
+  must therefore target the Wilson-line `contracted_metric`/`wilson_expanded`
+  /`loop_integrated`/post-index-group normal form feeding the one-sided
+  Green reduction, rather than changing the verified one-sided weights or
+  adding a target-specific `cHW` sign patch.
+- Latest correction after the required Matchete algorithm audit: the clean
+  selected order-four `hScalar-lScalar -> cHW` sign mismatch was traced to the
+  evaluated-HBAR convention bridge, not to the X-term signs, PropBoson signs,
+  scalar integral sign, or Green-bilinear weights. The relevant Matchete code
+  was rechecked in `SuperTrace.m` and `LoopIntegration.m`: scalar/vector
+  power-type traces carry `-I hbar/2`, `PropBosonExpand` has the expected
+  phase/sign factors, `LoopIntegrate` turns `Prop[M] Prop[0]^3` into
+  `+I LF[{M},{1,3}]`, and `EvaluateLoopFunctionsInternal` makes the LF
+  coefficient real. pychete's Wilson-line trace prefactor is intentionally
+  real `-1/2`, while the internal evaluated scalar integral already contains
+  `+I/(16*pi^2)`. Therefore the central
+  `OneLoopNormalization.MATCHETE_EVALUATED_HBAR` bridge must be
+  `+16*pi^2*i*hbar`, not the old negative sign. A new focused regression
+  `test_singlet_selected_wilson_line_chw_matches_matchete_order_four_coefficient`
+  now projects the selected order-four Wilson-line source to
+  `hbar*A^2*gL^2/(12*M^4)`, matching the Matchete order-four checkpoint.
+  The legacy bosonic-CDE heavy-scalar-solution `cH` expectation was updated
+  by the same global convention sign because it also opts into
+  `MATCHETE_EVALUATED_HBAR`; no CDE-specific sign exception was introduced.
+  The target-local tensor-canonized projection guard was also tightened so
+  oversized sources skip both generic and termwise exact fallback, while the
+  bounded legacy CDE source remains allowed under an explicit 64-term/512 KB
+  budget.
+  Targeted tests passed under the 30 GiB watchdog:
+  `test_one_loop_setup_builds_interaction_only_fluctuation_traces`,
+  `test_singlet_selected_wilson_line_chw_matches_matchete_order_four_coefficient`,
+  `test_public_bosonic_cde_heavy_solution_projects_ch_muphi_component`, plus
+  the focused idenso, numeric-probe, loop-integration, and Wilson-line
+  tensor-reduction gate: 110 tests passed.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
+  - promote the selected Singlet order-four `hScalar-lScalar -> cHW`
+    checkpoint into a broader validation slice: aggregate compatible
+    Wilson-line trace orders, compare against the saved Matchete condition
+    after the same Green/on-shell simplification stages, and only then decide
+    whether the first full Singlet one-loop integration-test fixture is ready
+    or which non-`cHW` Wilson coefficients still lack generic reductions;
+  - update any remaining debug artifacts and scripts so they use the corrected
+    evaluated-HBAR bridge consistently, and regenerate pychete debug JSON only
+    when the artifact is meant to be committed;
   - continue the matched-stage Singlet comparison at Matchete's
     `contracted_metric`, `wilson_expanded`, `loop_integrated`, and
     post-index/group cleanup checkpoints, using the newly matched
@@ -2078,6 +2144,14 @@
     the `aabb`/`abab`/`abba` derivative-word classes, `SymGammaFactor`
     weights, pre-Wilson tensor-reduction metric contractions, or Green/basis
     simplification;
+  - continue specifically at Matchete's `contracted_metric`,
+    `wilson_expanded`, `loop_integrated`, `post_index_group_cleanup`, and
+    `validation_match_reduce` checkpoints for the selected order-four
+    aggregate. The current evidence says pychete reaches the verified
+    one-sided Green weights but feeds them a different direct-FS/derivative
+    normal form; compare these stages before changing
+    `_four_derivative_commutator_weight(...)` or any local cHW projection
+    rule;
   - remeasure the full selected `hScalar-lScalar` Wilson-line aggregate across
     prop orders `0`, `2`, and `4` before comparing to the saved Matchete
     `cHW` condition. Use the order-specific Matchete dumps as checkpoints, but
