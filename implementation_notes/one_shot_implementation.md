@@ -242,6 +242,17 @@
   with the new scalar Green normal form preserved `2` Wilson-line terms in
   `hScalar-lScalar#wilson0_o0_0` and still produced no projected matching
   condition.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py -k
+  "reference_chd_records" -q` passed (`1 passed, 48 deselected`). This is a
+  fast partial regression for the Matchete `EOMSimplify` delta on the Singlet
+  `cHD` matching condition and does not require Mathematica at pytest time.
+- Watchdog-wrapped `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "higgs_gauge_subset or singlet_selected_wilson_line_chd_four_slot" -q`
+  passed (`2 passed, 114 deselected`). These are the current targeted
+  one-loop Wilson-coefficient regressions: selected `hScalar-lScalar` for
+  `cHW/cHB/cHWB`, and selected four-slot `cHD`.
 - `PYTHONPATH=src dependencies/.venv/bin/python -m py_compile
   scripts/debug_pychete_singlet_wilson_trace.py
   scripts/compare_singlet_wilson_debug.py` passed after the target-aware
@@ -422,6 +433,27 @@
   heavy-scalar substitution and post-finite scalar commutator-bilinear
   exposure using the registered Wilson target. This is still a selected-trace
   milestone, not yet a full Singlet model integration-test reproduction.
+- Added a Matchete debug checkpoint for the next full-model `cHD` boundary:
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` writes
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, recording the
+  saved Singlet reference off-shell projection, on-shell projection, and
+  `EOMSimplify` delta for the registered `cHD` operator. The coefficient shift
+  is
+  `-hbar*A^2*gY^2/(6*epsilon*M^4) -
+  17*hbar*A^2*gY^2/(36*M^4) -
+  hbar*A^2*gY^2*log(mubar2/M^2)/(6*M^4)`. Existing pychete
+  Green-basis/EOM helpers do not reproduce this full on-shell shift from the
+  saved reference; the remaining full-model blocker is a generic
+  Matchete-style `EOMSimplify`/field-redefinition implementation, not the
+  selected Wilson-line coefficient path.
+- Added the Mathematica-independent regression
+  `test_singlet_reference_chd_records_matchete_eom_simplify_delta`, which
+  projects `cHD` from the committed off-shell and on-shell Singlet matching
+  fixtures and checks the off-shell coefficient, the on-minus-off
+  `EOMSimplify` delta, and the stored on-shell matching condition separately.
+  The test uses the theory-owned `epsilon` and `mubar2` external symbols rather
+  than fresh global Symbolica symbols, preserving the structural state-loading
+  safety rule around symbol metadata.
 - Added a deliberately partial first-success integration regression for the
   selected Singlet Higgs-gauge Wilson subset. The former single `cHW`
   selected-trace test now projects only `cHW`, `cHB`, and `cHWB` from one

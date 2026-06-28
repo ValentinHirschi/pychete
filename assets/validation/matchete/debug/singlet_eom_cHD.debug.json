@@ -1,0 +1,41 @@
+{
+	"schema_version":1,
+	"generator":"debug_singlet_eom_simplify.wls",
+	"model":"Singlet_Scalar_Extension",
+	"target":"cHD",
+	"previous_validation_file":"\/Users\/vjhirsch\/HEP_programs\/pychete\/mathematica_reference\/Matchete\/Validation\/MatchingResults\/previous\/Singlet_Scalar_Extension-EFT.m",
+	"operator_input_form":"Bar[Field[H, Scalar, {Index[i19, SU2L[fund]]}, {Index[nu21, Lorentz]}]]*Bar[Field[H, Scalar, {Index[j20, SU2L[fund]]}, {}]]*Field[H, Scalar, {Index[i19, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[j20, SU2L[fund]]}, {Index[nu21, Lorentz]}]",
+	"off_shell_coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+	"on_shell_coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+	"on_minus_off_coefficient_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+	"off_shell_summary":{
+		"name":"off_shell_eft_lagrangian",
+		"byte_count":251656,
+		"term_count":300,
+		"sample_terms_input_form":[
+			"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]",
+			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
+			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/2"
+		]
+	},
+	"on_shell_summary":{
+		"name":"on_shell_eft_lagrangian",
+		"byte_count":1227024,
+		"term_count":460,
+		"sample_terms_input_form":[
+			"hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]",
+			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
+			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/2"
+		]
+	},
+	"on_minus_off_summary":{
+		"name":"on_minus_off_eft_lagrangian",
+		"byte_count":1430832,
+		"term_count":443,
+		"sample_terms_input_form":[
+			"-1\/2*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^2",
+			"(8*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(3*Coupling[M, {}, 0]^4)",
+			"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+		]
+	}
+}

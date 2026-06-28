@@ -1501,6 +1501,59 @@ def test_validation_fixture_gap_report_projects_registered_wilsons_before_refere
         )
 
 
+def test_singlet_reference_chd_records_matchete_eom_simplify_delta() -> None:
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = reference.theory
+    registered_targets = registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    condition_name, target = next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+
+    off_shell = reference.project_matching_conditions(
+        {condition_name: target},
+        source="off_shell_eft_lagrangian",
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+    on_shell = reference.project_matching_conditions(
+        {condition_name: target},
+        source="on_shell_eft_lagrangian",
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+    hbar = theory.external_handle("hbar")()
+    source = theory.coupling_handle("A")()
+    hypercharge = theory.coupling_handle("gY")()
+    mass = theory.coupling_handle("M")()
+    epsilon = theory.external_handle("epsilon")()
+    mubar_squared = theory.external_handle("mubar2")()
+    expected_off_shell = (
+        -Expression.num(3) * hbar * source**2 * hypercharge**2 / (2 * epsilon * mass**4)
+        - Expression.num(5) * hbar * source**2 * hypercharge**2 / (4 * mass**4)
+        - Expression.num(3)
+        * hbar
+        * source**2
+        * hypercharge**2
+        * (mubar_squared / mass**2).log()
+        / (2 * mass**4)
+    )
+    expected_delta = (
+        -hbar * source**2 * hypercharge**2 / (6 * epsilon * mass**4)
+        - Expression.num(17) * hbar * source**2 * hypercharge**2 / (36 * mass**4)
+        - hbar * source**2 * hypercharge**2 * (mubar_squared / mass**2).log() / (6 * mass**4)
+    )
+
+    assert_expr_equal((off_shell - expected_off_shell).collect_factors(), Expression.num(0))
+    assert_expr_equal(((on_shell - off_shell).expand() - expected_delta).collect_factors(), Expression.num(0))
+    assert_expr_equal((on_shell - reference.matching_conditions[condition_name]).collect_factors(), Expression.num(0))
+
+
 @pytest.mark.slow
 @pytest.mark.parametrize(
     ("target_name", "gauge_couplings", "denominator", "expected_term_count"),

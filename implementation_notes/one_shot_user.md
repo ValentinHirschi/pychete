@@ -1023,3 +1023,13 @@ without Warsaw-specific core assumptions.
   `cHD` test remains scoped to the single derivative-Higgs coefficient. This
   is intended to keep future regressions fast and localized before broader
   all-operator fixture checks are attempted.
+- Latest cHD on-shell frontier checkpoint: added a development-only Matchete
+  dump script and committed debug JSON for the Singlet `cHD`
+  `EOMSimplify` shift. pytest now has a fast Mathematica-independent partial
+  regression that separately checks the committed off-shell `cHD` projection,
+  the Matchete on-minus-off `EOMSimplify` delta, and the stored on-shell
+  matching condition. This makes the remaining full-model blocker explicit:
+  pychete still needs a generic Matchete-style on-shell field-redefinition
+  implementation, while the selected Wilson-line coefficient regressions are
+  already scoped and passing for `cHW/cHB/cHWB` and the selected four-slot
+  `cHD` contribution.
