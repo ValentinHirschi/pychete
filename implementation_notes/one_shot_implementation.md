@@ -26,6 +26,13 @@
   Matchete Mathematica algorithm and compare stage semantics before patching
   pychete. Do not repair a disagreement from the final coefficient alone; use
   intermediate dumps/probes to locate the first semantic difference.
+- For sustained Matchete/pychete disagreements, actively run focused debug
+  WolframScripts and dump as many relevant Matchete intermediate stages as
+  practical for the narrowed trace, insertion, propagation order, target, and
+  simplification stage. Compare those dumps against bounded pychete probes at
+  the same semantic boundaries before patching the first differing generic
+  algorithm. Keep pytest Mathematica-independent by committing only derived
+  JSON/pychete fixtures when they become regression evidence.
 - Use larger coherent implementation slices. Run focused tests while building a
   slice, grouped targeted tests before a green milestone, and full/slow tests
   only when the milestone justifies the cost.
@@ -825,3 +832,22 @@
   `tests/integration/validation/test_numeric_probes.py -k "projection" -q`
   (`25 passed`); and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
   passed with no issues.
+- Latest user-guidance reinforcement: the persistent goal objective and
+  `AGENTS.md` now explicitly require focused Matchete debug WolframScript
+  dumps for sustained Matchete/pychete disagreements whenever Mathematica is
+  available. The expected workflow is to dump Matchete stages such as raw
+  `EvaluateSTr`, insertion replacements, `ActWithOpenCDs`,
+  `GatherLoopMomenta`, `WilsonExpand`, loop integration,
+  `ContractCGs // MatchReduce // GreensSimplify`, `EOMSimplify`, and saved
+  projections, compare them to bounded pychete probes at the same semantic
+  boundaries, and patch the first differing generic algorithm rather than a
+  final-coefficient shortcut.
+- Latest selected-`cHD` path-map diagnostic: added a cached partial
+  integration regression for the four nonzero selected
+  `hScalar-lScalar-lVector-lScalar` zero-order Wilson-line paths. The test
+  proves that paths `0`, `2`, `24`, and `26` are all generated, filtered, and
+  evaluated, but only paths `0` and `26` currently project to the finite
+  Matchete quarter coefficient after heavy-scalar substitution and scalar
+  commutator exposure. Paths `2` and `24` remain source-present but
+  projection-zero, matching the current frontier that the missing equivalent
+  Matchete quarter families require broader Green/projection coverage.

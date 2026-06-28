@@ -1145,3 +1145,19 @@ without Warsaw-specific core assumptions.
   chunked exact projection fallback that preserves linearity without enabling
   expensive global collect/factor fallbacks, and the selected aggregate keeps
   the Matchete coefficient after heavy-scalar substitution.
+- Latest persistent-guidance update: the active goal objective and `AGENTS.md`
+  now explicitly state that sustained Matchete/pychete disagreements must be
+  narrowed with focused debug WolframScript dumps whenever Mathematica is
+  available. The intended workflow is to inspect Matchete intermediate stages
+  such as raw `EvaluateSTr`, insertion replacements, `ActWithOpenCDs`,
+  `GatherLoopMomenta`, `WilsonExpand`, loop integration,
+  `GreensSimplify`, `EOMSimplify`, and saved projections, then compare those
+  to bounded pychete probes at the same semantic boundaries before patching
+  the first differing generic algorithm.
+- Latest selected-`cHD` diagnostic update: added a partial path-map
+  regression for the selected four-slot trace. pychete now records that paths
+  `0`, `2`, `24`, and `26` are all generated and evaluated after the OpenCD
+  scalar-vector source fix, but only paths `0` and `26` project to the finite
+  Matchete quarter coefficient after heavy-scalar substitution. Paths `2` and
+  `24` remain the source-present/projection-zero frontier to compare against
+  the Matchete insertion dumps.

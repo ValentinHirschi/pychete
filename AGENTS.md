@@ -420,6 +420,19 @@ the final Wilson coefficient, and do not add model- or Warsaw-specific
 coefficient patches when the mismatch belongs to a generic stage such as
 Wilson-line expansion, Green-basis reduction, EOM simplification, tensor
 reduction, or projection.
+For every sustained Matchete/pychete disagreement, actively generate and
+inspect focused Matchete intermediate data with debug WolframScripts whenever
+Mathematica is available. Dump as many relevant Matchete stages as practical
+for the narrowed trace, insertion, propagation order, target, or simplification
+stage: raw `EvaluateSTr`, insertion replacements, `ActWithOpenCDs`,
+`GatherLoopMomenta`, `WilsonExpand`, loop integration,
+`ContractCGs // MatchReduce // GreensSimplify`, `EOMSimplify`, and saved
+matching-condition projections as applicable. Pair those dumps with bounded
+pychete probes at the same semantic boundaries, then patch the first differing
+generic algorithm. Keep useful dump scripts under `helper_mathematica_scripts/`
+and commit Mathematica-independent JSON/pychete fixtures when they become
+regression evidence. Runtime pychete and pytest must remain Mathematica
+independent.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by
