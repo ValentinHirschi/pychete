@@ -646,3 +646,26 @@
   public_wilson_line_can_filter_terms_by_matching_targets" -q`
   (`3 passed, 111 deselected`). `PYTHONPATH=src
   dependencies/.venv/bin/python -m mypy` also passed.
+- Latest source-map scoping slice: `MatchingResult` now exposes
+  `project_matching_conditions_by_source(...)`, a diagnostic projection view
+  that projects the same target set independently from each named supertrace
+  or staged source. The method is intentionally orchestration only: each
+  coefficient still goes through the existing Symbolica-backed
+  `project_matching_conditions(...)` path with the same tensor
+  canonicalization, derivative normalization, EFT truncation, and projection
+  aliases.
+- Added the partial integration regression
+  `test_singlet_reference_chd_source_map_is_single_four_slot_supertrace`.
+  It projects the committed Matchete Singlet reference fixture for registered
+  `cHD` source by source, proves the only nonzero supertrace contribution is
+  `hScalar-lScalar-lVector-lScalar`, and checks that this contribution equals
+  the full committed off-shell reference projection. This keeps future
+  regressions localized: a failure can distinguish wrong generated selected
+  coefficient, wrong Matchete source decomposition, and wrong on-shell EOM
+  delta.
+- Focused validation for this slice passed:
+  watchdog-wrapped `tests/integration/validation/test_validation_fixtures.py
+  -k "singlet_reference_chd" -q` (`3 passed, 50 deselected`);
+  watchdog-wrapped `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -q` (`6 passed`); `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  passed; and `git diff --check` passed.

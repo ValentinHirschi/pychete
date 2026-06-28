@@ -1647,6 +1647,44 @@ def test_singlet_reference_chd_records_matchete_eom_simplify_delta() -> None:
     assert_expr_equal((on_shell - reference.matching_conditions[condition_name]).collect_factors(), Expression.num(0))
 
 
+def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = reference.theory
+    registered_targets = registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    condition_name, target = next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+
+    contributions = reference.project_matching_conditions_by_source(
+        {condition_name: target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )
+    nonzero = {
+        source_name: projected[condition_name]
+        for source_name, projected in contributions.items()
+        if canonical_string(projected[condition_name].expand()) != "0"
+    }
+    off_shell = reference.project_matching_conditions(
+        {condition_name: target},
+        source="off_shell_eft_lagrangian",
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+
+    assert tuple(nonzero) == ("hScalar-lScalar-lVector-lScalar",)
+    assert_expr_equal(
+        (nonzero["hScalar-lScalar-lVector-lScalar"] - off_shell).collect_factors(),
+        Expression.num(0),
+    )
+
+
 def test_singlet_model_higgs_eom_rules_are_available_for_reference_laplacians() -> None:
     model = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference = load_validation_fixture(

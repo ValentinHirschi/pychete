@@ -1088,3 +1088,12 @@ without Warsaw-specific core assumptions.
   purely field-strength-local target requirements; mixed/pure field targets
   like registered `cHD` are filtered after full Wilson-line term generation so
   heavy-mediated path products are not removed too early.
+- Latest partial-regression update: pychete now has a source-by-source
+  matching-condition projection diagnostic on `MatchingResult`. A new
+  Matchete-independent Singlet fixture test projects registered `cHD` from
+  each committed reference supertrace and proves that
+  `hScalar-lScalar-lVector-lScalar` is the only nonzero off-shell source for
+  that coefficient in the saved reference. Together with the selected
+  `cHW/cHB/cHWB` and selected four-slot `cHD` pychete coefficient tests, this
+  gives narrower one-loop Wilson-coefficient regression surfaces before full
+  all-operator matching parity is attempted.

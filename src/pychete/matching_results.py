@@ -531,6 +531,46 @@ class MatchingResult:
             }
         return conditions
 
+    def project_matching_conditions_by_source(
+        self,
+        targets: MatchingConditionTargetInput,
+        sources: Iterable[str] | None = None,
+        *,
+        expand_source: bool = True,
+        canonize_indices: bool = True,
+        normalize_derivative_operators: bool = True,
+        normalize_ibp_scalar_bilinears: bool = False,
+        drop_zero: bool = False,
+        include_coupling_identities: bool = False,
+        eft_order: int | tuple[int, ...] | None = None,
+        heavy_field_dimension: bool = False,
+    ) -> dict[str, dict[str, Expression]]:
+        """Project matching conditions independently from each named source.
+
+        This is a diagnostic view for partial integration tests and notebook
+        debugging: it answers which individual supertrace or staged source
+        contributes to each target while delegating every coefficient
+        extraction to ``project_matching_conditions``. If ``sources`` is not
+        supplied, all stored supertrace names are inspected.
+        """
+
+        source_names = tuple(self.supertraces if sources is None else sources)
+        return {
+            source: self.project_matching_conditions(
+                targets,
+                source=source,
+                expand_source=expand_source,
+                canonize_indices=canonize_indices,
+                normalize_derivative_operators=normalize_derivative_operators,
+                normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
+                drop_zero=drop_zero,
+                include_coupling_identities=include_coupling_identities,
+                eft_order=eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            )
+            for source in source_names
+        }
+
     def with_projected_matching_conditions(
         self,
         targets: MatchingConditionTargetInput,
