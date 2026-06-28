@@ -22,9 +22,10 @@ from .expr import (
     field_strength_pattern,
     field_strength_with_derivatives,
     field_with_derivatives,
-    is_head,
     is_bar_field,
     is_bar_field_strength,
+    is_head,
+    is_zero,
     list_expr,
     list_items,
     matching_subexpressions,
@@ -143,6 +144,16 @@ def _adjacent_covariant_derivative_distinct_pair(derivatives: tuple[Expression, 
         if not bool(left == right):
             return index
     return None
+
+
+def _adjacent_covariant_derivative_distinct_positions(derivatives: tuple[Expression, ...]) -> tuple[int, ...]:
+    positions: list[int] = []
+    for index, (left, right) in enumerate(zip(derivatives, derivatives[1:], strict=False)):
+        if not is_head(left, s.Index) or not is_head(right, s.Index):
+            continue
+        if not bool(left == right):
+            positions.append(index)
+    return tuple(positions)
 
 
 def _adjacent_covariant_derivative_swap_position(
@@ -1307,6 +1318,85 @@ class Theory:
 
         return expr.replace(pattern, commutator_replacement, rhs_cache_size=0).expand()
 
+    def covariant_derivative_commutator_identities(self, expr: Expression) -> tuple[Expression, ...]:
+        """Return Matchete-style adjacent covariant-derivative commutation identities.
+
+        Matchete's ``IdentitiesCDCommutation`` does not rewrite an operator in
+        place; it generates one identity for every adjacent, distinct pair of
+        covariant derivative slots on each differentiated field or field
+        strength. This helper mirrors that identity source for pychete
+        expressions while keeping the symbolic work in Symbolica: field-like
+        atoms are discovered with tag-restricted patterns and each linear atom
+        contribution is extracted with native ``Expression.coefficient(...)``.
+
+        The returned identities have the form
+        ``coefficient * (CommuteCDs(atom, n) - atom)``. Atoms that appear
+        nonlinearly in their coefficient are skipped, because replacing a
+        single occurrence requires a later operator-class row-reduction
+        representation. Use :meth:`emit_covariant_derivative_commutators` when
+        an equality-preserving expression rewrite is wanted instead.
+        """
+
+        self._validate_registered_expression(expr)
+        identities: list[Expression] = []
+        seen: set[str] = set()
+        for atom, conjugate_field in self._covariant_derivative_identity_atoms(expr):
+            coefficient = expr.coefficient(atom).expand()
+            if is_zero(coefficient):
+                continue
+            if not is_zero(coefficient.coefficient(atom)):
+                continue
+            base_atom = self._covariant_derivative_commutator_base_atom(atom, conjugate_field=conjugate_field)
+            derivatives = self._covariant_derivative_atom_derivatives(base_atom)
+            for position in _adjacent_covariant_derivative_distinct_positions(derivatives):
+                commuted = self._commuted_covariant_derivative_atom_at_position(
+                    atom,
+                    conjugate_field=conjugate_field,
+                    swap_position=position,
+                )
+                identity = (coefficient * (commuted - atom)).expand()
+                if is_zero(identity):
+                    continue
+                key = canonical_string(identity)
+                if key in seen:
+                    continue
+                seen.add(key)
+                identities.append(identity)
+        return tuple(identities)
+
+    def _covariant_derivative_identity_atoms(self, expr: Expression) -> tuple[tuple[Expression, bool], ...]:
+        field_pat = field_pattern()
+        bar_pat = bar_field_pattern()
+        strength_pat = field_strength_pattern()
+        bar_strength_pat = bar_field_strength_pattern()
+        field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+        strength_label_is_tagged = s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value)
+
+        atoms: list[tuple[Expression, bool]] = []
+        seen: set[str] = set()
+        for pattern, condition, conjugate_field in (
+            (bar_pat, field_label_is_tagged, True),
+            (field_pat, field_label_is_tagged, False),
+            (bar_strength_pat, strength_label_is_tagged, True),
+            (strength_pat, strength_label_is_tagged, False),
+        ):
+            for atom in matching_subexpressions(expr, pattern, condition):
+                if conjugate_field:
+                    if not (is_bar_field(atom) or is_bar_field_strength(atom)):
+                        continue
+                    base_atom = self._covariant_derivative_commutator_base_atom(atom, conjugate_field=True)
+                else:
+                    base_atom = atom
+                derivatives = self._covariant_derivative_atom_derivatives(base_atom)
+                if not _adjacent_covariant_derivative_distinct_positions(derivatives):
+                    continue
+                key = canonical_string(atom)
+                if key in seen:
+                    continue
+                seen.add(key)
+                atoms.append((atom, conjugate_field))
+        return tuple(atoms)
+
     def emit_covariant_derivative_commutators(
         self,
         expr: Expression,
@@ -1431,8 +1521,29 @@ class Theory:
         swap_position = _adjacent_covariant_derivative_swap_position(derivatives, mode=mode)
         if swap_position is None:
             return atom
+        return self._commuted_covariant_derivative_atom_at_position(
+            atom,
+            conjugate_field=conjugate_field,
+            swap_position=swap_position,
+        )
+
+    def _commuted_covariant_derivative_atom_at_position(
+        self,
+        atom: Expression,
+        *,
+        conjugate_field: bool,
+        swap_position: int,
+    ) -> Expression:
+        base_atom = self._covariant_derivative_commutator_base_atom(atom, conjugate_field=conjugate_field)
+        derivatives = self._covariant_derivative_atom_derivatives(base_atom)
+        if swap_position < 0 or swap_position + 1 >= len(derivatives):
+            raise ValueError(f"covariant derivative swap position {swap_position} is out of range")
         left_index = derivatives[swap_position]
         right_index = derivatives[swap_position + 1]
+        if not is_head(left_index, s.Index) or not is_head(right_index, s.Index):
+            return atom
+        if bool(left_index == right_index):
+            return atom
         prefix = derivatives[:swap_position]
         suffix = derivatives[swap_position + 2 :]
         swapped_derivatives = (

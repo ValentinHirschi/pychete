@@ -583,6 +583,52 @@ def test_emit_covariant_derivative_commutators_supports_bounded_repeated_passes(
     assert_expr_equal(repeated, expected)
 
 
+def test_covariant_derivative_commutator_identities_generate_all_adjacent_pairs() -> None:
+    coefficient = S("commutator_identity_coefficient")
+    theory = Theory("commutator_identity_all_pairs")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    c = theory.index("c")
+    source_atom = phi(derivatives=[a, b, c])
+    spectator = s.Bar(phi())
+    expr = coefficient * spectator * source_atom
+
+    identities = theory.covariant_derivative_commutator_identities(expr)
+    expected = (
+        coefficient
+        * spectator
+        * (
+            phi(derivatives=[b, a, c])
+            + s.CovariantDerivativeCommutator(a, b, phi(derivatives=[c]))
+            - source_atom
+        ),
+        coefficient
+        * spectator
+        * (
+            phi(derivatives=[a, c, b])
+            + s.CD(s.List(a), s.CovariantDerivativeCommutator(b, c, phi()))
+            - source_atom
+        ),
+    )
+
+    assert len(identities) == 2
+    for got, want in zip(identities, expected, strict=True):
+        assert_expr_equal(got, want)
+
+
+def test_covariant_derivative_commutator_identities_skip_equal_and_nonlinear_atoms() -> None:
+    coefficient = S("commutator_identity_skip_coefficient")
+    theory = Theory("commutator_identity_skip")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    nonlinear_atom = phi(derivatives=[a, b])
+
+    assert theory.covariant_derivative_commutator_identities(phi(derivatives=[a, a])) == ()
+    assert theory.covariant_derivative_commutator_identities(coefficient * nonlinear_atom**2) == ()
+
+
 def test_emit_covariant_derivative_commutators_protects_existing_commutator_markers() -> None:
     theory = Theory("emit_commutator_protects_markers")
     phi = theory.define_field("phi", s.Scalar, mass=0)

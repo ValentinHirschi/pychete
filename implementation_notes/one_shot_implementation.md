@@ -118,6 +118,15 @@
   derivative target monomials. It is bounded, uses Symbolica pattern discovery
   and native coefficient extraction, and skips additive/composite `CD` targets
   so it does not double count the existing scalar-box bilinear alias path.
+- pychete now exposes `Theory.covariant_derivative_commutator_identities(expr)`
+  as the Matchete `IdentitiesCDCommutation` identity-source boundary. Unlike
+  `emit_covariant_derivative_commutators(..., mode="all_distinct")`, which is
+  an equality-preserving one-pair expression rewrite, the new helper returns a
+  separate identity for every adjacent distinct derivative pair on each
+  differentiated field/field-strength atom. It uses Symbolica
+  tag-restricted matches plus native `Expression.coefficient(...)` extraction,
+  and deliberately skips nonlinear repeated atom occurrences until a true
+  operator-class row-reduction representation owns them.
 
 ## Current Frontier
 
@@ -175,10 +184,24 @@
   identities. In particular, pychete still needs the explicit
   `IdentitiesCDCommutation` plus row-reduction semantics before interpreting
   partial pieces of total-derivative identities as selected Singlet `cHD`.
+- The latest commutator-identity slice closes the identity-source mismatch:
+  pychete can now generate all local adjacent-pair `CommuteCDs` identities for
+  linear field-like atoms, but those identities are not yet fed into a
+  Symbolica-backed row-reduction/normal-form solver. The next Green-basis
+  slice should build the bounded operator-class vector space around these
+  identities instead of extending the one-pair emitter.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py
+  tests/unit/definitions/test_public_api.py -q` passed (`64 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_theory_definitions.py -k "commutator" -q`
+  passed (`20 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/definitions/test_public_api.py -q` passed (`8 passed`).
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/integration/validation/test_numeric_probes.py -q` passed
   (`61 passed`).

@@ -900,3 +900,11 @@ without Warsaw-specific core assumptions.
   `IdentitiesIBP`: Matchete generates an identity for the outermost derivative
   on every differentiated scalar field, while pychete only covered
   first-derivative slots and explicit scalar-box bilinears.
+- Latest Matchete comparison for the covariant-derivative commutator frontier:
+  `IdentitiesCDCommutation` generates a separate identity for every adjacent
+  distinct derivative pair on each differentiated field/field-strength atom,
+  while pychete's `emit_covariant_derivative_commutators(...,
+  mode="all_distinct")` is an equality-preserving rewrite of only one eligible
+  pair per atom. Added a separate identity-source primitive so future
+  Green-basis row reduction can use the correct Matchete-style input without
+  changing Wilson-line numerator rewrite semantics.

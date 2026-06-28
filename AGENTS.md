@@ -568,6 +568,17 @@ repeat-to-fixed-point loop, because adjacent derivative swaps would otherwise
 commute the same pair back and grow the expression. Public Wilson-line parity
 probes should select it through
 `OneLoopMatchOptions.wilson_line_covariant_derivative_commutator_mode`.
+When reproducing Matchete `IdentitiesCDCommutation` or building future
+Green-basis row reduction, use
+`Theory.covariant_derivative_commutator_identities(expr)` rather than treating
+`emit_covariant_derivative_commutators(..., mode="all_distinct")` as a complete
+identity source. The emitter rewrites one eligible adjacent pair per atom and
+is an equality-preserving expression transform; Matchete's simplifier
+generates a separate identity for every adjacent distinct derivative pair on
+each differentiated field/field-strength atom. The identity helper mirrors
+that source with Symbolica pattern discovery and native coefficient
+extraction, while deliberately skipping nonlinear repeated atom occurrences
+until a full operator-class row-reduction representation owns that case.
 For scalar derivative-bilinear normal forms, use the generic
 `expose_scalar_derivative_commutator_bilinears(theory, expr, ...)` helper
 rather than adding projection-specific replacements. It collects tagged scalar
