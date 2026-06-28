@@ -155,6 +155,25 @@ derivativeWordHistogram[terms_List] := Module[{counts},
   ] /@ counts)
 ];
 
+derivativeSignatureSamples[terms_List] := Module[{samples = <||>, sig},
+  Do[
+    sig = termDerivativeSignature[term];
+    If[!KeyExistsQ[samples, sig],
+      samples[sig] = shortInputString[term]
+    ],
+    {term, terms}
+  ];
+  KeyValueMap[
+    Function[{signature, sample},
+      <|
+        "signature" -> signature,
+        "sample_input_form" -> sample
+      |>
+    ],
+    samples
+  ]
+];
+
 symGammaHistogram[terms_List] := Module[{counts},
   counts = Normal @ Counts[
     Cases[
@@ -190,6 +209,7 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
       "sym_gamma_factors" -> 0,
       "signature_histogram" -> {},
       "h_derivative_word_histogram" -> {},
+      "h_derivative_signature_samples" -> {},
       "sym_gamma_histogram" -> {},
       "sample_terms_input_form" -> {}
     |>
@@ -209,6 +229,7 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
     "sym_gamma_factors" -> Length @ Cases[expr, Matchete`PackageScope`SymGammaFactor[__], All],
     "signature_histogram" -> signatureHistogram[terms],
     "h_derivative_word_histogram" -> derivativeWordHistogram[terms],
+    "h_derivative_signature_samples" -> derivativeSignatureSamples[terms],
     "sym_gamma_histogram" -> symGammaHistogram[terms],
     "sample_terms_input_form" -> (shortInputString /@ Take[terms, UpTo[sampleTerms]])
   |>

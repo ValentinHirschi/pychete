@@ -33,6 +33,7 @@ from pychete.matching_options import OneLoopNormalization, one_loop_normalizatio
 from pychete.matching_results import MatchingResult
 from pychete.symbols import canonical_string, s
 from pychete.validation_fixtures import load_validation_fixture
+from pychete.wilson_lines import contract_wilson_term_derivative_metrics, expand_wilson_terms
 
 
 def _parse_args() -> argparse.Namespace:
@@ -126,6 +127,26 @@ def _field_derivative_word_histogram(expr: Expression, label: Expression) -> lis
     ]
 
 
+def _field_derivative_signature_samples(
+    expr: Expression,
+    label: Expression,
+    *,
+    sample_chars: int,
+) -> list[dict[str, Any]]:
+    expanded = expr.expand()
+    if bool(expanded == Expression.num(0)):
+        return []
+    samples: dict[str, str] = {}
+    for term in terms(expanded):
+        signature = _field_derivative_signature(term, label)
+        if signature not in samples:
+            samples[signature] = _short(term, sample_chars)
+    return [
+        {"signature": signature, "sample_input_form": sample}
+        for signature, sample in sorted(samples.items(), key=lambda item: item[0])
+    ]
+
+
 def _expr_summary(name: str, expr: Expression, *, sample_chars: int) -> dict[str, Any]:
     expanded = expr.expand()
     try:
@@ -147,6 +168,18 @@ def _expr_summary(name: str, expr: Expression, *, sample_chars: int) -> dict[str
             s.PropagatorDenominator(s.PowBaseWildcard, s.PowExponentWildcard),
         ),
         "sample_input_form": _short(expr, sample_chars),
+    }
+
+
+def _stage_snapshot(name: str, expr: Expression, *, h_label: Expression, sample_chars: int) -> dict[str, Any]:
+    return {
+        "summary": _expr_summary(name, expr, sample_chars=sample_chars),
+        "h_derivative_word_histogram": _field_derivative_word_histogram(expr, h_label),
+        "h_derivative_signature_samples": _field_derivative_signature_samples(
+            expr,
+            h_label,
+            sample_chars=sample_chars,
+        ),
     }
 
 
@@ -182,29 +215,84 @@ def _project_chw(theory: Any, target: Expression, expr: Expression) -> Expressio
     )["cHW"].expand()
 
 
-def _processed_stage(
+def _processed_stage_with_debug(
     theory: Any,
     raw: Expression,
     *,
     use_pre_wilson: bool,
-) -> Expression:
+    h_label: Expression,
+    sample_chars: int,
+) -> tuple[Expression, list[dict[str, Any]]]:
+    stage_prefix = "pre_wilson" if use_pre_wilson else "post_wilson"
+    snapshots = [
+        _stage_snapshot(
+            f"{stage_prefix}.raw_vakint_integral",
+            raw,
+            h_label=h_label,
+            sample_chars=sample_chars,
+        )
+    ]
     reduced = vakint.tensor_reduce(raw)
     reduced = vakint.decode_pychete_namespace(theory, reduced)
-    if use_pre_wilson:
-        return matching_module._postprocess_pre_wilson_line_tensor_reduced_expression(
-            theory,
+    snapshots.append(
+        _stage_snapshot(
+            f"{stage_prefix}.tensor_reduced_decoded",
             reduced,
-            max_wilson_derivative_order=4,
-            emit_covariant_derivative_commutators=True,
-            emit_covariant_derivative_commutator_passes=1,
-            covariant_derivative_commutator_mode="all_distinct",
-            expand_covariant_derivative_commutators=True,
-            simplify_pychete_color_algebra=True,
-            expose_scalar_derivative_commutator_bilinears_option=True,
+            h_label=h_label,
+            sample_chars=sample_chars,
         )
-    return matching_module._postprocess_wilson_line_tensor_reduced_expression(
+    )
+    if use_pre_wilson:
+        restored = matching_module._restore_theory_owned_generated_lorentz_indices(theory, reduced)
+        contracted = contract_wilson_term_derivative_metrics(
+            restored,
+            max_derivative_order=4,
+        )
+        snapshots.append(
+            _stage_snapshot(
+                f"{stage_prefix}.formal_metric_contracted",
+                contracted,
+                h_label=h_label,
+                sample_chars=sample_chars,
+            )
+        )
+        lowered = expand_wilson_terms(
+            theory,
+            contracted,
+            max_derivative_order=4,
+        )
+        snapshots.append(
+            _stage_snapshot(
+                f"{stage_prefix}.wilson_terms_expanded",
+                lowered,
+                h_label=h_label,
+                sample_chars=sample_chars,
+            )
+        )
+    else:
+        lowered = reduced
+
+    postprocessed_without_scalar_bilinears = matching_module._postprocess_wilson_line_tensor_reduced_expression(
         theory,
-        reduced,
+        lowered,
+        emit_covariant_derivative_commutators=True,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=True,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears_option=False,
+    )
+    snapshots.append(
+        _stage_snapshot(
+            f"{stage_prefix}.postprocessed_without_scalar_bilinears",
+            postprocessed_without_scalar_bilinears,
+            h_label=h_label,
+            sample_chars=sample_chars,
+        )
+    )
+    processed = matching_module._postprocess_wilson_line_tensor_reduced_expression(
+        theory,
+        lowered,
         emit_covariant_derivative_commutators=True,
         emit_covariant_derivative_commutator_passes=1,
         covariant_derivative_commutator_mode="all_distinct",
@@ -212,6 +300,31 @@ def _processed_stage(
         simplify_pychete_color_algebra=True,
         expose_scalar_derivative_commutator_bilinears_option=True,
     )
+    snapshots.append(
+        _stage_snapshot(
+            f"{stage_prefix}.postprocessed_with_scalar_bilinears",
+            processed,
+            h_label=h_label,
+            sample_chars=sample_chars,
+        )
+    )
+    return processed, snapshots
+
+
+def _processed_stage(
+    theory: Any,
+    raw: Expression,
+    *,
+    use_pre_wilson: bool,
+) -> Expression:
+    processed, _snapshots = _processed_stage_with_debug(
+        theory,
+        raw,
+        use_pre_wilson=use_pre_wilson,
+        h_label=theory.field_handle("H").label,
+        sample_chars=900,
+    )
+    return processed
 
 
 def _term_row(
@@ -235,8 +348,14 @@ def _term_row(
         "expansion_slot_lengths": [len(slot) for slot in term.expansion_indices],
         "mass_squareds": [_short(mass, sample_chars) for mass in term.mass_squareds],
         "numerator": _expr_summary("numerator", term.numerator, sample_chars=sample_chars),
+        "numerator_h_derivative_word_histogram": _field_derivative_word_histogram(term.numerator, h_label),
         "pre_wilson_numerator": (
             _expr_summary("pre_wilson_numerator", term.pre_wilson_numerator, sample_chars=sample_chars)
+            if term.pre_wilson_numerator is not None
+            else None
+        ),
+        "pre_wilson_numerator_h_derivative_word_histogram": (
+            _field_derivative_word_histogram(term.pre_wilson_numerator, h_label)
             if term.pre_wilson_numerator is not None
             else None
         ),
@@ -249,7 +368,13 @@ def _term_row(
         if use_pre_wilson and term.pre_wilson_numerator is None:
             continue
         raw = term.vakint_integral_expression(use_pre_wilson_numerator=use_pre_wilson)
-        processed = _processed_stage(theory, raw, use_pre_wilson=use_pre_wilson)
+        processed, pipeline_snapshots = _processed_stage_with_debug(
+            theory,
+            raw,
+            use_pre_wilson=use_pre_wilson,
+            h_label=h_label,
+            sample_chars=sample_chars,
+        )
         evaluated = vacuum_integrals.evaluate_one_loop_vakint_expression(
             processed,
             combine_terms=False,
@@ -261,6 +386,7 @@ def _term_row(
         finite_projection = _project_chw(theory, target, normalized_finite)
         row[stage_name] = {
             "raw_integral": _expr_summary(f"{stage_name}.raw_integral", raw, sample_chars=sample_chars),
+            "pipeline_snapshots": pipeline_snapshots,
             "processed_integral": _expr_summary(
                 f"{stage_name}.processed_integral",
                 processed,

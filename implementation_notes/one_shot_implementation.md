@@ -1879,11 +1879,45 @@
   Green-bilinear projection through this dual-index encoding. This is a
   necessary representation fix, but by itself it does not close the Singlet
   `cHW` coefficient gap.
+- Current diagnostic refinement: both the Matchete Wolfram dump and the
+  pychete debug dump now include one representative term per Higgs
+  derivative-word signature, not only histograms. The pychete script also
+  records row-level pipeline snapshots for raw vakint topology input,
+  decoded tensor reduction, formal WilsonTerm metric contraction,
+  WilsonTerm expansion, postprocessing without scalar-bilinear exposure, and
+  postprocessing with scalar-bilinear exposure. A full-row pychete artifact,
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_cHW.pychete.fullrows.debug.json`,
+  records all ten selected `hScalar-lScalar#wilson14_o4_0` rows rather than
+  only the two rows with nonzero `cHW` projections.
+- New evidence from the paired dumps: Matchete's order-four
+  `eps_expanded_relabelled` stage is already a compact derivative-only scalar
+  bilinear with three `aabb`, three `abab`, and three `abba` terms per
+  orientation. Its signature samples have no explicit field strengths; those
+  appear only after the validation simplification route
+  `ContractCGs // MatchReduce // GreensSimplify`. pychete's generated
+  Wilson-line rows still carry broader derivative signatures such as
+  `abac`, `abbc`, `abcc`, and `abcd`, plus mixed heavy/light factors and
+  field-strength-heavy postprocessed terms. In the Matchete-order pre-Wilson
+  path, term 9/path 2 has `aabb` at `wilson_terms_expanded` but only `abba`
+  after postprocessing; the balanced Matchete `aabb/abab/abba` structure is
+  not present in the current pychete aggregate before projection. This narrows
+  the next implementation target to the Wilson-line tensor/index
+  canonicalization and Green-normal-form boundary, especially contraction of
+  tensor-reduction metrics into derivative slots and preservation of the
+  derivative-only scalar-bilinear normal form until the generic
+  GreensSimplify-like reduction is applied. It is not a final
+  matching-condition convention issue.
 
 ## Next Work
 
 - Choose one coherent basis/projection/backend feature family from the
   remeasured frontier. Priority candidates are:
+  - implement a generic tensor-index/metric-normal-form correction for
+    Wilson-line scalar derivative bilinears so pychete collapses the relevant
+    generated Lorentz contractions to Matchete-like two-dummy derivative words
+    (`aabb`, `abab`, `abba`) before Green/basis projection. Use Symbolica
+    tensor canonicalization and idenso-backed metric contraction rather than
+    string-based derivative-word manipulation;
   - continue the paired Matchete/pychete dump loop for the Singlet
     `hScalar-lScalar -> cHW` frontier, adding more intermediate Matchete
     summaries whenever needed and using them to locate the first mismatch in

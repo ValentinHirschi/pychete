@@ -704,3 +704,14 @@ without Warsaw-specific core assumptions.
   slices, and the current comparison narrows the remaining mismatch to
   Wilson-line derivative/tensor/Green-normal-form weighting rather than broad
   trace selection or final target projection.
+- Follow-up diagnostic progress: the Matchete and pychete debug dumps now also
+  record representative terms per derivative-word signature. pychete's dump
+  additionally records pipeline snapshots through raw vakint input, decoded
+  tensor reduction, formal WilsonTerm metric contraction, WilsonTerm
+  expansion, and postprocessing with/without scalar-bilinear exposure. The
+  comparison now shows Matchete has a compact derivative-only
+  `aabb/abab/abba` structure before `GreensSimplify`, while pychete still
+  carries broader generated-index derivative classes and field-strength-heavy
+  postprocessed terms. The next correction should therefore target generic
+  Wilson-line tensor/index normal form and metric contraction into derivative
+  slots, not a final `cHW` coefficient patch.
