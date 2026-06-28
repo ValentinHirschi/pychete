@@ -21,6 +21,13 @@ pychete. Run or refresh debug WolframScripts often enough to compare raw
 the same semantic boundary. Patch the first differing generic algorithm rather
 than a final Wilson-coefficient shortcut. Runtime pychete and pytest must
 remain Mathematica-independent by consuming only committed derived fixtures.
+For every active mismatch, the live workflow is to keep running or refreshing
+focused Matchete debug WolframScripts and dissecting as many intermediate
+Matchete objects as practical until the first divergence against pychete is
+localized. Each progress update should name the Matchete dump/checkpoint, the
+paired bounded pychete probe, and the current suspected stage boundary. This is
+how pychete stays a Symbolica/idenso/spenso/vakint port of Matchete algorithms
+rather than a collection of final-coefficient fixes.
 
 Normal pychete tests must be Mathematica-independent. pytest must never require
 Mathematica, `wolframscript`, or a runnable Matchete installation. Optional
@@ -62,6 +69,12 @@ non-Abelian/group and Dirac algebra through idenso/spenso, full default-model
 integration of the internal mixed/zero-mass analytic integral backend,
 complete converted model fixtures, and generic operator-basis projection
 without Warsaw-specific core assumptions.
+
+Latest mismatch-debugging instruction, 2026-06-28: keep confirming and using
+the paired Matchete/pychete debug workflow during the active Singlet frontier.
+When the two systems disagree, refresh focused Matchete WolframScript dumps,
+compare them against bounded pychete probes at matching semantic stages, and
+only patch pychete after the first generic algorithm boundary has been found.
 
 ## Approved Plan
 
@@ -1380,3 +1393,21 @@ without Warsaw-specific core assumptions.
   next comparison should target Matchete's raw `LagrangianEFT` /
   `InternalSimplify` / `PerformSystematicFieldRedefs` sequence rather than
   selected trace aggregation.
+- Latest Matchete EOM dissection: refreshed the Singlet `cHD` Matchete debug
+  fixture with the internal-source field-redefinition replay. The selected
+  pychete trace already matches the Matchete off-shell checkpoint; the first
+  narrowed on-shell boundary is Matchete's dimension-6, three-derivative
+  `PerformSystematicFieldRedefs` shift (`after_shift_dim6_dev3`). The next
+  runtime work should port that generic scalar/matter field-redefinition
+  machinery through Symbolica/idenso/spenso/vakint boundaries rather than
+  repairing the final `cHD` coefficient.
+- Latest scalar field-redefinition implementation: pychete now has a bounded
+  formal-EOM scalar consumer,
+  `scalar_eom_field_redefinition_delta(...)` /
+  `Theory.scalar_eom_field_redefinition_delta(...)`, which consumes explicit
+  `EOM(Field(...))` and `EOM(Bar(Field(...)))` atoms through Symbolica
+  coefficient extraction and source-scoped `derive_eom(...)` variations. The
+  remaining Singlet `cHD` gap is now the preceding Matchete-like
+  Green/InternalSimplify exposure stage that must turn derivative-source terms
+  into explicit formal EOM atoms before the field-redefinition consumer can
+  reproduce `after_shift_dim6_dev3`.

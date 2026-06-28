@@ -1826,6 +1826,157 @@ def abelian_vector_eom_field_redefinition_delta(
     return sum_expr(deltas).expand()
 
 
+def scalar_eom_field_redefinition_delta(
+    theory: Theory,
+    source_lagrangian: Expression,
+    eom_terms: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    max_order: int | None = None,
+    shift_order: int | None = None,
+    strict: bool = False,
+) -> Expression:
+    """Return the scalar part of Matchete-style formal-EOM field shifts.
+
+    ``eom_terms`` must already contain formal ``EOM(Field(...))`` or
+    ``EOM(Bar(Field(...)))`` atoms.  This helper implements the consumer side
+    of Matchete's ``ScalarShift``/``ShiftLagrangian`` boundary for light scalar
+    fields: extract the scalar field shifts from explicit formal EOM terms,
+    then apply those shifts to the requested lower-order source through
+    pychete's Symbolica-backed Euler-Lagrange derivative.
+
+    It is intentionally a bounded subset.  It does not expose hidden EOM terms
+    from generic derivative operators; a Green/InternalSimplify-style stage
+    must do that first.
+    """
+
+    theory._validate_registered_expression(source_lagrangian)
+    theory._validate_registered_expression(eom_terms)
+    if (max_order is None) != (shift_order is None):
+        raise ValueError("max_order and shift_order must be provided together")
+    if max_order is not None and shift_order is not None:
+        from .eft import series_eft
+
+        if shift_order < 0:
+            raise ValueError("shift_order must be non-negative")
+        source = series_eft(
+            source_lagrangian,
+            theory,
+            eft_order=max_order - shift_order,
+            heavy_field_dimension=False,
+        )
+    else:
+        source = source_lagrangian
+
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    failures: list[str] = []
+    deltas: list[Expression] = []
+    for field in _formal_scalar_eom_fields(theory, eom_terms, allowed_labels=allowed_labels):
+        try:
+            shift = _formal_scalar_eom_shift(theory, eom_terms, field)
+        except ValueError as exc:
+            if strict:
+                failures.append(str(exc))
+            continue
+        if is_zero(shift):
+            continue
+        deltas.append(_scalar_shift_lagrangian_delta(theory, source, field, shift))
+    if failures:
+        raise ValueError("; ".join(failures))
+    return sum_expr(deltas).expand()
+
+
+def _formal_scalar_eom_fields(
+    theory: Theory,
+    eom_terms: Expression,
+    *,
+    allowed_labels: set[str] | None,
+) -> tuple[Expression, ...]:
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    fields: dict[str, Expression] = {}
+    for pattern in (s.EOM(field_pattern()), s.EOM(bar_field_pattern())):
+        for atom in matching_subexpressions(eom_terms, pattern, label_is_registered_field):
+            if not is_head(atom, s.EOM) or len(atom) != 1:
+                continue
+            body = atom[0]
+            base = bar_field_inner(body) if is_bar_field(body) else body
+            if not is_head(base, s.Field) or not bool(field_type(base) == s.Scalar):
+                continue
+            definition = theory._field_definition_for_label(field_label(base))
+            if definition.heavy:
+                continue
+            if allowed_labels is not None and canonical_string(definition.label) not in allowed_labels:
+                continue
+            unwrapped = field_with_derivatives(base, ())
+            fields.setdefault(canonical_string(unwrapped), unwrapped)
+    return tuple(sorted(fields.values(), key=canonical_string))
+
+
+def _formal_scalar_eom_shift(theory: Theory, eom_terms: Expression, field: Expression) -> Expression:
+    definition = theory._field_definition_for_label(field_label(field))
+    eom_atom = s.EOM(field)
+    chi_field = eom_terms.coefficient(eom_atom).expand()
+    if definition.is_self_conjugate:
+        return _adjust_formal_eom_shift_terms(chi_field, field).expand()
+
+    bar_field = s.Bar(field)
+    bar_eom_atom = s.EOM(bar_field)
+    remainder = (eom_terms - chi_field * eom_atom).expand()
+    chi_bar = remainder.coefficient(bar_eom_atom).expand()
+    if is_zero(chi_field) and is_zero(chi_bar):
+        return Expression.num(0)
+    shift = (hermitian_conjugate((chi_field + hermitian_conjugate(chi_bar)).expand()) / 2).expand()
+    return _adjust_formal_eom_shift_terms(shift, field).expand()
+
+
+def _adjust_formal_eom_shift_terms(shift: Expression, field: Expression) -> Expression:
+    """Drop terms assigned to an earlier field's EOM shift.
+
+    This mirrors Matchete's ``AdjustEOMShifts`` ordering rule in the bounded
+    formal-EOM subset: if a candidate shift term still contains a formal EOM
+    for a lexicographically earlier field label, that earlier field owns the
+    term.
+    """
+
+    field_key = canonical_string(field_label(field))
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    eom_field_pattern = s.EOM(field_pattern())
+    eom_bar_field_pattern = s.EOM(bar_field_pattern())
+    kept: list[Expression] = []
+    for term in terms(shift.expand()):
+        drop = False
+        for atom in matching_subexpressions(term, eom_field_pattern, label_is_registered_field):
+            body = atom[0]
+            if canonical_string(field_label(body)) < field_key:
+                drop = True
+                break
+        if drop:
+            continue
+        for atom in matching_subexpressions(term, eom_bar_field_pattern, label_is_registered_field):
+            body = atom[0]
+            if is_bar_field(body) and canonical_string(field_label(bar_field_inner(body))) < field_key:
+                drop = True
+                break
+        if not drop:
+            kept.append(term)
+    return sum_expr(kept).expand()
+
+
+def _scalar_shift_lagrangian_delta(
+    theory: Theory,
+    source_lagrangian: Expression,
+    field: Expression,
+    shift: Expression,
+) -> Expression:
+    definition = theory._field_definition_for_label(field_label(field))
+    if definition.is_self_conjugate:
+        return (derive_eom(theory, source_lagrangian, field) * shift).expand()
+    bar_shift = hermitian_conjugate(shift)
+    field_variation = derive_eom(theory, source_lagrangian, s.Bar(field))
+    bar_variation = derive_eom(theory, source_lagrangian, field)
+    return (field_variation * shift + bar_variation * bar_shift).expand()
+
+
 def _eom_rule_allowed_field_labels(
     theory: Theory,
     fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,

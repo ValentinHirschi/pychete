@@ -199,6 +199,103 @@
 			]
 		},
 		"fields_to_shift_input_form":"{{d, 4}, {e, 4}, {H, 4}, {l, 4}, {q, 4}, {u, 4}}",
+		"internal_fields_to_shift_preparation":{
+			"input_field_labels_input_form":"{d, e, l, q, u, H, B, W}",
+			"eom_term_count":105,
+			"eom_field_labels_input_form":"{H, B, d, e, u, l, q, W}",
+			"sample_eom_terms_input_form":[
+				"-1\/2*(hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]])\/Coupling[M, {}, 0]^2",
+				"(5*hbar*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]])\/(2*Coupling[M, {}, 0]^4)",
+				"(hbar*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"(hbar*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]])\/Coupling[M, {}, 0]^4",
+				"(hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Matchete`PackageScope`EoM[Bar[Field[H, Scalar, {Index[u3527, SU2L[fund]]}, {}]]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[u3527, SU2L[fund]]}, {}]]])\/(6*Coupling[M, {}, 0]^4)"
+			]
+		},
+		"internal_higgs_scalar_shift_summary":{
+			"available":true,
+			"field_type_input_form":"Scalar",
+			"self_conjugate":false,
+			"terms_containing_h_count":291,
+			"eom_terms_containing_h_count":105,
+			"sample_h_eom_terms_input_form":[
+				"-1\/2*(hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]])\/Coupling[M, {}, 0]^2",
+				"(5*hbar*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]])\/(2*Coupling[M, {}, 0]^4)",
+				"(hbar*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+			],
+			"rules_input_form":"{Field[{H, _, 0}, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380_, SU2L[fund]]}, Matchete`FieldRedef`PackagePrivate`devPat$200379_] :> RelabelIndices[CD[Matchete`FieldRedef`PackagePrivate`devPat$200379, -1\/4*(Bar[Field[H, Scalar, {Index[u20928, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[u20928, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^4 - (Bar[Field[H, Scalar, {Index[u20929, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[u20929, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/(4*Coupling[M, {}, 0]^4)], Unique -> True], Field[{H, _, 1}, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380_, SU2L[fund]]}, Matchete`FieldRedef`PackagePrivate`devPat$200379_] :> RelabelIndices[CD[Matchete`FieldRedef`PackagePrivate`devPat$200379, -1\/4*(Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/Coupling[M, {}, 0]^2 + (5*Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/(4*Coupling[M, {}, 0]^4) + (Coupling[A, {}, 0]^2*Coupling[\\[Mu]2, {}, 2]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/(2*\\[Epsilon]*Coupling[M, {}, 0]^4) + (5*Bar[Field[H, Scalar, {Index[u20930, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^4*Field[H, Scalar, {Index[u20930, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/(3*Coupling[M, {}, 0]^6) + (3*Bar[Field[H, Scalar, {Index[u20931, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^4*Field[H, Scalar, {Index[u20931, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/(4*\\[Epsilon]*Coupling[M, {}, 0]^6) - (5*Bar[Field[H, Scalar, {Index[u20932, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[gL, {}, 0]^2*Field[H, Scalar, {Index[u20932, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/(32*Coupling[M, {}, 0]^4) - (3*Bar[Field[H, Scalar, {Index[u20933, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Coupling[gL, {}, 0]^2*Field[H, Scalar, {Index[u20933, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[Matchete`FieldRedef`PackagePrivate`$i$200380, SU2L[fund]]}, {}])\/(16*\\[Epsilon]*Coupling[M, {}, 0]^4) - (5*Bar[Field[H, Scalar, {Index[u20934, SU..."
+		},
+		"internal_field_redefinition_replay":{
+			"source_name":"raw_internal_after_internal_simplify",
+			"max_order":6,
+			"fields_to_shift_input_form":"{{H, 4}, {B, 6}, {d, 6}, {e, 6}, {l, 6}, {q, 6}, {u, 6}, {W, 6}}",
+			"gauge_normalization_input_form":"<|B -> Coupling[gY, {}, 0]^2, G -> Coupling[gs, {}, 0]^2, W -> Coupling[gL, {}, 0]^2|>",
+			"kinetic_mixing_input_form":"<|Matchete`FieldRedef`PackagePrivate`FieldMap -> <||>, Matchete`PackageScope`Fields -> {}, Matchete`FieldRedef`PackagePrivate`Zinv -> {{}}|>",
+			"stages":[
+				{
+					"name":"source",
+					"byte_count":252896,
+					"coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"0",
+					"delta_from_off_shell_input_form":"0"
+				},
+				{
+					"name":"after_renormalize_matter",
+					"byte_count":270800,
+					"coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"0",
+					"delta_from_off_shell_input_form":"0"
+				},
+				{
+					"name":"after_shift_dim5_dev3",
+					"byte_count":270800,
+					"coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"0",
+					"delta_from_off_shell_input_form":"0"
+				},
+				{
+					"name":"after_shift_dim5_dev2",
+					"byte_count":270800,
+					"coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"0",
+					"delta_from_off_shell_input_form":"0"
+				},
+				{
+					"name":"after_shift_dim5_dev1",
+					"byte_count":270800,
+					"coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"0",
+					"delta_from_off_shell_input_form":"0"
+				},
+				{
+					"name":"after_shift_dim6_dev4",
+					"byte_count":704680,
+					"coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"0",
+					"delta_from_off_shell_input_form":"0"
+				},
+				{
+					"name":"after_shift_dim6_dev3",
+					"byte_count":778400,
+					"coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_off_shell_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"name":"after_shift_dim6_dev2",
+					"byte_count":1050632,
+					"coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_off_shell_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+				},
+				{
+					"name":"after_shift_dim6_dev1",
+					"byte_count":1380296,
+					"coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_replay_source_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+					"delta_from_off_shell_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+				}
+			]
+		},
 		"stages":[
 			{
 				"name":"raw_lagrangian_eft",

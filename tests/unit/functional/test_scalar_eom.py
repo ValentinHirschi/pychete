@@ -10,6 +10,7 @@ from pychete.functional import (
     expand_cd_operators,
     expose_scalar_derivative_commutator_bilinears,
     partial_functional_derivative,
+    scalar_eom_field_redefinition_delta,
 )
 from pychete.symbols import canonical_string
 from pychete.theory_metadata import EXTERNAL_LINEAR_FUNCTION_TAG
@@ -214,6 +215,57 @@ def test_abelian_vector_eom_field_redefinition_delta_matches_scalar_current_shif
     )
 
     assert_expr_equal(delta, -2 * coefficient * coupling() ** 2 * current**2)
+
+
+def test_scalar_eom_field_redefinition_delta_consumes_formal_complex_scalar_eoms() -> None:
+    theory = Theory("formal_complex_scalar_eom_shift")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=False, mass=0)
+    coefficient = theory.define_coupling("scalar_eom_shift_coefficient", self_conjugate=True)
+    field = phi()
+    source = theory.free_lag(phi)
+    eom_terms = (
+        -coefficient() * s.Bar(field) * s.EOM(field) / 2
+        - coefficient() * s.EOM(s.Bar(field)) * field / 2
+    ).expand()
+    expected_shift = -coefficient() * field / 2
+    expected = (
+        theory.derive_eom(source, s.Bar(field)) * expected_shift
+        + theory.derive_eom(source, field) * hermitian_conjugate(expected_shift)
+    ).expand()
+
+    delta = scalar_eom_field_redefinition_delta(
+        theory,
+        source,
+        eom_terms,
+        fields=[phi],
+        strict=True,
+    )
+
+    assert_expr_equal(delta, expected)
+    assert_expr_equal(theory.scalar_eom_field_redefinition_delta(source, eom_terms, fields=[phi]), expected)
+
+
+def test_scalar_eom_field_redefinition_delta_scopes_source_by_eft_order() -> None:
+    theory = Theory("formal_scalar_eom_shift_scoped")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    coefficient = theory.define_coupling("scalar_eom_shift_scoped_coefficient", self_conjugate=True)
+    high = theory.define_coupling("scalar_eom_shift_high_source", mass_dimension=-2, self_conjugate=True)
+    field = phi()
+    source = theory.free_lag(phi) + high() * field**6
+    eom_terms = coefficient() * field * s.EOM(field)
+    expected = (theory.derive_eom(theory.free_lag(phi), field) * coefficient() * field).expand()
+
+    delta = scalar_eom_field_redefinition_delta(
+        theory,
+        source,
+        eom_terms,
+        fields=[phi],
+        max_order=6,
+        shift_order=2,
+        strict=True,
+    )
+
+    assert_expr_equal(delta, expected)
 
 
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:

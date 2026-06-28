@@ -72,6 +72,12 @@
   them with bounded pychete probes until the first differing semantic boundary
   is explicit in these notes. Runtime changes motivated by the disagreement
   should only port that generic Matchete algorithm boundary.
+- Latest user reinforcement, 2026-06-28: explicitly confirm that mismatch work
+  is using repeated debug WolframScripts and Matchete intermediate dissection,
+  not final-coefficient guessing. For every active disagreement, keep dumping
+  as many relevant Matchete stages as practical, compare those checkpoints with
+  bounded pychete probes at the same semantic boundary, and record the first
+  divergence before patching runtime code.
 - Current concrete objective reminder: the active Singlet `cHD`
   EOM/on-shell frontier must keep
   `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
@@ -1342,3 +1348,47 @@
   `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, especially
   `InternalSimplify` and `PerformSystematicFieldRedefs`, before adding any
   on-shell field-redefinition code.
+- Latest Matchete EOM dissection, 2026-06-28: refreshed
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json` with the
+  internal-simplified source's shift preparation, Higgs `ScalarShift` summary,
+  and a replay of `PerformSystematicFieldRedefs` starting from that internal
+  source. The paired pychete checkpoint remains
+  `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`, which
+  matches the selected off-shell trace. The first narrowed Matchete on-shell
+  boundary is now `after_shift_dim6_dev3`: matter renormalization and shifts
+  through `after_shift_dim6_dev4` leave `cHD` unchanged, while
+  `after_shift_dim6_dev3` produces the full off-shell-to-on-shell delta
+  proportional to
+  `-1/36*hbar*A^2*gY^2*(6 + 17 epsilon + 6 epsilon log)/(epsilon*M^4)`.
+  The internal source exposes 105 EOM terms with field labels
+  `{H, B, d, e, u, l, q, W}`, and the Higgs scalar shift has 105
+  Higgs-containing EOM terms. The next runtime implementation should therefore
+  port the generic Matchete scalar/matter `DetermineShifts`/`ScalarShift` and
+  source-scoped `ShiftLagrangian` machinery for this dimension-6,
+  three-derivative boundary, not add a coefficient-specific projection alias.
+- Focused validation for the refreshed Matchete EOM dump passed:
+  `dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_singlet_chd_matchete_eom_dump_records_dim6_dev3_shift_boundary
+  -q` (`1 passed`).
+- Latest formal-EOM scalar field-redefinition slice: added
+  `scalar_eom_field_redefinition_delta(...)` and
+  `Theory.scalar_eom_field_redefinition_delta(...)` as the first bounded
+  pychete consumer for Matchete-style explicit `EOM(Field(...))` /
+  `EOM(Bar(Field(...)))` terms. The helper discovers light scalar formal-EOM
+  atoms with Symbolica patterns, extracts Matchete-style complex scalar shifts
+  with native `Expression.coefficient(...)`, applies the source-scoped shift
+  through pychete's Symbolica-backed `derive_eom(...)`, and can restrict the
+  shifted source by EFT order via `series_eft(...)`. This intentionally does
+  not yet expose hidden EOM terms from derivative operators; the next runtime
+  frontier is a Matchete-like Green/InternalSimplify exposure stage that
+  rewrites pychete's current derivative-source form into explicit formal EOM
+  atoms before this consumer can reproduce the Singlet `cHD`
+  `after_shift_dim6_dev3` boundary.
+- Focused validation for the formal scalar-EOM consumer passed:
+  `tests/unit/functional/test_scalar_eom.py -k
+  "scalar_eom_field_redefinition_delta" -q` (`2 passed, 24 deselected`);
+  `tests/unit/definitions/test_public_api.py -q` (`8 passed`); targeted mypy
+  on `src/pychete/functional.py`, `src/pychete/theory.py`,
+  `tests/unit/functional/test_scalar_eom.py`, and
+  `tests/unit/definitions/test_public_api.py` (`Success: no issues found`).

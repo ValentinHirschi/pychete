@@ -489,6 +489,16 @@ objects differ, and explain why the patch ports a generic Matchete algorithm
 rather than repairing a single coefficient. If the checklist cannot yet be
 completed, add more Matchete-side dumps or finer pychete probes before changing
 runtime code.
+Treat the repeated debug-WolframScript workflow as an active obligation during
+all mismatch work. If a pychete result disagrees with Matchete, assume the next
+engineering step is to dump more Matchete intermediate state, not to guess from
+the final coefficient. Run or refresh focused WolframScripts often, dissect
+Matchete's stage objects, and compare them with bounded pychete probes until
+the first divergence is localized. Status updates and implementation notes
+must explicitly name the Matchete dump/checkpoint, the pychete probe, and the
+suspected stage boundary so the port keeps following Matchete's algorithms,
+implemented through Symbolica/idenso/spenso/vakint, rather than drifting into
+coefficient-specific fixes.
 For the current Singlet `cHD` frontier and later one-loop frontiers, assume the
 first useful debugging artifact is a Matchete-side intermediate dump, not
 another final-coefficient probe. When a pychete coefficient disagrees with
@@ -528,6 +538,21 @@ WolframScript dumps, qualify Matchete package-scope heads such as
 inert lookalike symbols and report misleading checkpoints. Pair each refreshed
 Matchete EOM dump with a bounded pychete probe of the corresponding
 source/EOM/field-redefinition boundary before changing runtime code.
+The current narrowed Singlet `cHD` EOM boundary is the internal-simplified
+source replay through Matchete `PerformSystematicFieldRedefs`: matter
+renormalization and shifts through `after_shift_dim6_dev4` leave the `cHD`
+projection unchanged, while `after_shift_dim6_dev3` produces the full
+off-shell-to-on-shell delta. Treat this as evidence that the next runtime
+implementation should port generic scalar/matter `DetermineShifts`,
+`ScalarShift`, and source-scoped `ShiftLagrangian` behavior before adding any
+coefficient-specific alias.
+Use `scalar_eom_field_redefinition_delta(...)` /
+`Theory.scalar_eom_field_redefinition_delta(...)` as the bounded pychete
+consumer for explicit formal scalar `EOM(Field(...))` and
+`EOM(Bar(Field(...)))` terms. That helper intentionally assumes a prior
+Green/InternalSimplify-style exposure stage has already produced formal EOM
+atoms; do not pretend it handles arbitrary derivative sources until that
+exposure stage is implemented and validated against Matchete dumps.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

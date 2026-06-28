@@ -40,6 +40,9 @@ _SINGLET_CHD_FOUR_SLOT_PROP1_DEBUG = Path(
 _SINGLET_CHD_FOUR_SLOT_PROP2_DEBUG = Path(
     "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop2.debug.json"
 )
+_SINGLET_CHD_MATCHETE_EOM_DEBUG = Path(
+    "assets/validation/matchete/debug/singlet_eom_cHD.debug.json"
+)
 _SINGLET_CHD_PYCHETE_EOM_BOUNDARY_DEBUG = Path(
     "assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json"
 )
@@ -667,6 +670,7 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_
         matching_condition_truncate_eft=True,
         matching_condition_drop_zero=False,
     )
+    assert isinstance(result, MatchingResult)
     projected = result.matching_conditions[condition_name]
     mass = theory.coupling_handle("M")()
     expected = (
@@ -842,6 +846,36 @@ def test_selected_chd_four_slot_prop_order_one_two_match_matchete_dumps() -> Non
     assert_expr_equal(
         (projections[2] - _selected_chd_four_slot_order_two_finite_expected(theory)).expand(),
         Expression.num(0),
+    )
+
+
+def test_singlet_chd_matchete_eom_dump_records_dim6_dev3_shift_boundary() -> None:
+    debug = json.loads(_SINGLET_CHD_MATCHETE_EOM_DEBUG.read_text(encoding="utf-8"))
+    raw = debug["raw_lagrangian_eft_eom_boundary"]
+    replay = raw["internal_field_redefinition_replay"]
+    stages = {stage["name"]: stage for stage in replay["stages"]}
+
+    assert raw["fields_to_shift_input_form"] == "{{d, 4}, {e, 4}, {H, 4}, {l, 4}, {q, 4}, {u, 4}}"
+    assert raw["internal_fields_to_shift_preparation"]["eom_term_count"] == 105
+    assert raw["internal_fields_to_shift_preparation"]["eom_field_labels_input_form"] == (
+        "{H, B, d, e, u, l, q, W}"
+    )
+    assert raw["internal_higgs_scalar_shift_summary"]["eom_terms_containing_h_count"] == 105
+    assert "Field[{H, _, 1}" in raw["internal_higgs_scalar_shift_summary"]["rules_input_form"]
+
+    assert replay["source_name"] == "raw_internal_after_internal_simplify"
+    assert replay["fields_to_shift_input_form"] == "{{H, 4}, {B, 6}, {d, 6}, {e, 6}, {l, 6}, {q, 6}, {u, 6}, {W, 6}}"
+    assert stages["source"]["delta_from_replay_source_input_form"] == "0"
+    assert stages["after_renormalize_matter"]["delta_from_replay_source_input_form"] == "0"
+    assert stages["after_shift_dim6_dev4"]["delta_from_replay_source_input_form"] == "0"
+    assert "6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log" in (
+        stages["after_shift_dim6_dev3"]["delta_from_replay_source_input_form"]
+    )
+    assert stages["after_shift_dim6_dev3"]["coefficient_input_form"] == (
+        stages["after_shift_dim6_dev2"]["coefficient_input_form"]
+    )
+    assert stages["after_shift_dim6_dev3"]["coefficient_input_form"] == (
+        stages["after_shift_dim6_dev1"]["coefficient_input_form"]
     )
 
 

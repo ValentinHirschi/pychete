@@ -117,6 +117,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "derive_eom",
             "eom_replacement_rule",
             "eom_replacement_rules_for_expression",
+            "scalar_eom_field_redefinition_delta",
             "solve_heavy_scalar_eoms",
             "fluctuation_basis",
             "fluctuation_operator",

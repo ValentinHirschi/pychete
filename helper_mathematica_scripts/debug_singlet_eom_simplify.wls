@@ -208,6 +208,14 @@ rawLagrangianEftBoundarySummary[
     "tree_summary" -> stageSummary["raw_tree_replaced_heavy_eom", tree],
     "loop_summary" -> stageSummary["raw_loop_match", loop],
     "fields_to_shift_input_form" -> toInputString[Matchete`PackageScope`FieldsToShift[raw]],
+    "internal_fields_to_shift_preparation" -> fieldsToShiftPreparation[internal],
+    "internal_higgs_scalar_shift_summary" -> higgsScalarShiftSummary[internal],
+    "internal_field_redefinition_replay" -> fieldRedefReplaySummary[
+      "raw_internal_after_internal_simplify",
+      internal,
+      internal,
+      targetOperator
+    ],
     "stages" -> {
       coefficientBoundaryStageSummary[
         "raw_lagrangian_eft",
