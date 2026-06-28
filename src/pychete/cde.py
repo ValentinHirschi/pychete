@@ -11,7 +11,7 @@ from .functional import apply_cd
 from .noncommutative import normalize_ncm_chains
 from .symbols import s
 
-_MAX_OPEN_CD_CHAIN_ARITY = 8
+_MAX_OPEN_CD_CHAIN_ARITY = 16
 
 
 @dataclass(frozen=True)

@@ -433,6 +433,13 @@ generic algorithm. Keep useful dump scripts under `helper_mathematica_scripts/`
 and commit Mathematica-independent JSON/pychete fixtures when they become
 regression evidence. Runtime pychete and pytest must remain Mathematica
 independent.
+This Matchete-side dissection is the default parity workflow, not a last
+resort. During active one-shot matching work, keep running or refreshing
+focused debug WolframScripts often enough that any mismatch is compared against
+a current Matchete stage dump for the same trace, target, propagation order,
+and simplification boundary before changing pychete. If Mathematica is
+unavailable, record that limitation in the implementation notes and continue
+with the closest committed Matchete-derived fixtures.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

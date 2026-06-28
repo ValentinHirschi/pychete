@@ -33,6 +33,11 @@
   the same semantic boundaries before patching the first differing generic
   algorithm. Keep pytest Mathematica-independent by committing only derived
   JSON/pychete fixtures when they become regression evidence.
+- Treat those Matchete-side debug dumps as the default parity workflow during
+  active one-shot matching work. If a mismatch has no recent compatible
+  Matchete dump for the same trace, target, propagation order, and stage,
+  create or refresh one before changing pychete whenever Mathematica is
+  available; otherwise record that limitation explicitly.
 - Use larger coherent implementation slices. Run focused tests while building a
   slice, grouped targeted tests before a green milestone, and full/slow tests
   only when the milestone justifies the cost.
@@ -842,12 +847,34 @@
   projections, compare them to bounded pychete probes at the same semantic
   boundaries, and patch the first differing generic algorithm rather than a
   final-coefficient shortcut.
-- Latest selected-`cHD` path-map diagnostic: added a cached partial
-  integration regression for the four nonzero selected
-  `hScalar-lScalar-lVector-lScalar` zero-order Wilson-line paths. The test
-  proves that paths `0`, `2`, `24`, and `26` are all generated, filtered, and
-  evaluated, but only paths `0` and `26` currently project to the finite
-  Matchete quarter coefficient after heavy-scalar substitution and scalar
-  commutator exposure. Paths `2` and `24` remain source-present but
-  projection-zero, matching the current frontier that the missing equivalent
-  Matchete quarter families require broader Green/projection coverage.
+- Latest selected-`cHD` path-map diagnostic: the current slice followed the
+  Matchete-first debugging workflow. The Matchete full insertion and
+  scalar-vector `Xterm` dumps for selected
+  `hScalar-lScalar-lVector-lScalar -> cHD` were compared with bounded pychete
+  probes for paths `0`, `2`, `24`, and `26`, which located the first mismatch
+  before tensor reduction or final projection.
+- Two generic Wilson-line source mismatches were fixed. `_MAX_OPEN_CD_CHAIN_ARITY`
+  is now `16`, so `ActWithOpenCDs` reaches the longer four-slot Wilson-line
+  `NCM` chains and no acted selected four-slot numerator retains formal
+  `OpenCD`. The implicit Abelian scalar-vector `OpenCD` companion now follows
+  Matchete's `Xterm` orientation: barred scalar atoms carry `+C`, unbarred
+  scalar atoms carry `-C`.
+- The selected path-map regression now records the corrected signs: paths `0`,
+  `2`, and `26` project to the finite Matchete quarter coefficient after
+  heavy-scalar substitution, while path `24` carries the compensating opposite
+  sign. The aggregate public selected `cHD` coefficient remains
+  `hbar*A^2*gY^2/M^4*(log(M) - log(vakint::mursq)/2 - 1/2)`. This is a
+  selected-trace milestone; full-model `cHD` parity still needs broader
+  Matchete-style source/EOM coverage beyond this trace.
+- Focused validation for this slice passed:
+  `tests/integration/matching/test_fluctuation_operator.py -k
+  "implicit_abelian_scalar_kinetic"` (`1 passed, 113 deselected`);
+  `tests/unit/functional/test_cde.py -q` (`14 passed`);
+  `tests/integration/matching/test_fluctuation_operator.py -k
+  "implicit_abelian_scalar_kinetic or four_slot_scalar_vector_trace"` (`2
+  passed, 112 deselected`); watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "path_projection_map or public_match_selected_chd_four_slot"` (`2 passed, 11
+  deselected`); watchdog-wrapped full selected Wilson coefficient file (`13
+  passed`); and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed
+  with no issues.

@@ -6659,7 +6659,8 @@ def _implicit_abelian_scalar_vector_open_cd_terms_from_coefficient(
             scalar_coefficient = coefficient.coefficient(field_atom).expand()
             if is_zero(scalar_coefficient):
                 continue
-            terms_out.append(-scalar_coefficient * s.NCM(field_atom, open_cd))
+            sign = Expression.num(1) if is_bar_field(field_atom) else Expression.num(-1)
+            terms_out.append(sign * scalar_coefficient * s.NCM(field_atom, open_cd))
     return sum_expr(terms_out).expand()
 
 

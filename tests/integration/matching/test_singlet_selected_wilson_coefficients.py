@@ -568,14 +568,16 @@ def test_selected_chd_four_slot_post_heavy_path_projection_map_records_frontier(
         26: (1, 1, 1),
     }
     assert_expr_equal((projections[0] - expected_quarter).expand(), Expression.num(0))
-    assert_expr_equal(projections[2], Expression.num(0))
-    assert_expr_equal(projections[24], Expression.num(0))
+    assert_expr_equal((projections[2] - expected_quarter).expand(), Expression.num(0))
+    assert_expr_equal((projections[24] + expected_quarter).expand(), Expression.num(0))
     assert_expr_equal((projections[26] - expected_quarter).expand(), Expression.num(0))
 
     # Matchete records eight equivalent quarter checkpoints in the full
-    # insertion dump. pychete now generates all four scalar-vector OpenCD path
-    # families, but only the two loop-momentum-like path projections are
-    # exposed by the current Green/projection aliases.
+    # insertion dump. pychete generates the four scalar-vector OpenCD path
+    # families and, after bounded OpenCD action over the longer Wilson-line NCM
+    # chains, paths 0/2/26 project to the finite quarter coefficient while
+    # the opposite scalar orientation path 24 carries the compensating sign
+    # needed by the aggregate selected Matchete coefficient.
     quarter_insertions = [
         insertion["index"]
         for insertion in debug["insertions"]

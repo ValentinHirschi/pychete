@@ -12,6 +12,16 @@ reimplementing symbolic physics algorithms in Python.
 Very important: use Symbolica as much as possible and periodically rescan the
 Symbolica Python stub files so the native API stays in context.
 
+Whenever Matchete and pychete disagree, the required workflow is to narrow the
+disagreement with focused Matchete-side intermediate dumps before patching
+pychete. Run or refresh debug WolframScripts often enough to compare raw
+`EvaluateSTr`, insertion replacements, `ActWithOpenCDs`, `GatherLoopMomenta`,
+`WilsonExpand`, loop integration, `ContractCGs`/`MatchReduce`/`GreensSimplify`,
+`EOMSimplify`, and saved projection stages against bounded pychete probes at
+the same semantic boundary. Patch the first differing generic algorithm rather
+than a final Wilson-coefficient shortcut. Runtime pychete and pytest must
+remain Mathematica-independent by consuming only committed derived fixtures.
+
 Normal pychete tests must be Mathematica-independent. pytest must never require
 Mathematica, `wolframscript`, or a runnable Matchete installation. Optional
 top-level `scripts/` Wolfram conversion entry points may load the read-only
@@ -1154,10 +1164,17 @@ without Warsaw-specific core assumptions.
   `GreensSimplify`, `EOMSimplify`, and saved projections, then compare those
   to bounded pychete probes at the same semantic boundaries before patching
   the first differing generic algorithm.
-- Latest selected-`cHD` diagnostic update: added a partial path-map
-  regression for the selected four-slot trace. pychete now records that paths
-  `0`, `2`, `24`, and `26` are all generated and evaluated after the OpenCD
-  scalar-vector source fix, but only paths `0` and `26` project to the finite
-  Matchete quarter coefficient after heavy-scalar substitution. Paths `2` and
-  `24` remain the source-present/projection-zero frontier to compare against
-  the Matchete insertion dumps.
+- Latest selected-`cHD` diagnostic update: the current slice followed the
+  requested Matchete-intermediate comparison workflow. Matchete insertion and
+  scalar-vector `Xterm` dumps were compared to bounded pychete path probes,
+  which localized the disagreement before projection to two generic
+  Wilson-line source issues: the open-derivative action arity cap was too low
+  for four-slot `NCM` chains, and the implicit Abelian scalar-vector `OpenCD`
+  companion sign for barred scalar atoms had the wrong orientation.
+- After the fix, selected
+  `hScalar-lScalar-lVector-lScalar -> cHD` paths `0`, `2`, and `26` project to
+  the finite Matchete quarter coefficient after heavy-scalar substitution,
+  while path `24` carries the compensating opposite sign. The aggregate public
+  selected `cHD` coefficient remains the Matchete value. This is still a
+  selected-trace partial integration milestone, not a complete end-to-end
+  Matchete model reproduction.
