@@ -22,8 +22,6 @@ from .matching_options import (
 from .matching import (
     BosonicCDEExpansionPlan,
     WilsonLineExpansionPlan,
-    _apply_wilson_line_post_integral_scalar_commutator_bilinears,
-    _apply_wilson_line_scalar_eom_field_redefinition,
     _term_atom_requirements_for_targets,
 )
 from .matching_results import (
@@ -38,6 +36,11 @@ from .symbols import SymbolDataKey, s, symbol_data
 from .theory import Theory
 from .theory_metadata import ExternalKind
 from .tree_matching import heavy_scalar_solution_replacements, solve_heavy_scalar_eoms
+from .wilson_line_eom import (
+    _apply_on_shell_eom_reduction_to_expression,
+    _apply_wilson_line_post_integral_scalar_commutator_bilinears,
+    _apply_wilson_line_scalar_eom_field_redefinition,
+)
 from .validation import (
     NumericProbePlan,
     NumericValue,
@@ -1198,12 +1201,34 @@ class ValidationFixture:
             )
         if wilson_line_expose_scalar_derivative_commutator_bilinears or wilson_line_expose_scalar_eom_terms:
             before_scalar_exposure = result.on_shell_eft_lagrangian
-            reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+            scalar_exposed_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
                 theory,
                 before_scalar_exposure,
                 eom_lagrangian=resolved_on_shell_eom_lagrangian,
                 expose_scalar_eom_terms=wilson_line_expose_scalar_eom_terms,
             )
+            reduced_on_shell = scalar_exposed_on_shell
+            scalar_commutator_vector_eom_rule_count = 0
+            scalar_commutator_vector_field_redefinition_delta = Expression.num(0)
+            if (
+                resolved_on_shell_eom_lagrangian is not None
+                and on_shell_eom_abelian_vector_field_redefinition
+            ):
+                (
+                    reduced_on_shell,
+                    scalar_commutator_vector_eom_rule_count,
+                    scalar_commutator_vector_field_redefinition_delta,
+                ) = _apply_on_shell_eom_reduction_to_expression(
+                    theory,
+                    scalar_exposed_on_shell,
+                    eom_lagrangian=resolved_on_shell_eom_lagrangian,
+                    fields=on_shell_eom_fields,
+                    eft_order=eft_order,
+                    min_derivative_order=on_shell_eom_min_derivative_order,
+                    strict=on_shell_eom_strict,
+                    abelian_vector_field_redefinition=True,
+                    repeat=on_shell_replacement_repeat,
+                )
             after_scalar_eom_field_redefinition = reduced_on_shell
             scalar_eom_field_redefinition_delta = Expression.num(0)
             if wilson_line_expose_scalar_eom_terms:
@@ -1225,8 +1250,20 @@ class ValidationFixture:
                 "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
                     before_scalar_exposure
                 ),
-                "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": reduced_on_shell,
+                "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": scalar_exposed_on_shell,
             }
+            if scalar_commutator_vector_eom_rule_count or not bool(
+                scalar_commutator_vector_field_redefinition_delta == Expression.num(0)
+            ):
+                scalar_supertraces = {
+                    **scalar_supertraces,
+                    "on_shell_eft_lagrangian_after_scalar_commutator_abelian_vector_eom_reduction": (
+                        reduced_on_shell
+                    ),
+                    "on_shell_eft_lagrangian_scalar_commutator_abelian_vector_field_redefinition_delta": (
+                        scalar_commutator_vector_field_redefinition_delta
+                    ),
+                }
             if wilson_line_expose_scalar_eom_terms:
                 scalar_supertraces = {
                     **scalar_supertraces,
@@ -1249,6 +1286,12 @@ class ValidationFixture:
                     "wilson_line_scalar_eom_terms_reduced": wilson_line_expose_scalar_eom_terms,
                     "wilson_line_scalar_eom_field_redefinition_applied": (
                         not bool(scalar_eom_field_redefinition_delta == Expression.num(0))
+                    ),
+                    "wilson_line_scalar_commutator_abelian_vector_eom_reduction_rule_count": (
+                        scalar_commutator_vector_eom_rule_count
+                    ),
+                    "wilson_line_scalar_commutator_abelian_vector_field_redefinition_applied": (
+                        not bool(scalar_commutator_vector_field_redefinition_delta == Expression.num(0))
                     ),
                 },
             )

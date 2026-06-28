@@ -19,6 +19,10 @@
   WolframScript dumps, compare them against bounded pychete probes at the
   same trace/target/order/stage boundary, and patch only the first generic
   semantic divergence. Never tune a final Wilson coefficient directly.
+- Treat performance parity as part of semantic parity. Intermediate pychete
+  probes should be at least as performant as the corresponding Matchete stage;
+  if not, first look for a broader-than-Matchete staging, missing pruning, or
+  wrong algorithm boundary before increasing caps.
 - Run memory-risk tests and matching probes through
   `scripts/run_with_memory_watch.py --limit-gb 30 -- ...`.
 - Never request sandbox permission escalation. Use the user-started
@@ -84,36 +88,39 @@ Pychete now has a bounded consumer for formal Abelian vector EOM atoms:
 replacement and Abelian vector field-redefinition companion as the
 `FieldStrength(B, {nu, mu}, {}, {nu})` standard form. The derivative selector
 has also been corrected to count vector formal EOMs as two derivatives, matching
-Matchete `EOMDevs[_Vector]`. The remaining generic work is the
-`InternalSimplify` producer that exposes those formal B/W vector-EOM terms from
-the selected Wilson-line source; the current exact current-current bridge still
-finds no vector divergence in the selected pychete probe.
+Matchete `EOMDevs[_Vector]`.
+
+Current runtime ordering now mirrors the producer/consumer shape of Matchete's
+`InternalSimplify` followed by `PerformSystematicFieldRedefs`: after
+Wilson-line scalar commutator exposure, pychete can immediately rerun the
+bounded on-shell EOM replacement and Abelian vector field-redefinition
+companion on the scalar-exposed expression. This is implemented in both
+`Theory.match(...)` and `ValidationFixture.one_loop_preview(...)`, with
+separate supertraces for the raw scalar-exposed checkpoint and the
+post-vector-EOM checkpoint. The remaining generic work is still the deeper
+`InternalSimplify` producer that exposes the formal B/W vector-EOM terms from
+the selected Singlet source itself; the current exact current-current bridge
+still finds no vector divergence in the selected pychete probe.
 
 ## Current Implementation Slice
 
-- Added `scalar_derivative_green_normal_form_by_operator_class(...)`, which
-  applies the existing Symbolica-backed scalar Green solver per
-  Matchete-style operator class instead of one global local basis.
-- Wired Wilson-line formal scalar EOM exposure to that class-wise helper.
-- Refactored Wilson-line scalar EOM postprocessing out of
-  `matching.py` into `src/pychete/wilson_line_eom.py`.
-- Refreshed the Singlet `cHD` pychete boundary fixture. The class-wise pass
-  plus `EoMStandardForm`-only exposure now exposes formal scalar EOM terms and
-  nonzero scalar field-redefinition deltas for four lower-order selected
-  entries. The hybrid finite operator-basis path now also exposes formal
-  scalar EOM terms for the six high-order selected entries without recursive
-  Green-basis cap failures, but those high-order exposed terms still produce
-  zero scalar field-redefinition deltas.
-- Refreshed the Matchete `singlet_eom_cHD.debug.json` fixture with
-  `selection_before_shift` data. This narrowed the first on-shell mismatch to
-  dim6/dev3 vector EOM terms rather than scalar EOM deltas.
-- Added a bounded pychete consumer for formal Abelian vector EOM atoms and
-  fixed `operator_derivative_count(...)` so vector formal EOMs count as two
-  derivatives.
-- Focused validation passed for the scalar Green/operator-basis tests, the
-  Wilson-line scalar EOM hook tests, the Singlet `cHD` debug-fixture
-  regression, py_compile on changed files, targeted mypy, and
-  `git diff --check`.
+- Added `_apply_on_shell_eom_reduction_to_expression(...)` as a shared
+  bounded helper in `src/pychete/wilson_line_eom.py`.
+- Updated public one-loop matching and validation-preview Wilson-line
+  finalization so scalar commutator exposure can be followed by a second
+  vector-EOM/on-shell reduction pass when the Abelian vector
+  field-redefinition option is enabled.
+- Added focused regressions for the public `Theory.match(...)` route and the
+  direct `ValidationFixture.one_loop_preview(...)` route. Both tests use a
+  bounded scalar derivative source that reveals a vector-current divergence
+  only after scalar commutator exposure.
+- Kept the change performance-local: the second pass runs only on the already
+  scalar-exposed expression and only when the existing on-shell/vector options
+  request it. It does not globally expand or reclassify the full one-loop
+  source.
+- Focused validation currently passed for the four vector-EOM regression tests,
+  py_compile on changed files, and targeted mypy on the changed source
+  modules.
 
 ## Focused Tests For This Slice
 
@@ -122,21 +129,15 @@ Run after completing the slice:
 ```sh
 source "$HOME/.bashrc"
 dependencies/.venv/bin/python -m pytest \
-  tests/unit/functional/test_scalar_eom.py::test_eom_replacement_rules_collect_formal_abelian_vector_eom_targets \
-  tests/unit/functional/test_scalar_eom.py::test_formal_vector_eom_terms_use_matchete_dimension_and_derivative_count \
-  tests/unit/functional/test_scalar_green_bilinears.py::test_scalar_derivative_green_standard_form_eom_ignores_interaction_terms \
-  tests/unit/functional/test_scalar_green_bilinears.py::test_scalar_derivative_green_normal_form_by_operator_class_keeps_basis_local \
-  tests/unit/functional/test_scalar_green_bilinears.py::test_wilson_line_scalar_green_hook_closes_four_derivative_formal_eom_neighborhood \
-  tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap -q
+  tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_generates_abelian_vector_eom_replacements \
+  tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_applies_vector_eom_after_scalar_commutator_exposure \
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_abelian_vector_eom_field_redefinition \
+  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_vector_eom_after_scalar_commutator_exposure -q
 dependencies/.venv/bin/python -m py_compile \
-  src/pychete/functional.py src/pychete/matching.py src/pychete/wilson_line_eom.py \
-  scripts/debug_pychete_singlet_eom_boundary.py \
-  tests/unit/functional/test_scalar_green_bilinears.py \
-  tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py \
+  tests/integration/matching/test_heavy_scalar_tree.py \
+  tests/integration/validation/test_validation_fixtures.py
 dependencies/.venv/bin/python -m mypy \
-  src/pychete/functional.py src/pychete/matching.py src/pychete/wilson_line_eom.py \
-  scripts/debug_pychete_singlet_eom_boundary.py \
-  tests/unit/functional/test_scalar_green_bilinears.py \
-  tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py
 git diff --check
 ```

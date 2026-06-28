@@ -8,6 +8,8 @@ from symbolica import Expression
 from .backends import idenso
 from .expr import is_zero
 from .functional import (
+    abelian_vector_eom_field_redefinition_delta,
+    eom_replacement_rules_for_expression,
     expose_scalar_derivative_commutator_bilinears,
     expand_cd_operators,
     normalize_conjugate_scalar_field_slots,
@@ -20,6 +22,46 @@ from .noncommutative import scalarize_commutative_ncm_chains
 from .theory import Theory
 
 _WILSON_LINE_SCALAR_EOM_CLOSURE_BYTE_LIMIT = 50_000
+
+
+def _apply_on_shell_eom_reduction_to_expression(
+    theory: Theory,
+    expr: Expression,
+    *,
+    eom_lagrangian: Expression,
+    fields: Sequence[Any] | None = None,
+    eft_order: int = 6,
+    min_derivative_order: int = 2,
+    strict: bool = False,
+    abelian_vector_field_redefinition: bool = False,
+    repeat: bool = False,
+) -> tuple[Expression, int, Expression]:
+    """Apply on-shell EOM rules and the optional Abelian vector companion."""
+
+    eom_rules = eom_replacement_rules_for_expression(
+        theory,
+        eom_lagrangian,
+        expr,
+        fields=fields,
+        eft_order=eft_order,
+        min_derivative_order=min_derivative_order,
+        strict=strict,
+    )
+    reduced = expr
+    if eom_rules:
+        reduced = reduced.replace_multiple(eom_rules, repeat=repeat).expand()
+    vector_field_redefinition_delta = Expression.num(0)
+    if abelian_vector_field_redefinition:
+        vector_field_redefinition_delta = abelian_vector_eom_field_redefinition_delta(
+            theory,
+            eom_lagrangian,
+            expr,
+            fields=fields,
+            strict=strict,
+        )
+        if not is_zero(vector_field_redefinition_delta):
+            reduced = (reduced + vector_field_redefinition_delta).expand()
+    return reduced, len(eom_rules), vector_field_redefinition_delta
 
 
 def _apply_wilson_line_scalar_green_normal_form(theory: Theory, expr: Expression) -> Expression:
@@ -105,6 +147,7 @@ def _apply_wilson_line_scalar_eom_field_redefinition(
 
 
 __all__ = [
+    "_apply_on_shell_eom_reduction_to_expression",
     "_apply_wilson_line_post_integral_scalar_commutator_bilinears",
     "_apply_wilson_line_scalar_eom_field_redefinition",
     "_apply_wilson_line_scalar_green_normal_form",

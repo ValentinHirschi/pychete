@@ -546,6 +546,12 @@ pruning difference before increasing caps. Record the performance budget in
 the committed pychete debug fixture whenever practical, and keep large
 matching/debug workloads behind
 `scripts/run_with_memory_watch.py --limit-gb 30`.
+Latest user reinforcement, 2026-06-29: pychete's intermediate parity probes
+and runtime stages should be at least as performant as Matchete's
+corresponding intermediate stages. If they are not, treat that as evidence of
+a semantic staging or algorithm-selection mismatch before treating it as an
+acceptable cost. Do not make Matchete-comparison probes broader than the
+Matchete checkpoint they are meant to mirror.
 The current narrowed Singlet `cHD` EOM boundary is the internal-simplified
 source replay through Matchete `PerformSystematicFieldRedefs`: matter
 renormalization and shifts through `after_shift_dim6_dev4` leave the `cHD`
@@ -917,6 +923,18 @@ that changes the finite constants for the selected Singlet
 form as an explicit diagnostic comparison path only, and use
 `_apply_wilson_line_post_integral_scalar_commutator_bilinears(...)` for the
 default internal/vakint/validation Wilson-line exposure boundary.
+Scalar commutator exposure can be the producer that creates formal Abelian
+vector-EOM consumers, matching the Matchete order
+`InternalSimplify` -> `PerformSystematicFieldRedefs`. Therefore, when
+`wilson_line_expose_scalar_derivative_commutator_bilinears=True`,
+`on_shell_eom_lagrangian` is provided, and
+`on_shell_eom_abelian_vector_field_redefinition=True`, the default public
+matching and validation-preview routes must immediately rerun the bounded
+on-shell EOM replacement plus Abelian vector field-redefinition companion on
+the scalar-exposed expression. Store both the raw scalar-exposed checkpoint and
+the post-vector-EOM checkpoint in supertraces. Keep this target/stage local;
+do not replace it with broad global simplification or expansion that would be
+slower than the corresponding Matchete staged replay.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result
