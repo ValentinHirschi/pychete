@@ -1907,6 +1907,24 @@
   derivative-only scalar-bilinear normal form until the generic
   GreensSimplify-like reduction is applied. It is not a final
   matching-condition convention issue.
+- Latest confirmation/debug pass: regenerated
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_cHW.debug.json`
+  with the richer WolframScript dump under the 30 GiB watchdog and added
+  `scripts/compare_singlet_wilson_debug.py` to make the paired Matchete/pychete
+  comparison repeatable. The comparison now prints Matchete stages from
+  `contracted_metric` through `evaluate_str_reference` next to pychete's
+  nonzero `hScalar-lScalar#wilson14_o4_0` rows. It shows Matchete collapses
+  insertion 1/2 from lower-derivative plus `SymGammaFactor` families at
+  `loop_integrated` into only `aabb`, `abab`, and `abba` at
+  `post_index_group_cleanup`, then exactly three of each at
+  `eps_expanded_relabelled`. pychete's corresponding row-level postprocess
+  still contains lower-derivative families and two-field signatures such as
+  `bar=none;field=0,ab`, while the only nonzero projections remain term 4
+  post-Wilson and term 9 pre-Wilson. A scratch native
+  `canonize_tensors` termwise pass reduces some duplicate signature counts but
+  does not change the selected `cHW` value, so the next real implementation
+  target is a generic Matchete-style post-index/group cleanup and
+  Green-normal-form reduction, not tensor canonicalization alone.
 
 ## Next Work
 

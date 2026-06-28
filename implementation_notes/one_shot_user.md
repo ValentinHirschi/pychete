@@ -715,3 +715,17 @@ without Warsaw-specific core assumptions.
   postprocessed terms. The next correction should therefore target generic
   Wilson-line tensor/index normal form and metric contraction into derivative
   slots, not a final `cHW` coefficient patch.
+- Current confirmation/debug response: yes, the active Singlet
+  `hScalar-lScalar -> cHW` workflow is explicitly paired Matchete/pychete
+  dissection with focused WolframScript dumps. The refreshed Matchete JSON now
+  includes derivative-signature samples and `SymGammaFactor` histograms, and a
+  new `scripts/compare_singlet_wilson_debug.py` helper reads the Matchete and
+  pychete artifacts side by side. The latest comparison localizes the first
+  remaining mismatch to Matchete's cleanup between `loop_integrated`,
+  `post_index_group_cleanup`, and `eps_expanded_relabelled`: Matchete removes
+  lower-derivative families and balances `aabb/abab/abba`, while pychete's
+  corresponding rows still carry lower-derivative/two-field signatures. A
+  scratch native Symbolica tensor-canonicalization pass helps counts but does
+  not change the selected `cHW` value, so the next implementation target is a
+  generic post-index/group and Green-normal-form reduction, not a final
+  coefficient patch.
