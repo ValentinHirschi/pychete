@@ -115,6 +115,15 @@ Before starting a slice, review the remaining one-loop frontier and choose a
 larger feature family that can be completed coherently. Do not run the whole
 suite repeatedly while redesigning internals; reserve broad validation for the
 end of the slice after focused checks pass.
+When a first one-loop Wilson coefficient starts matching, add partial
+integration coverage for the smallest meaningful operator subset rather than
+jumping straight to all registered SMEFT conditions. Good regression surfaces
+are selected trace families, selected Wilson coefficient names, selected
+projection stages, and a few related operators sharing one generated source,
+such as the Singlet `cHW/cHB/cHWB` Higgs-gauge subset. These tests should make
+future mismatches cheap to reproduce and should identify whether a regression
+belongs to source generation, backend evaluation, on-shell reduction, or
+matching-condition projection.
 
 Always use the managed virtual environment for pychete development and tests.
 Do not use the ambient system Python when importing Symbolica, idenso, spenso,
@@ -276,14 +285,19 @@ after native coefficient, collect, and factor routes fail; its purpose is to
 expose small hidden additive factors introduced by replacement-rule outputs
 such as order-by-order heavy scalar solutions while preserving
 `matching_condition_expand_source=False` for the full matching source.
-After a target-local tensor-canonicalized projection source is built, use an
-even stricter term/byte guard before entering the generic full-source
-coefficient fallback or termwise exact fallback. If raw exact projection,
-powered-index wildcard projection, and target-local tensor canonicalization do
-not expose a bounded match, return zero for that oversized target-local source
-rather than letting one Wilson condition trigger unbounded native collection or
-coefficient extraction. This is a temporary performance frontier marker, not a
-claim that the missing Wilson coefficient has been physically shown to vanish.
+After a target-local tensor-canonicalized projection source is built, use
+separate term/byte guards for bounded termwise exact projection and generic
+full-source projection. A bounded termwise pass may run before the stricter
+generic fallback guard because it only applies native coefficient extraction
+term by term; this is needed for registered Wilson targets whose projection
+aliases broaden the canonicalization family, such as post-EOM scalar
+commutator-bilinear `cHD` terms. If raw exact projection, powered-index
+wildcard projection, target-local tensor canonicalization, and the bounded
+termwise exact pass do not expose a match, return zero for that oversized
+target-local source rather than letting one Wilson condition trigger
+unbounded native collection or coefficient extraction. This is a temporary
+performance frontier marker, not a claim that the missing Wilson coefficient
+has been physically shown to vanish.
 For simple registered `Coupling(label, indices, order)` matching targets, also
 prefilter source terms with a native Symbolica `Coupling(label, _, _)` pattern
 before coefficient extraction. This is a conservative label-presence filter:
@@ -638,6 +652,15 @@ factors and one-sided four-derivative factors. For a target normalized as
 vakint, and validation preview routes this is available through
 `OneLoopMatchOptions.wilson_line_expose_scalar_derivative_commutator_bilinears`
 and remains opt-in while the broader Matchete-normal-form layer is validated.
+For current-Matchete Wilson-line parity, apply this exposure after scalar
+vacuum-integral evaluation and finite-part extraction. Do not run
+`scalar_derivative_green_normal_form(...)` or its row-reduction identities on
+pre-integral Wilson-line numerators as part of the default matching pipeline:
+that changes the finite constants for the selected Singlet
+`hScalar-lScalar -> cHW` probe. Keep pre-integral scalar Green-basis normal
+form as an explicit diagnostic comparison path only, and use
+`_apply_wilson_line_post_integral_scalar_commutator_bilinears(...)` for the
+default internal/vakint/validation Wilson-line exposure boundary.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

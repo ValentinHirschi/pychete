@@ -22,7 +22,7 @@ from .matching_options import (
 from .matching import (
     BosonicCDEExpansionPlan,
     WilsonLineExpansionPlan,
-    _apply_wilson_line_scalar_green_normal_form,
+    _apply_wilson_line_post_integral_scalar_commutator_bilinears,
     _term_atom_requirements_for_targets,
 )
 from .matching_results import (
@@ -1126,18 +1126,23 @@ class ValidationFixture:
                 },
             )
         if wilson_line_expose_scalar_derivative_commutator_bilinears:
-            reduced_on_shell = _apply_wilson_line_scalar_green_normal_form(theory, result.on_shell_eft_lagrangian)
+            reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                theory,
+                result.on_shell_eft_lagrangian,
+            )
             result = replace(
                 result,
                 on_shell_eft_lagrangian=reduced_on_shell,
                 supertraces={
                     **result.supertraces,
-                    "on_shell_eft_lagrangian_before_scalar_green_normal_form": result.on_shell_eft_lagrangian,
-                    "on_shell_eft_lagrangian_after_scalar_green_normal_form": reduced_on_shell,
+                    "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
+                        result.on_shell_eft_lagrangian
+                    ),
+                    "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": reduced_on_shell,
                 },
                 metadata={
                     **result.metadata,
-                    "wilson_line_scalar_green_normal_form_reduced": True,
+                    "wilson_line_scalar_commutator_bilinears_reduced": True,
                 },
             )
         preview = MatchingResult(
@@ -1355,8 +1360,9 @@ class ValidationFixture:
         this fixture's direct preview route as long as reference matching
         conditions are being projected.
         ``wilson_line_expose_scalar_derivative_commutator_bilinears`` forwards
-        the opt-in scalar two-derivative commutator-bilinear normal-form pass
-        to Wilson-line internal and vakint preview routes.
+        the opt-in post-evaluation scalar two-derivative
+        commutator-bilinear exposure pass to Wilson-line internal and vakint
+        preview routes.
         ``wilson_line_tensor_reduce_before_wilson_expand`` forwards the
         Matchete-order internal Wilson-line path where loop-momentum tensor
         reduction contracts metrics into formal Wilson terms before supported

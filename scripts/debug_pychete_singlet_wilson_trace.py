@@ -73,6 +73,16 @@ def _parse_args() -> argparse.Namespace:
         action="store_true",
         help="Keep all selected Wilson-line entries instead of applying the conservative target atom filter.",
     )
+    parser.add_argument(
+        "--skip-runtime-internal-evaluated",
+        action="store_true",
+        help="Skip the aggregate runtime internal-evaluation summary when only source/stage diagnostics are needed.",
+    )
+    parser.add_argument(
+        "--source-only",
+        action="store_true",
+        help="Stop after Wilson-line source generation and numerator summaries.",
+    )
     return parser.parse_args()
 
 
@@ -420,6 +430,20 @@ def _h_derivative_histogram_map(
     }
 
 
+def _transform_map_with_errors(
+    expressions: dict[str, Expression],
+    transform: Any,
+) -> tuple[dict[str, Expression], dict[str, str]]:
+    transformed: dict[str, Expression] = {}
+    errors: dict[str, str] = {}
+    for stage_name, expr in expressions.items():
+        try:
+            transformed[stage_name] = transform(expr)
+        except Exception as exc:  # noqa: BLE001 - keep development dumps usable past frontier failures.
+            errors[stage_name] = f"{type(exc).__name__}: {exc}"
+    return transformed, errors
+
+
 def _sum_expressions(expressions: tuple[Expression, ...] | list[Expression]) -> Expression:
     total = Expression.num(0)
     for expr in expressions:
@@ -451,7 +475,7 @@ def _runtime_internal_evaluated_summary(
         covariant_derivative_commutator_mode="all_distinct",
         expand_covariant_derivative_commutators=False,
         simplify_pychete_color_algebra=True,
-        expose_scalar_derivative_commutator_bilinears=True,
+        expose_scalar_derivative_commutator_bilinears=False,
         epsilon=None,
         mu_r_squared=None,
     )
@@ -463,7 +487,11 @@ def _runtime_internal_evaluated_summary(
         entry_label: (normalization_factor * _sum_expressions(tuple(entry_terms))).expand()
         for entry_label, entry_terms in finite_by_entry.items()
     }
-    total_finite = _sum_expressions(tuple(normalized_finite_by_entry.values()))
+    total_finite_before_scalar_bilinears = _sum_expressions(tuple(normalized_finite_by_entry.values()))
+    total_finite = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        total_finite_before_scalar_bilinears,
+    )
     normalized_finite_by_order: dict[int, Expression] = {}
     for entry_label, expr in normalized_finite_by_entry.items():
         order = plan_entries_by_label[entry_label].total_order
@@ -480,7 +508,8 @@ def _runtime_internal_evaluated_summary(
             "tensor_reduce": True,
             "tensor_reduce_before_wilson_expand": True,
             "simplify_pychete_color_algebra": True,
-            "expose_scalar_derivative_commutator_bilinears": True,
+            "pre_integral_expose_scalar_derivative_commutator_bilinears": False,
+            "post_finite_expose_scalar_derivative_commutator_bilinears": True,
         },
         "term_counts_by_entry": {
             entry_label: len(entry_terms) for entry_label, entry_terms in evaluated_by_entry.items()
@@ -501,6 +530,11 @@ def _runtime_internal_evaluated_summary(
         "finite_summary": _expr_summary(
             "runtime_internal_evaluated.finite",
             total_finite,
+            sample_chars=sample_chars,
+        ),
+        "finite_before_scalar_bilinears_summary": _expr_summary(
+            "runtime_internal_evaluated.finite_before_scalar_bilinears",
+            total_finite_before_scalar_bilinears,
             sample_chars=sample_chars,
         ),
         "finite_h_derivative_word_histogram": _field_derivative_word_histogram(total_finite, h_label),
@@ -752,6 +786,8 @@ def main() -> int:
         coefficient_targets["A2"] = theory.coupling_handle("A")() ** 2
     if "A" in theory.couplings and "gL" in theory.couplings:
         coefficient_targets["A2_gL2"] = theory.coupling_handle("A")() ** 2 * theory.coupling_handle("gL")() ** 2
+    if "A" in theory.couplings and "gY" in theory.couplings:
+        coefficient_targets["A2_gY2"] = theory.coupling_handle("A")() ** 2 * theory.coupling_handle("gY")() ** 2
 
     setup = theory.one_loop_setup(
         lagrangian,
@@ -815,16 +851,101 @@ def main() -> int:
 
     rows: list[dict[str, Any]] = []
     plan_entries_by_label = {entry.label: entry for entry in plan.entries}
-    runtime_internal_evaluated = _runtime_internal_evaluated_summary(
-        theory,
-        args.target,
-        target,
-        normalization_factor,
-        runtime_grouped,
-        plan_entries_by_label,
-        h_label=h_label,
-        coefficient_targets=coefficient_targets,
-        sample_chars=args.sample_chars,
+    if args.source_only:
+        payload = {
+            "schema_version": 1,
+            "generator": "debug_pychete_singlet_wilson_trace.py",
+            "fixture": str(args.fixture),
+            "model": fixture.name,
+            "trace_name": args.trace_name,
+            "target": args.target,
+            "mode": "source_only",
+            "plan_entry_count": len(plan.entries),
+            "plan_entries": [
+                {
+                    "label": entry.label,
+                    "trace_name": entry.trace_name,
+                    "total_order": entry.total_order,
+                    "slot_orders": list(entry.slot_orders),
+                }
+                for entry in plan.entries
+            ],
+            "filter_terms_by_matching_targets": requirements is not None,
+            "preaction_prefilter_nonempty_grouped_entries": {
+                label: len(entry_terms) for label, entry_terms in preaction_prefilter_grouped.items() if entry_terms
+            },
+            "preaction_prefilter_nonempty_grouped_entry_orders": _grouped_entry_orders(
+                preaction_prefilter_grouped,
+                plan_entries_by_label,
+            ),
+            "preaction_prefilter_term_counts_by_total_order": _term_counts_by_total_order(
+                preaction_prefilter_grouped,
+                plan_entries_by_label,
+            ),
+            "preaction_prefilter_numerator_summaries_by_total_order": (
+                _aggregate_numerator_summaries_by_total_order(
+                    preaction_prefilter_grouped,
+                    plan_entries_by_label,
+                    h_label=h_label,
+                    sample_chars=args.sample_chars,
+                )
+            ),
+            "prefinal_nonempty_grouped_entries": {
+                label: len(entry_terms) for label, entry_terms in prefinal_grouped.items() if entry_terms
+            },
+            "prefinal_nonempty_grouped_entry_orders": _grouped_entry_orders(
+                prefinal_grouped,
+                plan_entries_by_label,
+            ),
+            "prefinal_term_counts_by_total_order": _term_counts_by_total_order(
+                prefinal_grouped,
+                plan_entries_by_label,
+            ),
+            "prefinal_numerator_summaries_by_total_order": _aggregate_numerator_summaries_by_total_order(
+                prefinal_grouped,
+                plan_entries_by_label,
+                h_label=h_label,
+                sample_chars=args.sample_chars,
+            ),
+            "postfinal_filter_dropped_term_count_by_entry": {
+                label: len(prefinal_grouped[label]) - len(entry_terms)
+                for label, entry_terms in grouped.items()
+                if len(prefinal_grouped[label]) - len(entry_terms)
+            },
+            "runtime_internal_nonempty_grouped_entries": {
+                label: len(entry_terms) for label, entry_terms in runtime_grouped.items() if entry_terms
+            },
+            "runtime_internal_nonempty_grouped_entry_orders": _grouped_entry_orders(
+                runtime_grouped,
+                plan_entries_by_label,
+            ),
+            "runtime_internal_term_counts_by_total_order": _term_counts_by_total_order(
+                runtime_grouped,
+                plan_entries_by_label,
+            ),
+            "nonempty_grouped_entries": {
+                label: len(entry_terms) for label, entry_terms in grouped.items() if entry_terms
+            },
+            "nonempty_grouped_entry_orders": _grouped_entry_orders(grouped, plan_entries_by_label),
+        }
+        args.out.parent.mkdir(parents=True, exist_ok=True)
+        args.out.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+        print(f"Wrote {args.out}")
+        return 0
+    runtime_internal_evaluated = (
+        {"skipped": True, "reason": "--skip-runtime-internal-evaluated"}
+        if args.skip_runtime_internal_evaluated
+        else _runtime_internal_evaluated_summary(
+            theory,
+            args.target,
+            target,
+            normalization_factor,
+            runtime_grouped,
+            plan_entries_by_label,
+            h_label=h_label,
+            coefficient_targets=coefficient_targets,
+            sample_chars=args.sample_chars,
+        )
     )
     totals = {
         "post_wilson_tensor_reduced_unrenormalized": Expression.num(0),
@@ -924,10 +1045,19 @@ def main() -> int:
         )
         for stage_name, expr in totals.items()
     }
-    heavy_substituted_scalar_green_totals = {
-        stage_name: matching_module._apply_wilson_line_scalar_green_normal_form(theory, expr)
-        for stage_name, expr in heavy_substituted_totals.items()
-    }
+    heavy_substituted_scalar_green_totals, heavy_substituted_scalar_green_errors = _transform_map_with_errors(
+        heavy_substituted_totals,
+        lambda expr: matching_module._apply_wilson_line_scalar_green_normal_form(theory, expr),
+    )
+    heavy_substituted_scalar_commutator_totals, heavy_substituted_scalar_commutator_errors = (
+        _transform_map_with_errors(
+            heavy_substituted_totals,
+            lambda expr: matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                theory,
+                expr,
+            ),
+        )
+    )
 
     payload = {
         "schema_version": 1,
@@ -1042,6 +1172,22 @@ def main() -> int:
             heavy_substituted_scalar_green_totals,
             h_label,
         ),
+        "heavy_substituted_scalar_green_total_errors": heavy_substituted_scalar_green_errors,
+        "heavy_substituted_scalar_commutator_total_projections": _projection_map(
+            theory,
+            args.target,
+            target,
+            heavy_substituted_scalar_commutator_totals,
+        ),
+        "heavy_substituted_scalar_commutator_total_summaries": _summary_map(
+            heavy_substituted_scalar_commutator_totals,
+            sample_chars=args.sample_chars,
+        ),
+        "heavy_substituted_scalar_commutator_total_h_derivative_word_histograms": _h_derivative_histogram_map(
+            heavy_substituted_scalar_commutator_totals,
+            h_label,
+        ),
+        "heavy_substituted_scalar_commutator_total_errors": heavy_substituted_scalar_commutator_errors,
         "total_coefficient_slices": {
             stage_name: {
                 coefficient_name: _coefficient_slice_summary(

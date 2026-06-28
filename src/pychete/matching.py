@@ -23,6 +23,7 @@ from .expr import (
     field_label,
     field_pattern,
     field_strength_pattern,
+    field_type,
     field_with_derivatives,
     is_bar_field,
     is_head,
@@ -44,7 +45,7 @@ from .functional import (
     scalar_derivative_green_normal_form,
     simplify_trivial_cd_operators,
 )
-from .indices import relabel_dummy_indices
+from .indices import collect_indices, relabel_dummy_indices
 from .logging import get_logger, progress
 from .matching_options import (
     OneLoopIntegralBackend,
@@ -967,6 +968,10 @@ class WilsonLineTracePath:
         from .wilson_lines import expand_wilson_terms, remove_loop_momentum_symmetry_vanishing_wilson_terms
 
         terms: list[WilsonLineTraceExpansionTerm] = []
+        fresh_entries = tuple(
+            _fresh_trace_entry_dummy_indices(entry, slot_index)
+            for slot_index, entry in enumerate(self.entries)
+        )
         for choices in product(*propagator_expansions):
             prefactor = self.prefactor
             loop_numerator = Expression.num(1)
@@ -977,18 +982,26 @@ class WilsonLineTracePath:
             for slot_index, (entry, mode, expansion) in enumerate(
                 zip(self.entries, self.propagator_modes, choices, strict=True)
             ):
+                target_slot_index = (slot_index + 1) % self.order
                 prefactor *= expansion.prefactor
                 loop_numerator *= expansion.loop_momentum_numerator
                 loop_momentum_indices.extend(expansion.loop_momentum_indices)
-                operands.append(_fresh_trace_entry_dummy_indices(entry, slot_index))
-                operands.append(
+                operands.append(fresh_entries[slot_index])
+                propagation_pairing = (
                     _fresh_fluctuation_propagation_pairing(
                         mode,
                         self.propagation_target_modes[slot_index],
                         slot_index,
-                        (slot_index + 1) % self.order,
+                        target_slot_index,
                     )
                 )
+                propagation_pairing *= _internal_vector_propagator_lorentz_pairing(
+                    mode,
+                    fresh_entries[slot_index],
+                    fresh_entries[target_slot_index],
+                    target_slot_index=target_slot_index,
+                )
+                operands.append(propagation_pairing)
                 operands.extend(expansion.open_cd_operands)
                 masses.append(_fluctuation_mass_squared(mode))
                 powers.append(expansion.denominator_power)
@@ -1067,6 +1080,31 @@ def _fresh_fluctuation_propagation_pairing(
     source = _slot_local_fluctuation_field(propagated_field, column_slot_index)
     target = _slot_local_fluctuation_field(target_row_mode.field, target_slot_index)
     return _fluctuation_field_pairing(source, target)
+
+
+def _internal_vector_propagator_lorentz_pairing(
+    mode: FluctuationMode,
+    source_entry: Expression,
+    target_entry: Expression,
+    *,
+    target_slot_index: int,
+) -> Expression:
+    """Return the implicit Lorentz metric for non-closing vector propagators."""
+
+    if target_slot_index == 0 or not _is_vector_field_type(mode.field_type):
+        return Expression.num(1)
+    source_index = _single_lorentz_index_in_expression(source_entry)
+    target_index = _single_lorentz_index_in_expression(target_entry)
+    if source_index is None or target_index is None:
+        return Expression.num(1)
+    return s.Metric(source_index, target_index)
+
+
+def _single_lorentz_index_in_expression(expr: Expression) -> Expression | None:
+    indices = tuple(info.expr for info in collect_indices(expr) if bool(info.representation == s.Lorentz))
+    if len(indices) != 1:
+        return None
+    return indices[0]
 
 
 def _slot_local_fluctuation_field(field: Expression, slot_index: int) -> Expression:
@@ -2316,9 +2354,7 @@ class OneLoopSetup:
                 covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                expose_scalar_derivative_commutator_bilinears=(
-                    expose_scalar_derivative_commutator_bilinears
-                ),
+                expose_scalar_derivative_commutator_bilinears=False,
             )
         named_integrals = {
             name: _postprocess_wilson_line_vakint_stage_expression(
@@ -2336,9 +2372,7 @@ class OneLoopSetup:
                 covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                expose_scalar_derivative_commutator_bilinears=(
-                    expose_scalar_derivative_commutator_bilinears
-                ),
+                expose_scalar_derivative_commutator_bilinears=False,
             )
             for name, expr in raw_named_integrals.items()
         }
@@ -2359,10 +2393,19 @@ class OneLoopSetup:
                 max_pole_order=max_pole_order,
                 epsilon=epsilon,
             )
-            supertraces["interaction_wilson_line_vakint_finite_part"] = vakint.finite_part(
+            finite_part = vakint.finite_part(
                 vakint_sum,
                 epsilon=epsilon,
             )
+            if expose_scalar_derivative_commutator_bilinears:
+                supertraces[
+                    "interaction_wilson_line_vakint_finite_part_before_scalar_commutator_bilinears"
+                ] = finite_part
+                finite_part = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                    self.theory,
+                    finite_part,
+                )
+            supertraces["interaction_wilson_line_vakint_finite_part"] = finite_part
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -2508,6 +2551,15 @@ class OneLoopSetup:
             _flatten_expression_slots(finite_terms_by_entry.values()),
             combine_terms=combine_terms,
         )
+        scalar_bilinear_supertraces: dict[str, Expression] = {}
+        if expose_scalar_derivative_commutator_bilinears:
+            finite_before_scalar_bilinears = finite
+            finite = _apply_wilson_line_post_integral_scalar_commutator_bilinears(self.theory, finite)
+            scalar_bilinear_supertraces = {
+                "interaction_wilson_line_internal_integral_finite_part_before_scalar_commutator_bilinears": (
+                    finite_before_scalar_bilinears
+                ),
+            }
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -2526,6 +2578,7 @@ class OneLoopSetup:
                 **evaluated_by_entry,
                 **pole_by_entry,
                 **finite_by_entry,
+                **scalar_bilinear_supertraces,
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
                 "interaction_wilson_line_internal_integral_pole_part": pole,
@@ -2671,6 +2724,15 @@ class OneLoopSetup:
             _flatten_expression_slots(finite_terms_by_entry.values()),
             combine_terms=combine_terms,
         )
+        scalar_bilinear_supertraces: dict[str, Expression] = {}
+        if expose_scalar_derivative_commutator_bilinears:
+            finite_before_scalar_bilinears = finite
+            finite = _apply_wilson_line_post_integral_scalar_commutator_bilinears(self.theory, finite)
+            scalar_bilinear_supertraces = {
+                "interaction_wilson_line_internal_integral_finite_part_before_scalar_commutator_bilinears": (
+                    finite_before_scalar_bilinears
+                ),
+            }
         counterterm = -pole
         return MatchingResult(
             theory=self.theory,
@@ -2690,6 +2752,7 @@ class OneLoopSetup:
                 **evaluated_by_entry,
                 **pole_by_entry,
                 **finite_by_entry,
+                **scalar_bilinear_supertraces,
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
                 "interaction_wilson_line_internal_integral_pole_part": pole,
@@ -2801,13 +2864,20 @@ class OneLoopSetup:
             covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
             expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            expose_scalar_derivative_commutator_bilinears=(
-                expose_scalar_derivative_commutator_bilinears
-            ),
+            expose_scalar_derivative_commutator_bilinears=False,
         )
         selected_named_stage = VakintIntegralStage.from_user(named_supertrace_stage)
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        scalar_bilinear_supertraces: dict[str, Expression] = {}
+        if expose_scalar_derivative_commutator_bilinears:
+            finite_before_scalar_bilinears = finite
+            finite = _apply_wilson_line_post_integral_scalar_commutator_bilinears(self.theory, finite)
+            scalar_bilinear_supertraces = {
+                "interaction_wilson_line_vakint_finite_part_before_scalar_commutator_bilinears": (
+                    finite_before_scalar_bilinears
+                ),
+            }
         counterterm = (-pole).expand()
         named_integrals = {
             name: _postprocess_wilson_line_vakint_stage_expression(
@@ -2825,9 +2895,7 @@ class OneLoopSetup:
                 covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
                 expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
                 simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                expose_scalar_derivative_commutator_bilinears=(
-                    expose_scalar_derivative_commutator_bilinears
-                ),
+                expose_scalar_derivative_commutator_bilinears=False,
             )
             for name, expr in raw_named_integrals.items()
         }
@@ -2846,6 +2914,7 @@ class OneLoopSetup:
                     loop_momentum_squared=loop_momentum_squared,
                 ),
                 **named_integrals,
+                **scalar_bilinear_supertraces,
                 "interaction_wilson_line_vakint_integral_sum": evaluated,
                 "interaction_wilson_line_vakint_integral_sum[evaluated]": evaluated,
                 "interaction_wilson_line_vakint_pole_part": pole,
@@ -6437,8 +6506,37 @@ def _fluctuation_differential_entry(
     row: Expression,
     column: Expression,
 ) -> Expression:
+    entry = _fluctuation_differential_entry_from_lagrangian(theory, lagrangian, row, column)
+    implicit_entry = _implicit_abelian_scalar_vector_differential_entry(
+        theory,
+        lagrangian,
+        row,
+        column,
+        explicit_entry=entry,
+    )
+    if not is_zero(implicit_entry):
+        entry = entry + implicit_entry
+    return entry.expand()
+
+
+def _fluctuation_differential_entry_from_lagrangian(
+    theory: Theory,
+    lagrangian: Expression,
+    row: Expression,
+    column: Expression,
+) -> Expression:
     row_variation = FieldVariation.BAR if is_bar_field(row) else FieldVariation.FIELD
     eom = derive_eom(theory, lagrangian, row, variation=row_variation)
+    return _fluctuation_differential_entry_from_eom(theory, lagrangian, eom, row, column)
+
+
+def _fluctuation_differential_entry_from_eom(
+    theory: Theory,
+    lagrangian: Expression,
+    eom: Expression,
+    row: Expression,
+    column: Expression,
+) -> Expression:
 
     column_base = bar_field_inner(column) if is_bar_field(column) else column
     column_barred = is_bar_field(column)
@@ -6458,6 +6556,117 @@ def _fluctuation_differential_entry(
         if not is_zero(coefficient):
             terms.append(_differential_operator_term(coefficient, derivatives))
     terms.extend(_field_strength_differential_terms(theory, lagrangian, row, column))
+    return sum_expr(terms).expand()
+
+
+def _implicit_abelian_scalar_vector_differential_entry(
+    theory: Theory,
+    lagrangian: Expression,
+    row: Expression,
+    column: Expression,
+    *,
+    explicit_entry: Expression,
+) -> Expression:
+    """Return Matchete-style scalar-vector X-terms from implicit Abelian CDs."""
+
+    if not is_zero(explicit_entry):
+        return Expression.num(0)
+    scalar, vector = _scalar_vector_fluctuation_pair(row, column)
+    if scalar is None or vector is None:
+        return Expression.num(0)
+    scalar_base = bar_field_inner(scalar) if is_bar_field(scalar) else scalar
+    if not bool(field_type(scalar_base) == s.Scalar):
+        return Expression.num(0)
+    if field_self_conjugate_from_label(field_label(scalar_base)):
+        return Expression.num(0)
+    if not _lagrangian_has_first_derivative_scalar_kinetic(lagrangian, scalar_base):
+        return Expression.num(0)
+    try:
+        scalar_definition = _field_definition_from_label(theory, field_label(scalar_base))
+        vector_definition = _field_definition_from_label(theory, field_label(vector))
+    except KeyError:
+        return Expression.num(0)
+    charge_connection = _abelian_connection_factor_for_vector(theory, scalar_definition, vector_definition)
+    if is_zero(charge_connection):
+        return Expression.num(0)
+    derivative = _implicit_scalar_kinetic_derivative_index(lagrangian, scalar_base, theory=theory)
+    scalar_derivative = field_with_derivatives(scalar_base, (derivative,))
+    interaction_lagrangian = (
+        Expression.I * charge_connection * vector * s.Bar(scalar_base) * scalar_derivative
+        - Expression.I * charge_connection * vector * s.Bar(scalar_derivative) * scalar_base
+    ).expand()
+    return _fluctuation_differential_entry_from_lagrangian(theory, interaction_lagrangian, row, column)
+
+
+def _scalar_vector_fluctuation_pair(row: Expression, column: Expression) -> tuple[Expression | None, Expression | None]:
+    row_base = bar_field_inner(row) if is_bar_field(row) else row
+    column_base = bar_field_inner(column) if is_bar_field(column) else column
+    if not is_head(row_base, s.Field) or not is_head(column_base, s.Field):
+        return None, None
+    row_is_scalar = bool(field_type(row_base) == s.Scalar)
+    column_is_scalar = bool(field_type(column_base) == s.Scalar)
+    row_is_vector = _is_vector_field_label(field_label(row_base))
+    column_is_vector = _is_vector_field_label(field_label(column_base))
+    if row_is_scalar and column_is_vector:
+        return row, column_base
+    if row_is_vector and column_is_scalar:
+        return column, row_base
+    return None, None
+
+
+def _lagrangian_has_first_derivative_scalar_kinetic(lagrangian: Expression, scalar_base: Expression) -> bool:
+    label = field_label(scalar_base)
+    plain_derivatives = _field_derivative_sets_in_expression(lagrangian, label, barred=False)
+    barred_derivatives = _field_derivative_sets_in_expression(lagrangian, label, barred=True)
+    return any(len(derivatives) == 1 for derivatives in plain_derivatives) and any(
+        len(derivatives) == 1 for derivatives in barred_derivatives
+    )
+
+
+def _implicit_scalar_kinetic_derivative_index(
+    lagrangian: Expression,
+    scalar_base: Expression,
+    *,
+    theory: Theory,
+) -> Expression:
+    label = field_label(scalar_base)
+    plain_derivatives = sorted(
+        (
+            derivatives
+            for derivatives in _field_derivative_sets_in_expression(lagrangian, label, barred=False)
+            if len(derivatives) == 1
+        ),
+        key=_derivative_set_sort_key,
+    )
+    if plain_derivatives:
+        return plain_derivatives[0][0]
+    return theory.dummy_index(0)
+
+
+def _abelian_connection_factor_for_vector(
+    theory: Theory,
+    scalar_definition: FieldDefinition,
+    vector_definition: FieldDefinition,
+) -> Expression:
+    terms: list[Expression] = []
+    for charge in scalar_definition.charge_exprs:
+        group_symbol = theory._group_symbol_for_charge(charge)
+        if group_symbol is None:
+            continue
+        group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
+        if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
+            continue
+        if len(charge) != 1:
+            raise ValueError(f"Gauge charge {canonical_string(charge)} must carry exactly one charge value")
+        field_name = symbol_data(group_symbol, SymbolDataKey.GROUP_FIELD)
+        if not isinstance(field_name, str):
+            continue
+        if theory.fields.get(field_name) != vector_definition:
+            continue
+        coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
+        if not isinstance(coupling_name, str):
+            raise ValueError(f"Gauge group {canonical_string(group_symbol)} is missing coupling metadata")
+        terms.append(charge[0] * theory.coupling_handle(coupling_name)())
     return sum_expr(terms).expand()
 
 
@@ -6892,7 +7101,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     out = _restore_theory_owned_generated_lorentz_indices(theory, out)
     out = normalize_conjugate_scalar_field_slots(theory, out)
     if expose_scalar_derivative_commutator_bilinears_option:
-        out = _apply_wilson_line_scalar_green_normal_form(theory, out)
+        out = _apply_wilson_line_post_integral_scalar_commutator_bilinears(theory, out)
     if emit_covariant_derivative_commutators or expand_covariant_derivative_commutators:
         max_cycles = max(1, min(8, emit_covariant_derivative_commutator_passes + 1))
         for _ in range(max_cycles):
@@ -6916,7 +7125,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
             out = updated
     out = simplify_trivial_cd_operators(out)
     if expose_scalar_derivative_commutator_bilinears_option:
-        out = _apply_wilson_line_scalar_green_normal_form(theory, out)
+        out = _apply_wilson_line_post_integral_scalar_commutator_bilinears(theory, out)
     out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
     if simplify_pychete_color_algebra:
         out = idenso.simplify_pychete_color_algebra(theory, out)
@@ -6934,6 +7143,28 @@ def _apply_wilson_line_scalar_green_normal_form(theory: Theory, expr: Expression
         include_gauge_coupling=False,
         expand_commutators=True,
     )
+
+
+def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+    theory: Theory,
+    expr: Expression,
+) -> Expression:
+    """Expose scalar derivative commutator bilinears after finite evaluation."""
+
+    from .backends import idenso
+
+    out = normalize_conjugate_scalar_field_slots(theory, expr)
+    out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
+    out = expand_cd_operators(out)
+    out = simplify_trivial_cd_operators(out)
+    out = expose_scalar_derivative_commutator_bilinears(
+        theory,
+        out,
+        include_gauge_coupling=False,
+        expand_commutators=True,
+    )
+    out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
+    return scalarize_commutative_ncm_chains(out)
 
 
 def _postprocess_pre_wilson_line_tensor_reduced_expression(
@@ -7890,9 +8121,7 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
                             expand_covariant_derivative_commutators
                         ),
                         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                        expose_scalar_derivative_commutator_bilinears=(
-                            expose_scalar_derivative_commutator_bilinears
-                        ),
+                        expose_scalar_derivative_commutator_bilinears=False,
                         epsilon=epsilon,
                     )
                 else:
@@ -7912,9 +8141,7 @@ def _wilson_line_internal_evaluated_terms_by_entry_from_terms(
                             expand_covariant_derivative_commutators
                         ),
                         simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                        expose_scalar_derivative_commutator_bilinears_option=(
-                            expose_scalar_derivative_commutator_bilinears
-                        ),
+                        expose_scalar_derivative_commutator_bilinears_option=False,
                     )
                 evaluated_terms.append(
                     vacuum_integrals.evaluate_one_loop_vakint_expression(
@@ -7944,13 +8171,18 @@ def _wilson_line_matchete_order_pre_wilson_integral_expression(
     """Lower a formal WilsonTerm numerator in Matchete's tensor-stage order."""
 
     from .backends import vakint
-    from .loop_integration import collect_loop_momenta_to_symmetric_lorentz, evaluate_symmetric_lorentz_indices
+    from .loop_integration import (
+        collect_loop_momenta_to_symmetric_lorentz,
+        contract_lorentz_metrics,
+        evaluate_symmetric_lorentz_indices,
+    )
     from .wilson_lines import expand_wilson_terms, remove_symmetry_vanishing_wilson_terms
 
     if term.pre_wilson_numerator is None:
         return term.vakint_integral_expression()
+    numerator = scalarize_commutative_ncm_chains(term.pre_wilson_numerator)
     numerator = collect_loop_momenta_to_symmetric_lorentz(
-        term.pre_wilson_numerator,
+        numerator,
         include_massless_denominator_shift=True,
         loop_momentum_squared=s.LoopMomentumSquared,
     )
@@ -7959,12 +8191,14 @@ def _wilson_line_matchete_order_pre_wilson_integral_expression(
         numerator,
         epsilon=epsilon,
         evaluate_gamma=True,
+        contract_metrics=False,
     )
     numerator = expand_wilson_terms(
         theory,
         numerator,
         max_derivative_order=max_wilson_derivative_order,
     )
+    numerator = contract_lorentz_metrics(numerator)
     numerator = _postprocess_wilson_line_tensor_reduced_expression(
         theory,
         numerator,
@@ -9168,18 +9402,23 @@ def match_one_loop(
             },
         )
     if options.wilson_line_expose_scalar_derivative_commutator_bilinears:
-        reduced_on_shell = _apply_wilson_line_scalar_green_normal_form(theory, result.on_shell_eft_lagrangian)
+        reduced_on_shell = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+            theory,
+            result.on_shell_eft_lagrangian,
+        )
         result = replace(
             result,
             on_shell_eft_lagrangian=reduced_on_shell,
             supertraces={
                 **result.supertraces,
-                "on_shell_eft_lagrangian_before_scalar_green_normal_form": result.on_shell_eft_lagrangian,
-                "on_shell_eft_lagrangian_after_scalar_green_normal_form": reduced_on_shell,
+                "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
+                    result.on_shell_eft_lagrangian
+                ),
+                "on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure": reduced_on_shell,
             },
             metadata={
                 **result.metadata,
-                "wilson_line_scalar_green_normal_form_reduced": True,
+                "wilson_line_scalar_commutator_bilinears_reduced": True,
             },
         )
     if options.truncate_eft_result:

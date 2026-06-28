@@ -194,11 +194,12 @@ class OneLoopMatchOptions:
     reduction; final coefficient extraction still uses the normal projection
     path.
     ``wilson_line_expose_scalar_derivative_commutator_bilinears`` enables a
-    post-tensor internal Wilson-line scalar Green-basis pass. The pass builds
-    bounded local scalar IBP and covariant-derivative commutator identities,
-    solves the local linear system with Symbolica, and then exposes supported
-    derivative-bilinear field-strength components. It is off by default while
-    the Matchete-parity normal-form layer is still being validated.
+    post-evaluation Wilson-line scalar commutator-bilinear exposure pass. The
+    default internal and minimal-subtraction routes apply it after scalar
+    integral evaluation and finite-part extraction, matching the current
+    Matchete ordering more closely than a pre-integral Green-basis row
+    reduction. It is off by default while the broader Matchete-parity
+    normal-form layer is still being validated.
     """
 
     max_trace_order: int = 2

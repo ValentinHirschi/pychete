@@ -958,3 +958,68 @@ without Warsaw-specific core assumptions.
   Green normal form; the next mismatch comparison should therefore focus on
   the higher-derivative `wilson14_o4_0` class and Matchete's full
   operator-class row reduction.
+- Latest source-identification correction: a target-aware Matchete
+  prop-order-4 dump shows selected `hScalar-lScalar -> cHD` is killed by
+  `GreensSimplify`, so it is not the source of the nonzero saved Matchete
+  `cHD` condition. Projecting the converted Matchete reference supertraces
+  identifies `hScalar-lScalar-lVector-lScalar` as the current nonzero
+  supertrace source for `cHD`. The next comparison now targets that exact
+  four-slot Wilson-line trace, and any precise mismatch there should be
+  checked against the corresponding Matchete algorithm before patching
+  pychete.
+- Latest four-slot trace slice: the first precise mismatch was source-level,
+  not projection-level. Matchete `SetSubstitutions` forms scalar-vector
+  X-terms from the charged scalar covariant kinetic current after subtracting
+  `KinOpLagrangian`, while pychete's Matchete-convention free lagrangian kept
+  the covariant derivative implicit and produced zero `lScalar-lVector`
+  fluctuation entries. pychete now adds a bounded implicit-Abelian
+  scalar-vector fluctuation contribution after checking that the ordinary
+  explicit entry is zero, and a Singlet regression confirms
+  `hScalar-lScalar-lVector-lScalar` generates four zero-order `gY^2`
+  Wilson-line terms. The full `cHD` coefficient remains open downstream in
+  Wilson-term/tensor/integral/Green-basis/projection stages.
+- Latest Green-basis frontier update: the selected Singlet
+  `hScalar-lScalar -> cHW` regression no longer crashes in Symbolica's linear
+  solver after pychete strips scalar identity prefactors and encodes complex
+  numeric row coefficients before solving. It now reaches projection, but the
+  coefficient is still wrong (`25/72` at `mu_R^2=M^2` instead of Matchete's
+  `1/12`). Pre-Green Matchete and pychete derivative-bilinear probes line up
+  structurally, but finite-first and pre-finite Green exposure give different
+  wrong constants, so the next semantic gap is Matchete's d-dimensional
+  Green-basis/finite-shift handling rather than source generation.
+- Latest Wilson-line ordering correction: a targeted pychete probe showed
+  that the selected `hScalar-lScalar -> cHW` coefficient becomes Matchete's
+  `1/12` when scalar derivative commutator-bilinear exposure is delayed until
+  after finite scalar integral evaluation. The current implementation slice is
+  changing the Wilson-line option and validation/debug paths to use that
+  post-finite exposure boundary, while retaining pre-integral scalar
+  Green-basis normal form only as a diagnostic comparison path.
+- Focused result: the selected Singlet `hScalar-lScalar -> cHW` one-loop
+  Wilson-line parity check now passes against the saved Matchete fixture.
+  This is the first selected-trace coefficient milestone; it is not yet a full
+  Matchete integration-test reproduction for an entire UV model.
+- Latest user reminder: whenever Matchete and pychete disagree, dump and
+  compare as many Matchete intermediate stages as practical before patching.
+  The current cHD four-slot slice followed that route: Matchete insertion
+  stages identified the expected paired Higgs-derivative structure before
+  pychete patches were made.
+- Current selected cHD status: pychete now reproduces the selected pre-heavy
+  Singlet `hScalar-lScalar-lVector-lScalar -> cHD` Wilson-line finite
+  coefficient with registered Wilson projection and EOM-aware target
+  filtering. Full-model matching parity is still open, especially the
+  registered projection/truncation behavior after heavy-scalar substitution
+  and post-finite scalar commutator-bilinear exposure.
+- Latest course adjustment: the requested Matchete-intermediate comparison
+  was applied again to the selected `cHD` frontier. The first post-heavy
+  mismatch was isolated inside pychete's registered Wilson projection guard,
+  not in Matchete source generation or integral evaluation. The guard now
+  permits a bounded termwise exact Symbolica coefficient pass before blocking
+  oversized generic projection fallbacks, and the selected `cHD` coefficient
+  survives the post-heavy/post-commutator registered projection path.
+- Latest testing adjustment: first-success one-loop Wilson coefficients are
+  now covered by partial integration regressions. The selected Singlet
+  `hScalar-lScalar` test projects only the related `cHW`, `cHB`, and `cHWB`
+  Higgs-gauge subset from one generated source, while the selected four-slot
+  `cHD` test remains scoped to the single derivative-Higgs coefficient. This
+  is intended to keep future regressions fast and localized before broader
+  all-operator fixture checks are attempted.

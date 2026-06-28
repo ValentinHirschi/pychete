@@ -654,6 +654,53 @@ def test_linear_identity_normal_form_reduces_composite_basis_terms_with_symbolic
     assert_expr_equal(reduced, 2 * coefficient * swapped + 2 * coefficient * commutator + untouched)
 
 
+def test_linear_identity_normal_form_strips_common_complex_identity_prefactor() -> None:
+    coefficient = S("green_basis_complex_solver_coefficient")
+    theory = Theory("green_basis_complex_solver")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    source = s.Bar(phi()) * phi(derivatives=[a, b])
+    swapped = s.Bar(phi()) * phi(derivatives=[b, a])
+    commutator = s.Bar(phi()) * s.CovariantDerivativeCommutator(a, b, phi())
+    identity = Expression.I * coefficient * (swapped + commutator - source)
+
+    reduced = linear_identity_normal_form(
+        2 * coefficient * source,
+        (identity,),
+        basis=(source, swapped, commutator),
+        preferred=(swapped, commutator),
+    )
+
+    assert_expr_equal(reduced, 2 * coefficient * swapped + 2 * coefficient * commutator)
+
+
+def test_linear_identity_normal_form_encodes_relative_complex_regulator_coefficients() -> None:
+    coefficient = S("green_basis_complex_regulator_coefficient")
+    regulator = S("green_basis_complex_regulator_epsilon")
+    theory = Theory("green_basis_complex_regulator")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    a = theory.index("a")
+    b = theory.index("b")
+    source = s.Bar(phi()) * phi(derivatives=[a, b])
+    swapped = s.Bar(phi()) * phi(derivatives=[b, a])
+    identity = coefficient * (
+        source
+        + Expression.num(2) * source / regulator
+        - Expression.I * swapped
+        - Expression.num(2) * Expression.I * swapped / regulator
+    )
+
+    reduced = linear_identity_normal_form(
+        coefficient * source,
+        (identity,),
+        basis=(source, swapped),
+        preferred=(swapped,),
+    )
+
+    assert_expr_equal(reduced, Expression.I * coefficient * swapped)
+
+
 def test_linear_identity_basis_terms_strip_coefficients_and_normalize_signs() -> None:
     coefficient = S("green_basis_auto_basis_coefficient")
     theory = Theory("green_basis_auto_basis")

@@ -644,13 +644,102 @@ def contract_pychete_deltas(theory: Any, expr: Expression) -> Expression:
     """
 
     out = contract_pychete_deltas_into_cg_tensors(expr)
-    replacements = _pychete_delta_contraction_replacements(theory)
+    replacements = (*_pychete_delta_field_slot_replacements(), *_pychete_delta_contraction_replacements(theory))
     for _ in range(8):
         updated = out.replace_multiple(replacements).expand()
         if bool(updated == out):
             return updated
         out = updated
     return out
+
+
+@cache
+def _pychete_delta_field_slot_replacements() -> tuple[Replacement, ...]:
+    first_label = s.head("pychete_delta_field_first_label_")
+    second_label = s.head("pychete_delta_field_second_label_")
+    representation = s.head("pychete_delta_field_representation_")
+    label = s.head("pychete_delta_field_label_")
+    type_expr = s.head("pychete_delta_field_type_")
+    derivatives = s.head("pychete_delta_field_derivatives_")
+    label_is_field = label.req_tag(SymbolRole.FIELD.value)
+    same_rep = s.Delta(
+        s.Index(first_label, representation),
+        s.Index(second_label, representation),
+    )
+    direct_pair = s.Delta(
+        s.Index(first_label, representation),
+        s.Index(second_label, s.Bar(representation)),
+    )
+    conjugate_pair = s.Delta(
+        s.Index(first_label, s.Bar(representation)),
+        s.Index(second_label, representation),
+    )
+
+    def field_replacement(
+        *,
+        index_wildcards: tuple[Expression, ...],
+        position: int,
+        source_label: Expression,
+        target_label: Expression,
+        barred: bool,
+    ) -> Callable[[dict[Expression, Expression]], Expression]:
+        def replace(match: dict[Expression, Expression]) -> Expression:
+            updated = list(index_wildcards)
+            updated[position] = s.Index(match[target_label], match[representation])
+            field = s.Field(
+                match[label],
+                match[type_expr],
+                s.List(*(match[item] if item in match else item for item in updated)),
+                match[derivatives],
+            )
+            return s.Bar(field) if barred else field
+
+        return replace
+
+    replacements: list[Replacement] = []
+    for delta in (same_rep, direct_pair, conjugate_pair):
+        for arity in range(1, 9):
+            for position in range(arity):
+                for source_label, target_label in (
+                    (first_label, second_label),
+                    (second_label, first_label),
+                ):
+                    index_wildcards = tuple(
+                        s.head(f"pychete_delta_field_index_{arity}_{position}_{index}_")
+                        for index in range(arity)
+                    )
+                    pattern_indices = list(index_wildcards)
+                    pattern_indices[position] = s.Index(source_label, representation)
+                    field = s.Field(label, type_expr, s.List(*pattern_indices), derivatives)
+                    replacements.append(
+                        Replacement(
+                            delta * field,
+                            field_replacement(
+                                index_wildcards=tuple(pattern_indices),
+                                position=position,
+                                source_label=source_label,
+                                target_label=target_label,
+                                barred=False,
+                            ),
+                            label_is_field,
+                            rhs_cache_size=0,
+                        )
+                    )
+                    replacements.append(
+                        Replacement(
+                            delta * s.Bar(field),
+                            field_replacement(
+                                index_wildcards=tuple(pattern_indices),
+                                position=position,
+                                source_label=source_label,
+                                target_label=target_label,
+                                barred=True,
+                            ),
+                            label_is_field,
+                            rhs_cache_size=0,
+                        )
+                    )
+    return tuple(replacements)
 
 
 def _pychete_delta_contraction_replacements(theory: Any) -> tuple[Replacement, ...]:

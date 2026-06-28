@@ -3,6 +3,7 @@ from __future__ import annotations
 from collections.abc import Sequence
 
 from symbolica import Expression, Replacement
+from symbolica.core import AtomType
 
 from .expr import (
     cg_tensor_pattern,
@@ -13,6 +14,7 @@ from .expr import (
     is_zero,
     matching_subexpressions,
     product_expr,
+    sum_expr,
     terms,
 )
 from .symbols import canonical_string
@@ -62,12 +64,16 @@ def linear_identity_normal_form(
     markers = tuple(
         Expression.symbol(f"pychete::green_basis_marker_{index}") for index, _term in enumerate(ordered_basis)
     )
+    imaginary_marker = Expression.symbol("pychete::green_basis_imaginary_unit")
     encode_rules = tuple(
         Replacement(term, marker)
         for term, marker in _sorted_for_encoding(tuple(zip(ordered_basis, markers, strict=True)))
     )
     decode_rules = tuple(Replacement(marker, term) for term, marker in zip(ordered_basis, markers, strict=True))
-    encoded_identities = tuple(identity.replace_multiple(encode_rules).expand() for identity in identity_terms)
+    encoded_identities = tuple(
+        _operator_identity_row(identity.replace_multiple(encode_rules), markers, imaginary_marker=imaginary_marker)
+        for identity in identity_terms
+    )
     solutions = Expression.solve_linear_system(encoded_identities, markers, warn_if_underdetermined=False)
     solution_rules = tuple(
         Replacement(marker, solution)
@@ -77,7 +83,8 @@ def linear_identity_normal_form(
     if not solution_rules:
         return expr
     encoded_expr = expr.replace_multiple(encode_rules)
-    return encoded_expr.replace_multiple(solution_rules).replace_multiple(decode_rules).expand()
+    out = encoded_expr.replace_multiple(solution_rules).replace_multiple(decode_rules)
+    return out.replace_multiple((Replacement(imaginary_marker, Expression.I),)).expand()
 
 
 def linear_identity_basis_terms(
@@ -190,6 +197,63 @@ def _sorted_for_encoding(
             key=lambda replacement: (-replacement[0].get_byte_size(), canonical_string(replacement[0])),
         )
     )
+
+
+def _operator_identity_row(
+    expr: Expression,
+    markers: Sequence[Expression],
+    *,
+    imaginary_marker: Expression,
+) -> Expression:
+    expanded = expr.expand()
+    marker_keys = {canonical_string(marker) for marker in markers}
+    row_terms: list[Expression] = []
+    leading_coefficient: Expression | None = None
+    for term in terms(expanded):
+        marker_factor, coefficient = _split_marker_factor(term, marker_keys)
+        if marker_factor is None:
+            continue
+        if leading_coefficient is None:
+            leading_coefficient = coefficient
+        row_terms.append((coefficient / leading_coefficient) * marker_factor)
+    if not row_terms:
+        return Expression.num(0)
+    return _encode_complex_numeric_coefficients(sum_expr(row_terms), imaginary_marker).expand()
+
+
+def _split_marker_factor(
+    term: Expression,
+    marker_keys: set[str],
+) -> tuple[Expression | None, Expression]:
+    marker: Expression | None = None
+    coefficient_factors: list[Expression] = []
+    for factor in factors(term):
+        if marker is None and canonical_string(factor) in marker_keys:
+            marker = factor
+        else:
+            coefficient_factors.append(factor)
+    if marker is None:
+        return None, term
+    return marker, product_expr(coefficient_factors)
+
+
+def _encode_complex_numeric_coefficients(expr: Expression, imaginary_marker: Expression) -> Expression:
+    encoded_terms: list[Expression] = []
+    for term in terms(expr.expand()):
+        encoded_terms.append(
+            product_expr(_encode_complex_numeric_factor(factor, imaginary_marker) for factor in factors(term))
+        )
+    return sum_expr(encoded_terms).expand()
+
+
+def _encode_complex_numeric_factor(factor: Expression, imaginary_marker: Expression) -> Expression:
+    if factor.get_type() is not AtomType.Num:
+        return factor
+    if bool(factor == factor.conj()):
+        return factor
+    real_part = ((factor + factor.conj()) / Expression.num(2)).expand()
+    imaginary_part = ((factor - factor.conj()) / (Expression.num(2) * Expression.I)).expand()
+    return (real_part + imaginary_part * imaginary_marker).expand()
 
 
 def _default_operator_patterns() -> tuple[Expression, ...]:

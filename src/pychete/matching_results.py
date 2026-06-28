@@ -80,6 +80,8 @@ _MAX_PROJECTION_COLLECT_TERMS = _MAX_PROJECTION_FACTOR_TERMS
 _MAX_PROJECTION_COLLECT_BYTES = _MAX_PROJECTION_FACTOR_BYTES
 _MAX_CANONIZED_PROJECTION_GENERIC_TERMS = 64
 _MAX_CANONIZED_PROJECTION_GENERIC_BYTES = 512_000
+_MAX_CANONIZED_PROJECTION_TERMWISE_TERMS = 512
+_MAX_CANONIZED_PROJECTION_TERMWISE_BYTES = 512_000
 _MAX_PROJECTION_EXPAND_TERMS = 128
 _MAX_PROJECTION_EXPAND_BYTES = 32_768
 _MAX_PROJECTION_FIELD_STRENGTH_SIMPLIFY_TERMS = 512
@@ -425,20 +427,23 @@ class MatchingResult:
                             )
                         )
                         target_local_canonized = target_extractor is not coefficient_extractor
+            if coefficient is None and target_local_canonized:
+                if _source_is_small_enough_for_termwise_exact_projection(target_extractor.source):
+                    exact_coefficient = _termwise_exact_matching_projection_coefficient(
+                        _without_wildcard_index_projection(target_extractor),
+                        target_projection_expression,
+                        target_ibp_aliases,
+                    )
+                    if not is_zero(exact_coefficient):
+                        coefficient = exact_coefficient
+                elif not _source_is_small_enough_for_generic_projection(target_extractor.source):
+                    coefficient = Expression.num(0)
             if (
                 coefficient is None
                 and target_local_canonized
                 and not _source_is_small_enough_for_generic_projection(target_extractor.source)
             ):
                 coefficient = Expression.num(0)
-            if coefficient is None and target_local_canonized:
-                exact_coefficient = _termwise_exact_matching_projection_coefficient(
-                    _without_wildcard_index_projection(target_extractor),
-                    target_projection_expression,
-                    target_ibp_aliases,
-                )
-                if not is_zero(exact_coefficient):
-                    coefficient = exact_coefficient
             if coefficient is None:
                 coefficient = _matching_projection_coefficient(
                     target_extractor,
@@ -1168,6 +1173,13 @@ def _source_is_small_enough_for_generic_projection(source: Expression) -> bool:
     return (
         len(source) <= _MAX_CANONIZED_PROJECTION_GENERIC_TERMS
         and source.get_byte_size() <= _MAX_CANONIZED_PROJECTION_GENERIC_BYTES
+    )
+
+
+def _source_is_small_enough_for_termwise_exact_projection(source: Expression) -> bool:
+    return (
+        len(source) <= _MAX_CANONIZED_PROJECTION_TERMWISE_TERMS
+        and source.get_byte_size() <= _MAX_CANONIZED_PROJECTION_TERMWISE_BYTES
     )
 
 

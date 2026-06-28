@@ -2,7 +2,7 @@
 (* ::Package:: *)
 
 (* Development-only Matchete intermediate-stage dump for the Singlet scalar
-   extension hScalar-lScalar Wilson-line/power-trace frontier.
+   extension Wilson-line/power-trace frontier.
 
    Usage:
      wolframscript -file helper_mathematica_scripts/debug_singlet_wilson_trace.wls \
@@ -22,6 +22,8 @@ optionValue[name_String, default_String] := Module[{pos},
     args[[pos[[1]] + 1]]
   ]
 ];
+
+optionFlag[name_String] := MemberQ[args, "--" <> name];
 
 repoRoot = DirectoryName[DirectoryName[$InputFileName]];
 matcheteRoot = FileNameJoin[{repoRoot, "mathematica_reference", "Matchete"}];
@@ -50,6 +52,11 @@ propOrderOption = ToExpression @ optionValue["prop-order", "4"];
 sampleChars = ToExpression @ optionValue["sample-chars", "2500"];
 sampleTerms = ToExpression @ optionValue["sample-terms", "3"];
 targetOption = ToExpression @ optionValue["target", "cHW"];
+traceNameOption = optionValue["trace-name", "hScalar-lScalar"];
+skipFullTraceOption = optionFlag["skip-full-trace"];
+skipSlotOrderSummariesOption = optionFlag["skip-slot-order-summaries"];
+includeLoopMatchSelectedOption = optionFlag["include-loop-match-selected"];
+maxInsertionDetails = ToExpression @ optionValue["max-insertion-details", "-1"];
 
 If[!DirectoryQ[matcheteRoot],
   Print["Matchete checkout not found: ", matcheteRoot];
@@ -325,6 +332,34 @@ safeEvaluate[expr_] := CheckAbort[Quiet[Check[expr, $Failed]], $Aborted];
 
 failedEvaluationQ[expr_] := expr === $Aborted || expr === $Failed;
 
+tracePropTypeNames = <|
+  "hScalar" -> Matchete`PackageScope`hScalar,
+  "lScalar" -> Matchete`PackageScope`lScalar,
+  "hFermion" -> Matchete`PackageScope`hFermion,
+  "lFermion" -> Matchete`PackageScope`lFermion,
+  "hVector" -> Matchete`PackageScope`hVector,
+  "lVector" -> Matchete`PackageScope`lVector,
+  "hGhost" -> Matchete`PackageScope`hGhost,
+  "lGhost" -> Matchete`PackageScope`lGhost,
+  "hAntiGhost" -> Matchete`PackageScope`hAntiGhost,
+  "lAntiGhost" -> Matchete`PackageScope`lAntiGhost
+|>;
+
+tracePropTypes[name_String] := Module[{tokens, missing},
+  tokens = StringSplit[name, "-"];
+  missing = Complement[tokens, Keys[tracePropTypeNames]];
+  If[Length[missing] > 0,
+    Print[
+      "Unsupported trace-name token(s): ",
+      StringRiffle[missing, ", "],
+      ". Supported tokens are: ",
+      StringRiffle[Keys[tracePropTypeNames], ", "]
+    ];
+    Quit[2]
+  ];
+  Lookup[tracePropTypeNames, tokens]
+];
+
 validationTraceStages[expr_] := Module[
   {
     contracted,
@@ -541,14 +576,12 @@ evaluateStages[gen_, insertion_, propTypes_] := Module[
   |>
 ];
 
-ResetAll[];
+Matchete`ResetAll[];
 Matchete`PackageScope`ActivateValidationMode["Singlet_Scalar_Extension", False];
-Begin["Global`"];
-luv = LoadModel["Singlet_Scalar_Extension"];
-End[];
+luv = Matchete`LoadModel["Singlet_Scalar_Extension"];
 
 lag = Matchete`PackageScope`SetCurrentLagrangian[luv, 1, 6, System`Verbose -> False];
-propTypes = {Matchete`PackageScope`hScalar, Matchete`PackageScope`lScalar};
+propTypes = tracePropTypes[traceNameOption];
 propOrder = propOrderOption;
 gen = Matchete`SuperTrace`PackagePrivate`GenericPropagatorExpansion[propTypes, propOrder];
 insertions = Matchete`SuperTrace`PackagePrivate`DeterminePowerInsertions[
@@ -556,15 +589,57 @@ insertions = Matchete`SuperTrace`PackagePrivate`DeterminePowerInsertions[
   6 - propOrder,
   All
 ];
+detailedInsertions = If[maxInsertionDetails < 0,
+  insertions,
+  Take[insertions, UpTo[maxInsertionDetails]]
+];
 preFactor = -I hbar/2;
+powerTypeTrace = If[skipFullTraceOption,
+  $Failed,
+  safeEvaluate @ Matchete`PackageScope`PowerTypeSTr[propTypes, 6]
+];
 rawInsertionSum = safeEvaluate @ Total[
   Matchete`PackageScope`EvaluateSTr[gen, #, propTypes, Matchete`Matching] & /@ insertions
 ];
-powerTypeTrace = safeEvaluate @ Matchete`PackageScope`PowerTypeSTr[propTypes, 6];
-selectedPropOrderValidationStages = validationTraceStages[preFactor rawInsertionSum];
+prefactoredRawInsertionSum = If[failedEvaluationQ[rawInsertionSum],
+  rawInsertionSum,
+  preFactor rawInsertionSum
+];
+selectedPropOrderValidationStages = If[failedEvaluationQ[prefactoredRawInsertionSum],
+  <|"result" -> prefactoredRawInsertionSum, "stages" -> {}|>,
+  validationTraceStages[prefactoredRawInsertionSum]
+];
 selectedPropOrderValidationSimplified = selectedPropOrderValidationStages["result"];
-fullTraceValidationStages = validationTraceStages[powerTypeTrace];
+fullTraceValidationStages = If[skipFullTraceOption,
+  <|"result" -> $Failed, "stages" -> {}|>,
+  validationTraceStages[powerTypeTrace]
+];
 fullTraceValidationSimplified = fullTraceValidationStages["result"];
+loopMatchSelectedReap = If[includeLoopMatchSelectedOption,
+  safeEvaluate @ Reap[
+    Matchete`PackageScope`LoopMatch[
+      Matchete`EFTOrder -> 6,
+      System`Verbose -> False,
+      Matchete`PackageScope`WhichTraces -> {propTypes}
+    ]
+  ],
+  $Failed
+];
+loopMatchSelectedExpression = If[failedEvaluationQ[loopMatchSelectedReap],
+  $Failed,
+  loopMatchSelectedReap[[1]]
+];
+loopMatchSelectedSows = If[
+  failedEvaluationQ[loopMatchSelectedReap] ||
+    Length[loopMatchSelectedReap] < 2 ||
+    Length[loopMatchSelectedReap[[2]]] < 1,
+  {},
+  loopMatchSelectedReap[[2, 1]]
+];
+loopMatchSelectedTraceRules = If[Length[loopMatchSelectedSows] >= 2,
+  Apply[Rule, Partition[loopMatchSelectedSows, 2], {1}],
+  {}
+];
 previousValidationFile = FileNameJoin[{
   matcheteRoot,
   "Validation",
@@ -577,7 +652,7 @@ previousValidationResult = If[FileExistsQ[previousValidationFile],
   <||>
 ];
 previousValidationTrace = If[AssociationQ[previousValidationResult],
-  previousValidationResult["SuperTraces"]["hScalar-lScalar"],
+  Lookup[previousValidationResult["SuperTraces"], traceNameOption, $Failed],
   $Failed
 ];
 previousTargetCondition = If[AssociationQ[previousValidationResult],
@@ -599,10 +674,15 @@ data = <|
   "schema_version" -> 1,
   "generator" -> "debug_singlet_wilson_trace.wls",
   "model" -> "Singlet_Scalar_Extension",
-  "trace_name" -> "hScalar-lScalar",
+  "trace_name" -> traceNameOption,
+  "prop_types_input_form" -> toInputString[propTypes],
   "target" -> toInputString[targetOption],
   "prop_order" -> propOrder,
   "eft_order" -> 6,
+  "skip_full_trace" -> skipFullTraceOption,
+  "skip_slot_order_summaries" -> skipSlotOrderSummariesOption,
+  "include_loop_match_selected" -> includeLoopMatchSelectedOption,
+  "max_insertion_details" -> maxInsertionDetails,
   "matchete_root" -> matcheteRoot,
   "x_field_dofs_input_form" -> toInputString[Matchete`PackageScope`$XFieldDofs],
   "selected_x_orders_input_form" -> toInputString[
@@ -613,20 +693,25 @@ data = <|
   ],
   "selected_xterm_values_input_form" -> toInputString[selectedXTermValues],
   "propagator_expansion_summary" -> stageSummary["generic_propagator_expansion", gen],
-  "slot_order_stage_summaries" -> orderTupleStageSummaries[propTypes, propOrder, insertions],
+  "slot_order_stage_summaries" -> If[
+    skipSlotOrderSummariesOption,
+    {},
+    orderTupleStageSummaries[propTypes, propOrder, insertions]
+  ],
   "insertion_count" -> Length[insertions],
+  "detailed_insertion_count" -> Length[detailedInsertions],
   "insertions" -> MapIndexed[
     Join[
       <|"index" -> First[#2]|>,
       evaluateStages[gen, #1, propTypes]
     ] &,
-    insertions
+    detailedInsertions
   ],
   "raw_insertion_sum_summary" -> stageSummary["raw_insertion_sum_no_power_prefactor", rawInsertionSum],
   "power_prefactor_input_form" -> toInputString[preFactor],
   "power_prefactor_times_raw_sum_summary" -> stageSummary[
     "power_prefactor_times_raw_sum",
-    preFactor rawInsertionSum
+    prefactoredRawInsertionSum
   ],
   "selected_prop_order_validation_simplified_summary" -> stageSummary[
     "selected_prop_order_validation_simplified",
@@ -646,10 +731,27 @@ data = <|
   ],
   "full_trace_validation_stage_summaries" ->
     fullTraceValidationStages["stages"],
+  "selected_loop_match_expression_summary" -> stageSummary[
+    "selected_loop_match_expression",
+    loopMatchSelectedExpression
+  ],
+  "selected_loop_match_sows_input_form" -> toInputString[loopMatchSelectedSows],
+  "selected_loop_match_trace_rules_input_form" -> toInputString[loopMatchSelectedTraceRules],
+  "selected_loop_match_trace_rule_summaries" -> (
+    Function[rule, <|
+      "trace_name_input_form" -> toInputString[First[rule]],
+      "summary" -> stageSummary["selected_loop_match_trace_rule", Last[rule]]
+    |>] /@ loopMatchSelectedTraceRules
+  ),
   "previous_validation_file" -> previousValidationFile,
-  "previous_validation_hScalar_lScalar_summary" -> stageSummary[
-    "previous_validation_hScalar_lScalar",
+  "previous_validation_trace_summary" -> stageSummary[
+    "previous_validation_" <> traceNameOption,
     previousValidationTrace
+  ],
+  "previous_validation_hScalar_lScalar_summary" -> If[
+    traceNameOption === "hScalar-lScalar",
+    stageSummary["previous_validation_hScalar_lScalar", previousValidationTrace],
+    <||>
   ],
   "previous_validation_target_condition_input_form" -> toInputString[previousTargetCondition],
   "previous_validation_cHW_condition_input_form" -> If[
@@ -658,7 +760,13 @@ data = <|
     "[]"
   ],
   "full_power_minus_selected_prop_order_input_form" -> shortInputString[
-    powerTypeTrace - preFactor rawInsertionSum
+    If[failedEvaluationQ[powerTypeTrace],
+      powerTypeTrace,
+      If[failedEvaluationQ[prefactoredRawInsertionSum],
+        prefactoredRawInsertionSum,
+        powerTypeTrace - prefactoredRawInsertionSum
+      ]
+    ]
   ]
 |>;
 

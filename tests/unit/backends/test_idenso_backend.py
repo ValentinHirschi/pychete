@@ -5,6 +5,7 @@ from symbolica.community import idenso as native_idenso
 
 from pychete import Theory
 from pychete.backends import idenso, vakint
+from pychete.expr import field_with_derivatives
 from pychete.group_algebra import simplify_color, simplify_gamma, simplify_metrics, simplify_pychete_color
 from pychete.symbols import SymbolRole, canonical_string, s
 
@@ -164,6 +165,52 @@ def test_idenso_bridge_contracts_pychete_delta_through_registered_field_index() 
     simplified = idenso.contract_pychete_deltas(theory, s.Delta(left, right) * higgs(left))
 
     assert _same(simplified, higgs(expected_index))
+    assert "pychete::Delta" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_contracts_pychete_delta_through_barred_field_index() -> None:
+    theory = Theory("idenso_color_su2_barred_field_pychete_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    left = theory.index("i", fund)
+    right = theory.index("j", s.Bar(fund))
+    right_inner = theory.index("j", fund)
+
+    simplified = idenso.contract_pychete_deltas(theory, s.Delta(left, right) * s.Bar(higgs(right_inner)))
+
+    assert _same(simplified, s.Bar(higgs(left)))
+    assert "pychete::Delta" not in canonical_string(simplified)
+
+
+def test_idenso_bridge_contracts_pychete_delta_chain_through_higgs_derivative_bilinear() -> None:
+    theory = Theory("idenso_color_su2_higgs_derivative_delta_chain")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    k = theory.index("k", fund)
+    ell = theory.index("ell", fund)
+    mu = theory.index("mu")
+    expr = (
+        higgs(i)
+        * field_with_derivatives(higgs(k), (mu,))
+        * s.Bar(higgs(ell))
+        * s.Bar(field_with_derivatives(higgs(j), (mu,)))
+        * s.Delta(i, theory.index("j", s.Bar(fund)))
+        * s.Delta(k, theory.index("ell", s.Bar(fund)))
+    )
+    expected = (
+        higgs(j)
+        * field_with_derivatives(higgs(ell), (mu,))
+        * s.Bar(higgs(ell))
+        * s.Bar(field_with_derivatives(higgs(j), (mu,)))
+    )
+
+    simplified = idenso.contract_pychete_deltas(theory, expr)
+
+    assert _same(simplified, expected)
     assert "pychete::Delta" not in canonical_string(simplified)
 
 

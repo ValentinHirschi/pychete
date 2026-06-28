@@ -202,6 +202,39 @@ def test_charged_scalar_free_lag_generates_gauge_interactions() -> None:
     assert_expr_equal(operator.interaction_entry(vector, vector), 2 * coupling() ** 2 * phi() * s.Bar(phi()))
 
 
+def test_matchete_implicit_abelian_scalar_kinetic_generates_scalar_vector_xterms() -> None:
+    theory = Theory("fluctuation_matchete_implicit_scalar_vector")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 1)],
+        self_conjugate=False,
+        mass=(FieldMassKind.LIGHT, "m"),
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+
+    operator = theory.fluctuation_operator(lagrangian, [s.Bar(phi()), phi(), vector()])
+
+    assert_expr_equal(
+        operator.differential_entry(s.Bar(phi()), vector()),
+        Expression.I * phi() * coupling() * s.DifferentialOperator(s.List(mu))
+        + 2 * Expression.I * phi(derivatives=[mu]) * coupling(),
+    )
+    assert_expr_equal(
+        operator.differential_entry(vector(), phi()),
+        Expression.I * coupling() * s.Bar(phi()) * s.DifferentialOperator(s.List(mu))
+        - Expression.I * coupling() * s.Bar(phi(derivatives=[mu])),
+    )
+    assert_expr_equal(
+        operator.differential_entry(s.Bar(phi()), vector()).coefficient(vector()).expand(),
+        Expression.num(0),
+    )
+
+
 def test_one_loop_match_option_expands_abelian_covariant_derivatives_before_setup(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -2129,11 +2162,44 @@ def test_singlet_wilson_line_target_prefilter_matches_matchete_order_four_insert
     assert phi_atom_count == 0
 
 
-def test_singlet_selected_wilson_line_chw_matches_matchete_order_four_coefficient() -> None:
+def test_singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
-    target = smeft_warsaw_operator(theory, "cHW")
-    assert target is not None
+    setup = theory.one_loop_setup(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        max_trace_order=4,
+        include_light_only=True,
+    )
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar-lVector-lScalar",),
+        max_total_order=0,
+        max_slot_order=0,
+        index_prefix="singlet_hslvls",
+    )
+
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+    )
+    generated_terms = tuple(term for entry_terms in grouped_terms.values() for term in entry_terms)
+    numerator_sum = sum((term.numerator for term in generated_terms), Expression.num(0)).expand()
+
+    assert len(generated_terms) == 4
+    assert not bool(numerator_sum.coefficient(theory.coupling_handle("gY")() ** 2).expand() == Expression.num(0))
+
+
+def test_singlet_selected_wilson_line_higgs_gauge_subset_matches_matchete_coefficients() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    targets = {
+        target_name: target
+        for target_name in ("cHW", "cHB", "cHWB")
+        if (target := smeft_warsaw_operator(theory, target_name)) is not None
+    }
+    assert set(targets) == {"cHW", "cHB", "cHWB"}
     hbar = theory.external_handle("hbar")()
     setup = theory.one_loop_setup(
         fixture.expression("lagrangian"),
@@ -2144,9 +2210,9 @@ def test_singlet_selected_wilson_line_chw_matches_matchete_order_four_coefficien
         trace_names=("hScalar-lScalar",),
         max_total_order=4,
         max_slot_order=4,
-        index_prefix="singlet_chw",
+        index_prefix="singlet_higgs_gauge_subset",
     )
-    requirements = matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
+    requirements = matching_module._term_atom_requirements_for_targets(theory, targets)
     grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
         plan,
         act_open_derivatives=True,
@@ -2170,7 +2236,100 @@ def test_singlet_selected_wilson_line_chw_matches_matchete_order_four_coefficien
         covariant_derivative_commutator_mode="all_distinct",
         expand_covariant_derivative_commutators=False,
         simplify_pychete_color_algebra=True,
-        expose_scalar_derivative_commutator_bilinears=True,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    selected = sum(
+        (term for entry_terms in evaluated_by_entry.values() for term in entry_terms),
+        Expression.num(0),
+    )
+    normalized_finite = (
+        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+        * vakint_backend.finite_part(selected)
+    ).expand()
+    normalized_finite = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        normalized_finite,
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized_finite,
+    )
+
+    projected = result.project_matching_conditions(
+        targets,
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )
+    mass = theory.coupling_handle("M")()
+    source = theory.coupling_handle("A")()
+    g_l = theory.coupling_handle("gL")()
+    g_y = theory.coupling_handle("gY")()
+
+    assert_expr_equal(projected["cHW"], hbar * source**2 * g_l**2 / (12 * mass**4))
+    assert_expr_equal(projected["cHB"], hbar * source**2 * g_y**2 / (12 * mass**4))
+    assert_expr_equal(projected["cHWB"], hbar * source**2 * g_l * g_y / (6 * mass**4))
+
+
+def test_singlet_selected_wilson_line_chd_four_slot_matches_matchete_selected_coefficient() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    registered_targets = matching_results_module.registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    condition_name, target = next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+    hbar = theory.external_handle("hbar")()
+    setup = theory.one_loop_setup(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        max_trace_order=4,
+    )
+    heavy_scalar_solutions = matching_module.solve_heavy_scalar_eoms(
+        theory,
+        fixture.expression("lagrangian"),
+        eft_order=6,
+    )
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar-lVector-lScalar",),
+        max_total_order=0,
+        max_slot_order=0,
+        index_prefix="singlet_chd_four_slot",
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(
+        theory,
+        {condition_name: target},
+        heavy_scalar_solutions=heavy_scalar_solutions,
+    )
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        term_atom_requirements=requirements,
+    )
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped_terms,
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=False,
         epsilon=None,
         mu_r_squared=None,
     )
@@ -2190,19 +2349,45 @@ def test_singlet_selected_wilson_line_chw_matches_matchete_order_four_coefficien
     )
 
     projected = result.project_matching_conditions(
-        {"cHW": target},
+        {condition_name: target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )
+    mass = theory.coupling_handle("M")()
+    expected = (
+        hbar
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (mass.log() - S("vakint::mursq").log() / 2 - Expression.num(1) / 2)
+        / mass**4
+    )
+
+    assert_expr_equal(projected[condition_name], expected)
+
+    replacement_rules = matching_module.heavy_scalar_solution_replacements(
+        heavy_scalar_solutions,
+        fresh_dummy_indices=True,
+    )
+    post_heavy = result.with_on_shell_reduction(replacement_rules, expand=False)
+    post_commutator = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        post_heavy.on_shell_eft_lagrangian,
+    )
+    post_commutator_result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=post_commutator,
+    )
+    post_commutator_projected = post_commutator_result.project_matching_conditions(
+        {condition_name: target},
         expand_source=False,
         normalize_derivative_operators=True,
         eft_order=6,
     )
 
-    assert_expr_equal(
-        projected["cHW"],
-        hbar
-        * theory.coupling_handle("A")() ** 2
-        * theory.coupling_handle("gL")() ** 2
-        / (12 * theory.coupling_handle("M")() ** 4),
-    )
+    assert_expr_equal(post_commutator_projected[condition_name], expected)
 
 
 def test_wilson_line_expansion_drops_odd_loop_rank_after_open_derivatives() -> None:

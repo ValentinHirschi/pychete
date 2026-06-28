@@ -165,97 +165,61 @@
 
 - The closest full one-loop Matchete integration milestone remains the Singlet
   Scalar Extension selected Wilson-line trace family. The accepted subset is
-  `hScalar-lScalar -> cHW/cHB/cHWB`; the first unresolved family is
-  `hScalar-lScalar -> cHD` and related derivative/Higgs targets `cHBox` and
-  `cH`.
-- The latest cHD mismatch investigation followed the explicit Matchete
-  algorithm before patching:
-  `SaveValidationResults` simplifies saved trace results with
-  `ContractCGs // MatchReduce // GreensSimplify`; `GreensSimplify` contracts
-  group/index structures, maps terms to operator classes, builds IBP and
-  covariant-derivative commutation identities through
-  `ConstructOperatorIdentities`, row-reduces those identities, and returns
-  preferred Green-basis representatives. `EOMSimplify` then performs systematic
-  matter/vector field redefinitions; vector EOM normal form is
-  `FieldStrength[V,{nu,mu},inds,{nu}]`, and `VectorShift` uses the gauge
-  kinetic normalization.
-- pychete now has a correct target-local Abelian vector-EOM projection alias,
-  but that is not enough for the selected Singlet `cHD` coefficient. A
-  filtered-versus-unfiltered selected `hScalar-lScalar` run with
-  `wilson_line_max_total_order=4` and `wilson_line_max_slot_order=4` kept the
-  same 16 Wilson-line terms in both cases, with nonzero plan entries
-  `hScalar-lScalar#wilson0_o0_0`, `hScalar-lScalar#wilson5_o2_0`, and
-  `hScalar-lScalar#wilson14_o4_0`. The on-shell aggregate still contained no
-  detected `FieldStrength` atoms and projected the selected scalar-only source
-  to zero for `cHD`.
-- Therefore the current precise gap is not premature cHD target filtering and
-  not direct coefficient extraction. It is the missing Matchete-style
-  Green-basis scalar derivative reduction that turns the selected scalar
-  derivative class into the preferred combination of pure `D^2H D^2H`,
-  Higgs-current times `D·B`/`D·W`, and direct four-Higgs derivative-current
-  operators before matching-condition extraction.
-- The latest scalar-Laplacian IBP slice covers the direct
-  `A * D^2 H -> D A * D H` source-side identity and projects a local
-  four-Higgs derivative-current component with the expected sign. It does not
-  complete the selected Singlet `cHD` mismatch: a bounded
-  `wilson_line_max_total_order=0` smoke with heavy-scalar substitution and the
-  new pass still projects `cHD` to zero. A max-order-4 debug with explicit
-  commutator emission confirmed many generated `FieldStrength` atoms but still
-  zero projected `cHD`; full source inspection of the `wilson14_o4_0` family is
-  currently too expensive interactively. The remaining gap is therefore the
-  higher-derivative Green-basis/commutator row-reduction piece, not this local
-  scalar Laplacian identity alone.
-- The follow-up first-derivative target-local IBP alias now projects a
-  registered `cHD` target from the full total-derivative-equivalent source
-  `-D_mu(Bar[H] H D_mu H) Bar[H]`. The bounded selected Singlet order-zero
-  smoke still returns zero, so the mismatch is not only projection of this
-  first-derivative IBP family; the higher-derivative selected-source
-  normal-form gap remains.
-- The direct higher-derivative scalar derivative-slot projection alias closes
-  a smaller structural mismatch with Matchete's `IdentitiesIBP`, but it is not
-  a recursive/additive substitute for Matchete's row-reduced Green-basis
-  identities. In particular, pychete still needs the explicit
-  `IdentitiesCDCommutation` plus row-reduction semantics before interpreting
-  partial pieces of total-derivative identities as selected Singlet `cHD`.
-- The latest commutator-identity slice closes the identity-source mismatch:
-  pychete can now generate all local adjacent-pair `CommuteCDs` identities for
-  linear field-like atoms. These identities now have a Symbolica-backed
-  explicit-basis solver boundary; what remains is the bounded automatic
-  operator-class vector-space construction around them.
-- The latest normal-form slices now feed local bases and generated commutator
-  identities into Symbolica's linear solver. The new automatic local-basis
-  builder is enough to reduce synthetic composite operator monomials such as
-  `Bar(phi) D_a D_b phi` to preferred `Bar(phi) D_b D_a phi` plus commutator
-  representatives without a hand-supplied basis list. The remaining cHD work
-  is automatic operator-class discovery/scoring for larger local classes,
-  basis construction for the higher-derivative Singlet source, and integration
-  with the selected Wilson-line Green-basis stage.
-- The source-side scalar IBP/commutator normal-form slice adds the next local
-  identity layer and is wired into the opt-in Wilson-line scalar-Green path.
-  A watchdog-wrapped order-zero selected Singlet `hScalar-lScalar -> cHD`
-  smoke still preserved two EOM-aware Wilson-line terms but produced no
-  projected matching condition, so this does not yet complete the `cHD`
-  milestone. The remaining gap is the larger Matchete operator-class scoring
-  and preferred-representative policy for higher-derivative scalar classes,
-  not just generation of the first local IBP/commutator identities.
-- The scalar-local preferred-representative score now maps a focused crossed
-  one-sided four-derivative scalar bilinear to the balanced two-derivative
-  bilinear in unit tests. The selected Singlet order-zero `cHD` smoke remains
-  unchanged, so the next mismatch investigation still has to compare
-  Matchete's full operator-class normal-form/evaluation path against pychete's
-  bounded local scalar normal form before another patch.
-- The diagnostic scripts now support target-aware `cHD` comparison. The
-  Matchete Singlet Wilson-line dump accepts `--target` and records the saved
-  reference matching condition for that target. The pychete Singlet debug dump
-  uses the requested target for filtering/projection, can apply the public
-  heavy-scalar solution replacement stage, and reports aggregate projections
-  after heavy substitution and after the scalar Green normal form. A
-  watchdog-wrapped order-zero `cHD` run with EOM-aware target filtering kept
-  the two expected `hScalar-lScalar#wilson0_o0_0` rows, but the aggregate
-  projection remained zero before substitution, after substitution, and after
-  scalar Green normal form. This localizes the next parity comparison away
-  from order-zero filtering and toward the higher-derivative
-  `wilson14_o4_0` operator-class row reduction.
+  `hScalar-lScalar -> cHW/cHB/cHWB`.
+- The previous assumption that selected `hScalar-lScalar` also sources the
+  unresolved Singlet `cHD` coefficient was rechecked against Matchete and is
+  wrong. A target-aware Matchete prop-order-4 dump for `hScalar-lScalar`
+  produced 18 raw four-derivative Higgs-bilinear terms, but the selected
+  contribution becomes zero at the Matchete validation pipeline's
+  `GreensSimplify` stage. Therefore `hScalar-lScalar -> cHD` is a useful
+  Green-basis regression, not the immediate source of the nonzero saved
+  Matchete `cHD` condition.
+- Projecting the converted Matchete reference supertraces with pychete's
+  registered `cHD` target identifies `hScalar-lScalar-lVector-lScalar` as the
+  only currently observed nonzero reference supertrace source. Its projected
+  contribution is
+  `-3/2*hbar*log(mubar2/M^2)*A^2*gY^2/M^4
+  -5/4*hbar*A^2*gY^2/M^4
+  -3/2*hbar*A^2*gY^2/(epsilon*M^4)`. The full saved `cHD` condition is
+  larger, so additional traces or tree/on-shell pieces still have to be
+  identified after this selected trace is understood.
+- The first precise mismatch in the four-slot trace was found before tensor
+  reduction or projection: pychete's `FreeLagConvention.MATCHETE` scalar
+  kinetic term kept Abelian covariant derivatives implicit but the fluctuation
+  operator did not synthesize the corresponding scalar-vector X-blocks.
+  Therefore every `lScalar-lVector`/`lVector-lScalar` path entry was zero and
+  `hScalar-lScalar-lVector-lScalar` generated no pychete Wilson-line terms.
+- The corresponding Matchete algorithm was reviewed before patching:
+  `Matching.m:SetSubstitutions` uses
+  `effLag = lag - KinOpLagrangian @@ allFieldLabels`, then computes
+  `-FluctuationOperator[effLag, Bar@f1@i, f2@j]`, drops remaining quantum
+  vector fields with `Field[_, _Vector, __] -> 0`, and lowers
+  `OpenCD -> OpenCD - I LoopMom`. Thus scalar-vector X-terms from the charged
+  scalar covariant kinetic current survive, while leftover vector-background
+  pieces from connection-squared terms are removed.
+- pychete now adds a bounded local implicit-Abelian scalar-vector contribution
+  during fluctuation differential-entry construction when one basis entry is a
+  registered scalar and the other is the registered Abelian vector for one of
+  that scalar's gauge charges. The ordinary explicit entry is tried first; if
+  it is already nonzero, pychete skips the implicit contribution to avoid
+  double-counting explicitly expanded pychete lagrangians. A focused Singlet
+  regression now confirms `hScalar-lScalar-lVector-lScalar` generates four
+  zero-order Wilson-line terms carrying `gY^2`.
+- The relevant downstream Matchete algorithm boundary remains:
+  `PowerTypeSTr` iterates propagation orders, builds
+  `GenericPropagatorExpansion`, enumerates `DeterminePowerInsertions`, and
+  evaluates each insertion with `EvaluateSTr`; saved validation trace results
+  are simplified through `ContractCGs // MatchReduce // GreensSimplify`.
+  `GreensSimplify` builds operator classes, IBP identities, and
+  covariant-derivative commutation identities, row-reduces them, and chooses
+  preferred Green-basis representatives. `EOMSimplify` then applies matter and
+  vector EOM redefinitions.
+- The next precise comparison is now downstream of source generation:
+  Wilson-term expansion, tensor reduction/integration, heavy-scalar
+  substitution, Green-basis normal form, and registered-Wilson projection for
+  the nonzero four-slot source. A full debug dump currently reaches a
+  pychete scalar Green-basis size frontier, so the next slice should keep
+  target-local dumps bounded while comparing Matchete stages.
 
 ## Latest Validation
 
@@ -286,6 +250,64 @@
   helper_mathematica_scripts/debug_singlet_wilson_trace.wls --target cHD
   --prop-order 0 ...` produced a Matchete order-zero dump whose saved
   reference `cHD` condition is nonzero.
+- Watchdog-wrapped Matchete `hScalar-lScalar --target cHD --prop-order 4`
+  showed the selected two-slot contribution vanishes after
+  `GreensSimplify`, despite 18 raw four-derivative Higgs-bilinear terms before
+  validation simplification.
+- A converted-reference supertrace projection probe showed the only current
+  nonzero `cHD` supertrace projection is
+  `hScalar-lScalar-lVector-lScalar`; this replaces the older two-slot
+  selected-trace assumption for the next mismatch slice.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "charged_scalar or implicit_abelian" -q` passed (`2 passed`), covering the
+  Matchete-convention implicit Abelian scalar-vector X-terms and preserving
+  the existing explicit charged-scalar gauge-interaction behavior.
+- Watchdog-wrapped `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "four_slot_scalar_vector_trace" -q` passed (`1 passed`), confirming the
+  Singlet `hScalar-lScalar-lVector-lScalar` zero-order Wilson-line source now
+  generates four `gY^2` terms.
+- Watchdog-wrapped direct Singlet source probe confirmed
+  `hScalar-lScalar-lVector-lScalar` has `48` paths, `4` nonzero paths, and
+  `4` zero-order Wilson-line terms after the implicit-Abelian X-term patch.
+- A watchdog-wrapped full pychete `cHD` debug dump for that trace was stopped
+  after it became too slow in downstream evaluation/projection. A broader
+  selected `cHW` regression probe then exposed a separate scalar Green-basis
+  solver limitation: some Wilson-line terms hand Symbolica's linear solver
+  complex coefficients such as `5*i/18` together with nontrivial backend
+  coefficient factors. The current solver patch now strips common scalar
+  identity prefactors and encodes complex numeric row coefficients through an
+  internal symbolic `i` placeholder before delegating to
+  `Expression.solve_linear_system(...)`; focused unit tests cover both a
+  shared imaginary prefactor and a relative `i/epsilon` row. This removes the
+  selected `cHW` solver crash, but the selected coefficient still disagrees,
+  so the patch is not yet a green milestone.
+- Watchdog-wrapped selected `hScalar-lScalar -> cHW` now reaches projection.
+  With `mu_R^2` left symbolic it gives
+  `hbar*A^2*gL^2/M^4*(log(mu_R^2)/6 - log(M)/3 + 25/72)`, and with
+  `mu_R^2=M^2` it gives `25/72*hbar*A^2*gL^2/M^4` instead of Matchete's saved
+  `1/12`. Disabling scalar Green-basis exposure gives zero projection, so the
+  mismatch is in scalar Green-basis/commutator exposure and finite-shift
+  handling rather than source generation.
+- A bounded Matchete `hScalar-lScalar -> cHW` prop-order-4 dump confirms the
+  saved validation condition is
+  `hbar*A^2*gL^2/(12*M^4)`. Matchete's reliable pre-`GreensSimplify`
+  `validation_match_reduce` samples have the same derivative-word families as
+  pychete. A pychete pre-Green finite probe at `mu_R^2=M^2` shows unbarred
+  Higgs derivative-bilinear coefficients `-7/9`, `11/9`, and `-5/18`, while
+  Matchete samples show the corresponding finite constants `-7/18`, `11/18`,
+  and `-5/36` on barred derivatives as part of a symmetric barred/unbarred
+  pair before simplification. Finite-first exploratory Green exposure gives
+  `7/144`, pre-finite Green exposure gives `50/144`, and Matchete expects
+  `12/144`; the next patch must therefore model Matchete's d-dimensional
+  operator identity and finite-shift handling more faithfully, not just adjust
+  an overall prefactor.
+- `scripts/debug_pychete_singlet_wilson_trace.py` now has a `--source-only`
+  mode for bounded four-slot trace diagnostics. Watchdog-wrapped source-only
+  `hScalar-lScalar-lVector-lScalar -> cHD` completed quickly and reported
+  four nonempty order-zero terms in preaction, prefinal, runtime-internal, and
+  post-final grouped source summaries.
 - Watchdog-wrapped `scripts/debug_pychete_singlet_wilson_trace.py --target
   cHD --max-total-order 0 --max-slot-order 0
   --substitute-heavy-scalar-solutions ...` produced a pychete dump retaining
@@ -295,28 +317,123 @@
 
 ## Next Work
 
-- Continue the next generic, bounded scalar Green-basis reduction slice. Start
-  from the Matchete `Simplifications.m` algorithms around
+- Continue target-aware Matchete and pychete debug comparisons for the exact
+  four-slot trace `hScalar-lScalar-lVector-lScalar -> cHD`, now that pychete
+  source generation is nonzero. Start with bounded per-entry/per-stage dumps
+  rather than full aggregate evaluation, because the current pychete debug
+  script becomes too slow downstream.
+- Compare Matchete's `SuperTrace.m` stages for this trace against pychete's
+  generated Wilson-line entries after the scalar-vector X-term fix. In
+  particular, check insertion enumeration, cyclic/log prefactors, light-vector
+  gauge-coupling factors, vector-slot signs, open-derivative action,
+  symmetry-vanishing Wilson terms, Wilson expansion, tensor
+  reduction/integration, heavy-scalar substitution, and final
+  Green-basis/projection stages.
+- If the first mismatch is still in Green-basis simplification, continue from
+  the already reviewed Matchete `Simplifications.m` algorithms around
   `MatchOperatorPatterns`, `ConstructOperatorIdentities`, `IdentitiesIBP`,
-  `IdentitiesCDCommutation`, `IBPSimplify`, and `OperatorToNormalForm`; do not
-  add another Warsaw-specific `cHD` shortcut.
-- Use Symbolica pattern/replacement/coefficient/tensor-canonicalization
-  primitives and idenso metric/group simplification as the pychete boundary.
-  A small Python orchestrator may enumerate candidate scalar derivative classes,
-  but the symbolic transformations should stay native.
-- The next concrete target is the higher-derivative scalar class behind
-  `hScalar-lScalar#wilson14_o4_0`: reproduce Matchete's adjacent
-  `CommuteCDs` plus row-reduced Green-basis representative for the local
-  four-derivative scalar terms, then rerun a reduced selected-trace cHD smoke
-  under the 30 GiB watchdog.
-- Use the target-aware Matchete/pychete debug dumps for the next precise
-  comparison, and inspect Matchete's `ConstructOperatorIdentities`/`IBPSimplify`
-  behavior for the exact derivative-class samples before changing runtime
-  matching code.
-- With bounded scalar IBP/commutator normal form now available and wired into
-  the opt-in Wilson-line scalar-Green route, the next implementation step is
-  to port more of Matchete's operator-class scoring/preferred-representative
-  policy for the higher-derivative scalar classes. The immediate target is a
-  generic preference strategy that can select the same Green-basis
-  representatives Matchete uses for the selected Singlet `cHD`/`cHBox`/`cH`
-  derivative-Higgs family, without hard-coding Warsaw coefficients.
+  `IdentitiesCDCommutation`, `IBPSimplify`, `OperatorToNormalForm`, and
+  `OpScore`. Keep the patch generic and Symbolica/idenso-backed rather than
+  adding a Warsaw-specific `cHD` shortcut.
+- The next scalar Green-basis work should continue beyond the fixed solver
+  crash and compare Matchete's d-dimensional simplification semantics. In
+  `Simplifications.m`, `Operator[...]` pulls prefactors free of
+  `Field|FieldStrength|CG|LCTensor` outside the operator object,
+  `SeparateInteractionTerm` returns `{coefficient, operator}`, and
+  `ConstructOperatorIdentities` row-reduces the operator vector space.
+  However, Matchete also keeps dimensional-regulator effects through
+  `IBPSimplify`/`EpsExpand` and its evanescent treatment. pychete must capture
+  the corresponding finite shifts generically before the selected `cHW`
+  regression can be treated as a stable first Green-basis milestone.
+
+## Latest Slice In Progress
+
+- A direct Matchete-vs-pychete stage comparison for selected Singlet
+  `hScalar-lScalar -> cHW` showed that applying pychete's scalar
+  Green-basis normal form before scalar integral evaluation is the wrong
+  ordering for the current Wilson-line path. Keeping the pre-integral
+  Wilson/tensor/integral expression unexposed, taking the finite evaluated
+  result, and only then applying scalar derivative commutator-bilinear
+  exposure gives the Matchete coefficient `1/12` in the focused probe.
+- The implementation is being adjusted so
+  `wilson_line_expose_scalar_derivative_commutator_bilinears` means
+  post-evaluation/post-finite exposure for internal, vakint, public matching,
+  and validation preview routes. The older
+  `_apply_wilson_line_scalar_green_normal_form(...)` remains available only as
+  an explicit diagnostic comparison path.
+- The focused regression to close first is now the selected Higgs-gauge
+  subset test
+  `test_singlet_selected_wilson_line_higgs_gauge_subset_matches_matchete_coefficients`.
+  Once it is stable, rerun the Singlet source-generation regressions and then
+  return to the four-slot `hScalar-lScalar-lVector-lScalar -> cHD` source.
+- Focused validation after the patch:
+  `tests/integration/matching/test_fluctuation_operator.py -k higgs_gauge_subset`
+  passes, and
+  `tests/integration/validation/test_validation_fixtures.py -k
+  "singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets and
+  cHW"` passes under the 30 GiB watchdog. This establishes selected
+  `hScalar-lScalar -> cHW` one-loop Wilson-line parity against the saved
+  Matchete fixture, but not full-model SMEFT matching parity.
+
+## Latest cHD Four-Slot Slice
+
+- Continued the selected Singlet
+  `hScalar-lScalar-lVector-lScalar -> cHD` Matchete parity investigation with
+  insertion-level Matchete debug output instead of final-condition guessing.
+  The useful Matchete checkpoint is insertion 1: after `WilsonExpand` and
+  loop integration it has the paired structure
+  `Bar[H_i] D_mu H_i D_mu Bar[H_j] H_j` with coefficient proportional to
+  `A^2 gY^2`, `Prop[0]^3 Prop[M]`, and the expected
+  `Log[mubar2/M^2]` finite part.
+- Found and fixed two generic pychete mismatches before projection:
+  pre-Wilson tensor reduction was not seeing loop momenta hidden inside
+  generated `NCM(...)` chains, and internal light-vector propagator slots in
+  longer Wilson-line paths were missing the Lorentz endpoint metric. The
+  pre-Wilson path now scalarizes commutative `NCM` chains before collecting
+  loop momenta, inserts the internal vector Lorentz metric, and delays
+  symmetric-Lorentz metric contraction until after `WilsonTerm` expansion.
+- Found and fixed the next generic mismatch in the pychete/idenso delta
+  bridge. Matchete's `ContractDelta // ContractCGs // ContractDelta` contracts
+  deltas through barred scalar field indices; pychete's generic
+  `Delta * rest` fallback could leave or drop the delta before identifying
+  the neighboring `Bar(Field(...))`. The idenso adapter now has bounded
+  Symbolica replacement rules for `Delta(...) * Field(...)` and
+  `Delta(...) * Bar(Field(...))` before the generic closed-dummy fallback.
+- Result: selected pre-heavy `hScalar-lScalar-lVector-lScalar -> cHD`
+  projection is now nonzero and matches the Matchete-selected finite
+  coefficient
+  `hbar*A^2*gY^2/M^4*(log(M) - log(vakint::mursq)/2 - 1/2)` using the
+  registered Wilson target and EOM-aware target filtering. This is a second
+  selected-trace Wilson-line coefficient milestone, not yet a full Singlet
+  model integration-test reproduction.
+- Latest registered-projection fix: a bounded pychete probe compared the raw
+  and registered `cHD` paths at each projection stage after heavy-scalar
+  substitution and post-finite scalar commutator-bilinear exposure. The first
+  mismatch was not tensor reduction, vakint evaluation, normalization, or
+  mass-dimension truncation. It was the registered projection path: Wilson
+  aliases broadened the target-local canonicalization family enough to trip
+  the generic-projection size guard before a cheap termwise exact native
+  coefficient pass could run. The guard now allows a separately bounded
+  termwise exact pass before blocking the expensive generic full-source
+  fallback.
+- Result: selected `hScalar-lScalar-lVector-lScalar -> cHD` now keeps the
+  Matchete-selected finite coefficient
+  `hbar*A^2*gY^2/M^4*(log(M) - log(vakint::mursq)/2 - 1/2)` through
+  heavy-scalar substitution and post-finite scalar commutator-bilinear
+  exposure using the registered Wilson target. This is still a selected-trace
+  milestone, not yet a full Singlet model integration-test reproduction.
+- Added a deliberately partial first-success integration regression for the
+  selected Singlet Higgs-gauge Wilson subset. The former single `cHW`
+  selected-trace test now projects only `cHW`, `cHB`, and `cHWB` from one
+  generated `hScalar-lScalar` Wilson-line source and checks the Matchete
+  coefficients `1/12`, `1/12`, and `1/6`. This gives fast regression scoping
+  for the first matching Wilson coefficients without paying for all registered
+  SMEFT conditions.
+- Focused validation passed:
+  `tests/unit/backends/test_idenso_backend.py -k "pychete_delta" -q`
+  (`5 passed`), and watchdog-wrapped
+  `tests/integration/matching/test_fluctuation_operator.py -k
+  "wilson_line_vector_slots_use_matchete_propagator_sign or
+  singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms or
+  higgs_gauge_subset or
+  singlet_selected_wilson_line_chd_four_slot" -q` (`4 passed`).
