@@ -70,6 +70,69 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
   |>
 ];
 
+coefficientStageSummary[name_String, expr_, source_, offShellExpr_, targetOperator_] := Module[
+  {coef, sourceCoef, offCoef},
+  coef = FullSimplify[Matchete`GetOperatorCoefficient[expr, targetOperator]];
+  sourceCoef = FullSimplify[Matchete`GetOperatorCoefficient[source, targetOperator]];
+  offCoef = FullSimplify[Matchete`GetOperatorCoefficient[offShellExpr, targetOperator]];
+  <|
+    "name" -> name,
+    "byte_count" -> ByteCount[expr],
+    "coefficient_input_form" -> toInputString[coef],
+    "delta_from_replay_source_input_form" -> toInputString[FullSimplify[coef - sourceCoef]],
+    "delta_from_off_shell_input_form" -> toInputString[FullSimplify[coef - offCoef]]
+  |>
+];
+
+fieldRedefReplaySummary[name_String, expr_, offShellExpr_, targetOperator_] := Module[
+  {maxOrder = 6, stages, renormalized, gaugeData, out},
+  stages = {coefficientStageSummary["source", expr, expr, offShellExpr, targetOperator]};
+  renormalized = Matchete`PackageScope`RenormalizeMatterFields[expr, maxOrder, 1];
+  AppendTo[
+    stages,
+    coefficientStageSummary[
+      "after_renormalize_matter",
+      renormalized,
+      expr,
+      offShellExpr,
+      targetOperator
+    ]
+  ];
+  gaugeData = Matchete`FieldRedef`PackagePrivate`GaugeFieldNormalization[renormalized, maxOrder];
+  out = renormalized;
+  Do[
+    out = Matchete`FieldRedef`PackagePrivate`ShiftLagrangian[
+      out,
+      gaugeData[[1]],
+      gaugeData[[2]],
+      devs,
+      eftOrder,
+      maxOrder,
+      1
+    ];
+    AppendTo[
+      stages,
+      coefficientStageSummary[
+        StringJoin["after_shift_dim", ToString[eftOrder], "_dev", ToString[devs]],
+        out,
+        expr,
+        offShellExpr,
+        targetOperator
+      ]
+    ],
+    {eftOrder, 5, maxOrder},
+    {devs, Reverse @ Range[eftOrder - 2]}
+  ];
+  <|
+    "source_name" -> name,
+    "max_order" -> maxOrder,
+    "fields_to_shift_input_form" -> toInputString[Matchete`PackageScope`FieldsToShift[expr]],
+    "gauge_normalization_input_form" -> shortInputString[gaugeData[[1]]],
+    "kinetic_mixing_input_form" -> shortInputString[gaugeData[[2]]],
+    "stages" -> stages
+  |>
+];
+
 fieldsToShiftPreparation[expr_] := Module[{fields, freeL, list, shiftFields, prepared},
   fields = DeleteDuplicates @ Cases[expr, HoldPattern @ Matchete`Field[a_, __] :> a, Infinity];
   freeL = Matchete`PackageScope`InternalSimplify @ Total[Matchete`FreeLag[#] & /@ fields];
@@ -144,10 +207,18 @@ If[!FileExistsQ[previousValidationFile],
 previousValidationResult = Get[previousValidationFile];
 offShell = previousValidationResult["Off-shell EFT Lagrangian"];
 onShell = previousValidationResult["On-shell EFT Lagrangian"];
+supertraceSum = Total[Values[previousValidationResult["SuperTraces"]]];
 operator = operatorForTarget[targetOption];
 fieldsToShift = Matchete`PackageScope`FieldsToShift[offShell];
 fieldsToShiftPrep = fieldsToShiftPreparation[offShell];
 higgsShift = higgsScalarShiftSummary[offShell];
+offShellFieldRedefReplay = fieldRedefReplaySummary["saved_off_shell", offShell, offShell, operator];
+supertraceSumFieldRedefReplay = fieldRedefReplaySummary[
+  "saved_supertrace_sum",
+  supertraceSum,
+  offShell,
+  operator
+];
 
 offCoefficient = Matchete`GetOperatorCoefficient[offShell, operator];
 onCoefficient = Matchete`GetOperatorCoefficient[onShell, operator];
@@ -166,8 +237,11 @@ data = <|
   "fields_to_shift_input_form" -> toInputString[fieldsToShift],
   "fields_to_shift_preparation" -> fieldsToShiftPrep,
   "higgs_scalar_shift_summary" -> higgsShift,
+  "field_redefinition_replay_off_shell" -> offShellFieldRedefReplay,
+  "field_redefinition_replay_supertrace_sum" -> supertraceSumFieldRedefReplay,
   "off_shell_summary" -> stageSummary["off_shell_eft_lagrangian", offShell],
   "on_shell_summary" -> stageSummary["on_shell_eft_lagrangian", onShell],
+  "supertrace_sum_summary" -> stageSummary["saved_supertrace_sum", supertraceSum],
   "on_minus_off_summary" -> stageSummary["on_minus_off_eft_lagrangian", onShell - offShell]
 |>;
 

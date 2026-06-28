@@ -1668,6 +1668,36 @@ def test_singlet_reference_chd_debug_records_matchete_fields_to_shift() -> None:
     assert "Field[{H, _, 0}" in higgs_shift["rules_input_form"]
 
 
+def test_singlet_reference_chd_debug_records_field_redefinition_replay_boundary() -> None:
+    debug = json.loads(
+        Path("assets/validation/matchete/debug/singlet_eom_cHD.debug.json").read_text(encoding="utf-8")
+    )
+    expected_stage_names = [
+        "source",
+        "after_renormalize_matter",
+        "after_shift_dim5_dev3",
+        "after_shift_dim5_dev2",
+        "after_shift_dim5_dev1",
+        "after_shift_dim6_dev4",
+        "after_shift_dim6_dev3",
+        "after_shift_dim6_dev2",
+        "after_shift_dim6_dev1",
+    ]
+
+    for key, source_name in (
+        ("field_redefinition_replay_off_shell", "saved_off_shell"),
+        ("field_redefinition_replay_supertrace_sum", "saved_supertrace_sum"),
+    ):
+        replay = debug[key]
+        assert replay["source_name"] == source_name
+        assert replay["max_order"] == 6
+        assert "{H, 4}" in replay["fields_to_shift_input_form"]
+        stages = replay["stages"]
+        assert [stage["name"] for stage in stages] == expected_stage_names
+        assert {stage["delta_from_off_shell_input_form"] for stage in stages} == {"0"}
+        assert {stage["delta_from_replay_source_input_form"] for stage in stages} == {"0"}
+
+
 def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:
     reference = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")

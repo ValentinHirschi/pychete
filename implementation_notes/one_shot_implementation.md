@@ -1126,3 +1126,20 @@
   one Higgs EOM term. This confirms the next generic frontier is systematic
   matter-field redefinition/source scoping, especially the Higgs/matter path,
   not a final `cHD` coefficient patch.
+- Latest Matchete replay boundary: extended the same debug fixture to replay
+  private `FieldRedef.m` stages on two saved Matchete artifacts, the saved
+  `Off-shell EFT Lagrangian` and the sum of saved simplified `SuperTraces`.
+  For both inputs, `RenormalizeMatterFields`, `GaugeFieldNormalization`, and
+  every `ShiftLagrangian` loop through dimension six leave the registered
+  `cHD` projection unchanged from the off-shell coefficient. This is now a
+  committed Mathematica-independent checkpoint:
+  `field_redefinition_replay_off_shell` and
+  `field_redefinition_replay_supertrace_sum` both have zero
+  `delta_from_off_shell_input_form` at every recorded stage. Therefore the
+  saved Matchete on-shell `cHD` delta is generated from the original
+  unsimplified `LagrangianEFT` boundary used by
+  `EOMSimplify[LagrangianEFT, ...]`, not by replaying field shifts on saved
+  Greens-simplified artifacts. The next Matchete dump should capture that raw
+  `LagrangianEFT`/`EOMSimplify` entry boundary, likely by rerunning the
+  validation-mode `Match` path or by adding a focused raw full-source exporter,
+  before any runtime scalar/fermion field-redefinition patch is accepted.

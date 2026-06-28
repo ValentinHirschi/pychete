@@ -1280,3 +1280,11 @@ without Warsaw-specific core assumptions.
   implementation frontier remains the generic Matchete-style systematic
   matter-field redefinition/source-scoping step, not a coefficient-specific
   `cHD` repair.
+- Latest replay checkpoint: the Singlet `cHD` debug fixture now also replays
+  Matchete private `FieldRedef.m` stages on the saved off-shell expression and
+  on the sum of saved simplified supertraces. Both replays leave the `cHD`
+  projection unchanged at every recorded stage, even though the saved
+  Matchete on-shell result has a nonzero `EOMSimplify` delta. This narrows the
+  next debugging target: the required Matchete evidence is the original
+  unsimplified `LagrangianEFT` entering `EOMSimplify`, not the already saved
+  Greens-simplified off-shell fixture.
