@@ -10,6 +10,7 @@ from pychete.functional import (
     integrate_by_parts_scalar_laplacians,
     normalize_conjugate_scalar_field_slots,
     scalar_derivative_green_normal_form,
+    scalar_derivative_green_normal_form_by_operator_class,
     scalar_derivative_ibp_identities,
     scalar_eom_identities,
     scalar_formal_eom_ibp_identities,
@@ -314,6 +315,39 @@ def test_scalar_derivative_green_normal_form_can_prefer_formal_eom_representativ
         include_eom=True,
         eom_lagrangian=theory.free_lag(higgs),
         eom_fields=[higgs],
+        max_rounds=1,
+    )
+
+    assert_expr_equal(reduced, expected)
+
+
+def test_scalar_derivative_green_normal_form_by_operator_class_keeps_basis_local() -> None:
+    coefficient = S("scalar_derivative_green_classwise_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    singlet = theory.define_field("S", s.Scalar, self_conjugate=False, mass=0)
+    source = (
+        coefficient * s.Bar(higgs(i)) * higgs(i, derivatives=[mu, nu])
+        + coefficient * s.Bar(singlet()) * singlet(derivatives=[mu, nu])
+    )
+    expected = (
+        -coefficient * s.Bar(higgs(i, derivatives=[mu])) * higgs(i, derivatives=[nu])
+        - coefficient * s.Bar(singlet(derivatives=[mu])) * singlet(derivatives=[nu])
+    )
+
+    with pytest.raises(ValueError, match="Green-basis reduction discovered more than 3 basis terms"):
+        scalar_derivative_green_normal_form(
+            theory,
+            source,
+            include_commutators=False,
+            max_basis_terms=3,
+            max_rounds=1,
+        )
+
+    reduced = scalar_derivative_green_normal_form_by_operator_class(
+        theory,
+        source,
+        include_commutators=False,
+        max_basis_terms=3,
         max_rounds=1,
     )
 

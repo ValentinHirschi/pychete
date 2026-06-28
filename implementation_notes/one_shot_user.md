@@ -1487,3 +1487,14 @@ generic algorithm boundary before runtime pychete changes are accepted.
   records 105 Higgs formal-EOM terms after `InternalSimplify`. The next generic
   port target is therefore Matchete `InternalSimplify`'s operator-basis /
   identity-neighborhood control, not final-coefficient tuning.
+- Latest user instruction and implementation response, 2026-06-28: perform a
+  short remaining-gap study for the first full one-loop matching parity target,
+  archive the large live implementation notes to
+  `implementation_notes/one_shot_implementation_B.md`, rewrite the live notes
+  as a compact summary, and start reducing `matching.py` by dispatching code
+  into semantic modules. The current estimate is 3-5 coherent slices to get the
+  first full nontrivial Singlet Scalar Extension `cHD` parity test: class-wise
+  scalar `InternalSimplify`, formal Higgs EOM exposure into the existing scalar
+  field-redefinition consumer, full public Singlet route composition, then a
+  locked full regression. The first refactor slice moved Wilson-line scalar
+  EOM postprocessing into `src/pychete/wilson_line_eom.py`.

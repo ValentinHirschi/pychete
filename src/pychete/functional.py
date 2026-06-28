@@ -638,6 +638,75 @@ def scalar_derivative_green_normal_form(
     )
 
 
+def scalar_derivative_green_normal_form_by_operator_class(
+    theory: Theory,
+    expr: Expression,
+    *,
+    preferred: Iterable[Expression] = (),
+    include_ibp: bool = True,
+    include_commutators: bool = True,
+    include_eom: bool = False,
+    eom_lagrangian: Expression | None = None,
+    eom_fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
+    max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
+    max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
+) -> Expression:
+    """Reduce scalar Green-basis identities class-by-class.
+
+    Matchete's ``IBPSimplify`` first maps terms to ``Operator[...]`` classes
+    determined by matter-field content and derivative count, then constructs
+    and solves identities inside each class.  This helper keeps the existing
+    Symbolica-backed scalar Green solver, but applies it separately to those
+    local classes so unrelated field monomials do not inflate one shared basis.
+    """
+
+    if include_eom and eom_lagrangian is None:
+        raise ValueError("eom_lagrangian must be provided when include_eom=True")
+    theory._validate_registered_expression(expr)
+    if eom_lagrangian is not None:
+        theory._validate_registered_expression(eom_lagrangian)
+    normalized = normalize_conjugate_scalar_field_slots(theory, expr)
+    class_groups = _scalar_derivative_green_class_groups(normalized, include_eom=include_eom)
+    if len(class_groups) <= 1:
+        return scalar_derivative_green_normal_form(
+            theory,
+            normalized,
+            preferred=preferred,
+            include_ibp=include_ibp,
+            include_commutators=include_commutators,
+            include_eom=include_eom,
+            eom_lagrangian=eom_lagrangian,
+            eom_fields=eom_fields,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+            max_rounds=max_rounds,
+        )
+
+    preferred_by_class = _scalar_derivative_green_preferred_by_class(
+        tuple(preferred),
+        include_eom=include_eom,
+    )
+    reduced: list[Expression] = []
+    for class_key, class_expr in class_groups:
+        reduced.append(
+            scalar_derivative_green_normal_form(
+                theory,
+                class_expr,
+                preferred=preferred_by_class.get(class_key, ()),
+                include_ibp=include_ibp,
+                include_commutators=include_commutators,
+                include_eom=include_eom,
+                eom_lagrangian=eom_lagrangian,
+                eom_fields=eom_fields,
+                max_basis_terms=max_basis_terms,
+                max_identities=max_identities,
+                max_rounds=max_rounds,
+            )
+        )
+    return sum_expr(reduced).expand()
+
+
 def normalize_conjugate_scalar_field_slots(theory: Theory, expr: Expression) -> Expression:
     """Rewrite dual-index scalar fields as explicit ``Bar(Field(...))`` atoms.
 
@@ -829,6 +898,170 @@ def _scalar_derivative_green_score(term: Expression) -> int:
         - derivative_balance_penalty
         - derivative_count_penalty
     )
+
+
+def _scalar_derivative_green_class_groups(
+    expr: Expression,
+    *,
+    include_eom: bool,
+) -> tuple[tuple[tuple[tuple[str, ...], int], Expression], ...]:
+    grouped: dict[tuple[tuple[str, ...], int], list[Expression]] = {}
+    for term in terms(expr.expand()):
+        if is_zero(term):
+            continue
+        key = _scalar_derivative_green_class_key(term, include_eom=include_eom)
+        grouped.setdefault(key, []).append(term)
+    return tuple(
+        (key, sum_expr(group_terms).expand())
+        for key, group_terms in sorted(grouped.items(), key=lambda item: (item[0][1], item[0][0]))
+    )
+
+
+def _scalar_derivative_green_preferred_by_class(
+    preferred: Sequence[Expression],
+    *,
+    include_eom: bool,
+) -> dict[tuple[tuple[str, ...], int], tuple[Expression, ...]]:
+    grouped: dict[tuple[tuple[str, ...], int], list[Expression]] = {}
+    for expr in preferred:
+        expanded_terms = tuple(term for term in terms(expr.expand()) if not is_zero(term))
+        if len(expanded_terms) != 1:
+            raise ValueError("preferred Green-basis representatives must be single operator terms")
+        key = _scalar_derivative_green_class_key(expanded_terms[0], include_eom=include_eom)
+        grouped.setdefault(key, []).append(expr)
+    return {key: tuple(values) for key, values in grouped.items()}
+
+
+def _scalar_derivative_green_class_key(
+    term: Expression,
+    *,
+    include_eom: bool,
+) -> tuple[tuple[str, ...], int]:
+    masked = term
+    field_entries: list[str] = []
+    derivative_count = 0
+
+    if include_eom:
+        eom_atoms = _formal_scalar_eom_atoms(masked, allowed_labels=None)
+        for atom in eom_atoms:
+            entry, derivatives = _scalar_green_field_class_entry(atom[0], derivative_bonus=2)
+            if entry is not None:
+                field_entries.append(entry)
+                derivative_count += derivatives
+        masked = _mask_scalar_green_class_atoms(masked, eom_atoms, "eom")
+
+    bar_strength_atoms = _unique_green_class_atoms(
+        matching_subexpressions(
+            masked,
+            bar_field_strength_pattern(),
+            s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value),
+        )
+    )
+    for atom in bar_strength_atoms:
+        entry, derivatives = _scalar_green_field_strength_class_entry(atom, barred=True)
+        if entry is not None:
+            field_entries.append(entry)
+            derivative_count += derivatives
+    masked = _mask_scalar_green_class_atoms(masked, bar_strength_atoms, "bar_strength")
+
+    strength_atoms = _unique_green_class_atoms(
+        matching_subexpressions(
+            masked,
+            field_strength_pattern(),
+            s.FieldStrengthLabelWildcard.req_tag(SymbolRole.FIELD.value),
+        )
+    )
+    for atom in strength_atoms:
+        entry, derivatives = _scalar_green_field_strength_class_entry(atom, barred=False)
+        if entry is not None:
+            field_entries.append(entry)
+            derivative_count += derivatives
+    masked = _mask_scalar_green_class_atoms(masked, strength_atoms, "strength")
+
+    bar_atoms = _unique_green_class_atoms(
+        matching_subexpressions(
+            masked,
+            bar_field_pattern(),
+            s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value),
+        )
+    )
+    for atom in bar_atoms:
+        entry, derivatives = _scalar_green_field_class_entry(atom, derivative_bonus=0)
+        if entry is not None:
+            field_entries.append(entry)
+            derivative_count += derivatives
+    masked = _mask_scalar_green_class_atoms(masked, bar_atoms, "bar_field")
+
+    field_atoms = _unique_green_class_atoms(
+        matching_subexpressions(
+            masked,
+            field_pattern(),
+            s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value),
+        )
+    )
+    for atom in field_atoms:
+        entry, derivatives = _scalar_green_field_class_entry(atom, derivative_bonus=0)
+        if entry is not None:
+            field_entries.append(entry)
+            derivative_count += derivatives
+
+    return (tuple(sorted(field_entries)), derivative_count)
+
+
+def _scalar_green_field_class_entry(
+    atom: Expression,
+    *,
+    derivative_bonus: int,
+) -> tuple[str | None, int]:
+    base = bar_field_inner(atom) if is_bar_field(atom) else atom
+    if not is_head(base, s.Field):
+        return None, 0
+    prefix = "BarField" if is_bar_field(atom) else "Field"
+    return (
+        f"{prefix}:{canonical_string(field_label(base))}",
+        len(field_derivatives(base)) + derivative_bonus,
+    )
+
+
+def _scalar_green_field_strength_class_entry(
+    atom: Expression,
+    *,
+    barred: bool,
+) -> tuple[str | None, int]:
+    base = bar_field_inner(atom) if barred and is_bar_field(atom) else atom
+    if not is_head(base, s.FieldStrength):
+        return None, 0
+    prefix = "BarFieldStrength" if barred else "FieldStrength"
+    return (
+        f"{prefix}:{canonical_string(field_strength_label(base))}",
+        2 + len(field_strength_derivatives(base)),
+    )
+
+
+def _unique_green_class_atoms(atoms: Sequence[Expression]) -> tuple[Expression, ...]:
+    unique: dict[str, Expression] = {}
+    for atom in atoms:
+        unique.setdefault(canonical_string(atom), atom)
+    return tuple(
+        sorted(
+            unique.values(),
+            key=lambda atom: (-atom.get_byte_size(), canonical_string(atom)),
+        )
+    )
+
+
+def _mask_scalar_green_class_atoms(
+    expr: Expression,
+    atoms: Sequence[Expression],
+    prefix: str,
+) -> Expression:
+    if not atoms:
+        return expr
+    replacements = tuple(
+        Replacement(atom, Expression.symbol(f"pychete::scalar_green_class_{prefix}_{index}"))
+        for index, atom in enumerate(_unique_green_class_atoms(atoms))
+    )
+    return expr.replace_multiple(replacements, repeat=False)
 
 
 def _formal_scalar_eom_atoms(

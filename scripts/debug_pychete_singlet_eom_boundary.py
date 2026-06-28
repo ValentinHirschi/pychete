@@ -590,13 +590,13 @@ def main() -> int:
             "the representative-conversion boundary before field redefinition: "
             "Matchete's InternalSimplify exposes EOM-proportional structures "
             "that feed PerformSystematicFieldRedefs, while pychete's selected "
-            "source still exceeds the bounded scalar Green-basis exposure cap "
-            "before formal scalar EOM atoms can be generated. The bounded "
-            "exact Abelian current-current exposure probe also finds no "
-            "vector-EOM divergence on this selected source, so the missing "
-            "conversion is broader than a simple inverse vector-EOM current "
-            "product and should next target Matchete InternalSimplify's "
-            "operator-basis/identity-neighborhood control."
+            "source still has high-order entries that exceed bounded scalar "
+            "Green-basis exposure limits before formal scalar EOM atoms can be "
+            "generated. The bounded exact Abelian current-current exposure "
+            "probe also finds no vector-EOM divergence on this selected source, "
+            "so the missing conversion is broader than a simple inverse "
+            "vector-EOM current product and should continue targeting Matchete "
+            "InternalSimplify's operator-basis/identity-neighborhood control."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

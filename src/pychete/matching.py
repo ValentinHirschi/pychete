@@ -45,9 +45,7 @@ from .functional import (
     expand_cd_operators,
     normalize_conjugate_scalar_field_slots,
     partial_functional_derivative,
-    scalar_derivative_green_normal_form,
     simplify_trivial_cd_operators,
-    systematic_scalar_eom_field_redefinition_delta,
 )
 from .indices import collect_indices, relabel_dummy_indices
 from .logging import get_logger, progress
@@ -101,6 +99,11 @@ from .tree_matching import (
     match_tree,
     replace_heavy_scalar_solutions_eft_limited,
     solve_heavy_scalar_eoms,
+)
+from .wilson_line_eom import (
+    _apply_wilson_line_post_integral_scalar_commutator_bilinears,
+    _apply_wilson_line_scalar_eom_field_redefinition,
+    _apply_wilson_line_scalar_green_normal_form,
 )
 
 FluctuationBasisItem: TypeAlias = FieldHandle | FieldDefinition | str | Expression
@@ -7298,80 +7301,6 @@ def _postprocess_wilson_line_tensor_reduced_expression(
         out = idenso.simplify_pychete_color_algebra(theory, out)
     out = contract_lorentz_metric_traces(out, epsilon=epsilon)
     return scalarize_commutative_ncm_chains(out)
-
-
-def _apply_wilson_line_scalar_green_normal_form(theory: Theory, expr: Expression) -> Expression:
-    out = scalar_derivative_green_normal_form(theory, expr)
-    out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
-    out = expand_cd_operators(out)
-    out = simplify_trivial_cd_operators(out)
-    return expose_scalar_derivative_commutator_bilinears(
-        theory,
-        out,
-        include_gauge_coupling=False,
-        expand_commutators=True,
-    )
-
-
-def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
-    theory: Theory,
-    expr: Expression,
-    *,
-    eom_lagrangian: Expression | None = None,
-    expose_scalar_eom_terms: bool = False,
-) -> Expression:
-    """Expose scalar derivative commutator bilinears after finite evaluation."""
-
-    from .backends import idenso
-
-    if expose_scalar_eom_terms and eom_lagrangian is None:
-        raise ValueError("eom_lagrangian must be provided when expose_scalar_eom_terms=True")
-    out = normalize_conjugate_scalar_field_slots(theory, expr)
-    if expose_scalar_eom_terms:
-        out = scalar_derivative_green_normal_form(
-            theory,
-            out,
-            include_eom=True,
-            eom_lagrangian=eom_lagrangian,
-            max_basis_terms=256,
-            max_identities=512,
-            max_rounds=4,
-        )
-    out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
-    out = expand_cd_operators(out)
-    out = simplify_trivial_cd_operators(out)
-    out = expose_scalar_derivative_commutator_bilinears(
-        theory,
-        out,
-        include_gauge_coupling=False,
-        expand_commutators=True,
-    )
-    out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
-    return scalarize_commutative_ncm_chains(out)
-
-
-def _apply_wilson_line_scalar_eom_field_redefinition(
-    theory: Theory,
-    expr: Expression,
-    *,
-    source_lagrangian: Expression,
-    max_order: int,
-    fields: Sequence[Any] | None = None,
-    strict: bool = False,
-) -> tuple[Expression, Expression]:
-    """Apply the scalar ``PerformSystematicFieldRedefs`` consumer to ``expr``."""
-
-    delta = systematic_scalar_eom_field_redefinition_delta(
-        theory,
-        source_lagrangian,
-        eom_terms_lagrangian=expr,
-        max_order=max_order,
-        fields=fields,
-        strict=strict,
-    )
-    if is_zero(delta):
-        return expr, delta
-    return (expr + delta).expand(), delta
 
 
 def _postprocess_pre_wilson_line_tensor_reduced_expression(
