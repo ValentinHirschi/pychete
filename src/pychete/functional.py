@@ -1305,6 +1305,14 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
 
 def partial_functional_derivative(lagrangian: Expression, target_field: Expression) -> Expression:
     lagrangian = _expand_variation_bars(lagrangian)
+    exact = _exact_partial_functional_derivative(lagrangian, target_field)
+    if not is_zero(exact):
+        return exact
+    indexed = _indexed_partial_functional_derivative(lagrangian, target_field)
+    return exact if is_zero(indexed) else indexed
+
+
+def _exact_partial_functional_derivative(lagrangian: Expression, target_field: Expression) -> Expression:
     target_replacement = Replacement(target_field, target_field + s.FunctionalVariationParameter)
     bar_protector = Replacement(
         bar_field_pattern(),
@@ -1324,6 +1332,85 @@ def partial_functional_derivative(lagrangian: Expression, target_field: Expressi
         .coefficient(s.FunctionalVariationParameter)
         .expand()
     )
+
+
+def _indexed_partial_functional_derivative(lagrangian: Expression, target_field: Expression) -> Expression:
+    target_barred = is_bar_field(target_field)
+    target_base = bar_field_inner(target_field) if target_barred else target_field
+    if not is_head(target_base, s.Field):
+        return Expression.num(0)
+    if not list_items(target_base[2]):
+        return Expression.num(0)
+
+    pattern = bar_field_pattern(field_label(target_base)) if target_barred else field_pattern(field_label(target_base))
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+
+    def indexed_variation(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        pairing = _indexed_functional_variation_pairing(matched, target_field)
+        if pairing is None:
+            return matched
+        return matched + s.FunctionalVariationParameter * pairing
+
+    indexed_replacement = Replacement(pattern, indexed_variation, label_is_tagged, rhs_cache_size=0)
+    bar_protector = Replacement(
+        bar_field_pattern(),
+        bar_field_pattern(),
+        label_is_tagged,
+    )
+    replacements = (
+        [indexed_replacement, bar_protector]
+        if target_barred
+        else [bar_protector, indexed_replacement]
+    )
+    varied = lagrangian.replace_multiple(replacements)
+    varied = _linearize_variation_wrappers(varied, s.FunctionalVariationParameter)
+    derivative = (
+        varied.series(s.FunctionalVariationParameter, 0, 1)
+        .to_expression()
+        .coefficient(s.FunctionalVariationParameter)
+        .expand()
+    )
+    from .backends import idenso
+
+    return idenso.contract_pychete_deltas(None, derivative).expand()
+
+
+def _indexed_functional_variation_pairing(source_field: Expression, target_field: Expression) -> Expression | None:
+    source_barred = is_bar_field(source_field)
+    target_barred = is_bar_field(target_field)
+    if source_barred != target_barred:
+        return None
+    source_base = bar_field_inner(source_field) if source_barred else source_field
+    target_base = bar_field_inner(target_field) if target_barred else target_field
+    if not is_head(source_base, s.Field) or not is_head(target_base, s.Field):
+        return None
+    if not bool(field_label(source_base) == field_label(target_base)):
+        return None
+    if not bool(field_type(source_base) == field_type(target_base)):
+        return None
+    if not _same_expression_sequence(field_derivatives(source_base), field_derivatives(target_base)):
+        return None
+
+    source_indices = list_items(source_base[2])
+    target_indices = list_items(target_base[2])
+    if len(source_indices) != len(target_indices) or not source_indices:
+        return None
+    factors: list[Expression] = []
+    for source_index, target_index in zip(source_indices, target_indices, strict=True):
+        if not is_head(source_index, s.Index) or not is_head(target_index, s.Index):
+            return None
+        if not bool(source_index[1] == target_index[1]):
+            return None
+        if source_barred:
+            factors.append(s.Delta(s.Index(source_index[0], s.Bar(source_index[1])), target_index))
+        else:
+            factors.append(s.Delta(source_index, s.Index(target_index[0], s.Bar(target_index[1]))))
+    return product_expr(factors)
+
+
+def _same_expression_sequence(left: tuple[Expression, ...], right: tuple[Expression, ...]) -> bool:
+    return len(left) == len(right) and all(bool(left_item == right_item) for left_item, right_item in zip(left, right))
 
 
 def _expand_variation_bars(expr: Expression) -> Expression:

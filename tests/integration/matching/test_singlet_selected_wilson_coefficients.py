@@ -40,6 +40,10 @@ _SINGLET_CHD_PYCHETE_EOM_BOUNDARY_DEBUG = Path(
 _SINGLET_CHD_PYCHETE_SOURCE_DEBUG = Path(
     "assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.source.debug.json"
 )
+_SINGLET_CHD_PYCHETE_UNFILTERED_SOURCE_DEBUG = Path(
+    "assets/validation/pychete/debug/"
+    "singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.unfiltered.source.debug.json"
+)
 
 _MATHEMATICA_XTERM_PATTERN = re.compile(
     r"Xterm\["
@@ -356,7 +360,7 @@ def _selected_chd_four_slot_post_heavy_path_projection_map() -> tuple[
     )
     projections: dict[int, Expression] = {}
     counts: dict[int, tuple[int, int, int]] = {}
-    for path_index in (0, 2, 24, 26):
+    for path_index in (0, 2, 12, 14, 24, 26, 36, 38):
         terms = paths[path_index].propagator_expansion_terms(
             ((), (), (), ()),
             act_open_derivatives=True,
@@ -530,12 +534,12 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_
         hbar
         * theory.coupling_handle("A")() ** 2
         * theory.coupling_handle("gY")() ** 2
-        * (2 * mass.log() - S("vakint::mursq").log() - Expression.num(1))
+        * (4 * mass.log() - 2 * S("vakint::mursq").log() - Expression.num(2))
         / mass**4
     )
 
     assert result.metadata["wilson_line_terms_filtered_by_matching_targets"] is True
-    assert result.metadata["interaction_wilson_line_term_count"] == 4
+    assert result.metadata["interaction_wilson_line_term_count"] == 8
     assert result.metadata["interaction_wilson_line_plan_entry_count"] == 1
     assert result.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
         "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0",
@@ -543,7 +547,7 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_
     assert_expr_equal((projected - expected).expand(), Expression.num(0))
 
 
-@pytest.mark.parametrize("path_index", (0, 26))
+@pytest.mark.parametrize("path_index", (0, 12, 26, 38))
 def test_selected_chd_four_slot_quarter_paths_match_matchete_insertion_checkpoint(path_index: int) -> None:
     debug = json.loads(_SINGLET_CHD_FOUR_SLOT_DEBUG.read_text(encoding="utf-8"))
     theory, projected = _selected_chd_four_slot_quarter_path_projection(path_index)
@@ -566,23 +570,24 @@ def test_selected_chd_four_slot_post_heavy_path_projection_map_records_frontier(
 
     assert debug["trace_name"] == "hScalar-lScalar-lVector-lScalar"
     assert debug["target"] == "cHD"
-    assert set(projections) == {0, 2, 24, 26}
+    assert set(projections) == {0, 2, 12, 14, 24, 26, 36, 38}
     assert counts == {
         0: (1, 1, 1),
         2: (1, 1, 1),
+        12: (1, 1, 1),
+        14: (1, 1, 1),
         24: (1, 1, 1),
         26: (1, 1, 1),
+        36: (1, 1, 1),
+        38: (1, 1, 1),
     }
-    assert_expr_equal((projections[0] - expected_quarter).expand(), Expression.num(0))
-    assert_expr_equal((projections[2] - expected_quarter).expand(), Expression.num(0))
-    assert_expr_equal((projections[24] - expected_quarter).expand(), Expression.num(0))
-    assert_expr_equal((projections[26] - expected_quarter).expand(), Expression.num(0))
+    for path_index in sorted(projections):
+        assert_expr_equal((projections[path_index] - expected_quarter).expand(), Expression.num(0))
 
     # Matchete records eight equivalent quarter checkpoints in the full
-    # insertion dump. pychete currently generates four scalar-vector OpenCD
-    # path families, and all four now project with the same Matchete `-1/4`
-    # sign. The remaining selected-source mismatch is therefore path/component
-    # coverage before EOM, not the path-24 scalar orientation sign.
+    # insertion dump. pychete now generates the same eight path-level quarter
+    # projections, so the remaining selected-source mismatch is downstream of
+    # source/path coverage and target filtering.
     quarter_insertions = [
         insertion["index"]
         for insertion in debug["insertions"]
@@ -656,12 +661,12 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert debug["generator"] == "scripts/debug_pychete_singlet_eom_boundary.py"
     assert debug["target"] == "cHD"
     assert debug["term_counts_by_entry"] == {
-        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 4,
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 8,
     }
     assert references["matchete_trace_off_shell_input_form"] == references["matchete_eom_off_shell_input_form"]
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
-    assert "selected_wilson_line_source_or_green_projection_before_eom" in debug["first_differing_boundary"]
+    assert "selected_wilson_line_trace_aggregation_or_reduction_before_eom" in debug["first_differing_boundary"]
     assert debug["matchete_quarter_insertion_count"] == 8
     assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
         1,
@@ -673,15 +678,25 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         56,
         58,
     ]
-    assert debug["pychete_nonzero_path_count"] == 4
-    assert debug["term_counts_by_path"] == {"path0": 1, "path2": 1, "path24": 1, "path26": 1}
-    assert debug["evaluated_term_counts_by_path"] == {"path0": 1, "path2": 1, "path24": 1, "path26": 1}
-    assert debug["path_stage_projections"]["path0"].startswith("-1/4*")
-    assert debug["path_stage_projections"]["path2"].startswith("-1/4*")
-    assert debug["path_stage_projections"]["path24"].startswith("-1/4*")
-    assert debug["path_stage_projections"]["path26"].startswith("-1/4*")
-    assert "pychete selected normalized source has the -1 pole/log weight" in debug["first_differing_boundary"]
-    assert projections["selected_normalized_pole_part"].startswith("-Singlet_Scalar_Extension::external_hbar*")
+    expected_paths = {
+        "path0": 1,
+        "path2": 1,
+        "path12": 1,
+        "path14": 1,
+        "path24": 1,
+        "path26": 1,
+        "path36": 1,
+        "path38": 1,
+    }
+    assert debug["pychete_nonzero_path_count"] == 8
+    assert debug["term_counts_by_path"] == expected_paths
+    assert debug["evaluated_term_counts_by_path"] == expected_paths
+    for path in expected_paths:
+        assert debug["path_stage_projections"][path].startswith("-1/4*")
+    assert "pychete selected prop-order-zero normalized source now has the -2 pole/log weight" in (
+        debug["first_differing_boundary"]
+    )
+    assert projections["selected_normalized_pole_part"].startswith("-2*Singlet_Scalar_Extension::external_hbar*")
     assert "vakint::ε" in projections["selected_normalized_pole_part"]
     assert projections["selected_normalized_evaluated"] == projections["selected_post_heavy_green"]
     assert projections["selected_normalized_evaluated"] != references["pychete_reference_off_shell"]
@@ -689,6 +704,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
 
 def test_selected_chd_pychete_source_fixture_records_filtered_frontier() -> None:
     debug = json.loads(_SINGLET_CHD_PYCHETE_SOURCE_DEBUG.read_text(encoding="utf-8"))
+    unfiltered_debug = json.loads(_SINGLET_CHD_PYCHETE_UNFILTERED_SOURCE_DEBUG.read_text(encoding="utf-8"))
     entry = "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"
 
     assert debug["generator"] == "debug_pychete_singlet_wilson_trace.py"
@@ -705,9 +721,19 @@ def test_selected_chd_pychete_source_fixture_records_filtered_frontier() -> None
             "trace_name": "hScalar-lScalar-lVector-lScalar",
         },
     ]
-    assert debug["preaction_prefilter_nonempty_grouped_entries"] == {entry: 4}
-    assert debug["prefinal_nonempty_grouped_entries"] == {entry: 4}
-    assert debug["runtime_internal_nonempty_grouped_entries"] == {entry: 4}
+    assert debug["preaction_prefilter_nonempty_grouped_entries"] == {entry: 8}
+    assert debug["prefinal_nonempty_grouped_entries"] == {entry: 8}
+    assert debug["runtime_internal_nonempty_grouped_entries"] == {entry: 8}
+    assert debug["preaction_prefilter_term_counts_by_total_order"] == {"0": 8}
+    assert debug["prefinal_term_counts_by_total_order"] == {"0": 8}
+    assert debug["runtime_internal_term_counts_by_total_order"] == {"0": 8}
+    assert unfiltered_debug["filter_terms_by_matching_targets"] is False
+    assert unfiltered_debug["preaction_prefilter_nonempty_grouped_entries"] == {entry: 8}
+    assert unfiltered_debug["prefinal_nonempty_grouped_entries"] == {entry: 8}
+    assert unfiltered_debug["runtime_internal_nonempty_grouped_entries"] == {entry: 8}
+    assert unfiltered_debug["preaction_prefilter_term_counts_by_total_order"] == {"0": 8}
+    assert unfiltered_debug["prefinal_term_counts_by_total_order"] == {"0": 8}
+    assert unfiltered_debug["runtime_internal_term_counts_by_total_order"] == {"0": 8}
 
 
 def test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates() -> None:
@@ -813,7 +839,7 @@ def test_selected_chd_four_slot_wilson_coefficient_records_current_source_fronti
         hbar
         * theory.coupling_handle("A")() ** 2
         * theory.coupling_handle("gY")() ** 2
-        * (2 * mass.log() - S("vakint::mursq").log() - Expression.num(1))
+        * (4 * mass.log() - 2 * S("vakint::mursq").log() - Expression.num(2))
         / mass**4
     )
 

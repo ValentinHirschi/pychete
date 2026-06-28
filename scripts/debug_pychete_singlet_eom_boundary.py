@@ -318,13 +318,17 @@ def main() -> int:
             "pychete_reference_on_shell": canonical_string(reference.matching_conditions[condition_name]),
         },
         "first_differing_boundary": (
-            "selected_wilson_line_source_or_green_projection_before_eom; "
-            "pychete selected normalized source has the -1 pole/log weight, "
-            "while Matchete's selected trace/off-shell checkpoint has -3/2. "
-            "The paired insertion/path checkpoint records eight Matchete "
-            "quarter insertions and four pychete nonzero Wilson-line paths "
-            "whose individual signs now agree at -1/4, so the next comparison "
-            "is source/path coverage or component-index delta handling before EOM."
+            "selected_wilson_line_trace_aggregation_or_reduction_before_eom; "
+            "pychete selected prop-order-zero normalized source now has the "
+            "-2 pole/log weight from eight nonzero Wilson-line paths, each "
+            "projecting with the Matchete -1/4 insertion sign. The paired "
+            "Matchete insertion dump also records eight -1/4 insertion "
+            "checkpoints, while Matchete's saved selected trace/off-shell "
+            "checkpoint has -3/2 and the selected prop-order aggregate fields "
+            "in this dump are $Failed/$Aborted. The next comparison is "
+            "Matchete's reduction/aggregation from insertion checkpoints or "
+            "raw selected prop-order data to the saved validation trace, not "
+            "source/path coverage or target filtering."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

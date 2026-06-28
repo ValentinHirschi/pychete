@@ -1335,6 +1335,26 @@ without Warsaw-specific core assumptions.
 - The paired pychete source-only debug fixture for the same narrowed trace and
   target is now kept under
   `assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.source.debug.json`
-  and has a cheap pytest assertion. It records the current four-term filtered
-  pychete source frontier so future comparisons can distinguish source
-  generation changes from post-evaluation/EOM projection changes.
+  and has a cheap pytest assertion. It originally recorded the four-term
+  filtered pychete source frontier; the latest indexed-functional-derivative
+  update below supersedes that count with eight terms while preserving the
+  same source-generation versus post-evaluation/EOM diagnostic role.
+- Latest cHD source/path update: the active Matchete checkpoint remains
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`,
+  paired with the pychete boundary/source fixtures under
+  `assets/validation/pychete/debug/`. A generic indexed-functional-derivative
+  fallback now uses Symbolica field-pattern replacement plus idenso delta
+  contraction to recover component-related paths. pychete now has eight
+  nonzero paths `{0, 2, 12, 14, 24, 26, 36, 38}`, matching Matchete's eight
+  `-1/4` insertion checkpoints path by path. Filtered and unfiltered pychete
+  source fixtures both have eight terms, so target filtering is not the
+  current mismatch. The remaining boundary is Matchete's reduction/aggregation
+  from insertion checkpoints or raw selected prop-order data to the saved
+  `-3/2` selected trace/off-shell coefficient, while pychete's selected
+  prop-order-zero aggregate is `-2`.
+- Latest reinforcement confirmed: when pychete and Matchete disagree, the
+  active workflow is to keep running or refreshing focused debug
+  WolframScripts, dump as many Matchete intermediate stages as practical,
+  compare them against bounded pychete probes at the same stage, and patch only
+  the first generic Matchete algorithm boundary through
+  Symbolica/idenso/spenso/vakint rather than final-coefficient fitting.

@@ -1233,8 +1233,51 @@
   EOM, not a path-sign issue.
 - The paired bounded pychete source probe
   `assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.source.debug.json`
-  is now committed as source-only evidence for the same narrowed trace/target.
-  It records the target-filtered `hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0`
-  entry with four terms through preaction, prefinal, and runtime-internal
-  checkpoints, matching the current pychete path frontier without executing
-  Mathematica at pytest time.
+  was committed as source-only evidence for the same narrowed trace/target.
+  At that earlier checkpoint it recorded the target-filtered
+  `hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0` entry with four terms
+  through preaction, prefinal, and runtime-internal checkpoints without
+  executing Mathematica at pytest time; the latest indexed-functional-
+  derivative checkpoint below supersedes that count with eight terms.
+- Latest indexed-functional-derivative checkpoint: the current paired Matchete
+  evidence remains
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`,
+  whose eight target-contributing insertion checkpoints all project with
+  `-1/4`, and the paired pychete probes are
+  `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`,
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.source.debug.json`,
+  and the unfiltered source fixture
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.pychete.unfiltered.source.debug.json`.
+  The first generic runtime mismatch was component-index functional variation:
+  converted Singlet interaction terms used one representative Higgs component,
+  while the fluctuation basis contains all component slots. pychete now keeps
+  exact Symbolica functional variation first, then uses a bounded
+  Symbolica-pattern indexed fallback for same-label field atoms and contracts
+  the resulting variation deltas through the idenso bridge. This recovers the
+  additional paths `12`, `14`, `36`, and `38`.
+- Updated status for the same cHD boundary: pychete now has eight nonzero
+  Wilson-line paths `{0, 2, 12, 14, 24, 26, 36, 38}`, and every path projects
+  with the Matchete `-1/4` insertion sign. The filtered and unfiltered pychete
+  source fixtures both record eight zero-order terms, so target filtering is
+  not the current source of disagreement. The selected prop-order-zero
+  pychete aggregate has the `-2` pole/log weight, while Matchete's saved
+  selected trace/off-shell checkpoint still has `-3/2` and the current dump's
+  prop-order aggregate fields are `$Failed`/`$Aborted`. The next first-boundary
+  comparison must therefore dump or reconstruct Matchete's reduction from
+  insertion checkpoints/raw selected prop-order data to the saved validation
+  trace, not patch EOM or final `cHD` conditions.
+- Latest user reinforcement, 2026-06-28, is confirmed as the active workflow:
+  continue running or refreshing focused debug WolframScripts, dissect
+  Matchete intermediate stages as deeply as needed, compare them against
+  bounded pychete probes at matching semantic boundaries, and patch only the
+  first generic Matchete algorithm divergence through Symbolica/idenso/spenso
+  or vakint. Every future mismatch-status note should name the Matchete dump,
+  the paired pychete probe, and the current suspected boundary explicitly.
+- Focused validation for this indexed-variation/source-boundary slice passed:
+  `tests/unit/functional/test_scalar_eom.py -k functional_derivative -q`
+  (`5 passed, 19 deselected`); watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "chd_four_slot or pychete_boundary_fixture or pychete_source_fixture" -q`
+  (`10 passed, 8 deselected`); `python -m py_compile
+  scripts/debug_pychete_singlet_eom_boundary.py`; `python -m mypy`; and
+  `git diff --check`.

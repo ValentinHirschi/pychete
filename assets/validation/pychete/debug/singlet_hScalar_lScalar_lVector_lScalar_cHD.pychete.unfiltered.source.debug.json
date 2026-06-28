@@ -1,5 +1,5 @@
 {
-  "filter_terms_by_matching_targets": true,
+  "filter_terms_by_matching_targets": false,
   "fixture": "assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json",
   "generator": "debug_pychete_singlet_wilson_trace.py",
   "mode": "source_only",

@@ -398,6 +398,42 @@ def test_functional_derivative_bar_protector_requires_field_tag() -> None:
     assert_expr_equal(partial_functional_derivative(lagrangian, phi()), untagged_bar)
 
 
+def test_functional_derivative_matches_indexed_field_by_label_with_local_delta_contraction() -> None:
+    theory = Theory("fd_indexed_delta")
+    theory.define_global_group("SU2", s.SU(Expression.num(2)))
+    fund = theory.define_representation("SU2", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    singlet = theory.define_field("S", s.Scalar, self_conjugate=True, mass=0)
+    source_index = theory.index("i", fund)
+    target_index = theory.index("j", fund)
+    target_dual = theory.index("j", s.Bar(fund))
+    lagrangian = singlet() * higgs(source_index) * s.Bar(higgs(source_index))
+
+    barred_derivative = partial_functional_derivative(lagrangian, s.Bar(higgs(target_index)))
+    field_derivative = partial_functional_derivative(lagrangian, higgs(target_index))
+
+    assert_expr_equal(
+        barred_derivative,
+        singlet() * higgs(target_index),
+    )
+    assert_expr_equal(
+        field_derivative,
+        singlet() * s.Bar(higgs(target_index)),
+    )
+    assert_expr_equal(
+        partial_functional_derivative(lagrangian, s.Bar(higgs(source_index))),
+        singlet() * higgs(source_index),
+    )
+    assert_expr_equal(
+        partial_functional_derivative(lagrangian, higgs(source_index)),
+        singlet() * s.Bar(higgs(source_index)),
+    )
+    assert_expr_equal(
+        partial_functional_derivative(lagrangian, higgs(target_dual)),
+        Expression.num(0),
+    )
+
+
 def test_functional_derivative_linearizes_tagged_external_transpose_wrapper() -> None:
     theory = Theory("fd_external_transp")
     psi = theory.define_field("psi", s.Fermion, mass=0)
