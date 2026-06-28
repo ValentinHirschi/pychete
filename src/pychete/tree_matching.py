@@ -2,13 +2,13 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from html import escape
-from itertools import count
+from itertools import count, product
 from typing import Callable
 
 from symbolica import Expression, Replacement
 
-from .eft import series_eft
-from .expr import as_int, bar_field_pattern, field_pattern, is_zero, list_items, product_expr
+from .eft import operator_dimension, series_eft
+from .expr import as_int, bar_field_pattern, field_pattern, is_zero, list_items, product_expr, terms
 from .functional import apply_cd, derive_eom
 from .indices import relabel_dummy_indices
 from .symbols import display_string, latex_string, s
@@ -133,6 +133,7 @@ def heavy_scalar_solution_replacements(
     solutions: dict[str, HeavyScalarSolution],
     *,
     fresh_dummy_indices: bool = False,
+    max_order: int | None = None,
 ) -> tuple[Replacement, ...]:
     """Return Symbolica replacement rules for solved heavy scalar fields."""
 
@@ -148,6 +149,22 @@ def heavy_scalar_solution_replacements(
                 return expr
             return relabel_dummy_indices(expr, start=100_000 + 1_000 * next(fresh_counter))
 
+        def solution_order_terms(
+            *,
+            solution: HeavyScalarSolution,
+            conjugate: bool,
+        ) -> tuple[tuple[int, Expression], ...]:
+            orders = (
+                solution.conjugate_orders
+                if conjugate and solution.conjugate_orders is not None
+                else solution.orders
+            )
+            return tuple(
+                (order, expr)
+                for order, expr in sorted(orders.items())
+                if max_order is None or order <= max_order
+            )
+
         def solution_expr(
             match: dict[Expression, Expression],
             *,
@@ -155,8 +172,14 @@ def heavy_scalar_solution_replacements(
             conjugate: bool,
             fresh_solution_expr: Callable[[Expression], Expression] = fresh_solution_expr,
         ) -> Expression:
-            expr = solution.inclusive_conjugate if conjugate else solution.inclusive
-            return apply_cd(list_items(match[s.FieldDerivativesWildcard]), fresh_solution_expr(expr))
+            derivatives = list_items(match[s.FieldDerivativesWildcard])
+            return sum(
+                (
+                    apply_cd(derivatives, fresh_solution_expr(expr))
+                    for _order, expr in solution_order_terms(solution=solution, conjugate=conjugate)
+                ),
+                Expression.num(0),
+            ).expand()
 
         def power_solution(
             match: dict[Expression, Expression],
@@ -169,10 +192,19 @@ def heavy_scalar_solution_replacements(
             exponent = as_int(match[s.PowExponentWildcard])
             if exponent is None or exponent <= 0:
                 return (pattern ** s.PowExponentWildcard).replace_wildcards(match)
-            return product_expr(
-                solution_expr(match, solution=solution, conjugate=conjugate)
-                for _ in range(exponent)
-            )
+            derivatives = list_items(match[s.FieldDerivativesWildcard])
+            order_terms = solution_order_terms(solution=solution, conjugate=conjugate)
+            expanded_terms: list[Expression] = []
+            for combination in product(order_terms, repeat=exponent):
+                if max_order is not None and sum(order for order, _expr in combination) > max_order:
+                    continue
+                expanded_terms.append(
+                    product_expr(
+                        apply_cd(derivatives, fresh_solution_expr(expr))
+                        for _order, expr in combination
+                    )
+                )
+            return sum(expanded_terms, Expression.num(0)).expand()
 
         def bar_solution(
             match: dict[Expression, Expression],
@@ -188,7 +220,7 @@ def heavy_scalar_solution_replacements(
         ) -> Expression:
             return solution_expr(match, solution=solution, conjugate=False)
 
-        if fresh_dummy_indices:
+        if fresh_dummy_indices or max_order is not None:
             def bar_power_solution(
                 match: dict[Expression, Expression],
                 solution: HeavyScalarSolution = solution,
@@ -232,6 +264,53 @@ def heavy_scalar_solution_replacements(
     return tuple(replacements)
 
 
+def replace_heavy_scalar_solutions_eft_limited(
+    expr: Expression,
+    solutions: dict[str, HeavyScalarSolution],
+    theory: Theory,
+    *,
+    eft_order: int,
+    fresh_dummy_indices: bool = False,
+) -> Expression:
+    """Replace heavy scalars with a per-term EFT-order cap.
+
+    This is a bounded one-loop projection helper.  It avoids expanding high
+    derivative orders of a heavy-scalar solution in source terms whose existing
+    EFT dimension already leaves no room for those solution orders to
+    contribute to the requested target order.  Symbolica still performs the
+    actual replacement; Python only chooses a conservative order cap per
+    additive source term.
+    """
+
+    if not solutions:
+        return expr.expand()
+    replaced_terms = []
+    for term in terms(expr.expand()):
+        max_order = _max_heavy_scalar_solution_order_for_term(
+            theory,
+            term,
+            eft_order=eft_order,
+        )
+        replacements = heavy_scalar_solution_replacements(
+            solutions,
+            fresh_dummy_indices=fresh_dummy_indices,
+            max_order=max_order,
+        )
+        replaced_terms.append(term.replace_multiple(replacements, repeat=False))
+    return sum(replaced_terms, Expression.num(0)).expand()
+
+
+def _max_heavy_scalar_solution_order_for_term(
+    theory: Theory,
+    term: Expression,
+    *,
+    eft_order: int,
+) -> int:
+    dimension = operator_dimension(term, theory, heavy_field_dimension=True)
+    remaining = eft_order - dimension
+    return max(1, int(2 * remaining - 1))
+
+
 def replace_heavy_scalar_solutions(expr: Expression, solutions: dict[str, HeavyScalarSolution]) -> Expression:
     """Replace heavy scalar fields in ``expr`` by solved EFT-order solutions."""
 
@@ -251,6 +330,7 @@ __all__ = [
     "HeavyScalarSolution",
     "heavy_scalar_solution_replacements",
     "match_tree",
+    "replace_heavy_scalar_solutions_eft_limited",
     "replace_heavy_scalar_solutions",
     "solve_heavy_scalar_eoms",
 ]

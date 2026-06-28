@@ -928,3 +928,46 @@
   appears. Future mismatch entries must identify the Matchete dump, the paired
   pychete probe, and the first differing generic algorithm boundary before a
   pychete fix is accepted.
+- Latest confirmation: this remains the active debugging workflow for the
+  current Singlet `cHD` frontier. New mismatch progress reports should name
+  the exact Matchete stage dump/checkpoint and bounded pychete probe compared,
+  so the next fixes keep following Matchete algorithms ported through
+  Symbolica/idenso/spenso/vakint rather than final-coefficient guesses.
+- Latest full-public `cHD` performance slice: the current comparison reused
+  the committed Matchete checkpoints
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`,
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`, and the saved
+  `Singlet_Scalar_Extension.matching_fixture.json` condition. The paired
+  watchdog-wrapped pychete probe ran the full generated order-zero Wilson-line
+  public route for registered `cHD` with the internal non-minimal backend,
+  heavy-scalar substitution, target filtering, and `mubar2`/`epsilon`
+  symbols.
+- Found the first practical blocker in that full public route before any new
+  Matchete algorithm patch: the heavy-scalar substitution stage expanded one
+  scalar-only source from 16 terms to 62,584 terms before Green/projection.
+  `heavy_scalar_solution_replacements(...)` now accepts `max_order`, powered
+  heavy-field replacements respect summed solution order, and
+  `replace_heavy_scalar_solutions_eft_limited(...)` chooses a conservative
+  per-term cap from the requested EFT order while still delegating the actual
+  rewrite to Symbolica `replace_multiple(...)`. Public `Theory.match(...)`
+  uses this bounded path when matching targets are projected with EFT
+  truncation, and it also updates staged on-shell projection sources.
+- The full public internal `cHD` probe now completes. It generates 32
+  Wilson-line terms over 64 planned entries and records
+  `heavy_scalar_solution_eft_limited=True`. The remaining mismatch is now
+  exposed cleanly: after factoring out `hbar*A^2*gY^2/M^4`, pychete gives
+  `-1/(2 epsilon) - 1/2 - 1/2 log(mubar2) + log(M)`, while the Matchete
+  reference gives
+  `-5/(3 epsilon) - 31/18 - 5/3 log(mubar2/M^2)`. The next slice should
+  compare Matchete source/EOMSimplify/field-redefinition stages against
+  target-local pychete probes for the missing `-7/(6 epsilon)` and associated
+  finite/log pieces, not revisit the heavy-scalar substitution performance
+  issue.
+- Focused validation for this slice passed:
+  `tests/integration/matching/test_heavy_scalar_tree.py -q` (`23 passed`);
+  watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "public_match_selected_chd_four_slot_wilson_coefficient" -q` (`1 passed, 13
+  deselected`); and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  passed with no issues. `git diff --check` and `py_compile` for the touched
+  Python modules also passed.

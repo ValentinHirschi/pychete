@@ -19,7 +19,11 @@ from pychete import (
 )
 from pychete.backends import spenso as spenso_backend
 from pychete.expr import index_pattern
-from pychete.tree_matching import HeavyScalarSolution, heavy_scalar_solution_replacements
+from pychete.tree_matching import (
+    HeavyScalarSolution,
+    heavy_scalar_solution_replacements,
+    replace_heavy_scalar_solutions_eft_limited,
+)
 
 from tests.conftest import assert_expr_equal
 
@@ -298,6 +302,76 @@ def test_heavy_scalar_solution_power_rules_use_fresh_dummy_indices() -> None:
 
     assert len(counts) == 2
     assert set(counts.values()) == {2}
+
+
+def test_heavy_scalar_solution_power_rules_respect_summed_max_order() -> None:
+    theory, heavy, phi, _g = _heavy_scalar_theory()
+    c1 = theory.define_coupling("c1", self_conjugate=True)
+    c3 = theory.define_coupling("c3", self_conjugate=True)
+    c5 = theory.define_coupling("c5", self_conjugate=True)
+    solution = HeavyScalarSolution(
+        field=heavy.definition,
+        orders={
+            1: c1() * phi(),
+            3: c3() * phi() ** 3,
+            5: c5() * phi() ** 5,
+        },
+    )
+    limited = replace_heavy_scalar_solutions_eft_limited(
+        heavy() ** 2,
+        {"S": solution},
+        theory,
+        eft_order=6,
+    )
+    directly_limited = (heavy() ** 2).replace_multiple(
+        heavy_scalar_solution_replacements({"S": solution}, max_order=3)
+    ).expand()
+    unbounded = (heavy() ** 2).replace_multiple(heavy_scalar_solution_replacements({"S": solution})).expand()
+
+    assert_expr_equal(limited, c1() ** 2 * phi() ** 2)
+    assert_expr_equal(directly_limited, c1() ** 2 * phi() ** 2)
+    assert canonical_string(c3()) not in canonical_string(limited)
+    assert canonical_string(c5()) not in canonical_string(limited)
+    assert canonical_string(c3()) in canonical_string(unbounded)
+    assert canonical_string(c5()) in canonical_string(unbounded)
+
+
+def test_one_loop_match_eft_limited_heavy_scalar_reduction_updates_staged_projection_sources() -> None:
+    theory, heavy, phi, g = _heavy_scalar_theory()
+    loop = theory.define_coupling("loop", self_conjugate=True)
+    mass = theory.coupling_handle("M")
+    lagrangian = theory.free_lag(heavy, phi) - g() * heavy() * phi() ** 2 / 2
+    engine = FakePoleVakintEngine(loop() * heavy() ** 2)
+
+    result = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=engine,
+            include_tree_level_matching=True,
+            substitute_heavy_scalar_solutions=True,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={"phi4": phi() ** 4},
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+    )
+
+    assert isinstance(result, MatchingResult)
+    expected_loop_source = loop() * g() ** 2 * phi() ** 4 / (4 * mass() ** 4)
+    assert result.metadata["heavy_scalar_solutions_substituted"] is True
+    assert result.metadata["heavy_scalar_solution_eft_limited"] is True
+    assert result.metadata["matching_condition_projection_source"] == "staged"
+    assert_expr_equal(result.expression("loop_only_on_shell_projection_source"), expected_loop_source)
+    assert canonical_string(heavy()) not in canonical_string(result.expression("loop_only_on_shell_projection_source"))
+    assert_expr_equal(
+        result.matching_conditions["phi4"],
+        result.expression("on_shell_eft_lagrangian").coefficient(phi() ** 4).expand(),
+    )
 
 
 def test_one_loop_match_applies_on_shell_reduction_before_condition_projection() -> None:

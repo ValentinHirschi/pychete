@@ -440,6 +440,11 @@ a current Matchete stage dump for the same trace, target, propagation order,
 and simplification boundary before changing pychete. If Mathematica is
 unavailable, record that limitation in the implementation notes and continue
 with the closest committed Matchete-derived fixtures.
+When reporting progress on a mismatch, state which Matchete dump/checkpoint
+and which bounded pychete probe were compared. A statement that a coefficient
+"does not match" is not actionable enough for this port unless it is tied to a
+specific stage boundary such as source generation, Wilson expansion, loop
+integration, Green-basis simplification, EOM reduction, or projection.
 Every mismatch-fix note should explicitly name the Matchete dump or
 WolframScript checkpoint used, the corresponding bounded pychete probe, and the
 first generic algorithm boundary where they differ. This keeps the port aligned

@@ -1196,3 +1196,19 @@ without Warsaw-specific core assumptions.
   WolframScript checkpoints and compare them with bounded pychete probes until
   the first generic algorithm boundary is found. This is now reinforced in
   `AGENTS.md` and the live one-shot implementation objective.
+- Latest confirmation repeated for the active objective: mismatch updates must
+  identify the Matchete dump/checkpoint, the paired bounded pychete probe, and
+  the first semantic boundary compared. This keeps the one-shot port aligned
+  with Matchete's algorithms while still implementing them in pychete with
+  Symbolica/idenso/spenso/vakint.
+- Latest implementation progress: the full public Singlet `cHD` order-zero
+  Wilson-line route now finishes under the 30 GiB watchdog instead of blowing
+  up during heavy-scalar substitution. The fix bounds heavy-scalar solution
+  replacement by the requested EFT order and keeps staged projection sources
+  synchronized. It was checked against the committed Matchete `cHD` insertion,
+  EOM, and matching-condition fixtures plus a bounded pychete public internal
+  probe. The coefficient still differs from Matchete: after factoring
+  `hbar*A^2*gY^2/M^4`, pychete has the `-1/2` pole/log coefficient while
+  Matchete has `-5/3`, so the next mismatch slice should target the missing
+  source/EOMSimplify/field-redefinition contribution rather than projection
+  performance.

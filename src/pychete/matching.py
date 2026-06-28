@@ -98,6 +98,7 @@ from .tree_matching import (
     HeavyScalarSolution,
     heavy_scalar_solution_replacements,
     match_tree,
+    replace_heavy_scalar_solutions_eft_limited,
     solve_heavy_scalar_eoms,
 )
 
@@ -9412,10 +9413,51 @@ def match_one_loop(
                 len(solutions),
                 theory.name,
             )
-            result = result.with_on_shell_reduction(
-                replacement_rules,
-                expand=options.heavy_scalar_solution_expand,
-            )
+            if matching_condition_targets is not None and matching_condition_truncate_eft:
+                before_reduction = result.on_shell_eft_lagrangian
+                reduced = replace_heavy_scalar_solutions_eft_limited(
+                    before_reduction,
+                    solutions,
+                    theory,
+                    eft_order=eft_order,
+                    fresh_dummy_indices=True,
+                )
+                supertraces = {
+                    **result.supertraces,
+                    "on_shell_eft_lagrangian_before_reduction": before_reduction,
+                    "on_shell_eft_lagrangian_after_reduction": reduced,
+                }
+                for stage_name in (
+                    LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE,
+                    TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
+                ):
+                    if stage_name not in result.supertraces:
+                        continue
+                    supertraces[stage_name] = replace_heavy_scalar_solutions_eft_limited(
+                        result.supertraces[stage_name],
+                        solutions,
+                        theory,
+                        eft_order=eft_order,
+                        fresh_dummy_indices=True,
+                    )
+                result = replace(
+                    result,
+                    on_shell_eft_lagrangian=reduced,
+                    supertraces=supertraces,
+                    metadata={
+                        **result.metadata,
+                        "on_shell_reduced": True,
+                        "on_shell_reduction_source": "on_shell_eft_lagrangian",
+                        "on_shell_reduction_replacement_count": len(replacement_rules),
+                        "on_shell_reduction_repeat": False,
+                        "heavy_scalar_solution_eft_limited": True,
+                    },
+                )
+            else:
+                result = result.with_on_shell_reduction(
+                    replacement_rules,
+                    expand=options.heavy_scalar_solution_expand,
+                )
         result = replace(
             result,
             metadata={
@@ -9428,6 +9470,11 @@ def match_one_loop(
                 ),
                 "heavy_scalar_solution_expand": options.heavy_scalar_solution_expand,
                 "heavy_scalar_solution_fresh_dummy_indices": True,
+                "heavy_scalar_solution_eft_limited": bool(
+                    replacement_rules
+                    and matching_condition_targets is not None
+                    and matching_condition_truncate_eft
+                ),
             },
         )
     else:
@@ -9441,6 +9488,7 @@ def match_one_loop(
                 "heavy_scalar_solution_source": "disabled",
                 "heavy_scalar_solution_expand": False,
                 "heavy_scalar_solution_fresh_dummy_indices": False,
+                "heavy_scalar_solution_eft_limited": False,
             },
         )
     if options.on_shell_replacements is not None:
