@@ -6,6 +6,8 @@ from .functional import (
     expose_scalar_derivative_commutator_bilinears,
     hermitian_conjugate,
     integrate_by_parts_scalar_laplacians,
+    scalar_derivative_green_normal_form,
+    scalar_derivative_ibp_identities,
 )
 from .group_algebra import simplify_pychete_color
 from .green_basis import (
@@ -230,6 +232,8 @@ __all__ = [
     "hermitian_conjugate",
     "infer_coupling_mass_dimensions",
     "integrate_by_parts_scalar_laplacians",
+    "scalar_derivative_green_normal_form",
+    "scalar_derivative_ibp_identities",
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",

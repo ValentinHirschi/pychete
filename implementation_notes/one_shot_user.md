@@ -924,3 +924,12 @@ without Warsaw-specific core assumptions.
   pychete now has bounded local basis discovery for expression-plus-identity
   neighborhoods, while preferred Green-basis representatives remain explicit
   until Matchete's operator-class scoring is ported generically.
+- Follow-up scalar Green-basis slice: pychete now has a source-side scalar
+  `IdentitiesIBP` helper and a combined bounded scalar
+  IBP/commutator normal-form helper. The existing opt-in Wilson-line scalar
+  derivative postprocess now uses this broader source-side Green-basis pass,
+  lowers any generated formal commutators, and then applies the existing
+  field-strength exposure helper. Focused tests pass, and the selected Singlet
+  order-zero `hScalar-lScalar -> cHD` smoke still preserves two pre-EOM terms
+  but projects no matching condition, so the first `cHD` milestone remains
+  open at the larger higher-derivative operator-class/scoring layer.

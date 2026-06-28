@@ -602,6 +602,16 @@ operator factors from scalar coefficients in a bounded expression/identity
 neighborhood. Preferred representatives remain explicit by design: do not
 guess Matchete's full operator-class scoring from strings or ad hoc global
 expression walks.
+For scalar derivative Green-basis work, use
+`scalar_derivative_ibp_identities(...)` as the local scalar
+`IdentitiesIBP` source and `scalar_derivative_green_normal_form(...)` as the
+combined bounded IBP/commutator normal-form boundary. These helpers discover
+tagged scalar field atoms with Symbolica patterns, extract coefficients with
+native `Expression.coefficient(...)`, close the local identity neighborhood
+under explicit bounds, and delegate row reduction to the Green-basis Symbolica
+solver. Do not add more target-specific scalar IBP projection aliases until
+this generic source-side normal form has been checked against the relevant
+Matchete operator class.
 For scalar derivative-bilinear normal forms, use the generic
 `expose_scalar_derivative_commutator_bilinears(theory, expr, ...)` helper
 rather than adding projection-specific replacements. It collects tagged scalar

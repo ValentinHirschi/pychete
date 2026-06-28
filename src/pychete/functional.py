@@ -46,6 +46,9 @@ from .theory_metadata import (
 
 _MAX_MULTILINEAR_CHAIN_ARITY = 8
 _MAX_SCALAR_DERIVATIVE_BILINEAR_CANDIDATES = 128
+_DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS = 96
+_DEFAULT_SCALAR_GREEN_MAX_IDENTITIES = 192
+_DEFAULT_SCALAR_GREEN_MAX_ROUNDS = 2
 
 
 def hermitian_conjugate(expr: Expression) -> Expression:
@@ -354,6 +357,103 @@ def integrate_by_parts_scalar_laplacians(
     return out.expand()
 
 
+def scalar_derivative_ibp_identities(
+    theory: Theory,
+    expr: Expression,
+    *,
+    max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
+) -> tuple[Expression, ...]:
+    """Return local scalar-field IBP identities for Green-basis reduction.
+
+    This is the scalar subset of Matchete's ``IdentitiesIBP`` identity source.
+    For every linear differentiated scalar ``Field`` or ``Bar(Field)`` atom it
+    constructs the total-derivative identity
+    ``D_mu(coefficient * D_rest(phi)) == 0``, i.e.
+    ``coefficient * D_mu D_rest(phi) + D_mu(coefficient) * D_rest(phi)``.
+    Field atoms are discovered with Symbolica tag-restricted patterns and the
+    coefficient is extracted with native ``Expression.coefficient(...)``.
+    """
+
+    if max_identities < 0:
+        raise ValueError("max_identities must be non-negative")
+    theory._validate_registered_expression(expr)
+    normalized = normalize_conjugate_scalar_field_slots(theory, expr)
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    for atom in _scalar_derivative_ibp_atoms(normalized):
+        coefficient = normalized.coefficient(atom).expand()
+        if is_zero(coefficient):
+            continue
+        if not is_zero(coefficient.coefficient(atom)):
+            continue
+        identity = _scalar_derivative_ibp_identity_for_atom(coefficient, atom)
+        if is_zero(identity):
+            continue
+        key = canonical_string(identity)
+        if key in seen:
+            continue
+        seen.add(key)
+        identities.append(identity)
+        if len(identities) > max_identities:
+            raise ValueError(f"scalar Green-basis IBP generated more than {max_identities} identities")
+    return tuple(identities)
+
+
+def scalar_derivative_green_normal_form(
+    theory: Theory,
+    expr: Expression,
+    *,
+    preferred: Iterable[Expression] = (),
+    include_ibp: bool = True,
+    include_commutators: bool = True,
+    max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
+    max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
+    max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
+) -> Expression:
+    """Reduce scalar derivative operators with local IBP and commutator identities.
+
+    The helper is a bounded pychete analogue of the scalar-derivative part of
+    Matchete's ``GreensSimplify``. It builds a local identity neighborhood from
+    scalar ``IdentitiesIBP`` and covariant-derivative commutation identities,
+    optionally closes that neighborhood over newly discovered local operator
+    basis terms for a few rounds, and then delegates row reduction to
+    Symbolica via :func:`pychete.green_basis.linear_identity_normal_form_from_identities`.
+
+    Preferred representatives remain explicit; this function does not guess
+    Matchete's full Green-basis scoring policy in Python.
+    """
+
+    if max_basis_terms < 0:
+        raise ValueError("max_basis_terms must be non-negative")
+    if max_identities < 0:
+        raise ValueError("max_identities must be non-negative")
+    if max_rounds < 0:
+        raise ValueError("max_rounds must be non-negative")
+    theory._validate_registered_expression(expr)
+    normalized = normalize_conjugate_scalar_field_slots(theory, expr)
+    identities = _scalar_derivative_green_identities(
+        theory,
+        normalized,
+        include_ibp=include_ibp,
+        include_commutators=include_commutators,
+        max_basis_terms=max_basis_terms,
+        max_identities=max_identities,
+        max_rounds=max_rounds,
+    )
+    if not identities:
+        return normalized
+
+    from .green_basis import linear_identity_normal_form_from_identities
+
+    return linear_identity_normal_form_from_identities(
+        normalized,
+        identities,
+        preferred=tuple(preferred),
+        max_basis_terms=max_basis_terms,
+        max_identities=max_identities,
+    )
+
+
 def normalize_conjugate_scalar_field_slots(theory: Theory, expr: Expression) -> Expression:
     """Rewrite dual-index scalar fields as explicit ``Bar(Field(...))`` atoms.
 
@@ -395,6 +495,120 @@ def _explicit_bar_scalar_field(atom: Expression) -> Expression | None:
         base_indices.append(s.Index(actual_index[0], expected_representation))
     base = s.Field(label, field_type(atom), list_expr(*base_indices), atom[3])
     return s.Bar(base)
+
+
+def _scalar_derivative_green_identities(
+    theory: Theory,
+    expr: Expression,
+    *,
+    include_ibp: bool,
+    include_commutators: bool,
+    max_basis_terms: int,
+    max_identities: int,
+    max_rounds: int,
+) -> tuple[Expression, ...]:
+    if not include_ibp and not include_commutators:
+        return ()
+
+    from .green_basis import linear_identity_basis_terms
+
+    identities: list[Expression] = []
+    seen_identities: set[str] = set()
+    processed_sources: set[str] = set()
+    frontier: tuple[Expression, ...] = (expr,)
+    for _ in range(max(1, max_rounds)):
+        new_sources: list[Expression] = []
+        for source in frontier:
+            source_key = canonical_string(source)
+            if source_key in processed_sources:
+                continue
+            processed_sources.add(source_key)
+            for identity in _scalar_derivative_identity_sources(
+                theory,
+                source,
+                include_ibp=include_ibp,
+                include_commutators=include_commutators,
+                max_identities=max_identities,
+            ):
+                identity_key = canonical_string(identity)
+                if identity_key in seen_identities:
+                    continue
+                seen_identities.add(identity_key)
+                identities.append(identity)
+                if len(identities) > max_identities:
+                    raise ValueError(f"scalar Green-basis reduction generated more than {max_identities} identities")
+        if not identities:
+            break
+        basis_terms = linear_identity_basis_terms(
+            (expr, *identities),
+            max_basis_terms=max_basis_terms,
+        )
+        for basis_term in basis_terms:
+            key = canonical_string(basis_term)
+            if key not in processed_sources:
+                new_sources.append(basis_term)
+        if not new_sources:
+            break
+        frontier = tuple(new_sources)
+    return tuple(identities)
+
+
+def _scalar_derivative_identity_sources(
+    theory: Theory,
+    expr: Expression,
+    *,
+    include_ibp: bool,
+    include_commutators: bool,
+    max_identities: int,
+) -> tuple[Expression, ...]:
+    identities: list[Expression] = []
+    if include_ibp:
+        identities.extend(scalar_derivative_ibp_identities(theory, expr, max_identities=max_identities))
+    if include_commutators:
+        identities.extend(theory.covariant_derivative_commutator_identities(expr))
+    if len(identities) > max_identities:
+        raise ValueError(f"scalar Green-basis reduction generated more than {max_identities} identities")
+    return tuple(identities)
+
+
+def _scalar_derivative_ibp_atoms(expr: Expression) -> tuple[Expression, ...]:
+    field_pat = field_pattern()
+    bar_pat = bar_field_pattern()
+    field_label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms: list[Expression] = []
+    seen: set[str] = set()
+    for pattern in (bar_pat, field_pat):
+        for atom in matching_subexpressions(expr, pattern, field_label_is_tagged):
+            if is_bar_field(atom):
+                base_atom = bar_field_inner(atom)
+            else:
+                base_atom = atom
+            if not _is_scalar_derivative_ibp_field(base_atom):
+                continue
+            key = canonical_string(atom)
+            if key in seen:
+                continue
+            seen.add(key)
+            atoms.append(atom)
+    return tuple(atoms)
+
+
+def _is_scalar_derivative_ibp_field(atom: Expression) -> bool:
+    if not bool(field_type(atom) == s.Scalar):
+        return False
+    derivatives = field_derivatives(atom)
+    return bool(derivatives) and all(is_head(derivative, s.Index) for derivative in derivatives)
+
+
+def _scalar_derivative_ibp_identity_for_atom(coefficient: Expression, atom: Expression) -> Expression:
+    base_atom = bar_field_inner(atom) if is_bar_field(atom) else atom
+    derivatives = field_derivatives(base_atom)
+    if not derivatives:
+        return Expression.num(0)
+    outer_derivative = derivatives[0]
+    reduced_base = field_with_derivatives(base_atom, derivatives[1:])
+    reduced_atom = s.Bar(reduced_base) if is_bar_field(atom) else reduced_base
+    return (coefficient * atom + apply_cd([outer_derivative], coefficient) * reduced_atom).expand()
 
 
 def _scalar_derivative_field_atoms(expr: Expression, *, derivative_count: int) -> tuple[Expression, ...]:

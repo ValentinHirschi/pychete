@@ -9,7 +9,6 @@ from typing import Any, Literal
 
 from symbolica import Expression
 
-from .functional import integrate_by_parts_scalar_laplacians
 from .logging import get_logger, progress
 from .matching_options import (
     CovariantDerivativeCommutatorModeInput,
@@ -20,7 +19,12 @@ from .matching_options import (
     VakintIntegralStage,
     one_loop_normalization_label,
 )
-from .matching import BosonicCDEExpansionPlan, WilsonLineExpansionPlan, _term_atom_requirements_for_targets
+from .matching import (
+    BosonicCDEExpansionPlan,
+    WilsonLineExpansionPlan,
+    _apply_wilson_line_scalar_green_normal_form,
+    _term_atom_requirements_for_targets,
+)
 from .matching_results import (
     MatchingConditionTarget,
     MatchingResult,
@@ -1122,18 +1126,18 @@ class ValidationFixture:
                 },
             )
         if wilson_line_expose_scalar_derivative_commutator_bilinears:
-            reduced_on_shell = integrate_by_parts_scalar_laplacians(theory, result.on_shell_eft_lagrangian)
+            reduced_on_shell = _apply_wilson_line_scalar_green_normal_form(theory, result.on_shell_eft_lagrangian)
             result = replace(
                 result,
                 on_shell_eft_lagrangian=reduced_on_shell,
                 supertraces={
                     **result.supertraces,
-                    "on_shell_eft_lagrangian_before_scalar_laplacian_ibp": result.on_shell_eft_lagrangian,
-                    "on_shell_eft_lagrangian_after_scalar_laplacian_ibp": reduced_on_shell,
+                    "on_shell_eft_lagrangian_before_scalar_green_normal_form": result.on_shell_eft_lagrangian,
+                    "on_shell_eft_lagrangian_after_scalar_green_normal_form": reduced_on_shell,
                 },
                 metadata={
                     **result.metadata,
-                    "wilson_line_scalar_laplacian_ibp_reduced": True,
+                    "wilson_line_scalar_green_normal_form_reduced": True,
                 },
             )
         preview = MatchingResult(

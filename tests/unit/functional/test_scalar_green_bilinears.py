@@ -8,6 +8,8 @@ from pychete.functional import (
     expose_scalar_derivative_commutator_bilinears,
     integrate_by_parts_scalar_laplacians,
     normalize_conjugate_scalar_field_slots,
+    scalar_derivative_green_normal_form,
+    scalar_derivative_ibp_identities,
 )
 from pychete.matching_results import MatchingResult
 from pychete.symbols import s
@@ -191,6 +193,71 @@ def test_scalar_laplacian_ibp_drops_bare_total_derivative() -> None:
     reduced = integrate_by_parts_scalar_laplacians(theory, source)
 
     assert_expr_equal(reduced, Expression.num(0))
+
+
+def test_scalar_derivative_ibp_identities_generate_outer_derivative_identity() -> None:
+    coefficient = S("scalar_derivative_ibp_identity_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, nu])
+    expected = (
+        coefficient * source
+        + coefficient * s.Bar(higgs(i, derivatives=[mu])) * higgs(i, derivatives=[nu])
+    )
+
+    identities = scalar_derivative_ibp_identities(theory, coefficient * source)
+
+    assert len(identities) == 1
+    assert_expr_equal(identities[0], expected)
+
+
+def test_scalar_derivative_green_normal_form_applies_ibp_identity() -> None:
+    coefficient = S("scalar_derivative_green_ibp_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, nu])
+    expected = -coefficient * s.Bar(higgs(i, derivatives=[mu])) * higgs(i, derivatives=[nu])
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        coefficient * source,
+        include_commutators=False,
+        max_rounds=1,
+    )
+
+    assert_expr_equal(reduced, expected)
+
+
+def test_scalar_derivative_green_normal_form_can_prefer_commuted_representatives() -> None:
+    coefficient = S("scalar_derivative_green_commutator_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, nu])
+    swapped = s.Bar(higgs(i)) * higgs(i, derivatives=[nu, mu])
+    commutator = s.Bar(higgs(i)) * s.CovariantDerivativeCommutator(mu, nu, higgs(i))
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        coefficient * source,
+        include_ibp=False,
+        preferred=(swapped, commutator),
+    )
+
+    assert_expr_equal(reduced, coefficient * swapped + coefficient * commutator)
+
+
+def test_scalar_derivative_green_normal_form_closes_local_ibp_neighborhood() -> None:
+    coefficient = S("scalar_derivative_green_closure_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    source = s.Bar(higgs(i)) * higgs(i, derivatives=[mu, nu])
+    preferred = s.Bar(higgs(i, derivatives=[mu, nu])) * higgs(i)
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        coefficient * source,
+        preferred=(preferred,),
+        include_commutators=False,
+        max_rounds=2,
+    )
+
+    assert_expr_equal(reduced, coefficient * preferred)
 
 
 @pytest.mark.parametrize(

@@ -39,9 +39,9 @@ from .functional import (
     eom_replacement_rules_for_expression,
     expose_scalar_derivative_commutator_bilinears,
     expand_cd_operators,
-    integrate_by_parts_scalar_laplacians,
     normalize_conjugate_scalar_field_slots,
     partial_functional_derivative,
+    scalar_derivative_green_normal_form,
     simplify_trivial_cd_operators,
 )
 from .indices import relabel_dummy_indices
@@ -6892,13 +6892,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     out = _restore_theory_owned_generated_lorentz_indices(theory, out)
     out = normalize_conjugate_scalar_field_slots(theory, out)
     if expose_scalar_derivative_commutator_bilinears_option:
-        out = integrate_by_parts_scalar_laplacians(theory, out)
-        out = expose_scalar_derivative_commutator_bilinears(
-            theory,
-            out,
-            include_gauge_coupling=False,
-            expand_commutators=True,
-        )
+        out = _apply_wilson_line_scalar_green_normal_form(theory, out)
     if emit_covariant_derivative_commutators or expand_covariant_derivative_commutators:
         max_cycles = max(1, min(8, emit_covariant_derivative_commutator_passes + 1))
         for _ in range(max_cycles):
@@ -6922,17 +6916,24 @@ def _postprocess_wilson_line_tensor_reduced_expression(
             out = updated
     out = simplify_trivial_cd_operators(out)
     if expose_scalar_derivative_commutator_bilinears_option:
-        out = integrate_by_parts_scalar_laplacians(theory, out)
-        out = expose_scalar_derivative_commutator_bilinears(
-            theory,
-            out,
-            include_gauge_coupling=False,
-            expand_commutators=True,
-        )
+        out = _apply_wilson_line_scalar_green_normal_form(theory, out)
     out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
     if simplify_pychete_color_algebra:
         out = idenso.simplify_pychete_color_algebra(theory, out)
     return scalarize_commutative_ncm_chains(out)
+
+
+def _apply_wilson_line_scalar_green_normal_form(theory: Theory, expr: Expression) -> Expression:
+    out = scalar_derivative_green_normal_form(theory, expr)
+    out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
+    out = expand_cd_operators(out)
+    out = simplify_trivial_cd_operators(out)
+    return expose_scalar_derivative_commutator_bilinears(
+        theory,
+        out,
+        include_gauge_coupling=False,
+        expand_commutators=True,
+    )
 
 
 def _postprocess_pre_wilson_line_tensor_reduced_expression(
@@ -9167,18 +9168,18 @@ def match_one_loop(
             },
         )
     if options.wilson_line_expose_scalar_derivative_commutator_bilinears:
-        reduced_on_shell = integrate_by_parts_scalar_laplacians(theory, result.on_shell_eft_lagrangian)
+        reduced_on_shell = _apply_wilson_line_scalar_green_normal_form(theory, result.on_shell_eft_lagrangian)
         result = replace(
             result,
             on_shell_eft_lagrangian=reduced_on_shell,
             supertraces={
                 **result.supertraces,
-                "on_shell_eft_lagrangian_before_scalar_laplacian_ibp": result.on_shell_eft_lagrangian,
-                "on_shell_eft_lagrangian_after_scalar_laplacian_ibp": reduced_on_shell,
+                "on_shell_eft_lagrangian_before_scalar_green_normal_form": result.on_shell_eft_lagrangian,
+                "on_shell_eft_lagrangian_after_scalar_green_normal_form": reduced_on_shell,
             },
             metadata={
                 **result.metadata,
-                "wilson_line_scalar_laplacian_ibp_reduced": True,
+                "wilson_line_scalar_green_normal_form_reduced": True,
             },
         )
     if options.truncate_eft_result:

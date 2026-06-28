@@ -144,6 +144,14 @@
   identities, strip scalar coefficients in the local Matchete
   `cpl * Operator[...]` sense, and still delegate row reduction to Symbolica.
   Preferred representatives remain explicit.
+- pychete now has source-side scalar Green-basis identity helpers:
+  `scalar_derivative_ibp_identities(...)` generates the scalar subset of
+  Matchete `IdentitiesIBP`, and `scalar_derivative_green_normal_form(...)`
+  combines scalar IBP and covariant-derivative commutator identities in a
+  bounded local basis before delegating row reduction to Symbolica. The
+  existing opt-in Wilson-line scalar derivative postprocess now uses this
+  broader normal form, lowers any generated formal commutators, and then runs
+  the existing field-strength exposure helper.
 
 ## Current Frontier
 
@@ -214,18 +222,37 @@
   is automatic operator-class discovery/scoring for larger local classes,
   basis construction for the higher-derivative Singlet source, and integration
   with the selected Wilson-line Green-basis stage.
+- The source-side scalar IBP/commutator normal-form slice adds the next local
+  identity layer and is wired into the opt-in Wilson-line scalar-Green path.
+  A watchdog-wrapped order-zero selected Singlet `hScalar-lScalar -> cHD`
+  smoke still preserved two EOM-aware Wilson-line terms but produced no
+  projected matching condition, so this does not yet complete the `cHD`
+  milestone. The remaining gap is the larger Matchete operator-class scoring
+  and preferred-representative policy for higher-derivative scalar classes,
+  not just generation of the first local IBP/commutator identities.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/definitions/test_theory_definitions.py -k
-  "green_basis or commutator" -q` passed (`22 passed`).
+  tests/unit/functional/test_scalar_green_bilinears.py -q` passed
+  (`19 passed`).
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/definitions/test_public_api.py -q` passed (`8 passed`).
-- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
-  tests/unit/definitions/test_theory_definitions.py
-  tests/unit/definitions/test_public_api.py -q` passed (`69 passed`).
+  tests/unit/functional/test_scalar_green_bilinears.py
+  tests/unit/definitions/test_public_api.py -q` passed (`27 passed`).
+- Watchdog-wrapped `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/matching/test_fluctuation_operator.py -k
+  "scalar_derivative" -q` passed (`3 passed`).
+- Watchdog-wrapped `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py -k
+  "wilson_line_scalar_derivative_bilinear_option" -q` passed (`1 passed`).
+- Watchdog-wrapped `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py -k
+  "pre_eom_terms_for_derivative_higgs_target" -q` passed (`1 passed`).
+- Watchdog-wrapped selected Singlet order-zero `hScalar-lScalar -> cHD` probe
+  with the new scalar Green normal form preserved `2` Wilson-line terms in
+  `hScalar-lScalar#wilson0_o0_0` and still produced no projected matching
+  condition.
 - `git diff --check` passed.
 
 ## Next Work
@@ -244,9 +271,10 @@
   `CommuteCDs` plus row-reduced Green-basis representative for the local
   four-derivative scalar terms, then rerun a reduced selected-trace cHD smoke
   under the 30 GiB watchdog.
-- With bounded automatic local-basis construction now available for generated
-  identities, the next implementation step is to extend the same Green-basis
-  boundary from commutator-only identities to the combined scalar derivative
-  class: collect source monomials plus generated IBP/commutator identity
-  terms, provide a generic preferred representative ordering, and apply the
-  normal form before rerunning the reduced selected Singlet `cHD` smoke.
+- With bounded scalar IBP/commutator normal form now available and wired into
+  the opt-in Wilson-line scalar-Green route, the next implementation step is
+  to port more of Matchete's operator-class scoring/preferred-representative
+  policy for the higher-derivative scalar classes. The immediate target is a
+  generic preference strategy that can select the same Green-basis
+  representatives Matchete uses for the selected Singlet `cHD`/`cHBox`/`cH`
+  derivative-Higgs family, without hard-coding Warsaw coefficients.
