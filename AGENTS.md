@@ -627,6 +627,14 @@ Matchete script or committed dump, the paired pychete probe, and the suspected
 algorithm boundary in status updates and implementation notes so the port
 closely follows Matchete's algorithms while translating them to
 Symbolica/idenso/spenso/vakint.
+Mismatch debugging rule, reinforced 2026-06-28: never treat a mismatching
+Wilson coefficient as enough information to patch runtime pychete. First add
+or refresh the smallest useful Matchete WolframScript dump, inspect the
+Matchete intermediate stages at the relevant trace/target/order boundary, add
+the matching bounded pychete probe, and identify the first semantic stage
+where the two diverge. Runtime changes should port that Matchete algorithmic
+stage using Symbolica/idenso/spenso/vakint primitives, not encode a
+coefficient-specific repair.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

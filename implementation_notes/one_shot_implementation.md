@@ -85,6 +85,14 @@
   script/fixture, the paired pychete probe, and the suspected generic
   algorithm boundary so runtime changes remain true Symbolica/idenso/spenso/
   vakint ports of Matchete algorithms.
+- Latest mismatch-debugging objective, 2026-06-28: a mismatching Wilson
+  coefficient is never enough information to patch runtime pychete. For each
+  mismatch, add or refresh the smallest useful Matchete WolframScript dump,
+  dissect the Matchete intermediates for the narrowed trace/target/order
+  boundary, add the matching bounded pychete probe, and identify the first
+  semantic stage where they diverge. Runtime work should then port that
+  Matchete algorithmic stage through Symbolica/idenso/spenso/vakint primitives,
+  not encode a coefficient-specific repair.
 - Current concrete objective reminder: the active Singlet `cHD`
   EOM/on-shell frontier must keep
   `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
@@ -1638,3 +1646,19 @@
   `src/pychete/matching.py` and
   `tests/unit/functional/test_scalar_green_bilinears.py`
   (`Success: no issues found in 2 source files`); and `git diff --check`.
+- Latest paired EOM-boundary probe, 2026-06-28: refreshed
+  `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json` from
+  `scripts/debug_pychete_singlet_eom_boundary.py` and compared it against the
+  current Matchete checkpoint
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` /
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`. Matchete's
+  raw `InternalSimplify` stage records 105 Higgs formal-EOM terms and feeds a
+  nonzero `after_shift_dim6_dev3` scalar field redefinition. The paired
+  pychete selected-entry probe now records scalar-EOM exposure attempts for
+  each of the 10 nonzero selected Wilson-line entries: all 10 currently hit
+  `Green-basis reduction discovered more than 256 basis terms`, expose zero
+  formal scalar `EOM(...)` atoms, and produce zero scalar
+  field-redefinition deltas. This is now the first concrete semantic boundary:
+  the next generic port work should target Matchete `InternalSimplify`'s
+  operator-basis / identity-neighborhood control for this selected source,
+  not the final `cHD` coefficient.

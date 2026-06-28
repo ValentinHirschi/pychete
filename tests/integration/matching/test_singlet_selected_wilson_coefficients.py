@@ -914,15 +914,28 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
     assert "representative-conversion boundary" in debug["first_differing_boundary"]
+    assert "bounded scalar Green-basis exposure cap" in debug["first_differing_boundary"]
     assert eom_probe == {
         "entry_count": 10,
         "field_strength_count": 0,
+        "nonzero_scalar_eom_field_redefinition_delta_entry_count": 0,
         "nonzero_vector_eom_current_exposed_delta_entry_count": 0,
         "nonzero_vector_field_redefinition_delta_entry_count": 0,
+        "scalar_eom_exposed_formal_eom_count": 0,
+        "scalar_eom_exposure_error_count": 10,
+        "scalar_eom_field_redefinition_delta_error_count": 0,
         "scalar_eom_identity_count": 28,
         "vector_eom_current_exposed_field_strength_divergence_count": 0,
         "vector_field_strength_divergence_count": 0,
     }
+    assert {
+        row["scalar_eom_exposure_error"]
+        for row in debug["eom_exposure_probe_by_entry"].values()
+    } == {"Green-basis reduction discovered more than 256 basis terms"}
+    assert {
+        row["scalar_eom_field_redefinition_delta_is_zero"]
+        for row in debug["eom_exposure_probe_by_entry"].values()
+    } == {True}
     assert debug["eom_exposure_probe_by_entry"]["hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"][
         "scalar_eom_identity_count"
     ] == 0

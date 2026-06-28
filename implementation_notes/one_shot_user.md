@@ -1472,3 +1472,18 @@ generic algorithm boundary before runtime pychete changes are accepted.
   `EoMSplitter`) and the active Singlet `cHD` EOM debug fixture; it is not a
   final-coefficient patch. The full Singlet on-shell coefficient still needs
   broader `InternalSimplify` exposure parity.
+- Latest user instruction, 2026-06-28: continue using repeated focused
+  Matchete debug WolframScripts and intermediate-stage dissection whenever a
+  pychete/Matchete mismatch appears. Add the rule to persistent markdown so
+  future work keeps comparing Matchete dumps with bounded pychete probes,
+  locating the first semantic disagreement, and only then porting the
+  corresponding generic Matchete algorithm through Symbolica/idenso/spenso/
+  vakint.
+- Latest Singlet `cHD` paired-probe status, 2026-06-28: the refreshed
+  pychete boundary fixture records scalar-EOM exposure attempts for the 10
+  nonzero selected `hScalar-lScalar-lVector-lScalar` Wilson-line entries. All
+  currently hit the bounded scalar Green-basis cap before formal `EOM(...)`
+  atoms appear, while Matchete's `debug_singlet_eom_simplify.wls` checkpoint
+  records 105 Higgs formal-EOM terms after `InternalSimplify`. The next generic
+  port target is therefore Matchete `InternalSimplify`'s operator-basis /
+  identity-neighborhood control, not final-coefficient tuning.

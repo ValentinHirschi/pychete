@@ -25,6 +25,7 @@ from pychete import (
     canonical_string,
     load_validation_fixture,
     one_loop_normalization_factor,
+    s,
 )
 from pychete.backends import vakint as vakint_backend
 from pychete.expr import (
@@ -171,6 +172,10 @@ def _field_strength_divergence_count(theory: Any, expr: Expression, *, field_nam
     return count
 
 
+def _formal_eom_count(expr: Expression) -> int:
+    return len(matching_subexpressions(expr, s.EOM(s.CDBodyWildcard)))
+
+
 def _eom_exposure_probe(
     theory: Any,
     lagrangian: Expression,
@@ -205,6 +210,33 @@ def _eom_exposure_probe(
             fields=[scalar_field],
             max_identities=512,
         )
+        scalar_eom_exposure_error: str | None = None
+        try:
+            scalar_eom_exposed = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                theory,
+                expr,
+                eom_lagrangian=lagrangian,
+                expose_scalar_eom_terms=True,
+            )
+        except ValueError as exc:
+            scalar_eom_exposed = expr
+            scalar_eom_exposure_error = str(exc)
+        scalar_eom_source_lagrangian = (lagrangian + scalar_eom_exposed).expand()
+        scalar_eom_delta_error: str | None = None
+        try:
+            _, scalar_eom_field_redefinition_delta = (
+                matching_module._apply_wilson_line_scalar_eom_field_redefinition(
+                    theory,
+                    scalar_eom_exposed,
+                    source_lagrangian=scalar_eom_source_lagrangian,
+                    max_order=6,
+                    fields=[scalar_field],
+                    strict=True,
+                )
+            )
+        except ValueError as exc:
+            scalar_eom_field_redefinition_delta = Expression.num(0)
+            scalar_eom_delta_error = str(exc)
         by_entry[entry_label] = {
             "byte_count": expr.get_byte_size(),
             "field_strength_count": len(matching_subexpressions(expr, field_strength_pattern())),
@@ -222,6 +254,16 @@ def _eom_exposure_probe(
                 )
             ),
             "scalar_eom_identity_count": len(scalar_identities),
+            "scalar_eom_exposure_error": scalar_eom_exposure_error,
+            "scalar_eom_exposed_byte_count": scalar_eom_exposed.get_byte_size(),
+            "scalar_eom_exposed_formal_eom_count": _formal_eom_count(scalar_eom_exposed),
+            "scalar_eom_field_redefinition_delta_is_zero": bool(
+                scalar_eom_field_redefinition_delta == Expression.num(0)
+            ),
+            "scalar_eom_field_redefinition_delta_byte_count": (
+                scalar_eom_field_redefinition_delta.get_byte_size()
+            ),
+            "scalar_eom_field_redefinition_delta_error": scalar_eom_delta_error,
             "vector_field_redefinition_delta_is_zero": bool(vector_delta == Expression.num(0)),
             "vector_field_redefinition_delta_byte_count": vector_delta.get_byte_size(),
             "vector_eom_current_exposed_delta_is_zero": bool(vector_exposed_delta == Expression.num(0)),
@@ -237,6 +279,18 @@ def _eom_exposure_probe(
             row["vector_eom_current_exposed_field_strength_divergence_count"] for row in by_entry.values()
         ),
         "scalar_eom_identity_count": sum(row["scalar_eom_identity_count"] for row in by_entry.values()),
+        "scalar_eom_exposed_formal_eom_count": sum(
+            row["scalar_eom_exposed_formal_eom_count"] for row in by_entry.values()
+        ),
+        "scalar_eom_exposure_error_count": sum(
+            row["scalar_eom_exposure_error"] is not None for row in by_entry.values()
+        ),
+        "nonzero_scalar_eom_field_redefinition_delta_entry_count": sum(
+            not row["scalar_eom_field_redefinition_delta_is_zero"] for row in by_entry.values()
+        ),
+        "scalar_eom_field_redefinition_delta_error_count": sum(
+            row["scalar_eom_field_redefinition_delta_error"] is not None for row in by_entry.values()
+        ),
         "nonzero_vector_field_redefinition_delta_entry_count": sum(
             not row["vector_field_redefinition_delta_is_zero"] for row in by_entry.values()
         ),
@@ -536,11 +590,13 @@ def main() -> int:
             "the representative-conversion boundary before field redefinition: "
             "Matchete's InternalSimplify exposes EOM-proportional structures "
             "that feed PerformSystematicFieldRedefs, while pychete's selected "
-            "source still contains scalar-derivative representatives with no "
-            "Abelian field-strength-divergence targets. The bounded exact "
-            "Abelian current-current exposure probe also finds no vector-EOM "
-            "divergence on this selected source, so the missing conversion is "
-            "broader than a simple inverse vector-EOM current product."
+            "source still exceeds the bounded scalar Green-basis exposure cap "
+            "before formal scalar EOM atoms can be generated. The bounded "
+            "exact Abelian current-current exposure probe also finds no "
+            "vector-EOM divergence on this selected source, so the missing "
+            "conversion is broader than a simple inverse vector-EOM current "
+            "product and should next target Matchete InternalSimplify's "
+            "operator-basis/identity-neighborhood control."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)
