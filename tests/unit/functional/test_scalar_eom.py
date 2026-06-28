@@ -5,6 +5,7 @@ from symbolica import Expression, S
 
 from pychete import FieldMassKind, FreeLagConvention, Theory, hermitian_conjugate, s
 from pychete.functional import (
+    abelian_vector_eom_field_redefinition_delta,
     apply_cd,
     expand_cd_operators,
     expose_scalar_derivative_commutator_bilinears,
@@ -181,6 +182,38 @@ def test_eom_replacement_rules_collect_opposite_abelian_vector_divergence_sign()
 
     assert len(rules) == 1
     assert_expr_equal(reduced, 2 * coefficient * coupling() ** 2 * current**2)
+
+
+def test_abelian_vector_eom_field_redefinition_delta_matches_scalar_current_shift() -> None:
+    coefficient = S("abelian_vector_field_redefinition_coefficient")
+    theory = Theory("abelian_vector_field_redefinition_delta")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    coupling = theory.coupling_handle("gY")
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    field = phi()
+    current = Expression.I * s.Bar(field) * s.CD(mu, field) - Expression.I * s.CD(mu, s.Bar(field)) * field
+    divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+    source = (coefficient * current * divergence).expand()
+
+    delta = abelian_vector_eom_field_redefinition_delta(
+        theory,
+        lagrangian,
+        source,
+        fields=[vector],
+        strict=True,
+    )
+
+    assert_expr_equal(delta, -2 * coefficient * coupling() ** 2 * current**2)
 
 
 def test_apply_cd_uses_symbolica_derivative_for_product_and_power_rules() -> None:

@@ -3,6 +3,7 @@ from __future__ import annotations
 from .dimensions import infer_coupling_mass_dimensions
 from .eft import operator_dimension, series_eft
 from .functional import (
+    abelian_vector_eom_field_redefinition_delta,
     expose_scalar_derivative_commutator_bilinears,
     hermitian_conjugate,
     integrate_by_parts_scalar_laplacians,
@@ -226,6 +227,7 @@ __all__ = [
     "evaluate_one_loop_single_scale_vacuum_integral",
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
     "evaluate_one_loop_vakint_expression",
+    "abelian_vector_eom_field_redefinition_delta",
     "expose_scalar_derivative_commutator_bilinears",
     "expand_wilson_terms",
     "get_logger",

@@ -531,3 +531,37 @@
   singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms" -q`
   (`5 passed`). `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` also
   passed with no issues.
+- Latest field-redefinition slice: reviewed Matchete
+  `Package/FieldRedef.m` before patching. The key missing vector-EOM piece was
+  not another projection alias: Matchete's `DummyGaugeShift` shifts both
+  Abelian field strengths and the charged covariant derivatives. pychete's
+  previous replacement-only path accounted for the
+  `D_nu F_{nu mu}` replacement but missed the scalar-current companion from
+  shifting charged scalar `CD` slots.
+- Added `abelian_vector_eom_field_redefinition_delta(...)` and
+  `Theory.abelian_vector_eom_field_redefinition_delta(...)`. The helper uses
+  the same Symbolica pattern collection, native `Expression.coefficient(...)`,
+  and Symbolica `Replacement` application as the EOM replacement pass. It is
+  deliberately bounded to Abelian gauge vectors and charged scalar currents;
+  fermion currents, non-Abelian vectors, kinetic mixing, Jacobian/anomaly
+  terms, and full iterative scalar/fermion field redefinitions remain open.
+- Added the opt-in public one-loop option
+  `OneLoopMatchOptions.on_shell_eom_abelian_vector_field_redefinition`. When
+  enabled together with `on_shell_eom_lagrangian`, pychete computes the
+  Abelian vector companion from the pre-reduction source, applies the ordinary
+  EOM replacements, then adds the companion as a named diagnostic stage.
+- Important checkpoint: applying the committed Singlet model Lagrangian to the
+  committed Matchete off-shell reference with the vector EOM replacement plus
+  this new companion now reproduces the saved Matchete `cHD` on-shell matching
+  coefficient exactly. The previous vector replacement alone moved only half
+  of the required off-shell-to-on-shell shift.
+- Latest focused validation for this slice passed:
+  `tests/unit/functional/test_scalar_eom.py -q` (`23 passed`);
+  `tests/integration/matching/test_heavy_scalar_tree.py -k
+  "vector_eom_replacements" -q` (`1 passed`);
+  `tests/integration/validation/test_validation_fixtures.py -k
+  "reference_chd_vector_eom_field_redefinition or reference_chd_records or
+  higgs_eom_rules" -q` (`3 passed`);
+  `tests/unit/definitions/test_public_api.py -q` (`8 passed`);
+  and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no
+  issues.

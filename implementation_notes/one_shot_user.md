@@ -1052,3 +1052,13 @@ without Warsaw-specific core assumptions.
   Wilson-line source, while the selected four-slot `cHD` coefficient remains a
   separate scoped regression. Full-model Singlet on-shell parity is still open
   because the generic Matchete-style field-redefinition loop is not complete.
+- Latest `cHD` on-shell progress: after reviewing Matchete `FieldRedef.m`,
+  pychete now has an opt-in Abelian vector field-redefinition companion for
+  charged scalar currents. This accounts for the charged-covariant-derivative
+  part of Matchete's vector `DummyGaugeShift`, in addition to the direct
+  `D_nu F_{nu mu}` EOM replacement. On the committed Singlet reference
+  fixture, vector EOM replacement plus this companion reproduces the saved
+  Matchete on-shell `cHD` matching coefficient from the committed off-shell
+  result. This is still a bounded subset: fermion currents, non-Abelian vector
+  shifts, kinetic mixing, anomalies/Jacobians, and full iterative
+  `EOMSimplify` remain to be implemented.

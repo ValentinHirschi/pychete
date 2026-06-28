@@ -36,6 +36,7 @@ from .expr import (
     terms,
 )
 from .functional import (
+    abelian_vector_eom_field_redefinition_delta,
     derive_eom,
     eom_replacement_rules_for_expression,
     expose_scalar_derivative_commutator_bilinears,
@@ -9377,19 +9378,48 @@ def match_one_loop(
             repeat=options.on_shell_replacement_repeat,
         )
     if options.on_shell_eom_lagrangian is not None:
+        eom_source = result.on_shell_eft_lagrangian
         eom_rules = eom_replacement_rules_for_expression(
             theory,
             options.on_shell_eom_lagrangian,
-            result.on_shell_eft_lagrangian,
+            eom_source,
             fields=options.on_shell_eom_fields,
             eft_order=eft_order,
             min_derivative_order=options.on_shell_eom_min_derivative_order,
             strict=options.on_shell_eom_strict,
         )
+        vector_field_redefinition_delta = Expression.num(0)
+        if options.on_shell_eom_abelian_vector_field_redefinition:
+            vector_field_redefinition_delta = abelian_vector_eom_field_redefinition_delta(
+                theory,
+                options.on_shell_eom_lagrangian,
+                eom_source,
+                fields=options.on_shell_eom_fields,
+                strict=options.on_shell_eom_strict,
+            )
         if eom_rules:
             result = result.with_on_shell_reduction(
                 eom_rules,
                 repeat=options.on_shell_replacement_repeat,
+            )
+        if not is_zero(vector_field_redefinition_delta):
+            before_field_redefinition = result.on_shell_eft_lagrangian
+            after_field_redefinition = (before_field_redefinition + vector_field_redefinition_delta).expand()
+            result = replace(
+                result,
+                on_shell_eft_lagrangian=after_field_redefinition,
+                supertraces={
+                    **result.supertraces,
+                    "on_shell_eft_lagrangian_before_abelian_vector_field_redefinition": (
+                        before_field_redefinition
+                    ),
+                    "on_shell_eft_lagrangian_after_abelian_vector_field_redefinition": (
+                        after_field_redefinition
+                    ),
+                    "on_shell_eft_lagrangian_abelian_vector_field_redefinition_delta": (
+                        vector_field_redefinition_delta
+                    ),
+                },
             )
         result = replace(
             result,
@@ -9399,6 +9429,12 @@ def match_one_loop(
                 "on_shell_eom_reduction_rule_count": len(eom_rules),
                 "on_shell_eom_min_derivative_order": options.on_shell_eom_min_derivative_order,
                 "on_shell_eom_strict": options.on_shell_eom_strict,
+                "on_shell_eom_abelian_vector_field_redefinition": (
+                    options.on_shell_eom_abelian_vector_field_redefinition
+                ),
+                "on_shell_eom_abelian_vector_field_redefinition_applied": (
+                    not is_zero(vector_field_redefinition_delta)
+                ),
             },
         )
     if options.wilson_line_expose_scalar_derivative_commutator_bilinears:

@@ -16,6 +16,7 @@ from pychete import (
     OneLoopSetup,
     Theory,
     ValidationFixture,
+    abelian_vector_eom_field_redefinition_delta,
     one_loop_normalization_factor,
     registered_wilson_matching_condition_targets,
 )
@@ -1597,6 +1598,52 @@ def test_singlet_model_higgs_eom_rules_are_available_for_reference_laplacians() 
 
     assert len(rules) == 2
     assert_expr_equal(reduced, off_shell)
+
+
+def test_singlet_reference_chd_vector_eom_field_redefinition_reaches_matchete_on_shell() -> None:
+    model = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = reference.theory
+    registered_targets = registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    condition_name, target = next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+    vector = theory.field_handle("B")
+    rules = theory.eom_replacement_rules_for_expression(
+        model.expression("lagrangian"),
+        reference.off_shell_eft_lagrangian,
+        fields=[vector],
+        strict=True,
+    )
+    delta = abelian_vector_eom_field_redefinition_delta(
+        theory,
+        model.expression("lagrangian"),
+        reference.off_shell_eft_lagrangian,
+        fields=[vector],
+        strict=True,
+    )
+    reduced = (reference.off_shell_eft_lagrangian.replace_multiple(rules) + delta).expand()
+    reduced_result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=reference.uv_lagrangian,
+        off_shell_eft_lagrangian=reduced,
+        on_shell_eft_lagrangian=reduced,
+    )
+    projected = reduced_result.project_matching_conditions(
+        {condition_name: target},
+        source="on_shell_eft_lagrangian",
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+
+    assert len(rules) == 1
+    assert not bool(delta == Expression.num(0))
+    assert_expr_equal((projected - reference.matching_conditions[condition_name]).collect_factors(), Expression.num(0))
 
 
 @pytest.mark.slow

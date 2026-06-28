@@ -415,6 +415,30 @@ def test_one_loop_match_generates_abelian_vector_eom_replacements() -> None:
     assert_expr_equal(result.off_shell_eft_lagrangian, normalized_source)
     assert_expr_equal(result.on_shell_eft_lagrangian, expected)
 
+    with_field_redefinition = theory.match(
+        lagrangian,
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=1,
+            integral_backend=OneLoopIntegralBackend.VAKINT,
+            vakint_stage=VakintIntegralStage.EVALUATED,
+            vakint_engine=FakePoleVakintEngine(source),
+            on_shell_eom_lagrangian=theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE),
+            on_shell_eom_fields=[vector],
+            on_shell_eom_strict=True,
+            on_shell_eom_abelian_vector_field_redefinition=True,
+            truncate_eft_result=False,
+        ),
+    )
+
+    assert isinstance(with_field_redefinition, MatchingResult)
+    assert with_field_redefinition.metadata["on_shell_eom_abelian_vector_field_redefinition"] is True
+    assert with_field_redefinition.metadata["on_shell_eom_abelian_vector_field_redefinition_applied"] is True
+    assert "on_shell_eft_lagrangian_abelian_vector_field_redefinition_delta" in with_field_redefinition.supertraces
+    assert_expr_equal(with_field_redefinition.off_shell_eft_lagrangian, normalized_source)
+    assert_expr_equal(with_field_redefinition.on_shell_eft_lagrangian, 2 * expected)
+
 
 def test_one_loop_match_truncates_eft_result_before_condition_projection() -> None:
     theory, heavy, phi, g = _heavy_scalar_theory()

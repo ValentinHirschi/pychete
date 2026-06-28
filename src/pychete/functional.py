@@ -1534,6 +1534,56 @@ def eom_replacement_rules_for_expression(
     return tuple(rules)
 
 
+def abelian_vector_eom_field_redefinition_delta(
+    theory: Theory,
+    lagrangian: Expression,
+    expression: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    strict: bool = False,
+) -> Expression:
+    """Return the bounded Abelian-vector companion to EOM replacements.
+
+    Matchete's vector field redefinition shifts both the Abelian field strength
+    and the charged covariant derivatives.  The ordinary
+    :func:`eom_replacement_rules_for_expression` path accounts for replacing
+    ``D_nu F_{nu mu}`` itself.  This helper adds the matching charged-current
+    companion induced by shifting scalar covariant derivatives, using the same
+    Symbolica pattern discovery and native coefficient extraction as the
+    replacement-rule path.
+
+    This is intentionally a first bounded subset of ``EOMSimplify``: Abelian
+    gauge vectors and charged scalar currents only.
+    """
+
+    theory._validate_registered_expression(expression)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    deltas: list[Expression] = []
+    failures: list[str] = []
+    for target, open_index, sign in _abelian_vector_eom_rule_targets(expression, allowed_labels=allowed_labels):
+        try:
+            replacement = _abelian_vector_eom_replacement(
+                theory,
+                lagrangian,
+                target,
+                open_index=open_index,
+                sign=sign,
+            )
+            if replacement is None:
+                continue
+            coefficient = expression.coefficient(target).expand()
+            if is_zero(coefficient):
+                continue
+            replacement_value = target.replace_multiple([replacement]).expand()
+            deltas.append((coefficient * replacement_value).expand())
+        except ValueError as exc:
+            if strict:
+                failures.append(str(exc))
+    if failures:
+        raise ValueError("; ".join(failures))
+    return sum_expr(deltas).expand()
+
+
 def _eom_rule_allowed_field_labels(
     theory: Theory,
     fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None,
