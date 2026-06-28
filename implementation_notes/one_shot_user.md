@@ -1097,3 +1097,12 @@ without Warsaw-specific core assumptions.
   `cHW/cHB/cHWB` and selected four-slot `cHD` pychete coefficient tests, this
   gives narrower one-loop Wilson-coefficient regression surfaces before full
   all-operator matching parity is attempted.
+- Latest partial-insertion update: added a Matchete debug fixture for the
+  selected Singlet `hScalar-lScalar-lVector-lScalar -> cHD` trace at
+  propagator order zero. The dump exposes 88 Matchete insertion replacements,
+  and pychete now has two narrow path-level regressions proving that Wilson-line
+  paths 0 and 26 each reproduce the same single quarter contribution seen in
+  the Matchete insertion checkpoint. This is the first layer of subset
+  matching tests below the selected aggregate coefficient: the remaining
+  off-shell mismatch is now scoped to the missing four equivalent quarter
+  insertions rather than to the loop integration or final projection pipeline.

@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 from functools import cache
 from pathlib import Path
 
@@ -23,6 +24,11 @@ from pychete.backends import vakint as vakint_backend
 from pychete.bases.smeft_warsaw import smeft_warsaw_operator
 
 from tests.conftest import assert_expr_equal
+
+
+_SINGLET_CHD_FOUR_SLOT_DEBUG = Path(
+    "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.debug.json"
+)
 
 
 @cache
@@ -116,6 +122,107 @@ def _selected_higgs_gauge_expected(theory: Theory, condition_name: str) -> Expre
     if condition_name == "cHWB":
         return hbar * source**2 * g_l * g_y / (6 * mass**4)
     raise ValueError(f"Unknown selected Singlet Higgs-gauge coefficient {condition_name!r}")
+
+
+def _selected_chd_four_slot_target(theory: Theory) -> tuple[str, Expression]:
+    registered_targets = matching_results_module.registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    return next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+
+
+def _selected_chd_four_slot_quarter_path_projection(path_index: int) -> tuple[Theory, Expression]:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    condition_name, target = _selected_chd_four_slot_target(theory)
+    setup = theory.one_loop_setup(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        max_trace_order=4,
+    )
+    paths = setup.interaction_wilson_line_trace_paths_by_trace(
+        trace_names=("hScalar-lScalar-lVector-lScalar",),
+    )["hScalar-lScalar-lVector-lScalar"]
+    heavy_scalar_solutions = matching_module.solve_heavy_scalar_eoms(
+        theory,
+        fixture.expression("lagrangian"),
+        eft_order=6,
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(
+        theory,
+        {condition_name: target},
+        heavy_scalar_solutions=heavy_scalar_solutions,
+    )
+    terms = paths[path_index].propagator_expansion_terms(
+        ((), (), (), ()),
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+    )
+    terms = matching_module._filter_wilson_line_terms_by_projection_requirements(terms, requirements)
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        {f"path{path_index}": terms},
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    selected = sum(evaluated_by_entry[f"path{path_index}"], Expression.num(0))
+    normalized = (
+        one_loop_normalization_factor(
+            OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+            hbar=theory.external_handle("hbar")(),
+        )
+        * selected
+    ).expand()
+    normalized = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        normalized,
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized,
+    )
+    projected = result.project_matching_conditions(
+        {condition_name: target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+    return theory, projected
+
+
+def _selected_chd_four_slot_quarter_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (
+            mass.log() / 2
+            - S("vakint::mursq").log() / 4
+            - Expression.num(1) / (4 * vakint_backend.epsilon_symbol())
+            - Expression.num(1) / 4
+        )
+        / mass**4
+    )
 
 
 @pytest.mark.parametrize("condition_name", ("cHW", "cHB", "cHWB"))
@@ -251,15 +358,25 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_matches_matchete
     assert_expr_equal((projected - expected).expand(), Expression.num(0))
 
 
+@pytest.mark.parametrize("path_index", (0, 26))
+def test_selected_chd_four_slot_quarter_paths_match_matchete_insertion_checkpoint(path_index: int) -> None:
+    debug = json.loads(_SINGLET_CHD_FOUR_SLOT_DEBUG.read_text(encoding="utf-8"))
+    theory, projected = _selected_chd_four_slot_quarter_path_projection(path_index)
+    expected = _selected_chd_four_slot_quarter_expected(theory)
+
+    assert debug["trace_name"] == "hScalar-lScalar-lVector-lScalar"
+    assert debug["target"] == "cHD"
+    assert debug["prop_order"] == 0
+    assert debug["insertion_count"] == 88
+    assert debug["insertions"][0]["manual_minus_evaluate_str_input_form"] == "0"
+    assert "(-1/4*" in debug["insertions"][0]["validation_simplified_prefactored_evaluate_str_input_form"]
+    assert_expr_equal((projected - expected).expand(), Expression.num(0))
+
+
 def test_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
-    registered_targets = matching_results_module.registered_wilson_matching_condition_targets(theory, basis="SMEFT")
-    condition_name, target = next(
-        (name, target)
-        for name, target in registered_targets.items()
-        if "external_cHD" in name
-    )
+    condition_name, target = _selected_chd_four_slot_target(theory)
     hbar = theory.external_handle("hbar")()
     setup = theory.one_loop_setup(
         fixture.expression("lagrangian"),

@@ -669,3 +669,27 @@
   watchdog-wrapped `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
   -q` (`6 passed`); `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
   passed; and `git diff --check` passed.
+- Latest insertion-checkpoint slice: generated and committed the Matchete
+  debug fixture
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.debug.json`
+  for the Singlet
+  `hScalar-lScalar-lVector-lScalar -> cHD` propagator-order-zero trace. The
+  dump records 88 Matchete insertion replacements, the `(-1/2*I)*hbar`
+  power-log prefactor, and detailed insertion-level bilinear coefficients.
+  Its first detailed insertion validates a single `-1/4` cHD-type quarter
+  contribution after Matchete's Wilson expansion and loop integration stages.
+- Added partial integration regressions that project only individual pychete
+  Wilson-line paths 0 and 26 for the same selected four-slot trace. Each path
+  independently reproduces the Matchete quarter coefficient
+  `hbar*A^2*gY^2/M^4*(log(M)/2 - log(vakint::mursq)/4 - 1/(4*epsilon) - 1/4)`.
+  This is intentionally narrower than the selected aggregate coefficient:
+  pychete currently finds two such quarter-path contributions, while the
+  committed Matchete off-shell source has the equivalent of six. The next
+  frontier is therefore localized to missing scalar-vector Xterm/GaugeCTerm
+  insertion families or Green-basis projection coverage, not to the basic
+  path-level loop integration/projection machinery.
+- Focused validation for this insertion-checkpoint slice passed under the
+  30 GiB watchdog:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -k "quarter_paths or selected_chd_four_slot_wilson_coefficient" -q`
+  (`4 passed, 4 deselected`).
