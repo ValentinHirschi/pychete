@@ -669,6 +669,21 @@ selectedXTermValues = safeEvaluate @ {
   Matchete`PackageScope`Xterm[{\[Phi], Matchete`PackageScope`Conj[H]}, {i, j}, 1, 0, 0],
   Matchete`PackageScope`Xterm[{Matchete`PackageScope`Conj[H], \[Phi]}, {i, j}, 1, 0, 0]
 } /. Matchete`PackageScope`$Xsubs;
+selectedScalarVectorXTermValues = safeEvaluate @ {
+  Matchete`PackageScope`Xterm[{H, B}, {i, j}, 2, 0, 0],
+  Matchete`PackageScope`Xterm[{H, B}, {i, j}, 1, 1, 0],
+  Matchete`PackageScope`Xterm[{H, B}, {i, j}, 1, 1, 1],
+  Matchete`PackageScope`Xterm[{B, H}, {i, j}, 2, 0, 0],
+  Matchete`PackageScope`Xterm[{B, H}, {i, j}, 1, 1, 0],
+  Matchete`PackageScope`Xterm[{B, H}, {i, j}, 1, 1, 1],
+  Matchete`PackageScope`Xterm[{Matchete`PackageScope`Conj[H], B}, {i, j}, 2, 0, 0],
+  Matchete`PackageScope`Xterm[{Matchete`PackageScope`Conj[H], B}, {i, j}, 1, 1, 0],
+  Matchete`PackageScope`Xterm[{Matchete`PackageScope`Conj[H], B}, {i, j}, 1, 1, 1],
+  Matchete`PackageScope`Xterm[{B, Matchete`PackageScope`Conj[H]}, {i, j}, 2, 0, 0],
+  Matchete`PackageScope`Xterm[{B, Matchete`PackageScope`Conj[H]}, {i, j}, 1, 1, 0],
+  Matchete`PackageScope`Xterm[{B, Matchete`PackageScope`Conj[H]}, {i, j}, 1, 1, 1],
+  Matchete`PackageScope`GaugeCTerm[B]
+} /. Matchete`PackageScope`$Xsubs /. Matchete`PackageScope`$Gsubs;
 
 data = <|
   "schema_version" -> 1,
@@ -692,6 +707,14 @@ data = <|
     ]
   ],
   "selected_xterm_values_input_form" -> toInputString[selectedXTermValues],
+  "selected_scalar_vector_x_orders_input_form" -> toInputString[
+    KeyTake[
+      Matchete`PackageScope`$XOrders,
+      {{H, B}, {B, H}, {Conj[H], B}, {B, Conj[H]}}
+    ]
+  ],
+  "selected_scalar_vector_xterm_values_input_form" ->
+    toInputString[selectedScalarVectorXTermValues],
   "propagator_expansion_summary" -> stageSummary["generic_propagator_expansion", gen],
   "slot_order_stage_summaries" -> If[
     skipSlotOrderSummariesOption,

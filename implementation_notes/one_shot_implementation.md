@@ -693,3 +693,40 @@
   `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
   -k "quarter_paths or selected_chd_four_slot_wilson_coefficient" -q`
   (`4 passed, 4 deselected`).
+- Latest scalar-vector frontier slice: extended the development-only
+  `helper_mathematica_scripts/debug_singlet_wilson_trace.wls` dump so the
+  selected Singlet `cHD` debug fixtures now record Matchete's scalar-vector
+  Xterm order metadata and explicit replacement values for `{H,B}`, `{B,H}`,
+  `{Conj[H],B}`, `{B,Conj[H]}`, and `GaugeCTerm[B]`. The regenerated compact
+  fixture keeps the first 12 detailed insertions, while the new full fixture
+  records all 88 insertion replacements for the same selected prop-order-zero
+  trace.
+- The full Matchete insertion fixture shows that the selected four-slot
+  `cHD` source has 44 nonzero detailed insertions, including 20 nonzero
+  `A^2 gY^2` scalar-vector insertion variants and eight explicit `-1/4`
+  quarter-insertion checkpoints. The scalar-vector Xterm replacements confirm
+  that Matchete keeps both `LoopMom` and `OpenCD` branches for the
+  `{H,B}`/`{B,H}` entries. This sharpens the remaining pychete mismatch:
+  the selected pychete Wilson-line path projection is still green for the two
+  already-known quarter paths, but the missing source families live in the
+  scalar-vector Xterm/open-derivative decomposition and/or its later
+  Green-basis projection, not in the committed Matchete reference source map.
+- A direct runtime prototype that replaced pychete selected Wilson-line
+  scalar-vector entries with a first-pass Matchete-style open-derivative
+  decomposition was tested and deliberately not kept: it reduced the selected
+  aggregate `cHD` coefficient to one quarter of the previous selected value,
+  whereas Matchete's committed off-shell source is larger. The next
+  implementation attempt should therefore compare the exact placement and
+  orientation of `FuncNCM[field, OpenCD]`, `LoopMom`, and differentiated-field
+  terms against pychete's `act_with_open_covariant_derivatives` semantics
+  before changing runtime source generation.
+- Added a fast Mathematica-independent fixture regression in
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py`
+  that parses the full Matchete JSON and checks the scalar-vector Xterm
+  metadata, the 20 nonzero `A^2 gY^2` insertion variants, and the eight
+  quarter-insertion indices. Focused validation passed under the 30 GiB
+  watchdog:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -k "matchete_fixture_records_scalar_vector_frontier or chd_four_slot" -q`
+  (`5 passed, 4 deselected`), and the full selected coefficient file passed
+  (`9 passed`).

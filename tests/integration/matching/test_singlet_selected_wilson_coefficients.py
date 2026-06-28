@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import re
 from functools import cache
 from pathlib import Path
 
@@ -28,6 +29,17 @@ from tests.conftest import assert_expr_equal
 
 _SINGLET_CHD_FOUR_SLOT_DEBUG = Path(
     "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.debug.json"
+)
+_SINGLET_CHD_FOUR_SLOT_FULL_DEBUG = Path(
+    "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json"
+)
+
+_MATHEMATICA_XTERM_PATTERN = re.compile(
+    r"Xterm\["
+    r"\{(.+?)\}, "
+    r"\{Matchete`SuperTrace`PackagePrivate`i, Matchete`SuperTrace`PackagePrivate`j\}, "
+    r"([0-9]+), ([0-9]+), ([0-9]+)"
+    r"\]"
 )
 
 
@@ -225,6 +237,18 @@ def _selected_chd_four_slot_quarter_expected(theory: Theory) -> Expression:
     )
 
 
+def _matchete_xterm_signatures(replacement: str) -> tuple[tuple[str, int, int, int], ...]:
+    return tuple(
+        (
+            fields.replace("Matchete`PackageScope`", "").replace("\\[Phi]", "phi"),
+            int(base_order),
+            int(momentum_order),
+            int(open_cd_order),
+        )
+        for fields, base_order, momentum_order, open_cd_order in _MATHEMATICA_XTERM_PATTERN.findall(replacement)
+    )
+
+
 @pytest.mark.parametrize("condition_name", ("cHW", "cHB", "cHWB"))
 def test_selected_higgs_gauge_wilson_coefficient_matches_matchete_subset(condition_name: str) -> None:
     theory, projected = _selected_higgs_gauge_projection()
@@ -370,7 +394,46 @@ def test_selected_chd_four_slot_quarter_paths_match_matchete_insertion_checkpoin
     assert debug["insertion_count"] == 88
     assert debug["insertions"][0]["manual_minus_evaluate_str_input_form"] == "0"
     assert "(-1/4*" in debug["insertions"][0]["validation_simplified_prefactored_evaluate_str_input_form"]
+    assert "selected_scalar_vector_xterm_values_input_form" in debug
     assert_expr_equal((projected - expected).expand(), Expression.num(0))
+
+
+def test_selected_chd_four_slot_matchete_fixture_records_scalar_vector_frontier() -> None:
+    debug = json.loads(_SINGLET_CHD_FOUR_SLOT_FULL_DEBUG.read_text(encoding="utf-8"))
+    assert debug["trace_name"] == "hScalar-lScalar-lVector-lScalar"
+    assert debug["target"] == "cHD"
+    assert debug["prop_order"] == 0
+    assert debug["insertion_count"] == 88
+    assert debug["detailed_insertion_count"] == 88
+
+    scalar_vector_orders = debug["selected_scalar_vector_x_orders_input_form"]
+    scalar_vector_values = debug["selected_scalar_vector_xterm_values_input_form"]
+    assert "{H, B} -> {{2, 0}, {1, 1}}" in scalar_vector_orders
+    assert "{B, H} -> {{2, 0}, {1, 1}}" in scalar_vector_orders
+    assert "LoopMom" in scalar_vector_values
+    assert "OpenCD" in scalar_vector_values
+    assert "Coupling[gY" in scalar_vector_values
+
+    nonzero_a2_gy2_insertions = []
+    quarter_insertions = []
+    for insertion in debug["insertions"]:
+        simplified = insertion["validation_simplified_prefactored_evaluate_str_input_form"]
+        if simplified == "0":
+            continue
+        if (
+            "Coupling[A" in simplified
+            and "Coupling[gY" in simplified
+            and "Coupling[\\[Kappa]" not in simplified
+            and "Coupling[gL" not in simplified
+        ):
+            nonzero_a2_gy2_insertions.append(
+                (insertion["index"], _matchete_xterm_signatures(insertion["replacement_input_form"]))
+            )
+        if "(-1/4*" in simplified:
+            quarter_insertions.append(insertion["index"])
+
+    assert len(nonzero_a2_gy2_insertions) == 20
+    assert quarter_insertions == [1, 3, 12, 14, 45, 47, 56, 58]
 
 
 def test_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> None:

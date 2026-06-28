@@ -1106,3 +1106,12 @@ without Warsaw-specific core assumptions.
   matching tests below the selected aggregate coefficient: the remaining
   off-shell mismatch is now scoped to the missing four equivalent quarter
   insertions rather than to the loop integration or final projection pipeline.
+- Latest scalar-vector debugging update: the Matchete debug script now also
+  records the scalar-vector `Xterm` replacements for the selected `cHD`
+  trace. A new full JSON fixture stores all 88 insertion replacements and a
+  fast pytest regression checks the key counts: 20 nonzero `A^2 gY^2`
+  scalar-vector insertion variants and eight explicit quarter-insertion
+  checkpoints. This confirms the next implementation target is the
+  scalar-vector `LoopMom`/`OpenCD` Xterm decomposition and its Green-basis
+  projection behavior, not the already-green loop integration or projection
+  machinery for paths 0 and 26.
