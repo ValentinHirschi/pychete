@@ -887,3 +887,9 @@ without Warsaw-specific core assumptions.
   derivative `cHD` frontier by rechecking Matchete `IdentitiesIBP`,
   `IdentitiesCDCommutation`, `CommuteCDs`, `OperatorToNormalForm`, and
   `EoMStandardForm` before adding a bounded scalar-Laplacian IBP helper.
+- Follow-up Green-basis projection slice: pychete now adds registered-Wilson
+  target-local scalar first-derivative IBP aliases, so a target factor
+  `A * D_mu(phi)` can also project from its full total-derivative-equivalent
+  source `-D_mu(A) * phi`. This remains generic and Symbolica-pattern-driven;
+  the selected Singlet order-zero `cHD` smoke still projects zero, so the next
+  mismatch remains the higher-derivative selected-source normal form.

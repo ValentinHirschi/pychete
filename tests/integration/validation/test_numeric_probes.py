@@ -1352,6 +1352,33 @@ def test_registered_wilson_projection_uses_abelian_gauge_eom_current_alias_for_c
     assert_expr_equal(projected["cHD"], 2 * coefficient * hypercharge() ** 2)
 
 
+def test_registered_wilson_projection_uses_scalar_first_derivative_ibp_alias_for_chd() -> None:
+    coefficient = S("condition_projection_chd_first_derivative_ibp_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    wilson_target = next(
+        target
+        for key, target in registered_wilson_matching_condition_targets(theory, basis="SMEFT").items()
+        if "external_cHD" in key
+    )
+    higgs = theory.field_handle("H")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_chd_first_derivative_ibp_i"), fund)
+    j = theory.index(theory.symbol("projection_chd_first_derivative_ibp_j"), fund)
+    mu = theory.dummy_index(0)
+    spectator = s.Bar(higgs(j)) * higgs(i) * s.CD(mu, higgs(j))
+    alias = -s.CD(mu, spectator) * s.Bar(higgs(i))
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * expand_cd_operators(alias).expand(),
+    )
+
+    projected = result.project_matching_conditions({"cHD": wilson_target}, expand_source=False)
+
+    assert_expr_equal(projected["cHD"], coefficient)
+
+
 def test_matching_result_projection_expands_indexed_higgs_bilinear_powers_to_ch() -> None:
     coefficient = S("condition_projection_ch_power_coefficient")
     theory = _singlet_scalar_extension_theory()

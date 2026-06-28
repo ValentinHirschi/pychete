@@ -11,17 +11,22 @@ from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .eft import operator_dimension, series_eft
-from .functional import expand_cd_operators
+from .functional import apply_cd, expand_cd_operators
 from .expr import (
     as_int,
+    bar_field_inner,
     bar_field_pattern,
     bar_field_strength_pattern,
     cd_pattern,
     coupling_pattern,
     factors,
+    field_derivatives,
     field_pattern,
     field_strength_pattern,
+    field_type,
+    field_with_derivatives,
     index_pattern,
+    is_bar_field,
     is_head,
     is_zero,
     list_items,
@@ -1811,6 +1816,7 @@ def _projection_aliases_for_target(
     aliases: list[tuple[Expression, Expression]] = []
     if normalize_ibp_scalar_bilinears or _uses_registered_wilson_operator_aliases(target):
         aliases.extend(_ibp_scalar_bilinear_projection_aliases(projection_expression))
+        aliases.extend(_ibp_scalar_first_derivative_projection_aliases(projection_expression))
     if _uses_registered_wilson_operator_aliases(target):
         aliases.extend(_abelian_gauge_eom_projection_aliases(theory, target, projection_expression))
     return tuple(_deduplicated_projection_aliases(aliases))
@@ -1845,6 +1851,79 @@ def _ibp_scalar_bilinear_projection_aliases(target: Expression) -> tuple[tuple[E
         seen.add(key)
         aliases.append((alias, Expression.num(-1)))
     return tuple(aliases)
+
+
+def _ibp_scalar_first_derivative_projection_aliases(target: Expression) -> tuple[tuple[Expression, Expression], ...]:
+    """Return projection-only aliases for ``A * D_mu(phi)`` total derivatives."""
+
+    normalized_target = expand_cd_operators(target)
+    aliases: list[tuple[Expression, Expression]] = []
+    seen: set[str] = set()
+    for atom in (
+        *_scalar_first_derivative_field_atoms(normalized_target),
+        *_scalar_first_derivative_barred_field_atoms(normalized_target),
+    ):
+        base_atom, derivative = _scalar_first_derivative_base(atom)
+        spectator = normalized_target.coefficient(atom).expand()
+        if is_zero(spectator):
+            continue
+        alias = (-apply_cd([derivative], spectator) * base_atom).expand()
+        key = canonical_string(alias)
+        if key in seen:
+            continue
+        seen.add(key)
+        aliases.append((alias, Expression.num(1)))
+    return tuple(aliases)
+
+
+def _scalar_first_derivative_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+    pattern = field_pattern()
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms: list[Expression] = []
+    seen: set[str] = set()
+    for match in expr.match(pattern, label_is_tagged):
+        atom = pattern.replace_wildcards(match)
+        if not _is_scalar_first_derivative_field(atom):
+            continue
+        key = canonical_string(atom)
+        if key in seen:
+            continue
+        seen.add(key)
+        atoms.append(atom)
+    return tuple(atoms)
+
+
+def _scalar_first_derivative_barred_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+    pattern = bar_field_pattern()
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms: list[Expression] = []
+    seen: set[str] = set()
+    for match in expr.match(pattern, label_is_tagged):
+        atom = pattern.replace_wildcards(match)
+        if not is_bar_field(atom):
+            continue
+        if not _is_scalar_first_derivative_field(bar_field_inner(atom)):
+            continue
+        key = canonical_string(atom)
+        if key in seen:
+            continue
+        seen.add(key)
+        atoms.append(atom)
+    return tuple(atoms)
+
+
+def _is_scalar_first_derivative_field(atom: Expression) -> bool:
+    return bool(field_type(atom) == s.Scalar) and len(field_derivatives(atom)) == 1
+
+
+def _scalar_first_derivative_base(atom: Expression) -> tuple[Expression, Expression]:
+    conjugated = is_bar_field(atom)
+    base_field = bar_field_inner(atom) if conjugated else atom
+    derivatives = field_derivatives(base_field)
+    if len(derivatives) != 1:
+        raise ValueError(f"Expected one scalar derivative slot, got {canonical_string(atom)}")
+    base_atom = field_with_derivatives(base_field, ())
+    return (s.Bar(base_atom) if conjugated else base_atom), derivatives[0]
 
 
 def _abelian_gauge_eom_projection_aliases(

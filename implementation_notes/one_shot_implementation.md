@@ -106,6 +106,12 @@
   with native `Expression.coefficient(...)`. It is exported through the public
   API and wired only into the opt-in Wilson-line scalar-Green path, including
   the post-heavy-scalar-substitution preview/public matching stage.
+- Registered Wilson/operator targets now also receive target-local scalar
+  first-derivative IBP projection aliases. For a target factor
+  `A * D_mu(phi)`, pychete adds the total-derivative-equivalent alias
+  `-D_mu(A) * phi`, discovered with Symbolica field patterns and differentiated
+  through `apply_cd(...)`. This is generic Green-basis projection support and
+  not tied to the SMEFT `cHD` name.
 
 ## Current Frontier
 
@@ -151,10 +157,27 @@
   currently too expensive interactively. The remaining gap is therefore the
   higher-derivative Green-basis/commutator row-reduction piece, not this local
   scalar Laplacian identity alone.
+- The follow-up first-derivative target-local IBP alias now projects a
+  registered `cHD` target from the full total-derivative-equivalent source
+  `-D_mu(Bar[H] H D_mu H) Bar[H]`. The bounded selected Singlet order-zero
+  smoke still returns zero, so the mismatch is not only projection of this
+  first-derivative IBP family; the higher-derivative selected-source
+  normal-form gap remains.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_scalar_green_bilinears.py
+  tests/integration/validation/test_numeric_probes.py -k
+  "scalar_laplacian_ibp or chd" -q` passed (`5 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py -k
+  "chd and (gauge_eom or current or first_derivative_ibp)" -q` passed
+  (`3 passed`).
+- Watchdog-wrapped selected Singlet `hScalar-lScalar -> cHD` order-zero smoke
+  with scalar-Laplacian and scalar-first-derivative IBP support still returned
+  projected coefficient `0`.
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/unit/functional/test_scalar_green_bilinears.py -q` passed
   (`15 passed`).
