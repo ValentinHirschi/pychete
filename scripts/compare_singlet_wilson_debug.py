@@ -187,6 +187,24 @@ def _print_pychete_stage_summary(row: dict[str, Any], stage_key: str, *, sample_
 
 
 def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
+    print(
+        "pychete selection: "
+        + f"filter_by_target={data.get('filter_terms_by_matching_targets', '<unknown>')} "
+        + f"plan_entries={data.get('plan_entry_count', '<unknown>')}"
+    )
+    entry_orders = data.get("nonempty_grouped_entry_orders", {})
+    nonempty_entries = data.get("nonempty_grouped_entries", {})
+    if isinstance(nonempty_entries, dict) and nonempty_entries:
+        print("pychete nonempty selected entries")
+        for label, count in nonempty_entries.items():
+            order = entry_orders.get(label, {}) if isinstance(entry_orders, dict) else {}
+            print(
+                "  "
+                + f"{label}: terms={count} "
+                + f"order={order.get('total_order', '<unknown>')} "
+                + f"slots={order.get('slot_orders', '<unknown>')}"
+            )
+        print()
     total_projections = data.get("total_projections", {})
     if isinstance(total_projections, dict) and total_projections:
         print("pychete selected-total projections")
@@ -198,6 +216,22 @@ def _print_pychete_summary(data: dict[str, Any], *, sample_chars: int) -> None:
         ):
             if name in total_projections:
                 print(f"  {name}: {_short(str(total_projections[name]), sample_chars)}")
+        print()
+    order_projections = data.get("order_projections", {})
+    if isinstance(order_projections, dict) and order_projections:
+        print("pychete selected projections by total order")
+        for stage_name in (
+            "post_wilson_tensor_reduced_finite",
+            "pre_wilson_tensor_reduced_finite",
+        ):
+            stage_projection = order_projections.get(stage_name, {})
+            if not isinstance(stage_projection, dict) or not stage_projection:
+                continue
+            rendered = ", ".join(
+                f"o{order}={_short(str(value), sample_chars)}"
+                for order, value in sorted(stage_projection.items(), key=lambda item: int(item[0]))
+            )
+            print(f"  {stage_name}: {rendered}")
         print()
     print("pychete nonzero rows")
     rows = _nonzero_pychete_rows(data)

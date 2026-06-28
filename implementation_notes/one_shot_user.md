@@ -740,3 +740,12 @@ without Warsaw-specific core assumptions.
   bilinears, and order `6` is empty. The next milestone is therefore full
   selected Wilson-line trace aggregation plus Green/on-shell projection, with
   the prop-order dumps used as intermediate checkpoints.
+- Follow-up pychete aggregate checkpoint: updated the pychete Singlet debug
+  script so artifacts record plan entries, target-filter status, nonempty
+  entries, and per-entry/per-order totals and `cHW` projections. Regenerated
+  the filtered artifact and added an unfiltered artifact. The unfiltered
+  pychete selected trace has nonempty order `0`, order `2`, and order `4`
+  entries, but only order `4` contributes to the current `cHW` projection.
+  This keeps the next fix focused on the order-four Wilson-line
+  Green/on-shell normal form and coefficient weighting while preserving
+  lower-order checkpoints.

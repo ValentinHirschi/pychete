@@ -58,6 +58,11 @@ def _parse_args() -> argparse.Namespace:
     parser.add_argument("--entry-contains", default="")
     parser.add_argument("--sample-chars", type=int, default=1200)
     parser.add_argument("--include-zero-terms", action="store_true")
+    parser.add_argument(
+        "--no-filter-by-target",
+        action="store_true",
+        help="Keep all selected Wilson-line entries instead of applying the conservative target atom filter.",
+    )
     return parser.parse_args()
 
 
@@ -450,7 +455,11 @@ def main() -> int:
         max_slot_order=args.max_slot_order,
         index_prefix=args.index_prefix,
     )
-    requirements = matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
+    requirements = (
+        None
+        if args.no_filter_by_target
+        else matching_module._term_atom_requirements_for_targets(theory, {"cHW": target})
+    )
     grouped = setup.interaction_wilson_line_expansion_terms_by_trace(
         plan,
         act_open_derivatives=True,
@@ -464,15 +473,24 @@ def main() -> int:
     )
 
     rows: list[dict[str, Any]] = []
+    plan_entries_by_label = {entry.label: entry for entry in plan.entries}
     totals = {
         "post_wilson_tensor_reduced_unrenormalized": Expression.num(0),
         "post_wilson_tensor_reduced_finite": Expression.num(0),
         "pre_wilson_tensor_reduced_unrenormalized": Expression.num(0),
         "pre_wilson_tensor_reduced_finite": Expression.num(0),
     }
+    totals_by_entry: dict[str, dict[str, Expression]] = {}
+    totals_by_order: dict[int, dict[str, Expression]] = {}
     for entry_label, entry_terms in grouped.items():
         if args.entry_contains and args.entry_contains not in entry_label:
             continue
+        entry = plan_entries_by_label[entry_label]
+        totals_by_entry[entry_label] = {stage_name: Expression.num(0) for stage_name in totals}
+        order_totals = totals_by_order.setdefault(
+            entry.total_order,
+            {stage_name: Expression.num(0) for stage_name in totals},
+        )
         for term_index, term in enumerate(entry_terms):
             row = _term_row(
                 theory,
@@ -509,6 +527,20 @@ def main() -> int:
                 totals[f"{stage_name}_finite"] = (
                     totals[f"{stage_name}_finite"] + normalization_factor * vakint.finite_part(evaluated)
                 ).expand()
+                totals_by_entry[entry_label][f"{stage_name}_unrenormalized"] = (
+                    totals_by_entry[entry_label][f"{stage_name}_unrenormalized"]
+                    + normalization_factor * evaluated
+                ).expand()
+                totals_by_entry[entry_label][f"{stage_name}_finite"] = (
+                    totals_by_entry[entry_label][f"{stage_name}_finite"]
+                    + normalization_factor * vakint.finite_part(evaluated)
+                ).expand()
+                order_totals[f"{stage_name}_unrenormalized"] = (
+                    order_totals[f"{stage_name}_unrenormalized"] + normalization_factor * evaluated
+                ).expand()
+                order_totals[f"{stage_name}_finite"] = (
+                    order_totals[f"{stage_name}_finite"] + normalization_factor * vakint.finite_part(evaluated)
+                ).expand()
 
     payload = {
         "schema_version": 1,
@@ -518,7 +550,25 @@ def main() -> int:
         "trace_name": args.trace_name,
         "target": args.target,
         "plan_entry_count": len(plan.entries),
+        "plan_entries": [
+            {
+                "label": entry.label,
+                "trace_name": entry.trace_name,
+                "total_order": entry.total_order,
+                "slot_orders": list(entry.slot_orders),
+            }
+            for entry in plan.entries
+        ],
+        "filter_terms_by_matching_targets": requirements is not None,
         "nonempty_grouped_entries": {label: len(entry_terms) for label, entry_terms in grouped.items() if entry_terms},
+        "nonempty_grouped_entry_orders": {
+            label: {
+                "total_order": plan_entries_by_label[label].total_order,
+                "slot_orders": list(plan_entries_by_label[label].slot_orders),
+            }
+            for label, entry_terms in grouped.items()
+            if entry_terms
+        },
         "normalization": "matchete_evaluated_hbar",
         "normalization_factor": _full(normalization_factor),
         "h_field_label": _full(h_label),
@@ -550,6 +600,56 @@ def main() -> int:
                 for coefficient_name, coefficient in coefficient_targets.items()
             }
             for stage_name, expr in totals.items()
+        },
+        "entry_projections": {
+            stage_name: {
+                entry_label: _full(_project_chw(theory, target, entry_totals[stage_name]))
+                for entry_label, entry_totals in totals_by_entry.items()
+            }
+            for stage_name in totals
+        },
+        "entry_summaries": {
+            stage_name: {
+                entry_label: _expr_summary(
+                    f"{stage_name}.{entry_label}",
+                    entry_totals[stage_name],
+                    sample_chars=args.sample_chars,
+                )
+                for entry_label, entry_totals in totals_by_entry.items()
+            }
+            for stage_name in totals
+        },
+        "entry_h_derivative_word_histograms": {
+            stage_name: {
+                entry_label: _field_derivative_word_histogram(entry_totals[stage_name], h_label)
+                for entry_label, entry_totals in totals_by_entry.items()
+            }
+            for stage_name in totals
+        },
+        "order_projections": {
+            stage_name: {
+                str(total_order): _full(_project_chw(theory, target, order_totals[stage_name]))
+                for total_order, order_totals in sorted(totals_by_order.items())
+            }
+            for stage_name in totals
+        },
+        "order_summaries": {
+            stage_name: {
+                str(total_order): _expr_summary(
+                    f"{stage_name}.order{total_order}",
+                    order_totals[stage_name],
+                    sample_chars=args.sample_chars,
+                )
+                for total_order, order_totals in sorted(totals_by_order.items())
+            }
+            for stage_name in totals
+        },
+        "order_h_derivative_word_histograms": {
+            stage_name: {
+                str(total_order): _field_derivative_word_histogram(order_totals[stage_name], h_label)
+                for total_order, order_totals in sorted(totals_by_order.items())
+            }
+            for stage_name in totals
         },
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

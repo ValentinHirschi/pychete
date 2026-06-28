@@ -1939,6 +1939,22 @@
   pychete target is therefore full selected Wilson-line trace aggregation plus
   Matchete-like Green/on-shell projection, using the prop-order dumps only as
   intermediate checkpoints.
+- Follow-up pychete aggregate diagnostic: extended
+  `scripts/debug_pychete_singlet_wilson_trace.py` so pychete artifacts record
+  the Wilson-line plan entries, whether the conservative matching-target atom
+  filter was enabled, nonempty selected entries with total derivative order
+  and slot orders, and per-entry/per-order totals, derivative-word histograms,
+  and `cHW` projections. Regenerated the filtered full-row artifact and added
+  an unfiltered companion artifact,
+  `assets/validation/pychete/debug/singlet_hScalar_lScalar_cHW.pychete.unfiltered.fullrows.debug.json`.
+  The unfiltered checkpoint shows only three nonempty pychete plan entries:
+  order `0`/slots `[0,0]` with 2 terms, order `2`/slots `[2,0]` with 4 terms,
+  and order `4`/slots `[4,0]` with 10 terms. In the current projection route
+  orders `0` and `2` project to zero for `cHW`; the mismatched selected-total
+  `cHW` value still comes entirely from order `4`. This proves the next
+  implementation fix should concentrate on the order-four Wilson-line
+  Green/on-shell normal form and coefficient weighting, while keeping the
+  lower-order checkpoints available for future EOM/projection regressions.
 
 ## Next Work
 
@@ -1961,6 +1977,11 @@
     `cHW` condition. Use the order-specific Matchete dumps as checkpoints, but
     compare the final `cHW` only after full-trace aggregation and
     Green/on-shell projection;
+  - use the new unfiltered pychete artifact to verify that future order-four
+    fixes do not accidentally change order-zero/two checkpoints or hide
+    target-filter behavior. The current unfiltered pychete projection shows
+    `cHW` only at order four, so the immediate physics mismatch remains in
+    the order-four Wilson-line Green-normal-form/basis reduction;
   - remeasure the selected Singlet `hScalar-lScalar -> cHW` route after the
     conservative Wilson-line filter fix; focus first on whether derivative-only
     `Bar[H] D^4 H`-type structures now survive to the internal evaluated
