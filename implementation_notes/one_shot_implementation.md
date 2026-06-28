@@ -53,6 +53,12 @@
   WolframScripts and dissect Matchete intermediates until the first mismatching
   semantic boundary is located. Record the Matchete stage dump, the bounded
   pychete probe, and the stage comparison before accepting runtime changes.
+- User reinforcement, 2026-06-28: this must be an active cadence during
+  mismatch work, not a retrospective audit. Keep dumping as many relevant
+  Matchete intermediate stages as practical for the narrowed
+  trace/target/stage, compare them directly with bounded pychete probes, and
+  add checkpoints until the first divergence is located before patching
+  runtime pychete.
 - Current concrete objective reminder: the active Singlet `cHD`
   EOM/on-shell frontier must keep
   `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and
@@ -1143,3 +1149,25 @@
   `LagrangianEFT`/`EOMSimplify` entry boundary, likely by rerunning the
   validation-mode `Match` path or by adding a focused raw full-source exporter,
   before any runtime scalar/fermion field-redefinition patch is accepted.
+- Latest raw `EOMSimplify` boundary checkpoint: extended
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls` and regenerated
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json` with
+  `raw_lagrangian_eft_eom_boundary`. The dump reconstructs Matchete's raw
+  validation source as
+  ``RelabelIndices[PackageScope`ReplaceHeavyEOM[lag]] + PackageScope`LoopMatch``
+  followed by ``ContractCGs // PackageScope`MatchReduce``. For the registered
+  `cHD` projection, this raw source differs from both saved off-shell and saved
+  on-shell results; ``PackageScope`InternalSimplify`` maps it exactly to the
+  saved off-shell coefficient; ``FieldRedef`PackagePrivate`PerformSystematicFieldRedefs``
+  maps the internal-simplified source exactly to the saved on-shell coefficient;
+  and both subsequent `GreensSimplify` and direct `EOMSimplify` stay on the
+  saved on-shell coefficient. The first generic runtime boundary is therefore
+  not the saved-artifact replay path but the unsimplified-source
+  `InternalSimplify` plus systematic field-redefinition route.
+- Mismatch checklist for the next runtime patch: Matchete dump is
+  `debug_singlet_eom_simplify.wls` / `singlet_eom_cHD.debug.json`
+  `raw_lagrangian_eft_eom_boundary`; the paired pychete probe still needs to
+  compare pychete's generated pre-EOM source against this raw/internal/on-shell
+  sequence; the first differing boundary to investigate is pychete's generated
+  full source plus Green/internal simplification before matter-field
+  redefinitions, not final Wilson projection.

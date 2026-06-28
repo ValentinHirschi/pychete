@@ -176,6 +176,72 @@
 			}
 		]
 	},
+	"raw_lagrangian_eft_eom_boundary":{
+		"source_name":"raw_lagrangian_eft",
+		"tree_summary":{
+			"name":"raw_tree_replaced_heavy_eom",
+			"byte_count":35400,
+			"term_count":24,
+			"sample_terms_input_form":[
+				"Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[\\[Mu]2, {}, 2]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]",
+				"Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]",
+				"(Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {Index[d$$1, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]*Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}])\/(2*Coupling[M, {}, 0]^4)"
+			]
+		},
+		"loop_summary":{
+			"name":"raw_loop_match",
+			"byte_count":1295696,
+			"term_count":551,
+			"sample_terms_input_form":[
+				"(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/\\[Epsilon]",
+				"(-2*hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(9*Coupling[M, {}, 0]^4)",
+				"-1\/6*(hbar*Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz], Index[d$$1, Lorentz], Index[d$$2, Lorentz], Index[d$$2, Lorentz]}]]*Coupling[A, {}, 0]^2*Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}])\/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
+			]
+		},
+		"fields_to_shift_input_form":"{{d, 4}, {e, 4}, {H, 4}, {l, 4}, {q, 4}, {u, 4}}",
+		"stages":[
+			{
+				"name":"raw_lagrangian_eft",
+				"byte_count":1570208,
+				"coefficient_input_form":"(Coupling[A, {}, 0]*(-16*hbar*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 4*hbar*Coupling[A, {}, 0]^3*(2 + 7*\\[Epsilon] + 2*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[A, {}, 0]*(8*hbar*Coupling[\\[Mu]\\[Phi], {}, 0]^2*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[M, {}, 0]^2*(hbar*Coupling[gL, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) - hbar*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 8*(\\[Epsilon] + hbar*\\[Epsilon]*Coupling[\\[Kappa], {}, 0] - 2*hbar*Coupling[\\[Lambda], {}, 0]*(1 + 3*\\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))))))\/(8*\\[Epsilon]*Coupling[M, {}, 0]^6)",
+				"delta_from_boundary_source_input_form":"0",
+				"delta_from_off_shell_input_form":"(Coupling[A, {}, 0]*(-16*hbar*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 4*hbar*Coupling[A, {}, 0]^3*(2 + 7*\\[Epsilon] + 2*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[A, {}, 0]*(8*hbar*Coupling[\\[Mu]\\[Phi], {}, 0]^2*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[M, {}, 0]^2*(hbar*Coupling[gL, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 8*(\\[Epsilon] + hbar*\\[Epsilon]*Coupling[\\[Kappa], {}, 0] - 2*hbar*Coupling[\\[Lambda], {}, 0]*(1 + 3*\\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))))))\/(8*\\[Epsilon]*Coupling[M, {}, 0]^6)",
+				"delta_from_on_shell_input_form":"(Coupling[A, {}, 0]*(-144*hbar*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 36*hbar*Coupling[A, {}, 0]^3*(2 + 7*\\[Epsilon] + 2*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[A, {}, 0]*(72*hbar*Coupling[\\[Mu]\\[Phi], {}, 0]^2*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[M, {}, 0]^2*(9*hbar*Coupling[gL, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Coupling[gY, {}, 0]^2*(66 + 79*\\[Epsilon] + 66*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 72*(\\[Epsilon] + hbar*\\[Epsilon]*Coupling[\\[Kappa], {}, 0] - 2*hbar*Coupling[\\[Lambda], {}, 0]*(1 + 3*\\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))))))\/(72*\\[Epsilon]*Coupling[M, {}, 0]^6)"
+			},
+			{
+				"name":"after_internal_simplify",
+				"byte_count":252896,
+				"coefficient_input_form":"-1\/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"delta_from_boundary_source_input_form":"-1\/8*(Coupling[A, {}, 0]*(-16*hbar*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 4*hbar*Coupling[A, {}, 0]^3*(2 + 7*\\[Epsilon] + 2*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[A, {}, 0]*(8*hbar*Coupling[\\[Mu]\\[Phi], {}, 0]^2*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[M, {}, 0]^2*(hbar*Coupling[gL, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 8*(\\[Epsilon] + hbar*\\[Epsilon]*Coupling[\\[Kappa], {}, 0] - 2*hbar*Coupling[\\[Lambda], {}, 0]*(1 + 3*\\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))))))\/(\\[Epsilon]*Coupling[M, {}, 0]^6)",
+				"delta_from_off_shell_input_form":"0",
+				"delta_from_on_shell_input_form":"(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(36*\\[Epsilon]*Coupling[M, {}, 0]^4)"
+			},
+			{
+				"name":"after_perform_systematic_field_redefs",
+				"byte_count":1380296,
+				"coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"delta_from_boundary_source_input_form":"-1\/72*(Coupling[A, {}, 0]*(-144*hbar*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 36*hbar*Coupling[A, {}, 0]^3*(2 + 7*\\[Epsilon] + 2*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[A, {}, 0]*(72*hbar*Coupling[\\[Mu]\\[Phi], {}, 0]^2*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[M, {}, 0]^2*(9*hbar*Coupling[gL, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Coupling[gY, {}, 0]^2*(66 + 79*\\[Epsilon] + 66*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 72*(\\[Epsilon] + hbar*\\[Epsilon]*Coupling[\\[Kappa], {}, 0] - 2*hbar*Coupling[\\[Lambda], {}, 0]*(1 + 3*\\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))))))\/(\\[Epsilon]*Coupling[M, {}, 0]^6)",
+				"delta_from_off_shell_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"delta_from_on_shell_input_form":"0"
+			},
+			{
+				"name":"after_greens_simplify",
+				"byte_count":333416,
+				"coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"delta_from_boundary_source_input_form":"-1\/72*(Coupling[A, {}, 0]*(-144*hbar*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 36*hbar*Coupling[A, {}, 0]^3*(2 + 7*\\[Epsilon] + 2*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[A, {}, 0]*(72*hbar*Coupling[\\[Mu]\\[Phi], {}, 0]^2*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[M, {}, 0]^2*(9*hbar*Coupling[gL, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Coupling[gY, {}, 0]^2*(66 + 79*\\[Epsilon] + 66*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 72*(\\[Epsilon] + hbar*\\[Epsilon]*Coupling[\\[Kappa], {}, 0] - 2*hbar*Coupling[\\[Lambda], {}, 0]*(1 + 3*\\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))))))\/(\\[Epsilon]*Coupling[M, {}, 0]^6)",
+				"delta_from_off_shell_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"delta_from_on_shell_input_form":"0"
+			},
+			{
+				"name":"direct_eom_simplify",
+				"byte_count":327176,
+				"coefficient_input_form":"-1\/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"delta_from_boundary_source_input_form":"-1\/72*(Coupling[A, {}, 0]*(-144*hbar*Coupling[M, {}, 0]^2*Coupling[\\[Kappa], {}, 0]*Coupling[\\[Mu]\\[Phi], {}, 0]*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 36*hbar*Coupling[A, {}, 0]^3*(2 + 7*\\[Epsilon] + 2*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[A, {}, 0]*(72*hbar*Coupling[\\[Mu]\\[Phi], {}, 0]^2*(1 + \\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + Coupling[M, {}, 0]^2*(9*hbar*Coupling[gL, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + hbar*Coupling[gY, {}, 0]^2*(66 + 79*\\[Epsilon] + 66*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]) + 72*(\\[Epsilon] + hbar*\\[Epsilon]*Coupling[\\[Kappa], {}, 0] - 2*hbar*Coupling[\\[Lambda], {}, 0]*(1 + 3*\\[Epsilon] + \\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))))))\/(\\[Epsilon]*Coupling[M, {}, 0]^6)",
+				"delta_from_off_shell_input_form":"-1\/36*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2\/Coupling[M, {}, 0]^2]))\/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
+				"delta_from_on_shell_input_form":"0"
+			}
+		]
+	},
 	"off_shell_summary":{
 		"name":"off_shell_eft_lagrangian",
 		"byte_count":251656,

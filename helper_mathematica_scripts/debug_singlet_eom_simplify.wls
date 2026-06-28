@@ -133,6 +133,126 @@ fieldRedefReplaySummary[name_String, expr_, offShellExpr_, targetOperator_] := M
   |>
 ];
 
+coefficientBoundaryStageSummary[
+  name_String,
+  expr_,
+  boundarySourceCoefficient_,
+  offShellCoefficient_,
+  onShellCoefficient_,
+  targetOperator_
+] := Module[{coef},
+  coef = FullSimplify[Matchete`GetOperatorCoefficient[expr, targetOperator]];
+  <|
+    "name" -> name,
+    "byte_count" -> ByteCount[expr],
+    "coefficient_input_form" -> toInputString[coef],
+    "delta_from_boundary_source_input_form" -> toInputString[
+      FullSimplify[coef - boundarySourceCoefficient]
+    ],
+    "delta_from_off_shell_input_form" -> toInputString[
+      FullSimplify[coef - offShellCoefficient]
+    ],
+    "delta_from_on_shell_input_form" -> toInputString[
+      FullSimplify[coef - onShellCoefficient]
+    ]
+  |>
+];
+
+rawLagrangianEftBoundarySummary[
+  target_String,
+  offShellCoefficient_,
+  onShellCoefficient_
+] := Module[
+  {
+    luv,
+    lag,
+    loop,
+    tree,
+    raw,
+    rawCoefficient,
+    internal,
+    fieldRedefined,
+    greens,
+    direct,
+    targetOperator
+  },
+  Matchete`ResetAll[];
+  luv = Matchete`LoadModel["Singlet_Scalar_Extension"];
+  lag = Matchete`PackageScope`SetCurrentLagrangian[luv, 1, 6, System`Verbose -> False];
+  loop = Matchete`PackageScope`LoopMatch[Matchete`EFTOrder -> 6, System`Verbose -> False];
+  tree = Matchete`RelabelIndices[Matchete`PackageScope`ReplaceHeavyEOM[lag]];
+  raw = (tree + loop) // Matchete`ContractCGs // Matchete`PackageScope`MatchReduce;
+  targetOperator = operatorForTarget[target];
+  rawCoefficient = FullSimplify[Matchete`GetOperatorCoefficient[raw, targetOperator]];
+  internal = Matchete`PackageScope`InternalSimplify[
+    raw,
+    Matchete`ReductionIdentities -> Matchete`dDimensional
+  ];
+  fieldRedefined = Matchete`FieldRedef`PackagePrivate`PerformSystematicFieldRedefs[
+    internal,
+    6,
+    False,
+    1
+  ];
+  greens = Matchete`GreensSimplify[
+    fieldRedefined,
+    Matchete`ReductionIdentities -> Matchete`dDimensional
+  ];
+  direct = Matchete`EOMSimplify[
+    raw,
+    Matchete`DummyCoefficients -> False,
+    Matchete`ReductionIdentities -> Matchete`dDimensional
+  ];
+  <|
+    "source_name" -> "raw_lagrangian_eft",
+    "tree_summary" -> stageSummary["raw_tree_replaced_heavy_eom", tree],
+    "loop_summary" -> stageSummary["raw_loop_match", loop],
+    "fields_to_shift_input_form" -> toInputString[Matchete`PackageScope`FieldsToShift[raw]],
+    "stages" -> {
+      coefficientBoundaryStageSummary[
+        "raw_lagrangian_eft",
+        raw,
+        rawCoefficient,
+        offShellCoefficient,
+        onShellCoefficient,
+        targetOperator
+      ],
+      coefficientBoundaryStageSummary[
+        "after_internal_simplify",
+        internal,
+        rawCoefficient,
+        offShellCoefficient,
+        onShellCoefficient,
+        targetOperator
+      ],
+      coefficientBoundaryStageSummary[
+        "after_perform_systematic_field_redefs",
+        fieldRedefined,
+        rawCoefficient,
+        offShellCoefficient,
+        onShellCoefficient,
+        targetOperator
+      ],
+      coefficientBoundaryStageSummary[
+        "after_greens_simplify",
+        greens,
+        rawCoefficient,
+        offShellCoefficient,
+        onShellCoefficient,
+        targetOperator
+      ],
+      coefficientBoundaryStageSummary[
+        "direct_eom_simplify",
+        direct,
+        rawCoefficient,
+        offShellCoefficient,
+        onShellCoefficient,
+        targetOperator
+      ]
+    }
+  |>
+];
+
 fieldsToShiftPreparation[expr_] := Module[{fields, freeL, list, shiftFields, prepared},
   fields = DeleteDuplicates @ Cases[expr, HoldPattern @ Matchete`Field[a_, __] :> a, Infinity];
   freeL = Matchete`PackageScope`InternalSimplify @ Total[Matchete`FreeLag[#] & /@ fields];
@@ -184,8 +304,9 @@ higgsScalarShiftSummary[expr_] := Module[
   |>
 ];
 
-operatorForTarget["cHD"] := Module[{i = Unique["i"], j = Unique["j"], nu = Unique["nu"]},
-  H[i] Matchete`CD[nu, Matchete`Bar[H[i]]] Matchete`Bar[H[j]] Matchete`CD[nu, H[j]]
+operatorForTarget["cHD"] := Module[
+  {h = ToExpression["H"], i = Unique["i"], j = Unique["j"], nu = Unique["nu"]},
+  h[i] Matchete`CD[nu, Matchete`Bar[h[i]]] Matchete`Bar[h[j]] Matchete`CD[nu, h[j]]
 ];
 operatorForTarget[other_] := (
   Print["Unsupported target for this EOMSimplify dump: ", other];
@@ -223,6 +344,7 @@ supertraceSumFieldRedefReplay = fieldRedefReplaySummary[
 offCoefficient = Matchete`GetOperatorCoefficient[offShell, operator];
 onCoefficient = Matchete`GetOperatorCoefficient[onShell, operator];
 deltaCoefficient = FullSimplify[onCoefficient - offCoefficient];
+rawBoundary = rawLagrangianEftBoundarySummary[targetOption, offCoefficient, onCoefficient];
 
 data = <|
   "schema_version" -> 1,
@@ -239,6 +361,7 @@ data = <|
   "higgs_scalar_shift_summary" -> higgsShift,
   "field_redefinition_replay_off_shell" -> offShellFieldRedefReplay,
   "field_redefinition_replay_supertrace_sum" -> supertraceSumFieldRedefReplay,
+  "raw_lagrangian_eft_eom_boundary" -> rawBoundary,
   "off_shell_summary" -> stageSummary["off_shell_eft_lagrangian", offShell],
   "on_shell_summary" -> stageSummary["on_shell_eft_lagrangian", onShell],
   "supertrace_sum_summary" -> stageSummary["saved_supertrace_sum", supertraceSum],

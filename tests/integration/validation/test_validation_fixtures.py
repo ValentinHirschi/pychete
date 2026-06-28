@@ -1698,6 +1698,37 @@ def test_singlet_reference_chd_debug_records_field_redefinition_replay_boundary(
         assert {stage["delta_from_replay_source_input_form"] for stage in stages} == {"0"}
 
 
+def test_singlet_reference_chd_debug_records_raw_eom_boundary() -> None:
+    debug = json.loads(
+        Path("assets/validation/matchete/debug/singlet_eom_cHD.debug.json").read_text(encoding="utf-8")
+    )
+    boundary = debug["raw_lagrangian_eft_eom_boundary"]
+
+    assert boundary["source_name"] == "raw_lagrangian_eft"
+    assert "{H, 4}" in boundary["fields_to_shift_input_form"]
+    assert "{B, 4}" not in boundary["fields_to_shift_input_form"]
+    stages = {stage["name"]: stage for stage in boundary["stages"]}
+    assert list(stages) == [
+        "raw_lagrangian_eft",
+        "after_internal_simplify",
+        "after_perform_systematic_field_redefs",
+        "after_greens_simplify",
+        "direct_eom_simplify",
+    ]
+    assert stages["raw_lagrangian_eft"]["delta_from_boundary_source_input_form"] == "0"
+    assert stages["raw_lagrangian_eft"]["delta_from_off_shell_input_form"] != "0"
+    assert stages["raw_lagrangian_eft"]["delta_from_on_shell_input_form"] != "0"
+    assert stages["after_internal_simplify"]["delta_from_off_shell_input_form"] == "0"
+    assert stages["after_internal_simplify"]["delta_from_on_shell_input_form"] != "0"
+    for stage_name in (
+        "after_perform_systematic_field_redefs",
+        "after_greens_simplify",
+        "direct_eom_simplify",
+    ):
+        assert stages[stage_name]["delta_from_on_shell_input_form"] == "0"
+        assert stages[stage_name]["delta_from_off_shell_input_form"] != "0"
+
+
 def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:
     reference = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")

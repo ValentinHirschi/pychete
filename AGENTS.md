@@ -440,6 +440,13 @@ a current Matchete stage dump for the same trace, target, propagation order,
 and simplification boundary before changing pychete. If Mathematica is
 unavailable, record that limitation in the implementation notes and continue
 with the closest committed Matchete-derived fixtures.
+Make this a regular cadence during mismatch work, not an occasional audit:
+after each nontrivial pychete/Matchete disagreement, dump the narrowest
+Matchete stages available, inspect them side by side with bounded pychete
+probes, and keep adding intermediate checkpoints until the first divergence is
+localized. The implementation notes should explicitly say which WolframScript
+dump was refreshed, which pychete probe was compared, and what the next generic
+Matchete algorithm boundary is.
 For the active one-loop frontier, treat debug WolframScript runs and Matchete
 intermediate dissection as routine engineering work, not exceptional
 diagnostics. When pychete and Matchete disagree, refresh the narrowest relevant

@@ -1288,3 +1288,15 @@ without Warsaw-specific core assumptions.
   next debugging target: the required Matchete evidence is the original
   unsimplified `LagrangianEFT` entering `EOMSimplify`, not the already saved
   Greens-simplified off-shell fixture.
+- Latest user reminder and raw-boundary update: the active workflow remains to
+  run focused debug WolframScripts frequently, dump as many relevant Matchete
+  intermediate stages as possible, compare them with bounded pychete probes,
+  and patch only the first generic algorithm boundary that diverges. This is
+  now reinforced in `AGENTS.md`, the persistent goal objective, and the live
+  implementation notes. The Singlet `cHD` EOMSimplify debug fixture now also
+  records Matchete's raw `LagrangianEFT` boundary: raw source differs from the
+  saved coefficients, `InternalSimplify` lands exactly on the saved off-shell
+  coefficient, and `PerformSystematicFieldRedefs`/`GreensSimplify`/direct
+  `EOMSimplify` land exactly on the saved on-shell coefficient. The next
+  runtime patch should therefore compare pychete's generated pre-EOM source to
+  this raw/internal/on-shell sequence, not fit the final coefficient.
