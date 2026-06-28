@@ -624,6 +624,30 @@ def test_selected_chd_four_slot_matchete_fixture_records_scalar_vector_frontier(
     assert quarter_insertions == [1, 3, 12, 14, 45, 47, 56, 58]
 
 
+def test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    condition_name, target = _selected_chd_four_slot_target(theory)
+    heavy_scalar_solutions = matching_module.solve_heavy_scalar_eoms(
+        theory,
+        fixture.expression("lagrangian"),
+        eft_order=6,
+    )
+
+    requirements = matching_module._term_atom_requirements_for_targets(
+        theory,
+        {condition_name: target},
+        heavy_scalar_solutions=heavy_scalar_solutions,
+    )
+
+    h_label = canonical_string(theory.field_handle("H").label)
+    phi_label = canonical_string(theory.field_handle("phi").label)
+    b_label = canonical_string(theory.field_handle("B").label)
+    assert requirements is not None
+    assert (("field", h_label, 2), ("field_strength", b_label, 1)) in requirements
+    assert (("field", phi_label, 1), ("field_strength", b_label, 1)) in requirements
+
+
 def test_selected_chd_four_slot_wilson_coefficient_matches_matchete_subset() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()

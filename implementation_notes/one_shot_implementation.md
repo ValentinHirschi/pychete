@@ -38,6 +38,11 @@
   Matchete dump for the same trace, target, propagation order, and stage,
   create or refresh one before changing pychete whenever Mathematica is
   available; otherwise record that limitation explicitly.
+- For each mismatch-fix slice, record the specific Matchete debug
+  WolframScript/dump consulted, the corresponding bounded pychete probe, and
+  the first generic algorithm boundary where they diverged. The goal is to
+  port the relevant Matchete algorithm through Symbolica/idenso/spenso/vakint,
+  not to infer fixes from final Wilson-coefficient disagreement.
 - Use larger coherent implementation slices. Run focused tests while building a
   slice, grouped targeted tests before a green milestone, and full/slow tests
   only when the milestone justifies the cost.
@@ -878,3 +883,48 @@
   deselected`); watchdog-wrapped full selected Wilson coefficient file (`13
   passed`); and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed
   with no issues.
+- Latest public-route `cHD`/EOM projection slice: a focused public selected
+  `cHD` probe showed that the order-zero four-slot source now generates and
+  projects correctly, but vector EOM reduction does not fire there because the
+  expression contains no Abelian field-strength divergence. A source-only
+  order-four `hScalar-lScalar -> cHD` pychete dump then showed that registered
+  target filtering keeps the field-strength candidate families, including the
+  heavy-scalar-relaxed `phi + B` requirement group.
+- The next mismatch was localized to the Green/IBP representative used by
+  Matchete: generated order-four sources can expose undifferentiated Abelian
+  field strengths multiplied by differentiated scalar currents,
+  schematically `F_{nu mu} D_nu J_mu`, while the existing registered Wilson
+  projection alias only handled the already-integrated form
+  `J_mu D_nu F_{nu mu}`. `MatchingResult` now adds the target-local IBP alias
+  `-D_nu J_mu F_{nu mu}` for registered Abelian vector EOM projections and
+  computes the coefficient with the same Symbolica-backed alias projection
+  path. The alias path now filters a bounded target-local candidate source and
+  delegates additive alias coefficient extraction to native
+  `_ProjectionCoefficientExtractor.coefficient(...)` instead of the older
+  termwise additive-alias shortcut.
+- `scripts/debug_pychete_singlet_wilson_trace.py` now resolves target names
+  such as `cHD` to theory-registered Wilson coefficient expressions when
+  available, so development dumps keep stored Wilson operator metadata and
+  EOM/IBP projection aliases. Raw Warsaw operator expressions remain the
+  fallback for unregistered targets.
+- Added focused regressions for the registered `cHD` vector-EOM IBP alias and
+  for the registered `cHD` target-filter requirement groups. This advances the
+  full-model `cHD` frontier by covering the Matchete-style `F * D current`
+  representative, but it is not yet a complete full Singlet on-shell match;
+  remaining work is to run the larger public order-four/full-model `cHD`
+  route and patch the next post-evaluation/EOM or finite Green-basis mismatch.
+- Focused validation for this slice passed:
+  `tests/integration/validation/test_numeric_probes.py -k
+  "abelian_gauge_eom"` (`2 passed, 61 deselected`);
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -k
+  "registered_chd_filter_requirements"` (`1 passed, 13 deselected`);
+  `tests/integration/validation/test_numeric_probes.py -k "projection"` (`26
+  passed, 37 deselected`); watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py -q`
+  (`14 passed`); and `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  passed with no issues.
+- Latest user reinforcement: continue running focused debug WolframScripts and
+  dissecting Matchete intermediate stages whenever a Matchete/pychete mismatch
+  appears. Future mismatch entries must identify the Matchete dump, the paired
+  pychete probe, and the first differing generic algorithm boundary before a
+  pychete fix is accepted.

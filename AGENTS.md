@@ -440,6 +440,11 @@ a current Matchete stage dump for the same trace, target, propagation order,
 and simplification boundary before changing pychete. If Mathematica is
 unavailable, record that limitation in the implementation notes and continue
 with the closest committed Matchete-derived fixtures.
+Every mismatch-fix note should explicitly name the Matchete dump or
+WolframScript checkpoint used, the corresponding bounded pychete probe, and the
+first generic algorithm boundary where they differ. This keeps the port aligned
+with Matchete's algorithms while still implementing them through Symbolica,
+idenso, spenso, and vakint rather than final-coefficient patching.
 Represent current-Matchete-style Wilson-line trace work through
 `WilsonLineTracePath`, `WilsonLineTraceExpansionTerm`, `s.WilsonLine`, and
 `s.WilsonTerm`. Build these objects from the ordered entry paths returned by

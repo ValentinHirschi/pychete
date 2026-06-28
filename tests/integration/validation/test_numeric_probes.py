@@ -25,7 +25,7 @@ from pychete import (
 from pychete.backends import vacuum_integrals
 from pychete.bases.smeft_warsaw import smeft_warsaw_operator
 from pychete.expr import field_with_derivatives
-from pychete.functional import expand_cd_operators
+from pychete.functional import apply_cd, expand_cd_operators
 from pychete.validation_fixtures import _gap_report
 from tests.conftest import assert_expr_equal
 
@@ -1416,6 +1416,52 @@ def test_registered_wilson_projection_uses_abelian_gauge_eom_current_alias_for_c
         off_shell_eft_lagrangian=Expression.num(0),
         on_shell_eft_lagrangian=coefficient * expand_cd_operators((current * standard_divergence).expand())
         + 3 * coefficient * expand_cd_operators((current * opposite_divergence).expand()),
+    )
+
+    projected = result.project_matching_conditions({"cHD": wilson_target}, expand_source=False)
+
+    assert_expr_equal(projected["cHD"], 2 * coefficient * hypercharge() ** 2)
+
+
+def test_registered_wilson_projection_uses_abelian_gauge_eom_ibp_alias_for_chd() -> None:
+    coefficient = S("condition_projection_chd_gauge_eom_ibp_coefficient")
+    theory = _singlet_scalar_extension_theory()
+    wilson_target = next(
+        target
+        for key, target in registered_wilson_matching_condition_targets(theory, basis="SMEFT").items()
+        if "external_cHD" in key
+    )
+    higgs = theory.field_handle("H")
+    hypercharge = theory.coupling_handle("gY")
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol("projection_chd_gauge_eom_ibp_i"), fund)
+    mu = theory.dummy_index(0)
+    nu = theory.dummy_index(1)
+    current = (
+        Expression.I * s.Bar(higgs(i)) * s.CD(mu, higgs(i))
+        - Expression.I * s.CD(mu, s.Bar(higgs(i))) * higgs(i)
+    )
+    standard_strength = s.FieldStrength(
+        theory.field_handle("B").label,
+        s.List(nu, mu),
+        s.List(),
+        s.List(),
+    )
+    opposite_strength = s.FieldStrength(
+        theory.field_handle("B").label,
+        s.List(mu, nu),
+        s.List(),
+        s.List(),
+    )
+    source = (
+        -apply_cd([nu], current) * standard_strength
+        - 3 * apply_cd([nu], current) * opposite_strength
+    ).expand()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=coefficient * expand_cd_operators(source),
     )
 
     projected = result.project_matching_conditions({"cHD": wilson_target}, expand_source=False)

@@ -30,7 +30,7 @@ from pychete.expr import (
     wilson_term_pattern,
 )
 from pychete.matching_options import OneLoopNormalization, one_loop_normalization_factor
-from pychete.matching_results import MatchingResult
+from pychete.matching_results import MatchingResult, registered_wilson_matching_condition_targets
 from pychete.symbols import canonical_string, s
 from pychete.validation_fixtures import load_validation_fixture
 from pychete.wilson_lines import contract_wilson_term_derivative_metrics, expand_wilson_terms
@@ -381,6 +381,22 @@ def _project_target(
         eft_order=6,
         drop_zero=False,
     )[target_name].expand()
+
+
+def _registered_or_warsaw_target(theory: Any, target_name: str) -> Expression:
+    if target_name in theory.externals:
+        handle = theory.external_handle(target_name)
+        condition = s.Coupling(
+            handle.label,
+            s.List(*handle.definition.index_exprs),
+            Expression.num(handle.definition.order),
+        )
+        if canonical_string(condition) in registered_wilson_matching_condition_targets(theory, basis="SMEFT"):
+            return condition
+    target = smeft_warsaw_operator(theory, target_name)
+    if target is None:
+        raise ValueError(f"unknown SMEFT Warsaw target {target_name!r}")
+    return target
 
 
 def _apply_heavy_scalar_replacements(
@@ -765,9 +781,7 @@ def main() -> int:
     fixture = load_validation_fixture(args.fixture)
     theory = fixture.theory()
     lagrangian = fixture.expression("lagrangian")
-    target = smeft_warsaw_operator(theory, args.target)
-    if target is None:
-        raise ValueError(f"unknown SMEFT Warsaw target {args.target!r}")
+    target = _registered_or_warsaw_target(theory, args.target)
     hbar = theory.external_handle("hbar")() if "hbar" in theory.externals else s.HBar
     normalization_factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
     h_label = theory.field_handle("H").label

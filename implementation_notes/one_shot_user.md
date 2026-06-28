@@ -1178,3 +1178,21 @@ without Warsaw-specific core assumptions.
   selected `cHD` coefficient remains the Matchete value. This is still a
   selected-trace partial integration milestone, not a complete end-to-end
   Matchete model reproduction.
+- Latest public-route `cHD` projection update: the next comparison moved from
+  the selected four-slot source to the registered Wilson projection/EOM
+  boundary. The source-only order-four `hScalar-lScalar -> cHD` probe confirms
+  that registered target filtering keeps the Abelian field-strength candidate
+  families needed for Matchete-style vector EOM reduction. pychete now also
+  projects the IBP-equivalent representative `F_{nu mu} D_nu J_mu` through the
+  same registered `cHD` vector-EOM alias as `J_mu D_nu F_{nu mu}`.
+- The development debug script now resolves names like `cHD` to registered
+  Wilson coefficient targets when possible, preserving operator metadata and
+  EOM aliases in future Matchete/pychete dumps. This improves the next
+  mismatch-dissection loop but still does not complete a full Matchete
+  one-loop model test; the remaining task is the larger public order-four/full
+  Singlet `cHD` route and whatever post-evaluation/EOM mismatch it exposes.
+- Latest instruction confirmed and recorded: when pychete disagrees with
+  Matchete, the active workflow is to keep dumping/dissecting focused Matchete
+  WolframScript checkpoints and compare them with bounded pychete probes until
+  the first generic algorithm boundary is found. This is now reinforced in
+  `AGENTS.md` and the live one-shot implementation objective.

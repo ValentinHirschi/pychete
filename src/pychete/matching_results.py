@@ -1052,7 +1052,11 @@ class _ProjectionCoefficientExtractor:
             return (coefficient * denominator).expand()
 
         source = self._filtered_source(target)
-        source = _projection_derivative_compatible_source(source, target)
+        source = (
+            _projection_derivative_family_compatible_source(source, (target,))
+            if self.wildcard_index_projection
+            else _projection_derivative_compatible_source(source, target)
+        )
         source = _field_strength_group_simplified_projection_source(self.theory, source, target)
         wildcard_coefficient = _indexed_field_strength_wildcard_projection_coefficient(source, target)
         if wildcard_coefficient is not None:
@@ -1868,26 +1872,40 @@ def _target_local_wildcard_projection_coefficient(
     projection_expression: Expression,
     ibp_aliases: Sequence[tuple[Expression, Expression]],
 ) -> Expression | None:
-    if not _powered_indexed_projection_atom_labels(projection_expression, kind="field_strength"):
-        return None
     alias_expressions = tuple(alias for alias, _weight in ibp_aliases)
+    if not any(
+        _contains_projection_field_strength(expression)
+        for expression in (projection_expression, *alias_expressions)
+    ):
+        return None
     candidate_terms = _projection_filtered_terms_for_expressions(
         source_extractor,
         (projection_expression, *alias_expressions),
     )
-    coefficient = _termwise_wildcard_index_projection_coefficient(candidate_terms, projection_expression)
+    candidate_source = sum_expr(candidate_terms)
+    candidate_extractor = _ProjectionCoefficientExtractor(
+        candidate_source,
+        theory=source_extractor.theory,
+        source_terms=candidate_terms,
+        wildcard_index_projection=True,
+    )
+    coefficient = candidate_extractor.coefficient(projection_expression)
     contributions: list[Expression] = []
-    if coefficient is not None and not is_zero(coefficient):
+    if not is_zero(coefficient):
         contributions.append(coefficient)
     for alias, weight in ibp_aliases:
         if is_zero(alias):
             continue
-        alias_coefficient = _termwise_wildcard_index_projection_coefficient(candidate_terms, alias)
-        if alias_coefficient is not None and not is_zero(alias_coefficient):
+        alias_coefficient = candidate_extractor.coefficient(alias)
+        if not is_zero(alias_coefficient):
             contributions.append(weight * alias_coefficient)
     if not contributions:
         return None
     return sum_expr(contributions).expand()
+
+
+def _contains_projection_field_strength(expression: Expression) -> bool:
+    return bool(expression.matches(field_strength_pattern()))
 
 
 def _termwise_wildcard_index_projection_coefficient(
@@ -1898,7 +1916,7 @@ def _termwise_wildcard_index_projection_coefficient(
     saw_matchable_term = False
     for term in terms:
         coefficient = _wildcard_index_projection_coefficient(
-            _projection_derivative_compatible_source(term, projection_expression),
+            _projection_derivative_family_compatible_source(term, (projection_expression,)),
             projection_expression,
         )
         if coefficient is None:
@@ -2149,13 +2167,19 @@ def _abelian_gauge_eom_projection_aliases(
                 s.List(),
                 s.List(nu),
             )
+            standard_strength = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List())
+            opposite_strength = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List())
             reduced_standard = (-coupling**2 * charge[0] * current * eom_current).expand()
             reduced_opposite = (coupling**2 * charge[0] * current * eom_current).expand()
             standard_alias = (current * standard_divergence).expand()
             opposite_alias = (current * opposite_divergence).expand()
+            standard_ibp_alias = (-apply_cd([nu], current) * standard_strength).expand()
+            opposite_ibp_alias = (-apply_cd([nu], current) * opposite_strength).expand()
             for alias, reduced in (
                 (standard_alias, reduced_standard),
                 (opposite_alias, reduced_opposite),
+                (standard_ibp_alias, reduced_standard),
+                (opposite_ibp_alias, reduced_opposite),
             ):
                 weight = _projection_alias_weight(theory, reduced, projection_expression)
                 if not is_zero(weight):
