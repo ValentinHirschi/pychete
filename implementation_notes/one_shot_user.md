@@ -1123,3 +1123,11 @@ without Warsaw-specific core assumptions.
   with only their requested projection target and assert the exact filtered
   Wilson-line source size, making future coefficient regressions faster and
   easier to localize.
+- Latest scalar-vector source update: pychete now generates the missing
+  implicit Abelian scalar-vector `OpenCD` branch seen in Matchete's
+  `Xterm[..., 1, 1, 1]` values. The selected Singlet four-slot source now has
+  explicit `OpenCD` terms in all four nonzero scalar-vector paths. The
+  pre-heavy selected `cHD` coefficient and the path `0`/`26` quarter
+  checkpoints still pass; the post-heavy selected `cHD` projection is now
+  correctly exposed as the next Green-basis/projection frontier instead of
+  being hidden by the previous source-incomplete checkpoint.

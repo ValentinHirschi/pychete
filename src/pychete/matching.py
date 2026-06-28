@@ -13,6 +13,7 @@ from .cde import (
     act_with_open_covariant_derivatives,
     bosonic_covariant_propagator_expansion_terms,
     fermionic_covariant_propagator_expansion_terms,
+    open_covariant_derivative,
 )
 from .eft import series_eft
 from .expr import (
@@ -20,6 +21,7 @@ from .expr import (
     bar_field_pattern,
     bar_field_inner,
     factors,
+    field_derivatives,
     field_label,
     field_pattern,
     field_strength_pattern,
@@ -6596,7 +6598,69 @@ def _implicit_abelian_scalar_vector_differential_entry(
         Expression.I * charge_connection * vector * s.Bar(scalar_base) * scalar_derivative
         - Expression.I * charge_connection * vector * s.Bar(scalar_derivative) * scalar_base
     ).expand()
-    return _fluctuation_differential_entry_from_lagrangian(theory, interaction_lagrangian, row, column)
+    entry = _fluctuation_differential_entry_from_lagrangian(theory, interaction_lagrangian, row, column)
+    open_cd_entry = _implicit_abelian_scalar_vector_open_cd_entry(entry, field_label(scalar_base))
+    return (entry + open_cd_entry).expand()
+
+
+def _implicit_abelian_scalar_vector_open_cd_entry(entry: Expression, scalar_label: Expression) -> Expression:
+    """Return Matchete-style scalar-vector ``OpenCD`` branches.
+
+    Matchete's scalar-vector ``Xterm[..., 1, 1, 1]`` branch is tied to the
+    same first-order operator coefficient that produces the ``LoopMom`` branch
+    after ``OpenCD -> OpenCD - I LoopMom``. In pychete's differential
+    representation, ``C * DifferentialOperator(mu)`` lowers to
+    ``I*C*LoopMomentum(mu)``, so the corresponding open branch is
+    ``-C*NCM(field, OpenCD(mu))`` with the matched scalar field kept inside the
+    noncommutative chain.
+    """
+
+    operator_pattern = s.DifferentialOperator(s.FieldDerivativesWildcard)
+    seen_operators: set[str] = set()
+    terms_out: list[Expression] = []
+    for match in entry.match(operator_pattern):
+        derivatives = list_items(match[s.FieldDerivativesWildcard])
+        if len(derivatives) != 1:
+            continue
+        operator = operator_pattern.replace_wildcards(match)
+        operator_key = canonical_string(operator)
+        if operator_key in seen_operators:
+            continue
+        seen_operators.add(operator_key)
+        coefficient = entry.coefficient(operator).expand()
+        terms_out.append(
+            _implicit_abelian_scalar_vector_open_cd_terms_from_coefficient(
+                coefficient,
+                scalar_label,
+                derivatives[0],
+            )
+        )
+    return sum_expr(terms_out).expand()
+
+
+def _implicit_abelian_scalar_vector_open_cd_terms_from_coefficient(
+    coefficient: Expression,
+    scalar_label: Expression,
+    derivative: Expression,
+) -> Expression:
+    open_cd = open_covariant_derivative(derivative)
+    terms_out: list[Expression] = []
+    seen_fields: set[str] = set()
+    for pattern in (field_pattern(scalar_label), bar_field_pattern(scalar_label)):
+        for match in coefficient.match(pattern):
+            field_atom = pattern.replace_wildcards(match)
+            base_field = bar_field_inner(field_atom) if is_bar_field(field_atom) else field_atom
+            if field_derivatives(base_field):
+                continue
+            field_key = canonical_string(field_atom)
+            if field_key in seen_fields:
+                continue
+            seen_fields.add(field_key)
+            scalar_coefficient = coefficient.coefficient(field_atom).expand()
+            if is_zero(scalar_coefficient):
+                continue
+            terms_out.append(-scalar_coefficient * s.NCM(field_atom, open_cd))
+    return sum_expr(terms_out).expand()
 
 
 def _scalar_vector_fluctuation_pair(row: Expression, column: Expression) -> tuple[Expression | None, Expression | None]:

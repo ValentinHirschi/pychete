@@ -754,3 +754,34 @@
   `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
   -q` (`9 passed`); `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
   passed; and `git diff --check` passed.
+- Latest scalar-vector OpenCD source slice: after comparing the committed
+  Matchete `Xterm[..., 1, 1, 1]` fixture values to pychete path entries,
+  pychete now generates the missing implicit Abelian scalar-vector OpenCD
+  branch. The branch is derived locally from each first-order
+  `DifferentialOperator(mu)` coefficient with Symbolica pattern matching and
+  native `Expression.coefficient(...)`: if `C*DifferentialOperator(mu)` would
+  lower to the loop-momentum branch, pychete also adds
+  `-C*NCM(field, OpenCD(mu))`, matching Matchete's
+  `OpenCD -> OpenCD - I LoopMom` relation. This keeps the existing loop and
+  differentiated-field pieces intact.
+- Focused source regressions now check both orientations of the implicit
+  Abelian scalar-vector entry and assert that the selected Singlet
+  `hScalar-lScalar-lVector-lScalar` zero-order source contains four generated
+  terms with explicit `OpenCD` branches. A direct probe shows all four
+  nonzero scalar-vector paths (`0`, `2`, `24`, and `26`) now carry OpenCD in
+  their pre-Wilson numerators.
+- The selected pre-heavy `cHD` coefficient remains green, and the already
+  matched path-level quarter checkpoints for paths `0` and `26` still pass.
+  However, once the more complete OpenCD branch is included, the old
+  post-heavy/post-commutator selected `cHD` checkpoint cancels to zero under
+  pychete's current bounded Green-basis normalization. This is now recorded as
+  the next downstream frontier rather than hidden by the earlier
+  source-incomplete checkpoint: paths `2` and `24` have source terms but still
+  need broader Matchete-style Green/projection handling to contribute.
+- Focused validation for this slice passed:
+  `tests/integration/matching/test_fluctuation_operator.py -k
+  "implicit_abelian_scalar_kinetic or four_slot_scalar_vector_trace" -q`
+  (`2 passed, 112 deselected`); watchdog-wrapped
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py
+  -q` (`9 passed`); `PYTHONPATH=src dependencies/.venv/bin/python -m mypy`
+  passed; and `git diff --check` passed.
