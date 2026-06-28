@@ -39,6 +39,7 @@ from .functional import (
     eom_replacement_rules_for_expression,
     expose_scalar_derivative_commutator_bilinears,
     expand_cd_operators,
+    integrate_by_parts_scalar_laplacians,
     normalize_conjugate_scalar_field_slots,
     partial_functional_derivative,
     simplify_trivial_cd_operators,
@@ -6891,6 +6892,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
     out = _restore_theory_owned_generated_lorentz_indices(theory, out)
     out = normalize_conjugate_scalar_field_slots(theory, out)
     if expose_scalar_derivative_commutator_bilinears_option:
+        out = integrate_by_parts_scalar_laplacians(theory, out)
         out = expose_scalar_derivative_commutator_bilinears(
             theory,
             out,
@@ -6920,6 +6922,7 @@ def _postprocess_wilson_line_tensor_reduced_expression(
             out = updated
     out = simplify_trivial_cd_operators(out)
     if expose_scalar_derivative_commutator_bilinears_option:
+        out = integrate_by_parts_scalar_laplacians(theory, out)
         out = expose_scalar_derivative_commutator_bilinears(
             theory,
             out,
@@ -9161,6 +9164,21 @@ def match_one_loop(
                 "on_shell_eom_reduction_rule_count": len(eom_rules),
                 "on_shell_eom_min_derivative_order": options.on_shell_eom_min_derivative_order,
                 "on_shell_eom_strict": options.on_shell_eom_strict,
+            },
+        )
+    if options.wilson_line_expose_scalar_derivative_commutator_bilinears:
+        reduced_on_shell = integrate_by_parts_scalar_laplacians(theory, result.on_shell_eft_lagrangian)
+        result = replace(
+            result,
+            on_shell_eft_lagrangian=reduced_on_shell,
+            supertraces={
+                **result.supertraces,
+                "on_shell_eft_lagrangian_before_scalar_laplacian_ibp": result.on_shell_eft_lagrangian,
+                "on_shell_eft_lagrangian_after_scalar_laplacian_ibp": reduced_on_shell,
+            },
+            metadata={
+                **result.metadata,
+                "wilson_line_scalar_laplacian_ibp_reduced": True,
             },
         )
     if options.truncate_eft_result:

@@ -98,6 +98,14 @@
   requirements, so terms relevant only after target-local EOM/IBP aliases are
   not dropped just because the literal Warsaw operator lacks that intermediate
   atom family.
+- pychete now has a bounded scalar-Laplacian IBP helper,
+  `integrate_by_parts_scalar_laplacians(...)`, implementing the local
+  Matchete `IdentitiesIBP` member
+  `A * D_mu D_mu(phi) -> -D_mu(A) * D_mu(phi)`. The helper discovers tagged
+  scalar Laplacian atoms with Symbolica patterns and extracts coefficients
+  with native `Expression.coefficient(...)`. It is exported through the public
+  API and wired only into the opt-in Wilson-line scalar-Green path, including
+  the post-heavy-scalar-substitution preview/public matching stage.
 
 ## Current Frontier
 
@@ -132,10 +140,34 @@
   derivative class into the preferred combination of pure `D^2H D^2H`,
   Higgs-current times `D·B`/`D·W`, and direct four-Higgs derivative-current
   operators before matching-condition extraction.
+- The latest scalar-Laplacian IBP slice covers the direct
+  `A * D^2 H -> D A * D H` source-side identity and projects a local
+  four-Higgs derivative-current component with the expected sign. It does not
+  complete the selected Singlet `cHD` mismatch: a bounded
+  `wilson_line_max_total_order=0` smoke with heavy-scalar substitution and the
+  new pass still projects `cHD` to zero. A max-order-4 debug with explicit
+  commutator emission confirmed many generated `FieldStrength` atoms but still
+  zero projected `cHD`; full source inspection of the `wilson14_o4_0` family is
+  currently too expensive interactively. The remaining gap is therefore the
+  higher-derivative Green-basis/commutator row-reduction piece, not this local
+  scalar Laplacian identity alone.
 
 ## Latest Validation
 
 - `PYTHONPATH=src dependencies/.venv/bin/python -m mypy` passed with no issues.
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_scalar_green_bilinears.py -q` passed
+  (`15 passed`).
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_numeric_probes.py -k
+  "chd and (gauge_eom or current)" -q` passed (`2 passed`).
+- Watchdog-wrapped
+  `dependencies/.venv/bin/python -m pytest
+  tests/integration/validation/test_validation_fixtures.py -k
+  "pre_eom_terms_for_derivative_higgs_target" -q` passed.
+- Watchdog-wrapped selected Singlet `hScalar-lScalar -> cHD` order-zero smoke
+  with the scalar-Laplacian IBP pass ran and still returned projected
+  coefficient `0`.
 - `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
   tests/integration/validation/test_numeric_probes.py -k "chd and gauge_eom"
   -q` passed.
@@ -146,7 +178,7 @@
 
 ## Next Work
 
-- Implement the next generic, bounded scalar Green-basis reduction slice. Start
+- Continue the next generic, bounded scalar Green-basis reduction slice. Start
   from the Matchete `Simplifications.m` algorithms around
   `MatchOperatorPatterns`, `ConstructOperatorIdentities`, `IdentitiesIBP`,
   `IdentitiesCDCommutation`, `IBPSimplify`, and `OperatorToNormalForm`; do not
@@ -155,8 +187,8 @@
   primitives and idenso metric/group simplification as the pychete boundary.
   A small Python orchestrator may enumerate candidate scalar derivative classes,
   but the symbolic transformations should stay native.
-- Build a small Matchete-independent regression for the scalar derivative
-  identity before rerunning the slow Singlet fixture probe.
-- Once focused tests are green, remeasure selected
-  `hScalar-lScalar -> cHD` against the Matchete fixture under the 30 GiB
-  watchdog, then promote any confirmed parity step into a committed regression.
+- The next concrete target is the higher-derivative scalar class behind
+  `hScalar-lScalar#wilson14_o4_0`: reproduce Matchete's adjacent
+  `CommuteCDs` plus row-reduced Green-basis representative for the local
+  four-derivative scalar terms, then rerun a reduced selected-trace cHD smoke
+  under the 30 GiB watchdog.

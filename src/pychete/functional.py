@@ -319,6 +319,41 @@ def expose_scalar_derivative_commutator_bilinears(
     return out.expand()
 
 
+def integrate_by_parts_scalar_laplacians(
+    theory: Theory,
+    expr: Expression,
+    *,
+    max_candidates: int = _MAX_SCALAR_DERIVATIVE_BILINEAR_CANDIDATES,
+) -> Expression:
+    """Integrate scalar Laplacian factors by parts in a bounded Green-basis pass.
+
+    Matchete's ``IdentitiesIBP`` generates total-derivative identities for
+    operators containing differentiated fields.  This helper implements the
+    local scalar-Laplacian member of that identity family,
+    ``A * D_mu D_mu phi -> -D_mu(A) * D_mu phi``, using Symbolica pattern
+    discovery and native coefficient extraction.  It is deliberately opt-in:
+    callers decide where this Green-basis normalization is appropriate.
+    """
+
+    if max_candidates < 0:
+        raise ValueError("max_candidates must be non-negative")
+    theory._validate_registered_expression(expr)
+    out = normalize_conjugate_scalar_field_slots(theory, expr)
+    atoms = (*_scalar_laplacian_field_atoms(out), *_scalar_laplacian_barred_field_atoms(out))
+    seen: set[str] = set()
+    candidate_count = 0
+    for atom in atoms:
+        key = canonical_string(atom)
+        if key in seen:
+            continue
+        seen.add(key)
+        candidate_count += 1
+        if candidate_count > max_candidates:
+            return out.expand()
+        out = _integrate_scalar_laplacian_atom_by_parts(out, atom)
+    return out.expand()
+
+
 def normalize_conjugate_scalar_field_slots(theory: Theory, expr: Expression) -> Expression:
     """Rewrite dual-index scalar fields as explicit ``Bar(Field(...))`` atoms.
 
@@ -397,6 +432,64 @@ def _scalar_derivative_barred_field_atoms(expr: Expression, *, derivative_count:
         seen.add(key)
         atoms.append(atom)
     return tuple(atoms)
+
+
+def _scalar_laplacian_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+    pattern = field_pattern()
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms: list[Expression] = []
+    seen: set[str] = set()
+    for match in expr.match(pattern, label_is_tagged):
+        atom = pattern.replace_wildcards(match)
+        if not _is_scalar_laplacian_field(atom):
+            continue
+        key = canonical_string(atom)
+        if key in seen:
+            continue
+        seen.add(key)
+        atoms.append(atom)
+    return tuple(atoms)
+
+
+def _scalar_laplacian_barred_field_atoms(expr: Expression) -> tuple[Expression, ...]:
+    pattern = bar_field_pattern()
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms: list[Expression] = []
+    seen: set[str] = set()
+    for match in expr.match(pattern, label_is_tagged):
+        atom = pattern.replace_wildcards(match)
+        if not is_bar_field(atom):
+            continue
+        if not _is_scalar_laplacian_field(bar_field_inner(atom)):
+            continue
+        key = canonical_string(atom)
+        if key in seen:
+            continue
+        seen.add(key)
+        atoms.append(atom)
+    return tuple(atoms)
+
+
+def _is_scalar_laplacian_field(atom: Expression) -> bool:
+    if not bool(field_type(atom) == s.Scalar):
+        return False
+    derivatives = field_derivatives(atom)
+    return len(derivatives) == 2 and bool(derivatives[0] == derivatives[1])
+
+
+def _integrate_scalar_laplacian_atom_by_parts(expr: Expression, atom: Expression) -> Expression:
+    base_atom = bar_field_inner(atom) if is_bar_field(atom) else atom
+    derivatives = field_derivatives(base_atom)
+    if len(derivatives) != 2 or not bool(derivatives[0] == derivatives[1]):
+        return expr
+    derivative = derivatives[0]
+    coefficient = expr.coefficient(atom).expand()
+    if is_zero(coefficient):
+        return expr
+    reduced_base = field_with_derivatives(base_atom, (derivative,))
+    reduced_atom = s.Bar(reduced_base) if is_bar_field(atom) else reduced_base
+    replacement = (-apply_cd([derivative], coefficient) * reduced_atom).expand()
+    return (expr - coefficient * atom + replacement).expand()
 
 
 def _is_scalar_derivative_field(atom: Expression, *, derivative_count: int) -> bool:

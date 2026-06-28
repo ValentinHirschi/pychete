@@ -2,7 +2,11 @@ from __future__ import annotations
 
 from .dimensions import infer_coupling_mass_dimensions
 from .eft import operator_dimension, series_eft
-from .functional import expose_scalar_derivative_commutator_bilinears, hermitian_conjugate
+from .functional import (
+    expose_scalar_derivative_commutator_bilinears,
+    hermitian_conjugate,
+    integrate_by_parts_scalar_laplacians,
+)
 from .group_algebra import simplify_pychete_color
 from .backends.vacuum_integrals import (
     absorb_vakint_scalar_loop_momentum_numerators,
@@ -220,6 +224,7 @@ __all__ = [
     "get_logger",
     "hermitian_conjugate",
     "infer_coupling_mass_dimensions",
+    "integrate_by_parts_scalar_laplacians",
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",

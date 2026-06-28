@@ -1,10 +1,14 @@
 from __future__ import annotations
 
 import pytest
-from symbolica import Expression
+from symbolica import Expression, S
 
 from pychete.backends import idenso
-from pychete.functional import expose_scalar_derivative_commutator_bilinears, normalize_conjugate_scalar_field_slots
+from pychete.functional import (
+    expose_scalar_derivative_commutator_bilinears,
+    integrate_by_parts_scalar_laplacians,
+    normalize_conjugate_scalar_field_slots,
+)
 from pychete.matching_results import MatchingResult
 from pychete.symbols import s
 from pychete.theory import Theory
@@ -158,6 +162,35 @@ def test_scalar_green_bilinear_exposes_conjugate_mixed_field_strength_derivative
     coefficient = _project_mixed_field_strength_coefficient(theory, source, target)
 
     assert_expr_equal(coefficient, -Expression.num(1) / Expression.num(2))
+
+
+def test_scalar_laplacian_ibp_exposes_derivative_current_component() -> None:
+    coefficient = S("scalar_laplacian_ibp_current_coefficient")
+    theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
+    j = theory.index("j", theory.fields["H"].indices[0])
+    source = s.Bar(higgs(i)) * higgs(i) * s.Bar(higgs(j)) * higgs(j, derivatives=[mu, mu])
+    target = higgs(i) * s.Bar(higgs(j)) * higgs(j, derivatives=[mu]) * s.Bar(higgs(i, derivatives=[mu]))
+
+    reduced = integrate_by_parts_scalar_laplacians(theory, coefficient * source)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=reduced,
+    )
+
+    projected = result.project_matching_conditions({"current": target}, expand_source=False)
+
+    assert_expr_equal(projected["current"], -coefficient)
+
+
+def test_scalar_laplacian_ibp_drops_bare_total_derivative() -> None:
+    theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
+    source = higgs(i, derivatives=[mu, mu])
+
+    reduced = integrate_by_parts_scalar_laplacians(theory, source)
+
+    assert_expr_equal(reduced, Expression.num(0))
 
 
 @pytest.mark.parametrize(

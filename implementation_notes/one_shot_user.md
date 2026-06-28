@@ -881,3 +881,9 @@ without Warsaw-specific core assumptions.
   filtering, so the remaining mismatch is not premature filtering or direct
   coefficient extraction. The next slice should implement a generic bounded
   scalar Green-basis reduction, not another Warsaw-specific `cHD` patch.
+- Latest continuation instruction: continue the one-shot implementation, and
+  whenever a precise mismatch is identified, carefully review the relevant
+  Matchete algorithms before changing pychete. Applied to the scalar
+  derivative `cHD` frontier by rechecking Matchete `IdentitiesIBP`,
+  `IdentitiesCDCommutation`, `CommuteCDs`, `OperatorToNormalForm`, and
+  `EoMStandardForm` before adding a bounded scalar-Laplacian IBP helper.
