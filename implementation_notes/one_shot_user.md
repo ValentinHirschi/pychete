@@ -1582,3 +1582,14 @@ generic algorithm boundary before runtime pychete changes are accepted.
   `InternalSimplify[..., dDimensional]` and become 12 B plus 12 W terms after
   that stage. This pins the next runtime fix to d-dimensional
   `InternalSimplify`/Green-basis identity semantics.
+- Latest scalar `OpScore` parity update, 2026-06-29: the bounded scalar
+  Green-basis scorer now follows Matchete's local score scale instead of using
+  pychete's earlier dominant Python-side derivative penalties. Kinetic scalar
+  representatives outrank formal EOMs, formal EOMs outrank field strengths,
+  and repeated-derivative penalties remain small. The refreshed pychete cHD
+  source fixture now gives the Matchete-aligned inert-SymGamma polynomial
+  `-8*pi^2*SG[1,4] + 64*pi^2*SG[2,4]` for `Bar[H] EOM[B] D H` and the
+  opposite orientation for `D Bar[H] EOM[B] H`, removing the previous spurious
+  constant term and fixing the local evanescent finite source gap without
+  broadening the probe. The next checkpoint is public-route composition to the
+  full Singlet `cHD` matching coefficient.

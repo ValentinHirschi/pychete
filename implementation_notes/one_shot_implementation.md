@@ -84,19 +84,26 @@ Latest narrowed mismatch:
   coefficient
   `-(1 + eps + eps log)/eps * (SG[1,4] - 8 SG[2,4])` multiplying
   `i hbar A^2 Bar[H] EOM[B] D H / M^4`.
-- Pychete's paired raw-topology source probe records
-  `32*pi^2*G1 - 64*pi^2*G2 - 4*pi^2` times the same
-  `Prop[0]^3 Prop[M]` topology and `hbar A^2` prefactor.
-- These agree at epsilon^0 but differ by `epsilon/24`; after the topology pole
-  this is the missing finite `+ i hbar A^2/(24 M^4)`.
+- pychete now mirrors Matchete's local scalar/vector `OpScore` scale in the
+  bounded scalar Green-basis scorer: kinetic scalar representatives score near
+  `20000`, formal EOM representatives near `10000`, field-strength
+  representatives near `1`, and repeated-derivative penalties are small
+  `0.1` corrections rather than dominant terms.
+- With that Matchete-scale score, the paired target-filtered raw-topology
+  source probe records the expected formal source polynomial
+  `-8*pi^2*SG[1,4] + 64*pi^2*SG[2,4]` for `Bar[H] EOM[B] D H` and the
+  opposite for `D Bar[H] EOM[B] H`, with the previous spurious constant term
+  removed. This closes the evanescent finite `cHD` source mismatch at this
+  local stage without increasing Green-basis caps or using the slower
+  heavy-first expansion route.
 - The topology evaluation, cHD projection aliases, metric contraction order,
   closed metric-trace convention, B-source orientation preference, simple
   Green-basis round increases, and pre-expanded commutator identities have
-  been ruled out as fixes.
-- The remaining likely gap is Matchete's d-dimensional operator-class identity
-  and representative semantics, especially the `AtomicOp` / `OpScore`
-  neighborhood that produces formal vector-EOM representatives inside the
-  same two-Higgs, four-derivative class.
+  been ruled out as fixes for the earlier mismatch.
+- The next frontier is to run the public route against this corrected local
+  source: selected Wilson-line replacement, unselected supertrace remainder,
+  heavy-scalar substitution, on-shell field redefinition, and registered
+  `cHD` projection must compose to the Matchete full integration coefficient.
 - The Matchete fixture now also records the exact identity neighborhood for
   that B source. The selected inert B terms match two AtomicOps in class
   `{{H, Conj[H]}, 4}`: ID 13 is `D Bar[H] EOM[B] H`, ID 14 is
@@ -169,6 +176,11 @@ Current slice progress:
   refreshed the Matchete cHD debug fixture with raw-before-`InternalSimplify`
   inert-`SymGammaFactor` source counts. The new evidence points directly to a
   d-dimensional `InternalSimplify`/Green-basis identity gap.
+- Updated the scalar Green-basis preferred-representative score to the
+  Matchete `OpScore` scale. The refreshed pychete fixture now has the
+  Matchete-aligned evanescent SymGamma source polynomial and finite
+  vector-field-redefinition projection at the bounded hScalar-lScalar source
+  checkpoint.
 
 ## Performance Budget For This Slice
 
@@ -185,6 +197,11 @@ Current slice progress:
   `Expression.replace_multiple`, and `Expression.solve_linear_system` for the
   symbolic work. Python may orchestrate class buckets and bounded metadata,
   but not reimplement symbolic algebra.
+- The score fix is deliberately a scoring/classing alignment rather than a
+  broader search: it keeps the same target-filtered source probe and lowers
+  the refreshed fixture byte counts in several expensive post-EOM summaries,
+  so this stage remains at least as targeted as the Matchete intermediate
+  checkpoint.
 
 ## Targeted Commands
 

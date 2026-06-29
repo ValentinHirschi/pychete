@@ -616,7 +616,14 @@ def test_wilson_line_scalar_green_hook_can_expose_formal_vector_eom_terms() -> N
         s.List(),
         s.List(nu),
     )
-    expected = coefficient * s.Bar(phi()) * phi(derivatives=[mu]) * s.EOM(vector(mu))
+    expected = (
+        coefficient
+        * (
+            s.Bar(phi()) * phi(derivatives=[mu]) * s.EOM(vector(mu))
+            - s.Bar(phi(derivatives=[mu])) * phi() * s.EOM(vector(mu))
+        )
+        / 2
+    ).expand()
 
     reduced = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
         theory,
@@ -664,7 +671,7 @@ def test_wilson_line_scalar_green_hook_exposes_generated_vector_divergence_as_fo
         drop_zero=False,
     )
 
-    assert_expr_equal(projected["formal_vector_eom"], coefficient)
+    assert_expr_equal(projected["formal_vector_eom"], coefficient / 2)
     assert_expr_equal(projected["divergence"], Expression.num(0))
 
 
@@ -717,6 +724,7 @@ def test_scalar_green_bilinear_exposes_three_plus_one_field_strength_divergence_
     source = coefficient * s.Bar(phi(derivatives=[mu, nu, nu])) * phi(derivatives=[mu])
     divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
     target = Expression.I * s.Bar(phi()) * phi(derivatives=[mu]) * divergence
+    expected = -coefficient * s.Bar(phi(derivatives=[nu, nu])) * phi(derivatives=[mu, mu])
 
     normalized = expose_scalar_derivative_commutator_bilinears(
         theory,
@@ -733,7 +741,8 @@ def test_scalar_green_bilinear_exposes_three_plus_one_field_strength_divergence_
 
     projected = result.project_matching_conditions({"current_divergence": target}, expand_source=False)
 
-    assert_expr_equal(projected["current_divergence"], coefficient)
+    assert_expr_equal(projected["current_divergence"], Expression.num(0))
+    assert_expr_equal(normalized, expected)
 
 
 def test_scalar_green_bilinear_keeps_unmatched_three_plus_one_ordering_bounded() -> None:

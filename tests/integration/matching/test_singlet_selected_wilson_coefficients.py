@@ -1010,7 +1010,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert source_trace_probe["summary"]["entry_count"] == 3
     assert source_trace_probe["summary"]["nonzero_vector_field_redefinition_delta_entry_count"] == 1
     assert source_trace_probe["summary"]["nonzero_vector_field_redefinition_delta_projection_entry_count"] == 1
-    assert source_trace_probe["summary"]["scalar_eom_exposed_formal_vector_eom_count"] == 4
+    assert source_trace_probe["summary"]["scalar_eom_exposed_formal_vector_eom_count"] == 3
     source_projection = source_trace_probe["summary"]["vector_field_redefinition_delta_projection_sum"]
     assert "Coupling(Singlet_Scalar_Extension::coupling_A" in source_projection
     assert "Coupling(Singlet_Scalar_Extension::coupling_gY" in source_projection
@@ -1030,13 +1030,13 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "-1𝑖/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
         source_operator_projections["DbarH_EOMB_H"]
     )
-    assert "-7𝑖/72*Singlet_Scalar_Extension::external_hbar*" in (
+    assert "-17𝑖/144*Singlet_Scalar_Extension::external_hbar*" in (
         source_operator_projections["DbarH_EOMB_H"]
     )
     assert "1𝑖/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
         source_operator_projections["barH_EOMB_DH"]
     )
-    assert "+7𝑖/72*Singlet_Scalar_Extension::external_hbar*" in (
+    assert "+17𝑖/144*Singlet_Scalar_Extension::external_hbar*" in (
         source_operator_projections["barH_EOMB_DH"]
     )
     assert "-3𝑖/8*Singlet_Scalar_Extension::external_hbar*" in (
@@ -1049,17 +1049,18 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "DH_EOMB_H_unbarred",
     }
     formal_dbar_source = formal_symgamma_source_operator_projections["DbarH_EOMB_H"]
-    assert "-16*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
+    assert "8*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
     assert "pychete::SymGammaFactor(1,4)" in formal_dbar_source
-    assert "32*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
+    assert "-64*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
     assert "pychete::SymGammaFactor(2,4)" in formal_dbar_source
-    assert "2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
+    assert "2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" not in formal_dbar_source
+    assert "vakint::topo(vakint::prop(1" in formal_dbar_source
     formal_bar_source = formal_symgamma_source_operator_projections["barH_EOMB_DH"]
-    assert "16*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "-8*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
     assert "pychete::SymGammaFactor(1,4)" in formal_bar_source
-    assert "-32*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "64*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
     assert "pychete::SymGammaFactor(2,4)" in formal_bar_source
-    assert "-2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "-2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" not in formal_bar_source
     assert "vakint::topo(vakint::prop(1" in formal_bar_source
     assert source_trace_probe["summary"][
         "nonzero_formal_symgamma_topology_source_operator_projection_names"

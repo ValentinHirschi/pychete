@@ -150,13 +150,15 @@ def expose_scalar_derivative_commutator_bilinears(
     commutation identities to expose field-strength components hidden inside
     scalar derivative bilinears. This helper implements the local, generic
     scalar cases needed by Wilson-line matching: two two-derivative scalar
-    factors and one-sided four-derivative scalar factors. Candidate atoms are
-    discovered with Symbolica tag-restricted patterns and component
-    coefficients are extracted with native ``Expression.coefficient(...)``
-    calls. The field-strength part is represented through formal
-    ``CovariantDerivativeCommutator`` products and lowered by the theory's
-    registered Symbolica-backed commutator expansion; the helper is not tied
-    to a particular operator basis such as SMEFT Warsaw.
+    factors, selected mixed field-strength bilinears, and one-sided
+    four-derivative scalar factors. Candidate atoms are discovered with
+    Symbolica tag-restricted patterns and component coefficients are extracted
+    with native ``Expression.coefficient(...)`` calls. The field-strength part
+    is represented through formal ``CovariantDerivativeCommutator`` products
+    and lowered by the theory's registered Symbolica-backed commutator
+    expansion; for three-plus-one derivative shapes the Matchete-like local
+    Green-basis score may instead keep the kinetic representative. The helper
+    is not tied to a particular operator basis such as SMEFT Warsaw.
     """
 
     if max_candidates < 0:
@@ -1244,26 +1246,56 @@ def _scalar_derivative_green_preferred_terms(
     )
 
 
-def _scalar_derivative_green_score(term: Expression) -> int:
-    eom_score = 1_000_000 * len(matching_subexpressions(term, s.EOM(s.CDBodyWildcard)))
-    field_strength_score = 10_000 * (
+def _scalar_derivative_green_score(term: Expression) -> float:
+    """Return the local scalar Green-basis ordering score.
+
+    The scale mirrors Matchete's scalar/vector ``OpScore`` classes: kinetic
+    scalar operators outrank formal EOM terms, formal EOMs outrank
+    field-strength representatives, and repeated/non-ordered derivatives carry
+    only small penalties. This ordering matters for evanescent one-loop terms
+    whose O(epsilon) representative differences multiply a pole.
+    """
+
+    kinetic_score = 20_000.0 if _scalar_green_kinetic_like(term) else 0.0
+    eom_score = 10_000.0 * len(matching_subexpressions(term, s.EOM(s.CDBodyWildcard)))
+    field_strength_score = 1.0 * (
         len(matching_subexpressions(term, field_strength_pattern()))
         + len(matching_subexpressions(term, bar_field_strength_pattern()))
         + len(matching_subexpressions(term, covariant_derivative_commutator_pattern()))
     )
-    explicit_cd_penalty = 1_000 * len(matching_subexpressions(term, cd_pattern()))
+    explicit_cd_penalty = 0.5 * len(matching_subexpressions(term, cd_pattern()))
     derivative_lengths = _scalar_green_derivative_lengths(term)
-    repeated_derivative_penalty = 100 * sum(1 for derivatives in derivative_lengths if _has_repeated_derivative(derivatives))
-    derivative_balance_penalty = 10 * sum(len(derivatives) * len(derivatives) for derivatives in derivative_lengths)
-    derivative_count_penalty = sum(len(derivatives) for derivatives in derivative_lengths)
+    repeated_derivative_penalty = 0.1 * sum(
+        1 for derivatives in derivative_lengths if _has_repeated_derivative(derivatives)
+    )
     return (
-        eom_score
+        kinetic_score
+        + eom_score
         + field_strength_score
         - explicit_cd_penalty
         - repeated_derivative_penalty
-        - derivative_balance_penalty
-        - derivative_count_penalty
     )
+
+
+def _scalar_green_kinetic_like(term: Expression) -> bool:
+    """Detect Matchete-like scalar kinetic representatives in a local class."""
+
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    scalar_atoms: dict[str, Expression] = {}
+    for atom in matching_subexpressions(term, bar_field_pattern(), label_is_tagged):
+        base = bar_field_inner(atom)
+        if is_head(base, s.Field) and bool(field_type(base) == s.Scalar):
+            scalar_atoms.setdefault(canonical_string(base), base)
+    for atom in matching_subexpressions(term, field_pattern(), label_is_tagged):
+        if bool(field_type(atom) == s.Scalar):
+            scalar_atoms.setdefault(canonical_string(atom), atom)
+    laplacian_count = sum(1 for atom in scalar_atoms.values() if _scalar_green_is_laplacian_atom(atom))
+    return laplacian_count >= 2
+
+
+def _scalar_green_is_laplacian_atom(atom: Expression) -> bool:
+    derivatives = field_derivatives(atom)
+    return len(derivatives) == 2 and bool(derivatives[0] == derivatives[1])
 
 
 def _scalar_derivative_green_class_groups(
