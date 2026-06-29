@@ -529,3 +529,30 @@ Matchete comparison:
   passes over already expanded pychete expressions. The next refactor should
   move closer to Matchete's insertion-level collected expression pipeline,
   not add more pathwise caches.
+
+## Current Slice Update: Earlier Wilson-Term Symmetry Pruning
+
+This slice moves Wilson-line loop-momentum symmetry pruning earlier in the
+shared raw Wilson-line postprocessor: after `ActWithOpenCDs` and before the
+second `distribute_ncm_additions(...)` pass. This is closer to Matchete's
+`EvaluateSTr` order, where `RemoveSymmetryVanishingWilsonTerms` follows the
+open-CD/gather stage before later Wilson expansion and algebra cleanup.
+
+The change is intentionally semantic-preserving: focused Singlet
+four-slot pathwise-vs-collected numerator checks still pass, and the public
+four-slot `cHD` checkpoint remains green under the 30 GiB watchdog.
+
+Performance evidence on the same collected four-slot total-order-2 family:
+
+- `o2_0_0_0`: about 9.8 seconds before, about 9.1 seconds after.
+- `o0_2_0_0`: about 5.3 seconds before, about 5.0 seconds after.
+- `o1_1_0_0`: about 4.3 seconds before, about 3.7 seconds after.
+- `o1_0_1_0`: about 2.8 seconds before, about 2.5 seconds after.
+- `o0_0_2_0`: about 2.5 seconds before, about 2.4 seconds after.
+
+The improvement is useful but not decisive. A Symbolica
+`Transformer.map_terms(...)` prototype for the open-CD and additive-NCM
+passes was also tested and found to be neutral or slightly slower on the worst
+entry. The remaining performance frontier is still structural: implement a
+more Matchete-like insertion-level collected `EvaluateSTr` expression
+pipeline, rather than optimizing the existing raw-path postprocessor further.

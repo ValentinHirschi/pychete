@@ -141,6 +141,16 @@ is negligible but `ActWithOpenCDs`, NCM distribution, symmetry pruning,
 next performance refactor should move still earlier toward Matchete's actual
 `GenericPropagatorExpansion` + `DeterminePowerInsertions` + collected
 `EvaluateSTr` staging rather than adding more pathwise caches.
+Latest stage-ordering performance update, 2026-06-29: Wilson-line
+loop-momentum symmetry pruning now runs immediately after `ActWithOpenCDs` and
+before the second additive-NCM distribution pass. This matches Matchete's
+`EvaluateSTr` ordering more closely and trims the slow four-slot total-order-2
+entries modestly, e.g. `o2_0_0_0` from about 9.8s to 9.1s and `o1_1_0_0`
+from about 4.3s to 3.7s, while focused Wilson-line equivalence tests and the
+watchdog-wrapped public four-slot `cHD` checkpoint remain green. A
+Symbolica `Transformer.map_terms(...)` prototype was neutral/slower, so the
+next real performance step remains an insertion-level collected
+`EvaluateSTr` pipeline.
 
 ## Approved Plan
 

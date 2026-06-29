@@ -1307,11 +1307,16 @@ def _postprocess_wilson_line_raw_expansion_term(
         # Explicit Wilson-line chains already close on the final WilsonTerm;
         # Matchete's ActWithOpenCDs acts only on factors to the right here.
         numerator = act_with_open_covariant_derivatives(numerator)
+        numerator = _remove_wilson_line_loop_momentum_symmetry_vanishing_terms(
+            numerator,
+            raw_term.loop_momentum_indices,
+        )
         numerator = distribute_ncm_additions(numerator)
-    numerator = _remove_wilson_line_loop_momentum_symmetry_vanishing_terms(
-        numerator,
-        raw_term.loop_momentum_indices,
-    )
+    else:
+        numerator = _remove_wilson_line_loop_momentum_symmetry_vanishing_terms(
+            numerator,
+            raw_term.loop_momentum_indices,
+        )
     pre_wilson_numerator = numerator
     numerator = expand_wilson_terms(
         raw_term.theory,
