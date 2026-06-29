@@ -167,6 +167,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "matching_condition_targets",
             "validate",
             "staged_projection_sources",
+            "map_effective_couplings",
             "project_matching_conditions",
             "project_matching_conditions_from_sources",
             "with_projected_matching_conditions",

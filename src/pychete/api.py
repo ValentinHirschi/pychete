@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 from .dimensions import infer_coupling_mass_dimensions
+from .effective_couplings import EffectiveCouplingTarget, map_effective_couplings
 from .eft import operator_dimension, series_eft
 from .functional import (
     abelian_vector_eom_field_redefinition_delta,
@@ -170,6 +171,7 @@ __all__ = [
     "ExternalDefinition",
     "ExternalHandle",
     "ExternalKind",
+    "EffectiveCouplingTarget",
     "FieldHandle",
     "FieldChirality",
     "FieldMassKind",
@@ -278,6 +280,7 @@ __all__ = [
     "operator_dimension",
     "one_loop_normalization_factor",
     "matching_condition_targets",
+    "map_effective_couplings",
     "reduce_loop_function_first_power",
     "reduce_loop_function_ibp",
     "reduce_loop_functions_first_power",

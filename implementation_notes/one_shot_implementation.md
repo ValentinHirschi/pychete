@@ -218,6 +218,61 @@ Validation for this slice:
   `tests/integration/validation/test_validation_fixtures.py::test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fixture`
   passed in 205.65s under the 30 GiB cap.
 
+## Current Slice Update: Effective-Coupling Solver Boundary
+
+This slice starts the generic pychete analogue of Matchete's
+`MapEffectiveCouplingsInternal` rather than adding more direct coefficient
+fallbacks. The relevant Matchete source is
+`Package/CouplingManipulations.m`, especially
+`CoefficientEqualities`, `MapEffectiveCouplingsInternal`, and
+`SolveMatchingConditions`: Matchete introduces/collects effective
+coefficients, forms operator coefficient equalities, chooses target
+couplings, and solves the resulting system.
+
+Generic implementation:
+
+- Added `src/pychete/effective_couplings.py` with
+  `EffectiveCouplingTarget` and `map_effective_couplings(...)`.
+- The solver encodes operator monomials as temporary Symbolica variables,
+  extracts coefficient equalities with native `Expression.coefficient_list`,
+  encodes complex numeric factors such as `I` for Symbolica's rational
+  linear solver, delegates the solve to
+  `Expression.solve_linear_system(...)`, and decodes the complex marker.
+- Added `MatchingResult.map_effective_couplings(...)` as an opt-in
+  target-Lagrangian solve path. It resolves registered Wilson operator
+  metadata structurally from the theory and can use explicit identities before
+  solving.
+- Added explicit `allow_incomplete_target=True` for partial diagnostics only.
+  The default remains a complete-target solve, so unrelated operator
+  equations still make the system inconsistent instead of being silently
+  discarded.
+
+Mismatch checklist:
+
+- Matchete evidence: `CouplingManipulations.m` shows the mapping stage is a
+  solver over coefficient equalities, not isolated coefficient lookup.
+- Pychete probe: watchdog-wrapped
+  `Singlet_Scalar_Extension.matching_fixture.json` `matchete_previous`
+  `on_shell_eft_lagrangian` with
+  `MatchingResult.map_effective_couplings({"clequ1": clequ1},
+  allow_incomplete_target=True)`.
+- First differing boundary: the new generic solver still maps the partial
+  `clequ1` target to zero, while the committed Matchete matching condition is
+  `-1/6 hbar A^2 Ye Yu / M^4`. A full registered-Wilson solve is still
+  inconsistent, which means pychete still lacks the complete target
+  Lagrangian normalization and the Fierz/Green/operator identities needed
+  before this boundary can reproduce Matchete's `MapEffectiveCouplings`
+  result.
+- Generic patch rationale: this adds the target-Lagrangian solve boundary
+  needed to host the missing identities. It does not special-case
+  `clequ1` or any Warsaw coefficient.
+
+Validation for this slice:
+
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_effective_couplings.py
+  tests/unit/definitions/test_public_api.py` passed.
+
 ## Active Checkpoints
 
 Matchete checkpoints:

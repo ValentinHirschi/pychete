@@ -10,6 +10,7 @@ from typing import TYPE_CHECKING, Any
 from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
+from .effective_couplings import EffectiveCouplingTarget, map_effective_couplings
 from .eft import operator_dimension, series_eft
 from .functional import apply_cd, expand_cd_operators
 from .expr import (
@@ -627,6 +628,86 @@ class MatchingResult:
             )
             for source in source_names
         }
+
+    def map_effective_couplings(
+        self,
+        targets: MatchingConditionTargetInput,
+        *,
+        source: str = "on_shell_eft_lagrangian",
+        target_lagrangian: Expression | None = None,
+        identities: Sequence[Expression] = (),
+        allow_incomplete_target: bool = False,
+        normalize_derivative_operators: bool = True,
+        max_basis_terms: int = 128,
+        max_identities: int = 256,
+    ) -> dict[str, Expression]:
+        """Solve registered target couplings from a target Lagrangian.
+
+        Unlike direct matching-condition projection, this builds the
+        Matchete-style target-Lagrangian equation
+        ``source == sum_i C_i O_i`` and asks Symbolica to solve the resulting
+        coefficient equalities for the target couplings. Optional identities
+        can express Green-basis, Fierz, or operator-basis equivalences before
+        the solve. Runtime pychete still owns the identities; this method does
+        not call Mathematica or depend on a Matchete checkout.
+        ``allow_incomplete_target`` is for partial diagnostics only; full
+        Matchete-parity mapping should keep the target complete.
+        """
+
+        source_expr = self.expression(source)
+        structured_targets = matching_condition_targets(
+            _resolve_matching_condition_targets(self.theory, targets)
+        )
+        effective_targets: list[EffectiveCouplingTarget] = []
+        for target in structured_targets:
+            variable = target.expression
+            operator = target.operator
+            if operator is None and target.name in self.theory.externals:
+                definition = self.theory.externals[target.name]
+                if (
+                    definition.kind is ExternalKind.WILSON_COEFFICIENT
+                    and definition.operator_expr is not None
+                ):
+                    variable = s.Coupling(
+                        definition.label,
+                        s.List(*definition.index_exprs),
+                        Expression.num(definition.order),
+                    )
+                    operator = definition.operator_expr
+            if operator is None:
+                raise ValueError(
+                    "effective-coupling mapping requires targets with stored operator metadata"
+                )
+            effective_targets.append(
+                EffectiveCouplingTarget(
+                    name=target.name,
+                    variable=variable,
+                    operator=operator,
+                )
+            )
+        identity_tuple = tuple(identities)
+        target_expr = target_lagrangian
+        if normalize_derivative_operators:
+            source_expr = expand_cd_operators(source_expr)
+            target_expr = None if target_expr is None else expand_cd_operators(target_expr)
+            identity_tuple = tuple(expand_cd_operators(identity) for identity in identity_tuple)
+            effective_targets = [
+                EffectiveCouplingTarget(
+                    name=target.name,
+                    variable=target.variable,
+                    operator=expand_cd_operators(target.operator),
+                )
+                for target in effective_targets
+            ]
+        return map_effective_couplings(
+            source_expr,
+            effective_targets,
+            target_lagrangian=target_expr,
+            identities=identity_tuple,
+            allow_incomplete_target=allow_incomplete_target,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+        )
 
     def with_projected_matching_conditions(
         self,

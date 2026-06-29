@@ -485,6 +485,16 @@ Symbolica replacement rules and native idenso/spenso/vakint operations. When a
 Matchete stage succeeds by a delayed basis map, Green-basis identity, Fierz
 map, or `MapEffectiveCouplings` solve, implement that generic stage in
 pychete rather than repairing individual Wilson coefficient names.
+For `MapEffectiveCouplings` parity, use pychete's target-Lagrangian solver
+boundary (`EffectiveCouplingTarget`, `map_effective_couplings(...)`, and
+`MatchingResult.map_effective_couplings(...)`) instead of adding more direct
+coefficient-extraction fallbacks. That boundary must form operator coefficient
+equalities, encode unsupported complex numeric solver coefficients when
+needed, and delegate the solve to Symbolica's
+`Expression.solve_linear_system(...)`. Partial frontier probes may set
+`allow_incomplete_target=True`, but full Matchete-parity mapping must keep the
+target Lagrangian complete and supply the missing Green-basis/Fierz/operator
+identities explicitly.
 Whenever a precise Matchete-parity mismatch is identified, first review the
 corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
 side by side before patching pychete. Use intermediate-stage dumps and focused
