@@ -888,3 +888,53 @@ Validation:
   `test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches_checkpoint`.
 - Targeted mypy on `matching.py`, `validation_fixtures.py`, and
   `matching_results.py` passes, and `git diff --check` is clean.
+
+## Current Slice Update: Effective-Coupling Open-Index Basis Map
+
+This slice continued the `clequ1` frontier by following Matchete's
+`MapEffectiveCouplingsInternal` behavior at the converted on-shell
+Lagrangian boundary. The first precise mismatch was not missing source
+generation: the committed Matchete on-shell Lagrangian already contained the
+scalar four-fermion `Ye*Yu` source term. The mismatch was in pychete's final
+effective-coupling projection semantics.
+
+Implemented generic fixes:
+
+- Added idenso-side `canonicalize_builtin_epsilon_cg_tensors(...)` for
+  registered rank-two `builtin:eps` CG tensors. It uses Symbolica metadata on
+  the CG label and enforces the antisymmetric orientation
+  `eps(j,i) = -eps(i,j)`.
+- Extended `map_effective_couplings(...)` with target-aware epsilon
+  orientation aliases. This is needed because the real Singlet `clequ1`
+  source has an epsilon orientation that is lexically canonical but opposite
+  to the registered Warsaw target field-slot order.
+- Fixed open-index mapping to relabel the whole additive term, including
+  Yukawa/coupling factors, instead of replacing only the bare operator
+  subexpression. The key Symbolica rule is: match target-operator aliases to
+  infer open indices, apply the resulting `Index(...)` replacements to the
+  whole term, then replace the alias by the registered target operator.
+- Kept the implementation generic: no `clequ1`, Warsaw, or model-name
+  special cases were added.
+
+Validation:
+
+- Focused unit tests pass for chiral scalar projector normalization,
+  rank-two builtin epsilon canonicalization, target-aware epsilon basis-map
+  orientation, open-index coefficient relabeling, and the effective-coupling
+  solver.
+- New fixture regression
+  `test_singlet_reference_effective_coupling_map_recovers_clequ1_condition`
+  passes under the 30 GiB watchdog. It proves
+  `MatchingResult.map_effective_couplings({"clequ1": clequ1}, source="on_shell_eft_lagrangian")`
+  now reproduces the committed Matchete `clequ1` matching condition exactly:
+  `-hbar*A^2*Ye[i1,i2]*Yu[i3,i4]/(6*M^4)`.
+- Targeted mypy passes for `src/pychete/effective_couplings.py` and
+  `src/pychete/backends/idenso.py`.
+
+Updated parity count for the selected/targeted frontier: the Singlet Scalar
+Extension to SMEFT now has five nonzero Wilson coefficients/routes with
+validated pychete/Matchete agreement: `cHW`, `cHB`, `cHWB`, `cHD`, and
+converted-on-shell effective-coupling projection for `clequ1`. The full
+default all-Wilson Singlet integration test is still not green; this `clequ1`
+success is at the final basis-map boundary, not yet the full public
+one-loop-generation route for that coefficient.

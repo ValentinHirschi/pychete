@@ -58,6 +58,77 @@ def test_map_effective_couplings_uses_operator_identities_when_direct_projection
     assert_expr_equal(mapped["cPhiDer"], 2 * coefficient)
 
 
+def test_map_effective_couplings_normalizes_chiral_scalar_projectors() -> None:
+    theory = Theory("effective_coupling_chiral_projectors")
+    left = theory.define_field("l", s.Fermion, chirality="left")
+    right = theory.define_field("e", s.Fermion, chirality="right")
+    target_operator = s.NCM(s.Bar(left()), right())
+    source_operator = s.NCM(s.Bar(left()), s.DiracProduct(s.PR), right())
+    wilson = theory.define_wilson_coefficient("cLe", operator=target_operator)
+    coefficient = S("effective_coupling_chiral_projectors_k")
+
+    assert_expr_equal((coefficient * source_operator).coefficient(target_operator), Expression.num(0))
+
+    mapped = map_effective_couplings(
+        coefficient * source_operator,
+        (EffectiveCouplingTarget("cLe", wilson(), target_operator),),
+    )
+
+    assert_expr_equal(mapped["cLe"], coefficient)
+
+
+def test_map_effective_couplings_aligns_target_operator_indices_into_coefficients() -> None:
+    theory = Theory("effective_coupling_index_alignment")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    left = theory.define_field("l", s.Fermion, indices=[flavor.symbol], chirality="left")
+    right = theory.define_field("e", s.Fermion, indices=[flavor.symbol], chirality="right")
+    yukawa = theory.define_coupling("Y", indices=[flavor.symbol, flavor.symbol])
+    i = theory.index("i", flavor.symbol)
+    j = theory.index("j", flavor.symbol)
+    a = theory.index("a", flavor.symbol)
+    b = theory.index("b", flavor.symbol)
+    target_operator = s.NCM(s.Bar(left(i)), right(j))
+    source_operator = s.NCM(s.Bar(left(a)), s.DiracProduct(s.PR), right(b))
+    wilson = theory.define_wilson_coefficient("cLe", indices=[i, j], operator=target_operator)
+
+    mapped = map_effective_couplings(
+        yukawa(a, b) * source_operator,
+        (EffectiveCouplingTarget("cLe", wilson(), target_operator),),
+    )
+
+    assert_expr_equal(mapped["cLe"], yukawa(i, j))
+
+
+def test_map_effective_couplings_canonicalizes_builtin_epsilon_orientation() -> None:
+    theory = Theory("effective_coupling_epsilon_orientation")
+    theory.define_gauge_group("SU2F", s.SU(Expression.num(2)), "g", "W")
+    fund = theory.define_representation("SU2F", "fund")
+    left_l = theory.define_field("l", s.Fermion, indices=[fund], chirality="left")
+    right_e = theory.define_field("e", s.Fermion, chirality="right")
+    left_q = theory.define_field("q", s.Fermion, indices=[fund], chirality="left")
+    right_u = theory.define_field("u", s.Fermion, chirality="right")
+    coupling = theory.define_coupling("Y")
+    eps = theory.cg_tensor_handle("eps_SU2F")
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    a = theory.index("a", fund)
+    b = theory.index("b", fund)
+    target_operator = s.NCM(s.Bar(left_l(i)), right_e()) * s.NCM(s.Bar(left_q(j)), right_u()) * eps(i, j)
+    source_operator = (
+        s.NCM(s.Bar(left_l(b)), s.DiracProduct(s.PR), right_e())
+        * s.NCM(s.Bar(left_q(a)), s.DiracProduct(s.PR), right_u())
+        * eps(a, b)
+    )
+    wilson = theory.define_wilson_coefficient("cLq", operator=target_operator)
+
+    mapped = map_effective_couplings(
+        coupling() * source_operator,
+        (EffectiveCouplingTarget("cLq", wilson(), target_operator),),
+    )
+
+    assert_expr_equal(mapped["cLq"], -coupling())
+
+
 def test_map_effective_couplings_incomplete_target_mode_is_explicit() -> None:
     theory = Theory("effective_coupling_incomplete")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

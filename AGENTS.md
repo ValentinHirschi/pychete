@@ -495,6 +495,16 @@ needed, and delegate the solve to Symbolica's
 `allow_incomplete_target=True`, but full Matchete-parity mapping must keep the
 target Lagrangian complete and supply the missing Green-basis/Fierz/operator
 identities explicitly.
+For open-index `MapEffectiveCouplings` parity, do not project only the bare
+operator subexpression and leave coupling factors outside the match callback.
+Use Symbolica pattern matches over target-operator aliases to infer the open
+index map, then relabel the whole additive term, including coupling factors
+such as Yukawas and masses, before replacing the alias by the registered
+target operator. Registered rank-two builtin epsilon CG tensors are
+antisymmetric: include target-aware `eps(j,i) = -eps(i,j)` aliases because a
+global lexical epsilon canonicalization can still be opposite to the field
+slot order used by the Wilson target. This is generic basis-map semantics,
+not a Warsaw-name-specific repair.
 Whenever a precise Matchete-parity mismatch is identified, first review the
 corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
 side by side before patching pychete. Use intermediate-stage dumps and focused

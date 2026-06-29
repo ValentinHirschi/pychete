@@ -636,6 +636,17 @@ def test_idenso_bridge_canonicalizes_mixed_su2_u1_field_strength_generator_bilin
     assert _same(simplified, expected)
 
 
+def test_idenso_canonicalizes_rank_two_builtin_epsilon_cg_tensors() -> None:
+    theory = Theory("idenso_builtin_epsilon_canonical")
+    theory.define_gauge_group("SU2F", s.SU(Expression.num(2)), "g", "W")
+    fund = theory.define_representation("SU2F", "fund")
+    eps = theory.cg_tensor_handle("eps_SU2F")
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+
+    assert _same(idenso.canonicalize_builtin_epsilon_cg_tensors(eps(j, i)), -eps(i, j))
+
+
 def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
     mu = s.Index(s.dummy_index(0), s.Lorentz)
     nu = s.Index(s.dummy_index(1), s.Lorentz)
@@ -852,6 +863,30 @@ def test_idenso_bridge_simplifies_registered_open_fermion_chains_through_native_
         ),
         4 * s.NCM(s.Bar(left()), right()),
     )
+
+
+def test_idenso_chiral_scalar_projectors_use_registered_field_chirality() -> None:
+    theory = Theory("idenso_chiral_scalar_projectors")
+    left = theory.define_field("l", s.Fermion, chirality="left")
+    right = theory.define_field("e", s.Fermion, chirality="right")
+    dirac = theory.define_field("psi", s.Fermion)
+
+    assert _same(
+        idenso.simplify_pychete_chiral_scalar_projectors(
+            s.NCM(s.Bar(left()), s.DiracProduct(s.PR), right())
+        ),
+        s.NCM(s.Bar(left()), right()),
+    )
+    assert _same(
+        idenso.simplify_pychete_chiral_scalar_projectors(s.NCM(s.Bar(right()), s.PL, left())),
+        s.NCM(s.Bar(right()), left()),
+    )
+    assert _same(
+        idenso.simplify_pychete_chiral_scalar_projectors(s.NCM(s.Bar(left()), s.PL, right())),
+        Expression.num(0),
+    )
+    unchiral = s.NCM(s.Bar(left()), s.PR, dirac())
+    assert _same(idenso.simplify_pychete_chiral_scalar_projectors(unchiral), unchiral)
 
 
 def test_wilson_line_numerator_hoists_commutative_operands_before_open_chain_dirac_simplification() -> None:

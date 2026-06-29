@@ -25,7 +25,7 @@ from ..expr import (
     terms,
 )
 from ..symbols import SymbolDataKey, SymbolRole, canonical_string, expression_from_canonical, s, symbol_data
-from ..theory_metadata import GroupKind
+from ..theory_metadata import FieldChirality, GroupKind, field_chirality_from_label
 
 _MAX_NATIVE_PROJECTOR_POWER = 16
 _MAX_NATIVE_DIRAC_WORD_ARITY = 8
@@ -192,6 +192,21 @@ def simplify_pychete_color_algebra(
         simplified = _decode_native_color_metrics(theory, simplified, groups)
     simplified = _decode_native_color_tensors(theory, simplified, groups)
     return simplified.expand()
+
+
+def canonicalize_builtin_epsilon_cg_tensors(expr: Expression) -> Expression:
+    """Canonicalize registered rank-two builtin epsilon CG tensors.
+
+    The SU(2) invariant epsilon tensor is antisymmetric. Matchete normalizes
+    these CG tensors before basis projection, so ``eps(j, i)`` must be
+    available as ``-eps(i, j)`` when a registered operator basis uses the
+    opposite slot order. Selection is driven by Symbolica metadata on the CG
+    label, not by Wilson-coefficient names.
+    """
+
+    if not _contains_cg_tensor(expr):
+        return expr
+    return expr.replace_multiple(_builtin_epsilon_cg_replacements()).expand()
 
 
 def decode_native_color_wrappers(
@@ -417,6 +432,7 @@ def simplify_pychete_dirac_algebra(expr: Expression) -> Expression:
     out = out.replace_multiple(_dirac_product_replacements())
     out = out.replace_multiple(_ncm_dirac_word_replacements())
     out = simplify_pychete_open_dirac_chains(out)
+    out = simplify_pychete_chiral_scalar_projectors(out)
     out = out.replace_multiple(_mixed_ncm_dirac_subword_replacements())
     return simplify_pychete_dirac_projectors(out).expand()
 
@@ -457,6 +473,21 @@ def simplify_pychete_open_dirac_chains(expr: Expression) -> Expression:
     """
 
     return expr.replace_multiple(_open_fermion_ncm_dirac_chain_replacements()).expand()
+
+
+def simplify_pychete_chiral_scalar_projectors(expr: Expression) -> Expression:
+    """Normalize scalar chiral projectors in registered open fermion chains.
+
+    Matchete's target SMEFT scalar four-fermion operators omit explicit
+    projectors because the fermion fields carry chirality metadata. Generated
+    and converted pychete sources can still contain compact
+    ``NCM(Bar(psi), DiracProduct(PR|PL), chi)`` chains. This pass uses
+    Symbolica replacement rules and field-label symbol data to remove
+    projectors that match the right endpoint chirality, or to return zero for
+    the opposite chirality. Non-chiral endpoints are left unchanged.
+    """
+
+    return expr.replace_multiple(_chiral_scalar_projector_replacements()).expand()
 
 
 def simplify_metrics(expr: Expression) -> Expression:
@@ -1440,6 +1471,34 @@ def _open_fermion_ncm_dirac_chain_replacements() -> tuple[Replacement, ...]:
     return tuple(replacements)
 
 
+@cache
+def _chiral_scalar_projector_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    left_label = s.head("chiral_projector_left_label_")
+    left_indices = s.head("chiral_projector_left_indices_")
+    left_derivatives = s.head("chiral_projector_left_derivatives_")
+    right_label = s.head("chiral_projector_right_label_")
+    right_indices = s.head("chiral_projector_right_indices_")
+    right_derivatives = s.head("chiral_projector_right_derivatives_")
+    left_endpoint = s.Bar(s.Field(left_label, s.Fermion, left_indices, left_derivatives))
+    right_endpoint = s.Field(right_label, s.Fermion, right_indices, right_derivatives)
+    field_labels_are_registered = left_label.req_tag(SymbolRole.FIELD.value) & right_label.req_tag(
+        SymbolRole.FIELD.value
+    )
+    for projector in (s.PR, s.PL):
+        for projector_expr in (projector, s.DiracProduct(projector)):
+            pattern = s.NCM(left_endpoint, projector_expr, right_endpoint)
+            replacements.append(
+                Replacement(
+                    pattern,
+                    _chiral_scalar_projector_replacement(pattern, projector, left_endpoint, right_endpoint),
+                    field_labels_are_registered,
+                    rhs_cache_size=0,
+                )
+            )
+    return tuple(replacements)
+
+
 def _dirac_word_replacements(head: Expression, kind: str) -> tuple[Replacement, ...]:
     replacements: list[Replacement] = []
     for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
@@ -1453,6 +1512,33 @@ def _dirac_word_replacements(head: Expression, kind: str) -> tuple[Replacement, 
             )
         )
     return tuple(replacements)
+
+
+def _chiral_scalar_projector_replacement(
+    pattern: Expression,
+    projector: Expression,
+    left_endpoint: Expression,
+    right_endpoint: Expression,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_projector(match: dict[Expression, Expression]) -> Expression:
+        right_label = match[s.head("chiral_projector_right_label_")]
+        chirality = field_chirality_from_label(right_label)
+        if chirality is FieldChirality.NONE:
+            return pattern.replace_wildcards(match)
+        if _projector_matches_right_chirality(projector, chirality):
+            return s.NCM(
+                left_endpoint.replace_wildcards(match),
+                right_endpoint.replace_wildcards(match),
+            )
+        return Expression.num(0)
+
+    return replace_projector
+
+
+def _projector_matches_right_chirality(projector: Expression, chirality: FieldChirality) -> bool:
+    return (bool(projector == s.PR) and chirality is FieldChirality.RIGHT) or (
+        bool(projector == s.PL) and chirality is FieldChirality.LEFT
+    )
 
 
 def _open_fermion_ncm_dirac_chain_replacement(
@@ -1760,6 +1846,32 @@ def _cg_tensor_definition_for_label(theory: Any, label: Expression) -> Any | Non
         if canonical_string(definition.label) == label_text:
             return definition
     return None
+
+
+@cache
+def _builtin_epsilon_cg_replacements() -> tuple[Replacement, ...]:
+    label = s.head("builtin_epsilon_cg_label_")
+    left = s.head("builtin_epsilon_cg_left_")
+    right = s.head("builtin_epsilon_cg_right_")
+    pattern = s.CG(label, s.List(left, right))
+    registered_cg_label = label.req_tag(SymbolRole.CG_TENSOR.value)
+
+    def canonicalize(match: dict[Expression, Expression]) -> Expression:
+        if not _is_rank_two_builtin_epsilon_label(match[label]):
+            return pattern.replace_wildcards(match)
+        left_index = match[left]
+        right_index = match[right]
+        if canonical_string(left_index) <= canonical_string(right_index):
+            return pattern.replace_wildcards(match)
+        return -s.CG(match[label], s.List(right_index, left_index))
+
+    return (Replacement(pattern, canonicalize, registered_cg_label, rhs_cache_size=0),)
+
+
+def _is_rank_two_builtin_epsilon_label(label: Expression) -> bool:
+    source = symbol_data(label, SymbolDataKey.CG_SOURCE, "")
+    representations = symbol_data(label, SymbolDataKey.CG_REPRESENTATIONS, [])
+    return source == "builtin:eps" and isinstance(representations, list) and len(representations) == 2
 
 
 def _replace_adjoint_generators_with_structure_constants(theory: Any, expr: Expression) -> Expression:
@@ -2470,6 +2582,7 @@ def _pychete_dirac_word(dirac_factors: tuple[Expression, ...]) -> Expression:
 
 
 __all__ = [
+    "canonicalize_builtin_epsilon_cg_tensors",
     "cook_function",
     "cook_indices",
     "contract_pychete_deltas_into_cg_tensors",
@@ -2493,6 +2606,7 @@ __all__ = [
     "simplify_pychete_field_strength_group_algebra",
     "expand_pychete_ncm_powers",
     "simplify_pychete_color_algebra",
+    "simplify_pychete_chiral_scalar_projectors",
     "simplify_pychete_dirac_algebra",
     "trace_pychete_closed_dirac_chains",
     "simplify_pychete_field_derivative_metrics",
