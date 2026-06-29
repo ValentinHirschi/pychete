@@ -257,6 +257,31 @@ Current slice progress:
   `test_singlet_wilson_line_target_prefilter_matches_matchete_order_four_insertions`,
   and `test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates`,
   all under the 30 GiB watchdog.
+- The public `hScalar-lScalar -> cHD` route now gets past the previous
+  post-heavy scalar Green-basis capacity failure. The mismatch checklist for
+  this slice is:
+  Matchete fixture `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`,
+  paired pychete probe
+  `test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_frontier`,
+  first differing boundary = public Wilson-line scalar EOM exposure after
+  target-local heavy-scalar substitution. Before the patch, that stage fed the
+  whole 1.3 MB/2592-term selected source into class-local Green-basis
+  reduction and one unrelated H4/H6 operator class exceeded the 1536 basis-term
+  cap. The runtime change ports a bounded Matchete-style class locality rule:
+  in the Wilson-line EOM bridge, oversized operator classes are left
+  unreduced while smaller classes continue through Symbolica-backed
+  Green-basis reduction. This is not a final `cHD` coefficient patch.
+- After the bounded class fallback, the public selected route completes and
+  records the next semantic frontier. With heavy-scalar substitution,
+  scalar-EOM exposure, and Abelian B-vector field-redefinition enabled, the
+  candidate projected `cHD` contains target-local `kappa/muphi` heavy-solution
+  terms and still differs from the Matchete `A^2 gY^2` vector-EOM coefficient.
+  The bridge metadata confirms two scalar-commutator Abelian vector-EOM rules
+  and a nonzero vector field-redefinition delta. The next Matchete dump/probe
+  comparison should therefore inspect how Matchete separates the selected
+  two-Higgs B-source shift from the heavy-solution `kappa/muphi` source during
+  `PerformSystematicFieldRedefs`, not tensor reduction or the Green-basis
+  capacity guard.
 
 ## Targeted Commands
 

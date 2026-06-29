@@ -1628,3 +1628,19 @@ Green/EOM identity conversion.
   `src/pychete/matching_projection_filters.py`, preserving `pychete.matching`
   compatibility aliases and validating with focused target-filter tests under
   the 30 GiB watchdog.
+- Latest public-route `cHD` progress, 2026-06-29: the selected
+  `hScalar-lScalar -> cHD` public route was probed through target-local
+  heavy-scalar substitution and then through scalar-EOM/vector-field
+  redefinition. Heavy-only projection is efficient but produces
+  `kappa/muphi`-type heavy-solution terms, not Matchete's `A^2 gY^2` cHD
+  shift. Enabling the scalar-EOM bridge previously failed because the
+  post-heavy selected source was about 1.3 MB / 2592 terms and an unrelated
+  large operator class exceeded the Green-basis cap. Implementation response:
+  added an opt-in class-local capacity fallback for the Wilson-line EOM
+  bridge, leaving oversized classes unreduced while reducing smaller classes
+  with Symbolica's Green-basis solve. The public heavy+EOM probe now completes,
+  applies two scalar-commutator Abelian vector-EOM rules and a nonzero vector
+  field-redefinition delta, and records the remaining semantic mismatch as
+  `kappa/muphi` source composition versus the Matchete `A^2 gY^2` vector-EOM
+  coefficient. Focused unit and slow integration frontier tests passed under
+  the 30 GiB watchdog.

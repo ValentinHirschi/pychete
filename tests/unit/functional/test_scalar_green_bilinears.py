@@ -481,6 +481,42 @@ def test_scalar_derivative_green_normal_form_by_operator_class_keeps_basis_local
     assert_expr_equal(reduced, expected)
 
 
+def test_scalar_derivative_green_normal_form_by_operator_class_can_skip_oversized_classes() -> None:
+    coefficient = S("scalar_derivative_green_skip_class_coefficient")
+    theory, higgs, _target, i, mu, nu = _scalar_su2_probe()
+    singlet = theory.define_field("S", s.Scalar, self_conjugate=False, mass=0)
+    reducible = coefficient * s.Bar(higgs(i)) * higgs(i, derivatives=[mu, nu])
+    oversized = coefficient * s.Bar(singlet(derivatives=[mu, mu])) * singlet(derivatives=[nu, nu])
+    source = reducible + oversized
+    expected = -coefficient * s.Bar(higgs(i, derivatives=[mu])) * higgs(i, derivatives=[nu]) + oversized
+
+    with pytest.raises(ValueError, match="Green-basis reduction discovered more than 3 basis terms"):
+        scalar_derivative_green_normal_form_by_operator_class(
+            theory,
+            source,
+            include_commutators=False,
+            include_eom=True,
+            eom_lagrangian=theory.free_lag(higgs, singlet),
+            eom_standard_form_only=True,
+            max_basis_terms=3,
+            max_rounds=1,
+        )
+
+    reduced = scalar_derivative_green_normal_form_by_operator_class(
+        theory,
+        source,
+        include_commutators=False,
+        include_eom=True,
+        eom_lagrangian=theory.free_lag(higgs, singlet),
+        eom_standard_form_only=True,
+        max_basis_terms=3,
+        max_rounds=1,
+        skip_oversized_classes=True,
+    )
+
+    assert_expr_equal(reduced, expected)
+
+
 def test_scalar_formal_eom_ibp_identity_matches_matchete_scalar_eom_splitter() -> None:
     coefficient = S("scalar_formal_eom_ibp_coefficient")
     theory, higgs, _target, i, _mu, _nu = _scalar_su2_probe()

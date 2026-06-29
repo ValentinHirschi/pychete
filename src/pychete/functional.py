@@ -906,6 +906,7 @@ def scalar_derivative_green_normal_form_by_operator_class(
     max_basis_terms: int = _DEFAULT_SCALAR_GREEN_MAX_BASIS_TERMS,
     max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
     max_rounds: int = _DEFAULT_SCALAR_GREEN_MAX_ROUNDS,
+    skip_oversized_classes: bool = False,
 ) -> Expression:
     """Reduce scalar Green-basis identities class-by-class.
 
@@ -914,6 +915,10 @@ def scalar_derivative_green_normal_form_by_operator_class(
     and solves identities inside each class.  This helper keeps the existing
     Symbolica-backed scalar Green solver, but applies it separately to those
     local classes so unrelated field monomials do not inflate one shared basis.
+    ``skip_oversized_classes`` is a performance-frontier option for public
+    Wilson-line probes: capacity-limited classes are left unreduced while
+    smaller classes still reduce. It should not be used to claim a skipped
+    class is physically irrelevant.
     """
 
     if include_eom and eom_lagrangian is None:
@@ -947,8 +952,8 @@ def scalar_derivative_green_normal_form_by_operator_class(
     )
     reduced: list[Expression] = []
     for class_key, class_expr in class_groups:
-        reduced.append(
-            scalar_derivative_green_normal_form(
+        try:
+            reduced_class = scalar_derivative_green_normal_form(
                 theory,
                 class_expr,
                 preferred=preferred_by_class.get(class_key, ()),
@@ -963,8 +968,22 @@ def scalar_derivative_green_normal_form_by_operator_class(
                 max_identities=max_identities,
                 max_rounds=max_rounds,
             )
-        )
+        except ValueError as exc:
+            if not skip_oversized_classes or not _is_green_basis_capacity_error(exc):
+                raise
+            reduced_class = class_expr
+        reduced.append(reduced_class)
     return sum_expr(reduced).expand()
+
+
+def _is_green_basis_capacity_error(exc: ValueError) -> bool:
+    message = str(exc)
+    return (
+        "Green-basis reduction discovered more than" in message
+        or "Green-basis reduction received" in message
+        or "scalar Green-basis reduction generated more than" in message
+        or "vector formal-EOM IBP generated more than" in message
+    )
 
 
 def _validate_scalar_green_identity_generation(value: str) -> str:

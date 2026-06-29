@@ -256,6 +256,13 @@ For matching-condition extraction from large one-loop expressions, prefer
 target coefficient first with native `Expression.coefficient(...)`, then
 applies `series_eft(...)` to only `coefficient * target`, preserving total
 EFT-order semantics without forcing global expansion of the full result.
+For Wilson-line post-integral scalar EOM exposure on large selected sources,
+keep the Green-basis solve class-local and bounded. If a target-local public
+route contains unrelated oversized operator classes, leave those classes
+unreduced and continue reducing smaller classes rather than raising caps or
+feeding the whole expression into one Green-basis solve. Record this as a
+frontier marker in tests/notes: skipping an oversized class is a performance
+guard, not proof that the skipped class is physically irrelevant.
 For Matchete-parity validation, keep loop-convention symbols theory-owned.
 When using `OneLoopNormalization.MATCHETE_HBAR` against converted Matchete
 fixtures, pass `OneLoopMatchOptions.hbar` as the registered external `hbar`

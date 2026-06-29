@@ -1205,6 +1205,7 @@ class ValidationFixture:
                 theory,
                 before_scalar_exposure,
                 eom_lagrangian=resolved_on_shell_eom_lagrangian,
+                eom_fields=on_shell_eom_fields,
                 expose_scalar_eom_terms=wilson_line_expose_scalar_eom_terms,
             )
             reduced_on_shell = scalar_exposed_on_shell

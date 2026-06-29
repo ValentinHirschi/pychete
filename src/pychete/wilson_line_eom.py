@@ -84,6 +84,7 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
     expr: Expression,
     *,
     eom_lagrangian: Expression | None = None,
+    eom_fields: Sequence[Any] | None = None,
     expose_scalar_eom_terms: bool = False,
 ) -> Expression:
     """Expose scalar derivative commutator bilinears after finite evaluation."""
@@ -96,20 +97,24 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
             max_basis_terms = 256
             max_identities = 512
             max_rounds = 4
+            skip_oversized_classes = False
         else:
             max_basis_terms = 1536
             max_identities = 4096
             max_rounds = 1
+            skip_oversized_classes = True
         out = scalar_derivative_green_normal_form_by_operator_class(
             theory,
             out,
             include_eom=True,
             eom_lagrangian=eom_lagrangian,
+            eom_fields=eom_fields,
             eom_standard_form_only=True,
             identity_generation="operator_basis",
             max_basis_terms=max_basis_terms,
             max_identities=max_identities,
             max_rounds=max_rounds,
+            skip_oversized_classes=skip_oversized_classes,
         )
     out = theory.expand_covariant_derivative_commutators(out, include_gauge_coupling=False)
     out = expand_cd_operators(out)

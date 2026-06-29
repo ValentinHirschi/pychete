@@ -8947,6 +8947,7 @@ def match_one_loop(
             theory,
             before_scalar_exposure,
             eom_lagrangian=options.on_shell_eom_lagrangian,
+            eom_fields=options.on_shell_eom_fields,
             expose_scalar_eom_terms=options.wilson_line_expose_scalar_eom_terms,
         )
         reduced_on_shell = scalar_exposed_on_shell
