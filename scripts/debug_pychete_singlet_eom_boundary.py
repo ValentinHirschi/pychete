@@ -196,10 +196,15 @@ def _eom_exposure_probe(
     lagrangian: Expression,
     entry_expressions: dict[str, Expression],
     *,
+    condition_name: str,
+    target: Expression,
     vector_field: str,
     scalar_field: str,
+    heavy_replacements: tuple[Replacement, ...] = (),
 ) -> tuple[dict[str, dict[str, Any]], dict[str, Any]]:
     by_entry: dict[str, dict[str, Any]] = {}
+    scalar_eom_exposed_vector_delta_projections: list[Expression] = []
+    scalar_eom_exposed_heavy_vector_delta_projections: list[Expression] = []
     for entry_label, expr in entry_expressions.items():
         vector_exposed = expose_abelian_vector_eom_currents(
             theory,
@@ -263,6 +268,42 @@ def _eom_exposure_probe(
         except ValueError as exc:
             scalar_eom_exposed_vector_delta = Expression.num(0)
             scalar_eom_exposed_vector_delta_error = str(exc)
+        scalar_eom_exposed_vector_delta_projection = _project(
+            theory,
+            condition_name,
+            target,
+            scalar_eom_exposed_vector_delta,
+        )
+        scalar_eom_exposed_vector_delta_projections.append(scalar_eom_exposed_vector_delta_projection)
+        formal_vector_count = _formal_vector_eom_count(
+            theory,
+            scalar_eom_exposed,
+            field_name=vector_field,
+        )
+        heavy_vector_delta = Expression.num(0)
+        heavy_vector_delta_error: str | None = None
+        if heavy_replacements and formal_vector_count:
+            try:
+                scalar_eom_exposed_heavy = scalar_eom_exposed.replace_multiple(
+                    heavy_replacements,
+                    repeat=False,
+                ).expand()
+                heavy_vector_delta = theory.abelian_vector_eom_field_redefinition_delta(
+                    lagrangian,
+                    scalar_eom_exposed_heavy,
+                    fields=[vector_field],
+                    strict=True,
+                )
+            except ValueError as exc:
+                heavy_vector_delta = Expression.num(0)
+                heavy_vector_delta_error = str(exc)
+        heavy_vector_delta_projection = _project(
+            theory,
+            condition_name,
+            target,
+            heavy_vector_delta,
+        )
+        scalar_eom_exposed_heavy_vector_delta_projections.append(heavy_vector_delta_projection)
         by_entry[entry_label] = {
             "byte_count": expr.get_byte_size(),
             "field_strength_count": len(matching_subexpressions(expr, field_strength_pattern())),
@@ -288,11 +329,7 @@ def _eom_exposure_probe(
             "scalar_eom_exposure_error": scalar_eom_exposure_error,
             "scalar_eom_exposed_byte_count": scalar_eom_exposed.get_byte_size(),
             "scalar_eom_exposed_formal_eom_count": _formal_eom_count(scalar_eom_exposed),
-            "scalar_eom_exposed_formal_vector_eom_count": _formal_vector_eom_count(
-                theory,
-                scalar_eom_exposed,
-                field_name=vector_field,
-            ),
+            "scalar_eom_exposed_formal_vector_eom_count": formal_vector_count,
             "scalar_eom_exposed_vector_field_strength_divergence_count": (
                 _field_strength_divergence_count(
                     theory,
@@ -315,6 +352,25 @@ def _eom_exposure_probe(
             ),
             "scalar_eom_exposed_vector_field_redefinition_delta_error": (
                 scalar_eom_exposed_vector_delta_error
+            ),
+            "scalar_eom_exposed_vector_field_redefinition_delta_projection": canonical_string(
+                scalar_eom_exposed_vector_delta_projection
+            ),
+            "scalar_eom_exposed_vector_field_redefinition_delta_projection_is_zero": bool(
+                scalar_eom_exposed_vector_delta_projection == Expression.num(0)
+            ),
+            "scalar_eom_exposed_heavy_vector_field_redefinition_delta_is_zero": bool(
+                heavy_vector_delta == Expression.num(0)
+            ),
+            "scalar_eom_exposed_heavy_vector_field_redefinition_delta_byte_count": (
+                heavy_vector_delta.get_byte_size()
+            ),
+            "scalar_eom_exposed_heavy_vector_field_redefinition_delta_error": heavy_vector_delta_error,
+            "scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection": canonical_string(
+                heavy_vector_delta_projection
+            ),
+            "scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection_is_zero": bool(
+                heavy_vector_delta_projection == Expression.num(0)
             ),
             "vector_field_redefinition_delta_is_zero": bool(vector_delta == Expression.num(0)),
             "vector_field_redefinition_delta_byte_count": vector_delta.get_byte_size(),
@@ -357,6 +413,28 @@ def _eom_exposure_probe(
             row["scalar_eom_exposed_vector_field_redefinition_delta_error"] is not None
             for row in by_entry.values()
         ),
+        "nonzero_scalar_eom_exposed_vector_field_redefinition_delta_projection_entry_count": sum(
+            not row["scalar_eom_exposed_vector_field_redefinition_delta_projection_is_zero"]
+            for row in by_entry.values()
+        ),
+        "scalar_eom_exposed_vector_field_redefinition_delta_projection_sum": canonical_string(
+            _sum_expressions(scalar_eom_exposed_vector_delta_projections)
+        ),
+        "nonzero_scalar_eom_exposed_heavy_vector_field_redefinition_delta_entry_count": sum(
+            not row["scalar_eom_exposed_heavy_vector_field_redefinition_delta_is_zero"]
+            for row in by_entry.values()
+        ),
+        "scalar_eom_exposed_heavy_vector_field_redefinition_delta_error_count": sum(
+            row["scalar_eom_exposed_heavy_vector_field_redefinition_delta_error"] is not None
+            for row in by_entry.values()
+        ),
+        "nonzero_scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection_entry_count": sum(
+            not row["scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection_is_zero"]
+            for row in by_entry.values()
+        ),
+        "scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection_sum": canonical_string(
+            _sum_expressions(scalar_eom_exposed_heavy_vector_delta_projections)
+        ),
         "nonzero_vector_field_redefinition_delta_entry_count": sum(
             not row["vector_field_redefinition_delta_is_zero"] for row in by_entry.values()
         ),
@@ -365,6 +443,35 @@ def _eom_exposure_probe(
         ),
     }
     return by_entry, summary
+
+
+def _matchete_internal_dim6_dev3_delta(matchete_eom_debug: dict[str, Any]) -> dict[str, Any]:
+    stages = (
+        matchete_eom_debug.get("raw_lagrangian_eft_eom_boundary", {})
+        .get("internal_field_redefinition_replay", {})
+        .get("stages", [])
+    )
+    if not isinstance(stages, list):
+        return {}
+    for index, stage in enumerate(stages):
+        if isinstance(stage, dict) and stage.get("name") == "after_shift_dim6_dev3":
+            selection = stage.get("selection_before_shift")
+            return {
+                "stage_index": index,
+                "stage_name": stage.get("name"),
+                "delta_from_replay_source_input_form": stage.get("delta_from_replay_source_input_form"),
+                "coefficient_input_form": stage.get("coefficient_input_form"),
+                "selection_selected_term_count": (
+                    selection.get("selected_term_count") if isinstance(selection, dict) else None
+                ),
+                "selection_selected_eom_field_labels_input_form": (
+                    selection.get("selected_eom_field_labels_input_form") if isinstance(selection, dict) else None
+                ),
+                "selection_selected_eom_terms_input_form": (
+                    selection.get("selected_eom_terms_input_form") if isinstance(selection, dict) else None
+                ),
+            }
+    return {}
 
 
 def _projection_strings_from_order_map(
@@ -513,17 +620,16 @@ def main() -> int:
         "selected_normalized_pole_part",
         "selected_normalized_finite_part",
     ]
-    heavy_replacements: tuple[Replacement, ...] = ()
+    heavy_replacements = matching_module.heavy_scalar_solution_replacements(
+        heavy_solutions,
+        fresh_dummy_indices=True,
+    )
     if args.include_green_heavy_stages:
         stage_names.extend([
             "selected_post_green",
             "selected_post_heavy",
             "selected_post_heavy_green",
         ])
-        heavy_replacements = matching_module.heavy_scalar_solution_replacements(
-            heavy_solutions,
-            fresh_dummy_indices=True,
-        )
     stage_expression_parts_by_order: dict[str, dict[int, list[Expression]]] = {
         stage_name: {} for stage_name in stage_names
     }
@@ -579,8 +685,11 @@ def main() -> int:
         theory,
         lagrangian,
         pole_finite_expression_by_entry,
+        condition_name=condition_name,
+        target=target,
         vector_field="B",
         scalar_field="H",
+        heavy_replacements=heavy_replacements,
     )
     payload = {
         "schema_version": 1,
@@ -592,6 +701,7 @@ def main() -> int:
             "eom": str(args.matchete_eom_debug),
             "trace": str(args.matchete_trace_debug),
         },
+        "matchete_internal_dim6_dev3_delta": _matchete_internal_dim6_dev3_delta(matchete_eom_debug),
         "controls": {
             "trace_names": ["hScalar-lScalar-lVector-lScalar"],
             "max_trace_order": 4,
@@ -657,13 +767,16 @@ def main() -> int:
             "Matchete's InternalSimplify exposes EOM-proportional structures "
             "that feed PerformSystematicFieldRedefs. The refreshed Matchete "
             "replay locates the first nonzero cHD delta at dim6/dev3 vector "
-            "EOM selection over B/W, while pychete's selected source still "
-            "contains no B formal vector EOM and no B field-strength "
-            "divergence. The bounded exact Abelian current-current exposure "
-            "probe also finds no vector-EOM divergence on this selected "
-            "source, so the missing conversion is broader than a simple "
-            "inverse vector-EOM current product and should continue targeting "
-            "Matchete InternalSimplify's vector-EOM producer."
+            "EOM selection over B/W. pychete now exposes one formal B-vector "
+            "EOM in wilson13_o1_1_0_0 and obtains a nonzero Abelian vector "
+            "field-redefinition delta, but that delta still projects to zero "
+            "for cHD both before and after heavy-scalar substitution. Filtered "
+            "and unfiltered Wilson-line generation have identical term counts "
+            "through total order 2, so the remaining gap is not target-term "
+            "filtering or heavy-substitution ordering. The next boundary is "
+            "the missing Matchete InternalSimplify vector-EOM producer content "
+            "that creates the dim6/dev3 B/W source terms selected by "
+            "PerformSystematicFieldRedefs."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

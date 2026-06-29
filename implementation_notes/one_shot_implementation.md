@@ -122,6 +122,19 @@ Latest bounded probes:
   dim6/dev3
   `Bar[D_mu H] H D_nu F_B^{mu nu}` / `Bar[H] D_mu H D_nu F_B^{mu nu}`
   intermediate operators.
+- A refreshed projection probe now records the post-exposure vector-shift
+  projection explicitly. The raw scalar-exposed B-vector field-redefinition
+  delta and the heavy-substituted version are both nonzero for
+  `wilson13_o1_1_0_0`, but both project to zero for `cHD`. This eliminates
+  heavy-substitution ordering as the reason for the current zero.
+- Filtered and unfiltered Wilson-line generation have identical selected term
+  counts through total order 2: 8 terms at order 0, 24 at order 1, and 72 at
+  order 2. The current cHD gap is therefore not caused by target-local
+  Wilson-line term filtering.
+- The cHD target-local Abelian EOM projection aliases do exist and have
+  nonzero weights for the B-current/divergence preimages, so the latest zero
+  is not simply a missing projection alias. The source content produced by
+  pychete is still not the Matchete dim6/dev3 B/W vector-EOM source content.
 - `wilson14_o2_0_0_0` creates many field-strength atoms after scalar exposure
   but no B divergence and no vector-EOM rule.
 - The exact `expose_abelian_vector_eom_currents(...)` bridge can see too many
@@ -149,6 +162,15 @@ Latest bounded probes:
 - Extended the Singlet cHD debug script with vector-specific post-exposure
   counters for formal vector EOMs, residual B divergences, and the Abelian
   vector field-redefinition delta after scalar-EOM exposure.
+- Extended the same debug script again with cHD projections of the raw and
+  heavy-substituted post-exposure Abelian vector field-redefinition deltas,
+  and embedded the Matchete `after_shift_dim6_dev3` delta/selection summary in
+  the pychete JSON payload for side-by-side inspection.
+- The latest script-only diagnostic run shows:
+  pychete has one nonzero post-exposure B-vector field-redefinition delta,
+  one nonzero heavy-substituted B-vector field-redefinition delta, zero cHD
+  projection for both, while the Matchete `after_shift_dim6_dev3` checkpoint
+  has 12 selected B/W formal vector-EOM terms and a nonzero cHD delta.
 - Focused validation passed for scalar Green/vector EOM units, scalar EOM
   units, the two public vector-EOM replay integration regressions, py_compile
   on changed files, static typing, and the bounded Singlet cHD debug probe.
