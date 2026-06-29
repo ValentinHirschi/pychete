@@ -1928,6 +1928,27 @@ def test_singlet_reference_chd_debug_records_raw_eom_boundary() -> None:
         assert stages[stage_name]["delta_from_off_shell_input_form"] != "0"
 
 
+def test_singlet_reference_chd_debug_records_vector_shift_split() -> None:
+    debug = json.loads(
+        Path("assets/validation/matchete/debug/singlet_eom_cHD.debug.json").read_text(encoding="utf-8")
+    )
+    split = debug["raw_lagrangian_eft_eom_boundary"]["internal_vector_shift_dim6_dev3_split"]
+    summaries = {row["field_input_form"]: row for row in split["field_summaries"]}
+
+    assert split["dim"] == 6
+    assert split["devs"] == 3
+    assert split["fields_input_form"] == "{B, W}"
+    assert set(summaries) == {"B", "W"}
+    assert summaries["B"]["selected_term_count"] == 6
+    assert summaries["W"]["selected_term_count"] == 6
+    assert "6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log" in summaries["B"]["delta_from_source_input_form"]
+    assert "Coupling[gY, {}, 0]^2" in summaries["B"]["delta_from_source_input_form"]
+    assert summaries["W"]["delta_from_source_input_form"] == "0"
+    assert all("EoM[Field[B" in term for term in summaries["B"]["selected_terms_input_form"])
+    assert all("EoM[Field[W" in term for term in summaries["W"]["selected_terms_input_form"])
+    assert all("CG[gen[SU2L[fund]]" in term for term in summaries["W"]["selected_terms_input_form"])
+
+
 def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:
     reference = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")

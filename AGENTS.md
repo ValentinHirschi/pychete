@@ -575,6 +575,12 @@ that first nonzero stage selects 12 dim6/dev3 vector-EOM terms with fields
 runtime implementation should port generic vector `DetermineShifts` /
 `VectorShift` behavior and the `InternalSimplify` producer of formal vector
 EOM terms before adding any coefficient-specific alias.
+The field-specific replay for this same stage shows that the Abelian `B`
+shift alone carries the full Singlet `cHD` on-shell delta, while the non-Abelian
+`W` split is selected but projects zero for `cHD`. Therefore the first
+Singlet `cHD` parity milestone should keep the next runtime probes B-focused
+and target-local; do not pay for broad W-side field-redefinition work until a
+target actually needs it.
 Use `scalar_eom_field_redefinition_delta(...)` /
 `Theory.scalar_eom_field_redefinition_delta(...)` as the bounded pychete
 consumer for explicit formal scalar `EOM(Field(...))` and
@@ -602,9 +608,18 @@ Matchete's `IdentitiesIBP` EOM branch:
 the identity by replacing one formal scalar `EOM(...)` atom with the splitter
 and applying `apply_cd([mu], ...)`, letting the existing Symbolica-backed
 linear Green-basis solver combine that total-derivative relation with
-`scalar_eom_identities(...)`. Keep this as a scalar formal-EOM identity source;
-do not extend it to fermion/vector EOMs without first routing the resulting
-Dirac, field-strength, and group algebra through idenso/spenso-backed
+`scalar_eom_identities(...)`.
+Use `vector_formal_eom_ibp_identities(...)` for the vector subset:
+`EoMSplitter[mu, Field[f, Vector[nu], inds, {}]] -> FieldStrength[f, {mu, nu}, inds, {}]`,
+including barred vectors. It must collect formal vector `EOM(...)` atoms with
+Symbolica patterns, extract coefficients with native
+`Expression.coefficient(...)`, apply the same `apply_cd([mu], ...)` boundary,
+and then let `vector_eom_identities(...)` and the Symbolica-backed
+Green-basis solver relate `D_mu F_{mu nu}` to formal vector EOMs. This is
+generic field-strength splitter coverage; it does not by itself solve the
+Singlet `cHD` coefficient gap, which currently sits earlier in the scalar
+Green/source coefficient boundary. Fermion EoMSplitter support must still
+wait until the resulting Dirac chains are routed through idenso-backed
 implementations.
 The first bounded exposure stage is `scalar_eom_identities(...)` plus
 `scalar_derivative_green_normal_form(..., include_eom=True,

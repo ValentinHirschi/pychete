@@ -147,6 +147,13 @@ Latest bounded probes:
   now records all 12 selected dim6/dev3 B/W vector-EOM terms at
   `after_shift_dim6_dev3`. The terms are two-Higgs formal vector-EOM sources
   proportional to `hbar A^2 / M^4`, not four-Higgs sources.
+- The Matchete script now also replays the dim6/dev3 vector shift field by
+  field. The B-only replay selects six terms and produces the full cHD
+  on-shell delta
+  `-hbar A^2 gY^2 (6 + 17 eps + 6 eps log(mubar2/M^2))/(36 eps M^4)`;
+  the W-only replay also selects six terms but projects zero to cHD. This
+  keeps the first parity milestone B-focused and avoids a broader W-vector
+  field-redefinition implementation until a target needs it.
 - A bounded pychete hScalar-lScalar source-trace probe was added to
   `scripts/debug_pychete_singlet_eom_boundary.py` and refreshed in
   `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`. With
@@ -175,6 +182,14 @@ Latest bounded probes:
 - Added `vector_eom_identities(...)` as the formal vector-EOM identity source
   for Abelian `D.F` representatives inside the existing Symbolica-backed
   Green-basis solver.
+- Added `vector_formal_eom_ibp_identities(...)` for the vector branch of
+  Matchete `IdentitiesIBP` / `EoMSplitter`, mapping formal vector EOM atoms to
+  `FieldStrength(mu, nu)` splitters and applying `apply_cd([mu], ...)` before
+  the Symbolica-backed Green-basis solver combines that total-derivative
+  identity with `vector_eom_identities(...)`. Focused unit tests cover both
+  the raw identity and the normal-form use. The refreshed cHD probe is
+  unchanged, so this was necessary generic coverage but not the source of the
+  short Singlet B coefficient.
 - Added `expose_vector_field_strength_divergences_as_formal_eom(...)` as the
   cheap standard-form pass for already-created Abelian field-strength
   divergences. This uses Symbolica `replace_multiple` over tag-restricted

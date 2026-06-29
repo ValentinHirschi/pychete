@@ -15,6 +15,7 @@ from .functional import (
     scalar_formal_eom_ibp_identities,
     select_terms_by_dimension_and_derivatives,
     systematic_scalar_eom_field_redefinition_delta,
+    vector_formal_eom_ibp_identities,
 )
 from .group_algebra import simplify_pychete_color
 from .green_basis import (
@@ -250,6 +251,7 @@ __all__ = [
     "scalar_eom_identities",
     "scalar_formal_eom_ibp_identities",
     "select_terms_by_dimension_and_derivatives",
+    "vector_formal_eom_ibp_identities",
     "loop_function",
     "loop_function_pole_part",
     "loop_function_to_vakint_integral",

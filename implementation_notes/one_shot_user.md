@@ -1498,6 +1498,17 @@ generic algorithm boundary before runtime pychete changes are accepted.
   the debug fixture; the remaining gap is coefficient parity for the scalar
   Green / EoMSplitter source, with W-vector EOM support tracked separately if
   needed.
+- Latest cHD vector-split update, 2026-06-29: the Matchete debug script now
+  replays the dim6/dev3 vector shift separately for B and W. B selects six
+  two-Higgs formal vector-EOM terms and produces the full on-shell cHD delta,
+  while W selects six terms but projects zero to cHD. pychete now has the
+  generic vector formal-EOM IBP splitter
+  `vector_formal_eom_ibp_identities(...)`, matching Matchete
+  `EoMSplitter[mu, Vector[nu]] -> FieldStrength[mu, nu]`; focused unit tests
+  pass, but the refreshed hScalar-lScalar B-source coefficient is unchanged.
+  The first remaining mismatch is therefore still upstream scalar Green /
+  source coefficient parity, not the vector EOM consumer or a W-side
+  field-redefinition gap.
 - Latest user instruction and implementation response, 2026-06-28: perform a
   short remaining-gap study for the first full one-loop matching parity target,
   archive the large live implementation notes to

@@ -183,6 +183,103 @@ fieldRedefReplaySummary[name_String, expr_, offShellExpr_, targetOperator_] := M
   |>
 ];
 
+fieldSpecificShiftLagrangian[lag_, lagTerms_, fields_List, gaugeData_, devs_Integer, dim_Integer, maxOrder_Integer, loopOrder_] := Module[
+  {jacobianShift, replacementRules, shiftOrd, termsToShift, termsToKeep},
+  If[lagTerms === 0, Return[lag]];
+  shiftOrd = dim - 4;
+  {replacementRules, jacobianShift} =
+    Matchete`FieldRedef`PackagePrivate`DetermineShifts[
+      lagTerms,
+      fields,
+      gaugeData[[1]],
+      gaugeData[[2]],
+      maxOrder,
+      loopOrder
+    ];
+  {termsToShift, termsToKeep} =
+    Matchete`FieldRedef`PackagePrivate`SplitLagByDims[lag, maxOrder - shiftOrd];
+  termsToShift =
+    Matchete`FieldRedef`PackagePrivate`DummyShiftTerms[
+      termsToShift,
+      fields,
+      shiftOrd,
+      maxOrder
+    ];
+  termsToShift = termsToShift /.
+    Power[f_ /; (!FreeQ[f, Matchete`Field | Matchete`FieldStrength]), k_Integer?Positive] :>
+      Inactive[Times] @@ ConstantArray[f, k];
+  termsToShift =
+    Matchete`PackageScope`InternalSimplify[
+      Activate[
+        Matchete`RelabelIndices[termsToShift, Unique -> True] /. replacementRules
+      ] + jacobianShift,
+      Matchete`CoefficientSimplify -> False
+    ];
+  termsToShift + termsToKeep
+];
+
+eomTermsForField[eomTerms_, field_] := Module[{terms},
+  terms = termList[eomTerms];
+  Plus @@ Select[
+    terms,
+    Not @* FreeQ[Matchete`PackageScope`EoM[Matchete`Field[field, __]]]
+  ]
+];
+
+fieldSpecificVectorShiftSummary[lag_, field_, devs_Integer, dim_Integer, targetOperator_] := Module[
+  {
+    maxOrder = 6,
+    loopOrder = 1,
+    gaugeData,
+    selectedTerms,
+    fieldTerms,
+    shifted,
+    sourceCoef,
+    shiftedCoef,
+    deltaCoef
+  },
+  gaugeData = Matchete`FieldRedef`PackagePrivate`GaugeFieldNormalization[lag, maxOrder];
+  selectedTerms = Matchete`FieldRedef`PackagePrivate`SelectOperatorDevsAndDim[lag, devs, dim];
+  fieldTerms = eomTermsForField[selectedTerms, field];
+  sourceCoef = FullSimplify[Matchete`GetOperatorCoefficient[lag, targetOperator]];
+  shifted =
+    fieldSpecificShiftLagrangian[
+      lag,
+      fieldTerms,
+      {field},
+      gaugeData,
+      devs,
+      dim,
+      maxOrder,
+      loopOrder
+    ];
+  shiftedCoef = FullSimplify[Matchete`GetOperatorCoefficient[shifted, targetOperator]];
+  deltaCoef = FullSimplify[shiftedCoef - sourceCoef];
+  <|
+    "field_input_form" -> toInputString[field],
+    "selected_term_count" -> Length[termList[fieldTerms]],
+    "selected_terms_input_form" -> (shortInputString /@ Take[termList[fieldTerms], UpTo[sampleTerms]]),
+    "coefficient_input_form" -> toInputString[shiftedCoef],
+    "delta_from_source_input_form" -> toInputString[deltaCoef]
+  |>
+];
+
+vectorShiftSplitSummary[lag_, devs_Integer, dim_Integer, targetOperator_] := Module[
+  {selectedTerms, fields},
+  selectedTerms = Matchete`FieldRedef`PackagePrivate`SelectOperatorDevsAndDim[lag, devs, dim];
+  fields = DeleteDuplicates @ Cases[
+    selectedTerms,
+    Matchete`PackageScope`EoM[Matchete`Field[lab_, _Matchete`Vector, __]] :> lab,
+    Infinity
+  ];
+  <|
+    "dim" -> dim,
+    "devs" -> devs,
+    "fields_input_form" -> toInputString[fields],
+    "field_summaries" -> (fieldSpecificVectorShiftSummary[lag, #, devs, dim, targetOperator] & /@ fields)
+  |>
+];
+
 coefficientBoundaryStageSummary[
   name_String,
   expr_,
@@ -260,6 +357,12 @@ rawLagrangianEftBoundarySummary[
     "fields_to_shift_input_form" -> toInputString[Matchete`PackageScope`FieldsToShift[raw]],
     "internal_fields_to_shift_preparation" -> fieldsToShiftPreparation[internal],
     "internal_higgs_scalar_shift_summary" -> higgsScalarShiftSummary[internal],
+    "internal_vector_shift_dim6_dev3_split" -> vectorShiftSplitSummary[
+      internal,
+      3,
+      6,
+      targetOperator
+    ],
     "internal_field_redefinition_replay" -> fieldRedefReplaySummary[
       "raw_internal_after_internal_simplify",
       internal,

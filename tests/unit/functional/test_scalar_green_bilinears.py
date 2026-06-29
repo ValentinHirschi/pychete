@@ -15,6 +15,7 @@ from pychete.functional import (
     scalar_derivative_ibp_identities,
     scalar_eom_identities,
     scalar_formal_eom_ibp_identities,
+    vector_formal_eom_ibp_identities,
     vector_eom_identities,
 )
 from pychete.expr import (
@@ -22,11 +23,13 @@ from pychete.expr import (
     bar_field_pattern,
     field_derivatives,
     field_pattern,
+    field_strength_derivatives,
+    field_strength_pattern,
     matching_subexpressions,
     terms,
 )
 from pychete.matching_results import MatchingResult
-from pychete.symbols import s
+from pychete.symbols import SymbolRole, s
 from pychete.theory import Theory
 from pychete.theory_metadata import FieldHandle
 from tests.conftest import assert_expr_equal
@@ -503,6 +506,50 @@ def test_scalar_derivative_green_normal_form_uses_formal_eom_ibp_splitter_identi
     )
 
     assert_expr_equal(reduced, coefficient * preferred)
+
+
+def test_vector_formal_eom_ibp_identity_matches_matchete_vector_eom_splitter() -> None:
+    coefficient = S("vector_formal_eom_ibp_coefficient")
+    theory, phi, _strength, _target, mu, _nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    source = coefficient * s.Bar(phi()) * phi() * s.EOM(vector(mu))
+
+    identities = vector_formal_eom_ibp_identities(theory, source, fields=[vector])
+
+    assert len(identities) == 1
+    identity = identities[0]
+    strength_atoms = matching_subexpressions(identity, field_strength_pattern(vector.definition.label))
+    divergence_atoms = [atom for atom in strength_atoms if field_strength_derivatives(atom)]
+    assert strength_atoms
+    assert divergence_atoms
+    assert not bool(identity.matches(s.EOM(s.CDBodyWildcard)))
+
+
+def test_scalar_derivative_green_normal_form_uses_vector_formal_eom_ibp_splitter_identity() -> None:
+    coefficient = S("scalar_derivative_green_vector_formal_eom_ibp_coefficient")
+    theory, phi, _strength, _target, mu, _nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    rho = theory.index(theory.symbol("vector_formal_eom_ibp_0_mu", role=SymbolRole.INDEX), s.Lorentz)
+    source = coefficient * s.Bar(phi()) * phi() * s.EOM(vector(mu))
+    preferred = (
+        s.Bar(phi(derivatives=[rho])) * phi() * s.FieldStrength(vector.label, s.List(rho, mu), s.List(), s.List()),
+        s.Bar(phi()) * phi(derivatives=[rho]) * s.FieldStrength(vector.label, s.List(rho, mu), s.List(), s.List()),
+    )
+    expected = -coefficient * sum(preferred, Expression.num(0))
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        source,
+        preferred=preferred,
+        include_ibp=False,
+        include_commutators=False,
+        include_eom=True,
+        eom_lagrangian=theory.free_lag(phi, vector),
+        eom_fields=[vector],
+        max_rounds=3,
+    )
+
+    assert_expr_equal(reduced, expected)
 
 
 def test_wilson_line_scalar_green_hook_can_expose_formal_eom_terms() -> None:

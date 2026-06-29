@@ -647,6 +647,53 @@ def scalar_formal_eom_ibp_identities(
     return tuple(identities)
 
 
+def vector_formal_eom_ibp_identities(
+    theory: Theory,
+    expr: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
+) -> tuple[Expression, ...]:
+    """Return vector formal-EOM IBP identities from Matchete ``EoMSplitter``.
+
+    For each linear formal vector ``EOM(Field(Vector[nu]))`` atom, this builds
+    the total-derivative identity obtained by replacing that EOM with the
+    Matchete splitter ``FieldStrength[mu, nu]`` and acting with ``CD(mu, ...)``.
+    Atom discovery and coefficient extraction stay in Symbolica.
+    """
+
+    if max_identities < 0:
+        raise ValueError("max_identities must be non-negative")
+    theory._validate_registered_expression(expr)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    for position, atom in enumerate(_formal_vector_eom_atoms(expr, allowed_labels=allowed_labels)):
+        coefficient = expr.coefficient(atom).expand()
+        if is_zero(coefficient):
+            continue
+        if not is_zero(coefficient.coefficient(atom)):
+            continue
+        mu = theory.index(
+            theory.symbol(
+                f"vector_formal_eom_ibp_{position}_mu",
+                role=SymbolRole.INDEX,
+            ),
+            s.Lorentz,
+        )
+        identity = apply_cd([mu], coefficient * _vector_eom_splitter(mu, atom[0])).expand()
+        if is_zero(identity):
+            continue
+        key = canonical_string(identity)
+        if key in seen:
+            continue
+        seen.add(key)
+        identities.append(identity)
+        if len(identities) > max_identities:
+            raise ValueError(f"vector formal-EOM IBP generated more than {max_identities} identities")
+    return tuple(identities)
+
+
 def scalar_derivative_green_normal_form(
     theory: Theory,
     expr: Expression,
@@ -1057,6 +1104,14 @@ def _scalar_derivative_identity_sources(
             )
         )
         identities.extend(
+            vector_formal_eom_ibp_identities(
+                theory,
+                expr,
+                fields=eom_fields,
+                max_identities=max_identities,
+            )
+        )
+        identities.extend(
             scalar_eom_identities(
                 theory,
                 eom_lagrangian,
@@ -1304,6 +1359,34 @@ def _formal_scalar_eom_atoms(
     return tuple(sorted(kept.values(), key=canonical_string))
 
 
+def _formal_vector_eom_atoms(
+    expr: Expression,
+    *,
+    allowed_labels: set[str] | None,
+) -> tuple[Expression, ...]:
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms = (
+        *matching_subexpressions(expr, s.EOM(field_pattern()), label_is_registered_field),
+        *matching_subexpressions(expr, s.EOM(bar_field_pattern()), label_is_registered_field),
+    )
+    kept: dict[str, Expression] = {}
+    for atom in atoms:
+        if not is_head(atom, s.EOM) or len(atom) != 1:
+            continue
+        body = atom[0]
+        base = bar_field_inner(body) if is_bar_field(body) else body
+        if not is_head(base, s.Field) or not is_head(field_type(base), s.Vector):
+            continue
+        if field_derivatives(base):
+            continue
+        if allowed_labels is not None and canonical_string(field_label(base)) not in allowed_labels:
+            continue
+        if len(_vector_field_lorentz_indices(base)) != 1:
+            continue
+        kept.setdefault(canonical_string(atom), atom)
+    return tuple(sorted(kept.values(), key=canonical_string))
+
+
 def _formal_green_eom_atoms(
     expr: Expression,
     *,
@@ -1332,6 +1415,30 @@ def _formal_green_eom_atoms(
 
 def _scalar_eom_splitter(mu: Expression, field: Expression) -> Expression:
     return apply_cd([mu], field)
+
+
+def _vector_eom_splitter(mu: Expression, field: Expression) -> Expression:
+    base = bar_field_inner(field) if is_bar_field(field) else field
+    lorentz = _vector_field_lorentz_indices(base)
+    if len(lorentz) != 1:
+        raise ValueError(f"Expected exactly one Lorentz index in vector EOM field {base}")
+    internal = tuple(
+        index
+        for index in list_items(base[2])
+        if not (is_head(index, s.Index) and bool(index[1] == s.Lorentz))
+    )
+    splitter = s.FieldStrength(field_label(base), s.List(mu, lorentz[0]), list_expr(*internal), s.List())
+    if is_bar_field(field):
+        return s.Bar(splitter)
+    return splitter
+
+
+def _vector_field_lorentz_indices(field: Expression) -> tuple[Expression, ...]:
+    return tuple(
+        index
+        for index in list_items(field[2])
+        if is_head(index, s.Index) and bool(index[1] == s.Lorentz)
+    )
 
 
 def _scalar_green_derivative_lengths(term: Expression) -> tuple[tuple[Expression, ...], ...]:
