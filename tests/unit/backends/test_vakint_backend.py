@@ -615,6 +615,9 @@ def test_vakint_laurent_helpers_use_symbolica_coefficients() -> None:
     assert canonical_string(vakint.epsilon_coefficient(expr, 2)) == "0"
     assert canonical_string(vakint.pole_part(expr, max_pole_order=2)) == canonical_string(a / eps**2 + b / eps)
     assert canonical_string(vakint.finite_part(expr)) == canonical_string(c)
+    assert canonical_string(vakint.through_finite_part(expr, max_pole_order=2)) == canonical_string(
+        a / eps**2 + b / eps + c
+    )
 
     with pytest.raises(ValueError, match="max_pole_order"):
         vakint.pole_part(expr, max_pole_order=0)

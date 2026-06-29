@@ -360,8 +360,40 @@ def _selected_chd_four_slot_order_two_finite_expected(theory: Theory) -> Express
     )
 
 
+def _selected_chd_four_slot_order_one_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (
+            Expression.num(1) / vakint_backend.epsilon_symbol()
+            + S("vakint::mursq").log()
+            - 2 * mass.log()
+            + Expression.num(3) / 2
+        )
+        / mass**4
+    )
+
+
+def _selected_chd_four_slot_order_two_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (
+            -Expression.num(1) / (2 * vakint_backend.epsilon_symbol())
+            + mass.log()
+            - S("vakint::mursq").log() / 2
+            - Expression.num(3) / 4
+        )
+        / mass**4
+    )
+
+
 @cache
-def _selected_chd_four_slot_order_zero_weighted_finite_projection() -> tuple[Theory, Expression]:
+def _selected_chd_four_slot_order_zero_weighted_projection() -> tuple[Theory, Expression, Expression]:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
     condition_name, target = _selected_chd_four_slot_target(theory)
@@ -421,23 +453,48 @@ def _selected_chd_four_slot_order_zero_weighted_finite_projection() -> tuple[The
         (term for entry_terms in evaluated_by_entry.values() for term in entry_terms),
         Expression.num(0),
     )
-    normalized_finite = (
-        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
-        * vakint_backend.finite_part(selected)
-    ).expand()
-    result = MatchingResult(
-        theory=theory,
-        uv_lagrangian=Expression.num(0),
-        off_shell_eft_lagrangian=Expression.num(0),
-        on_shell_eft_lagrangian=normalized_finite,
+    normalization = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+    selected_through_finite = vakint_backend.through_finite_part(selected)
+    normalized = (normalization * selected_through_finite).expand()
+    normalized_finite = (normalization * vakint_backend.finite_part(selected)).expand()
+    projected: list[Expression] = []
+    for source in (normalized, normalized_finite):
+        result = MatchingResult(
+            theory=theory,
+            uv_lagrangian=Expression.num(0),
+            off_shell_eft_lagrangian=Expression.num(0),
+            on_shell_eft_lagrangian=source,
+        )
+        projected.append(
+            result.project_matching_conditions(
+                {condition_name: target},
+                expand_source=False,
+                normalize_derivative_operators=True,
+                eft_order=6,
+            )[condition_name]
+        )
+    return theory, projected[0], projected[1]
+
+
+def _selected_chd_four_slot_order_zero_weighted_finite_projection() -> tuple[Theory, Expression]:
+    theory, _full, finite = _selected_chd_four_slot_order_zero_weighted_projection()
+    return theory, finite
+
+
+def _selected_chd_hscalar_lscalar_on_minus_off_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (
+            -Expression.num(1) / (6 * vakint_backend.epsilon_symbol())
+            - S("vakint::mursq").log() / 6
+            + mass.log() / 3
+            - Expression.num(17) / 36
+        )
+        / mass**4
     )
-    projected = result.project_matching_conditions(
-        {condition_name: target},
-        expand_source=False,
-        normalize_derivative_operators=True,
-        eft_order=6,
-    )[condition_name]
-    return theory, projected
 
 
 def _selected_chd_hscalar_lscalar_on_minus_off_finite_expected(theory: Theory) -> Expression:
@@ -447,6 +504,22 @@ def _selected_chd_hscalar_lscalar_on_minus_off_finite_expected(theory: Theory) -
         * theory.coupling_handle("A")() ** 2
         * theory.coupling_handle("gY")() ** 2
         * (-S("vakint::mursq").log() / 6 + mass.log() / 3 - Expression.num(17) / 36)
+        / mass**4
+    )
+
+
+def _selected_chd_on_shell_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (
+            -Expression.num(5) / (3 * vakint_backend.epsilon_symbol())
+            - 5 * S("vakint::mursq").log() / 3
+            + 10 * mass.log() / 3
+            - Expression.num(31) / 18
+        )
         / mass**4
     )
 
@@ -462,9 +535,26 @@ def _selected_chd_on_shell_finite_expected(theory: Theory) -> Expression:
     )
 
 
+def _project_selected_chd_source(theory: Theory, source: Expression) -> Expression:
+    condition_name, target = _selected_chd_four_slot_target(theory)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=source,
+    )
+    return result.project_matching_conditions(
+        {condition_name: target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+
+
 @cache
-def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
+def _selected_chd_four_slot_projection_by_total_order() -> tuple[
     Theory,
+    dict[int, Expression],
     dict[int, Expression],
     dict[int, dict[str, int]],
 ]:
@@ -535,6 +625,7 @@ def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
     )
     order_by_entry = {entry.label: entry.total_order for entry in entries}
     counts_by_order: dict[int, dict[str, int]] = {1: {}, 2: {}}
+    full_by_order: dict[int, Expression] = {}
     finite_by_order: dict[int, Expression] = {}
     normalization = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
     for entry_label, entry_terms in evaluated_by_entry.items():
@@ -542,28 +633,42 @@ def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
             continue
         order = order_by_entry[entry_label]
         counts_by_order[order][entry_label] = weighted_counts_by_entry[entry_label]
-        finite = (normalization * vakint_backend.finite_part(sum(entry_terms, Expression.num(0)))).expand()
+        entry_sum = sum(entry_terms, Expression.num(0))
+        entry_through_finite = vakint_backend.through_finite_part(entry_sum)
+        full = (normalization * entry_through_finite).expand()
+        finite = (normalization * vakint_backend.finite_part(entry_sum)).expand()
+        full_by_order[order] = (full_by_order.get(order, Expression.num(0)) + full).expand()
         finite_by_order[order] = (finite_by_order.get(order, Expression.num(0)) + finite).expand()
 
-    projections: dict[int, Expression] = {}
-    for order, finite in finite_by_order.items():
-        post_commutator = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
-            theory,
-            finite,
-        )
-        result = MatchingResult(
-            theory=theory,
-            uv_lagrangian=Expression.num(0),
-            off_shell_eft_lagrangian=Expression.num(0),
-            on_shell_eft_lagrangian=post_commutator,
-        )
-        projections[order] = result.project_matching_conditions(
-            {condition_name: target},
-            expand_source=False,
-            normalize_derivative_operators=True,
-            eft_order=6,
-        )[condition_name]
-    return theory, projections, counts_by_order
+    def project_by_order(sources: dict[int, Expression]) -> dict[int, Expression]:
+        projections: dict[int, Expression] = {}
+        for order, source in sources.items():
+            post_commutator = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                theory,
+                source,
+            )
+            projections[order] = _project_selected_chd_source(theory, post_commutator)
+        return projections
+
+    return theory, project_by_order(full_by_order), project_by_order(finite_by_order), counts_by_order
+
+
+def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
+    Theory,
+    dict[int, Expression],
+    dict[int, dict[str, int]],
+]:
+    theory, _full, finite, counts = _selected_chd_four_slot_projection_by_total_order()
+    return theory, finite, counts
+
+
+def _selected_chd_four_slot_full_projection_by_total_order() -> tuple[
+    Theory,
+    dict[int, Expression],
+    dict[int, dict[str, int]],
+]:
+    theory, full, _finite, counts = _selected_chd_four_slot_projection_by_total_order()
+    return theory, full, counts
 
 
 @cache
@@ -1280,6 +1385,34 @@ def test_selected_chd_staged_finite_composition_matches_matchete_on_shell_coeffi
         (on_shell_finite - _selected_chd_on_shell_finite_expected(theory)).expand(),
         Expression.num(0),
     )
+
+
+@pytest.mark.slow
+def test_selected_chd_staged_full_composition_matches_matchete_on_shell_coefficient() -> None:
+    """Pin the selected cHD pole and finite pieces at Matchete validation semantics."""
+
+    theory, order_zero, _order_zero_finite = _selected_chd_four_slot_order_zero_weighted_projection()
+    _, projections, _ = _selected_chd_four_slot_full_projection_by_total_order()
+    off_shell = (order_zero + projections[1] + projections[2]).expand()
+    on_minus_off = _selected_chd_hscalar_lscalar_on_minus_off_expected(theory)
+    on_shell = (off_shell + on_minus_off).expand()
+
+    expected_off_shell = (
+        _selected_chd_four_slot_quarter_expected(theory) * 8
+        + _selected_chd_four_slot_order_one_expected(theory)
+        + _selected_chd_four_slot_order_two_expected(theory)
+    ).expand()
+
+    assert_expr_equal(
+        (projections[1] - _selected_chd_four_slot_order_one_expected(theory)).expand(),
+        Expression.num(0),
+    )
+    assert_expr_equal(
+        (projections[2] - _selected_chd_four_slot_order_two_expected(theory)).expand(),
+        Expression.num(0),
+    )
+    assert_expr_equal((off_shell - expected_off_shell).expand(), Expression.num(0))
+    assert_expr_equal((on_shell - _selected_chd_on_shell_expected(theory)).expand(), Expression.num(0))
 
 
 def test_singlet_chd_matchete_eom_dump_records_dim6_dev3_shift_boundary() -> None:

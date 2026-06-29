@@ -626,6 +626,47 @@ Current slice progress:
   runtime work should therefore focus on pole/MS propagation and efficient
   public-route composition across these exact stages, not another
   coefficient-specific scalar-EOM rewrite.
+- Deep Matchete one-loop call-chain refresh, 2026-06-29: the active Singlet
+  `cHD` route should be debugged as the following Mathematica-stage sequence,
+  with pychete probes paired at the same boundary before any runtime patch:
+  `LoadModel` creates the model metadata; `Match` sets the current Lagrangian,
+  combines tree and one-loop pieces, applies `ContractCGs // MatchReduce`, and
+  Hermitian-symmetrizes; `SetCurrentLagrangian` canonicalizes masses, adds
+  gauge fixing/ghost terms, solves heavy EOMs, and calls `SetSubstitutions`;
+  `SetSubstitutions` constructs `$XFieldDofs`, `$Xsubs`, `$XOrders`,
+  `$XOrdMin`, `$Msubs`, and `$Gsubs` from `FluctuationOperator`/`VarD`,
+  `SeriesEFT`, and covariant-momentum lowering; `LoopMatch` calls
+  `ListPowerTypeTraces` plus `LogTypeSTr`/`PowerTypeSTr`; `PowerTypeSTr`
+  applies the `-I*hbar/2` statistics prefactor and delegates to
+  `GenericPropagatorExpansion`, `DeterminePowerInsertions`, and
+  `EvaluateSTr`; `EvaluateSTr` is the core ordered transform
+  `ActWithOpenCDs -> GatherLoopMomenta -> RemoveSymmetryVanishingWilsonTerms
+  -> CloseFermionLoop -> EvaluateSymmetricLorentzInds -> ContractMetric ->
+  WilsonExpand -> LoopIntegrate -> ExpandGenFSs -> ContractDelta/ContractCGs
+  -> RefineDiracProducts -> EpsExpand`; `MatchReduce` performs the off-shell
+  contraction and single-scale `LF` evaluation cleanup; validation then uses
+  `GreensSimplify` for the off-shell result, `EOMSimplify` with
+  `InternalSimplify -> IBPSimplify -> ConstructOperatorIdentities ->
+  PerformSystematicFieldRedefs -> ShiftLagrangian` for the on-shell result,
+  and `MapEffectiveCouplings`/`MapEffectiveCouplingsInternal` for the final
+  Wilson-condition solve. The selected/staged pychete checkpoints now agree
+  with this route for the finite Singlet `cHD` sources and for the pole
+  coefficients through the helper-level composition below; the remaining
+  frontier is to make the public `Theory.match(...)` route compose these same
+  stage-local results efficiently without broad full-source projection.
+- Latest Laurent convention checkpoint, 2026-06-29: a naive combined public
+  Wilson-line plan for `hScalar-lScalar-lVector-lScalar` orders 0-2 plus
+  `hScalar-lScalar` orders 0-4 produced 30 plan entries and ran for more than
+  two minutes without reaching projection, so it was stopped under the
+  watchdog. This confirms the next public-route fix must be a targeted
+  Matchete-stage composition, not one monolithic full-source projection. The
+  staged helper now uses the backend boundary
+  `vakint.through_finite_part(...)`, which returns Laurent poles plus the
+  epsilon^0 coefficient and drops positive epsilon powers retained by the
+  internal evaluator. With that Matchete validation convention, weighted
+  four-slot orders 0/1/2 plus the `hScalar-lScalar` vector-EOM replay match
+  the full on-shell Singlet `cHD` coefficient through pole and finite terms:
+  `hbar*A^2*gY^2*(-5/(3 eps) - 5/3 log(mursq) + 10/3 log(M) - 31/18)/M^4`.
 
 ## Targeted Commands
 

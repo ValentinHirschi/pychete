@@ -101,6 +101,22 @@ The active cHD mismatch is now compared against the committed Matchete
 boundary fixture, with the suspected boundary localized between finite
 Higgs-bilinear Wilson-line evaluation and Matchete's d-dimensional scalar
 Green/EOM identity conversion.
+Latest Matchete source-code audit, 2026-06-29: the active one-loop parity
+route has been re-read directly in Matchete's `Matching.m`, `SuperTrace.m`,
+`LoopIntegration.m`, `FunctionalTools.m`, `TreeLevelMatching.m`,
+`EFTCounting.m`, `Simplifications.m`, `FieldRedef.m`,
+`CouplingManipulations.m`, and validation code. For the Singlet `cHD`
+frontier, compare pychete against Matchete stage-by-stage in this order:
+`Match`, `SetCurrentLagrangian`, `SetSubstitutions`, `LoopMatch`,
+`ListPowerTypeTraces`, `PowerTypeSTr`/`LogTypeSTr`,
+`GenericPropagatorExpansion`, `DeterminePowerInsertions`, `EvaluateSTr`,
+`ActWithOpenCDs`, `GatherLoopMomenta`, `WilsonExpand`, `LoopIntegrate`,
+`MatchReduce`, `GreensSimplify`, `EOMSimplify`/`InternalSimplify`/field
+redefinitions, and `MapEffectiveCouplings`. The current selected/staged
+pychete checkpoints match the finite Singlet `cHD` sources and now also the
+Matchete pole-through-finite Laurent convention locally; the remaining
+frontier is efficient public `Theory.match(...)` composition of these same
+stage-local results, not another coefficient-specific rewrite.
 
 ## Approved Plan
 

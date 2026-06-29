@@ -1058,6 +1058,27 @@ def finite_part(expr: Expression, *, epsilon: Expression | None = None) -> Expre
     return epsilon_coefficient(expr, 0, epsilon=epsilon)
 
 
+def through_finite_part(
+    expr: Expression,
+    *,
+    max_pole_order: int = 1,
+    epsilon: Expression | None = None,
+) -> Expression:
+    """Return Laurent poles plus the epsilon^0 coefficient.
+
+    Matchete validation dumps compare one-loop results after expanding through
+    finite order in dimensional regularization. Native/internal pychete
+    evaluators may retain positive epsilon powers for later products, so
+    parity probes should use this boundary instead of projecting the raw
+    untruncated evaluator output.
+    """
+
+    return (
+        pole_part(expr, max_pole_order=max_pole_order, epsilon=epsilon)
+        + finite_part(expr, epsilon=epsilon)
+    ).expand()
+
+
 __all__ = [
     "create_engine",
     "create_tensor_reduction_engine",
@@ -1089,6 +1110,7 @@ __all__ = [
     "propagator",
     "symbol",
     "tensor_reduce",
+    "through_finite_part",
     "to_canonical",
     "topology",
     "vakint_expression",
