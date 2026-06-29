@@ -402,14 +402,7 @@
       "((I/12)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[B, Vector[Index[d$$1, Lorentz]], {}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]])/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
       "((I/12)*hbar*Coupling[A, {}, 0]^2*Log[\\[Mu]bar2/Coupling[M, {}, 0]^2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]], Matchete`PackageScope`EoM[Field[B, Vector[Index[d$$1, Lorentz]], {}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]])/Coupling[M, {}, 0]^4",
       "(((-17*I)/72)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]], Matchete`PackageScope`EoM[Field[B, Vector[Index[d$$1, Lorentz]], {}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]])/Coupling[M, {}, 0]^4",
-      "((-1/12*I)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]], Matchete`PackageScope`EoM[Field[B, Vector[Index[d$$1, Lorentz]], {}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]])/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-      "((-1/12*I)*hbar*Coupling[A, {}, 0]^2*Log[\\[Mu]bar2/Coupling[M, {}, 0]^2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]], Matchete`PackageScope`EoM[Field[B, Vector[Index[d$$1, Lorentz]], {}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]])/Coupling[M, {}, 0]^4",
-      "(((-17*I)/36)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]], CG[gen[SU2L[fund]], {Index[d$$1, SU2L[adj]], Index[d$$1, SU2L[fund]], Bar[Index[d$$2, SU2L[fund]]]}], Matchete`PackageScope`EoM[Field[W, Vector[Index[d$$1, Lorentz]], {Index[d$$1, SU2L[adj]]}, {}]], Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]])/Coupling[M, {}, 0]^4",
-      "((-1/6*I)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]], CG[gen[SU2L[fund]], {Index[d$$1, SU2L[adj]], Index[d$$1, SU2L[fund]], Bar[Index[d$$2, SU2L[fund]]]}], Matchete`PackageScope`EoM[Field[W, Vector[Index[d$$1, Lorentz]], {Index[d$$1, SU2L[adj]]}, {}]], Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]])/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-      "((-1/6*I)*hbar*Coupling[A, {}, 0]^2*Log[\\[Mu]bar2/Coupling[M, {}, 0]^2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]], CG[gen[SU2L[fund]], {Index[d$$1, SU2L[adj]], Index[d$$1, SU2L[fund]], Bar[Index[d$$2, SU2L[fund]]]}], Matchete`PackageScope`EoM[Field[W, Vector[Index[d$$1, Lorentz]], {Index[d$$1, SU2L[adj]]}, {}]], Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]])/Coupling[M, {}, 0]^4",
-      "(((17*I)/36)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]], CG[gen[SU2L[fund]], {Index[d$$1, SU2L[adj]], Index[d$$2, SU2L[fund]], Bar[Index[d$$1, SU2L[fund]]]}], Matchete`PackageScope`EoM[Field[W, Vector[Index[d$$1, Lorentz]], {Index[d$$1, SU2L[adj]]}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]])/Coupling[M, {}, 0]^4",
-      "((I/6)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]], CG[gen[SU2L[fund]], {Index[d$$1, SU2L[adj]], Index[d$$2, SU2L[fund]], Bar[Index[d$$1, SU2L[fund]]]}], Matchete`PackageScope`EoM[Field[W, Vector[Index[d$$1, Lorentz]], {Index[d$$1, SU2L[adj]]}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]])/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
-      "((I/6)*hbar*Coupling[A, {}, 0]^2*Log[\\[Mu]bar2/Coupling[M, {}, 0]^2]*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$2, SU2L[fund]]}, {}]], CG[gen[SU2L[fund]], {Index[d$$1, SU2L[adj]], Index[d$$2, SU2L[fund]], Bar[Index[d$$1, SU2L[fund]]]}], Matchete`PackageScope`EoM[Field[W, Vector[Index[d$$1, Lorentz]], {Index[d$$1, SU2L[adj]]}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]])/Coupling[M, {}, 0]^4"
+      "((-1/12*I)*hbar*Coupling[A, {}, 0]^2*Matchete`PackageScope`Operator[Bar[Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {Index[d$$1, Lorentz]}]], Matchete`PackageScope`EoM[Field[B, Vector[Index[d$$1, Lorentz]], {}, {}]], Field[H, Scalar, {Index[d$$1, SU2L[fund]]}, {}]])/(\\[Epsilon]*Coupling[M, {}, 0]^4)"
     ],
     "selection_selected_term_count": 12,
     "stage_index": 6,
@@ -796,14 +789,87 @@
       "hScalar-lScalar#wilson8_o2_1": 0,
       "hScalar-lScalar#wilson9_o3_0": 0
     },
+    "formal_symgamma_by_entry": {
+      "hScalar-lScalar#wilson0_o0_0": {
+        "formal_vector_eom_source_operator_projections": {
+          "DH_EOMB_H_unbarred": "0",
+          "DbarH_EOMB_H": "0",
+          "H_EOMB_DH_unbarred": "0",
+          "barH_EOMB_DH": "0"
+        },
+        "nonzero_formal_vector_eom_source_operator_projection_names": [],
+        "raw_topology_byte_count": 999,
+        "raw_topology_term_count": 2,
+        "scalar_eom_exposed_byte_count": 999,
+        "scalar_eom_exposed_formal_vector_eom_count": 0
+      },
+      "hScalar-lScalar#wilson14_o4_0": {
+        "formal_vector_eom_source_operator_projections": {
+          "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+          "DbarH_EOMB_H": "0",
+          "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+          "barH_EOMB_DH": "32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-4*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+        },
+        "nonzero_formal_vector_eom_source_operator_projection_names": [
+          "barH_EOMB_DH",
+          "H_EOMB_DH_unbarred",
+          "DH_EOMB_H_unbarred"
+        ],
+        "raw_topology_byte_count": 99948,
+        "raw_topology_term_count": 10,
+        "scalar_eom_exposed_byte_count": 164613,
+        "scalar_eom_exposed_formal_vector_eom_count": 4
+      },
+      "hScalar-lScalar#wilson5_o2_0": {
+        "formal_vector_eom_source_operator_projections": {
+          "DH_EOMB_H_unbarred": "0",
+          "DbarH_EOMB_H": "0",
+          "H_EOMB_DH_unbarred": "0",
+          "barH_EOMB_DH": "0"
+        },
+        "nonzero_formal_vector_eom_source_operator_projection_names": [],
+        "raw_topology_byte_count": 9107,
+        "raw_topology_term_count": 4,
+        "scalar_eom_exposed_byte_count": 4825,
+        "scalar_eom_exposed_formal_vector_eom_count": 0
+      }
+    },
+    "formal_symgamma_raw_term_counts_by_entry": {
+      "hScalar-lScalar#wilson0_o0_0": 2,
+      "hScalar-lScalar#wilson10_o0_4": 0,
+      "hScalar-lScalar#wilson11_o1_3": 0,
+      "hScalar-lScalar#wilson12_o2_2": 0,
+      "hScalar-lScalar#wilson13_o3_1": 0,
+      "hScalar-lScalar#wilson14_o4_0": 10,
+      "hScalar-lScalar#wilson1_o0_1": 0,
+      "hScalar-lScalar#wilson2_o1_0": 0,
+      "hScalar-lScalar#wilson3_o0_2": 0,
+      "hScalar-lScalar#wilson4_o1_1": 0,
+      "hScalar-lScalar#wilson5_o2_0": 4,
+      "hScalar-lScalar#wilson6_o0_3": 0,
+      "hScalar-lScalar#wilson7_o1_2": 0,
+      "hScalar-lScalar#wilson8_o2_1": 0,
+      "hScalar-lScalar#wilson9_o3_0": 0
+    },
     "summary": {
       "entry_count": 3,
+      "formal_symgamma_topology_source_operator_projection_sums": {
+        "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+        "DbarH_EOMB_H": "0",
+        "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+        "barH_EOMB_DH": "32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-4*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+      },
       "formal_vector_eom_source_operator_projection_sums": {
         "DH_EOMB_H_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
         "DbarH_EOMB_H": "0",
         "H_EOMB_DH_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
         "barH_EOMB_DH": "1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+7\ud835\udc56/36*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
       },
+      "nonzero_formal_symgamma_topology_source_operator_projection_names": [
+        "barH_EOMB_DH",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred"
+      ],
       "nonzero_formal_vector_eom_source_operator_projection_names": [
         "barH_EOMB_DH",
         "H_EOMB_DH_unbarred",

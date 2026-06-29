@@ -1539,3 +1539,13 @@ generic algorithm boundary before runtime pychete changes are accepted.
   field-redefinition consumer, full public Singlet route composition, then a
   locked full regression. The first refactor slice moved Wilson-line scalar
   EOM postprocessing into `src/pychete/wilson_line_eom.py`.
+- Latest fixture-backed evanescent-source update, 2026-06-29: refreshed the
+  focused Singlet `cHD` Matchete and pychete debug fixtures so the first
+  source-level mismatch is now committed data, not only an exploratory note.
+  Matchete's inert `EvaluateGammaFactor` replay records the B-source
+  coefficient as `-(1 + eps + eps log)/eps * (SG[1,4] - 8 SG[2,4])`, while
+  pychete's paired target-filtered raw-topology probe records
+  `32*pi^2*G1 - 64*pi^2*G2 - 4*pi^2` on the same `Prop[0]^3 Prop[M]`
+  topology. These fixtures keep the next runtime slice focused on the generic
+  d-dimensional `InternalSimplify`/identity-set semantics and avoid the slower
+  heavy-first four-slot expansion route.

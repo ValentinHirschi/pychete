@@ -1949,6 +1949,36 @@ def test_singlet_reference_chd_debug_records_vector_shift_split() -> None:
     assert all("CG[gen[SU2L[fund]]" in term for term in summaries["W"]["selected_terms_input_form"])
 
 
+def test_singlet_reference_chd_debug_records_inert_gamma_vector_source_split() -> None:
+    debug = json.loads(
+        Path("assets/validation/matchete/debug/singlet_eom_cHD.debug.json").read_text(encoding="utf-8")
+    )
+    inert = debug["raw_lagrangian_eft_inert_gamma_eom_boundary"]
+    bar_summary = inert["barH_EOMB_DH_normalized_source_coefficient"]
+    dbar_summary = inert["DbarH_EOMB_H_normalized_source_coefficient"]
+
+    assert inert["controls"] == {
+        "evaluate_gamma_factor": "inert",
+        "replacement_input_form": "EvaluateGammaFactor[n_Integer, dim_] := SG[n, dim]",
+        "reduction_identities": "dDimensional",
+        "devs": 3,
+        "dim": 6,
+    }
+    assert inert["split"]["fields_input_form"] == "{B, W}"
+    assert inert["b_selected_term_count"] == 12
+    assert inert["w_selected_term_count"] == 12
+    assert bar_summary["term_count"] == 6
+    assert dbar_summary["term_count"] == 6
+    assert "Matchete`PackageScope`SG[1, 4] - 8*Matchete`PackageScope`SG[2, 4]" in (
+        bar_summary["normalized_coefficient_input_form"]
+    )
+    assert "1 + \\[Epsilon] + \\[Epsilon]*Log" in bar_summary["normalized_coefficient_input_form"]
+    assert bar_summary["normalized_coefficient_input_form"].startswith("-(")
+    assert dbar_summary["normalized_coefficient_input_form"].startswith("((")
+    assert any("*Matchete`PackageScope`SG[1, 4]" in term for term in inert["b_selected_terms_input_form"])
+    assert any("8*I" in term and "*Matchete`PackageScope`SG[2, 4]" in term for term in inert["b_selected_terms_input_form"])
+
+
 def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:
     reference = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")

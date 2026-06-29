@@ -226,6 +226,41 @@ eomTermsForField[eomTerms_, field_] := Module[{terms},
   ]
 ];
 
+sourceOperatorInTerm[term_, scalarField_, vectorField_, derivativeOnBar_] := FirstCase[
+  term,
+  If[
+    TrueQ[derivativeOnBar],
+    Matchete`PackageScope`Operator[
+      Bar[Matchete`Field[scalarField, Matchete`Scalar, _, {_}]],
+      Matchete`PackageScope`EoM[Matchete`Field[vectorField, Matchete`Vector[_], {}, {}]],
+      Matchete`Field[scalarField, Matchete`Scalar, _, {}]
+    ],
+    Matchete`PackageScope`Operator[
+      Bar[Matchete`Field[scalarField, Matchete`Scalar, _, {}]],
+      Matchete`PackageScope`EoM[Matchete`Field[vectorField, Matchete`Vector[_], {}, {}]],
+      Matchete`Field[scalarField, Matchete`Scalar, _, {_}]
+    ]
+  ],
+  Missing["NotFound"],
+  {0, Infinity}
+];
+
+sourceOperatorCoefficientSummary[terms_, scalarField_, vectorField_, derivativeOnBar_] := Module[
+  {matches, coefficients},
+  matches = DeleteCases[
+    {#, sourceOperatorInTerm[#, scalarField, vectorField, derivativeOnBar]} & /@ terms,
+    {_, Missing["NotFound"]}
+  ];
+  coefficients = FullSimplify[
+    (#[[1]]/#[[2]] * Coupling[M, {}, 0]^4)/(I*hbar*Coupling[A, {}, 0]^2)
+  ] & /@ matches;
+  <|
+    "term_count" -> Length[matches],
+    "terms_input_form" -> (shortInputString /@ (First /@ matches)),
+    "normalized_coefficient_input_form" -> toInputString[FullSimplify[Plus @@ coefficients]]
+  |>
+];
+
 fieldSpecificVectorShiftSummary[lag_, field_, devs_Integer, dim_Integer, targetOperator_] := Module[
   {
     maxOrder = 6,
@@ -262,6 +297,90 @@ fieldSpecificVectorShiftSummary[lag_, field_, devs_Integer, dim_Integer, targetO
     "coefficient_input_form" -> toInputString[shiftedCoef],
     "delta_from_source_input_form" -> toInputString[deltaCoef]
   |>
+];
+
+SetAttributes[withInertEvaluateGammaFactor, HoldFirst];
+withInertEvaluateGammaFactor[body_] := Module[
+  {
+    oldDownValues = DownValues[Matchete`PackageScope`EvaluateGammaFactor],
+    oldOwnValues = OwnValues[Matchete`PackageScope`EvaluateGammaFactor],
+    oldAttributes = Attributes[Matchete`PackageScope`EvaluateGammaFactor],
+    result
+  },
+  Unprotect[Matchete`PackageScope`EvaluateGammaFactor];
+  ClearAll[Matchete`PackageScope`EvaluateGammaFactor];
+  Matchete`PackageScope`EvaluateGammaFactor[n_Integer, dim_] := Matchete`PackageScope`SG[n, dim];
+  Protect[Matchete`PackageScope`EvaluateGammaFactor];
+  result = body;
+  Unprotect[Matchete`PackageScope`EvaluateGammaFactor];
+  ClearAll[Matchete`PackageScope`EvaluateGammaFactor];
+  DownValues[Matchete`PackageScope`EvaluateGammaFactor] = oldDownValues;
+  OwnValues[Matchete`PackageScope`EvaluateGammaFactor] = oldOwnValues;
+  Attributes[Matchete`PackageScope`EvaluateGammaFactor] = oldAttributes;
+  Protect[Matchete`PackageScope`EvaluateGammaFactor];
+  result
+];
+
+inertGammaVectorShiftSplitSummary[target_String] := withInertEvaluateGammaFactor[
+  Module[
+    {
+      luv,
+      lag,
+      loop,
+      tree,
+      raw,
+      internal,
+      targetOperator,
+      selectedTerms,
+      bTerms,
+      wTerms,
+      hField,
+      bField,
+      split
+    },
+    Matchete`ResetAll[];
+    luv = Matchete`LoadModel["Singlet_Scalar_Extension"];
+    lag = Matchete`PackageScope`SetCurrentLagrangian[luv, 1, 6, System`Verbose -> False];
+    loop = Matchete`PackageScope`LoopMatch[Matchete`EFTOrder -> 6, System`Verbose -> False];
+    tree = Matchete`RelabelIndices[Matchete`PackageScope`ReplaceHeavyEOM[lag]];
+    raw = (tree + loop) // Matchete`ContractCGs // Matchete`PackageScope`MatchReduce;
+    targetOperator = operatorForTarget[target];
+    internal = Matchete`PackageScope`InternalSimplify[
+      raw,
+      Matchete`ReductionIdentities -> Matchete`dDimensional
+    ];
+    selectedTerms = Matchete`FieldRedef`PackagePrivate`SelectOperatorDevsAndDim[internal, 3, 6];
+    hField = ToExpression["H"];
+    bField = ToExpression["B"];
+    bTerms = termList[eomTermsForField[selectedTerms, bField]];
+    wTerms = termList[eomTermsForField[selectedTerms, ToExpression["W"]]];
+    split = vectorShiftSplitSummary[internal, 3, 6, targetOperator];
+    <|
+      "controls" -> <|
+        "evaluate_gamma_factor" -> "inert",
+        "replacement_input_form" -> "EvaluateGammaFactor[n_Integer, dim_] := SG[n, dim]",
+        "reduction_identities" -> "dDimensional",
+        "devs" -> 3,
+        "dim" -> 6
+      |>,
+      "split" -> split,
+      "b_selected_term_count" -> Length[bTerms],
+      "w_selected_term_count" -> Length[wTerms],
+      "b_selected_terms_input_form" -> (shortInputString /@ bTerms),
+      "barH_EOMB_DH_normalized_source_coefficient" -> sourceOperatorCoefficientSummary[
+        bTerms,
+        hField,
+        bField,
+        False
+      ],
+      "DbarH_EOMB_H_normalized_source_coefficient" -> sourceOperatorCoefficientSummary[
+        bTerms,
+        hField,
+        bField,
+        True
+      ]
+    |>
+  ]
 ];
 
 vectorShiftSplitSummary[lag_, devs_Integer, dim_Integer, targetOperator_] := Module[
@@ -506,6 +625,7 @@ offCoefficient = Matchete`GetOperatorCoefficient[offShell, operator];
 onCoefficient = Matchete`GetOperatorCoefficient[onShell, operator];
 deltaCoefficient = FullSimplify[onCoefficient - offCoefficient];
 rawBoundary = rawLagrangianEftBoundarySummary[targetOption, offCoefficient, onCoefficient];
+inertGammaVectorShiftBoundary = inertGammaVectorShiftSplitSummary[targetOption];
 
 data = <|
   "schema_version" -> 1,
@@ -523,6 +643,7 @@ data = <|
   "field_redefinition_replay_off_shell" -> offShellFieldRedefReplay,
   "field_redefinition_replay_supertrace_sum" -> supertraceSumFieldRedefReplay,
   "raw_lagrangian_eft_eom_boundary" -> rawBoundary,
+  "raw_lagrangian_eft_inert_gamma_eom_boundary" -> inertGammaVectorShiftBoundary,
   "off_shell_summary" -> stageSummary["off_shell_eft_lagrangian", offShell],
   "on_shell_summary" -> stageSummary["on_shell_eft_lagrangian", onShell],
   "supertrace_sum_summary" -> stageSummary["saved_supertrace_sum", supertraceSum],

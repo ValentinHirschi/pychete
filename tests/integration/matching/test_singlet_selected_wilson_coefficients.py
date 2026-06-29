@@ -989,6 +989,9 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     source_operator_projections = source_trace_probe["summary"][
         "formal_vector_eom_source_operator_projection_sums"
     ]
+    formal_symgamma_source_operator_projections = source_trace_probe["summary"][
+        "formal_symgamma_topology_source_operator_projection_sums"
+    ]
     assert set(source_operator_projections) == {
         "barH_EOMB_DH",
         "DbarH_EOMB_H",
@@ -1005,6 +1008,27 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "-3𝑖/8*Singlet_Scalar_Extension::external_hbar*" in (
         source_operator_projections["H_EOMB_DH_unbarred"]
     )
+    assert set(formal_symgamma_source_operator_projections) == {
+        "barH_EOMB_DH",
+        "DbarH_EOMB_H",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred",
+    }
+    assert formal_symgamma_source_operator_projections["DbarH_EOMB_H"] == "0"
+    formal_bar_source = formal_symgamma_source_operator_projections["barH_EOMB_DH"]
+    assert "32*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "pychete::SymGammaFactor(1,4)" in formal_bar_source
+    assert "-64*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "pychete::SymGammaFactor(2,4)" in formal_bar_source
+    assert "-4*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "vakint::topo(vakint::prop(1" in formal_bar_source
+    assert source_trace_probe["summary"][
+        "nonzero_formal_symgamma_topology_source_operator_projection_names"
+    ] == [
+        "barH_EOMB_DH",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred",
+    ]
     assert source_trace_probe["summary"][
         "nonzero_formal_vector_eom_source_operator_projection_names"
     ] == [
@@ -1024,6 +1048,12 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "H_EOMB_DH_unbarred",
         "DH_EOMB_H_unbarred",
     ]
+    assert {
+        entry
+        for entry, row in source_trace_probe["formal_symgamma_by_entry"].items()
+        if row["nonzero_formal_vector_eom_source_operator_projection_names"]
+    } == {"hScalar-lScalar#wilson14_o4_0"}
+    assert source_trace_probe["formal_symgamma_raw_term_counts_by_entry"]["hScalar-lScalar#wilson14_o4_0"] == 10
     assert debug["matchete_quarter_insertion_count"] == 8
     assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
         1,

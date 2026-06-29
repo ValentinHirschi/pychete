@@ -19,6 +19,7 @@ from typing import Any
 from symbolica import Expression, Replacement
 
 import pychete.matching as matching_module
+import pychete.loop_integration as loop_integration_module
 from pychete import (
     MatchingResult,
     OneLoopNormalization,
@@ -133,6 +134,62 @@ def _project_source_operator_coefficients(
         eft_order=None,
         drop_zero=False,
     )
+
+
+def _source_trace_formal_symgamma_raw_terms_by_entry(
+    theory: Any,
+    grouped_terms: dict[str, tuple[Any, ...]],
+    *,
+    max_wilson_derivative_order: int,
+) -> dict[str, tuple[Expression, ...]]:
+    original_evaluate_symmetric_lorentz_indices = (
+        loop_integration_module.evaluate_symmetric_lorentz_indices
+    )
+
+    def evaluate_formal_symgamma(
+        expr: Expression,
+        *,
+        evaluate_gamma: bool = True,
+        epsilon: Expression | None = None,
+        gamma_order: int = 1,
+        contract_metrics: bool = True,
+    ) -> Expression:
+        return original_evaluate_symmetric_lorentz_indices(
+            expr,
+            evaluate_gamma=False,
+            epsilon=epsilon,
+            gamma_order=gamma_order,
+            contract_metrics=contract_metrics,
+        )
+
+    loop_integration_module.evaluate_symmetric_lorentz_indices = evaluate_formal_symgamma
+    try:
+        lowered_by_entry: dict[str, tuple[Expression, ...]] = {}
+        for entry_label, entry_terms in grouped_terms.items():
+            lowered_terms: list[Expression] = []
+            for term in entry_terms:
+                if term.pre_wilson_numerator is None:
+                    lowered = term.vakint_integral_expression()
+                else:
+                    lowered = matching_module._wilson_line_matchete_order_pre_wilson_integral_expression(
+                        theory,
+                        term,
+                        max_wilson_derivative_order=max_wilson_derivative_order,
+                        emit_covariant_derivative_commutators=False,
+                        emit_covariant_derivative_commutator_passes=1,
+                        covariant_derivative_commutator_mode="all_distinct",
+                        expand_covariant_derivative_commutators=False,
+                        simplify_pychete_color_algebra=True,
+                        expose_scalar_derivative_commutator_bilinears=False,
+                        epsilon=None,
+                    )
+                lowered_terms.append(lowered)
+            lowered_by_entry[entry_label] = tuple(lowered_terms)
+    finally:
+        loop_integration_module.evaluate_symmetric_lorentz_indices = (
+            original_evaluate_symmetric_lorentz_indices
+        )
+    return lowered_by_entry
 
 
 def _source_vector_eom_operator_targets(
@@ -548,6 +605,11 @@ def _source_trace_vector_eom_probe(
         simplify_pychete_color_algebra=True,
         term_atom_requirements=requirements,
     )
+    formal_symgamma_raw_by_entry = _source_trace_formal_symgamma_raw_terms_by_entry(
+        theory,
+        grouped_terms,
+        max_wilson_derivative_order=4,
+    )
     evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
         theory,
         grouped_terms,
@@ -572,6 +634,48 @@ def _source_trace_vector_eom_probe(
         vector_field=vector_field,
         index_prefix=f"{index_prefix}_source_projection",
     )
+    formal_symgamma_by_entry: dict[str, dict[str, Any]] = {}
+    formal_symgamma_source_operator_projection_sums: dict[str, list[Expression]] = {
+        name: [] for name in source_operator_targets
+    }
+    for entry_label, raw_terms in sorted(formal_symgamma_raw_by_entry.items()):
+        if not raw_terms:
+            continue
+        normalized_raw = (normalization * sum(raw_terms, Expression.num(0))).expand()
+        scalar_eom_exposed_raw = (
+            matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                theory,
+                normalized_raw,
+                eom_lagrangian=lagrangian,
+                expose_scalar_eom_terms=True,
+            )
+        )
+        raw_source_operator_projections = _project_source_operator_coefficients(
+            theory,
+            source_operator_targets,
+            scalar_eom_exposed_raw,
+        )
+        for name, projected in raw_source_operator_projections.items():
+            formal_symgamma_source_operator_projection_sums[name].append(projected)
+        formal_symgamma_by_entry[entry_label] = {
+            "raw_topology_term_count": len(raw_terms),
+            "raw_topology_byte_count": normalized_raw.get_byte_size(),
+            "scalar_eom_exposed_byte_count": scalar_eom_exposed_raw.get_byte_size(),
+            "scalar_eom_exposed_formal_vector_eom_count": _formal_vector_eom_count(
+                theory,
+                scalar_eom_exposed_raw,
+                field_name=vector_field,
+            ),
+            "formal_vector_eom_source_operator_projections": {
+                name: canonical_string(projected)
+                for name, projected in raw_source_operator_projections.items()
+            },
+            "nonzero_formal_vector_eom_source_operator_projection_names": [
+                name
+                for name, projected in raw_source_operator_projections.items()
+                if not is_zero(projected)
+            ],
+        }
     source_operator_projection_sums: dict[str, list[Expression]] = {
         name: [] for name in source_operator_targets
     }
@@ -660,7 +764,11 @@ def _source_trace_vector_eom_probe(
         "evaluated_term_counts_by_entry": {
             entry: len(evaluated_by_entry.get(entry, ())) for entry in grouped_terms
         },
+        "formal_symgamma_raw_term_counts_by_entry": {
+            entry: len(terms) for entry, terms in formal_symgamma_raw_by_entry.items()
+        },
         "by_entry": by_entry,
+        "formal_symgamma_by_entry": formal_symgamma_by_entry,
         "summary": {
             "entry_count": len(by_entry),
             "nonzero_vector_field_redefinition_delta_entry_count": sum(
@@ -685,6 +793,15 @@ def _source_trace_vector_eom_probe(
             "nonzero_formal_vector_eom_source_operator_projection_names": [
                 name
                 for name, values in source_operator_projection_sums.items()
+                if not is_zero(_sum_expressions(values))
+            ],
+            "formal_symgamma_topology_source_operator_projection_sums": {
+                name: canonical_string(_sum_expressions(values))
+                for name, values in formal_symgamma_source_operator_projection_sums.items()
+            },
+            "nonzero_formal_symgamma_topology_source_operator_projection_names": [
+                name
+                for name, values in formal_symgamma_source_operator_projection_sums.items()
                 if not is_zero(_sum_expressions(values))
             ],
         },

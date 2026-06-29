@@ -207,6 +207,18 @@ Latest bounded probes:
   therefore the d-dimensional `InternalSimplify` / identity-set semantics that
   produce Matchete's evanescent representative, not projection, vector-current
   insertion, or scalar topology evaluation.
+- The inert-gamma diagnosis is now fixture-backed on both sides. Matchete's
+  `singlet_eom_cHD.debug.json` records the dim6/dev3 B source with inert
+  `EvaluateGammaFactor -> SG`, including the normalized
+  `Bar[H] EOM[B] D H` coefficient
+  `-(1 + eps + eps log)/eps * (SG[1,4] - 8 SG[2,4])`. Pychete's paired
+  `singlet_eom_cHD.pychete.debug.json` records the target-filtered raw-topology
+  source before vacuum-integral evaluation as
+  `32*pi^2*G1 - 64*pi^2*G2 - 4*pi^2` times the same
+  `Prop[0]^3 Prop[M]` topology and `hbar A^2` prefactor. New focused tests
+  assert both fixtures so future work can target the class-wise
+  d-dimensional identity semantics without rerunning exploratory notebooks or
+  broad matching workloads.
 
 ## Current Implementation Slice
 
@@ -264,6 +276,14 @@ Latest bounded probes:
   performance-competitive and hits the Green-basis cap, so the next runtime
   slice should port the missing class-wise d-dimensional identity semantics in
   the aggregate source path.
+- Refreshed the committed Matchete and pychete cHD debug fixtures so the
+  evanescent source mismatch is no longer only a handwritten diagnostic note.
+  The Matchete fixture now contains an inert `EvaluateGammaFactor` replay, and
+  the pychete fixture now contains a raw-topology formal `SymGammaFactor`
+  replay generated from the same target-filtered `hScalar-lScalar` source
+  terms. This preserves performance parity for comparison: the pychete probe
+  reuses the bounded source trace rather than expanding the larger four-slot
+  heavy-first route.
 - Focused validation passed for scalar Green/vector EOM units, scalar EOM
   units, the two public vector-EOM replay integration regressions, py_compile
   on changed files, static typing, and the bounded Singlet cHD debug probe.
@@ -275,20 +295,13 @@ Run after completing the slice:
 ```sh
 source "$HOME/.bashrc"
 dependencies/.venv/bin/python -m pytest \
-  tests/unit/functional/test_scalar_green_bilinears.py \
-  tests/unit/functional/test_scalar_eom.py \
-  tests/unit/functional/test_scalar_eom.py::test_expose_abelian_vector_eom_currents_rewrites_exact_current_product \
-  tests/unit/functional/test_scalar_eom.py::test_expose_abelian_vector_eom_currents_returns_bounded_source_when_candidate_budget_is_exhausted \
-  tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_generates_abelian_vector_eom_replacements \
-  tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_applies_vector_eom_after_scalar_commutator_exposure \
-  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_abelian_vector_eom_field_redefinition \
-  tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_vector_eom_after_scalar_commutator_exposure -q
+  tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap \
+  tests/integration/validation/test_validation_fixtures.py::test_singlet_reference_chd_debug_records_vector_shift_split \
+  tests/integration/validation/test_validation_fixtures.py::test_singlet_reference_chd_debug_records_inert_gamma_vector_source_split -q
 dependencies/.venv/bin/python -m py_compile \
-  src/pychete/functional.py src/pychete/wilson_line_eom.py scripts/debug_pychete_singlet_eom_boundary.py \
-  tests/unit/functional/test_scalar_green_bilinears.py tests/unit/functional/test_scalar_eom.py \
-  tests/integration/matching/test_heavy_scalar_tree.py \
+  scripts/debug_pychete_singlet_eom_boundary.py \
+  tests/integration/matching/test_singlet_selected_wilson_coefficients.py \
   tests/integration/validation/test_validation_fixtures.py
-dependencies/.venv/bin/python -m pytest tests/test_static_typing.py -q
 dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 --stop-file /tmp/pychete_singlet_probe.stop -- \
   dependencies/.venv/bin/python scripts/debug_pychete_singlet_eom_boundary.py --out /tmp/singlet_eom_cHD.pychete.debug.json
 git diff --check
