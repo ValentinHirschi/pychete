@@ -2189,10 +2189,21 @@ def test_singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms() -> 
         max_wilson_derivative_order=4,
         simplify_pychete_color_algebra=True,
     )
+    collected_grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        collect_path_sums=True,
+    )
     generated_terms = tuple(term for entry_terms in grouped_terms.values() for term in entry_terms)
+    collected_terms = tuple(term for entry_terms in collected_grouped_terms.values() for term in entry_terms)
     numerator_sum = sum((term.numerator for term in generated_terms), Expression.num(0)).expand()
+    collected_numerator_sum = sum((term.numerator for term in collected_terms), Expression.num(0)).expand()
 
-    assert len(generated_terms) == 4
+    assert len(generated_terms) == 16
+    assert len(collected_terms) == 1
+    assert_expr_equal(collected_numerator_sum, numerator_sum)
     assert all(bool(term.numerator.matches(s.OpenCD(s.OpenCDIndicesWildcard))) for term in generated_terms)
     assert not bool(numerator_sum.coefficient(theory.coupling_handle("gY")() ** 2).expand() == Expression.num(0))
 
@@ -2206,7 +2217,25 @@ def test_singlet_four_slot_scalar_vector_trace_has_implicit_abelian_xterms() -> 
         ).values()
         for term in entry_terms
     )
-    assert len(acted_terms) == 4
+    acted_collected_terms = tuple(
+        term
+        for entry_terms in setup.interaction_wilson_line_expansion_terms_by_trace(
+            plan,
+            act_open_derivatives=True,
+            max_wilson_derivative_order=4,
+            simplify_pychete_color_algebra=True,
+            collect_path_sums=True,
+        ).values()
+        for term in entry_terms
+    )
+    acted_numerator_sum = sum((term.numerator for term in acted_terms), Expression.num(0)).expand()
+    acted_collected_numerator_sum = sum(
+        (term.numerator for term in acted_collected_terms),
+        Expression.num(0),
+    ).expand()
+    assert len(acted_terms) == 16
+    assert len(acted_collected_terms) == 1
+    assert_expr_equal(acted_collected_numerator_sum, acted_numerator_sum)
     assert all(not bool(term.numerator.matches(s.OpenCD(s.OpenCDIndicesWildcard))) for term in acted_terms)
 
 

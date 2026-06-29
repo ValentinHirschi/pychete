@@ -952,6 +952,15 @@ tweaks; move the boundary earlier toward Matchete's collected
 `DeterminePowerInsertions -> EvaluateSTr` staging by constructing collected
 path-sum entries before `ActWithOpenCDs`, `WilsonExpand`, and idenso cleanup,
 then split only where propagator topology or debugging diagnostics require it.
+If collected path sums still leave the public two-trace route slower than
+Matchete, profile the individual `EvaluateSTr`-equivalent stages before
+adding caches. In the Singlet four-slot `cHD` frontier, raw path construction
+and `sum_expr(...).expand()` are cheap; the measured cost is expanded
+`ActWithOpenCDs`, additive `NCM` distribution, loop-symmetry pruning,
+`WilsonExpand`, and idenso cleanup on multi-megabyte intermediates. The next
+structural target is an insertion-level collected expression pipeline modeled
+on Matchete's `GenericPropagatorExpansion` plus `DeterminePowerInsertions`,
+not another pathwise postprocessing cache.
 The remaining Singlet `cHW` frontier is not solved by target filtering,
 post-result heavy-scalar substitution, or additive `NCM` linearization alone.
 Pure `A^2` `hScalar-lScalar` Wilson-line terms reach the pre-commutator stage

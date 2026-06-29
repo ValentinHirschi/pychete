@@ -473,3 +473,59 @@ Next performance direction:
   Matchete's `DeterminePowerInsertions -> EvaluateSTr` ordering more closely
   than running the full open-CD/Wilson/postprocess chain independently on
   every path and every generated term.
+
+## Current Slice Update: Collected Wilson-Line Path Sums
+
+This slice added `OneLoopMatchOptions.wilson_line_collect_path_sums` and
+setup-level `collect_path_sums` plumbing for selected Wilson-line expansion.
+The new path sums collect raw same-topology Wilson-line numerators before
+`ActWithOpenCDs`, Wilson-term expansion, and idenso cleanup, while leaving the
+older pathwise route available for term diagnostics.
+
+Focused regression coverage was added to the Singlet four-slot
+`hScalar-lScalar-lVector-lScalar` fixture: the pathwise zero-order scalar-vector
+probe now produces 16 nonzero path terms, while the collected route collapses
+the same source to one term. The summed numerators agree both before and after
+open covariant derivatives act.
+
+Performance findings:
+
+- Setup and plan generation remain cheap: about 1.9 seconds and 0.03 seconds
+  respectively for the selected `hScalar-lScalar` plus
+  `hScalar-lScalar-lVector-lScalar` two-trace public composition with 85 plan
+  entries.
+- The broad two-trace collected generation still exceeded the useful
+  interactive budget and was stopped through `stop.order`. Therefore
+  collection after raw path materialization is still not enough for public
+  parity-speed composition.
+- Per-entry profiling localizes the active cost to the four-slot total-order-2
+  derivative allocations. Representative collected timings:
+  `o2_0_0_0` about 9.8 seconds, `o0_2_0_0` about 5.3 seconds,
+  `o1_1_0_0` about 4.3 seconds, `o1_0_1_0` about 2.8 seconds, and
+  `o0_0_2_0` about 2.5 seconds. Two-slot `hScalar-lScalar` entries remain
+  subsecond.
+- Path-sum collection reduces output term count on the slow entries, e.g.
+  eight pathwise terms become two collected topology terms, but runtime barely
+  changes. The cost is not raw path construction or final term count.
+- Stage profiling of the slow `o2_0_0_0` entry shows raw construction and
+  `sum_expr(...).expand()` are negligible. The time is in expanded
+  `ActWithOpenCDs`, NCM distribution, symmetry pruning, Wilson expansion, and
+  idenso cleanup. One group grows temporarily to roughly 4.6 MB / 5120
+  expression nodes after open-CD action, then 6.7 MB / 8560 nodes after NCM
+  distribution before being pruned and simplified.
+
+Matchete comparison:
+
+- Matchete's relevant source boundary remains `PowerTypeSTr`:
+  `GenericPropagatorExpansion`, `DeterminePowerInsertions`, then
+  `EvaluateSTr`.
+- `EvaluateSTr` first applies the insertion replacements and `$Xsubs/$Msubs/$Gsubs`
+  to a collected generic expression, then runs `ActWithOpenCDs`,
+  `GatherLoopMomenta`, `RemoveSymmetryVanishingWilsonTerms`,
+  `CloseFermionLoop`, `EvaluateSymmetricLorentzInds`, `ContractMetric`,
+  `WilsonExpand`, `LoopIntegrate`, and final algebra cleanup.
+- The pychete slowdown is therefore structural: it still materializes raw
+  path-level expressions and runs repeated bounded `NCM`/open-CD replacement
+  passes over already expanded pychete expressions. The next refactor should
+  move closer to Matchete's insertion-level collected expression pipeline,
+  not add more pathwise caches.

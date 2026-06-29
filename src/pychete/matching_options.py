@@ -261,6 +261,12 @@ class OneLoopMatchOptions:
     pre-Wilson numerators summed before the expensive Matchete-order
     tensor/Wilson/postprocess chain. Use ``"termwise"`` when debugging one
     generated Wilson-line term at a time.
+    ``wilson_line_collect_path_sums`` moves collection one stage earlier:
+    raw path numerators with the same propagator topology are summed before
+    open covariant derivatives, Wilson-term expansion, and idenso cleanup.
+    This is closer to Matchete's collected ``EvaluateSTr`` staging and should
+    be used for performance-focused selected-trace parity probes once the
+    collected output has been checked against the termwise diagnostic route.
     """
 
     max_trace_order: int = 2
@@ -333,6 +339,7 @@ class OneLoopMatchOptions:
     wilson_line_internal_evaluation_mode: WilsonLineInternalEvaluationMode | str = (
         WilsonLineInternalEvaluationMode.ENTRYWISE
     )
+    wilson_line_collect_path_sums: bool = False
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True

@@ -129,6 +129,18 @@ open-CD/Wilson/postprocess chain over the four-slot path orientations. The
 next performance refactor should follow Matchete more closely by constructing
 collected path-sum entries before `ActWithOpenCDs`, `WilsonExpand`, and idenso
 cleanup, then split only where topology or diagnostics require it.
+Latest collected-path profiling, 2026-06-29: pychete now has
+`wilson_line_collect_path_sums`, which collects raw same-topology path
+numerators before open-CD action and Wilson expansion. The focused Singlet
+four-slot zero-order probe confirms pathwise and collected summed numerators
+agree, with 16 path terms collapsing to one collected term. However, the full
+two-trace public composition is still too slow: profiling localizes the cost
+to four-slot total-order-2 entries such as `o2_0_0_0`, where raw construction
+is negligible but `ActWithOpenCDs`, NCM distribution, symmetry pruning,
+`WilsonExpand`, and idenso cleanup run on large expanded intermediates. The
+next performance refactor should move still earlier toward Matchete's actual
+`GenericPropagatorExpansion` + `DeterminePowerInsertions` + collected
+`EvaluateSTr` staging rather than adding more pathwise caches.
 
 ## Approved Plan
 
