@@ -88,6 +88,9 @@ def map_effective_couplings(
     input_expr = idenso.canonicalize_builtin_epsilon_cg_tensors(input_expr)
     target_expr = idenso.canonicalize_builtin_epsilon_cg_tensors(target_expr)
     identity_tuple = tuple(idenso.canonicalize_builtin_epsilon_cg_tensors(identity) for identity in identity_tuple)
+    input_expr = idenso.canonicalize_pychete_deltas(input_expr)
+    target_expr = idenso.canonicalize_pychete_deltas(target_expr)
+    identity_tuple = tuple(idenso.canonicalize_pychete_deltas(identity) for identity in identity_tuple)
     input_expr = _align_target_operator_indices(input_expr, target_tuple)
     target_expr = _align_target_operator_indices(target_expr, target_tuple)
     identity_tuple = tuple(_align_target_operator_indices(identity, target_tuple) for identity in identity_tuple)
@@ -145,7 +148,7 @@ def map_effective_couplings(
     )
     decode_rules = (Replacement(imaginary_marker, Expression.I),)
     return {
-        target.name: solution.replace_multiple(decode_rules).expand()
+        target.name: idenso.canonicalize_pychete_deltas(solution.replace_multiple(decode_rules)).expand()
         for target, solution in zip(target_tuple, solutions, strict=True)
     }
 
@@ -728,9 +731,6 @@ def _crossed_color_vector_operator(octet: _ColorOctetTarget) -> Expression:
 
 
 def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> tuple[Replacement, ...]:
-    operator_terms = terms(target.operator.expand())
-    if len(operator_terms) != 1:
-        return ()
     index_infos = collect_indices(target.operator)
     if not index_infos:
         return ()
@@ -778,9 +778,6 @@ def _target_operator_alignment_operator_patterns(
     tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform],
     ...,
 ]:
-    operator_terms = terms(target.operator.expand())
-    if len(operator_terms) != 1:
-        return ()
     index_infos = collect_indices(target.operator)
     if not index_infos:
         return ()
@@ -806,15 +803,18 @@ def _target_operator_alignment_aliases(
 ) -> tuple[tuple[Expression, Expression, int, _CoefficientTransform], ...]:
     out: list[tuple[Expression, Expression, int, _CoefficientTransform]] = []
     seen: set[str] = set()
-    target_alias_operator = _normalize_alignment_alias_operator(target.operator)
-    for alias_operator, alias_sign in _epsilon_orientation_aliases(target_alias_operator):
-        key = f"{canonical_string(alias_operator)}->{canonical_string(target.operator)}:{alias_sign}:direct"
-        if key in seen:
-            continue
-        seen.add(key)
-        out.append((alias_operator, target.operator, alias_sign, _identity_coefficient_transform))
+    operator_terms = terms(target.operator.expand())
+    direct_terms = operator_terms if len(operator_terms) > 1 else (target.operator,)
+    for replacement_term in direct_terms:
+        target_alias_operator = _normalize_alignment_alias_operator(replacement_term)
+        for alias_operator, alias_sign in _epsilon_orientation_aliases(target_alias_operator):
+            key = f"{canonical_string(alias_operator)}->{canonical_string(replacement_term)}:{alias_sign}:direct"
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append((alias_operator, replacement_term, alias_sign, _identity_coefficient_transform))
     chiral_fierz_channels = _chiral_fierz_channels_for_operator(target.operator)
-    if not chiral_fierz_channels:
+    if not chiral_fierz_channels and len(operator_terms) == 1:
         hermitian_operator = _normalize_alignment_alias_operator(_hermitian_conjugate_coefficient(target.operator))
         for alias_operator, alias_sign in _epsilon_orientation_aliases(hermitian_operator):
             key = f"{canonical_string(alias_operator)}->{canonical_string(target.operator)}:{alias_sign}:hc"

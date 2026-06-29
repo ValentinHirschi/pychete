@@ -662,6 +662,25 @@ def test_idenso_canonicalizes_conjugated_rank_two_builtin_epsilon_cg_tensors() -
     assert _same(idenso.canonicalize_builtin_epsilon_cg_tensors(s.Bar(eps(j, i))), -s.Bar(eps(i, j)))
 
 
+def test_idenso_canonicalizes_same_representation_pychete_delta_ordering() -> None:
+    theory = Theory("idenso_delta_canonical")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    first = theory.index("i1", flavor.symbol)
+    second = theory.index("i2", flavor.symbol)
+
+    assert _same(idenso.canonicalize_pychete_deltas(s.Delta(second, first)), s.Delta(first, second))
+
+
+def test_idenso_canonicalizes_registered_external_delta_ordering() -> None:
+    theory = Theory("idenso_external_delta_canonical")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    delta = theory.define_external("Delta")
+    first = theory.index("i1", flavor.symbol)
+    second = theory.index("i2", flavor.symbol)
+
+    assert _same(idenso.canonicalize_pychete_deltas(delta(second, first)), delta(first, second))
+
+
 def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
     mu = s.Index(s.dummy_index(0), s.Lorentz)
     nu = s.Index(s.dummy_index(1), s.Lorentz)

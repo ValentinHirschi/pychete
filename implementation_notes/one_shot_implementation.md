@@ -1117,8 +1117,82 @@ Current converted-on-shell effective-coupling parity sweep for
 `Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current pairs:
 
 - Nonzero Matchete Wilson conditions in the fixture: 25.
-- Matching in pychete at this boundary: `cHD`, `cHud`, `cle`, `cledq`,
+- Exact standalone converted-boundary matches after dummy/external-delta
+  canonicalization: `cHud`, `cle`, `clequ1`, `cqd1`, `cqd8`, `cqu1`,
+  `cqu8`, `cquqd1`.
+- Selected public Wilson-line routes remain separately green for `cHW`,
+  `cHB`, `cHWB`, and `cHD`; these are not counted in the standalone
+  converted-boundary sweep below.
+- Still zero at this boundary: `cHB`, `cHW`, `cHWB`, `cHl3`, `cHq3`.
+- Standalone converted-boundary solve errors: `cH`, `cHBox`, `cHD`.
+- Nonzero but different: `cHd`, `cHe`, `cHl1`, `cHq1`, `cHu`, `cdH`,
+  `ceH`, `cledq`, `cuH`.
+
+## Current Slice Update: Additive Higgs-Current Basis Map
+
+This slice extends the standalone converted on-shell `MapEffectiveCouplings`
+boundary from 8/25 exact nonzero Wilson-condition matches to 11/25. The newly
+matching coefficients are the right-handed Higgs-current family `cHu`, `cHd`,
+and `cHe`.
+
+Mismatch checklist:
+
+- Matchete evidence: committed fixture
+  `assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json`,
+  whose saved matching conditions for `cHu`, `cHd`, and `cHe` contain the
+  expected Yukawa-current and hypercharge-current pieces.
+- Paired pychete probe: watchdog-wrapped
+  `MatchingResult.map_effective_couplings(...)` on the converted Matchete
+  `on_shell_eft_lagrangian`, using the registered SMEFT Wilson target
+  metadata for `cHu`, `cHd`, and `cHe`.
+- First differing boundary before this slice: the source already contained
+  the two Higgs-current additive terms with derivative-slot fields, but
+  target-index alignment only handled single-monomial operators. Multi-term
+  targets such as
+  `i Bar[H] D[H] J_mu - i H D[Bar[H]] J_mu`
+  therefore left source dummy indices unaligned with the target Wilson
+  indices. In diagnostic `allow_incomplete_target` mode, the source equations
+  were then dropped and the solve returned zero.
+- Generic patch: target-index alignment now emits aliases for each additive
+  target term while keeping the single-term hermitian-conjugate path used by
+  `cHud`. This is a term-level Matchete-style basis-map alignment step, not a
+  Wilson-name-specific coefficient repair.
+- Secondary generic patch: idenso's delta canonicalizer now also handles
+  registered external `Delta(...)` functions with indexed arguments, matching
+  the Matchete fixture encoding of flavour Kronecker deltas. This removes
+  irrelevant `Delta(i2,i1)` versus `Delta(i1,i2)` differences in solved
+  coefficients.
+
+Validation:
+
+- `tests/unit/functional/test_effective_couplings.py` now includes
+  `test_map_effective_couplings_aligns_additive_target_operator_terms`,
+  covering distinguishable additive target terms with source dummy indices.
+- `tests/unit/backends/test_idenso_backend.py` now includes pychete and
+  registered-external Delta ordering tests.
+- `tests/integration/validation/test_validation_fixtures.py` now includes
+  `test_singlet_reference_effective_coupling_map_recovers_additive_higgs_current_condition`,
+  parameterized over `cHu`, `cHd`, and `cHe`.
+- Focused validation passed:
+  `tests/unit/functional/test_effective_couplings.py`, the targeted idenso
+  Delta tests, and the eight converted-boundary Singlet fixture checks
+  (`cHud`, `cHu`, `cHd`, `cHe`, `cle`, `clequ1`, `cqu1/cqu8`,
+  `cqd1/cqd8`) under the 30 GiB watchdog.
+- Targeted mypy passed on `src/pychete/effective_couplings.py`,
+  `src/pychete/backends/idenso.py`, and the focused unit test modules. A
+  direct mypy run over the large validation test file still reports existing
+  unrelated test-typing issues, so it is not used as this slice's typing
+  gate.
+
+Current standalone converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current pairs
+and external Delta canonicalization:
+
+- Nonzero Matchete Wilson conditions in the fixture: 25.
+- Matching in pychete at this boundary: `cHd`, `cHe`, `cHu`, `cHud`, `cle`,
   `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`.
-- Still zero at this boundary: `cHB`, `cHBox`, `cHW`, `cHWB`, `cHd`, `cHe`,
-  `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`.
-- Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
+- Still zero at this boundary: `cHB`, `cHW`, `cHWB`, `cHl3`, `cHq3`.
+- Standalone converted-boundary solve errors: `cH`, `cHBox`, `cHD`.
+- Nonzero but different: `cHl1`, `cHq1`, `cdH`, `ceH`, `cledq`, `cuH`.
+- Separate selected public Wilson-line route matches remain `cHW`, `cHB`,
+  `cHWB`, and `cHD`.

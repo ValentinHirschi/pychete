@@ -209,6 +209,25 @@ def canonicalize_builtin_epsilon_cg_tensors(expr: Expression) -> Expression:
     return expr.replace_multiple(_builtin_epsilon_cg_replacements()).expand()
 
 
+def canonicalize_pychete_deltas(expr: Expression) -> Expression:
+    """Canonicalize symmetric pychete or registered-Matchete ``Delta`` tensors."""
+
+    if not _contains_delta(expr) and not _contains_external_delta_function(expr):
+        return expr
+    return expr.replace_multiple(
+        (
+            *_pychete_delta_canonicalization_replacements(),
+            *_external_delta_canonicalization_replacements(),
+        )
+    ).expand()
+
+
+def _contains_external_delta_function(expr: Expression) -> bool:
+    label = s.head("external_delta_contains_label_")
+    pattern = label(s.head("external_delta_contains_left_"), s.head("external_delta_contains_right_"))
+    return bool(expr.matches(pattern, label.req_tag(SymbolRole.EXTERNAL.value)))
+
+
 def decode_native_color_wrappers(
     theory: Any,
     expr: Expression,
@@ -1987,6 +2006,54 @@ def _is_rank_two_builtin_epsilon_label(label: Expression) -> bool:
     source = symbol_data(label, SymbolDataKey.CG_SOURCE, "")
     representations = symbol_data(label, SymbolDataKey.CG_REPRESENTATIONS, [])
     return source == "builtin:eps" and isinstance(representations, list) and len(representations) == 2
+
+
+@cache
+def _pychete_delta_canonicalization_replacements() -> tuple[Replacement, ...]:
+    left = s.head("pychete_delta_canonical_left_")
+    right = s.head("pychete_delta_canonical_right_")
+    representation = s.head("pychete_delta_canonical_representation_")
+    pattern = s.Delta(s.Index(left, representation), s.Index(right, representation))
+
+    def canonicalize(match: dict[Expression, Expression]) -> Expression:
+        left_index = s.Index(match[left], match[representation])
+        right_index = s.Index(match[right], match[representation])
+        if canonical_string(left_index) <= canonical_string(right_index):
+            return pattern.replace_wildcards(match)
+        return s.Delta(right_index, left_index)
+
+    return (Replacement(pattern, canonicalize, rhs_cache_size=0),)
+
+
+@cache
+def _external_delta_canonicalization_replacements() -> tuple[Replacement, ...]:
+    label = s.head("external_delta_label_")
+    left = s.head("external_delta_left_")
+    right = s.head("external_delta_right_")
+    pattern = label(left, right)
+
+    def canonicalize(match: dict[Expression, Expression]) -> Expression:
+        matched_label = match[label]
+        if symbol_data(matched_label, SymbolDataKey.NAME) != "Delta":
+            return pattern.replace_wildcards(match)
+        left_index = match[left]
+        right_index = match[right]
+        if not is_head(left_index, s.Index) or not is_head(right_index, s.Index):
+            return pattern.replace_wildcards(match)
+        if not bool(left_index[1] == right_index[1]):
+            return pattern.replace_wildcards(match)
+        if canonical_string(left_index) <= canonical_string(right_index):
+            return pattern.replace_wildcards(match)
+        return matched_label(right_index, left_index)
+
+    return (
+        Replacement(
+            pattern,
+            canonicalize,
+            label.req_tag(SymbolRole.EXTERNAL.value),
+            rhs_cache_size=0,
+        ),
+    )
 
 
 def _replace_adjoint_generators_with_structure_constants(theory: Any, expr: Expression) -> Expression:

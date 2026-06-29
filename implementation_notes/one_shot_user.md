@@ -2064,3 +2064,13 @@ next real performance step remains an insertion-level collected
   coefficients after this slice are `cHD`, `cHud`, `cle`, `cledq`, `clequ1`,
   `cqd1`, `cqd8`, `cqu1`, `cqu8`, and `cquqd1`. Selected public Wilson-line
   probes remain separately green for `cHW`, `cHB`, `cHWB`, and `cHD`.
+- Current continuation, 2026-06-29: after re-sweeping with exact canonical
+  Wilson-condition keys, the standalone converted `MapEffectiveCouplings`
+  boundary should be tracked separately from selected public Wilson-line
+  parity. The latest standalone converted-boundary matches for
+  `Singlet_Scalar_Extension -> SMEFT Warsaw` are `cHd`, `cHe`, `cHu`,
+  `cHud`, `cle`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and `cquqd1`
+  (`11/25`). The latest slice added generic additive target-term alignment
+  and registered external-`Delta` canonicalization to recover `cHu`, `cHd`,
+  and `cHe`. Selected public Wilson-line probes remain separately green for
+  `cHW`, `cHB`, `cHWB`, and `cHD`.

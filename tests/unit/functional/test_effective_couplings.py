@@ -174,6 +174,31 @@ def test_map_effective_couplings_recovers_hermitian_conjugate_target_operator() 
     )
 
 
+def test_map_effective_couplings_aligns_additive_target_operator_terms() -> None:
+    theory = Theory("effective_coupling_additive_target_alignment")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    phi = theory.define_field("phi", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
+    chi = theory.define_field("chi", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
+    rho = theory.define_field("rho", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
+    eta = theory.define_field("eta", s.Scalar, indices=[flavor.symbol], self_conjugate=True, mass=0)
+    coefficient = theory.define_coupling("C")
+    i = theory.index("i", flavor.symbol)
+    j = theory.index("j", flavor.symbol)
+    a = theory.index("a", flavor.symbol)
+    b = theory.index("b", flavor.symbol)
+    operator = phi(i) * chi(j) + rho(i) * eta(j)
+    source = coefficient() * (phi(a) * chi(b) + rho(a) * eta(b))
+    wilson = theory.define_wilson_coefficient("cAdd", indices=[i, j], operator=operator)
+
+    mapped = map_effective_couplings(
+        source,
+        (EffectiveCouplingTarget("cAdd", wilson(), operator),),
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(mapped["cAdd"], coefficient())
+
+
 def test_map_effective_couplings_uses_chiral_fierz_identity_for_vector_currents() -> None:
     theory = Theory("effective_coupling_chiral_fierz")
     flavor = theory.define_flavor_index("Flavor", 3)

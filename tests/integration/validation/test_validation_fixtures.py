@@ -22,6 +22,7 @@ from pychete import (
     registered_wilson_matching_condition_targets,
 )
 from pychete.backends import spenso as spenso_backend
+from pychete.backends import idenso
 from pychete.backends import vacuum_integrals
 from pychete.backends import vakint as vakint_backend
 from pychete import validation_fixtures as validation_fixtures_module
@@ -236,6 +237,33 @@ def test_singlet_reference_effective_coupling_map_recovers_chud_from_hermitian_c
         (
             relabel_dummy_indices(mapped["cHud"], start=1)
             - relabel_dummy_indices(result.matching_conditions[reference_name], start=1)
+        ).expand(),
+        Expression.num(0),
+    )
+
+
+@pytest.mark.parametrize("label", ["cHu", "cHd", "cHe"])
+def test_singlet_reference_effective_coupling_map_recovers_additive_higgs_current_condition(
+    label: str,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    definition = result.theory.externals[label]
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    reference_name = canonical_string(variable)
+
+    mapped = result.map_effective_couplings(
+        {label: variable},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        (
+            idenso.canonicalize_pychete_deltas(relabel_dummy_indices(mapped[label], start=1))
+            - idenso.canonicalize_pychete_deltas(
+                relabel_dummy_indices(result.matching_conditions[reference_name], start=1)
+            )
         ).expand(),
         Expression.num(0),
     )
