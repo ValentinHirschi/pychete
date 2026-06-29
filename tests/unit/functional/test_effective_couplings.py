@@ -283,6 +283,89 @@ def test_map_effective_couplings_decomposes_color_fierz_singlet_octet_currents()
     assert_expr_equal(mapped["cqu8"], -expected)
 
 
+@pytest.mark.parametrize("field_name", ["l", "q"])
+def test_map_effective_couplings_decomposes_su2_higgs_current_singlet_triplet_pair(
+    field_name: str,
+) -> None:
+    theory = Theory(f"ec_su2_hc_{field_name}")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    weak = theory.define_representation("SU2L", "fund")
+    adjoint = theory.define_representation("SU2L", "adj")
+    if field_name == "q":
+        theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+        color = theory.define_representation("SU3c", "fund")
+    else:
+        color = None
+    flavor = theory.define_flavor_index("Flavor", 3)
+    h = theory.define_field("H", s.Scalar, indices=[weak])
+    if field_name == "q":
+        assert color is not None
+        fermion = theory.define_field(
+            field_name,
+            s.Fermion,
+            indices=[color, weak],
+            chirality="left",
+        )
+    else:
+        fermion = theory.define_field(field_name, s.Fermion, indices=[weak], chirality="left")
+    gen = theory.cg_tensor_handle("gen_SU2L_fund")
+    mu = theory.index("mu")
+    adj = theory.index("A", adjoint)
+    h_i = theory.index("hi", weak)
+    h_j = theory.index("hj", weak)
+    f_j = theory.index("fj", weak)
+    f_k = theory.index("fk", weak)
+    f_m = theory.index("fm", weak)
+    p = theory.index("p", flavor.symbol)
+    r = theory.index("r", flavor.symbol)
+    alpha = theory.index("alpha", color) if color is not None else None
+    singlet_coefficient = S(f"effective_coupling_su2_{field_name}_singlet")
+    crossed_coefficient = S(f"effective_coupling_su2_{field_name}_crossed")
+
+    def current(left_weak: Expression, right_weak: Expression) -> Expression:
+        if alpha is None:
+            return s.NCM(s.Bar(fermion(left_weak, p)), s.Gamma(mu), fermion(right_weak, r))
+        return s.NCM(s.Bar(fermion(alpha, left_weak, p)), s.Gamma(mu), fermion(alpha, right_weak, r))
+
+    singlet_operator = (
+        -Expression.I * h(h_i) * s.Bar(h(h_i, derivatives=[mu])) * current(f_j, f_j)
+        + Expression.I * h(h_i, derivatives=[mu]) * s.Bar(h(h_i)) * current(f_j, f_j)
+    ).expand()
+    triplet_operator = (
+        -4
+        * Expression.I
+        * h(h_j)
+        * s.Bar(h(h_i, derivatives=[mu]))
+        * current(f_k, f_m)
+        * gen(adj, h_i, h_j)
+        * gen(adj, f_k, f_m)
+        + 4
+        * Expression.I
+        * h(h_j, derivatives=[mu])
+        * s.Bar(h(h_i))
+        * current(f_k, f_m)
+        * gen(adj, h_i, h_j)
+        * gen(adj, f_k, f_m)
+    ).expand()
+    crossed_operator = (
+        -Expression.I * h(h_j) * s.Bar(h(h_i, derivatives=[mu])) * current(h_j, h_i)
+        + Expression.I * h(h_j, derivatives=[mu]) * s.Bar(h(h_i)) * current(h_j, h_i)
+    ).expand()
+    c_singlet = theory.define_wilson_coefficient(f"cH{field_name}1", indices=[p, r], operator=singlet_operator)
+    c_triplet = theory.define_wilson_coefficient(f"cH{field_name}3", indices=[p, r], operator=triplet_operator)
+
+    mapped = map_effective_couplings(
+        singlet_coefficient * singlet_operator + crossed_coefficient * crossed_operator,
+        (
+            EffectiveCouplingTarget(f"cH{field_name}1", c_singlet(), singlet_operator),
+            EffectiveCouplingTarget(f"cH{field_name}3", c_triplet(), triplet_operator),
+        ),
+    )
+
+    assert_expr_equal(mapped[f"cH{field_name}1"], singlet_coefficient + crossed_coefficient / 2)
+    assert_expr_equal(mapped[f"cH{field_name}3"], crossed_coefficient / 2)
+
+
 def test_map_effective_couplings_incomplete_target_mode_is_explicit() -> None:
     theory = Theory("effective_coupling_incomplete")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

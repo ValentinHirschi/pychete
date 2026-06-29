@@ -80,6 +80,7 @@ def map_effective_couplings(
     auto_identities = (
         *_target_operator_chiral_fierz_identities(target_tuple),
         *_target_operator_color_fierz_identities(target_tuple),
+        *_target_operator_weak_higgs_current_identities(target_tuple),
     )
     identity_tuple = tuple(identity for identity in (*identities, *auto_identities) if not is_zero(identity))
     input_expr = idenso.simplify_pychete_chiral_projectors(input_expr)
@@ -95,7 +96,12 @@ def map_effective_couplings(
     target_expr = _align_target_operator_indices(target_expr, target_tuple)
     identity_tuple = tuple(_align_target_operator_indices(identity, target_tuple) for identity in identity_tuple)
     if identity_tuple:
-        preferred = tuple(target.operator for target in target_tuple)
+        preferred = tuple(
+            term
+            for target in target_tuple
+            for term in terms(target.operator.expand())
+            if not is_zero(term)
+        )
         input_expr = linear_identity_normal_form_from_identities(
             input_expr,
             identity_tuple,
@@ -244,6 +250,20 @@ class _ColorOctetTarget:
     generators: tuple[_GeneratorCurrentMatch, _GeneratorCurrentMatch]
 
 
+@dataclass(frozen=True)
+class _WeakHiggsCurrentSingletTarget:
+    target: EffectiveCouplingTarget
+    current_label_key: str
+    crossed_operator: Expression
+
+
+@dataclass(frozen=True)
+class _WeakHiggsCurrentTripletTarget:
+    target: EffectiveCouplingTarget
+    current_label_key: str
+    dimension: int
+
+
 def _target_operator_chiral_fierz_identities(
     targets: Sequence[EffectiveCouplingTarget],
 ) -> tuple[Expression, ...]:
@@ -284,6 +304,24 @@ def _target_operator_color_fierz_identities(
     return tuple(identities)
 
 
+def _target_operator_weak_higgs_current_identities(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[Expression, ...]:
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    for singlet, triplet in _weak_higgs_current_fierz_pairs(targets):
+        identity = (
+            singlet.crossed_operator
+            - (singlet.target.operator + triplet.target.operator) / Expression.num(2)
+        ).expand()
+        key = canonical_string(identity)
+        if key in seen:
+            continue
+        seen.add(key)
+        identities.append(identity)
+    return tuple(identities)
+
+
 def _target_operator_group_fierz_alignment_replacements(
     targets: Sequence[EffectiveCouplingTarget],
 ) -> tuple[Replacement, ...]:
@@ -291,6 +329,13 @@ def _target_operator_group_fierz_alignment_replacements(
     seen: set[str] = set()
     for crossed in _target_operator_color_fierz_crossed_vectors(targets):
         for alias in (crossed, *tuple(channel for channel, _operator in _chiral_fierz_channels_for_operator(crossed))):
+            key = canonical_string(alias)
+            if key in seen:
+                continue
+            seen.add(key)
+            aliases.append((alias, alias, 1, _identity_coefficient_transform))
+    for crossed in _target_operator_weak_higgs_current_crossed_operators(targets):
+        for alias in terms(crossed.expand()):
             key = canonical_string(alias)
             if key in seen:
                 continue
@@ -321,10 +366,10 @@ def _target_operator_group_fierz_alignment_replacements(
                 _target_operator_alignment_replacement(
                     coefficient * pattern_operator,
                     coefficient,
-                    replacement_operator,
+                    _replacement_operator,
                     wildcards,
-                    alias_sign,
-                    coefficient_transform,
+                    _alias_sign,
+                    _coefficient_transform,
                 ),
                 partial=False,
                 rhs_cache_size=0,
@@ -343,8 +388,15 @@ def _target_operator_group_fierz_alignment_operator_patterns(
         tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform]
     ] = []
     seen: set[str] = set()
-    for alias_position, crossed in enumerate(_target_operator_color_fierz_crossed_vectors(targets)):
-        aliases = (crossed, *tuple(channel for channel, _operator in _chiral_fierz_channels_for_operator(crossed)))
+    crossed_operators = (
+        *_target_operator_color_fierz_crossed_vectors(targets),
+        *_target_operator_weak_higgs_current_crossed_operators(targets),
+    )
+    for alias_position, crossed in enumerate(crossed_operators):
+        aliases = (
+            *terms(crossed.expand()),
+            *tuple(channel for channel, _operator in _chiral_fierz_channels_for_operator(crossed)),
+        )
         for alias_offset, alias_operator in enumerate(aliases):
             key = canonical_string(alias_operator)
             if key in seen:
@@ -364,6 +416,46 @@ def _target_operator_group_fierz_alignment_operator_patterns(
     return tuple(patterns)
 
 
+def _target_operator_weak_higgs_current_crossed_operators(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[Expression, ...]:
+    out: list[Expression] = []
+    seen: set[str] = set()
+    for singlet, _triplet in _weak_higgs_current_fierz_pairs(targets):
+        key = canonical_string(singlet.crossed_operator)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(singlet.crossed_operator)
+    return tuple(out)
+
+
+def _weak_higgs_current_fierz_pairs(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[tuple[_WeakHiggsCurrentSingletTarget, _WeakHiggsCurrentTripletTarget], ...]:
+    singlet_targets: list[_WeakHiggsCurrentSingletTarget] = []
+    triplet_targets: list[_WeakHiggsCurrentTripletTarget] = []
+    for target in targets:
+        singlet = _weak_higgs_current_singlet_target(target)
+        if singlet is not None:
+            singlet_targets.append(singlet)
+        triplet = _weak_higgs_current_triplet_target(target)
+        if triplet is not None:
+            triplet_targets.append(triplet)
+    out: list[tuple[_WeakHiggsCurrentSingletTarget, _WeakHiggsCurrentTripletTarget]] = []
+    seen: set[tuple[str, str]] = set()
+    for singlet in singlet_targets:
+        for triplet in triplet_targets:
+            if triplet.dimension != 2 or singlet.current_label_key != triplet.current_label_key:
+                continue
+            key = (canonical_string(singlet.target.variable), canonical_string(triplet.target.variable))
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append((singlet, triplet))
+    return tuple(out)
+
+
 def _target_operator_color_fierz_crossed_vectors(
     targets: Sequence[EffectiveCouplingTarget],
 ) -> tuple[Expression, ...]:
@@ -381,6 +473,159 @@ def _target_operator_color_fierz_crossed_vectors(
         seen.add(key)
         out.append(crossed)
     return tuple(out)
+
+
+def _weak_higgs_current_singlet_target(
+    target: EffectiveCouplingTarget,
+) -> _WeakHiggsCurrentSingletTarget | None:
+    normalized = _normalize_alignment_alias_operator(target.operator).expand()
+    if _builtin_generator_atoms(normalized):
+        return None
+    crossed_terms: list[Expression] = []
+    current_label_key: str | None = None
+    for term in terms(normalized):
+        crossed = _crossed_weak_higgs_current_term(term)
+        if crossed is None:
+            return None
+        crossed_term, current = crossed
+        label_key = canonical_string(current.label)
+        if current_label_key is None:
+            current_label_key = label_key
+        elif current_label_key != label_key:
+            return None
+        crossed_terms.append(crossed_term)
+    if current_label_key is None or len(crossed_terms) != 2:
+        return None
+    return _WeakHiggsCurrentSingletTarget(
+        target=target,
+        current_label_key=current_label_key,
+        crossed_operator=sum_expr(crossed_terms).expand(),
+    )
+
+
+def _weak_higgs_current_triplet_target(
+    target: EffectiveCouplingTarget,
+) -> _WeakHiggsCurrentTripletTarget | None:
+    normalized = _normalize_alignment_alias_operator(target.operator).expand()
+    generators = _builtin_generator_atoms(normalized)
+    if len(generators) < 2:
+        return None
+    dimensions = {_fundamental_generator_dimension(generator) for generator in generators}
+    if len(dimensions) != 1:
+        return None
+    dimension = next(iter(dimensions))
+    if dimension <= 0:
+        return None
+    current_label_key: str | None = None
+    for term in terms(normalized):
+        currents = _vector_current_matches(term)
+        if len(currents) != 1:
+            return None
+        label_key = canonical_string(currents[0].label)
+        if current_label_key is None:
+            current_label_key = label_key
+        elif current_label_key != label_key:
+            return None
+    if current_label_key is None:
+        return None
+    return _WeakHiggsCurrentTripletTarget(
+        target=target,
+        current_label_key=current_label_key,
+        dimension=dimension,
+    )
+
+
+def _fundamental_generator_dimension(generator: Expression) -> int:
+    dimension = _generator_fundamental_dimension(generator)
+    if dimension > 0:
+        return dimension
+    indices = list_items(generator[1])
+    if len(indices) < 2:
+        return -1
+    return _index_representation_dimension(indices[1])
+
+
+def _crossed_weak_higgs_current_term(
+    term: Expression,
+) -> tuple[Expression, _VectorCurrentPatternMatch] | None:
+    currents = _vector_current_matches(term)
+    if len(currents) != 1:
+        return None
+    current = currents[0]
+    unbarred, barred = _weak_higgs_current_scalar_factors(term, current)
+    if unbarred is None or barred is None:
+        return None
+    h_index = _single_field_index(barred)
+    if h_index is None:
+        return None
+    weak_position = _singlet_current_color_position(current, h_index)
+    if weak_position is None:
+        return None
+    left_indices = list_items(current.left[2])
+    if weak_position >= len(left_indices):
+        return None
+    weak_index = left_indices[weak_position]
+    crossed_unbarred = _field_with_single_index(unbarred, weak_index)
+    crossed_right = _field_with_index_at_position(current.right, weak_position, h_index)
+    crossed_term = term.replace_multiple(
+        (
+            Replacement(unbarred, crossed_unbarred),
+            Replacement(current.right, crossed_right),
+        )
+    ).expand()
+    return crossed_term, current
+
+
+def _weak_higgs_current_scalar_factors(
+    term: Expression,
+    current: _VectorCurrentPatternMatch,
+) -> tuple[Expression | None, Expression | None]:
+    remainder = _remove_current_factors(term, (current,))
+    unbarred: Expression | None = None
+    barred: Expression | None = None
+    for factor in factors(remainder):
+        if _is_higgs_current_scalar_factor(factor, current.mu):
+            if unbarred is not None:
+                return None, None
+            unbarred = factor
+            continue
+        if is_head(factor, s.Bar) and _is_higgs_current_scalar_factor(factor[0], current.mu):
+            if barred is not None:
+                return None, None
+            barred = factor[0]
+    if unbarred is None or barred is None:
+        return None, None
+    if not bool(unbarred[0] == barred[0]):
+        return None, None
+    if not bool(_single_field_index(unbarred) == _single_field_index(barred)):
+        return None, None
+    return unbarred, barred
+
+
+def _is_higgs_current_scalar_factor(expr: Expression, mu: Expression) -> bool:
+    if not is_head(expr, s.Field) or not bool(expr[1] == s.Scalar):
+        return False
+    if len(list_items(expr[2])) != 1:
+        return False
+    derivatives = list_items(expr[3])
+    return len(derivatives) in {0, 1} and (not derivatives or bool(derivatives[0] == mu))
+
+
+def _single_field_index(field: Expression) -> Expression | None:
+    indices = list_items(field[2])
+    return indices[0] if len(indices) == 1 else None
+
+
+def _field_with_single_index(field: Expression, index: Expression) -> Expression:
+    return s.Field(field[0], field[1], s.List(index), field[3])
+
+
+def _field_with_index_at_position(field: Expression, position: int, index: Expression) -> Expression:
+    indices = list(list_items(field[2]))
+    if position >= len(indices):
+        return field
+    indices[position] = index
+    return s.Field(field[0], field[1], s.List(*indices), field[3])
 
 
 def _pure_vector_targets(
@@ -760,10 +1005,10 @@ def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> 
                 _target_operator_alignment_replacement(
                     pattern,
                     coefficient,
-                    replacement_operator,
+                    _replacement_operator,
                     wildcards,
-                    alias_sign,
-                    coefficient_transform,
+                    _alias_sign,
+                    _coefficient_transform,
                 ),
                 partial=False,
                 rhs_cache_size=0,

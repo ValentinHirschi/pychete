@@ -296,6 +296,38 @@ def test_singlet_reference_effective_coupling_map_recovers_color_fierz_current_p
         )
 
 
+@pytest.mark.parametrize("labels", [("cHl1", "cHl3"), ("cHq1", "cHq3")])
+def test_singlet_reference_effective_coupling_map_recovers_weak_higgs_current_pair(
+    labels: tuple[str, str],
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    targets: dict[str, Expression] = {}
+    reference_names: dict[str, str] = {}
+    for label in labels:
+        definition = result.theory.externals[label]
+        variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+        targets[label] = variable
+        reference_names[label] = canonical_string(variable)
+
+    mapped = result.map_effective_couplings(
+        targets,
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    for label in labels:
+        assert_expr_equal(
+            (
+                idenso.canonicalize_pychete_deltas(relabel_dummy_indices(mapped[label], start=1))
+                - idenso.canonicalize_pychete_deltas(
+                    relabel_dummy_indices(result.matching_conditions[reference_names[label]], start=1)
+                )
+            ).expand(),
+            Expression.num(0),
+        )
+
+
 def test_committed_model_fixtures_store_matching_smeft_wilson_metadata() -> None:
     for model in ("Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
         model_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))

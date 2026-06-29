@@ -1196,3 +1196,66 @@ and external Delta canonicalization:
 - Nonzero but different: `cHl1`, `cHq1`, `cdH`, `ceH`, `cledq`, `cuH`.
 - Separate selected public Wilson-line route matches remain `cHW`, `cHB`,
   `cHWB`, and `cHD`.
+
+## Current Slice Update: SU(2) Higgs-Current Singlet/Triplet Basis Map
+
+This slice extends the standalone converted on-shell `MapEffectiveCouplings`
+boundary from 11/25 exact nonzero Wilson-condition matches to 15/25. The
+newly matching coefficients are the weak-doublet Higgs-current pairs `cHl1`,
+`cHl3`, `cHq1`, and `cHq3`.
+
+Mismatch checklist:
+
+- Matchete evidence: the committed Singlet fixture contains nonzero `cHl1`,
+  `cHl3`, `cHq1`, and `cHq3` conditions. Direct probes of the converted
+  `on_shell_eft_lagrangian` showed the source already had the relevant
+  singlet weak-index contractions and crossed weak-index contractions.
+- First differing boundary before this slice: pychete's additive target-term
+  alignment could recover the singlet contraction, but it had no basis-map
+  identity for the crossed SU(2) fundamental Higgs-current contraction. As a
+  result, `gL` pieces were incorrectly left in the singlet coefficient and
+  the crossed Yukawa pieces were not decomposed into the singlet/triplet pair.
+- Generic patch: the effective-coupling mapper now detects a registered
+  SU(2) fundamental triplet Higgs-current target paired with its singlet
+  target and adds the identity
+  `O_cross = (O_singlet + O_triplet)/2`, matching the Warsaw `tau = 2 T`
+  convention. The crossed operator is built from the target slots and
+  registered generator metadata; no SMEFT Wilson names are hard-coded.
+- Supporting patch: Green-basis preference for target operators now uses
+  individual additive target terms, because Higgs-current targets are
+  two-term operators. Target/group alias replacement now applies the
+  prefactor-adjusted coefficient transform that was already computed by the
+  alignment helper, which is required for aliases carrying explicit `i`
+  prefactors.
+
+Validation:
+
+- `tests/unit/functional/test_effective_couplings.py` now includes
+  `test_map_effective_couplings_decomposes_su2_higgs_current_singlet_triplet_pair`,
+  parameterized over a lepton doublet and a quark doublet. It verifies
+  `a O_singlet + b O_cross -> c1 = a + b/2`, `c3 = b/2`, including the quark
+  case where the weak index is not the first field index.
+- `tests/integration/validation/test_validation_fixtures.py` now includes
+  `test_singlet_reference_effective_coupling_map_recovers_weak_higgs_current_pair`,
+  parameterized over `("cHl1", "cHl3")` and `("cHq1", "cHq3")`.
+- Focused validation passed under the 30 GiB watchdog:
+  the new SU(2) unit test, the new Singlet weak-current fixture test, the full
+  `tests/unit/functional/test_effective_couplings.py` module, and the existing
+  converted-boundary checks for `cHud`, `cHu/cHd/cHe`, `cle`, `clequ1`, and
+  the colour-current pairs.
+- Targeted mypy passed on `src/pychete/effective_couplings.py` and
+  `tests/unit/functional/test_effective_couplings.py`.
+
+Current standalone converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current and
+weak-current pairs and external Delta canonicalization:
+
+- Nonzero Matchete Wilson conditions in the fixture: 25.
+- Matching in pychete at this boundary: `cHd`, `cHe`, `cHl1`, `cHl3`,
+  `cHq1`, `cHq3`, `cHu`, `cHud`, `cle`, `clequ1`, `cqd1`, `cqd8`, `cqu1`,
+  `cqu8`, `cquqd1`.
+- Still zero at this boundary: `cHB`, `cHW`, `cHWB`.
+- Standalone converted-boundary solve errors: `cH`, `cHBox`, `cHD`.
+- Nonzero but different: `cdH`, `ceH`, `cledq`, `cuH`.
+- Separate selected public Wilson-line route matches remain `cHW`, `cHB`,
+  `cHWB`, and `cHD`.

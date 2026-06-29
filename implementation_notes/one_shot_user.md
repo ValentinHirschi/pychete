@@ -2074,3 +2074,12 @@ next real performance step remains an insertion-level collected
   and registered external-`Delta` canonicalization to recover `cHu`, `cHd`,
   and `cHe`. Selected public Wilson-line probes remain separately green for
   `cHW`, `cHB`, `cHWB`, and `cHD`.
+- Current continuation, 2026-06-29: the latest slice added a generic SU(2)
+  Higgs-current crossed-contraction basis map for paired singlet/triplet
+  weak-doublet targets. The standalone converted-boundary matches for
+  `Singlet_Scalar_Extension -> SMEFT Warsaw` are now `cHd`, `cHe`, `cHl1`,
+  `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`, `cle`, `clequ1`, `cqd1`, `cqd8`,
+  `cqu1`, `cqu8`, and `cquqd1` (`15/25`). Remaining converted-boundary gaps
+  are zero `cHB/cHW/cHWB`, solve errors for `cH/cHBox/cHD`, and differing
+  `cdH/ceH/cledq/cuH`; selected public Wilson-line probes remain separately
+  green for `cHW`, `cHB`, `cHWB`, and `cHD`.
