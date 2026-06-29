@@ -18,6 +18,7 @@ from .functional import (
     scalar_derivative_green_normal_form,
     scalar_derivative_green_normal_form_by_operator_class,
     simplify_trivial_cd_operators,
+    systematic_abelian_vector_eom_field_redefinition_delta,
     systematic_scalar_eom_field_redefinition_delta,
 )
 from .noncommutative import scalarize_commutative_ncm_chains
@@ -156,8 +157,34 @@ def _apply_wilson_line_scalar_eom_field_redefinition(
     return (expr + delta).expand(), delta
 
 
+def _apply_wilson_line_abelian_vector_eom_field_redefinition(
+    theory: Theory,
+    expr: Expression,
+    *,
+    source_lagrangian: Expression,
+    eom_terms_lagrangian: Expression,
+    max_order: int,
+    fields: Sequence[Any] | None = None,
+    strict: bool = False,
+) -> tuple[Expression, Expression]:
+    """Apply the staged Abelian-vector ``ShiftLagrangian`` consumer."""
+
+    delta = systematic_abelian_vector_eom_field_redefinition_delta(
+        theory,
+        source_lagrangian,
+        eom_terms_lagrangian=eom_terms_lagrangian,
+        max_order=max_order,
+        fields=fields,
+        strict=strict,
+    )
+    if is_zero(delta):
+        return expr, delta
+    return (expr + delta).expand(), delta
+
+
 __all__ = [
     "_apply_on_shell_eom_reduction_to_expression",
+    "_apply_wilson_line_abelian_vector_eom_field_redefinition",
     "_apply_wilson_line_post_integral_scalar_commutator_bilinears",
     "_apply_wilson_line_scalar_eom_field_redefinition",
     "_apply_wilson_line_scalar_green_normal_form",

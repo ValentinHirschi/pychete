@@ -1881,3 +1881,15 @@ stage-local results, not another coefficient-specific rewrite.
   public API tests, and mypy. The next slice should wire this staged consumer
   into the Singlet `cHD` Wilson-line/on-shell bridge and compare against the
   Matchete `after_shift_dim6_dev3` checkpoint.
+- Follow-up bridge wiring, 2026-06-29: wired the staged Abelian vector-EOM
+  consumer into both `Theory.match(..., loop_order=1)` and validation-fixture
+  previews when `wilson_line_expose_scalar_eom_terms=True`. This preserves
+  the ordinary EOM replacement contribution, but computes the Abelian vector
+  field-redefinition companion through Matchete-style EFT-dimension and
+  descending derivative-count staging, matching the `PerformSystematicFieldRedefs`
+  / `ShiftLagrangian` boundary identified in
+  `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`. Added tests
+  distinguish commutator-only exposure, where formal vector-EOM replay stays
+  inactive, from formal-EOM exposure, where the staged vector companion is
+  applied. Focused integration checks, the two active Singlet `cHD` frontier
+  tests, mypy, and `git diff --check` passed.

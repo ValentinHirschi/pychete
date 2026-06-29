@@ -1152,7 +1152,7 @@ def test_validation_fixture_preview_applies_abelian_vector_eom_field_redefinitio
     assert_expr_equal(preview.on_shell_eft_lagrangian, -4 * coefficient() * gauge() ** 2 * current**2)
 
 
-def test_validation_fixture_preview_applies_vector_eom_after_scalar_commutator_exposure(
+def test_validation_fixture_preview_commutator_exposure_without_formal_eom_keeps_vector_replay_inactive(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     theory = Theory("validation_preview_vector_eom_after_scalar_commutator")
@@ -1212,12 +1212,92 @@ def test_validation_fixture_preview_applies_vector_eom_after_scalar_commutator_e
         fields=[vector],
         strict=True,
     )
+
+    assert len(rules) == 0
+    assert_expr_equal(delta, Expression.num(0))
+    assert preview.metadata["wilson_line_scalar_commutator_abelian_vector_eom_reduction_rule_count"] == 0
+    assert preview.metadata["wilson_line_scalar_commutator_abelian_vector_field_redefinition_applied"] is False
+    assert preview.metadata["wilson_line_scalar_commutator_abelian_vector_field_redefinition_staged"] is False
+    assert "on_shell_eft_lagrangian_after_scalar_commutator_abelian_vector_eom_reduction" not in preview.supertraces
+    assert_expr_equal(preview.on_shell_eft_lagrangian, scalar_exposed)
+
+
+def test_validation_fixture_preview_stages_vector_eom_redefinition_after_formal_eom_exposure(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    theory = Theory("validation_preview_staged_vector_eom_after_formal")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    coefficient = theory.define_coupling("c", self_conjugate=True)
+    vector = theory.field_handle("B")
+    mu = theory.dummy_index(0)
+    field = phi()
+    current = (
+        Expression.I * s.Bar(field) * s.CD(mu, field)
+        - Expression.I * s.CD(mu, s.Bar(field)) * field
+    )
+    source = (coefficient() * current * s.EOM(vector(mu))).expand()
+    lagrangian = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+    state = PycheteState()
+    state.add_theory(theory)
+    state.add_expression("lagrangian", theory, lagrangian)
+    fixture = ValidationFixture(
+        name="validation_preview_staged_vector_eom_after_formal",
+        kind="unit",
+        state=state,
+        source={"generator": "pytest"},
+        expression_names=("lagrangian",),
+    )
+
+    def fake_power_type_result(self: OneLoopSetup, **_kwargs: object) -> MatchingResult:
+        return MatchingResult(
+            theory=self.theory,
+            uv_lagrangian=self.uv_lagrangian,
+            off_shell_eft_lagrangian=source,
+            on_shell_eft_lagrangian=source,
+        )
+
+    monkeypatch.setattr(OneLoopSetup, "interaction_power_type_matching_result", fake_power_type_result)
+
+    preview = fixture.one_loop_preview(
+        max_trace_order=1,
+        on_shell_eom_lagrangian="lagrangian",
+        on_shell_eom_fields=[vector],
+        on_shell_eom_strict=True,
+        on_shell_eom_abelian_vector_field_redefinition=True,
+        wilson_line_expose_scalar_eom_terms=True,
+    )
+    scalar_exposed = preview.supertraces["on_shell_eft_lagrangian_after_scalar_commutator_bilinear_exposure"]
+    rules = theory.eom_replacement_rules_for_expression(
+        lagrangian,
+        scalar_exposed,
+        fields=[vector],
+        strict=True,
+    )
+    delta = theory.systematic_abelian_vector_eom_field_redefinition_delta(
+        lagrangian,
+        eom_terms_lagrangian=scalar_exposed,
+        max_order=6,
+        fields=[vector],
+        strict=True,
+    )
     expected = (scalar_exposed.replace_multiple(rules) + delta).expand()
 
     assert len(rules) == 1
+    assert preview.metadata["wilson_line_scalar_eom_terms_reduced"] is True
     assert preview.metadata["wilson_line_scalar_commutator_abelian_vector_eom_reduction_rule_count"] == 1
     assert preview.metadata["wilson_line_scalar_commutator_abelian_vector_field_redefinition_applied"] is True
-    assert "on_shell_eft_lagrangian_after_scalar_commutator_abelian_vector_eom_reduction" in preview.supertraces
+    assert preview.metadata["wilson_line_scalar_commutator_abelian_vector_field_redefinition_staged"] is True
+    assert_expr_equal(
+        preview.supertraces["on_shell_eft_lagrangian_scalar_commutator_abelian_vector_field_redefinition_delta"],
+        delta,
+    )
     assert_expr_equal(preview.on_shell_eft_lagrangian, expected)
 
 

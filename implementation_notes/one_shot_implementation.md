@@ -268,7 +268,55 @@ Focused validation passed:
 - `tests/unit/definitions/test_public_api.py`
 - `dependencies/.venv/bin/python -m mypy`
 
-Next code slice: wire this staged Abelian vector-EOM consumer into the Singlet
-`cHD` Wilson-line/on-shell bridge at the Matchete `InternalSimplify` /
-`ShiftLagrangian` boundary, then compare against the existing Matchete
-`after_shift_dim6_dev3` checkpoint before broad public-route projection.
+This follow-up slice wired the staged Abelian vector-EOM consumer into both
+the public `Theory.match(..., loop_order=1)` Wilson-line/on-shell bridge and
+the validation-fixture preview bridge. When
+`wilson_line_expose_scalar_eom_terms=True`, pychete now:
+
+- exposes formal vector EOM terms at the post-integral
+  `InternalSimplify`-like boundary;
+- applies ordinary EOM replacement rules to the exposed source;
+- computes the Abelian vector field-redefinition companion through
+  `systematic_abelian_vector_eom_field_redefinition_delta(...)`, selecting
+  formal EOM terms by EFT dimension and descending derivative count; and
+- records whether the vector companion was staged in result metadata.
+
+The commutator-only bridge remains distinct: without
+`wilson_line_expose_scalar_eom_terms=True`, it does not claim formal
+vector-EOM replay. Tests now pin that inactive path separately from the staged
+formal-EOM path.
+
+Mismatch checklist for this slice:
+
+- Matchete checkpoint: `assets/validation/matchete/debug/singlet_eom_cHD.debug.json`
+  with the `after_shift_dim6_dev3` vector-EOM replay boundary, plus
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls`.
+- Pychete probes/tests:
+  `tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_stages_vector_eom_redefinition_after_formal_eom_exposure`,
+  `tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_stages_vector_eom_redefinition_after_formal_eom_exposure`,
+  and the existing Singlet `cHD` public frontier tests.
+- First generic boundary: Matchete `PerformSystematicFieldRedefs` /
+  `ShiftLagrangian` selects formal vector EOM terms by
+  `SelectOperatorDevsAndDim` before replaying the vector field shift. Pychete
+  previously used the direct whole-expression Abelian vector companion at the
+  Wilson-line scalar/EOM bridge.
+- Generic port rationale: the runtime patch does not alter a Wilson
+  coefficient. It reuses Symbolica-pattern EOM discovery and native
+  coefficient extraction, but changes the consumer boundary to Matchete's
+  dimension/derivative-staged field-redefinition loop for all already-exposed
+  Abelian vector EOM terms.
+
+Focused validation passed:
+
+- `tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_commutator_exposure_without_formal_eom_keeps_vector_replay_inactive`
+- `tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_stages_vector_eom_redefinition_after_formal_eom_exposure`
+- `tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_commutator_exposure_without_formal_eom_keeps_vector_replay_inactive`
+- `tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_stages_vector_eom_redefinition_after_formal_eom_exposure`
+- `tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_frontier`
+- `tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_public_match_selected_chd_tree_staging_preserves_wilson_line_vector_delta`
+- `dependencies/.venv/bin/python -m mypy`
+- `git diff --check`
+
+Next code slice: use this staged boundary in the remaining Singlet `cHD`
+gap analysis for full public-route composition, especially unselected trace
+remainder and final `MapEffectiveCouplings`-equivalent projection semantics.
