@@ -1646,6 +1646,8 @@ class ValidationFixture:
         matching_condition_projection_truncate_eft: bool = False,
         matching_condition_projection_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = True,
+        matching_condition_effective_coupling_map: bool = False,
+        matching_condition_effective_coupling_allow_incomplete_target: bool = False,
         use_public_match_api: bool = False,
         simplify_loop_functions_for_comparison: bool = False,
         evaluate_loop_functions_for_comparison: bool = False,
@@ -1726,6 +1728,10 @@ class ValidationFixture:
         matching conditions to a target-local subset. Entries may be canonical
         condition names or external Wilson names such as ``cHW``; the reserved
         string ``"wilson"`` selects all Wilson-coefficient conditions.
+        ``matching_condition_effective_coupling_map`` compares candidate
+        matching conditions obtained by solving the selected targets with
+        pychete's Matchete-style effective-coupling mapper rather than direct
+        coefficient projection. Keep it target-local for Wilson-line sources.
         ``comparison_canonize_indices`` keeps Symbolica tensor-index
         canonicalization enabled for common-expression comparisons so fixture
         reports do not flag alpha-equivalent dummy-index relabelings as gaps.
@@ -1898,6 +1904,10 @@ class ValidationFixture:
                 matching_condition_include_coupling_identities=(
                     matching_condition_include_coupling_identities
                 ),
+                matching_condition_effective_coupling_map=matching_condition_effective_coupling_map,
+                matching_condition_effective_coupling_allow_incomplete_target=(
+                    matching_condition_effective_coupling_allow_incomplete_target
+                ),
             )
             if not isinstance(matched, MatchingResult):
                 raise TypeError("public one-loop match returned a tree-level expression")
@@ -2007,18 +2017,27 @@ class ValidationFixture:
                 heavy_scalar_solution_expand=heavy_scalar_solution_expand,
             )
         if project_reference_matching_conditions and not use_public_match_api:
-            candidate = candidate.with_projected_matching_conditions(
-                projected_targets or {},
-                source=matching_condition_projection_source,
-                expand_source=matching_condition_projection_expand_source,
-                canonize_indices=matching_condition_projection_canonize_indices,
-                normalize_derivative_operators=matching_condition_projection_normalize_derivative_operators,
-                normalize_ibp_scalar_bilinears=matching_condition_projection_normalize_ibp_scalar_bilinears,
-                eft_order=eft_order if matching_condition_projection_truncate_eft else None,
-                heavy_field_dimension=heavy_field_dimension,
-                drop_zero=matching_condition_projection_drop_zero,
-                include_coupling_identities=matching_condition_include_coupling_identities,
-            )
+            if matching_condition_effective_coupling_map:
+                candidate = candidate.with_mapped_effective_couplings(
+                    projected_targets or {},
+                    source=matching_condition_projection_source,
+                    allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
+                    normalize_derivative_operators=matching_condition_projection_normalize_derivative_operators,
+                    drop_zero=matching_condition_projection_drop_zero,
+                )
+            else:
+                candidate = candidate.with_projected_matching_conditions(
+                    projected_targets or {},
+                    source=matching_condition_projection_source,
+                    expand_source=matching_condition_projection_expand_source,
+                    canonize_indices=matching_condition_projection_canonize_indices,
+                    normalize_derivative_operators=matching_condition_projection_normalize_derivative_operators,
+                    normalize_ibp_scalar_bilinears=matching_condition_projection_normalize_ibp_scalar_bilinears,
+                    eft_order=eft_order if matching_condition_projection_truncate_eft else None,
+                    heavy_field_dimension=heavy_field_dimension,
+                    drop_zero=matching_condition_projection_drop_zero,
+                    include_coupling_identities=matching_condition_include_coupling_identities,
+                )
         with progress(f"comparing fixture {self.name} one-loop preview to {reference_name}", logger=_LOGGER):
             report = _gap_report(
                 self.name,

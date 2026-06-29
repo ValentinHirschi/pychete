@@ -329,6 +329,29 @@ def test_singlet_reference_effective_coupling_map_recovers_standalone_ch_conditi
     )
 
 
+def test_matching_result_can_store_mapped_effective_coupling_conditions() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    definition = result.theory.externals["cH"]
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    reference_name = canonical_string(variable)
+
+    mapped_result = result.with_mapped_effective_couplings(
+        {"cH": variable},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+        merge=False,
+    )
+
+    assert mapped_result.metadata["matching_condition_projection_mode"] == "effective_coupling_map"
+    assert mapped_result.metadata["matching_condition_effective_coupling_map"] is True
+    assert mapped_result.matching_conditions.keys() == {"cH"}
+    assert_expr_equal(
+        (mapped_result.matching_conditions["cH"] - result.matching_conditions[reference_name]).expand(),
+        Expression.num(0),
+    )
+
+
 @pytest.mark.parametrize("label", ["cdH", "ceH", "cuH"])
 def test_singlet_reference_effective_coupling_map_recovers_hbox_shifted_yukawa_higgs_condition(
     label: str,
@@ -3150,6 +3173,48 @@ def test_validation_fixture_gap_report_resolves_registered_hbar_for_matchete_nor
     )
 
     assert_expr_equal(captured["hbar"], theory.external_handle("hbar")())
+
+
+def test_validation_fixture_gap_report_forwards_effective_coupling_map_to_public_match(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = fixture.theory()
+    definition = theory.externals["cH"]
+    condition_name = canonical_string(
+        s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    )
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        matching_conditions={condition_name: reference.matching_conditions[condition_name]},
+    )
+    captured: dict[str, object] = {}
+
+    def fake_match(self: Theory, _lagrangian: Expression, **kwargs: object) -> MatchingResult:
+        captured.update(kwargs)
+        return candidate
+
+    monkeypatch.setattr(Theory, "match", fake_match)
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        use_public_match_api=True,
+        project_reference_matching_conditions=True,
+        matching_condition_projection_names=("cH",),
+        matching_condition_effective_coupling_map=True,
+        matching_condition_effective_coupling_allow_incomplete_target=True,
+    )
+
+    assert captured["matching_condition_effective_coupling_map"] is True
+    assert captured["matching_condition_effective_coupling_allow_incomplete_target"] is True
+    assert report.accepted_common_wilson_matching_condition_names == (condition_name,)
 
 
 def test_validation_fixture_gap_report_can_simplify_loop_functions_for_comparison(

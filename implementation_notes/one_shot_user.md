@@ -2129,3 +2129,23 @@ next real performance step remains an insertion-level collected
   `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`, and `cuH`.
   This is converted-boundary parity; the next frontier is moving the same
   coverage upstream into the public Wilson-line one-loop generation path.
+- Current continuation, 2026-06-29: archived the oversized live
+  `one_shot_implementation.md` to `one_shot_implementation_part_I.md` and
+  rewrote the live implementation note as a compact current-status document.
+  A first post-`36647fc` probe tried to map selected two-trace public
+  Wilson-line sources through the full effective-coupling solve, but it was
+  stopped under the watchdog after several minutes because the global solve
+  was too coarse. The next planned slice is therefore a target-local public
+  effective-coupling mapping boundary for `Theory.match(...)` and validation
+  gap reports, so selected Wilson-line sources can be compared without
+  all-Wilson/global solves.
+- Current continuation, 2026-06-29: implemented that target-local public
+  effective-coupling mapping boundary. `MatchingResult` now has
+  `with_mapped_effective_couplings(...)`, and `Theory.match(..., loop_order=1)`
+  plus `one_loop_preview_gap_report(...)` accept the opt-in flags
+  `matching_condition_effective_coupling_map` and
+  `matching_condition_effective_coupling_allow_incomplete_target`. Defaults
+  still use direct coefficient projection. Focused tests passed for the new
+  structured result method, public gap-report forwarding, the existing
+  converted effective-map group, targeted mypy, and the selected public
+  Singlet `cHW/cHB/cHWB` and `cHD` regressions.

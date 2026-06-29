@@ -2570,6 +2570,8 @@ class Theory:
         matching_condition_truncate_eft: bool = False,
         matching_condition_drop_zero: bool = False,
         matching_condition_include_coupling_identities: bool = False,
+        matching_condition_effective_coupling_map: bool = False,
+        matching_condition_effective_coupling_allow_incomplete_target: bool = False,
     ) -> Expression | MatchingResult:
         """Match a Lagrangian through the requested loop order.
 
@@ -2605,6 +2607,10 @@ class Theory:
         ``matching_condition_include_coupling_identities`` to
         include tree-level identity values for target couplings registered in
         this theory when projecting from a loop-correction expression.
+        Set ``matching_condition_effective_coupling_map=True`` to solve the
+        requested targets from the selected EFT source with pychete's
+        Matchete-style effective-coupling mapper instead of direct coefficient
+        projection. Keep this target-local for large Wilson-line sources.
         """
 
         from .matching import match_one_loop
@@ -2636,6 +2642,10 @@ class Theory:
                 matching_condition_drop_zero=matching_condition_drop_zero,
                 matching_condition_include_coupling_identities=(
                     matching_condition_include_coupling_identities
+                ),
+                matching_condition_effective_coupling_map=matching_condition_effective_coupling_map,
+                matching_condition_effective_coupling_allow_incomplete_target=(
+                    matching_condition_effective_coupling_allow_incomplete_target
                 ),
             )
         raise ValueError("loop_order must be 0 or 1")

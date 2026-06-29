@@ -955,6 +955,64 @@ class MatchingResult:
             )
         return mapped
 
+    def with_mapped_effective_couplings(
+        self,
+        targets: MatchingConditionTargetInput,
+        *,
+        source: str = "on_shell_eft_lagrangian",
+        target_lagrangian: Expression | None = None,
+        identities: Sequence[Expression] = (),
+        allow_incomplete_target: bool = False,
+        normalize_derivative_operators: bool = True,
+        max_basis_terms: int = 128,
+        max_identities: int = 256,
+        drop_zero: bool = False,
+        merge: bool = True,
+    ) -> MatchingResult:
+        """Return a result with target couplings solved from an EFT Lagrangian.
+
+        This is the result-preserving companion to
+        :meth:`map_effective_couplings`.  It is intended for target-local
+        Matchete-style ``MapEffectiveCouplings`` comparisons where direct
+        coefficient projection is not the right basis-decomposition boundary.
+        """
+
+        mapped = self.map_effective_couplings(
+            targets,
+            source=source,
+            target_lagrangian=target_lagrangian,
+            identities=identities,
+            allow_incomplete_target=allow_incomplete_target,
+            normalize_derivative_operators=normalize_derivative_operators,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+        )
+        if drop_zero:
+            mapped = {
+                name: coefficient
+                for name, coefficient in mapped.items()
+                if _canonical_expr(coefficient) != "0"
+            }
+        matching_conditions = {**self.matching_conditions, **mapped} if merge else dict(mapped)
+        return replace(
+            self,
+            matching_conditions=matching_conditions,
+            metadata={
+                **self.metadata,
+                "matching_conditions_projected": True,
+                "matching_condition_projection_source": source,
+                "matching_condition_projection_count": len(mapped),
+                "matching_condition_projection_mode": "effective_coupling_map",
+                "matching_condition_effective_coupling_map": True,
+                "matching_condition_effective_coupling_allow_incomplete_target": allow_incomplete_target,
+                "matching_condition_effective_coupling_normalize_derivative_operators": (
+                    normalize_derivative_operators
+                ),
+                "matching_condition_effective_coupling_max_basis_terms": max_basis_terms,
+                "matching_condition_effective_coupling_max_identities": max_identities,
+            },
+        )
+
     def with_projected_matching_conditions(
         self,
         targets: MatchingConditionTargetInput,

@@ -8288,6 +8288,8 @@ def match_one_loop(
     matching_condition_truncate_eft: bool = False,
     matching_condition_drop_zero: bool = False,
     matching_condition_include_coupling_identities: bool = False,
+    matching_condition_effective_coupling_map: bool = False,
+    matching_condition_effective_coupling_allow_incomplete_target: bool = False,
 ) -> MatchingResult:
     """Run the current internal-analytic one-loop matching pipeline.
 
@@ -8297,7 +8299,9 @@ def match_one_loop(
     a different preview backend. The result metadata carries ``complete=False``
     until the remaining Matchete-level matching stages are implemented and
     validated. Requested matching conditions are projected from the selected
-    result expression stage with native Symbolica coefficient extraction.
+    result expression stage with native Symbolica coefficient extraction
+    unless ``matching_condition_effective_coupling_map`` is enabled, in which
+    case the selected target subset is solved with the effective-coupling map.
     """
 
     theory._validate_registered_expression(lagrangian)
@@ -9355,6 +9359,16 @@ def match_one_loop(
     if matching_condition_targets is None:
         _log_one_loop_result(result)
         return result
+    if matching_condition_effective_coupling_map:
+        projected = result.with_mapped_effective_couplings(
+            matching_condition_targets,
+            source=matching_condition_source,
+            allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
+            normalize_derivative_operators=matching_condition_normalize_derivative_operators,
+            drop_zero=matching_condition_drop_zero,
+        )
+        _log_one_loop_result(projected)
+        return projected
     staged_sources = result.staged_projection_sources(matching_condition_source)
     if staged_sources:
         projected = result.with_projected_matching_conditions_from_sources(
