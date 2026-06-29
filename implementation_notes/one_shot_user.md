@@ -2083,3 +2083,13 @@ next real performance step remains an insertion-level collected
   are zero `cHB/cHW/cHWB`, solve errors for `cH/cHBox/cHD`, and differing
   `cdH/ceH/cledq/cuH`; selected public Wilson-line probes remain separately
   green for `cHW`, `cHB`, `cHWB`, and `cHD`.
+- Current continuation, 2026-06-29: the latest slice gates
+  hermitian-conjugate target-alignment aliases so they are used only when a
+  direct target-aligned source occurrence is absent. This fixes the `cledq`
+  factor-of-two double count while preserving the `cHud` h.c.-only recovery,
+  and it also makes the standalone converted `cHD` map exact. The standalone
+  converted-boundary matches for `Singlet_Scalar_Extension -> SMEFT Warsaw`
+  are now `cHD`, `cHd`, `cHe`, `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`,
+  `cHud`, `cle`, `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and
+  `cquqd1` (`17/25`). Remaining converted-boundary gaps are zero
+  `cHB/cHW/cHWB`, solve error `cHBox`, and differing `cH/cdH/ceH/cuH`.

@@ -242,6 +242,49 @@ def test_singlet_reference_effective_coupling_map_recovers_chud_from_hermitian_c
     )
 
 
+def test_singlet_reference_effective_coupling_map_recovers_cledq_without_hc_double_counting() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    definition = result.theory.externals["cledq"]
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    reference_name = canonical_string(variable)
+
+    mapped = result.map_effective_couplings(
+        {"cledq": variable},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        (
+            idenso.canonicalize_pychete_deltas(relabel_dummy_indices(mapped["cledq"], start=1))
+            - idenso.canonicalize_pychete_deltas(
+                relabel_dummy_indices(result.matching_conditions[reference_name], start=1)
+            )
+        ).expand(),
+        Expression.num(0),
+    )
+
+
+def test_singlet_reference_effective_coupling_map_recovers_standalone_chd_condition() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    definition = result.theory.externals["cHD"]
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    reference_name = canonical_string(variable)
+
+    mapped = result.map_effective_couplings(
+        {"cHD": variable},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        (mapped["cHD"] - result.matching_conditions[reference_name]).expand(),
+        Expression.num(0),
+    )
+
+
 @pytest.mark.parametrize("label", ["cHu", "cHd", "cHe"])
 def test_singlet_reference_effective_coupling_map_recovers_additive_higgs_current_condition(
     label: str,

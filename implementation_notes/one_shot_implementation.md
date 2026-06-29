@@ -1259,3 +1259,68 @@ weak-current pairs and external Delta canonicalization:
 - Nonzero but different: `cdH`, `ceH`, `cledq`, `cuH`.
 - Separate selected public Wilson-line route matches remain `cHW`, `cHB`,
   `cHWB`, and `cHD`.
+
+## Current Slice Update: Hermitian-Conjugate Alias Gating
+
+This slice extends the standalone converted on-shell `MapEffectiveCouplings`
+boundary from 15/25 exact nonzero Wilson-condition matches to 17/25. The
+newly recorded standalone matches are `cledq` and `cHD`.
+
+Mismatch checklist:
+
+- Matchete evidence: the committed Singlet matching fixture has a nonzero
+  `cledq` condition equal to
+  `1/6 hbar A^2 Ye[i1,i2] bar(Yd[i4,i3]) / M^4`. A bounded source-term probe
+  of the converted Matchete `on_shell_eft_lagrangian` showed two scalar
+  four-fermion terms: the direct `cledq` operator and its hermitian conjugate,
+  each with the `1/6` normalization.
+- Paired pychete probe: `MatchingResult.map_effective_couplings({"cledq": ...},
+  source="on_shell_eft_lagrangian", allow_incomplete_target=True)` returned
+  `1/3 ...` before the patch, exactly twice the Matchete condition. The same
+  probe also confirmed `cHud` still needs the h.c.-only fallback, because its
+  source orientation is conjugated relative to the registered target.
+- First differing boundary: target-index alignment treated direct aliases and
+  hermitian-conjugate direct aliases as independent ways to build the same
+  target coefficient. When both direct and h.c. source terms were present,
+  as for `cledq`, the h.c. fallback was incorrectly added to the direct
+  coefficient instead of being left as the conjugate coefficient.
+- Generic patch: hermitian-conjugate target aliases are now gated per target
+  and per source expression. If a direct target-aligned occurrence exists,
+  the h.c. fallback is not installed for that target. If no direct occurrence
+  exists, the h.c. fallback remains available, preserving the `cHud` recovery
+  path. The detection uses the same Symbolica pattern/replacement alignment
+  machinery as the mapper and is not Wilson-name-specific.
+- Side effect: the standalone converted `cHD` effective-coupling map, which
+  was previously a solve error in the sweep, now solves exactly to the
+  Matchete condition. This is recorded with a direct fixture regression.
+
+Validation:
+
+- `tests/unit/functional/test_effective_couplings.py` now includes
+  `test_map_effective_couplings_does_not_double_count_hermitian_conjugate_when_direct_target_exists`,
+  while the existing `cHud` h.c.-only unit test still passes.
+- `tests/integration/validation/test_validation_fixtures.py` now includes
+  `test_singlet_reference_effective_coupling_map_recovers_cledq_without_hc_double_counting`
+  and `test_singlet_reference_effective_coupling_map_recovers_standalone_chd_condition`.
+- Focused validation passed under the 30 GiB watchdog: the h.c.-only and
+  direct-plus-h.c. unit checks, the new `cledq` and standalone `cHD` fixture
+  checks, the full `tests/unit/functional/test_effective_couplings.py`
+  module, and the existing converted-boundary checks for `cHud`,
+  `cHu/cHd/cHe`, `cHl1/cHl3`, `cHq1/cHq3`, `cle`, `clequ1`, and the
+  colour-current pairs.
+- Targeted mypy passed on `src/pychete/effective_couplings.py` and
+  `tests/unit/functional/test_effective_couplings.py`.
+
+Current standalone converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current and
+weak-current pairs and external Delta canonicalization:
+
+- Nonzero Matchete Wilson conditions in the fixture: 25.
+- Matching in pychete at this boundary: `cHD`, `cHd`, `cHe`, `cHl1`,
+  `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`, `cle`, `cledq`, `clequ1`, `cqd1`,
+  `cqd8`, `cqu1`, `cqu8`, `cquqd1`.
+- Still zero at this boundary: `cHB`, `cHW`, `cHWB`.
+- Standalone converted-boundary solve errors: `cHBox`.
+- Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
+- Separate selected public Wilson-line route matches remain `cHW`, `cHB`,
+  `cHWB`, and `cHD`.

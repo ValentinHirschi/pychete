@@ -163,15 +163,25 @@ def _align_target_operator_indices(
     expr: Expression,
     targets: Sequence[EffectiveCouplingTarget],
 ) -> Expression:
+    target_alias_modes = tuple(
+        (target, not _expr_has_direct_target_alignment(expr, target))
+        for target in targets
+    )
     replacements = tuple(
         replacement
-        for target in targets
-        for replacement in _target_operator_alignment_replacements(target)
+        for target, include_hermitian in target_alias_modes
+        for replacement in _target_operator_alignment_replacements(
+            target,
+            include_hermitian=include_hermitian,
+        )
     ) + _target_operator_group_fierz_alignment_replacements(targets)
     fallback_patterns = tuple(
         pattern
-        for target in targets
-        for pattern in _target_operator_alignment_operator_patterns(target)
+        for target, include_hermitian in target_alias_modes
+        for pattern in _target_operator_alignment_operator_patterns(
+            target,
+            include_hermitian=include_hermitian,
+        )
     ) + _target_operator_group_fierz_alignment_operator_patterns(targets)
     if not replacements:
         return expr
@@ -180,6 +190,30 @@ def _align_target_operator_indices(
         for term in terms(expr.expand())
     )
     return sum_expr(aligned_terms).expand()
+
+
+def _expr_has_direct_target_alignment(expr: Expression, target: EffectiveCouplingTarget) -> bool:
+    replacements = _target_operator_alignment_replacements(target, include_hermitian=False)
+    fallback_patterns = _target_operator_alignment_operator_patterns(target, include_hermitian=False)
+    for term in terms(expr.expand()):
+        aligned = term.replace_multiple(replacements).expand()
+        if not bool(aligned == term):
+            return True
+        for (
+            pattern_operator,
+            alias_operator,
+            _replacement_operator,
+            _alias_sign,
+            wildcards,
+            _coefficient_transform,
+        ) in fallback_patterns:
+            for match in term.match(pattern_operator):
+                index_replacements = _target_operator_index_replacements(match, wildcards)
+                relabeled = term.replace_multiple(index_replacements).expand()
+                coefficient = relabeled.coefficient(alias_operator).expand()
+                if not is_zero(coefficient) and is_zero((relabeled - coefficient * alias_operator).expand()):
+                    return True
+    return False
 
 
 def _align_target_operator_indices_term(
@@ -975,14 +1009,18 @@ def _crossed_color_vector_operator(octet: _ColorOctetTarget) -> Expression:
     return (first.current.expr * crossed_second).expand()
 
 
-def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> tuple[Replacement, ...]:
+def _target_operator_alignment_replacements(
+    target: EffectiveCouplingTarget,
+    *,
+    include_hermitian: bool = True,
+) -> tuple[Replacement, ...]:
     index_infos = collect_indices(target.operator)
     if not index_infos:
         return ()
     safe_target_name = safe_symbol_name(target.name)
     replacements: list[Replacement] = []
     for alias_position, (alias_operator, replacement_operator, alias_sign, coefficient_transform) in enumerate(
-        _target_operator_alignment_aliases(target)
+        _target_operator_alignment_aliases(target, include_hermitian=include_hermitian)
     ):
         coefficient = Expression.symbol(
             f"pychete::effective_coupling_coefficient_{safe_target_name}_{alias_position}_"
@@ -1019,6 +1057,8 @@ def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> 
 
 def _target_operator_alignment_operator_patterns(
     target: EffectiveCouplingTarget,
+    *,
+    include_hermitian: bool = True,
 ) -> tuple[
     tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform],
     ...,
@@ -1038,13 +1078,15 @@ def _target_operator_alignment_operator_patterns(
             alias_position=alias_position,
         )
         for alias_position, (alias_operator, replacement_operator, alias_sign, coefficient_transform) in enumerate(
-            _target_operator_alignment_aliases(target)
+            _target_operator_alignment_aliases(target, include_hermitian=include_hermitian)
         )
     )
 
 
 def _target_operator_alignment_aliases(
     target: EffectiveCouplingTarget,
+    *,
+    include_hermitian: bool = True,
 ) -> tuple[tuple[Expression, Expression, int, _CoefficientTransform], ...]:
     out: list[tuple[Expression, Expression, int, _CoefficientTransform]] = []
     seen: set[str] = set()
@@ -1059,7 +1101,7 @@ def _target_operator_alignment_aliases(
             seen.add(key)
             out.append((alias_operator, replacement_term, alias_sign, _identity_coefficient_transform))
     chiral_fierz_channels = _chiral_fierz_channels_for_operator(target.operator)
-    if not chiral_fierz_channels and len(operator_terms) == 1:
+    if include_hermitian and not chiral_fierz_channels and len(operator_terms) == 1:
         hermitian_operator = _normalize_alignment_alias_operator(_hermitian_conjugate_coefficient(target.operator))
         for alias_operator, alias_sign in _epsilon_orientation_aliases(hermitian_operator):
             key = f"{canonical_string(alias_operator)}->{canonical_string(target.operator)}:{alias_sign}:hc"

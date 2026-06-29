@@ -174,6 +174,42 @@ def test_map_effective_couplings_recovers_hermitian_conjugate_target_operator() 
     )
 
 
+def test_map_effective_couplings_does_not_double_count_hermitian_conjugate_when_direct_target_exists() -> None:
+    theory = Theory("effective_coupling_direct_plus_hc")
+    theory.define_gauge_group("SU2F", s.SU(Expression.num(2)), "g2", "W")
+    theory.define_gauge_group("SU3C", s.SU(Expression.num(3)), "g3", "G")
+    weak = theory.define_representation("SU2F", "fund")
+    color = theory.define_representation("SU3C", "fund")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    lepton = theory.define_field("l", s.Fermion, indices=[weak, flavor.symbol], chirality="left")
+    electron = theory.define_field("e", s.Fermion, indices=[flavor.symbol], chirality="right")
+    quark = theory.define_field("q", s.Fermion, indices=[color, weak, flavor.symbol], chirality="left")
+    down = theory.define_field("d", s.Fermion, indices=[color, flavor.symbol], chirality="right")
+    ye = theory.define_coupling("Ye", indices=[flavor.symbol, flavor.symbol])
+    yd = theory.define_coupling("Yd", indices=[flavor.symbol, flavor.symbol])
+    weak_i = theory.index("i", weak)
+    alpha = theory.index("alpha", color)
+    i1 = theory.index("i1", flavor.symbol)
+    i2 = theory.index("i2", flavor.symbol)
+    i3 = theory.index("i3", flavor.symbol)
+    i4 = theory.index("i4", flavor.symbol)
+    operator = s.NCM(s.Bar(lepton(weak_i, i1)), electron(i2)) * s.NCM(
+        s.Bar(down(alpha, i3)),
+        quark(alpha, weak_i, i4),
+    )
+    coefficient = ye(i1, i2) * s.Bar(yd(i4, i3)) / Expression.num(6)
+    source = (coefficient * operator + expand_cd_operators(hermitian_conjugate(coefficient * operator))).expand()
+    wilson = theory.define_wilson_coefficient("cledq", indices=[i1, i2, i3, i4], operator=operator)
+
+    mapped = map_effective_couplings(
+        source,
+        (EffectiveCouplingTarget("cledq", wilson(), operator),),
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(mapped["cledq"], coefficient)
+
+
 def test_map_effective_couplings_aligns_additive_target_operator_terms() -> None:
     theory = Theory("effective_coupling_additive_target_alignment")
     flavor = theory.define_flavor_index("Flavor", 3)
