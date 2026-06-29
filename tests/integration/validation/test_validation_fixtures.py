@@ -423,9 +423,11 @@ def test_validation_fixture_direct_preview_runs_scalar_eom_exposure_without_comm
         expr: Expression,
         *,
         eom_lagrangian: Expression | None = None,
+        eom_fields: object | None = None,
         expose_scalar_eom_terms: bool = False,
     ) -> Expression:
         calls.append((expr, eom_lagrangian, expose_scalar_eom_terms))
+        assert eom_fields is None
         return expr + marker
 
     monkeypatch.setattr(OneLoopSetup, "interaction_power_type_matching_result", fake_result)
@@ -443,6 +445,7 @@ def test_validation_fixture_direct_preview_runs_scalar_eom_exposure_without_comm
 
     assert len(calls) == 1
     assert_expr_equal(calls[0][0], source)
+    assert calls[0][1] is not None
     assert_expr_equal(calls[0][1], fixture.expression("lagrangian"))
     assert calls[0][2] is True
     assert_expr_equal(preview.on_shell_eft_lagrangian, source + marker)
@@ -484,10 +487,13 @@ def test_validation_fixture_direct_preview_applies_scalar_eom_field_redefinition
         expr: Expression,
         *,
         eom_lagrangian: Expression | None = None,
+        eom_fields: object | None = None,
         expose_scalar_eom_terms: bool = False,
     ) -> Expression:
         assert_expr_equal(expr, Expression.num(0))
+        assert eom_lagrangian is not None
         assert_expr_equal(eom_lagrangian, lagrangian)
+        assert eom_fields == [phi]
         assert expose_scalar_eom_terms is True
         return exposed
 

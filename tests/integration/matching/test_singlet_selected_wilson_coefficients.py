@@ -744,15 +744,42 @@ def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_front
         matching_condition_drop_zero=False,
     )
 
+    assert isinstance(result, MatchingResult)
     projected = result.matching_conditions[condition_name]
     reference_projected = reference.matching_conditions[condition_name]
     projected_str = canonical_string(projected)
 
     assert result.metadata["heavy_scalar_solution_eft_limited"] is True
     assert result.metadata["wilson_line_scalar_eom_terms_reduced"] is True
-    assert result.metadata["wilson_line_scalar_commutator_abelian_vector_eom_reduction_rule_count"] == 2
+    assert result.metadata["tensor_reduce"] is True
+    assert result.metadata["on_shell_eom_reduction_deferred_to_wilson_line_scalar_eom"] is True
+    assert result.metadata["interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed"] is False
+    assert result.metadata["wilson_line_scalar_commutator_abelian_vector_eom_reduction_rule_count"] == 3
     assert result.metadata["wilson_line_scalar_commutator_abelian_vector_field_redefinition_applied"] is True
     assert result.metadata["interaction_wilson_line_term_count"] == 16
+    delta = result.supertraces["on_shell_eft_lagrangian_scalar_commutator_abelian_vector_field_redefinition_delta"]
+    delta_projection = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=delta,
+        on_shell_eft_lagrangian=delta,
+    ).project_matching_conditions(
+        {condition_name: target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+        drop_zero=False,
+    )[condition_name]
+    mass = theory.coupling_handle("M")()
+    selected_vector_delta = (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (-S("vakint::mursq").log() / 24 + mass.log() / 12 - Expression.num(17) / 144)
+        / mass**4
+    )
+    assert_expr_equal((delta_projection - selected_vector_delta).expand(), Expression.num(0))
+    assert "coupling_gY" in projected_str
     assert "coupling_kappa" in projected_str
     assert "coupling_muphi" in projected_str
     assert not bool((projected - reference_projected).expand() == Expression.num(0))

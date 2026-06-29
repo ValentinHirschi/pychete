@@ -8379,6 +8379,11 @@ def match_one_loop(
         if options.wilson_line_filter_terms_by_matching_targets and wilson_line_expansion_indices_by_trace is not None
         else None
     )
+    wilson_line_builder_expose_scalar_derivative_commutator_bilinears = bool(
+        options.wilson_line_expose_scalar_derivative_commutator_bilinears
+        and not options.wilson_line_expose_scalar_eom_terms
+    )
+    wilson_line_internal_tensor_reduce = bool(options.tensor_reduce or options.wilson_line_expose_scalar_eom_terms)
     if wilson_line_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
         result = setup.interaction_wilson_line_hybrid_internal_matching_result(
             wilson_line_expansion_indices_by_trace,
@@ -8399,7 +8404,7 @@ def match_one_loop(
                 options.wilson_line_expand_covariant_derivative_commutators
             ),
             max_wilson_derivative_order=options.wilson_line_max_derivative_order,
-            tensor_reduce=options.tensor_reduce,
+            tensor_reduce=wilson_line_internal_tensor_reduce,
             tensor_reduce_engine=options.tensor_reduce_engine,
             tensor_reduce_before_wilson_expand=(
                 options.wilson_line_tensor_reduce_before_wilson_expand
@@ -8410,7 +8415,7 @@ def match_one_loop(
             combine_terms=options.combine_terms,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=(
-                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+                wilson_line_builder_expose_scalar_derivative_commutator_bilinears
             ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
@@ -8437,7 +8442,7 @@ def match_one_loop(
                 options.wilson_line_expand_covariant_derivative_commutators
             ),
             max_wilson_derivative_order=options.wilson_line_max_derivative_order,
-            tensor_reduce=options.tensor_reduce,
+            tensor_reduce=wilson_line_internal_tensor_reduce,
             tensor_reduce_engine=options.tensor_reduce_engine,
             tensor_reduce_before_wilson_expand=(
                 options.wilson_line_tensor_reduce_before_wilson_expand
@@ -8448,7 +8453,7 @@ def match_one_loop(
             combine_terms=options.combine_terms,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=(
-                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+                wilson_line_builder_expose_scalar_derivative_commutator_bilinears
             ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
@@ -8483,7 +8488,7 @@ def match_one_loop(
             named_supertrace_engine=options.named_supertrace_engine,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=(
-                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+                wilson_line_builder_expose_scalar_derivative_commutator_bilinears
             ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
@@ -8517,7 +8522,7 @@ def match_one_loop(
             named_supertrace_engine=options.named_supertrace_engine,
             simplify_pychete_color_algebra=options.simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=(
-                options.wilson_line_expose_scalar_derivative_commutator_bilinears
+                wilson_line_builder_expose_scalar_derivative_commutator_bilinears
             ),
             term_atom_requirements=wilson_line_term_atom_requirements,
         )
@@ -8881,7 +8886,11 @@ def match_one_loop(
             options.on_shell_replacements,
             repeat=options.on_shell_replacement_repeat,
         )
-    if options.on_shell_eom_lagrangian is not None:
+    defer_on_shell_eom_to_wilson_line_scalar_eom = bool(
+        options.on_shell_eom_lagrangian is not None
+        and options.wilson_line_expose_scalar_eom_terms
+    )
+    if options.on_shell_eom_lagrangian is not None and not defer_on_shell_eom_to_wilson_line_scalar_eom:
         eom_source = result.on_shell_eft_lagrangian
         eom_rules = eom_replacement_rules_for_expression(
             theory,
@@ -8939,6 +8948,22 @@ def match_one_loop(
                 "on_shell_eom_abelian_vector_field_redefinition_applied": (
                     not is_zero(vector_field_redefinition_delta)
                 ),
+            },
+        )
+    elif defer_on_shell_eom_to_wilson_line_scalar_eom:
+        result = replace(
+            result,
+            metadata={
+                **result.metadata,
+                "on_shell_eom_reduction_requested": True,
+                "on_shell_eom_reduction_rule_count": 0,
+                "on_shell_eom_min_derivative_order": options.on_shell_eom_min_derivative_order,
+                "on_shell_eom_strict": options.on_shell_eom_strict,
+                "on_shell_eom_abelian_vector_field_redefinition": (
+                    options.on_shell_eom_abelian_vector_field_redefinition
+                ),
+                "on_shell_eom_abelian_vector_field_redefinition_applied": False,
+                "on_shell_eom_reduction_deferred_to_wilson_line_scalar_eom": True,
             },
         )
     if options.wilson_line_expose_scalar_derivative_commutator_bilinears or options.wilson_line_expose_scalar_eom_terms:

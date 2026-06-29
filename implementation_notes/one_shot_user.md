@@ -1644,3 +1644,16 @@ Green/EOM identity conversion.
   `kappa/muphi` source composition versus the Matchete `A^2 gY^2` vector-EOM
   coefficient. Focused unit and slow integration frontier tests passed under
   the 30 GiB watchdog.
+- Latest performance/parity continuation, 2026-06-29: user emphasized that
+  pychete's intermediate parity stages must stay at least as performant as
+  Matchete's. Implementation response: narrowed the public
+  `hScalar-lScalar -> cHD` mismatch to Wilson-line scalar-EOM ordering and
+  tensor-reduction preparation. The public and validation-preview routes now
+  defer generic generated on-shell EOM replacement to the combined
+  Wilson-line scalar/EOM exposure stage, avoid a duplicate setup-level scalar
+  commutator exposure when formal scalar-EOM exposure is requested, and
+  automatically enable native tensor reduction for Wilson-line internal
+  scalar-EOM bridges. The focused public regression now records the selected
+  Abelian B-vector field-redefinition delta proportional to `A^2*gY^2`; the
+  remaining frontier is the heavy-solution `kappa/muphi` composition and the
+  residual factor to Matchete's full dim6/dev3 vector-shift replay.

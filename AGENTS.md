@@ -991,6 +991,17 @@ the scalar-exposed expression. Store both the raw scalar-exposed checkpoint and
 the post-vector-EOM checkpoint in supertraces. Keep this target/stage local;
 do not replace it with broad global simplification or expansion that would be
 slower than the corresponding Matchete staged replay.
+When `wilson_line_expose_scalar_eom_terms=True`, the public matching and
+validation-preview routes must not run a separate setup-level scalar
+commutator exposure before the formal-EOM bridge. The combined post-integral
+scalar/EOM exposure stage owns that rewrite, after loop normalization and
+target filtering, so the formal vector-EOM source is exposed once in the same
+order as Matchete's staged replay. This bridge must also run the native
+tensor-reduction path for Wilson-line internal backends, even if the user did
+not separately set `tensor_reduce=True`: unreduced loop-momentum numerators
+can hide the selected B-source from Symbolica coefficient projection. Treat
+this as mandatory native backend preparation for vector-EOM parity, not as a
+Python-side momentum simplification.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

@@ -271,17 +271,24 @@ Current slice progress:
   in the Wilson-line EOM bridge, oversized operator classes are left
   unreduced while smaller classes continue through Symbolica-backed
   Green-basis reduction. This is not a final `cHD` coefficient patch.
-- After the bounded class fallback, the public selected route completes and
-  records the next semantic frontier. With heavy-scalar substitution,
-  scalar-EOM exposure, and Abelian B-vector field-redefinition enabled, the
-  candidate projected `cHD` contains target-local `kappa/muphi` heavy-solution
-  terms and still differs from the Matchete `A^2 gY^2` vector-EOM coefficient.
-  The bridge metadata confirms two scalar-commutator Abelian vector-EOM rules
-  and a nonzero vector field-redefinition delta. The next Matchete dump/probe
-  comparison should therefore inspect how Matchete separates the selected
-  two-Higgs B-source shift from the heavy-solution `kappa/muphi` source during
-  `PerformSystematicFieldRedefs`, not tensor reduction or the Green-basis
-  capacity guard.
+- The public selected route now keeps the Wilson-line scalar-EOM bridge closer
+  to the Matchete staged replay. When formal scalar-EOM exposure is enabled,
+  pychete no longer runs a separate setup-level scalar commutator exposure
+  before the formal-EOM pass; the combined post-integral scalar/EOM exposure
+  owns that rewrite after loop normalization. The same route now automatically
+  enables native tensor reduction for Wilson-line internal backends, because
+  unreduced loop-momentum numerators hide the selected B-source from
+  Symbolica coefficient projection. The focused public regression now records
+  the nonzero selected Abelian B-vector field-redefinition delta
+  `hbar*A^2*gY^2*(-log(mursq)/24 + log(M)/12 - 17/144)/M^4`.
+- The remaining public `hScalar-lScalar -> cHD` mismatch is now downstream of
+  that selected `A^2 gY^2` source. With heavy-scalar substitution enabled, the
+  candidate still also contains target-local `kappa/muphi` heavy-solution
+  terms and remains below Matchete's full dim6/dev3 vector-shift coefficient.
+  The next Matchete dump/probe comparison should inspect how Matchete orders
+  and separates the selected two-Higgs B-source shift from the heavy-solution
+  source during `PerformSystematicFieldRedefs`, especially the factor between
+  pychete's current selected finite delta and Matchete's replay delta.
 
 ## Targeted Commands
 
