@@ -123,6 +123,27 @@ def test_indexed_complex_scalar_eom_uses_conjugate_variation_and_declared_indice
     assert_expr_equal((s.Bar(higgs(internal)) * target).replace_multiple(rules), s.Bar(higgs(internal)) * source(internal))
 
 
+def test_indexed_partial_functional_derivative_prefers_alpha_aware_variation_when_exact_match_is_partial() -> None:
+    theory = Theory("indexed_partial_derivative_alpha_variation")
+    theory.define_gauge_group("SU2L", s.SU(2), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    higgs = theory.define_field("H", s.Scalar, indices=[fund], self_conjugate=False, mass=0)
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    first = theory.define_coupling("A", self_conjugate=True)
+    second = theory.define_coupling("B", self_conjugate=True)
+    source_index = theory.dummy_index(1, fund)
+    target_index = theory.dummy_index(2, fund)
+    lagrangian = (
+        first() * phi() * s.Bar(higgs(source_index)) * higgs(source_index)
+        + second() * s.Bar(higgs(target_index)) * higgs(target_index)
+    ).expand()
+
+    derivative = partial_functional_derivative(lagrangian, s.Bar(higgs(target_index)))
+    expected = ((first() * phi() + second()) * higgs(target_index)).expand()
+
+    assert_expr_equal(derivative, expected)
+
+
 def test_eom_replacement_rules_collect_abelian_vector_divergence_targets() -> None:
     coefficient = S("abelian_vector_eom_coefficient")
     theory = Theory("abelian_vector_eom_rules")

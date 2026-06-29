@@ -1657,3 +1657,15 @@ Green/EOM identity conversion.
   Abelian B-vector field-redefinition delta proportional to `A^2*gY^2`; the
   remaining frontier is the heavy-solution `kappa/muphi` composition and the
   residual factor to Matchete's full dim6/dev3 vector-shift replay.
+- Latest indexed-variation parity fix, 2026-06-29: the remaining selected
+  `hScalar-lScalar -> cHD` factor mismatch was traced to a generic indexed
+  functional-derivative issue. Exact dummy-label replacement could return a
+  nonzero but partial derivative and thereby drop alpha-equivalent `H[d2]`
+  fluctuation entries before Wilson-line expansion. Implementation response:
+  indexed targets now prefer the native indexed Symbolica-pattern variation
+  before accepting exact output; the refreshed pychete fixture doubles the
+  selected source/path multiplicity to Matchete's insertion neighborhood, and
+  the public selected route now reproduces Matchete's B-only dim6/dev3 finite
+  replay coefficient for `cHD`. The remaining work is full Singlet public-route
+  composition, including heavy-solution terms, unselected trace remainder, and
+  pole/MS convention handling.

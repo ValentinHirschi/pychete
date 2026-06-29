@@ -15,10 +15,10 @@
   },
   "eom_exposure_probe_by_entry": {
     "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
-      "byte_count": 25693,
+      "byte_count": 25681,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 66215,
+      "scalar_eom_exposed_byte_count": 66137,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -34,11 +34,11 @@
       "scalar_eom_exposed_vector_field_redefinition_delta_projection_is_zero": true,
       "scalar_eom_exposed_vector_field_strength_divergence_count": 0,
       "scalar_eom_exposure_error": null,
-      "scalar_eom_field_redefinition_delta_byte_count": 173165,
+      "scalar_eom_field_redefinition_delta_byte_count": 173075,
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": false,
       "scalar_eom_identity_count": 0,
-      "vector_eom_current_exposed_byte_count": 25693,
+      "vector_eom_current_exposed_byte_count": 25681,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -47,10 +47,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": {
-      "byte_count": 244236,
+      "byte_count": 244288,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 311526,
+      "scalar_eom_exposed_byte_count": 311552,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -70,7 +70,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": true,
       "scalar_eom_identity_count": 4,
-      "vector_eom_current_exposed_byte_count": 244236,
+      "vector_eom_current_exposed_byte_count": 244288,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -79,10 +79,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": {
-      "byte_count": 408210,
+      "byte_count": 407844,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 517401,
+      "scalar_eom_exposed_byte_count": 517037,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -102,7 +102,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": true,
       "scalar_eom_identity_count": 4,
-      "vector_eom_current_exposed_byte_count": 408210,
+      "vector_eom_current_exposed_byte_count": 407844,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -111,18 +111,18 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": {
-      "byte_count": 371255,
+      "byte_count": 371154,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 632244,
+      "scalar_eom_exposed_byte_count": 631950,
       "scalar_eom_exposed_formal_eom_count": 4,
       "scalar_eom_exposed_formal_vector_eom_count": 1,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [
-        "1\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz))))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^6",
-        "-1\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^6",
-        "1\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz))))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^6"
+        "1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz))))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^6",
+        "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^6",
+        "1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())^2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)^2*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(203000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz))))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(pychete::dummy_index(202001),pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^6"
       ],
-      "scalar_eom_exposed_heavy_vector_field_redefinition_delta_byte_count": 2629036,
+      "scalar_eom_exposed_heavy_vector_field_redefinition_delta_byte_count": 2628514,
       "scalar_eom_exposed_heavy_vector_field_redefinition_delta_error": null,
       "scalar_eom_exposed_heavy_vector_field_redefinition_delta_is_zero": false,
       "scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection": "0",
@@ -138,7 +138,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": true,
       "scalar_eom_identity_count": 4,
-      "vector_eom_current_exposed_byte_count": 371255,
+      "vector_eom_current_exposed_byte_count": 371154,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -147,10 +147,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": {
-      "byte_count": 763147,
+      "byte_count": 763384,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 1119642,
+      "scalar_eom_exposed_byte_count": 1119438,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -170,7 +170,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": true,
       "scalar_eom_identity_count": 10,
-      "vector_eom_current_exposed_byte_count": 763147,
+      "vector_eom_current_exposed_byte_count": 763384,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -179,10 +179,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": {
-      "byte_count": 20663,
+      "byte_count": 20629,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 47430,
+      "scalar_eom_exposed_byte_count": 47385,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -202,7 +202,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": false,
       "scalar_eom_identity_count": 0,
-      "vector_eom_current_exposed_byte_count": 20663,
+      "vector_eom_current_exposed_byte_count": 20629,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -211,10 +211,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": {
-      "byte_count": 10208,
+      "byte_count": 10191,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 34617,
+      "scalar_eom_exposed_byte_count": 34591,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -234,7 +234,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": false,
       "scalar_eom_identity_count": 0,
-      "vector_eom_current_exposed_byte_count": 10208,
+      "vector_eom_current_exposed_byte_count": 10191,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -243,10 +243,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": {
-      "byte_count": 25759,
+      "byte_count": 25723,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 66299,
+      "scalar_eom_exposed_byte_count": 66238,
       "scalar_eom_exposed_formal_eom_count": 5,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -266,7 +266,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": false,
       "scalar_eom_identity_count": 0,
-      "vector_eom_current_exposed_byte_count": 25759,
+      "vector_eom_current_exposed_byte_count": 25723,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -275,10 +275,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": {
-      "byte_count": 251520,
+      "byte_count": 251492,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 428100,
+      "scalar_eom_exposed_byte_count": 428165,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -298,7 +298,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": true,
       "scalar_eom_identity_count": 4,
-      "vector_eom_current_exposed_byte_count": 251520,
+      "vector_eom_current_exposed_byte_count": 251492,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -307,10 +307,10 @@
       "vector_field_strength_divergence_count": 0
     },
     "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": {
-      "byte_count": 185622,
+      "byte_count": 185480,
       "field_strength_count": 0,
       "formal_vector_eom_count": 0,
-      "scalar_eom_exposed_byte_count": 277094,
+      "scalar_eom_exposed_byte_count": 276874,
       "scalar_eom_exposed_formal_eom_count": 3,
       "scalar_eom_exposed_formal_vector_eom_count": 0,
       "scalar_eom_exposed_formal_vector_eom_term_samples": [],
@@ -330,7 +330,7 @@
       "scalar_eom_field_redefinition_delta_error": null,
       "scalar_eom_field_redefinition_delta_is_zero": true,
       "scalar_eom_identity_count": 2,
-      "vector_eom_current_exposed_byte_count": 185622,
+      "vector_eom_current_exposed_byte_count": 185480,
       "vector_eom_current_exposed_delta_byte_count": 3,
       "vector_eom_current_exposed_delta_is_zero": true,
       "vector_eom_current_exposed_field_strength_divergence_count": 0,
@@ -364,27 +364,27 @@
     "vector_field_strength_divergence_count": 0
   },
   "evaluated_term_counts_by_entry": {
-    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 32,
     "hScalar-lScalar-lVector-lScalar#wilson11_o1_0_0_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 32,
     "hScalar-lScalar-lVector-lScalar#wilson1_o0_0_0_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 8,
+    "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 16,
     "hScalar-lScalar-lVector-lScalar#wilson5_o0_0_0_2": 0,
     "hScalar-lScalar-lVector-lScalar#wilson6_o0_0_1_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 32,
     "hScalar-lScalar-lVector-lScalar#wilson8_o0_1_0_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 8
+    "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 16
   },
   "evaluated_term_counts_by_path": {},
   "evaluated_term_counts_by_total_order": {
-    "0": 8,
-    "1": 24,
-    "2": 72
+    "0": 16,
+    "1": 48,
+    "2": 144
   },
   "first_differing_boundary": "selected_wilson_line_trace_generation_now_matches_the_Matchete_propagation_order_0_1_2_selected_trace_checkpoint. Projections are computed entry/order-locally before summing to avoid the known large aggregate projection cost. The current narrowed mismatch is the representative-conversion boundary before field redefinition: Matchete's InternalSimplify exposes EOM-proportional structures that feed PerformSystematicFieldRedefs. The refreshed Matchete replay locates the first nonzero cHD delta at dim6/dev3 vector EOM selection over B/W. A follow-up source-trace probe shows that the relevant two-Higgs B-vector EOM source is generated by the hScalar-lScalar order-four Wilson-line trace, not by the hScalar-lScalar-lVector-lScalar four-slot trace alone. pychete now exposes that bounded hScalar-lScalar B-vector EOM source and gets a nonzero cHD projection from its Abelian vector field redefinition, but the coefficient is still short of Matchete's after_shift_dim6_dev3 delta. The next boundary is therefore the Matchete InternalSimplify scalar Green/EoMSplitter coefficient parity for the hScalar-lScalar two-Higgs source, plus the later non-Abelian W-vector EOM treatment if needed.",
   "generator": "scripts/debug_pychete_singlet_eom_boundary.py",
@@ -659,7 +659,7 @@
     }
   ],
   "model": "Singlet_Scalar_Extension_model_definition",
-  "pychete_nonzero_path_count": 8,
+  "pychete_nonzero_path_count": 16,
   "reference_projections": {
     "matchete_eom_off_shell_input_form": "-1/4*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log[\\[Mu]bar2/Coupling[M, {}, 0]^2]))/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
     "matchete_eom_on_shell_input_form": "-1/18*(hbar*Coupling[A, {}, 0]^2*Coupling[gY, {}, 0]^2*(30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log[\\[Mu]bar2/Coupling[M, {}, 0]^2]))/(\\[Epsilon]*Coupling[M, {}, 0]^4)",
@@ -669,31 +669,31 @@
   },
   "schema_version": 1,
   "selected_stage_projections": {
-    "selected_normalized_evaluated": "1/4*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/2*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+7/18*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-3/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+3*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/36*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-5/18*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/36*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-3/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-5/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-    "selected_normalized_finite_part": "-3/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+3*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-5/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-    "selected_normalized_pole_part": "-3/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)"
+    "selected_normalized_evaluated": "1/2*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+7/9*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-3*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/18*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-5/9*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/18*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-3*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-5/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+    "selected_normalized_finite_part": "-3*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-5/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+    "selected_normalized_pole_part": "-3*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)"
   },
   "selected_stage_projections_by_total_order": {
     "selected_normalized_evaluated": {
-      "0": "-2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-      "1": "1/2*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/2*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+3/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-      "2": "-1/4*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/2*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/9*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/36*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-5/18*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/36*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+      "0": "-4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+8*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+      "1": "Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-2*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+3*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+      "2": "-1/2*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-2/9*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/18*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-5/9*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+5/18*Singlet_Scalar_Extension::external_hbar*vakint::\u03b5^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
     },
     "selected_normalized_finite_part": {
-      "0": "-2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-      "1": "Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+3/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-      "2": "-1/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-3/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+      "0": "-4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+8*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+      "1": "2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-4*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+3*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+      "2": "-Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-3/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
     },
     "selected_normalized_pole_part": {
-      "0": "-2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)",
-      "1": "Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)",
-      "2": "-1/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)"
+      "0": "-4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)",
+      "1": "2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)",
+      "2": "-Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)"
     }
   },
   "source_trace_vector_eom_probe": {
     "by_entry": {
       "hScalar-lScalar#wilson0_o0_0": {
-        "evaluated_term_count": 2,
+        "evaluated_term_count": 4,
         "formal_vector_eom_source_operator_projections": {
           "DH_EOMB_H_unbarred": "0",
           "DbarH_EOMB_H": "0",
@@ -701,8 +701,8 @@
           "barH_EOMB_DH": "0"
         },
         "nonzero_formal_vector_eom_source_operator_projection_names": [],
-        "pole_finite_byte_count": 2463,
-        "scalar_eom_exposed_byte_count": 2463,
+        "pole_finite_byte_count": 2481,
+        "scalar_eom_exposed_byte_count": 2481,
         "scalar_eom_exposed_formal_vector_eom_count": 0,
         "scalar_eom_exposed_formal_vector_eom_term_samples": [],
         "slot_orders": [
@@ -716,12 +716,12 @@
         "vector_field_redefinition_delta_projection_is_zero": true
       },
       "hScalar-lScalar#wilson14_o4_0": {
-        "evaluated_term_count": 10,
+        "evaluated_term_count": 20,
         "formal_vector_eom_source_operator_projections": {
-          "DH_EOMB_H_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-          "DbarH_EOMB_H": "-1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17\ud835\udc56/144*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-          "H_EOMB_DH_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-          "barH_EOMB_DH": "1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+17\ud835\udc56/144*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+          "DH_EOMB_H_unbarred": "-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+          "DbarH_EOMB_H": "-1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17\ud835\udc56/72*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+          "H_EOMB_DH_unbarred": "-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+          "barH_EOMB_DH": "1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+17\ud835\udc56/72*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
         },
         "nonzero_formal_vector_eom_source_operator_projection_names": [
           "barH_EOMB_DH",
@@ -729,26 +729,26 @@
           "H_EOMB_DH_unbarred",
           "DH_EOMB_H_unbarred"
         ],
-        "pole_finite_byte_count": 295120,
-        "scalar_eom_exposed_byte_count": 428430,
+        "pole_finite_byte_count": 295172,
+        "scalar_eom_exposed_byte_count": 428302,
         "scalar_eom_exposed_formal_vector_eom_count": 3,
         "scalar_eom_exposed_formal_vector_eom_term_samples": [
-          "-1\ud835\udc56/3*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz))))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-          "-3\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_1,pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_1,pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-          "4\ud835\udc56/3*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+          "-2\ud835\udc56/3*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz))))*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+          "-3\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_1,pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_1,pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+          "8\ud835\udc56/3*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Field(Singlet_Scalar_Extension::field_phi,pychete::Scalar,pychete::List(),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(pychete::dummy_index(201000),Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz)))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)*pychete::Coupling(Singlet_Scalar_Extension::coupling_kappa,pychete::List(),0)*pychete::EOM(pychete::Field(Singlet_Scalar_Extension::field_B,pychete::Vector(Singlet_Scalar_Extension::group_U1Y),pychete::List(pychete::Index(Singlet_Scalar_Extension::index_debug_singlet_eom_boundary_source_trace_eom_hScalar_lScalar_14_0_2,pychete::Lorentz)),pychete::List()))/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
         ],
         "slot_orders": [
           4,
           0
         ],
         "total_order": 4,
-        "vector_field_redefinition_delta_byte_count": 75626,
+        "vector_field_redefinition_delta_byte_count": 75597,
         "vector_field_redefinition_delta_is_zero": false,
-        "vector_field_redefinition_delta_projection": "-1/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/12*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/24*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17/144*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "vector_field_redefinition_delta_projection": "-1/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17/72*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
         "vector_field_redefinition_delta_projection_is_zero": false
       },
       "hScalar-lScalar#wilson5_o2_0": {
-        "evaluated_term_count": 4,
+        "evaluated_term_count": 8,
         "formal_vector_eom_source_operator_projections": {
           "DH_EOMB_H_unbarred": "0",
           "DbarH_EOMB_H": "0",
@@ -756,8 +756,8 @@
           "barH_EOMB_DH": "0"
         },
         "nonzero_formal_vector_eom_source_operator_projection_names": [],
-        "pole_finite_byte_count": 26185,
-        "scalar_eom_exposed_byte_count": 3373,
+        "pole_finite_byte_count": 26205,
+        "scalar_eom_exposed_byte_count": 3370,
         "scalar_eom_exposed_formal_vector_eom_count": 0,
         "scalar_eom_exposed_formal_vector_eom_term_samples": [],
         "slot_orders": [
@@ -781,17 +781,17 @@
       "trace_name": "hScalar-lScalar"
     },
     "evaluated_term_counts_by_entry": {
-      "hScalar-lScalar#wilson0_o0_0": 2,
+      "hScalar-lScalar#wilson0_o0_0": 4,
       "hScalar-lScalar#wilson10_o0_4": 0,
       "hScalar-lScalar#wilson11_o1_3": 0,
       "hScalar-lScalar#wilson12_o2_2": 0,
       "hScalar-lScalar#wilson13_o3_1": 0,
-      "hScalar-lScalar#wilson14_o4_0": 10,
+      "hScalar-lScalar#wilson14_o4_0": 20,
       "hScalar-lScalar#wilson1_o0_1": 0,
       "hScalar-lScalar#wilson2_o1_0": 0,
       "hScalar-lScalar#wilson3_o0_2": 0,
       "hScalar-lScalar#wilson4_o1_1": 0,
-      "hScalar-lScalar#wilson5_o2_0": 4,
+      "hScalar-lScalar#wilson5_o2_0": 8,
       "hScalar-lScalar#wilson6_o0_3": 0,
       "hScalar-lScalar#wilson7_o1_2": 0,
       "hScalar-lScalar#wilson8_o2_1": 0,
@@ -807,16 +807,16 @@
         },
         "nonzero_formal_vector_eom_source_operator_projection_names": [],
         "raw_topology_byte_count": 999,
-        "raw_topology_term_count": 2,
+        "raw_topology_term_count": 4,
         "scalar_eom_exposed_byte_count": 999,
         "scalar_eom_exposed_formal_vector_eom_count": 0
       },
       "hScalar-lScalar#wilson14_o4_0": {
         "formal_vector_eom_source_operator_projections": {
-          "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-          "DbarH_EOMB_H": "8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-          "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-          "barH_EOMB_DH": "-8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+          "DH_EOMB_H_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+          "DbarH_EOMB_H": "16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+          "H_EOMB_DH_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+          "barH_EOMB_DH": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
         },
         "nonzero_formal_vector_eom_source_operator_projection_names": [
           "barH_EOMB_DH",
@@ -824,9 +824,9 @@
           "H_EOMB_DH_unbarred",
           "DH_EOMB_H_unbarred"
         ],
-        "raw_topology_byte_count": 99948,
-        "raw_topology_term_count": 10,
-        "scalar_eom_exposed_byte_count": 147135,
+        "raw_topology_byte_count": 100000,
+        "raw_topology_term_count": 20,
+        "scalar_eom_exposed_byte_count": 147202,
         "scalar_eom_exposed_formal_vector_eom_count": 3
       },
       "hScalar-lScalar#wilson5_o2_0": {
@@ -838,23 +838,23 @@
         },
         "nonzero_formal_vector_eom_source_operator_projection_names": [],
         "raw_topology_byte_count": 9107,
-        "raw_topology_term_count": 4,
+        "raw_topology_term_count": 8,
         "scalar_eom_exposed_byte_count": 4825,
         "scalar_eom_exposed_formal_vector_eom_count": 0
       }
     },
     "formal_symgamma_raw_term_counts_by_entry": {
-      "hScalar-lScalar#wilson0_o0_0": 2,
+      "hScalar-lScalar#wilson0_o0_0": 4,
       "hScalar-lScalar#wilson10_o0_4": 0,
       "hScalar-lScalar#wilson11_o1_3": 0,
       "hScalar-lScalar#wilson12_o2_2": 0,
       "hScalar-lScalar#wilson13_o3_1": 0,
-      "hScalar-lScalar#wilson14_o4_0": 10,
+      "hScalar-lScalar#wilson14_o4_0": 20,
       "hScalar-lScalar#wilson1_o0_1": 0,
       "hScalar-lScalar#wilson2_o1_0": 0,
       "hScalar-lScalar#wilson3_o0_2": 0,
       "hScalar-lScalar#wilson4_o1_1": 0,
-      "hScalar-lScalar#wilson5_o2_0": 4,
+      "hScalar-lScalar#wilson5_o2_0": 8,
       "hScalar-lScalar#wilson6_o0_3": 0,
       "hScalar-lScalar#wilson7_o1_2": 0,
       "hScalar-lScalar#wilson8_o2_1": 0,
@@ -863,35 +863,35 @@
     "pre_wilson_stage_probe": {
       "by_stage": {
         "loop_momenta_collected": {
-          "byte_count": 264512,
-          "expanded_term_count": 596,
+          "byte_count": 529016,
+          "expanded_term_count": 1192,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "lorentz_metrics_contracted": {
-          "byte_count": 97871,
+          "byte_count": 97935,
           "expanded_term_count": 250,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "matchete_contract_before_wilson_postprocessed_numerator": {
-          "byte_count": 73812,
+          "byte_count": 73864,
           "expanded_term_count": 236,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "matchete_contract_before_wilson_terms_expanded": {
-          "byte_count": 97871,
+          "byte_count": 97935,
           "expanded_term_count": 250,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "matchete_contract_before_wilson_topology_lowered": {
-          "byte_count": 99948,
+          "byte_count": 100000,
           "expanded_term_count": 236,
           "formal_vector_eom_count": 0,
           "nonzero_raw_source_operator_projection_names": [],
@@ -907,53 +907,53 @@
             "H_EOMB_DH_unbarred": "0",
             "barH_EOMB_DH": "0"
           },
-          "scalar_eom_exposed_byte_count": 147135,
+          "scalar_eom_exposed_byte_count": 147202,
           "scalar_eom_exposed_formal_vector_eom_count": 3,
           "scalar_eom_exposed_source_operator_projections": {
-            "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-            "DbarH_EOMB_H": "8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-            "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-            "barH_EOMB_DH": "-8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+            "DH_EOMB_H_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "DbarH_EOMB_H": "16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "H_EOMB_DH_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "barH_EOMB_DH": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
           },
-          "term_count": 10
+          "term_count": 20
         },
         "postprocessed_numerator": {
-          "byte_count": 73812,
+          "byte_count": 73864,
           "expanded_term_count": 236,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "pre_wilson_numerator": {
-          "byte_count": 257190,
-          "expanded_term_count": 596,
+          "byte_count": 514372,
+          "expanded_term_count": 1192,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "symgamma_formal_metric_contracted_pre_wilson": {
-          "byte_count": 219378,
-          "expanded_term_count": 524,
+          "byte_count": 438748,
+          "expanded_term_count": 1048,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "symgamma_formal_uncontracted": {
-          "byte_count": 324306,
-          "expanded_term_count": 700,
+          "byte_count": 648604,
+          "expanded_term_count": 1400,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "symmetry_vanishing_removed": {
-          "byte_count": 253536,
-          "expanded_term_count": 568,
+          "byte_count": 507064,
+          "expanded_term_count": 1136,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         },
         "topology_lowered": {
-          "byte_count": 99948,
+          "byte_count": 100000,
           "expanded_term_count": 236,
           "formal_vector_eom_count": 0,
           "nonzero_raw_source_operator_projection_names": [],
@@ -969,22 +969,22 @@
             "H_EOMB_DH_unbarred": "0",
             "barH_EOMB_DH": "0"
           },
-          "scalar_eom_exposed_byte_count": 147135,
+          "scalar_eom_exposed_byte_count": 147202,
           "scalar_eom_exposed_formal_vector_eom_count": 3,
           "scalar_eom_exposed_source_operator_projections": {
-            "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-            "DbarH_EOMB_H": "8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-            "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-            "barH_EOMB_DH": "-8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+            "DH_EOMB_H_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "DbarH_EOMB_H": "16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "H_EOMB_DH_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "barH_EOMB_DH": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
           },
-          "term_count": 10
+          "term_count": 20
         },
         "wilson_terms_expanded": {
-          "byte_count": 158996,
+          "byte_count": 159188,
           "expanded_term_count": 354,
           "formal_vector_eom_count": 0,
           "source_operator_projection_skipped": "metadata-only stage",
-          "term_count": 10
+          "term_count": 20
         }
       },
       "entry_label": "hScalar-lScalar#wilson14_o4_0",
@@ -1012,16 +1012,16 @@
     "summary": {
       "entry_count": 3,
       "formal_symgamma_topology_source_operator_projection_sums": {
-        "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-        "DbarH_EOMB_H": "8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-        "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
-        "barH_EOMB_DH": "-8*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+64*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+        "DH_EOMB_H_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+        "DbarH_EOMB_H": "16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+        "H_EOMB_DH_unbarred": "-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+        "barH_EOMB_DH": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+128*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
       },
       "formal_vector_eom_source_operator_projection_sums": {
-        "DH_EOMB_H_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-        "DbarH_EOMB_H": "-1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17\ud835\udc56/144*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-        "H_EOMB_DH_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
-        "barH_EOMB_DH": "1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/24*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+17\ud835\udc56/144*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+        "DH_EOMB_H_unbarred": "-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "DbarH_EOMB_H": "-1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17\ud835\udc56/72*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "H_EOMB_DH_unbarred": "-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "barH_EOMB_DH": "1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+17\ud835\udc56/72*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
       },
       "nonzero_formal_symgamma_topology_source_operator_projection_names": [
         "barH_EOMB_DH",
@@ -1038,64 +1038,72 @@
       "nonzero_vector_field_redefinition_delta_entry_count": 1,
       "nonzero_vector_field_redefinition_delta_projection_entry_count": 1,
       "scalar_eom_exposed_formal_vector_eom_count": 3,
-      "vector_field_redefinition_delta_projection_sum": "-1/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/12*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/24*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17/144*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+      "vector_field_redefinition_delta_projection_sum": "-1/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-17/72*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::Coupling(Singlet_Scalar_Extension::coupling_gY,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
     },
     "term_counts_by_entry": {
-      "hScalar-lScalar#wilson0_o0_0": 2,
+      "hScalar-lScalar#wilson0_o0_0": 4,
       "hScalar-lScalar#wilson10_o0_4": 0,
       "hScalar-lScalar#wilson11_o1_3": 0,
       "hScalar-lScalar#wilson12_o2_2": 0,
       "hScalar-lScalar#wilson13_o3_1": 0,
-      "hScalar-lScalar#wilson14_o4_0": 10,
+      "hScalar-lScalar#wilson14_o4_0": 20,
       "hScalar-lScalar#wilson1_o0_1": 0,
       "hScalar-lScalar#wilson2_o1_0": 0,
       "hScalar-lScalar#wilson3_o0_2": 0,
       "hScalar-lScalar#wilson4_o1_1": 0,
-      "hScalar-lScalar#wilson5_o2_0": 4,
+      "hScalar-lScalar#wilson5_o2_0": 8,
       "hScalar-lScalar#wilson6_o0_3": 0,
       "hScalar-lScalar#wilson7_o1_2": 0,
       "hScalar-lScalar#wilson8_o2_1": 0,
       "hScalar-lScalar#wilson9_o3_0": 0
     },
     "term_counts_by_total_order": {
-      "0": 2,
+      "0": 4,
       "1": 0,
-      "2": 4,
+      "2": 8,
       "3": 0,
-      "4": 10
+      "4": 20
     }
   },
   "target": "cHD",
   "term_counts_by_entry": {
-    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 32,
     "hScalar-lScalar-lVector-lScalar#wilson11_o1_0_0_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 32,
     "hScalar-lScalar-lVector-lScalar#wilson1_o0_0_0_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 8,
-    "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 8,
+    "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 16,
     "hScalar-lScalar-lVector-lScalar#wilson5_o0_0_0_2": 0,
     "hScalar-lScalar-lVector-lScalar#wilson6_o0_0_1_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 16,
+    "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 32,
     "hScalar-lScalar-lVector-lScalar#wilson8_o0_1_0_1": 0,
-    "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 8
+    "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 16
   },
   "term_counts_by_path": {
     "path0": 13,
+    "path1": 13,
     "path12": 13,
+    "path13": 13,
     "path14": 13,
+    "path15": 13,
     "path2": 13,
     "path24": 13,
+    "path25": 13,
     "path26": 13,
+    "path27": 13,
+    "path3": 13,
     "path36": 13,
-    "path38": 13
+    "path37": 13,
+    "path38": 13,
+    "path39": 13
   },
   "term_counts_by_total_order": {
-    "0": 8,
-    "1": 24,
-    "2": 72
+    "0": 16,
+    "1": 48,
+    "2": 144
   }
 }

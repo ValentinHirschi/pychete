@@ -40,8 +40,13 @@ The first realistic full one-loop matching integration test remains the
 Singlet Scalar Extension to SMEFT, with `cHD` as the hard coefficient. The
 selected `hScalar-lScalar-lVector-lScalar -> cHD` Wilson-line
 trace/integral/projection path matches Matchete's off-shell checkpoint through
-propagation orders 0, 1, and 2. The remaining blocker is the on-shell
-operator-simplification and field-redefinition source feeding the cHD shift.
+propagation orders 0, 1, and 2. The selected `hScalar-lScalar -> cHD`
+B-vector EOM replay now reaches Matchete's finite dim6/dev3 replay
+coefficient after fixing indexed functional-derivative alpha matching. The
+remaining blocker is full public-route composition beyond this selected
+source: heavy-scalar solution terms, unselected trace remainder, pole/MS
+convention handling, and broad Singlet `cHD` projection against Matchete's
+full on-shell result.
 
 The active evidence points away from scalar-Higgs EOM replacement as the first
 source of the mismatch. Matchete's first nonzero `cHD` delta appears at
@@ -223,6 +228,17 @@ Current slice progress:
   `pychete.matching` remain compatibility aliases, while the performance
   policy now has a dedicated semantic home. This reduced `matching.py` from
   9,544 to 9,164 lines without changing the bounded cHD route.
+- Fixed the indexed functional-derivative alpha-matching boundary in
+  `src/pychete/functional.py`: indexed targets now try the native indexed
+  Symbolica-pattern variation before accepting exact replacement output. This
+  restores the missing `H[d2]` EOM entries in the Singlet fluctuation Hessian,
+  doubles the selected `hScalar-lScalar` source multiplicity to Matchete's
+  eight insertion neighborhood, and closes the residual factor-two gap in the
+  selected B-vector replay finite coefficient.
+- Added the paired idenso bridge support needed by that indexed variation:
+  open identity deltas such as `Delta(Index(i,R), Index(i,Bar(R)))` reduce to
+  one, while closed deltas with independent dummy labels continue to reduce to
+  the registered representation dimension.
 
 ## Performance Budget For This Slice
 
@@ -278,17 +294,19 @@ Current slice progress:
   owns that rewrite after loop normalization. The same route now automatically
   enables native tensor reduction for Wilson-line internal backends, because
   unreduced loop-momentum numerators hide the selected B-source from
-  Symbolica coefficient projection. The focused public regression now records
-  the nonzero selected Abelian B-vector field-redefinition delta
-  `hbar*A^2*gY^2*(-log(mursq)/24 + log(M)/12 - 17/144)/M^4`.
-- The remaining public `hScalar-lScalar -> cHD` mismatch is now downstream of
-  that selected `A^2 gY^2` source. With heavy-scalar substitution enabled, the
-  candidate still also contains target-local `kappa/muphi` heavy-solution
-  terms and remains below Matchete's full dim6/dev3 vector-shift coefficient.
-  The next Matchete dump/probe comparison should inspect how Matchete orders
-  and separates the selected two-Higgs B-source shift from the heavy-solution
-  source during `PerformSystematicFieldRedefs`, especially the factor between
-  pychete's current selected finite delta and Matchete's replay delta.
+  Symbolica coefficient projection. After the indexed-variation fix, the
+  focused public regression records the selected Abelian B-vector
+  field-redefinition delta
+  `hbar*A^2*gY^2*(-log(mursq)/12 + log(M)/6 - 17/72)/M^4`; the combined
+  direct formal-EOM replacement plus vector companion gives the Matchete B-only
+  replay finite piece
+  `hbar*A^2*gY^2*(-log(mursq)/6 + log(M)/3 - 17/36)/M^4`.
+- Performance check for the indexed-variation fix: the public selected cHD
+  probe still runs in about 53 seconds under the 30 GiB watchdog. The debug
+  fixture refresh is slower because it records broad stage diagnostics, but
+  the topology-lowered source probe remains around 100 KB and uses the same
+  bounded projection chunks. If this fixture grows again, split it into a
+  cheap path-multiplicity smoke and a slower explicit source-boundary refresh.
 
 ## Targeted Commands
 

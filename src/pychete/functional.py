@@ -2262,6 +2262,11 @@ def _cd_variation_replacements(index: Expression) -> tuple[Replacement, ...]:
 
 def partial_functional_derivative(lagrangian: Expression, target_field: Expression) -> Expression:
     lagrangian = _expand_variation_bars(lagrangian)
+    target_base = bar_field_inner(target_field) if is_bar_field(target_field) else target_field
+    if is_head(target_base, s.Field) and list_items(target_base[2]):
+        indexed = _indexed_partial_functional_derivative(lagrangian, target_field)
+        if not is_zero(indexed):
+            return indexed
     exact = _exact_partial_functional_derivative(lagrangian, target_field)
     if not is_zero(exact):
         return exact

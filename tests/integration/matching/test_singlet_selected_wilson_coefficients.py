@@ -756,7 +756,7 @@ def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_front
     assert result.metadata["interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed"] is False
     assert result.metadata["wilson_line_scalar_commutator_abelian_vector_eom_reduction_rule_count"] == 3
     assert result.metadata["wilson_line_scalar_commutator_abelian_vector_field_redefinition_applied"] is True
-    assert result.metadata["interaction_wilson_line_term_count"] == 16
+    assert result.metadata["interaction_wilson_line_term_count"] == 32
     delta = result.supertraces["on_shell_eft_lagrangian_scalar_commutator_abelian_vector_field_redefinition_delta"]
     delta_projection = MatchingResult(
         theory=theory,
@@ -775,7 +775,7 @@ def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_front
         theory.external_handle("hbar")()
         * theory.coupling_handle("A")() ** 2
         * theory.coupling_handle("gY")() ** 2
-        * (-S("vakint::mursq").log() / 24 + mass.log() / 12 - Expression.num(17) / 144)
+        * (-S("vakint::mursq").log() / 12 + mass.log() / 6 - Expression.num(17) / 72)
         / mass**4
     )
     assert_expr_equal((delta_projection - selected_vector_delta).expand(), Expression.num(0))
@@ -1031,19 +1031,19 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         if count
     }
     assert nonzero_entry_counts == {
-        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 8,
-        "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 8,
-        "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 8,
-        "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 8,
-        "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 16,
-        "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 8,
-        "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 16,
-        "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 8,
-        "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 8,
-        "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson2_o0_0_1_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson3_o0_1_0_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson4_o1_0_0_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson7_o0_0_2_0": 32,
+        "hScalar-lScalar-lVector-lScalar#wilson9_o0_1_1_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson10_o0_2_0_0": 32,
+        "hScalar-lScalar-lVector-lScalar#wilson12_o1_0_1_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson13_o1_1_0_0": 16,
+        "hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0": 32,
     }
-    assert debug["term_counts_by_total_order"] == {"0": 8, "1": 24, "2": 72}
-    assert debug["evaluated_term_counts_by_total_order"] == {"0": 8, "1": 24, "2": 72}
+    assert debug["term_counts_by_total_order"] == {"0": 16, "1": 48, "2": 144}
+    assert debug["evaluated_term_counts_by_total_order"] == {"0": 16, "1": 48, "2": 144}
     assert references["matchete_trace_off_shell_input_form"] == references["matchete_eom_off_shell_input_form"]
     assert "6 + 5*\\[Epsilon] + 6*\\[Epsilon]*Log" in references["matchete_eom_off_shell_input_form"]
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
@@ -1108,7 +1108,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert source_trace_probe["controls"]["trace_name"] == "hScalar-lScalar"
     assert source_trace_probe["controls"]["max_total_order"] == 4
     assert source_trace_probe["controls"]["filter_terms_by_matching_targets"] is True
-    assert source_trace_probe["term_counts_by_total_order"] == {"0": 2, "1": 0, "2": 4, "3": 0, "4": 10}
+    assert source_trace_probe["term_counts_by_total_order"] == {"0": 4, "1": 0, "2": 8, "3": 0, "4": 20}
     stage_probe = source_trace_probe["pre_wilson_stage_probe"]
     assert stage_probe["entry_label"] == "hScalar-lScalar#wilson14_o4_0"
     assert stage_probe["source_exposure_stages"] == [
@@ -1158,19 +1158,19 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "H_EOMB_DH_unbarred",
         "DH_EOMB_H_unbarred",
     }
-    assert "-1𝑖/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
+    assert "-1𝑖/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
         source_operator_projections["DbarH_EOMB_H"]
     )
-    assert "-17𝑖/144*Singlet_Scalar_Extension::external_hbar*" in (
+    assert "-17𝑖/72*Singlet_Scalar_Extension::external_hbar*" in (
         source_operator_projections["DbarH_EOMB_H"]
     )
-    assert "1𝑖/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
+    assert "1𝑖/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
         source_operator_projections["barH_EOMB_DH"]
     )
-    assert "+17𝑖/144*Singlet_Scalar_Extension::external_hbar*" in (
+    assert "+17𝑖/72*Singlet_Scalar_Extension::external_hbar*" in (
         source_operator_projections["barH_EOMB_DH"]
     )
-    assert "-3𝑖/8*Singlet_Scalar_Extension::external_hbar*" in (
+    assert "-3𝑖/4*Singlet_Scalar_Extension::external_hbar*" in (
         source_operator_projections["H_EOMB_DH_unbarred"]
     )
     assert set(formal_symgamma_source_operator_projections) == {
@@ -1180,16 +1180,16 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "DH_EOMB_H_unbarred",
     }
     formal_dbar_source = formal_symgamma_source_operator_projections["DbarH_EOMB_H"]
-    assert "8*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
+    assert "16*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
     assert "pychete::SymGammaFactor(1,4)" in formal_dbar_source
-    assert "-64*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
+    assert "-128*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
     assert "pychete::SymGammaFactor(2,4)" in formal_dbar_source
     assert "2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" not in formal_dbar_source
     assert "vakint::topo(vakint::prop(1" in formal_dbar_source
     formal_bar_source = formal_symgamma_source_operator_projections["barH_EOMB_DH"]
-    assert "-8*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "-16*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
     assert "pychete::SymGammaFactor(1,4)" in formal_bar_source
-    assert "64*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "128*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
     assert "pychete::SymGammaFactor(2,4)" in formal_bar_source
     assert "-2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" not in formal_bar_source
     assert "vakint::topo(vakint::prop(1" in formal_bar_source
@@ -1227,7 +1227,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         for entry, row in source_trace_probe["formal_symgamma_by_entry"].items()
         if row["nonzero_formal_vector_eom_source_operator_projection_names"]
     } == {"hScalar-lScalar#wilson14_o4_0"}
-    assert source_trace_probe["formal_symgamma_raw_term_counts_by_entry"]["hScalar-lScalar#wilson14_o4_0"] == 10
+    assert source_trace_probe["formal_symgamma_raw_term_counts_by_entry"]["hScalar-lScalar#wilson14_o4_0"] == 20
     assert debug["matchete_quarter_insertion_count"] == 8
     assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
         1,
@@ -1239,24 +1239,44 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         56,
         58,
     ]
-    expected_paths = {f"path{index}": 13 for index in (0, 2, 12, 14, 24, 26, 36, 38)}
-    assert debug["pychete_nonzero_path_count"] == 8
+    expected_paths = {
+        f"path{index}": 13
+        for index in (
+            0,
+            1,
+            2,
+            3,
+            12,
+            13,
+            14,
+            15,
+            24,
+            25,
+            26,
+            27,
+            36,
+            37,
+            38,
+            39,
+        )
+    }
+    assert debug["pychete_nonzero_path_count"] == 16
     assert debug["term_counts_by_path"] == expected_paths
     assert debug["evaluated_term_counts_by_path"] == {}
     assert projections_by_order["selected_normalized_pole_part"]["0"].startswith(
-        "-2*Singlet_Scalar_Extension::external_hbar*"
+        "-4*Singlet_Scalar_Extension::external_hbar*"
     )
     assert projections_by_order["selected_normalized_pole_part"]["1"].startswith(
-        "Singlet_Scalar_Extension::external_hbar*"
+        "2*Singlet_Scalar_Extension::external_hbar*"
     )
     assert projections_by_order["selected_normalized_pole_part"]["2"].startswith(
-        "-1/2*Singlet_Scalar_Extension::external_hbar*"
+        "-Singlet_Scalar_Extension::external_hbar*"
     )
     assert projections["selected_normalized_pole_part"].startswith(
-        "-3/2*Singlet_Scalar_Extension::external_hbar*"
+        "-3*Singlet_Scalar_Extension::external_hbar*"
     )
     assert "vakint::ε" in projections["selected_normalized_pole_part"]
-    assert "-5/4*Singlet_Scalar_Extension::external_hbar*" in projections["selected_normalized_finite_part"]
+    assert "-5/2*Singlet_Scalar_Extension::external_hbar*" in projections["selected_normalized_finite_part"]
     assert "selected_post_heavy_green" not in projections
     assert projections["selected_normalized_evaluated"] != references["pychete_reference_on_shell"]
 

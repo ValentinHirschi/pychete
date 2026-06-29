@@ -404,6 +404,14 @@ with Symbolica patterns, encode them as temporary Symbolica variables with
 `Replacement` and `Expression.replace_multiple`, then use native Symbolica
 operations such as `Expression.derivative` or a formal variation extracted with
 `Expression.series` and `Expression.coefficient`.
+For indexed functional derivatives and Hessian/fluctuation-operator entries,
+prefer the alpha-aware indexed Symbolica-pattern variation over exact
+dummy-label replacement. An exact match on one indexed field occurrence can be
+nonzero but still partial when other alpha-equivalent dummy labels occur in the
+same Lagrangian. Use native indexed variation plus backend delta contraction
+for indexed fields before accepting an exact replacement result; otherwise
+Wilson-line path multiplicities and Matchete component/field-degree factors
+can be silently halved.
 Momentum lowering must keep derivative information symbolic rather than
 dropping it. Contracted derivative pairs lower to `LoopMomentumSquared`; open
 Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator

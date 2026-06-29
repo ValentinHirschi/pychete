@@ -644,13 +644,37 @@ def contract_pychete_deltas(theory: Any, expr: Expression) -> Expression:
     """
 
     out = contract_pychete_deltas_into_cg_tensors(expr)
-    replacements = (*_pychete_delta_field_slot_replacements(), *_pychete_delta_contraction_replacements(theory))
+    replacements = (
+        *_pychete_delta_identity_replacements(),
+        *_pychete_delta_field_slot_replacements(),
+        *_pychete_delta_contraction_replacements(theory),
+    )
     for _ in range(8):
         updated = out.replace_multiple(replacements).expand()
         if bool(updated == out):
             return updated
         out = updated
     return out
+
+
+@cache
+def _pychete_delta_identity_replacements() -> tuple[Replacement, ...]:
+    label = s.head("pychete_delta_identity_label_")
+    representation = s.head("pychete_delta_identity_representation_")
+    rest = s.head("pychete_delta_identity_rest_")
+    direct = s.Delta(
+        s.Index(label, representation),
+        s.Index(label, s.Bar(representation)),
+    )
+    conjugate = s.Delta(
+        s.Index(label, s.Bar(representation)),
+        s.Index(label, representation),
+    )
+    replacements: list[Replacement] = []
+    for delta in (direct, conjugate):
+        replacements.append(Replacement(delta * rest, rest, rhs_cache_size=0))
+        replacements.append(Replacement(delta, Expression.num(1), rhs_cache_size=0))
+    return tuple(replacements)
 
 
 @cache
