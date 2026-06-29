@@ -1056,8 +1056,69 @@ Corrected converted-on-shell effective-coupling parity sweep for
 `Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current pairs:
 
 - Nonzero Matchete Wilson conditions in the fixture: 25.
-- Matching in pychete at this boundary: `cHD`, `cle`, `cledq`, `clequ1`,
-  `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`.
+- Matching in pychete at this boundary: `cHD`, `cHud`, `cle`, `cledq`,
+  `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`.
 - Still zero at this boundary: `cHB`, `cHBox`, `cHW`, `cHWB`, `cHd`, `cHe`,
-  `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`.
+  `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`.
+- Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
+
+## Current Slice Update: Hermitian-Conjugate Direct Basis Map
+
+This slice extends the converted on-shell `MapEffectiveCouplings` boundary
+from 9/25 to 10/25 nonzero Singlet Wilson conditions. The newly matching
+coefficient is `cHud`.
+
+Mismatch checklist:
+
+- Matchete evidence: the committed Singlet reference contains a nonzero
+  `cHud` condition proportional to
+  `-hbar*A^2*Yd[d, i2]*bar(Yu[d, i1])*(log(mubar2/M^2)+5/2+1/epsilon)/(2*M^4)`.
+- First differing pychete boundary before this slice: the on-shell EFT source
+  contained only the hermitian-conjugate operator orientation,
+  `bar(d) gamma u` with barred Higgs fields and an unbarred epsilon tensor.
+  The direct registered Warsaw target is `bar(u) gamma d` with unbarred Higgs
+  fields and a barred epsilon tensor, so the target-local basis map dropped
+  the h.c. equation as unrelated to the requested `cHud` variable.
+- Generic patch: target-alignment aliases now include hermitian-conjugate
+  direct aliases when the target is not already handled by the chiral-Fierz
+  current machinery. The matched coefficient is relabelled, divided by the
+  numeric prefactor of the h.c. alias, hermitian-conjugated through the
+  central `hermitian_conjugate(...)` helper, and then rebuilt with the
+  registered target operator. This does not impose `bar(cHud)=cHud`.
+- Supporting normalization: `expand_cd_operators(...)` now lowers barred
+  `CD(...)` wrappers into barred derivative-slot fields, and
+  `hermitian_conjugate(...)` simplifies powers/logs of self-conjugate
+  couplings and generic real external symbols such as `hbar`, `epsilon`, and
+  `mubar2`.
+- Supporting tensor normalization: idenso-backed epsilon canonicalization now
+  normalizes `CG(Bar(eps), {Bar(i), Bar(j)})` into
+  `Bar(CG(eps, {i, j}))`, including the antisymmetric sign for swapped
+  rank-two builtin epsilon slots.
+
+Validation:
+
+- `tests/unit/functional/test_effective_couplings.py` now includes a direct
+  h.c. target-map regression with the `cHud` operator shape.
+- `tests/unit/functional/test_scalar_eom.py` now checks hermitian conjugation
+  of self-conjugate powers, generic real external logs, and complex Yukawa
+  factors.
+- `tests/unit/backends/test_idenso_backend.py` now checks conjugated builtin
+  epsilon canonicalization.
+- `tests/integration/validation/test_validation_fixtures.py` now includes
+  `test_singlet_reference_effective_coupling_map_recovers_chud_from_hermitian_conjugate_source`.
+- Focused validation passed:
+  `tests/unit/functional/test_effective_couplings.py`,
+  the targeted scalar-EOM hermitian-conjugate tests, the targeted idenso
+  epsilon/projector tests, and the five converted-boundary Singlet fixture
+  checks (`clequ1`, `cle`, `cHud`, `cqu1/cqu8`, `cqd1/cqd8`) under the
+  30 GiB watchdog.
+
+Current converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current pairs:
+
+- Nonzero Matchete Wilson conditions in the fixture: 25.
+- Matching in pychete at this boundary: `cHD`, `cHud`, `cle`, `cledq`,
+  `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`.
+- Still zero at this boundary: `cHB`, `cHBox`, `cHW`, `cHWB`, `cHd`, `cHe`,
+  `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`.
 - Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.

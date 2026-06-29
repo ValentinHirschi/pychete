@@ -16,6 +16,7 @@ from .theory_metadata import FieldChirality, field_chirality_from_label
 
 _DEFAULT_MAX_EFFECTIVE_COUPLING_BASIS_TERMS = 128
 _DEFAULT_MAX_EFFECTIVE_COUPLING_IDENTITIES = 256
+_CoefficientTransform = Callable[[Expression], Expression]
 
 
 @dataclass(frozen=True)
@@ -81,9 +82,9 @@ def map_effective_couplings(
         *_target_operator_color_fierz_identities(target_tuple),
     )
     identity_tuple = tuple(identity for identity in (*identities, *auto_identities) if not is_zero(identity))
-    input_expr = idenso.simplify_pychete_chiral_scalar_projectors(input_expr)
-    target_expr = idenso.simplify_pychete_chiral_scalar_projectors(target_expr)
-    identity_tuple = tuple(idenso.simplify_pychete_chiral_scalar_projectors(identity) for identity in identity_tuple)
+    input_expr = idenso.simplify_pychete_chiral_projectors(input_expr)
+    target_expr = idenso.simplify_pychete_chiral_projectors(target_expr)
+    identity_tuple = tuple(idenso.simplify_pychete_chiral_projectors(identity) for identity in identity_tuple)
     input_expr = idenso.canonicalize_builtin_epsilon_cg_tensors(input_expr)
     target_expr = idenso.canonicalize_builtin_epsilon_cg_tensors(target_expr)
     identity_tuple = tuple(idenso.canonicalize_builtin_epsilon_cg_tensors(identity) for identity in identity_tuple)
@@ -176,7 +177,7 @@ def _align_target_operator_indices_term(
     term: Expression,
     replacements: Sequence[Replacement],
     fallback_patterns: Sequence[
-        tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]]
+        tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform]
     ],
 ) -> Expression:
     aligned = term.replace_multiple(replacements).expand()
@@ -188,13 +189,20 @@ def _align_target_operator_indices_term(
         replacement_operator,
         alias_sign,
         wildcards,
+        coefficient_transform,
     ) in fallback_patterns:
         for match in term.match(pattern_operator):
             index_replacements = _target_operator_index_replacements(match, wildcards)
             relabeled = term.replace_multiple(index_replacements).expand()
-            updated = relabeled.replace(
-                alias_operator,
-                Expression.num(alias_sign) * replacement_operator,
+            coefficient = relabeled.coefficient(alias_operator).expand()
+            if is_zero(coefficient):
+                continue
+            if not is_zero((relabeled - coefficient * alias_operator).expand()):
+                continue
+            updated = (
+                Expression.num(alias_sign)
+                * coefficient_transform(coefficient)
+                * replacement_operator
             ).expand()
             if not bool(updated == term):
                 return updated
@@ -276,7 +284,7 @@ def _target_operator_color_fierz_identities(
 def _target_operator_group_fierz_alignment_replacements(
     targets: Sequence[EffectiveCouplingTarget],
 ) -> tuple[Replacement, ...]:
-    aliases: list[tuple[Expression, Expression, int]] = []
+    aliases: list[tuple[Expression, Expression, int, _CoefficientTransform]] = []
     seen: set[str] = set()
     for crossed in _target_operator_color_fierz_crossed_vectors(targets):
         for alias in (crossed, *tuple(channel for channel, _operator in _chiral_fierz_channels_for_operator(crossed))):
@@ -284,18 +292,21 @@ def _target_operator_group_fierz_alignment_replacements(
             if key in seen:
                 continue
             seen.add(key)
-            aliases.append((alias, alias, 1))
+            aliases.append((alias, alias, 1, _identity_coefficient_transform))
     replacements: list[Replacement] = []
-    for alias_position, (alias_operator, replacement_operator, alias_sign) in enumerate(aliases):
+    for alias_position, (alias_operator, replacement_operator, alias_sign, coefficient_transform) in enumerate(aliases):
         index_infos = collect_indices(alias_operator * replacement_operator)
         if not index_infos:
             continue
-        coefficient = Expression.symbol(f"pychete::effective_coupling_coefficient_group_fierz_{alias_position}_")
-        pattern_operator, _alias_operator, _replacement_operator, _alias_sign, wildcards = (
+        coefficient = Expression.symbol(
+            f"pychete::effective_coupling_coefficient_group_fierz_{alias_position}_"
+        )
+        pattern_operator, _alias_operator, _replacement_operator, _alias_sign, wildcards, _coefficient_transform = (
             _target_operator_alignment_operator_pattern(
                 alias_operator,
                 replacement_operator,
                 alias_sign,
+                coefficient_transform,
                 index_infos,
                 safe_target_name="group_fierz",
                 alias_position=alias_position,
@@ -310,6 +321,7 @@ def _target_operator_group_fierz_alignment_replacements(
                     replacement_operator,
                     wildcards,
                     alias_sign,
+                    coefficient_transform,
                 ),
                 partial=False,
                 rhs_cache_size=0,
@@ -320,8 +332,13 @@ def _target_operator_group_fierz_alignment_replacements(
 
 def _target_operator_group_fierz_alignment_operator_patterns(
     targets: Sequence[EffectiveCouplingTarget],
-) -> tuple[tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]], ...]:
-    patterns: list[tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]]] = []
+) -> tuple[
+    tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform],
+    ...,
+]:
+    patterns: list[
+        tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform]
+    ] = []
     seen: set[str] = set()
     for alias_position, crossed in enumerate(_target_operator_color_fierz_crossed_vectors(targets)):
         aliases = (crossed, *tuple(channel for channel, _operator in _chiral_fierz_channels_for_operator(crossed)))
@@ -335,6 +352,7 @@ def _target_operator_group_fierz_alignment_operator_patterns(
                     alias_operator,
                     alias_operator,
                     1,
+                    _identity_coefficient_transform,
                     collect_indices(alias_operator),
                     safe_target_name="group_fierz_fallback",
                     alias_position=alias_position * 8 + alias_offset,
@@ -718,17 +736,18 @@ def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> 
         return ()
     safe_target_name = safe_symbol_name(target.name)
     replacements: list[Replacement] = []
-    for alias_position, (alias_operator, replacement_operator, alias_sign) in enumerate(
+    for alias_position, (alias_operator, replacement_operator, alias_sign, coefficient_transform) in enumerate(
         _target_operator_alignment_aliases(target)
     ):
         coefficient = Expression.symbol(
             f"pychete::effective_coupling_coefficient_{safe_target_name}_{alias_position}_"
         )
-        pattern_operator, _alias_operator, _replacement_operator, _alias_sign, wildcards = (
+        pattern_operator, _alias_operator, _replacement_operator, _alias_sign, wildcards, _coefficient_transform = (
             _target_operator_alignment_operator_pattern(
                 alias_operator,
                 replacement_operator,
                 alias_sign,
+                coefficient_transform,
                 index_infos,
                 safe_target_name=safe_target_name,
                 alias_position=alias_position,
@@ -744,6 +763,7 @@ def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> 
                     replacement_operator,
                     wildcards,
                     alias_sign,
+                    coefficient_transform,
                 ),
                 partial=False,
                 rhs_cache_size=0,
@@ -754,7 +774,10 @@ def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> 
 
 def _target_operator_alignment_operator_patterns(
     target: EffectiveCouplingTarget,
-) -> tuple[tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]], ...]:
+) -> tuple[
+    tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform],
+    ...,
+]:
     operator_terms = terms(target.operator.expand())
     if len(operator_terms) != 1:
         return ()
@@ -767,11 +790,12 @@ def _target_operator_alignment_operator_patterns(
             alias_operator,
             replacement_operator,
             alias_sign,
+            coefficient_transform,
             index_infos,
             safe_target_name=safe_target_name,
             alias_position=alias_position,
         )
-        for alias_position, (alias_operator, replacement_operator, alias_sign) in enumerate(
+        for alias_position, (alias_operator, replacement_operator, alias_sign, coefficient_transform) in enumerate(
             _target_operator_alignment_aliases(target)
         )
     )
@@ -779,34 +803,54 @@ def _target_operator_alignment_operator_patterns(
 
 def _target_operator_alignment_aliases(
     target: EffectiveCouplingTarget,
-) -> tuple[tuple[Expression, Expression, int], ...]:
-    out: list[tuple[Expression, Expression, int]] = []
+) -> tuple[tuple[Expression, Expression, int, _CoefficientTransform], ...]:
+    out: list[tuple[Expression, Expression, int, _CoefficientTransform]] = []
     seen: set[str] = set()
-    for alias_operator, alias_sign in _epsilon_orientation_aliases(target.operator):
-        key = f"{canonical_string(alias_operator)}->{canonical_string(target.operator)}:{alias_sign}"
+    target_alias_operator = _normalize_alignment_alias_operator(target.operator)
+    for alias_operator, alias_sign in _epsilon_orientation_aliases(target_alias_operator):
+        key = f"{canonical_string(alias_operator)}->{canonical_string(target.operator)}:{alias_sign}:direct"
         if key in seen:
             continue
         seen.add(key)
-        out.append((alias_operator, target.operator, alias_sign))
-    for scalar_channel, _operator_term in _chiral_fierz_channels_for_operator(target.operator):
-        for alias_operator, alias_sign in _epsilon_orientation_aliases(scalar_channel):
-            key = f"{canonical_string(alias_operator)}->{canonical_string(scalar_channel)}:{alias_sign}"
+        out.append((alias_operator, target.operator, alias_sign, _identity_coefficient_transform))
+    chiral_fierz_channels = _chiral_fierz_channels_for_operator(target.operator)
+    if not chiral_fierz_channels:
+        hermitian_operator = _normalize_alignment_alias_operator(_hermitian_conjugate_coefficient(target.operator))
+        for alias_operator, alias_sign in _epsilon_orientation_aliases(hermitian_operator):
+            key = f"{canonical_string(alias_operator)}->{canonical_string(target.operator)}:{alias_sign}:hc"
             if key in seen:
                 continue
             seen.add(key)
-            out.append((alias_operator, scalar_channel, alias_sign))
+            out.append((alias_operator, target.operator, alias_sign, _hermitian_conjugate_coefficient))
+    for scalar_channel, _operator_term in chiral_fierz_channels:
+        for alias_operator, alias_sign in _epsilon_orientation_aliases(scalar_channel):
+            key = f"{canonical_string(alias_operator)}->{canonical_string(scalar_channel)}:{alias_sign}:direct"
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append((alias_operator, scalar_channel, alias_sign, _identity_coefficient_transform))
     return tuple(out)
+
+
+def _normalize_alignment_alias_operator(expr: Expression) -> Expression:
+    from .functional import expand_cd_operators
+
+    return idenso.canonicalize_builtin_epsilon_cg_tensors(
+        idenso.simplify_pychete_chiral_projectors(expand_cd_operators(expr))
+    )
 
 
 def _target_operator_alignment_operator_pattern(
     alias_operator: Expression,
     replacement_operator: Expression,
     alias_sign: int,
+    coefficient_transform: _CoefficientTransform,
     index_infos: Sequence[IndexInfo],
     *,
     safe_target_name: str,
     alias_position: int,
-) -> tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]]:
+) -> tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform]:
+    alias_prefactor, alias_body = _numeric_prefactor_and_body(alias_operator)
     wildcards = tuple(
         (
             info,
@@ -814,14 +858,52 @@ def _target_operator_alignment_operator_pattern(
         )
         for position, info in enumerate(index_infos)
     )
-    pattern_operator = alias_operator
+    pattern_operator = alias_body
     for info, wildcard in wildcards:
         pattern_operator = pattern_operator.replace(
             info.expr,
             s.Index(wildcard, info.representation),
             allow_new_wildcards_on_rhs=True,
         )
-    return pattern_operator, alias_operator, replacement_operator, alias_sign, wildcards
+    return (
+        pattern_operator,
+        alias_body,
+        replacement_operator,
+        alias_sign,
+        wildcards,
+        _prefactor_adjusted_coefficient_transform(alias_prefactor, coefficient_transform),
+    )
+
+
+def _numeric_prefactor_and_body(expr: Expression) -> tuple[Expression, Expression]:
+    prefactors: list[Expression] = []
+    body_factors: list[Expression] = []
+    for factor in factors(expr):
+        if factor.get_type() is AtomType.Num:
+            prefactors.append(factor)
+        else:
+            body_factors.append(factor)
+    return product_expr(prefactors), product_expr(body_factors)
+
+
+def _prefactor_adjusted_coefficient_transform(
+    prefactor: Expression,
+    transform: _CoefficientTransform,
+) -> _CoefficientTransform:
+    def adjusted(coefficient: Expression) -> Expression:
+        return transform((coefficient / prefactor).expand())
+
+    return adjusted
+
+
+def _identity_coefficient_transform(expr: Expression) -> Expression:
+    return expr
+
+
+def _hermitian_conjugate_coefficient(expr: Expression) -> Expression:
+    from .functional import hermitian_conjugate
+
+    return hermitian_conjugate(expr)
 
 
 def _epsilon_orientation_aliases(expr: Expression) -> tuple[tuple[Expression, int], ...]:
@@ -864,11 +946,13 @@ def _target_operator_alignment_replacement(
     replacement_operator: Expression,
     wildcards: Sequence[tuple[IndexInfo, Expression]],
     alias_sign: int,
+    coefficient_transform: _CoefficientTransform,
 ) -> Callable[[dict[Expression, Expression]], Expression]:
     def replace_term(match: dict[Expression, Expression]) -> Expression:
         coefficient = match[coefficient_wildcard]
         replacements = _target_operator_index_replacements(match, wildcards)
-        return (Expression.num(alias_sign) * coefficient.replace_multiple(replacements) * replacement_operator).expand()
+        aligned_coefficient = coefficient_transform(coefficient.replace_multiple(replacements))
+        return (Expression.num(alias_sign) * aligned_coefficient * replacement_operator).expand()
 
     return replace_term
 

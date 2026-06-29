@@ -432,7 +432,7 @@ def simplify_pychete_dirac_algebra(expr: Expression) -> Expression:
     out = out.replace_multiple(_dirac_product_replacements())
     out = out.replace_multiple(_ncm_dirac_word_replacements())
     out = simplify_pychete_open_dirac_chains(out)
-    out = simplify_pychete_chiral_scalar_projectors(out)
+    out = simplify_pychete_chiral_projectors(out)
     out = out.replace_multiple(_mixed_ncm_dirac_subword_replacements())
     return simplify_pychete_dirac_projectors(out).expand()
 
@@ -488,6 +488,21 @@ def simplify_pychete_chiral_scalar_projectors(expr: Expression) -> Expression:
     """
 
     return expr.replace_multiple(_chiral_scalar_projector_replacements()).expand()
+
+
+def simplify_pychete_chiral_projectors(expr: Expression) -> Expression:
+    """Normalize explicit projectors next to registered chiral endpoints.
+
+    This extends scalar projector cleanup to vector/current chains such as
+    ``NCM(Bar(u_R), Gamma(mu), PR, d_R)``. SMEFT targets usually omit these
+    explicit projectors because field chirality is stored as Symbolica symbol
+    data. The replacement remains local: only projectors adjacent to the right
+    endpoint are removed or zeroed according to that endpoint's registered
+    chirality.
+    """
+
+    out = simplify_pychete_chiral_scalar_projectors(expr)
+    return out.replace_multiple(_right_endpoint_chiral_projector_replacements()).expand()
 
 
 def simplify_metrics(expr: Expression) -> Expression:
@@ -1535,6 +1550,82 @@ def _chiral_scalar_projector_replacement(
     return replace_projector
 
 
+@cache
+def _right_endpoint_chiral_projector_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_NATIVE_DIRAC_WORD_ARITY + 1):
+        middle_wildcards = _dirac_word_wildcards("right_chiral_projector", arity)
+        left_label = s.head(f"right_chiral_projector_{arity}_left_label_")
+        left_indices = s.head(f"right_chiral_projector_{arity}_left_indices_")
+        left_derivatives = s.head(f"right_chiral_projector_{arity}_left_derivatives_")
+        right_label = s.head(f"right_chiral_projector_{arity}_right_label_")
+        right_indices = s.head(f"right_chiral_projector_{arity}_right_indices_")
+        right_derivatives = s.head(f"right_chiral_projector_{arity}_right_derivatives_")
+        left_endpoint = s.Bar(s.Field(left_label, s.Fermion, left_indices, left_derivatives))
+        right_endpoint = s.Field(right_label, s.Fermion, right_indices, right_derivatives)
+        field_labels_are_registered = left_label.req_tag(SymbolRole.FIELD.value) & right_label.req_tag(
+            SymbolRole.FIELD.value
+        )
+        for projector in (s.PR, s.PL):
+            for projector_expr in (projector, s.DiracProduct(projector)):
+                pattern = s.NCM(left_endpoint, *middle_wildcards, projector_expr, right_endpoint)
+                replacements.append(
+                    Replacement(
+                        pattern,
+                        _right_endpoint_chiral_projector_replacement(
+                            pattern,
+                            projector,
+                            left_endpoint,
+                            middle_wildcards,
+                            right_endpoint,
+                            right_label,
+                        ),
+                        field_labels_are_registered,
+                        rhs_cache_size=0,
+                    )
+                )
+            compact_pattern = s.NCM(left_endpoint, s.DiracProduct(*middle_wildcards, projector), right_endpoint)
+            replacements.append(
+                Replacement(
+                    compact_pattern,
+                    _right_endpoint_chiral_projector_replacement(
+                        compact_pattern,
+                        projector,
+                        left_endpoint,
+                        middle_wildcards,
+                        right_endpoint,
+                        right_label,
+                    ),
+                    field_labels_are_registered,
+                    rhs_cache_size=0,
+                )
+            )
+    return tuple(replacements)
+
+
+def _right_endpoint_chiral_projector_replacement(
+    pattern: Expression,
+    projector: Expression,
+    left_endpoint: Expression,
+    middle_wildcards: tuple[Expression, ...],
+    right_endpoint: Expression,
+    right_label: Expression,
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_projector(match: dict[Expression, Expression]) -> Expression:
+        chirality = field_chirality_from_label(match[right_label])
+        if chirality is FieldChirality.NONE:
+            return pattern.replace_wildcards(match)
+        if _projector_matches_right_chirality(projector, chirality):
+            return s.NCM(
+                left_endpoint.replace_wildcards(match),
+                *(match[wildcard] for wildcard in middle_wildcards),
+                right_endpoint.replace_wildcards(match),
+            )
+        return Expression.num(0)
+
+    return replace_projector
+
+
 def _projector_matches_right_chirality(projector: Expression, chirality: FieldChirality) -> bool:
     return (bool(projector == s.PR) and chirality is FieldChirality.RIGHT) or (
         bool(projector == s.PL) and chirality is FieldChirality.LEFT
@@ -1854,6 +1945,8 @@ def _builtin_epsilon_cg_replacements() -> tuple[Replacement, ...]:
     left = s.head("builtin_epsilon_cg_left_")
     right = s.head("builtin_epsilon_cg_right_")
     pattern = s.CG(label, s.List(left, right))
+    barred_pattern = s.Bar(pattern)
+    conjugated_pattern = s.CG(s.Bar(label), s.List(s.Bar(left), s.Bar(right)))
     registered_cg_label = label.req_tag(SymbolRole.CG_TENSOR.value)
 
     def canonicalize(match: dict[Expression, Expression]) -> Expression:
@@ -1865,7 +1958,29 @@ def _builtin_epsilon_cg_replacements() -> tuple[Replacement, ...]:
             return pattern.replace_wildcards(match)
         return -s.CG(match[label], s.List(right_index, left_index))
 
-    return (Replacement(pattern, canonicalize, registered_cg_label, rhs_cache_size=0),)
+    def canonicalize_barred(match: dict[Expression, Expression]) -> Expression:
+        if not _is_rank_two_builtin_epsilon_label(match[label]):
+            return barred_pattern.replace_wildcards(match)
+        left_index = match[left]
+        right_index = match[right]
+        if canonical_string(left_index) <= canonical_string(right_index):
+            return s.Bar(s.CG(match[label], s.List(left_index, right_index)))
+        return -s.Bar(s.CG(match[label], s.List(right_index, left_index)))
+
+    def canonicalize_conjugated(match: dict[Expression, Expression]) -> Expression:
+        if not _is_rank_two_builtin_epsilon_label(match[label]):
+            return conjugated_pattern.replace_wildcards(match)
+        left_index = match[left]
+        right_index = match[right]
+        if canonical_string(left_index) <= canonical_string(right_index):
+            return s.Bar(s.CG(match[label], s.List(left_index, right_index)))
+        return -s.Bar(s.CG(match[label], s.List(right_index, left_index)))
+
+    return (
+        Replacement(barred_pattern, canonicalize_barred, registered_cg_label, rhs_cache_size=0),
+        Replacement(conjugated_pattern, canonicalize_conjugated, registered_cg_label, rhs_cache_size=0),
+        Replacement(pattern, canonicalize, registered_cg_label, rhs_cache_size=0),
+    )
 
 
 def _is_rank_two_builtin_epsilon_label(label: Expression) -> bool:
@@ -2606,6 +2721,7 @@ __all__ = [
     "simplify_pychete_field_strength_group_algebra",
     "expand_pychete_ncm_powers",
     "simplify_pychete_color_algebra",
+    "simplify_pychete_chiral_projectors",
     "simplify_pychete_chiral_scalar_projectors",
     "simplify_pychete_dirac_algebra",
     "trace_pychete_closed_dirac_chains",

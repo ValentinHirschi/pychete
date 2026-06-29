@@ -859,3 +859,15 @@ def test_hermitian_conjugate_reverses_supported_yukawa_chains() -> None:
     expected = -s.Bar(y()) * scalar() * s.NCM(s.Bar(heavy()), s.PL, light())
 
     assert_expr_equal(hermitian_conjugate(interaction), expected)
+
+
+def test_hermitian_conjugate_simplifies_real_external_logs_and_self_conjugate_powers() -> None:
+    theory = Theory("hc_real_external_logs")
+    hbar = theory.define_external("hbar")
+    mubar2 = theory.define_external("mubar2")
+    mass = theory.define_coupling("M", self_conjugate=True)
+    yukawa = theory.define_coupling("Y")
+    expr = hbar() * (mubar2() / mass() ** 2).log() * s.Bar(yukawa()) / mass() ** 4
+    expected = hbar() * (mubar2() / mass() ** 2).log() * yukawa() / mass() ** 4
+
+    assert_expr_equal(hermitian_conjugate(expr), expected)

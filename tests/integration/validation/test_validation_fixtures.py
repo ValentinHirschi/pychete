@@ -26,6 +26,7 @@ from pychete.backends import vacuum_integrals
 from pychete.backends import vakint as vakint_backend
 from pychete import validation_fixtures as validation_fixtures_module
 from pychete.bases.smeft_warsaw import SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES
+from pychete.indices import relabel_dummy_indices
 from pychete.loaders import load_python_model
 from pychete.matching import MatchingResult, VakintIntegralStage
 from pychete.state import PycheteState
@@ -217,6 +218,27 @@ def test_singlet_reference_effective_coupling_map_recovers_cle_condition() -> No
     )
 
     assert_expr_equal((mapped["cle"] - result.matching_conditions[reference_name]).expand(), Expression.num(0))
+
+
+def test_singlet_reference_effective_coupling_map_recovers_chud_from_hermitian_conjugate_source() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    chud = result.theory.external_handle("cHud")
+    reference_name = next(name for name in result.matching_conditions if "external_cHud" in name)
+
+    mapped = result.map_effective_couplings(
+        {"cHud": chud()},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        (
+            relabel_dummy_indices(mapped["cHud"], start=1)
+            - relabel_dummy_indices(result.matching_conditions[reference_name], start=1)
+        ).expand(),
+        Expression.num(0),
+    )
 
 
 @pytest.mark.parametrize("labels", [("cqu1", "cqu8"), ("cqd1", "cqd8")])

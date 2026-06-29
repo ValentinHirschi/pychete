@@ -2057,3 +2057,10 @@ next real performance step remains an insertion-level collected
   comparison normalization `expand_loop_scale_logs_for_comparison` was added.
   This is a generic loop-scale comparison boundary, not a final-coefficient
   patch.
+- Current continuation, 2026-06-29: the user asked for the current list of
+  nonzero Wilson coefficients matching in pychete and the UV/effective theory
+  names. The active converted-boundary fixture is
+  `Singlet_Scalar_Extension -> SMEFT Warsaw`; the matching nonzero
+  coefficients after this slice are `cHD`, `cHud`, `cle`, `cledq`, `clequ1`,
+  `cqd1`, `cqd8`, `cqu1`, `cqu8`, and `cquqd1`. Selected public Wilson-line
+  probes remain separately green for `cHW`, `cHB`, `cHWB`, and `cHD`.

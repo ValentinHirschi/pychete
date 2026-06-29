@@ -647,6 +647,21 @@ def test_idenso_canonicalizes_rank_two_builtin_epsilon_cg_tensors() -> None:
     assert _same(idenso.canonicalize_builtin_epsilon_cg_tensors(eps(j, i)), -eps(i, j))
 
 
+def test_idenso_canonicalizes_conjugated_rank_two_builtin_epsilon_cg_tensors() -> None:
+    theory = Theory("idenso_builtin_epsilon_conjugated_canonical")
+    theory.define_gauge_group("SU2F", s.SU(Expression.num(2)), "g", "W")
+    fund = theory.define_representation("SU2F", "fund")
+    eps = theory.cg_tensor_handle("eps_SU2F")
+    i = theory.index("i", fund)
+    j = theory.index("j", fund)
+    direct = s.CG(s.Bar(eps.label), s.List(s.Bar(i), s.Bar(j)))
+    swapped = s.CG(s.Bar(eps.label), s.List(s.Bar(j), s.Bar(i)))
+
+    assert _same(idenso.canonicalize_builtin_epsilon_cg_tensors(direct), s.Bar(eps(i, j)))
+    assert _same(idenso.canonicalize_builtin_epsilon_cg_tensors(swapped), -s.Bar(eps(i, j)))
+    assert _same(idenso.canonicalize_builtin_epsilon_cg_tensors(s.Bar(eps(j, i))), -s.Bar(eps(i, j)))
+
+
 def test_idenso_bridge_contracts_pychete_loop_momentum_metrics() -> None:
     mu = s.Index(s.dummy_index(0), s.Lorentz)
     nu = s.Index(s.dummy_index(1), s.Lorentz)
@@ -887,6 +902,35 @@ def test_idenso_chiral_scalar_projectors_use_registered_field_chirality() -> Non
     )
     unchiral = s.NCM(s.Bar(left()), s.PR, dirac())
     assert _same(idenso.simplify_pychete_chiral_scalar_projectors(unchiral), unchiral)
+
+
+def test_idenso_chiral_projectors_use_registered_right_endpoint_chirality_in_currents() -> None:
+    theory = Theory("idenso_chiral_current_projectors")
+    left = theory.define_field("q", s.Fermion, chirality="left")
+    right = theory.define_field("d", s.Fermion, chirality="right")
+    dirac = theory.define_field("psi", s.Fermion)
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+
+    assert _same(
+        idenso.simplify_pychete_chiral_projectors(
+            s.NCM(s.Bar(right()), s.Gamma(mu), s.PR, right())
+        ),
+        s.NCM(s.Bar(right()), s.Gamma(mu), right()),
+    )
+    assert _same(
+        idenso.simplify_pychete_chiral_projectors(
+            s.NCM(s.Bar(right()), s.Gamma(mu), s.PL, right())
+        ),
+        Expression.num(0),
+    )
+    assert _same(
+        idenso.simplify_pychete_chiral_projectors(
+            s.NCM(s.Bar(left()), s.Gamma(mu), s.DiracProduct(s.PL), left())
+        ),
+        s.NCM(s.Bar(left()), s.Gamma(mu), left()),
+    )
+    unchiral = s.NCM(s.Bar(dirac()), s.Gamma(mu), s.PR, dirac())
+    assert _same(idenso.simplify_pychete_chiral_projectors(unchiral), unchiral)
 
 
 def test_wilson_line_numerator_hoists_commutative_operands_before_open_chain_dirac_simplification() -> None:

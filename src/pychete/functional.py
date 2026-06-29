@@ -30,6 +30,7 @@ from .expr import (
     list_expr,
     list_items,
     matching_subexpressions,
+    pow_parts,
     product_expr,
     sum_expr,
     terms,
@@ -40,6 +41,7 @@ from .symbols import SymbolDataKey, SymbolRole, canonical_string, s, symbol_data
 from .theory import Theory
 from .theory_metadata import (
     CouplingSelfConjugate,
+    ExternalKind,
     FieldDefinition,
     FieldHandle,
     FieldVariation,
@@ -90,7 +92,8 @@ def expand_cd_operators(expr: Expression) -> Expression:
     """
 
     cd_pat = cd_pattern()
-    if not bool(expr.matches(cd_pat)):
+    bar_cd_pat = s.Bar(cd_pat)
+    if not bool(expr.matches(cd_pat)) and not bool(expr.matches(bar_cd_pat)):
         return expr
 
     def cd_replacement(match: dict[Expression, Expression]) -> Expression:
@@ -98,9 +101,17 @@ def expand_cd_operators(expr: Expression) -> Expression:
         indices = list_items(index) if is_head(index, s.List) else (index,)
         return apply_cd(indices, match[s.CDBodyWildcard])
 
+    def bar_cd_replacement(match: dict[Expression, Expression]) -> Expression:
+        return _bar_expr(cd_replacement(match), generated=False)
+
     out = expr
     for _ in range(16):
-        updated = out.replace(cd_pat, cd_replacement).expand()
+        updated = out.replace_multiple(
+            (
+                Replacement(bar_cd_pat, bar_cd_replacement, rhs_cache_size=0),
+                Replacement(cd_pat, cd_replacement, rhs_cache_size=0),
+            )
+        ).expand()
         if bool(updated == out):
             return updated
         out = updated
@@ -2395,10 +2406,19 @@ def _bar_expr(body: Expression, *, generated: bool) -> Expression:
     kind = body.get_type()
     if kind is AtomType.Num:
         return body.conj()
+    if kind is AtomType.Var and _is_real_external_symbol(body):
+        return body
     if kind is AtomType.Add:
         return sum_expr(_bar_expr(term, generated=True) for term in terms(body))
     if kind is AtomType.Mul:
         return product_expr(_bar_expr(factor, generated=True) for factor in factors(body))
+    parts = pow_parts(body)
+    if parts is not None:
+        base, exponent = parts
+        if exponent.get_type() is AtomType.Num:
+            return _bar_expr(base, generated=True) ** exponent.conj()
+    if _is_symbolica_log(body):
+        return _bar_expr(body[0], generated=True).log()
     if is_head(body, s.Bar):
         return body[0]
     if is_head(body, s.Field):
@@ -2423,6 +2443,16 @@ def _bar_expr(body: Expression, *, generated: bool) -> Expression:
     if is_head(body, s.NCM):
         return _chain_expr(*(_bar_expr(arg, generated=True) for arg in reversed(args(body))))
     return s.Bar(body)
+
+
+def _is_real_external_symbol(expr: Expression) -> bool:
+    if symbol_data(expr, SymbolDataKey.ROLE) != SymbolRole.EXTERNAL.value:
+        return False
+    return symbol_data(expr, SymbolDataKey.EXTERNAL_KIND) == ExternalKind.GENERIC.value
+
+
+def _is_symbolica_log(expr: Expression) -> bool:
+    return expr.get_type() is AtomType.Fn and expr.get_name() == "symbolica::log" and len(expr) == 1
 
 
 def _conjugated_coupling(expr: Expression, spec: CouplingSelfConjugate) -> Expression:

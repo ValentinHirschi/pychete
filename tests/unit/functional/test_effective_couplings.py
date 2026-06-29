@@ -3,7 +3,9 @@ from __future__ import annotations
 import pytest
 from symbolica import Expression, S
 
-from pychete import EffectiveCouplingTarget, MatchingResult, Theory, map_effective_couplings, s
+from pychete import EffectiveCouplingTarget, MatchingResult, Theory, hermitian_conjugate, map_effective_couplings, s
+from pychete.functional import expand_cd_operators
+from pychete.indices import relabel_dummy_indices
 
 from tests.conftest import assert_expr_equal
 
@@ -127,6 +129,49 @@ def test_map_effective_couplings_canonicalizes_builtin_epsilon_orientation() -> 
     )
 
     assert_expr_equal(mapped["cLq"], -coupling())
+
+
+def test_map_effective_couplings_recovers_hermitian_conjugate_target_operator() -> None:
+    theory = Theory("effective_coupling_hermitian_target")
+    theory.define_gauge_group("SU2F", s.SU(Expression.num(2)), "g2", "W")
+    theory.define_gauge_group("SU3C", s.SU(Expression.num(3)), "g3", "G")
+    weak = theory.define_representation("SU2F", "fund")
+    color = theory.define_representation("SU3C", "fund")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    higgs = theory.define_field("H", s.Scalar, indices=[weak], self_conjugate=False, mass=0)
+    up = theory.define_field("u", s.Fermion, indices=[color, flavor.symbol], chirality="right")
+    down = theory.define_field("d", s.Fermion, indices=[color, flavor.symbol], chirality="right")
+    yd = theory.define_coupling("Yd", indices=[flavor.symbol, flavor.symbol])
+    yu = theory.define_coupling("Yu", indices=[flavor.symbol, flavor.symbol])
+    eps = theory.cg_tensor_handle("eps_SU2F")
+    mu = theory.index("mu")
+    weak_i = theory.index("i", weak)
+    weak_j = theory.index("j", weak)
+    alpha = theory.index("alpha", color)
+    i1 = theory.index("i1", flavor.symbol)
+    i2 = theory.index("i2", flavor.symbol)
+    dummy = theory.dummy_index(3, flavor.symbol)
+    operator = (
+        Expression.I
+        * higgs(weak_j)
+        * s.Bar(eps(weak_i, weak_j))
+        * s.CD(mu, higgs(weak_i))
+        * s.NCM(s.Bar(up(alpha, i1)), s.Gamma(mu), down(alpha, i2))
+    )
+    coefficient = -yd(dummy, i2) * s.Bar(yu(dummy, i1)) / Expression.num(2)
+    source = expand_cd_operators(hermitian_conjugate((coefficient * operator).expand()))
+    wilson = theory.define_wilson_coefficient("cHud", indices=[i1, i2], operator=operator)
+
+    mapped = map_effective_couplings(
+        source,
+        (EffectiveCouplingTarget("cHud", wilson(), operator),),
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        relabel_dummy_indices(mapped["cHud"], start=1),
+        relabel_dummy_indices(coefficient, start=1),
+    )
 
 
 def test_map_effective_couplings_uses_chiral_fierz_identity_for_vector_currents() -> None:
