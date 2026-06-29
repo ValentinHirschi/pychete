@@ -1728,3 +1728,8 @@ Green/EOM identity conversion.
   raw generated Wilson-line terms from 32 to 16 with effective weighted count
   32. Future use of component weights must be backed by a matching Matchete
   checkpoint.
+- Latest selected Higgs-gauge fixture tightening, 2026-06-29: the accepted
+  `cHW/cHB/cHWB` validation fixture now explicitly uses label-level Matchete
+  fluctuation DOFs with component path weights disabled, and pins the bounded
+  nonzero Wilson-plan entries so this matched subset stays on the targeted
+  performance route.

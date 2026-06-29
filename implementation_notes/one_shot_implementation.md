@@ -386,6 +386,14 @@ Current slice progress:
   the topology-lowered source probe remains around 100 KB and uses the same
   bounded projection chunks. If this fixture grows again, split it into a
   cheap path-multiplicity smoke and a slower explicit source-boundary refresh.
+- Selected Higgs-gauge fixture tightening: the slow `cHW/cHB/cHWB` validation
+  fixture now explicitly uses the label-level Matchete fluctuation-DOF route
+  with component path weights disabled. The accepted coefficients and final
+  term counts remain `10/10/14`, but the test now pins the bounded nonzero
+  Wilson plan entries (`wilson14_o4_0` for `cHW/cHB`, `wilson5_o2_0` plus
+  `wilson14_o4_0` for `cHWB`). This prevents future regressions from silently
+  broadening back to explicit component enumeration for the already matched
+  selected field-strength subset.
 
 ## Targeted Commands
 

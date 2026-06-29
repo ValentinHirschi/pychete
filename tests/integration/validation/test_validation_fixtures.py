@@ -2153,11 +2153,23 @@ def test_singlet_reference_chd_vector_eom_field_redefinition_reaches_matchete_on
 
 @pytest.mark.slow
 @pytest.mark.parametrize(
-    ("target_name", "gauge_couplings", "denominator", "expected_term_count"),
+    (
+        "target_name",
+        "gauge_couplings",
+        "denominator",
+        "expected_term_count",
+        "expected_nonzero_entries",
+    ),
     [
-        ("cHW", ("gL", "gL"), 12, 10),
-        ("cHB", ("gY", "gY"), 12, 10),
-        ("cHWB", ("gL", "gY"), 6, 14),
+        ("cHW", ("gL", "gL"), 12, 10, ("hScalar-lScalar#wilson14_o4_0",)),
+        ("cHB", ("gY", "gY"), 12, 10, ("hScalar-lScalar#wilson14_o4_0",)),
+        (
+            "cHWB",
+            ("gL", "gY"),
+            6,
+            14,
+            ("hScalar-lScalar#wilson5_o2_0", "hScalar-lScalar#wilson14_o4_0"),
+        ),
     ],
 )
 def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_against_matchete_fixture(
@@ -2165,6 +2177,7 @@ def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_aga
     gauge_couplings: tuple[str, ...],
     denominator: int,
     expected_term_count: int,
+    expected_nonzero_entries: tuple[str, ...],
 ) -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference_fixture = load_validation_fixture(
@@ -2196,6 +2209,8 @@ def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_aga
         wilson_line_expand_covariant_derivative_commutators=False,
         wilson_line_max_derivative_order=4,
         wilson_line_filter_terms_by_matching_targets=True,
+        use_matchete_fluctuation_dof_basis=True,
+        wilson_line_weight_paths_by_component_dofs=False,
         wilson_line_expose_scalar_derivative_commutator_bilinears=True,
         wilson_line_tensor_reduce_before_wilson_expand=True,
         simplify_pychete_color_algebra=True,
@@ -2221,7 +2236,12 @@ def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_aga
     assert report.different_after_probe_common_matching_condition_names == ()
     assert report.matching_condition_projection_registered_wilson_names == (condition_name,)
     assert report.candidate_metadata["interaction_wilson_line_tensor_reduce_before_wilson_expand"] is True
+    assert report.candidate_metadata["matchete_fluctuation_dof_basis"] is True
+    assert report.candidate_metadata["interaction_wilson_line_paths_weighted_by_component_dofs"] is False
+    nonzero_entries = tuple(report.candidate_metadata["interaction_wilson_line_nonzero_plan_entries"])
+    assert nonzero_entries == expected_nonzero_entries
     assert sum(report.candidate_metadata["interaction_wilson_line_term_count_by_entry"].values()) == expected_term_count
+    assert report.candidate_metadata["interaction_wilson_line_component_weighted_term_count"] == expected_term_count
 
 
 @pytest.mark.slow
