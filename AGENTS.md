@@ -258,9 +258,12 @@ exposes this as `matchete_fluctuation_dof_basis_fields(...)`,
 `wilson_line_path_component_weight(...)`,
 `OneLoopMatchOptions.use_matchete_fluctuation_dof_basis`, and
 `OneLoopMatchOptions.wilson_line_weight_paths_by_component_dofs`. Use the
-weighted route for targeted parity probes once the same Matchete checkpoint
-has validated the effective multiplicity; do not evaluate duplicate component
-paths just to throw them away at projection time.
+weighted route only when the same Matchete checkpoint has validated the
+effective multiplicity; do not evaluate duplicate component paths just to
+throw them away at projection time. Do not apply component weights blindly:
+the current Singlet evidence uses label-level DOFs without component weights
+for the `hScalar-lScalar -> cHW/cHB/cHWB` field-strength subset, and
+label-level DOFs with component weights for the scalar-EOM `cHD` boundary.
 For matching-condition extraction from large one-loop expressions, prefer
 `matching_condition_expand_source=False` plus
 `matching_condition_truncate_eft=True` when appropriate. This projects each

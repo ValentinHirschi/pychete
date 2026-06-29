@@ -1571,6 +1571,8 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
         wilson_line_covariant_derivative_commutator_mode="all_distinct",
         wilson_line_max_derivative_order=3,
         wilson_line_filter_terms_by_matching_targets=True,
+        use_matchete_fluctuation_dof_basis=True,
+        wilson_line_weight_paths_by_component_dofs=True,
         wilson_line_expose_scalar_derivative_commutator_bilinears=True,
         wilson_line_expose_scalar_eom_terms=True,
         wilson_line_tensor_reduce_before_wilson_expand=True,
@@ -1589,6 +1591,8 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     assert options.wilson_line_covariant_derivative_commutator_mode == "all_distinct"
     assert options.wilson_line_max_derivative_order == 3
     assert options.wilson_line_filter_terms_by_matching_targets is True
+    assert options.use_matchete_fluctuation_dof_basis is True
+    assert options.wilson_line_weight_paths_by_component_dofs is True
     assert options.wilson_line_expose_scalar_derivative_commutator_bilinears is True
     assert options.wilson_line_expose_scalar_eom_terms is True
     assert options.wilson_line_tensor_reduce_before_wilson_expand is True
@@ -1643,6 +1647,8 @@ def test_validation_fixture_gap_report_can_filter_direct_wilson_line_terms_by_pr
         wilson_line_trace_names=("hScalar", "hScalar-lScalar"),
         wilson_line_max_total_order=0,
         wilson_line_filter_terms_by_matching_targets=True,
+        use_matchete_fluctuation_dof_basis=True,
+        wilson_line_weight_paths_by_component_dofs=True,
         project_reference_matching_conditions=True,
     )
 
@@ -1652,6 +1658,8 @@ def test_validation_fixture_gap_report_can_filter_direct_wilson_line_terms_by_pr
     assert report.reference_matching_condition_names == (target_name,)
     assert report.candidate_metadata["wilson_line_terms_filtered_by_matching_targets"] is True
     assert report.candidate_metadata["interaction_wilson_line_terms_filtered_by_matching_targets"] is True
+    assert report.candidate_metadata["matchete_fluctuation_dof_basis"] is True
+    assert report.candidate_metadata["interaction_wilson_line_paths_weighted_by_component_dofs"] is True
     assert report.candidate_metadata["interaction_wilson_line_plan_entry_count"] == 2
     candidate_entry_counts = report.candidate_metadata["interaction_wilson_line_term_count_by_entry"]
     assert len(candidate_entry_counts) == 2

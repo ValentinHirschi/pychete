@@ -210,6 +210,7 @@ def _public_selected_higgs_gauge_gap_report() -> tuple[Theory, MatchingFixtureGa
         wilson_line_expand_covariant_derivative_commutators=False,
         wilson_line_max_derivative_order=4,
         wilson_line_filter_terms_by_matching_targets=True,
+        use_matchete_fluctuation_dof_basis=True,
         wilson_line_expose_scalar_derivative_commutator_bilinears=True,
         wilson_line_tensor_reduce_before_wilson_expand=True,
         simplify_pychete_color_algebra=True,
@@ -607,6 +608,8 @@ def test_public_match_selected_higgs_gauge_wilson_subset_matches_matchete_fixtur
     assert report.candidate_metadata["fixture_preview_source"] == "public_match_api"
     assert report.candidate_metadata["wilson_line_terms_filtered_by_matching_targets"] is True
     assert report.candidate_metadata["interaction_wilson_line_tensor_reduce_before_wilson_expand"] is True
+    assert report.candidate_metadata["use_matchete_fluctuation_dof_basis"] is True
+    assert report.candidate_metadata["wilson_line_weight_paths_by_component_dofs"] is False
     assert report.candidate_metadata["interaction_wilson_line_term_count"] == 14
     assert report.candidate_metadata["interaction_wilson_line_plan_entry_count"] == 15
     assert report.candidate_matching_condition_names == expected_names
@@ -799,6 +802,8 @@ def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_front
             integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
             normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
             hbar=theory.external_handle("hbar")(),
+            use_matchete_fluctuation_dof_basis=True,
+            wilson_line_weight_paths_by_component_dofs=True,
             wilson_line_trace_names=("hScalar-lScalar",),
             wilson_line_max_total_order=4,
             wilson_line_max_slot_order=4,
@@ -835,11 +840,15 @@ def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_front
     assert result.metadata["heavy_scalar_solution_eft_limited"] is True
     assert result.metadata["wilson_line_scalar_eom_terms_reduced"] is True
     assert result.metadata["tensor_reduce"] is True
+    assert result.metadata["use_matchete_fluctuation_dof_basis"] is True
+    assert result.metadata["wilson_line_weight_paths_by_component_dofs"] is True
+    assert result.metadata["interaction_wilson_line_paths_weighted_by_component_dofs"] is True
     assert result.metadata["on_shell_eom_reduction_deferred_to_wilson_line_scalar_eom"] is True
     assert result.metadata["interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed"] is False
     assert result.metadata["wilson_line_scalar_commutator_abelian_vector_eom_reduction_rule_count"] == 3
     assert result.metadata["wilson_line_scalar_commutator_abelian_vector_field_redefinition_applied"] is True
-    assert result.metadata["interaction_wilson_line_term_count"] == 32
+    assert result.metadata["interaction_wilson_line_term_count"] == 16
+    assert result.metadata["interaction_wilson_line_component_weighted_term_count"] == 32
     delta = result.supertraces["on_shell_eft_lagrangian_scalar_commutator_abelian_vector_field_redefinition_delta"]
     delta_projection = MatchingResult(
         theory=theory,

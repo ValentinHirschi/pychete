@@ -1718,3 +1718,13 @@ Green/EOM identity conversion.
   with effective weight eight instead of sixteen duplicate component paths.
   The default explicit-component route remains available as a diagnostic until
   broader fixtures validate the weighted route.
+- Follow-up performance validation, 2026-06-29: implementation checked the
+  same DOF classing idea against the accepted `hScalar-lScalar -> cHW/cHB/cHWB`
+  field-strength subset and the active `hScalar-lScalar -> cHD` scalar-EOM
+  bridge. Result: label-level DOFs alone preserve the accepted Higgs-gauge
+  Wilson coefficients and keep the 14-term route; component weights are wrong
+  for those field-strength targets. For the scalar-EOM `cHD` route, label-level
+  DOFs plus component weights preserve the selected coefficient while reducing
+  raw generated Wilson-line terms from 32 to 16 with effective weighted count
+  32. Future use of component weights must be backed by a matching Matchete
+  checkpoint.

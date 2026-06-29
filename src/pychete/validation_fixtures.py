@@ -680,6 +680,8 @@ class ValidationFixture:
         wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
+        use_matchete_fluctuation_dof_basis: bool = False,
+        wilson_line_weight_paths_by_component_dofs: bool = False,
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
         wilson_line_expose_scalar_eom_terms: bool = False,
         wilson_line_tensor_reduce_before_wilson_expand: bool = False,
@@ -751,6 +753,8 @@ class ValidationFixture:
             eft_order=eft_order,
             max_trace_order=max_trace_order,
             include_light_only=include_light_only,
+            matchete_fluctuation_dof_basis=use_matchete_fluctuation_dof_basis,
+            wilson_line_weight_paths_by_component_dofs=wilson_line_weight_paths_by_component_dofs,
         )
         if simplify_pychete_color_algebra:
             setup = setup.simplify_index_algebra(
@@ -1487,6 +1491,8 @@ class ValidationFixture:
         wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
+        use_matchete_fluctuation_dof_basis: bool = False,
+        wilson_line_weight_paths_by_component_dofs: bool = False,
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
         wilson_line_expose_scalar_eom_terms: bool = False,
         wilson_line_tensor_reduce_before_wilson_expand: bool = False,
@@ -1545,6 +1551,12 @@ class ValidationFixture:
         Wilson-line expansion requests. It works through the public matcher or
         this fixture's direct preview route as long as reference matching
         conditions are being projected.
+        ``use_matchete_fluctuation_dof_basis`` and
+        ``wilson_line_weight_paths_by_component_dofs`` forward the opt-in
+        Matchete-style label-level fluctuation-DOF route. Use the DOF flag
+        alone when the Matchete checkpoint validates label-level classing, and
+        add component weighting only when that same checkpoint validates the
+        omitted component multiplicity.
         ``wilson_line_expose_scalar_derivative_commutator_bilinears`` forwards
         the opt-in post-evaluation scalar two-derivative
         commutator-bilinear exposure pass to Wilson-line internal and vakint
@@ -1701,6 +1713,8 @@ class ValidationFixture:
                     ),
                     wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                     wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
+                    use_matchete_fluctuation_dof_basis=use_matchete_fluctuation_dof_basis,
+                    wilson_line_weight_paths_by_component_dofs=wilson_line_weight_paths_by_component_dofs,
                     wilson_line_expose_scalar_derivative_commutator_bilinears=(
                         wilson_line_expose_scalar_derivative_commutator_bilinears
                     ),
@@ -1822,6 +1836,8 @@ class ValidationFixture:
                 ),
                 wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                 wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
+                use_matchete_fluctuation_dof_basis=use_matchete_fluctuation_dof_basis,
+                wilson_line_weight_paths_by_component_dofs=wilson_line_weight_paths_by_component_dofs,
                 wilson_line_expose_scalar_derivative_commutator_bilinears=(
                     wilson_line_expose_scalar_derivative_commutator_bilinears
                 ),

@@ -289,6 +289,15 @@ Current slice progress:
   enumeration remains unchanged for diagnostics. Generated Wilson-line terms
   carry both their raw term count and component-weighted effective count in
   metadata, making parity/performance comparisons explicit.
+- Extended the performance validation to the active `hScalar-lScalar`
+  selected public routes. For the accepted `cHW/cHB/cHWB` field-strength
+  subset, Matchete-style label-level DOFs alone preserve the Matchete
+  coefficients and keep the 14-term route; adding component weights doubles
+  those coefficients and is therefore explicitly not valid there. For the
+  scalar-EOM `cHD` public bridge, label-level DOFs plus component weights
+  preserve the selected coefficient and vector-field-redefinition delta while
+  reducing raw generated Wilson-line terms from 32 to 16 with effective
+  weighted count 32.
 
 ## Performance Budget For This Slice
 
@@ -324,6 +333,12 @@ Current slice progress:
   canonical probe is available and validated for the same target. Keep the
   route opt-in until broader Singlet and non-Singlet fixtures validate the
   same Matchete field-degree/component semantics.
+- Component weights are target/stage semantics, not a global switch. Current
+  Singlet evidence says to use label-level DOFs without component weights for
+  the accepted field-strength subset `cHW/cHB/cHWB`, and label-level DOFs
+  with component weights for the scalar-EOM `cHD` route. Any broader use of
+  component weights must first be backed by a Matchete checkpoint and paired
+  pychete probe.
 - For the four-slot `cHD` factor-two overcount, do not patch projection,
   tensor reduction, or idenso delta contraction next. The next useful slice is
   to port Matchete's field-degree/component weighting at the fluctuation path
