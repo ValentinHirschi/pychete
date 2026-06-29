@@ -2418,6 +2418,28 @@ class Theory:
             strict=strict,
         )
 
+    def systematic_abelian_vector_eom_field_redefinition_delta(
+        self,
+        source_lagrangian: Expression,
+        *,
+        eom_terms_lagrangian: Expression | None = None,
+        max_order: int,
+        fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+        strict: bool = False,
+    ) -> Expression:
+        """Return the staged Abelian-vector formal-EOM shift delta."""
+
+        from .functional import systematic_abelian_vector_eom_field_redefinition_delta
+
+        return systematic_abelian_vector_eom_field_redefinition_delta(
+            self,
+            source_lagrangian,
+            eom_terms_lagrangian=eom_terms_lagrangian,
+            max_order=max_order,
+            fields=fields,
+            strict=strict,
+        )
+
     def scalar_eom_field_redefinition_delta(
         self,
         source_lagrangian: Expression,

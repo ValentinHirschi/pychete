@@ -14,6 +14,7 @@ from pychete.functional import (
     partial_functional_derivative,
     scalar_eom_field_redefinition_delta,
     select_terms_by_dimension_and_derivatives,
+    systematic_abelian_vector_eom_field_redefinition_delta,
     systematic_scalar_eom_field_redefinition_delta,
 )
 from pychete.symbols import canonical_string
@@ -518,6 +519,84 @@ def test_systematic_scalar_eom_field_redefinition_delta_selects_dim6_formal_eom_
             max_order=6,
         ),
         direct,
+    )
+
+
+def test_systematic_abelian_vector_eom_field_redefinition_delta_selects_dim6_formal_eom_terms() -> None:
+    coefficient = S("systematic_vector_eom_shift_coefficient")
+    theory = Theory("systematic_vector_eom_shift")
+    theory.define_gauge_group("U1Y", s.U1, "gY", "B")
+    phi = theory.define_field(
+        "phi",
+        s.Scalar,
+        charges=[theory.group_charge("U1Y", 2)],
+        self_conjugate=False,
+        mass=0,
+    )
+    vector = theory.field_handle("B")
+    mu = theory.dummy_index(0)
+    field = phi()
+    current = (
+        Expression.I * s.Bar(field) * s.CD(mu, field)
+        - Expression.I * s.CD(mu, s.Bar(field)) * field
+    )
+    eom_terms = (coefficient * current * s.EOM(vector(mu))).expand()
+    free = theory.free_lag(phi, vector, convention=FreeLagConvention.MATCHETE)
+    lagrangian = (free + eom_terms).expand()
+
+    selected = select_terms_by_dimension_and_derivatives(
+        theory,
+        lagrangian,
+        dimension=6,
+        derivative_count=3,
+        require_formal_eom=True,
+    )
+    direct = abelian_vector_eom_field_redefinition_delta(
+        theory,
+        free,
+        eom_terms,
+        fields=[vector],
+        strict=True,
+    )
+    systematic = systematic_abelian_vector_eom_field_redefinition_delta(
+        theory,
+        free,
+        eom_terms_lagrangian=eom_terms,
+        max_order=6,
+        fields=[vector],
+        strict=True,
+    )
+    systematic_from_combined_source = systematic_abelian_vector_eom_field_redefinition_delta(
+        theory,
+        lagrangian,
+        max_order=6,
+        fields=[vector],
+        strict=True,
+    )
+
+    assert_expr_equal(selected, eom_terms)
+    assert_expr_equal(systematic, direct)
+    assert_expr_equal(systematic_from_combined_source, direct)
+    assert_expr_equal(
+        theory.systematic_abelian_vector_eom_field_redefinition_delta(
+            free,
+            eom_terms_lagrangian=eom_terms,
+            max_order=6,
+            fields=[vector],
+            strict=True,
+        ),
+        direct,
+    )
+    assert_expr_equal(
+        systematic_abelian_vector_eom_field_redefinition_delta(
+            theory,
+            free,
+            eom_terms_lagrangian=eom_terms,
+            max_order=5,
+            fields=[vector],
+            strict=True,
+        ),
+        Expression.num(0),
     )
 
 

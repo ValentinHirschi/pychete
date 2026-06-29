@@ -14,6 +14,7 @@ from .functional import (
     scalar_eom_identities,
     scalar_formal_eom_ibp_identities,
     select_terms_by_dimension_and_derivatives,
+    systematic_abelian_vector_eom_field_redefinition_delta,
     systematic_scalar_eom_field_redefinition_delta,
     vector_formal_eom_ibp_identities,
 )
@@ -258,6 +259,7 @@ __all__ = [
     "scalar_eom_identities",
     "scalar_formal_eom_ibp_identities",
     "select_terms_by_dimension_and_derivatives",
+    "systematic_abelian_vector_eom_field_redefinition_delta",
     "vector_formal_eom_ibp_identities",
     "loop_function",
     "loop_function_pole_part",

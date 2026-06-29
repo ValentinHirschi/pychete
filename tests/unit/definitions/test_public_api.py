@@ -76,6 +76,10 @@ def test_scalar_green_helpers_are_public_api() -> None:
     assert pychete.operator_derivative_count is api.operator_derivative_count
     assert pychete.select_terms_by_dimension_and_derivatives is api.select_terms_by_dimension_and_derivatives
     assert pychete.systematic_scalar_eom_field_redefinition_delta is api.systematic_scalar_eom_field_redefinition_delta
+    assert (
+        pychete.systematic_abelian_vector_eom_field_redefinition_delta
+        is api.systematic_abelian_vector_eom_field_redefinition_delta
+    )
 
 
 def test_public_api_exports_have_docstrings() -> None:
@@ -130,6 +134,7 @@ def test_public_api_methods_have_docstrings() -> None:
             "select_terms_by_dimension_and_derivatives",
             "scalar_eom_field_redefinition_delta",
             "systematic_scalar_eom_field_redefinition_delta",
+            "systematic_abelian_vector_eom_field_redefinition_delta",
             "solve_heavy_scalar_eoms",
             "fluctuation_basis",
             "fluctuation_operator",

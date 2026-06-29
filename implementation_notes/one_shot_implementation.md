@@ -250,12 +250,25 @@ pychete result disagrees with Matchete.
 
 ## Current Slice Status
 
-This slice re-read the Matchete source behind the active one-loop route and
-refreshed the live notes around the exact Mathematica function boundaries.
-No runtime matching implementation has been changed yet in this slice.
+The source-audit checkpoint is committed as `77ebb72`, and this runtime slice
+added `systematic_abelian_vector_eom_field_redefinition_delta(...)` as the
+bounded Abelian-vector companion to the existing systematic scalar helper.
+The helper:
 
-Next code slice: implement a generic Matchete-staged Abelian vector-EOM
-field-redefinition helper or equivalent wiring that consumes already-exposed
-formal vector-EOM terms through the same dimension/derivative-count loop as
-`PerformSystematicFieldRedefs` / `ShiftLagrangian`, then test it against the
-existing Singlet `cHD` boundary probes.
+- consumes already-exposed formal vector `EOM(Field(...))` terms only;
+- loops over EFT dimension and descending derivative count like Matchete's
+  `PerformSystematicFieldRedefs` / `ShiftLagrangian`;
+- selects terms with `select_terms_by_dimension_and_derivatives(...)`; and
+- delegates the actual current replacement to the existing Symbolica-pattern
+  `abelian_vector_eom_field_redefinition_delta(...)` consumer.
+
+Focused validation passed:
+
+- `tests/unit/functional/test_scalar_eom.py`
+- `tests/unit/definitions/test_public_api.py`
+- `dependencies/.venv/bin/python -m mypy`
+
+Next code slice: wire this staged Abelian vector-EOM consumer into the Singlet
+`cHD` Wilson-line/on-shell bridge at the Matchete `InternalSimplify` /
+`ShiftLagrangian` boundary, then compare against the existing Matchete
+`after_shift_dim6_dev3` checkpoint before broad public-route projection.

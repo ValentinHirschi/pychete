@@ -1870,3 +1870,14 @@ stage-local results, not another coefficient-specific rewrite.
   only the supertrace layer; the active Singlet `cHD` parity slice should next
   mirror Matchete's staged `InternalSimplify` and vector-EOM
   field-redefinition loop before broad public-route projection.
+- Runtime follow-up, 2026-06-29: added the generic staged Abelian vector-EOM
+  consumer `systematic_abelian_vector_eom_field_redefinition_delta(...)` plus
+  a `Theory` method and package-root API export. This helper consumes
+  already-exposed formal vector EOM terms through the same EFT-dimension and
+  descending derivative-count loop as Matchete's
+  `PerformSystematicFieldRedefs` / `ShiftLagrangian`, then delegates the
+  actual current replacement to the existing Symbolica-pattern Abelian vector
+  consumer. Focused validation passed for the scalar/vector EOM unit tests,
+  public API tests, and mypy. The next slice should wire this staged consumer
+  into the Singlet `cHD` Wilson-line/on-shell bridge and compare against the
+  Matchete `after_shift_dim6_dev3` checkpoint.

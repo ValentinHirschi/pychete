@@ -2965,6 +2965,64 @@ def select_terms_by_dimension_and_derivatives(
     return sum_expr(selected).expand()
 
 
+def systematic_abelian_vector_eom_field_redefinition_delta(
+    theory: Theory,
+    source_lagrangian: Expression,
+    *,
+    eom_terms_lagrangian: Expression | None = None,
+    max_order: int,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    strict: bool = False,
+) -> Expression:
+    """Apply the Abelian-vector formal-EOM part of Matchete's shifts.
+
+    This mirrors the outer staging of Matchete's
+    ``PerformSystematicFieldRedefs`` / ``ShiftLagrangian`` loop for the
+    bounded Abelian-vector subset: iterate EFT dimensions ``5..max_order`` and
+    derivative counts in descending order, select already-exposed formal EOM
+    terms with :func:`select_terms_by_dimension_and_derivatives`, then
+    delegate the actual current replacement to
+    :func:`abelian_vector_eom_field_redefinition_delta`.
+
+    It is a consumer-side helper. It does not expose hidden vector EOMs from
+    generic derivative operators; an ``InternalSimplify``/Green-basis stage
+    must do that first.
+    """
+
+    if max_order < 5:
+        return Expression.num(0)
+    theory._validate_registered_expression(source_lagrangian)
+    eom_source = source_lagrangian if eom_terms_lagrangian is None else eom_terms_lagrangian
+    theory._validate_registered_expression(eom_source)
+    shifted_source = source_lagrangian
+    shifted_eom_source = eom_source
+    deltas: list[Expression] = []
+    for eft_order in range(5, max_order + 1):
+        for derivative_count in range(eft_order - 2, 0, -1):
+            eom_terms = select_terms_by_dimension_and_derivatives(
+                theory,
+                shifted_eom_source,
+                dimension=eft_order,
+                derivative_count=derivative_count,
+                require_formal_eom=True,
+            )
+            if is_zero(eom_terms):
+                continue
+            delta = abelian_vector_eom_field_redefinition_delta(
+                theory,
+                shifted_source,
+                eom_terms,
+                fields=fields,
+                strict=strict,
+            )
+            if is_zero(delta):
+                continue
+            deltas.append(delta)
+            shifted_source = (shifted_source + delta).expand()
+            shifted_eom_source = (shifted_eom_source + delta).expand()
+    return sum_expr(deltas).expand()
+
+
 def systematic_scalar_eom_field_redefinition_delta(
     theory: Theory,
     source_lagrangian: Expression,
