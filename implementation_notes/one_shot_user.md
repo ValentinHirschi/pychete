@@ -1549,3 +1549,12 @@ generic algorithm boundary before runtime pychete changes are accepted.
   topology. These fixtures keep the next runtime slice focused on the generic
   d-dimensional `InternalSimplify`/identity-set semantics and avoid the slower
   heavy-first four-slot expansion route.
+- Latest class-neighborhood probe, 2026-06-29: the relevant
+  `hScalar-lScalar#wilson14_o4_0` two-Higgs source class is small enough for a
+  Matchete-like class solve (`32` basis terms, `18` identities), but pychete
+  currently creates the B-vector EOM only after the Green solve. Simply
+  increasing the class closure depth changes the coefficient in the wrong
+  direction and then exceeds the local basis cap; pre-expanding commutator
+  identities also gives the wrong sign pattern. The next runtime patch should
+  therefore target Matchete's actual `AtomicOp`/`OpScore` representative
+  semantics for the class, not caps or commutator-order shortcuts.

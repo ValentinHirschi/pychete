@@ -219,6 +219,15 @@ Latest bounded probes:
   assert both fixtures so future work can target the class-wise
   d-dimensional identity semantics without rerunning exploratory notebooks or
   broad matching workloads.
+- Follow-up bounded class probes ruled out two shortcut fixes. Raising the
+  `wilson14_o4_0` Green-basis neighborhood from one to two rounds changes the
+  raw formal source to `-4 G2 - 1/4` and a third round exceeds the 1536-term
+  local basis cap; expanding generated commutator identities to field-strength
+  form before the same solve flips the sign pattern rather than approaching
+  Matchete. The remaining fix should therefore port Matchete's actual
+  `AtomicOp`/`OpScore` class representative semantics for this source class,
+  not just increase closure depth or reorder the current pychete commutator
+  expansion.
 
 ## Current Implementation Slice
 
@@ -284,6 +293,14 @@ Latest bounded probes:
   terms. This preserves performance parity for comparison: the pychete probe
   reuses the bounded source trace rather than expanding the larger four-slot
   heavy-first route.
+- Ran one focused source-class introspection on
+  `hScalar-lScalar#wilson14_o4_0`. The relevant two-Higgs class is bounded
+  (`32` basis terms and `18` generated identities), but it has no formal EOM
+  basis terms at the Green-solve boundary. pychete creates the B-vector EOM
+  only later, after commutator expansion and field-strength-divergence
+  standardization. That confirms the next algorithmic step is a more faithful
+  Matchete-style class representative selection that includes the right
+  field-strength/EOM neighborhood without broadening the full source.
 - Focused validation passed for scalar Green/vector EOM units, scalar EOM
   units, the two public vector-EOM replay integration regressions, py_compile
   on changed files, static typing, and the bounded Singlet cHD debug probe.
