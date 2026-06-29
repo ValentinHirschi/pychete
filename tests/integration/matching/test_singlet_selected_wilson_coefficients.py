@@ -6,7 +6,7 @@ from functools import cache
 from pathlib import Path
 
 import pytest
-from symbolica import Expression, S
+from symbolica import Expression, Replacement, S
 
 from pychete import (
     MatchingResult,
@@ -533,6 +533,19 @@ def _selected_chd_on_shell_finite_expected(theory: Theory) -> Expression:
         * (-5 * S("vakint::mursq").log() / 3 + 10 * mass.log() / 3 - Expression.num(31) / 18)
         / mass**4
     )
+
+
+def _matchete_fixture_loop_convention_to_vakint(theory: Theory, expr: Expression) -> Expression:
+    mass = theory.coupling_handle("M")()
+    mubar_squared = theory.external_handle("mubar2")()
+    matchete_epsilon = theory.external_handle("epsilon")()
+    mu_r_squared = S("vakint::mursq")
+    return expr.replace_multiple(
+        [
+            Replacement(matchete_epsilon, vakint_backend.epsilon_symbol()),
+            Replacement((mubar_squared / mass**2).log(), (mu_r_squared.log() - 2 * mass.log()).expand()),
+        ],
+    ).expand()
 
 
 def _project_selected_chd_source(theory: Theory, source: Expression) -> Expression:
@@ -1536,6 +1549,27 @@ def test_selected_chd_staged_full_composition_matches_matchete_on_shell_coeffici
     )
     assert_expr_equal((off_shell - expected_off_shell).expand(), Expression.num(0))
     assert_expr_equal((on_shell - _selected_chd_on_shell_expected(theory)).expand(), Expression.num(0))
+
+
+@pytest.mark.slow
+def test_selected_chd_staged_full_composition_matches_matchete_fixture_condition() -> None:
+    """Compare the staged selected cHD composition against the saved Matchete fixture."""
+
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory, order_zero, _order_zero_finite = _selected_chd_four_slot_order_zero_weighted_projection()
+    condition_name, _target = _selected_chd_four_slot_target(theory)
+    _, projections, _ = _selected_chd_four_slot_full_projection_by_total_order()
+    off_shell = (order_zero + projections[1] + projections[2]).expand()
+    on_shell = (off_shell + _selected_chd_hscalar_lscalar_on_minus_off_expected(theory)).expand()
+
+    assert condition_name in reference.matching_conditions
+    reference_condition = _matchete_fixture_loop_convention_to_vakint(
+        theory,
+        reference.matching_conditions[condition_name],
+    )
+    assert_expr_equal((on_shell - reference_condition).expand(), Expression.num(0))
 
 
 def test_singlet_chd_matchete_eom_dump_records_dim6_dev3_shift_boundary() -> None:

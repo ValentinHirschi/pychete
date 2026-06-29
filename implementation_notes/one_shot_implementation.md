@@ -47,8 +47,12 @@ Singlet Scalar Extension to SMEFT. Current accepted progress:
   Wilson-line order/entry filters, but a broad aggregate public projection is
   still too monolithic.
 - The committed Singlet fixture has 64 external SMEFT/Wilson entries; 25 are
-  nonzero. Pychete currently has meaningful nonzero parity for 3 of them
-  (`cHW`, `cHB`, `cHWB`). `cHD` is the active first full on-shell frontier.
+  nonzero. The broad default fixture report still has all 25 nonzero Wilson
+  entries different, because public composition/projection is not yet using
+  the validated staged Wilson-line pieces efficiently. Stage-local nonzero
+  parity is now meaningful for 4 of the 25: selected-route
+  `cHW`, `cHB`, `cHWB`, and staged selected `cHD` after explicit
+  Matchete-fixture/vakint loop-convention conversion.
 
 The active evidence points away from scalar-Higgs EOM replacement as the first
 source of the remaining `cHD` mismatch. Matchete's first nonzero `cHD` delta
@@ -69,6 +73,31 @@ Immediate next implementation direction:
   replay match: selected Wilson-line replacement, unselected trace remainder,
   heavy-scalar solution policy, on-shell ordering, and registered `cHD`
   projection.
+
+Performance follow-up on the two-trace public composition: a transient
+Symbolica `is_linear=True` head prototype for pychete `FuncNCM` was tested
+and rejected. It preserved the focused Wilson-line behavior but made the
+heavy four-slot entries much slower (`o0_0_2_0` about 8.9s, `o0_2_0_0` about
+20.9s, `o1_0_1_0` about 9.2s, `o1_1_0_0` about 15.2s, compared with the
+previous roughly 2.4s/5.0s/2.5s/3.7s baseline). The next performance slice
+must therefore port Matchete's actual staged
+`GenericPropagatorExpansion -> DeterminePowerInsertions -> EvaluateSTr`
+boundary, not only the distributive behavior of Mathematica `FuncNCM`.
+
+Latest targeted regression: added
+`test_selected_chd_staged_full_composition_matches_matchete_fixture_condition`.
+It computes the selected pychete `cHD` coefficient from the already validated
+four-slot off-shell source plus the `hScalar-lScalar` on-minus-off vector-EOM
+piece, then compares it to the committed Matchete matching fixture after the
+explicit convention bridge
+`epsilon -> vakint::epsilon` and
+`log(mubar2/M^2) -> log(vakint::mursq) - 2 log(M)`. This is a
+Matchete-independent pytest regression for the first derivative-sector
+nonzero coefficient, not yet full public-route parity.
+Focused watchdog gate passed on 2026-06-29:
+`test_selected_chd_staged_full_composition_matches_matchete_fixture_condition`,
+the staged finite/full `cHD` composition checks, and the selected
+`cHW/cHB/cHWB` public fixture check.
 
 ## Active Checkpoints
 

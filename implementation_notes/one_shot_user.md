@@ -164,6 +164,26 @@ next real performance step remains an insertion-level collected
   redesign must therefore introduce a Matchete-like generic
   `FuncNCM`/insertion-level `EvaluateSTr` representation rather than adding
   another pathwise cache.
+- Follow-up prototype result, 2026-06-29: a temporary Symbolica
+  `is_linear=True` pychete `FuncNCM` shortcut was tested and reverted. It
+  passed the focused small Wilson-line checks but was several times slower on
+  the heavy Singlet four-slot entries (`o0_2_0_0` around 21s vs the previous
+  roughly 5s local baseline). The useful Matchete lesson is the whole
+  staged `GenericPropagatorExpansion -> DeterminePowerInsertions ->
+  EvaluateSTr` pipeline with delayed open-CD action and custom factor
+  hoisting, not just a linear/distributive function head.
+- Current nonzero Singlet Wilson status, 2026-06-29: the committed fixture has
+  25 nonzero Wilson coefficients. The broad default report still has all 25
+  nonzero entries different, but selected/staged parity is now established for
+  4 of them: `cHW`, `cHB`, `cHWB`, and staged `cHD`. The new staged `cHD`
+  regression compares against the saved Matchete fixture after the explicit
+  loop-convention bridge between Matchete's `epsilon`/`mubar2` and pychete's
+  vakint symbols. The remaining nonzero blockers group into Higgs
+  potential/derivative coefficients (`cH`, `cHBox`), fermion-current
+  coefficients (`cHf` family), Yukawa-Higgs coefficients (`cfH` family), and
+  four-fermion coefficients; these should be attacked through Matchete-inspired
+  staged source composition and `MapEffectiveCouplings`-style target solving,
+  not coefficient-specific formulas.
 
 ## Approved Plan
 

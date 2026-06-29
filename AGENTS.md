@@ -970,6 +970,15 @@ Wilson-term symmetry pruning. A Matchete-speed rewrite must therefore change
 the staging representation itself, e.g. by introducing a generic
 `FuncNCM`/insertion-level `EvaluateSTr` equivalent that performs the same
 termwise operation once on the collected insertion expression.
+Do not implement that rewrite as a trivial Symbolica `is_linear=True`
+temporary head around the current pychete path builder. A focused prototype of
+that shortcut preserved the small Wilson-line tests but made the heavy
+Singlet four-slot entries several times slower (`o0_2_0_0` rose from about
+5s to about 21s on the local probe). Matchete's `FuncNCM` performance comes
+from the full staged template/insertion pipeline, custom commutative-factor
+hoisting, delayed open-CD action, and one `EvaluateSTr` pass over a collected
+insertion expression; copying only the distributive linear-head behavior is
+not an acceptable performance route.
 The remaining Singlet `cHW` frontier is not solved by target filtering,
 post-result heavy-scalar substitution, or additive `NCM` linearization alone.
 Pure `A^2` `hScalar-lScalar` Wilson-line terms reach the pre-commutator stage
