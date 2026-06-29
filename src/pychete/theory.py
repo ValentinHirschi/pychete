@@ -2489,6 +2489,9 @@ class Theory:
         eft_order: int = 6,
         max_trace_order: int = 2,
         include_light_only: bool = False,
+        fluctuation_fields: FluctuationBasis | Iterable[FluctuationBasisItem] | None = None,
+        matchete_fluctuation_dof_basis: bool = False,
+        wilson_line_weight_paths_by_component_dofs: bool = False,
     ) -> OneLoopSetup:
         """Prepare native-backed one-loop matching inputs without evaluating loops."""
 
@@ -2500,6 +2503,9 @@ class Theory:
             eft_order=eft_order,
             max_trace_order=max_trace_order,
             include_light_only=include_light_only,
+            fluctuation_fields=fluctuation_fields,
+            matchete_fluctuation_dof_basis=matchete_fluctuation_dof_basis,
+            wilson_line_weight_paths_by_component_dofs=wilson_line_weight_paths_by_component_dofs,
         )
 
     def match(

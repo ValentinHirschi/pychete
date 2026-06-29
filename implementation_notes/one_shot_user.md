@@ -1709,3 +1709,12 @@ Green/EOM identity conversion.
   B-containing paths with component weight two, matching Matchete's eight
   nonzero insertion checkpoints without Wilson-term expansion or tensor
   reduction. This pins the scalable route for the next runtime promotion.
+- Latest continuation, 2026-06-29: user asked to continue while making sure
+  pychete performance is always at least as good as Matchete for intermediate
+  parity comparisons. Implementation response: promoted the label-level
+  Matchete-DOF boundary into an explicit opt-in Wilson-line route. The route
+  uses Matchete-style fluctuation DOFs plus component-weighted path terms, so
+  the four-slot Singlet `cHD` checkpoint can evaluate four generated B paths
+  with effective weight eight instead of sixteen duplicate component paths.
+  The default explicit-component route remains available as a diagnostic until
+  broader fixtures validate the weighted route.

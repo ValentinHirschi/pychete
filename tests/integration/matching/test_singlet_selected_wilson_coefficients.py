@@ -706,6 +706,77 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_
 
 
 @pytest.mark.slow
+def test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches_checkpoint() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    registered_targets = matching_results_module.registered_wilson_matching_condition_targets(theory, basis="SMEFT")
+    condition_name, target = next(
+        (name, target)
+        for name, target in registered_targets.items()
+        if "external_cHD" in name
+    )
+    hbar = theory.external_handle("hbar")()
+
+    result = theory.match(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=4,
+            integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+            normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+            hbar=hbar,
+            use_matchete_fluctuation_dof_basis=True,
+            wilson_line_weight_paths_by_component_dofs=True,
+            wilson_line_trace_names=("hScalar-lScalar-lVector-lScalar",),
+            wilson_line_max_total_order=0,
+            wilson_line_max_slot_order=0,
+            wilson_line_index_prefix="public_singlet_cHD_four_slot_weighted",
+            wilson_line_act_open_derivatives=True,
+            wilson_line_emit_covariant_derivative_commutators=False,
+            wilson_line_emit_covariant_derivative_commutator_passes=1,
+            wilson_line_covariant_derivative_commutator_mode="all_distinct",
+            wilson_line_expand_covariant_derivative_commutators=False,
+            wilson_line_max_derivative_order=4,
+            wilson_line_filter_terms_by_matching_targets=True,
+            wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+            wilson_line_tensor_reduce_before_wilson_expand=True,
+            simplify_pychete_color_algebra=True,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={condition_name: target},
+        matching_condition_source="on_shell_eft_lagrangian",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        matching_condition_drop_zero=False,
+    )
+    projected = result.matching_conditions[condition_name]
+    mass = theory.coupling_handle("M")()
+    expected = (
+        hbar
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (4 * mass.log() - 2 * S("vakint::mursq").log() - Expression.num(2))
+        / mass**4
+    )
+
+    assert result.metadata["use_matchete_fluctuation_dof_basis"] is True
+    assert result.metadata["wilson_line_weight_paths_by_component_dofs"] is True
+    assert result.metadata["interaction_wilson_line_paths_weighted_by_component_dofs"] is True
+    assert result.metadata["interaction_wilson_line_term_count"] == 4
+    assert result.metadata["interaction_wilson_line_component_weighted_term_count"] == 8
+    assert result.metadata["interaction_wilson_line_component_weighted_term_count_by_entry_path"] == {
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
+            "0": 2,
+            "1": 2,
+            "6": 2,
+            "7": 2,
+        }
+    }
+    assert_expr_equal((projected - expected).expand(), Expression.num(0))
+
+
+@pytest.mark.slow
 def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_frontier() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference = load_validation_fixture(
@@ -1398,6 +1469,104 @@ def test_selected_chd_four_slot_matchete_dof_path_weights_match_insertion_bounda
     assert sum(weight for weight in component_weights.values() if weight is not None) == len(
         _matchete_nonzero_target_insertion_indices(debug)
     )
+
+
+def test_selected_chd_four_slot_matchete_dof_weighted_route_matches_checkpoint() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    condition_name, target = _selected_chd_four_slot_target(theory)
+    hbar = theory.external_handle("hbar")()
+    setup = theory.one_loop_setup(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        max_trace_order=4,
+        matchete_fluctuation_dof_basis=True,
+        wilson_line_weight_paths_by_component_dofs=True,
+    )
+    heavy_scalar_solutions = matching_module.solve_heavy_scalar_eoms(
+        theory,
+        fixture.expression("lagrangian"),
+        eft_order=6,
+    )
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar-lVector-lScalar",),
+        max_total_order=0,
+        max_slot_order=0,
+        index_prefix="singlet_chd_four_slot_weighted",
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(
+        theory,
+        {condition_name: target},
+        heavy_scalar_solutions=heavy_scalar_solutions,
+    )
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        term_atom_requirements=requirements,
+    )
+    entry = "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0"
+    metadata = matching_module._wilson_line_expansion_term_metadata(grouped_terms)
+
+    assert setup.matchete_fluctuation_dof_basis is True
+    assert setup.wilson_line_weight_paths_by_component_dofs is True
+    assert metadata["interaction_wilson_line_term_count_by_entry"] == {entry: 4}
+    assert metadata["interaction_wilson_line_component_weighted_term_count_by_entry"] == {entry: 8}
+    assert metadata["interaction_wilson_line_component_weighted_term_count_by_entry_path"] == {
+        entry: {"0": 2, "1": 2, "6": 2, "7": 2}
+    }
+
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped_terms,
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    selected = sum(
+        (term for entry_terms in evaluated_by_entry.values() for term in entry_terms),
+        Expression.num(0),
+    )
+    normalized_finite = (
+        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+        * vakint_backend.finite_part(selected)
+    ).expand()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized_finite,
+    )
+    projected = result.project_matching_conditions(
+        {condition_name: target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )
+    mass = theory.coupling_handle("M")()
+    expected = (
+        hbar
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (4 * mass.log() - 2 * S("vakint::mursq").log() - Expression.num(2))
+        / mass**4
+    )
+
+    assert_expr_equal((projected[condition_name] - expected).expand(), Expression.num(0))
 
 
 def test_selected_chd_four_slot_wilson_coefficient_records_current_source_frontier() -> None:

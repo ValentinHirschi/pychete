@@ -1290,6 +1290,7 @@ class WilsonLineTraceExpansionTerm:
     mass_squareds: tuple[Expression, ...]
     propagator_powers: tuple[int, ...]
     pre_wilson_numerator: Expression | None = None
+    component_weight: int = 1
 
     def kernel_expression(self, *, loop_momentum_squared: Expression | None = None) -> Expression:
         """Return this term as a pychete ``SupertraceKernel`` expression."""
@@ -1326,7 +1327,8 @@ class WilsonLineTraceExpansionTerm:
     def _repr_html_(self) -> str:
         return (
             f"<code>WilsonLineTraceExpansionTerm({escape(self.trace_name)} "
-            f"path={self.path_index} powers={self.propagator_powers})</code>"
+            f"path={self.path_index} powers={self.propagator_powers} "
+            f"weight={self.component_weight})</code>"
         )
 
 
@@ -1604,6 +1606,8 @@ class OneLoopSetup:
     fluctuation_operator: FluctuationOperator
     supertrace_plan: SupertracePlan
     block_traces: tuple[SupertraceBlockTrace, ...]
+    matchete_fluctuation_dof_basis: bool = False
+    wilson_line_weight_paths_by_component_dofs: bool = False
 
     @property
     def max_trace_order(self) -> int:
@@ -1985,18 +1989,22 @@ class OneLoopSetup:
                 ):
                     continue
                 path = _wilson_line_path_with_projection_filtered_entries(path, term_atom_requirements)
-                terms.extend(
-                    path.propagator_expansion_terms(
-                        entry.expansion_indices,
-                        act_open_derivatives=act_open_derivatives,
-                        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-                        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
-                        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-                        max_wilson_derivative_order=max_wilson_derivative_order,
-                        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                    )
+                path_terms = path.propagator_expansion_terms(
+                    entry.expansion_indices,
+                    act_open_derivatives=act_open_derivatives,
+                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                    covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                    max_wilson_derivative_order=max_wilson_derivative_order,
+                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
                 )
+                if self.wilson_line_weight_paths_by_component_dofs:
+                    path_terms = _component_weighted_wilson_line_terms(
+                        path,
+                        path_terms,
+                    )
+                terms.extend(path_terms)
             grouped[entry.label] = _filter_wilson_line_terms_by_projection_requirements(
                 terms,
                 term_atom_requirements,
@@ -2370,6 +2378,10 @@ class OneLoopSetup:
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_paths_weighted_by_component_dofs": (
+                    self.wilson_line_weight_paths_by_component_dofs
+                ),
+                "matchete_fluctuation_dof_basis": self.matchete_fluctuation_dof_basis,
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
                 "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
@@ -2538,6 +2550,10 @@ class OneLoopSetup:
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_paths_weighted_by_component_dofs": (
+                    self.wilson_line_weight_paths_by_component_dofs
+                ),
+                "matchete_fluctuation_dof_basis": self.matchete_fluctuation_dof_basis,
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
                 "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
@@ -2713,6 +2729,10 @@ class OneLoopSetup:
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_paths_weighted_by_component_dofs": (
+                    self.wilson_line_weight_paths_by_component_dofs
+                ),
+                "matchete_fluctuation_dof_basis": self.matchete_fluctuation_dof_basis,
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
                 "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
@@ -2877,6 +2897,10 @@ class OneLoopSetup:
                 **_wilson_line_expansion_request_metadata(expansion_indices_by_trace),
                 **_wilson_line_expansion_term_metadata(grouped_terms),
                 "interaction_wilson_line_term_count": len(terms),
+                "interaction_wilson_line_paths_weighted_by_component_dofs": (
+                    self.wilson_line_weight_paths_by_component_dofs
+                ),
+                "matchete_fluctuation_dof_basis": self.matchete_fluctuation_dof_basis,
                 "interaction_wilson_line_terms_filtered_by_matching_targets": term_atom_requirements is not None,
                 "interaction_wilson_line_pychete_color_algebra_simplified": simplify_pychete_color_algebra,
                 "interaction_wilson_line_scalar_derivative_commutator_bilinears_exposed": (
@@ -6391,12 +6415,21 @@ def one_loop_setup(
     eft_order: int = 6,
     max_trace_order: int = 2,
     include_light_only: bool = False,
+    fluctuation_fields: FluctuationBasis | Iterable[FluctuationBasisItem] | None = None,
+    matchete_fluctuation_dof_basis: bool = False,
+    wilson_line_weight_paths_by_component_dofs: bool = False,
 ) -> OneLoopSetup:
     """Prepare the current native-backed one-loop matching input stages."""
 
     if max_trace_order < 1:
         raise ValueError("max_trace_order must be at least 1")
     theory._validate_registered_expression(lagrangian)
+    if wilson_line_weight_paths_by_component_dofs and not matchete_fluctuation_dof_basis:
+        raise ValueError(
+            "wilson_line_weight_paths_by_component_dofs requires matchete_fluctuation_dof_basis"
+        )
+    if matchete_fluctuation_dof_basis and fluctuation_fields is None:
+        fluctuation_fields = matchete_fluctuation_dof_basis_fields(theory, lagrangian)
     with progress(
         (
             f"preparing one-loop setup for {theory.name} "
@@ -6404,7 +6437,7 @@ def one_loop_setup(
         ),
         logger=_LOGGER,
     ):
-        operator = fluctuation_operator(theory, lagrangian)
+        operator = fluctuation_operator(theory, lagrangian, fluctuation_fields)
         plan = operator.supertrace_plan()
         block_traces = tuple(
             trace
@@ -6418,6 +6451,8 @@ def one_loop_setup(
             fluctuation_operator=operator,
             supertrace_plan=plan,
             block_traces=block_traces,
+            matchete_fluctuation_dof_basis=matchete_fluctuation_dof_basis,
+            wilson_line_weight_paths_by_component_dofs=wilson_line_weight_paths_by_component_dofs,
         )
     _LOGGER.info(
         "one-loop setup for %s contains %d fluctuation modes and %d trace kernels",
@@ -7149,7 +7184,10 @@ def _wilson_line_expansion_term_metadata(
     count_by_entry: dict[str, int] = {}
     count_by_trace: dict[str, int] = {}
     count_by_entry_path: dict[str, dict[str, int]] = {}
+    weighted_count_by_entry: dict[str, int] = {}
+    weighted_count_by_entry_path: dict[str, dict[str, int]] = {}
     nonzero_entries: list[str] = []
+    weighted_term_count = 0
     for entry_label, terms in grouped_terms.items():
         term_count = len(terms)
         trace_name = terms[0].trace_name if terms else _wilson_line_trace_name_from_entry_label(entry_label)
@@ -7158,17 +7196,61 @@ def _wilson_line_expansion_term_metadata(
         if term_count:
             nonzero_entries.append(entry_label)
         path_counts: dict[str, int] = {}
+        weighted_path_counts: dict[str, int] = {}
+        weighted_entry_count = 0
         for term in terms:
             path_key = str(term.path_index)
             path_counts[path_key] = path_counts.get(path_key, 0) + 1
+            weighted_path_counts[path_key] = weighted_path_counts.get(path_key, 0) + term.component_weight
+            weighted_entry_count += term.component_weight
+        weighted_term_count += weighted_entry_count
         count_by_entry_path[entry_label] = dict(sorted(path_counts.items(), key=lambda item: int(item[0])))
+        weighted_count_by_entry[entry_label] = weighted_entry_count
+        weighted_count_by_entry_path[entry_label] = dict(
+            sorted(weighted_path_counts.items(), key=lambda item: int(item[0]))
+        )
     return {
         "interaction_wilson_line_term_count_by_entry": count_by_entry,
         "interaction_wilson_line_term_count_by_trace": dict(sorted(count_by_trace.items())),
         "interaction_wilson_line_term_count_by_entry_path": count_by_entry_path,
+        "interaction_wilson_line_component_weighted_term_count": weighted_term_count,
+        "interaction_wilson_line_component_weighted_term_count_by_entry": weighted_count_by_entry,
+        "interaction_wilson_line_component_weighted_term_count_by_entry_path": weighted_count_by_entry_path,
         "interaction_wilson_line_nonzero_plan_entries": tuple(nonzero_entries),
         "interaction_wilson_line_empty_plan_entry_count": sum(1 for count in count_by_entry.values() if count == 0),
     }
+
+
+def _component_weighted_wilson_line_terms(
+    path: WilsonLineTracePath,
+    terms: Sequence[WilsonLineTraceExpansionTerm],
+) -> tuple[WilsonLineTraceExpansionTerm, ...]:
+    """Scale label-level Wilson-line terms by Matchete-style component multiplicity."""
+
+    if not terms:
+        return ()
+    weight = wilson_line_path_component_weight(path)
+    if weight is None:
+        raise ValueError(
+            "Cannot apply Wilson-line component-DOF path weighting because at least "
+            f"one internal dimension in path {path.trace_name}[{path.path_index}] is unknown"
+        )
+    if weight == 1:
+        return tuple(terms)
+    factor = Expression.num(weight)
+    return tuple(
+        replace(
+            term,
+            numerator=factor * term.numerator,
+            pre_wilson_numerator=(
+                None
+                if term.pre_wilson_numerator is None
+                else factor * term.pre_wilson_numerator
+            ),
+            component_weight=term.component_weight * weight,
+        )
+        for term in terms
+    )
 
 
 def _combine_bosonic_cde_hybrid_results(
@@ -7690,12 +7772,24 @@ def match_one_loop(
         )
         theory._validate_registered_expression(solution_lagrangian)
         heavy_scalar_solutions = solve_heavy_scalar_eoms(theory, solution_lagrangian, eft_order=eft_order)
+    if options.wilson_line_weight_paths_by_component_dofs and not options.use_matchete_fluctuation_dof_basis:
+        raise ValueError(
+            "wilson_line_weight_paths_by_component_dofs requires "
+            "use_matchete_fluctuation_dof_basis in the public one-loop route"
+        )
+    setup_fluctuation_fields: FluctuationBasis | Iterable[FluctuationBasisItem] | None = None
+    if options.use_matchete_fluctuation_dof_basis:
+        _LOGGER.info("using Matchete-style label-level fluctuation DOF basis for %s", theory.name)
+        setup_fluctuation_fields = matchete_fluctuation_dof_basis_fields(theory, matching_lagrangian)
     setup = one_loop_setup(
         theory,
         matching_lagrangian,
         eft_order=eft_order,
         max_trace_order=options.max_trace_order,
         include_light_only=options.include_light_only,
+        fluctuation_fields=setup_fluctuation_fields,
+        matchete_fluctuation_dof_basis=options.use_matchete_fluctuation_dof_basis,
+        wilson_line_weight_paths_by_component_dofs=options.wilson_line_weight_paths_by_component_dofs,
     )
     if options.simplify_pychete_color_algebra:
         _LOGGER.info("simplifying one-loop pychete colour algebra for %s", theory.name)
@@ -8168,6 +8262,10 @@ def match_one_loop(
                 options.wilson_line_expose_scalar_derivative_commutator_bilinears
             ),
             "wilson_line_scalar_eom_terms_exposed": options.wilson_line_expose_scalar_eom_terms,
+            "use_matchete_fluctuation_dof_basis": options.use_matchete_fluctuation_dof_basis,
+            "wilson_line_weight_paths_by_component_dofs": (
+                options.wilson_line_weight_paths_by_component_dofs
+            ),
             "pychete_color_algebra_simplified": options.simplify_pychete_color_algebra,
         },
     )

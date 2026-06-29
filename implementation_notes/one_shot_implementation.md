@@ -42,14 +42,16 @@ selected `hScalar-lScalar -> cHD` B-vector EOM replay now reaches Matchete's
 finite dim6/dev3 replay coefficient after fixing indexed
 functional-derivative alpha matching. The older
 `hScalar-lScalar-lVector-lScalar -> cHD` four-slot prop-order-0 aggregate is
-now explicitly recorded as a factor-two multiplicity frontier: Matchete's
-debug checkpoint has eight target quarter insertions, while pychete currently
-keeps sixteen alpha-aware component paths after the indexed-variation fix.
+now explicitly recorded as a factor-two multiplicity frontier in the default
+component-explicit diagnostic route. The new opt-in Matchete-style DOF route
+builds that selected trace from label-level fluctuation DOFs and carries the
+omitted SU(2) component multiplicity as Wilson-line path weights. That gives
+four B-containing generated paths with effective weight eight, matching the
+Matchete checkpoint without evaluating sixteen duplicate component paths.
 The remaining blocker is full public-route composition beyond the matched
-selected B-vector source: heavy-scalar solution terms, unselected trace
-remainder, pole/MS convention handling, multiplicity-preserving component
-canonicalization, and broad Singlet `cHD` projection against Matchete's full
-on-shell result.
+selected sources: heavy-scalar solution terms, unselected trace remainder,
+pole/MS convention handling, broader component-weight validation, and broad
+Singlet `cHD` projection against Matchete's full on-shell result.
 
 The active evidence points away from scalar-Higgs EOM replacement as the first
 source of the mismatch. Matchete's first nonzero `cHD` delta appears at
@@ -280,9 +282,13 @@ Current slice progress:
   `hScalar-lScalar-lVector-lScalar` setup has 12 total paths and four
   B-containing paths `(0, 1, 6, 7)`, each with SU(2) component weight two,
   matching Matchete's eight nonzero target insertion checkpoints before any
-  Wilson-term expansion or tensor reduction. This is the performance-correct
-  route to promote later; it is not yet wired into the default one-loop
-  pipeline.
+  Wilson-term expansion or tensor reduction.
+- Promoted that boundary into an explicit opt-in runtime route. The setup and
+  public one-loop options now expose Matchete-style label-level fluctuation
+  DOFs plus component-weighted Wilson-line paths, while default component
+  enumeration remains unchanged for diagnostics. Generated Wilson-line terms
+  carry both their raw term count and component-weighted effective count in
+  metadata, making parity/performance comparisons explicit.
 
 ## Performance Budget For This Slice
 
@@ -312,10 +318,12 @@ Current slice progress:
 - The Matchete-DOF helper now pins the intended weighted replacement boundary:
   use label-level DOFs from `matchete_fluctuation_dof_basis_fields(...)`, then
   carry `wilson_line_path_component_weight(...)` through selected trace
-  generation. Do not evaluate all sixteen duplicate component paths when the
-  weighted four-path canonical probe is available and validated for the same
-  target; the next runtime promotion must preserve the weighted aggregate and
-  broader model behavior before becoming default.
+  generation with `OneLoopMatchOptions.use_matchete_fluctuation_dof_basis`
+  and `OneLoopMatchOptions.wilson_line_weight_paths_by_component_dofs`. Do not
+  evaluate all sixteen duplicate component paths when the weighted four-path
+  canonical probe is available and validated for the same target. Keep the
+  route opt-in until broader Singlet and non-Singlet fixtures validate the
+  same Matchete field-degree/component semantics.
 - For the four-slot `cHD` factor-two overcount, do not patch projection,
   tensor reduction, or idenso delta contraction next. The next useful slice is
   to port Matchete's field-degree/component weighting at the fluctuation path

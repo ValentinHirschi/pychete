@@ -250,6 +250,17 @@ frontier is the current example: the dim6/dev3 vector-EOM shift is sourced by
 the target-filtered `hScalar-lScalar` order-four two-Higgs trace, not by
 expanding the four-slot `hScalar-lScalar-lVector-lScalar` entries after heavy
 substitution.
+When a Matchete parity boundary is a field-DOF/component multiplicity issue,
+prefer label-level fluctuation DOFs plus explicit component weights over
+materializing every dummy-label-equivalent path. The current Wilson-line route
+exposes this as `matchete_fluctuation_dof_basis_fields(...)`,
+`matchete_fluctuation_dof_basis(...)`,
+`wilson_line_path_component_weight(...)`,
+`OneLoopMatchOptions.use_matchete_fluctuation_dof_basis`, and
+`OneLoopMatchOptions.wilson_line_weight_paths_by_component_dofs`. Use the
+weighted route for targeted parity probes once the same Matchete checkpoint
+has validated the effective multiplicity; do not evaluate duplicate component
+paths just to throw them away at projection time.
 For matching-condition extraction from large one-loop expressions, prefer
 `matching_condition_expand_source=False` plus
 `matching_condition_truncate_eft=True` when appropriate. This projects each

@@ -213,6 +213,12 @@ class OneLoopMatchOptions:
     ``PerformSystematicFieldRedefs`` consumer to the exposed source and stores
     the scalar field-redefinition delta in the result supertraces. It remains
     opt-in while the Singlet ``cHD`` boundary is being validated.
+    ``use_matchete_fluctuation_dof_basis`` builds the fluctuation operator
+    from Matchete-style label-level field DOFs instead of concrete discovered
+    field atoms. ``wilson_line_weight_paths_by_component_dofs`` then carries
+    the omitted internal-index component multiplicity as a small integer
+    Wilson-line path weight. Keep both options opt-in until the weighted route
+    has been validated beyond the Singlet ``cHD`` four-slot frontier.
     """
 
     max_trace_order: int = 2
@@ -273,6 +279,8 @@ class OneLoopMatchOptions:
     wilson_line_expand_covariant_derivative_commutators: bool = False
     wilson_line_max_derivative_order: int = 4
     wilson_line_filter_terms_by_matching_targets: bool = False
+    use_matchete_fluctuation_dof_basis: bool = False
+    wilson_line_weight_paths_by_component_dofs: bool = False
     wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False
     wilson_line_expose_scalar_eom_terms: bool = False
     wilson_line_tensor_reduce_before_wilson_expand: bool = False
