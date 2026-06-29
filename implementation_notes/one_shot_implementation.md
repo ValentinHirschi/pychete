@@ -176,6 +176,20 @@ Latest bounded probes:
   scalar Green / `EoMSplitter` coefficient parity for the two-Higgs
   hScalar-lScalar source, with non-Abelian W-vector EOM treatment tracked as a
   later generic boundary if needed.
+- Refreshed pychete source-operator projections now isolate that boundary more
+  sharply. The target-filtered `hScalar-lScalar#wilson14_o4_0` source projects
+  onto `Bar[H] EOM[B_mu] D_mu H` with the same pole and log structure as the
+  Matchete B-only replay, but pychete's finite source coefficient is
+  `7 i/36 * hbar A^2/M^4` where Matchete's selected B terms require
+  `17 i/72 * hbar A^2/M^4`. The conjugate
+  `D_mu Bar[H] EOM[B_mu] H` projection is currently zero in this pychete
+  source probe. This confirms the next runtime patch must target the generic
+  tensor/source producer before vector current insertion or cHD projection.
+- A performance check on the same boundary reinforces the staging choice:
+  per-term Green splitting can hit the local basis cap, while the aggregate
+  target-filtered source probe stays bounded and mirrors the Matchete class
+  boundary. Future cHD parity slices should improve this source-stage
+  algorithm, not raise caps or switch back to heavy-first four-slot expansion.
 
 ## Current Implementation Slice
 
@@ -213,12 +227,18 @@ Latest bounded probes:
   Matchete-relevant two-Higgs B-vector EOM source separately from the
   four-slot off-shell trace probe, and keeps the parity comparison bounded
   enough to stay useful.
+- Extended the same source-trace probe with formal B-vector EOM source-operator
+  projections for `Bar[H] EOM[B] D H`, `D Bar[H] EOM[B] H`, and the unbarred
+  diagnostic orientations. These projections use the off-shell source in
+  `MatchingResult.project_matching_conditions(...)`, so they avoid registered
+  Wilson vector-EOM aliases and isolate the source coefficient directly.
 - The latest script-only diagnostic run shows:
   pychete has one nonzero four-slot post-exposure B-vector field-redefinition
   delta with zero cHD projection, and separately one nonzero hScalar-lScalar
   order-four B-vector field-redefinition projection. The latter is the first
-  relevant source for Matchete `after_shift_dim6_dev3`, but its coefficient is
-  not yet Matchete-complete.
+  relevant source for Matchete `after_shift_dim6_dev3`. Its `Bar[H] EOM[B] D H`
+  finite source coefficient is now recorded as `7 i/36`, short of Matchete's
+  `17 i/72`, while the pole/log terms align.
 - Focused validation passed for scalar Green/vector EOM units, scalar EOM
   units, the two public vector-EOM replay integration regressions, py_compile
   on changed files, static typing, and the bounded Singlet cHD debug probe.

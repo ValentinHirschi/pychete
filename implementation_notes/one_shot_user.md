@@ -1509,6 +1509,15 @@ generic algorithm boundary before runtime pychete changes are accepted.
   The first remaining mismatch is therefore still upstream scalar Green /
   source coefficient parity, not the vector EOM consumer or a W-side
   field-redefinition gap.
+- Latest source-boundary/performance update, 2026-06-29: pychete now records
+  formal B-vector EOM source-operator projections in the bounded
+  `hScalar-lScalar` cHD debug fixture. The `Bar[H] EOM[B_mu] D_mu H` source
+  coefficient has Matchete-aligned pole/log terms, but the finite term is
+  `7 i/36 * hbar A^2/M^4` instead of Matchete's `17 i/72 * hbar A^2/M^4`.
+  This pins the next generic patch to the scalar Green/tensor source producer.
+  The diagnostic route remains the target-filtered aggregate source probe,
+  because per-term Green splitting is not performance-competitive with the
+  corresponding Matchete stage and should not be rescued by raising caps.
 - Latest user instruction and implementation response, 2026-06-28: perform a
   short remaining-gap study for the first full one-loop matching parity target,
   archive the large live implementation notes to

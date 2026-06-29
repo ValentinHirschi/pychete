@@ -986,11 +986,44 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "Coupling(Singlet_Scalar_Extension::coupling_A" in source_projection
     assert "Coupling(Singlet_Scalar_Extension::coupling_gY" in source_projection
     assert "vakint::ε" in source_projection
+    source_operator_projections = source_trace_probe["summary"][
+        "formal_vector_eom_source_operator_projection_sums"
+    ]
+    assert set(source_operator_projections) == {
+        "barH_EOMB_DH",
+        "DbarH_EOMB_H",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred",
+    }
+    assert source_operator_projections["DbarH_EOMB_H"] == "0"
+    assert "1𝑖/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
+        source_operator_projections["barH_EOMB_DH"]
+    )
+    assert "+7𝑖/36*Singlet_Scalar_Extension::external_hbar*" in (
+        source_operator_projections["barH_EOMB_DH"]
+    )
+    assert "-3𝑖/8*Singlet_Scalar_Extension::external_hbar*" in (
+        source_operator_projections["H_EOMB_DH_unbarred"]
+    )
+    assert source_trace_probe["summary"][
+        "nonzero_formal_vector_eom_source_operator_projection_names"
+    ] == [
+        "barH_EOMB_DH",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred",
+    ]
     assert {
         entry
         for entry, row in source_trace_probe["by_entry"].items()
         if not row["vector_field_redefinition_delta_projection_is_zero"]
     } == {"hScalar-lScalar#wilson14_o4_0"}
+    assert source_trace_probe["by_entry"]["hScalar-lScalar#wilson14_o4_0"][
+        "nonzero_formal_vector_eom_source_operator_projection_names"
+    ] == [
+        "barH_EOMB_DH",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred",
+    ]
     assert debug["matchete_quarter_insertion_count"] == 8
     assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
         1,

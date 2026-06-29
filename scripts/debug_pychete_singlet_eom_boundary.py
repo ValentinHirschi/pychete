@@ -30,6 +30,7 @@ from pychete import (
 from pychete.backends import vakint as vakint_backend
 from pychete.expr import (
     field_derivatives,
+    field_with_derivatives,
     field_pattern,
     field_strength_derivatives,
     field_strength_label,
@@ -111,6 +112,49 @@ def _project(theory: Any, condition_name: str, target: Expression, expr: Express
         eft_order=6,
         drop_zero=False,
     )[condition_name]
+
+
+def _project_source_operator_coefficients(
+    theory: Any,
+    targets: dict[str, Expression],
+    expr: Expression,
+) -> dict[str, Expression]:
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=expr,
+        on_shell_eft_lagrangian=expr,
+    )
+    return result.project_matching_conditions(
+        targets,
+        source="off_shell_eft_lagrangian",
+        expand_source=False,
+        normalize_derivative_operators=False,
+        eft_order=None,
+        drop_zero=False,
+    )
+
+
+def _source_vector_eom_operator_targets(
+    theory: Any,
+    *,
+    vector_field: str,
+    index_prefix: str,
+) -> dict[str, Expression]:
+    higgs = theory.field_handle("H")
+    vector = theory.field_handle(vector_field)
+    fund = theory.fields["H"].indices[0]
+    i = theory.index(theory.symbol(f"{index_prefix}_higgs_i"), fund)
+    mu = theory.index(theory.symbol(f"{index_prefix}_mu"), s.Lorentz)
+    higgs_field = higgs(i)
+    derivative_higgs = field_with_derivatives(higgs_field, (mu,))
+    vector_eom = s.EOM(vector(mu))
+    return {
+        "barH_EOMB_DH": s.Bar(higgs_field) * vector_eom * derivative_higgs,
+        "DbarH_EOMB_H": s.Bar(derivative_higgs) * vector_eom * higgs_field,
+        "H_EOMB_DH_unbarred": higgs_field * vector_eom * derivative_higgs,
+        "DH_EOMB_H_unbarred": derivative_higgs * vector_eom * higgs_field,
+    }
 
 
 def _projection_strings(
@@ -523,6 +567,14 @@ def _source_trace_vector_eom_probe(
     plan_entries_by_label = {entry.label: entry for entry in plan.entries}
     by_entry: dict[str, dict[str, Any]] = {}
     projections: list[Expression] = []
+    source_operator_targets = _source_vector_eom_operator_targets(
+        theory,
+        vector_field=vector_field,
+        index_prefix=f"{index_prefix}_source_projection",
+    )
+    source_operator_projection_sums: dict[str, list[Expression]] = {
+        name: [] for name in source_operator_targets
+    }
     for entry_label, evaluated_terms in sorted(evaluated_by_entry.items()):
         if not evaluated_terms:
             continue
@@ -545,6 +597,13 @@ def _source_trace_vector_eom_probe(
         )
         projection = _project(theory, condition_name, target, vector_delta)
         projections.append(projection)
+        source_operator_projections = _project_source_operator_coefficients(
+            theory,
+            source_operator_targets,
+            scalar_eom_exposed,
+        )
+        for name, projected in source_operator_projections.items():
+            source_operator_projection_sums[name].append(projected)
         by_entry[entry_label] = {
             "total_order": plan_entries_by_label[entry_label].total_order,
             "slot_orders": list(plan_entries_by_label[entry_label].slot_orders),
@@ -569,6 +628,15 @@ def _source_trace_vector_eom_probe(
             "vector_field_redefinition_delta_projection_is_zero": bool(
                 projection == Expression.num(0)
             ),
+            "formal_vector_eom_source_operator_projections": {
+                name: canonical_string(projected)
+                for name, projected in source_operator_projections.items()
+            },
+            "nonzero_formal_vector_eom_source_operator_projection_names": [
+                name
+                for name, projected in source_operator_projections.items()
+                if not is_zero(projected)
+            ],
         }
     return {
         "controls": {
@@ -610,6 +678,15 @@ def _source_trace_vector_eom_probe(
             "vector_field_redefinition_delta_projection_sum": canonical_string(
                 _sum_expressions(projections)
             ),
+            "formal_vector_eom_source_operator_projection_sums": {
+                name: canonical_string(_sum_expressions(values))
+                for name, values in source_operator_projection_sums.items()
+            },
+            "nonzero_formal_vector_eom_source_operator_projection_names": [
+                name
+                for name, values in source_operator_projection_sums.items()
+                if not is_zero(_sum_expressions(values))
+            ],
         },
     }
 

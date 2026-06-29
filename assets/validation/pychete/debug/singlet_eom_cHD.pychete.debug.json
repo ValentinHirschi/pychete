@@ -694,6 +694,13 @@
     "by_entry": {
       "hScalar-lScalar#wilson0_o0_0": {
         "evaluated_term_count": 2,
+        "formal_vector_eom_source_operator_projections": {
+          "DH_EOMB_H_unbarred": "0",
+          "DbarH_EOMB_H": "0",
+          "H_EOMB_DH_unbarred": "0",
+          "barH_EOMB_DH": "0"
+        },
+        "nonzero_formal_vector_eom_source_operator_projection_names": [],
         "pole_finite_byte_count": 2463,
         "scalar_eom_exposed_byte_count": 2463,
         "scalar_eom_exposed_formal_vector_eom_count": 0,
@@ -710,6 +717,17 @@
       },
       "hScalar-lScalar#wilson14_o4_0": {
         "evaluated_term_count": 10,
+        "formal_vector_eom_source_operator_projections": {
+          "DH_EOMB_H_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+          "DbarH_EOMB_H": "0",
+          "H_EOMB_DH_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+          "barH_EOMB_DH": "1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+7\ud835\udc56/36*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+        },
+        "nonzero_formal_vector_eom_source_operator_projection_names": [
+          "barH_EOMB_DH",
+          "H_EOMB_DH_unbarred",
+          "DH_EOMB_H_unbarred"
+        ],
         "pole_finite_byte_count": 295120,
         "scalar_eom_exposed_byte_count": 493423,
         "scalar_eom_exposed_formal_vector_eom_count": 4,
@@ -730,6 +748,13 @@
       },
       "hScalar-lScalar#wilson5_o2_0": {
         "evaluated_term_count": 4,
+        "formal_vector_eom_source_operator_projections": {
+          "DH_EOMB_H_unbarred": "0",
+          "DbarH_EOMB_H": "0",
+          "H_EOMB_DH_unbarred": "0",
+          "barH_EOMB_DH": "0"
+        },
+        "nonzero_formal_vector_eom_source_operator_projection_names": [],
         "pole_finite_byte_count": 26185,
         "scalar_eom_exposed_byte_count": 3373,
         "scalar_eom_exposed_formal_vector_eom_count": 0,
@@ -773,6 +798,17 @@
     },
     "summary": {
       "entry_count": 3,
+      "formal_vector_eom_source_operator_projection_sums": {
+        "DH_EOMB_H_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "DbarH_EOMB_H": "0",
+        "H_EOMB_DH_unbarred": "-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/2*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/4*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)-3\ud835\udc56/8*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4",
+        "barH_EOMB_DH": "1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4-1\ud835\udc56/6*Singlet_Scalar_Extension::external_hbar*log(pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0))*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4+1\ud835\udc56/12*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/(vakint::\u03b5*pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4)+7\ud835\udc56/36*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2/pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^4"
+      },
+      "nonzero_formal_vector_eom_source_operator_projection_names": [
+        "barH_EOMB_DH",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred"
+      ],
       "nonzero_vector_field_redefinition_delta_entry_count": 1,
       "nonzero_vector_field_redefinition_delta_projection_entry_count": 1,
       "scalar_eom_exposed_formal_vector_eom_count": 4,
