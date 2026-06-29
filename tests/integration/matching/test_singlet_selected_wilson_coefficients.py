@@ -990,6 +990,56 @@ def test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches
     assert_expr_equal((projected - expected).expand(), Expression.num(0))
 
 
+def test_loop_normalization_exposes_through_finite_projection_sources() -> None:
+    theory = Theory("through_finite_projection_sources")
+    hbar = S("through_finite_hbar")
+    raw_sources = {
+        "interaction_power_type_internal_integral_through_finite_part": S("raw_power_through_finite"),
+        "interaction_wilson_line_internal_integral_through_finite_part": S("raw_wilson_through_finite"),
+        "interaction_wilson_line_hybrid_internal_integral_through_finite_part": S(
+            "raw_wilson_hybrid_through_finite"
+        ),
+        "interaction_bosonic_cde_internal_integral_through_finite_part": S("raw_cde_through_finite"),
+        "interaction_bosonic_cde_hybrid_internal_integral_through_finite_part": S(
+            "raw_cde_hybrid_through_finite"
+        ),
+    }
+    normalized_sources = {
+        "interaction_power_type_internal_integral_through_finite_part": (
+            "interaction_power_type_normalized_internal_integral_through_finite_part"
+        ),
+        "interaction_wilson_line_internal_integral_through_finite_part": (
+            "interaction_wilson_line_normalized_internal_integral_through_finite_part"
+        ),
+        "interaction_wilson_line_hybrid_internal_integral_through_finite_part": (
+            "interaction_wilson_line_normalized_hybrid_internal_integral_through_finite_part"
+        ),
+        "interaction_bosonic_cde_internal_integral_through_finite_part": (
+            "interaction_bosonic_cde_normalized_internal_integral_through_finite_part"
+        ),
+        "interaction_bosonic_cde_hybrid_internal_integral_through_finite_part": (
+            "interaction_bosonic_cde_normalized_hybrid_internal_integral_through_finite_part"
+        ),
+    }
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces=raw_sources,
+    )
+    normalized = result.with_loop_normalization(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+    factor = one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+
+    for raw_name, normalized_name in normalized_sources.items():
+        assert raw_name in normalized.supertraces
+        assert normalized_name in normalized.supertraces
+        assert_expr_equal(
+            normalized.expression(normalized_name),
+            (factor * raw_sources[raw_name]).expand(),
+        )
+
+
 @pytest.mark.slow
 def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_frontier() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))

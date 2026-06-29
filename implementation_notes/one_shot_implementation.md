@@ -255,6 +255,165 @@ divergence in this order.
   projections are allowed to be Pythonic, but parity checks must compare to
   this semantic boundary and not only to raw on-shell Lagrangians.
 
+### Matchete Function Ledger For The Active cHD Route
+
+This is the tighter source-level ledger from the 2026-06-29 reread. Keep this
+list in view when deciding whether pychete is conceptually doing the same
+operation as Matchete.
+
+- `LoadModel` (`Definitions.m`/model files): loads field, gauge, coupling,
+  mass, representation, and basis metadata. pychete counterpart:
+  Mathematica-independent converted fixtures plus structurally safe
+  `Theory`/symbol-data construction before expressions are parsed.
+- `Match` (`Matching.m`): public orchestrator. It calls
+  `SetCurrentLagrangian`, combines `ReplaceHeavyEOM` tree terms and
+  `LoopMatch` one-loop terms, then applies `ContractCGs // MatchReduce` and
+  Hermitian symmetrization. pychete counterpart: `Theory.match(...)` must
+  compose tree, selected Wilson-line one-loop, unselected one-loop remainder,
+  normalization, on-shell reduction, and projection in the same order.
+- `SetCurrentLagrangian` (`Matching.m`): canonicalizes the UV lagrangian,
+  introduces effective masses, contracts/relabels indices, adds gauge-fixing
+  and ghost terms, refreshes field/mass associations, solves heavy EOMs, and
+  calls `SetSubstitutions` for loop work. pychete counterpart: theory setup,
+  fluctuation-basis discovery, free/interaction split, and heavy-field
+  solution metadata.
+- `LagrangianDofs` / `FieldDoFs` (`Matching.m`): determine propagating
+  fluctuation DOFs, including conjugate DOFs for non-self-conjugate fields.
+  pychete counterpart: Matchete-style fluctuation DOF basis and weighted
+  Wilson-line paths; do not collapse components without preserving
+  multiplicities.
+- `SetSubstitutions` (`Matching.m`): subtracts `KinOpLagrangian`, builds
+  X-terms from `FluctuationOperator`, lowers `OpenCD` to
+  `OpenCD - i LoopMom`, decomposes each X-term by `SeriesEFT`, loop-momentum
+  order, and open-CD order, and stores `$Xsubs`, `$XOrders`, `$XOrdMin`,
+  `$Msubs`, and `$Gsubs`. pychete counterpart: interaction block extraction,
+  free inverse metadata, ordered insertion kernels, mass/gauge-coupling
+  symbol data, and Wilson-line plan generation.
+- `ListPowerTypeTraces` (`Matching.m`): enumerates cyclic power-trace words
+  seeded by heavy modes, prunes by `$XOrdMin`, maximum EFT order, and word
+  length, then deletes cyclic duplicates. pychete counterpart:
+  `_supertrace_block_entry_paths(...)`, cyclic-orbit factors, and selected
+  Wilson-line trace plans.
+- `LoopMatch` (`Matching.m`): evaluates charged log traces and all allowed
+  power traces, with optional `WhichTraces` filtering and validation `Sow` of
+  trace names/results. pychete counterpart: one-loop setup result builders and
+  validation preview/gap-report helpers with the same selected-trace controls.
+- `PowerTypeSTr` (`SuperTrace.m`): applies the statistics prefactor
+  `-I*hbar/2` with fermion/ghost sign, computes the maximal propagator
+  expansion order, calls `GenericPropagatorExpansion`,
+  `DeterminePowerInsertions`, and `EvaluateSTr`, then applies
+  `ReplaceHeavyEOM` before multiplying the prefactor into each term. pychete
+  counterpart: `WilsonLineTracePath` construction, path weights, selected
+  Wilson-line term evaluation, internal/vakint integral evaluation, and the
+  `MATCHETE_EVALUATED_HBAR` normalization bridge.
+- `GenericPropagatorExpansion` / `PropExpand` / `PropBosonExpand` /
+  `PropFermionExpand` (`SuperTrace.m`): build the ordered noncommutative
+  `Xop, Prop, ..., WilsonLine` template; scalar slots use bosonic hard-region
+  propagators, vector slots add Matchete's extra minus sign, and fermion
+  slots include slash numerators plus open-derivative terms. pychete
+  counterpart: Wilson-line propagator expansion terms and idenso-backed
+  noncommutative/gamma cleanup.
+- `DeterminePowerInsertions` / `PopulateCovMomOps` (`SuperTrace.m`): choose
+  concrete field DOF insertions and X-term order tuples, apply selected-field
+  filtering, attach cyclic symmetry factors, and expand allowed open-CD
+  counts. pychete counterpart: generated Wilson-line plans, target-local
+  term filtering, and component-DOF path weighting.
+- `EvaluateSTr` (`SuperTrace.m`): the core ordered transform:
+  insertion replacement, `ActWithOpenCDs`, `FuncNCM -> NCM`,
+  `GatherLoopMomenta`, `RemoveSymmetryVanishingWilsonTerms`,
+  `CloseFermionLoop`, `EvaluateSymmetricLorentzInds`, `ContractMetric`,
+  `WilsonExpand`, `LoopIntegrate`, `RelabelIndices`, `ExpandGenFSs`,
+  `ContractDelta`, `ContractCGs`, `RefineDiracProducts`, and `EpsExpand`.
+  pychete counterpart: keep the same boundaries and delegate symbolic/tensor
+  work to Symbolica/idenso/vakint/internal integral backends rather than
+  final-coefficient patches.
+- `ActWithOpenCDs` (`SuperTrace.m`): distributes each open covariant
+  derivative over all later noncommutative factors, dropping derivatives that
+  reach the end. pychete counterpart: Symbolica-rule-based open-derivative
+  action on Wilson-line kernels, not handwritten product-rule loops.
+- `GatherLoopMomenta` / `LoopMoms` / `EvaluateSymmetricLorentzInds`
+  (`LoopIntegration.m`): extract slashed/vector loop momenta, drop odd
+  ranks, turn even ranks into symmetric metric sums with `SymGammaFactor`,
+  and contract metrics. pychete counterpart: vakint tensor reduction boundary
+  and idenso metric contraction, with SymGamma-like diagnostic support.
+- `RemoveSymmetryVanishingWilsonTerms` (`SuperTrace.m`): drops Wilson terms
+  whose derivative indices are killed by loop-momentum symmetry or repeated
+  Wilson derivative slots. pychete counterpart:
+  `remove_symmetry_vanishing_wilson_terms(...)` and
+  `remove_loop_momentum_symmetry_vanishing_wilson_terms(...)`.
+- `WilsonExpand` / `WilsonTermExpand` / `DerivativeSubLists` /
+  `FSWilsonFactor` / `DevTermOnWilson` (`SuperTrace.m`): expand
+  coincidence-limit Wilson lines into identity transporters and field
+  strengths using derivative-sublist partitions, Abelian charges, non-Abelian
+  gauge index chains, and derivative prefactors. pychete counterpart:
+  `expand_wilson_terms(...)` plus idenso/spenso group algebra.
+- `LoopIntegrate` / `ToLoopFunctions` / `LFFull2LF` /
+  `EvaluateLoopFunctions` / `SingleScaleIntegral` / `MultiScaleIntegral`
+  (`LoopIntegration.m`): collect duplicate propagators into powers, keep
+  massless powers separately, emit `LF`/`LFFull`, and evaluate pole/finite
+  pieces in dimensional regularization. pychete counterpart:
+  `pychete.backends.vacuum_integrals` for analytic mixed/zero-mass cases,
+  vakint as single-scale cross-check/backend, and public
+  `*_through_finite_part` sources for Matchete validation semantics.
+- `MatchReduce` (`Matching.m`): contracts CGs/deltas, rewrites
+  field-strength representation indices, evaluates single-scale `LF`s, and
+  reduces redundant flavor sums. pychete counterpart: post-integral idenso
+  group/metric cleanup and single-scale finite evaluation before projection.
+- `Operator` / `EoM` / `OperatorClass` / `OperatorProperties`
+  (`Simplifications.m`): convert expressions to operator atoms, recognize
+  scalar/fermion/vector EOM forms, classify by field content and derivative
+  count, record symmetries and scoring. pychete counterpart: Green-basis
+  atomization and Matchete-scale representative scoring for target-local
+  normal forms.
+- `InternalSimplify` / `IBPSimplify` / `ConstructOperatorIdentities`
+  (`Simplifications.m`): class-local simplification path. It contracts
+  deltas/CGs, optionally applies 4D/evanescent reductions, matches
+  `AtomicOp`s, constructs IBP/CD-commutator/Jacobi/Fierz/Lorentz/group
+  identities, row-reduces them by `OpScore`, collects coefficients, and
+  returns either atomic or operator form. pychete counterpart: bounded
+  Green-basis identity families; for Singlet `cHD`, this is the source of the
+  formal B/W vector-EOM bilinear and must be mirrored before field shifts.
+- `GreensSimplify` (`Simplifications.m`): public off-shell Green-basis
+  simplifier: `HcExpand`, `LagrangianExpand`, constants separation,
+  `ContractDelta`, `ContractCGs`, `IBPSimplify`, `CollectCoefficients`, and
+  `AtomicToNormalForm`. pychete counterpart: final off-shell simplification
+  and debug oracle, not a replacement for the earlier `InternalSimplify`
+  field-redefinition staging.
+- `EOMSimplify` (`FieldRedef.m`): public on-shell reduction. It selects loop
+  order, handles superleading/dummy coefficients, calls `InternalSimplify`,
+  warns on heavy-field EOMs, applies `PerformSystematicFieldRedefs`, then
+  finishes with `GreensSimplify`. pychete counterpart: on-shell reduction
+  stage composed after loop matching but before registered Wilson-condition
+  projection.
+- `PerformSystematicFieldRedefs` / `RenormalizeMatterFields` /
+  `GaugeFieldNormalization` / `ShiftLagrangian` / `DetermineShifts`
+  (`FieldRedef.m`): canonicalize kinetic terms, compute gauge normalization
+  and kinetic mixing, loop over EFT dimension and derivative count, select
+  EOM terms, determine scalar/fermion/vector shifts, shift only terms that can
+  contribute at the target order, and re-run `InternalSimplify`. pychete
+  counterpart: bounded vector/scalar EOM bridge and future generic
+  field-redefinition engine.
+- `CollectOperators` / `InternalCollectOperators` /
+  `GetOperatorCoefficient` (`Simplifications.m`): normal-form collection and
+  exact operator coefficient extraction after index relabeling and operator
+  atomization. pychete counterpart: Symbolica-native coefficient extraction,
+  tensor canonicalization, projection filters, and target-local aliases.
+- `MapEffectiveCouplings` / `MapEffectiveCouplingsInternal` /
+  `SolveMatchingConditions` (`CouplingManipulations.m`): final coefficient
+  solve against the target EFT lagrangian. It optionally EOM-simplifies input
+  and target, introduces temporary effective couplings, computes
+  `CollectOperators[input-target]`, solves coefficient equalities, filters
+  gauge-coupling sign branches, replaces temporary couplings, relabels RHS
+  indices, truncates RHS terms with `SeriesEFT`, and sorts. pychete
+  counterpart: registered Wilson target projection and validation fixture
+  comparison at the Matchete matching-condition boundary.
+- `SaveValidationResults` (`DevTools/Validation.m`): Matchete's validation
+  wrapper. It saves per-trace `ContractCGs // MatchReduce // GreensSimplify`,
+  off-shell `GreensSimplify`, on-shell
+  `EOMSimplify[..., ReductionIdentities -> dDimensional]`, and SMEFT
+  `MapEffectiveCouplings` results. pychete counterpart: committed fixtures;
+  runtime pytest must never require Mathematica.
+
 Latest narrowed mismatch:
 
 - Matchete inert-`SymGammaFactor` replay selects the normalized B-source
@@ -667,6 +826,16 @@ Current slice progress:
   four-slot orders 0/1/2 plus the `hScalar-lScalar` vector-EOM replay match
   the full on-shell Singlet `cHD` coefficient through pole and finite terms:
   `hbar*A^2*gY^2*(-5/(3 eps) - 5/3 log(mursq) + 10/3 log(M) - 31/18)/M^4`.
+- Current public-source course correction, 2026-06-29: the first attempted
+  public hybrid regression for the four-slot `cHD` through-finite source also
+  behaved like the monolithic route and was stopped under the watchdog after
+  roughly two and a half minutes. The code change remains useful, but the
+  regression must be stage-local: `MatchingResult.with_loop_normalization(...)`
+  now exposes normalized `*_through_finite_part` sources for interaction
+  power, Wilson-line, Wilson-line hybrid, CDE, and CDE hybrid stages. The
+  existing staged Singlet `cHD` tests remain the coefficient-composition
+  oracle; the new fast test only pins that public projection source names are
+  available without forcing the whole hybrid public route to recompute.
 
 ## Targeted Commands
 

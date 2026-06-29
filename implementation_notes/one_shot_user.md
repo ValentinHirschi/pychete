@@ -899,7 +899,8 @@ stage-local results, not another coefficient-specific rewrite.
   `test_singlet_wilson_line_gap_report_accepts_selected_chw_against_matchete_fixture`,
   which passes under the 30 GiB watchdog. The focused lower-level `cHW`
   regression, validation Wilson-line preview smoke, and static typing pytest
-  gate also pass for this slice.
+  gate also pass for this slice. This validation remains a stage-local
+  success, not yet full-model one-loop parity.
 - Latest continuation under the same mismatch-review policy: the selected
   Singlet `hScalar-lScalar` fixture route now also accepts `cHB` and `cHWB`
   against the committed Matchete fixture, using the same Wilson-line controls
@@ -1789,3 +1790,12 @@ stage-local results, not another coefficient-specific rewrite.
   `SaveValidationResults`, `MapEffectiveCouplings`, and
   `MapEffectiveCouplingsInternal`, and tie the active `cHD` strategy to
   Matchete's validation-stage semantics.
+- Follow-up implementation note, 2026-06-29: attempted to promote the
+  selected four-slot `cHD` pole-through-finite checkpoint directly through the
+  public hybrid `Theory.match(...)` source, but the run again behaved like a
+  broad monolithic route and was stopped under the 30 GiB watchdog. The
+  regression has therefore been narrowed to the actual stage-local change:
+  normalized public `*_through_finite_part` projection source names are now
+  exposed by `MatchingResult.with_loop_normalization(...)`, while the existing
+  staged Singlet `cHD` tests continue to pin the selected pole/finite
+  coefficient composition.

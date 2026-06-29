@@ -2507,13 +2507,41 @@ class OneLoopSetup:
             _flatten_expression_slots(finite_terms_by_entry.values()),
             combine_terms=combine_terms,
         )
+        through_finite_terms_by_entry = {
+            entry_label: tuple(
+                vakint.through_finite_part(
+                    term,
+                    max_pole_order=max_pole_order,
+                    epsilon=epsilon,
+                )
+                for term in entry_terms
+            )
+            for entry_label, entry_terms in evaluated_terms_by_entry.items()
+        }
+        through_finite_by_entry = _wilson_line_internal_expression_map_by_entry(
+            through_finite_terms_by_entry,
+            "interaction_wilson_line_internal_integral_through_finite_part",
+            combine_terms=combine_terms,
+        )
+        through_finite = _sum_wilson_line_internal_terms(
+            _flatten_expression_slots(through_finite_terms_by_entry.values()),
+            combine_terms=combine_terms,
+        )
         scalar_bilinear_supertraces: dict[str, Expression] = {}
         if expose_scalar_derivative_commutator_bilinears:
             finite_before_scalar_bilinears = finite
+            through_finite_before_scalar_bilinears = through_finite
             finite = _apply_wilson_line_post_integral_scalar_commutator_bilinears(self.theory, finite)
+            through_finite = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                self.theory,
+                through_finite,
+            )
             scalar_bilinear_supertraces = {
                 "interaction_wilson_line_internal_integral_finite_part_before_scalar_commutator_bilinears": (
                     finite_before_scalar_bilinears
+                ),
+                "interaction_wilson_line_internal_integral_through_finite_part_before_scalar_commutator_bilinears": (
+                    through_finite_before_scalar_bilinears
                 ),
             }
         return MatchingResult(
@@ -2534,11 +2562,13 @@ class OneLoopSetup:
                 **evaluated_by_entry,
                 **pole_by_entry,
                 **finite_by_entry,
+                **through_finite_by_entry,
                 **scalar_bilinear_supertraces,
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
                 "interaction_wilson_line_internal_integral_pole_part": pole,
                 "interaction_wilson_line_internal_integral_finite_part": finite,
+                "interaction_wilson_line_internal_integral_through_finite_part": through_finite,
             },
             metadata={
                 "stage": "interaction_wilson_line_internal_integral_result",
@@ -2684,13 +2714,41 @@ class OneLoopSetup:
             _flatten_expression_slots(finite_terms_by_entry.values()),
             combine_terms=combine_terms,
         )
+        through_finite_terms_by_entry = {
+            entry_label: tuple(
+                vakint.through_finite_part(
+                    term,
+                    max_pole_order=max_pole_order,
+                    epsilon=epsilon,
+                )
+                for term in entry_terms
+            )
+            for entry_label, entry_terms in evaluated_terms_by_entry.items()
+        }
+        through_finite_by_entry = _wilson_line_internal_expression_map_by_entry(
+            through_finite_terms_by_entry,
+            "interaction_wilson_line_internal_integral_through_finite_part",
+            combine_terms=combine_terms,
+        )
+        through_finite = _sum_wilson_line_internal_terms(
+            _flatten_expression_slots(through_finite_terms_by_entry.values()),
+            combine_terms=combine_terms,
+        )
         scalar_bilinear_supertraces: dict[str, Expression] = {}
         if expose_scalar_derivative_commutator_bilinears:
             finite_before_scalar_bilinears = finite
+            through_finite_before_scalar_bilinears = through_finite
             finite = _apply_wilson_line_post_integral_scalar_commutator_bilinears(self.theory, finite)
+            through_finite = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                self.theory,
+                through_finite,
+            )
             scalar_bilinear_supertraces = {
                 "interaction_wilson_line_internal_integral_finite_part_before_scalar_commutator_bilinears": (
                     finite_before_scalar_bilinears
+                ),
+                "interaction_wilson_line_internal_integral_through_finite_part_before_scalar_commutator_bilinears": (
+                    through_finite_before_scalar_bilinears
                 ),
             }
         counterterm = -pole
@@ -2712,11 +2770,13 @@ class OneLoopSetup:
                 **evaluated_by_entry,
                 **pole_by_entry,
                 **finite_by_entry,
+                **through_finite_by_entry,
                 **scalar_bilinear_supertraces,
                 "interaction_wilson_line_vakint_integral_sum": raw_vakint_sum,
                 "interaction_wilson_line_internal_integral_sum": evaluated,
                 "interaction_wilson_line_internal_integral_pole_part": pole,
                 "interaction_wilson_line_internal_integral_finite_part": finite,
+                "interaction_wilson_line_internal_integral_through_finite_part": through_finite,
                 "interaction_wilson_line_internal_integral_ms_counterterm": counterterm,
             },
             metadata={
@@ -3115,12 +3175,17 @@ class OneLoopSetup:
             interaction_remainder.expression("interaction_power_type_internal_integral_finite_part")
             + wilson_line_result.expression("interaction_wilson_line_internal_integral_finite_part")
         )
+        through_finite = (
+            interaction_remainder.expression("interaction_power_type_internal_integral_through_finite_part")
+            + wilson_line_result.expression("interaction_wilson_line_internal_integral_through_finite_part")
+        )
         return replace(
             result,
             supertraces={
                 **result.supertraces,
                 "interaction_wilson_line_hybrid_internal_integral_pole_part": pole,
                 "interaction_wilson_line_hybrid_internal_integral_finite_part": finite,
+                "interaction_wilson_line_hybrid_internal_integral_through_finite_part": through_finite,
             },
         )
 
@@ -3933,6 +3998,11 @@ class OneLoopSetup:
         )
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        through_finite = vakint.through_finite_part(
+            evaluated,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+        )
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -3955,6 +4025,7 @@ class OneLoopSetup:
                 "power_type_internal_integral_sum": evaluated,
                 "power_type_internal_integral_pole_part": pole,
                 "power_type_internal_integral_finite_part": finite,
+                "power_type_internal_integral_through_finite_part": through_finite,
             },
             metadata={
                 "stage": "power_type_internal_integral_result",
@@ -4393,6 +4464,11 @@ class OneLoopSetup:
         )
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        through_finite = vakint.through_finite_part(
+            evaluated,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+        )
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -4427,6 +4503,7 @@ class OneLoopSetup:
                 "interaction_bosonic_cde_internal_integral_sum": evaluated,
                 "interaction_bosonic_cde_internal_integral_pole_part": pole,
                 "interaction_bosonic_cde_internal_integral_finite_part": finite,
+                "interaction_bosonic_cde_internal_integral_through_finite_part": through_finite,
             },
             metadata={
                 "stage": "interaction_bosonic_cde_internal_integral_result",
@@ -5090,6 +5167,11 @@ class OneLoopSetup:
         )
         pole = vakint.pole_part(evaluated, max_pole_order=max_pole_order, epsilon=epsilon)
         finite = vakint.finite_part(evaluated, epsilon=epsilon)
+        through_finite = vakint.through_finite_part(
+            evaluated,
+            max_pole_order=max_pole_order,
+            epsilon=epsilon,
+        )
         return MatchingResult(
             theory=self.theory,
             uv_lagrangian=self.uv_lagrangian,
@@ -5121,6 +5203,7 @@ class OneLoopSetup:
                 "interaction_power_type_internal_integral_sum": evaluated,
                 "interaction_power_type_internal_integral_pole_part": pole,
                 "interaction_power_type_internal_integral_finite_part": finite,
+                "interaction_power_type_internal_integral_through_finite_part": through_finite,
             },
             metadata={
                 "stage": "interaction_power_type_internal_integral_result",
@@ -5181,6 +5264,7 @@ class OneLoopSetup:
         )
         pole = unrenormalized.expression("interaction_power_type_internal_integral_pole_part")
         finite = unrenormalized.expression("interaction_power_type_internal_integral_finite_part")
+        through_finite = unrenormalized.expression("interaction_power_type_internal_integral_through_finite_part")
         counterterm = (-pole).expand()
         finite_named_supertraces = _finite_named_supertraces(
             unrenormalized.supertraces,
@@ -5205,6 +5289,7 @@ class OneLoopSetup:
             supertraces={
                 **unrenormalized.supertraces,
                 **finite_named_supertraces,
+                "interaction_power_type_internal_integral_through_finite_part": through_finite,
                 "interaction_power_type_internal_integral_ms_counterterm": counterterm,
             },
             metadata={

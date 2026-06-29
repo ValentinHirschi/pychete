@@ -72,6 +72,21 @@ _DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES = {
     "interaction_power_type_internal_integral_finite_part": (
         "interaction_power_type_normalized_internal_integral_finite_part"
     ),
+    "interaction_power_type_internal_integral_through_finite_part": (
+        "interaction_power_type_normalized_internal_integral_through_finite_part"
+    ),
+    "interaction_wilson_line_internal_integral_through_finite_part": (
+        "interaction_wilson_line_normalized_internal_integral_through_finite_part"
+    ),
+    "interaction_wilson_line_hybrid_internal_integral_through_finite_part": (
+        "interaction_wilson_line_normalized_hybrid_internal_integral_through_finite_part"
+    ),
+    "interaction_bosonic_cde_internal_integral_through_finite_part": (
+        "interaction_bosonic_cde_normalized_internal_integral_through_finite_part"
+    ),
+    "interaction_bosonic_cde_hybrid_internal_integral_through_finite_part": (
+        "interaction_bosonic_cde_normalized_hybrid_internal_integral_through_finite_part"
+    ),
 }
 
 _MAX_PROJECTION_FACTOR_TERMS = 64
