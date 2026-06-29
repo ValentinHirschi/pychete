@@ -151,12 +151,53 @@ the final converted-boundary bridge:
   passed`), targeted mypy on `matching.py`, `matching_results.py`, and
   `validation_fixtures.py`, and the selected `cHD` direct/effective-map slow
   regression (`2 passed` in about six minutes).
+- Current slice: `cHBox` public staged effective-map debugging found a
+  generic incomplete-map boundary, not a final-coefficient issue. Matchete
+  evidence remains the committed `Q_HBox` EOM/projection dump
+  `assets/validation/matchete/debug/singlet_eom_cHBox.debug.json`, while the
+  paired pychete probes were target-local public `cHBox` runs through
+  `Theory.match(...)` and a cheap Singlet tree-only map. Before the patch,
+  every staged selected public `cHBox` source, including
+  `tree_level_on_shell_projection_source`, mapped to zero in incomplete
+  effective-map mode even though direct projection recovered the tree
+  coefficient. The first differing boundary was therefore
+  `MapEffectiveCouplings` on a target-local source containing a registered
+  projection alias of the Wilson operator rather than the exact target
+  representative.
+- Implementation: `MatchingResult.map_effective_couplings(...)` now keeps the
+  lower-level Symbolica linear solve authoritative when it returns a nonzero
+  answer, but for incomplete target-local maps whose solve returns zero it
+  falls back to the existing direct Symbolica coefficient/projection-alias
+  machinery for registered Wilson targets on the same source stage. The
+  SMEFT `Q_HBox` bridge now passes the actual source-stage name into its
+  internal `cHBox` lookup so alias gating remains stage-aware. This is a
+  generic projection-boundary fallback for partial effective maps, not a
+  hard-coded `cHBox` coefficient.
+- Validation for the slice: focused effective-coupling unit tests and the new
+  Singlet tree regression passed (`18 passed` for the selected group), the
+  converted effective-map fixture group passed under the 30 GiB watchdog
+  (`20 passed`), targeted mypy passed on `matching_results.py` and
+  `effective_couplings.py`, and the public selected Higgs-gauge staged
+  effective-map regression still passed.
+- Updated `cHBox` public frontier: the selected two-trace public route now
+  maps the tree `-A^2/(2 M^4)` contribution correctly but still differs from
+  the full Matchete `cHBox` condition because the selected
+  `hScalar-lScalar` / `hScalar-lScalar-lVector-lScalar` families do not
+  generate the missing one-loop scalar-sector terms. A bounded pure-heavy
+  trace probe showed that `hScalar-hScalar` contributes the reference
+  `-hbar*kappa^2/(24 M^2)` term; broader `hScalar-hScalar-hScalar` probing
+  was stopped with `stop.order` because the unrestricted derivative-order plan
+  was too slow. The next `cHBox` work should use narrower total-order plans
+  for pure-heavy scalar traces before broadening further.
 
 ## Next Implementation Slices
 
 1. Selected Singlet broadening:
    use the staged public map boundary to broaden beyond the currently green
-   selected `cHW/cHB/cHWB/cHD` families. Record whether each failure is source
+   selected `cHW/cHB/cHWB/cHD` families. The immediate `cHBox` sub-frontier is
+   pure-heavy scalar trace coverage: keep `hScalar-hScalar` as the first
+   committed partial loop contribution and probe `hScalar-hScalar-hScalar`
+   only with narrow total-order plans. Record whether each failure is source
    generation, on-shell reduction, effective-coupling decomposition, or
    performance.
 

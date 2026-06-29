@@ -321,6 +321,7 @@ def _apply_smeft_hbox_eom_effective_coupling_corrections(
         result,
         mapped,
         source_expr=source_expr,
+        source_name=source_name,
         identities=identities,
         allow_incomplete_target=allow_incomplete_target,
         max_basis_terms=max_basis_terms,
@@ -368,6 +369,7 @@ def _hbox_effective_coupling_coefficient(
     mapped: Mapping[str, Expression],
     *,
     source_expr: Expression,
+    source_name: str,
     identities: Sequence[Expression],
     allow_incomplete_target: bool,
     max_basis_terms: int,
@@ -391,7 +393,18 @@ def _hbox_effective_coupling_coefficient(
         )
     except ValueError:
         return None
-    return hbox_map.get("cHBox")
+    coefficient = hbox_map.get("cHBox")
+    if coefficient is not None and not is_zero(coefficient):
+        return coefficient
+    structured_target = matching_condition_targets({"cHBox": variable})[0]
+    fallback = _direct_project_effective_coupling_target(
+        result,
+        source_expr,
+        structured_target,
+        source_name=source_name,
+        normalize_derivative_operators=True,
+    )
+    return coefficient if fallback is None or is_zero(fallback) else fallback
 
 
 def _smeft_hbox_yukawa_higgs_correction(
@@ -512,6 +525,70 @@ def _target_local_effective_coupling_source(
         wildcard_index_projection=False,
     )
     return extractor._filtered_source_for_expressions(operators)
+
+
+def _direct_project_effective_coupling_target(
+    result: MatchingResult,
+    source_expr: Expression,
+    target: MatchingConditionTarget,
+    *,
+    source_name: str,
+    normalize_derivative_operators: bool,
+) -> Expression | None:
+    """Project a single registered Wilson target from an incomplete map source.
+
+    ``MapEffectiveCouplings`` is a linear solve over a selected target
+    Lagrangian. In partial, target-local diagnostics the selected source may
+    contain a projection alias of the registered operator rather than the
+    exact operator representative used by the linear basis. When the solve has
+    no target-variable equation, fall back to the same Symbolica coefficient
+    and alias machinery used by matching-condition projection.
+    """
+
+    if not _uses_registered_wilson_operator_aliases(target):
+        return None
+    source_result = MatchingResult(
+        theory=result.theory,
+        uv_lagrangian=result.uv_lagrangian,
+        off_shell_eft_lagrangian=source_expr,
+        on_shell_eft_lagrangian=source_expr,
+        supertraces={source_name: source_expr},
+    )
+    projected = source_result.project_matching_conditions(
+        {target.name: target.expression},
+        source=source_name,
+        expand_source=False,
+        normalize_derivative_operators=normalize_derivative_operators,
+        drop_zero=False,
+    )
+    return projected.get(target.name)
+
+
+def _apply_incomplete_effective_coupling_projection_fallback(
+    result: MatchingResult,
+    mapped: Mapping[str, Expression],
+    targets: Sequence[MatchingConditionTarget],
+    *,
+    source_expr: Expression,
+    source_name: str,
+    normalize_derivative_operators: bool,
+) -> dict[str, Expression]:
+    """Fill zero incomplete-map outputs with direct target-local projections."""
+
+    corrected = dict(mapped)
+    for target in targets:
+        if not is_zero(corrected.get(target.name, Expression.num(0))):
+            continue
+        fallback = _direct_project_effective_coupling_target(
+            result,
+            source_expr,
+            target,
+            source_name=source_name,
+            normalize_derivative_operators=normalize_derivative_operators,
+        )
+        if fallback is not None and not is_zero(fallback):
+            corrected[target.name] = fallback
+    return corrected
 
 
 def _effective_targets_need_smeft_hbox_bridge(
@@ -985,6 +1062,15 @@ class MatchingResult:
             max_basis_terms=max_basis_terms,
             max_identities=max_identities,
         )
+        if allow_incomplete_target and target_lagrangian is None:
+            mapped = _apply_incomplete_effective_coupling_projection_fallback(
+                self,
+                mapped,
+                structured_targets,
+                source_expr=source_expr,
+                source_name=source,
+                normalize_derivative_operators=normalize_derivative_operators,
+            )
         if target_lagrangian is None:
             mapped = _apply_smeft_hbox_eom_effective_coupling_corrections(
                 self,

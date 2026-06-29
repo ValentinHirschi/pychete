@@ -2160,3 +2160,16 @@ next real performance step remains an insertion-level collected
   (`cH`, `cdH`, `ceH`, `cuH`) because those require the `Q_HBox` EOM image.
   The selected public `cHW/cHB/cHWB` and `cHD` routes now pass through staged
   effective-coupling mapping.
+- Current continuation, 2026-06-30: public `cHBox` probing showed that
+  incomplete staged effective maps were dropping registered Wilson projection
+  aliases. In particular, the selected public route generated the Singlet
+  tree source, but `tree_level_on_shell_projection_source` mapped to zero
+  while direct projection recovered the expected `-A^2/(2 M^4)` term.
+  `MatchingResult.map_effective_couplings(...)` now falls back to the
+  existing Symbolica coefficient/projection-alias machinery only when an
+  incomplete target-local solve returns zero for a registered Wilson target.
+  The selected public `cHBox` route now recovers the tree term; remaining
+  `cHBox` mismatch is trace coverage. A bounded `hScalar-hScalar` probe
+  produced the expected `-hbar*kappa^2/(24 M^2)` loop term, while broader
+  `hScalar-hScalar-hScalar` probing must use narrower total-order plans to
+  avoid slow broad derivative expansion.

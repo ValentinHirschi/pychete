@@ -1668,6 +1668,40 @@ def test_singlet_tree_matching_projects_ch_and_hbox_terms() -> None:
     assert_expr_equal(projected[canonical_string(hbox_target)], -A() ** 2 / (2 * mass() ** 4))
 
 
+def test_singlet_tree_matching_effective_map_recovers_hbox_projection_alias() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    lagrangian = fixture.expression("lagrangian")
+    tree = theory.match(lagrangian, eft_order=6, loop_order=0)
+    assert isinstance(tree, Expression)
+    hbox_definition = theory.externals["cHBox"]
+    hbox_target = s.Coupling(
+        hbox_definition.label,
+        s.List(*hbox_definition.index_exprs),
+        Expression.num(hbox_definition.order),
+    )
+    target_name = canonical_string(hbox_target)
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=lagrangian,
+        off_shell_eft_lagrangian=tree,
+        on_shell_eft_lagrangian=tree,
+    )
+
+    projected = result.project_matching_conditions(
+        {target_name: hbox_target},
+        expand_source=False,
+        normalize_ibp_scalar_bilinears=True,
+        eft_order=6,
+    )[target_name]
+    mapped = result.map_effective_couplings(
+        {target_name: hbox_target},
+        allow_incomplete_target=True,
+    )[target_name]
+
+    assert_expr_equal(mapped, projected)
+
+
 def test_matching_result_applies_on_shell_replacements_with_symbolica_rules() -> None:
     theory = Theory("result_on_shell_reduction")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
