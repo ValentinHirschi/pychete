@@ -961,6 +961,15 @@ and `sum_expr(...).expand()` are cheap; the measured cost is expanded
 structural target is an insertion-level collected expression pipeline modeled
 on Matchete's `GenericPropagatorExpansion` plus `DeterminePowerInsertions`,
 not another pathwise postprocessing cache.
+Do not try to speed this up by simply delaying
+`distribute_ncm_additions(...)` past the current pychete
+`act_with_open_covariant_derivatives(...)` call. A focused Singlet four-slot
+check showed that this is not semantics-preserving: the current open-CD engine
+expects additive `NCM` operands to be linearized before derivative action and
+Wilson-term symmetry pruning. A Matchete-speed rewrite must therefore change
+the staging representation itself, e.g. by introducing a generic
+`FuncNCM`/insertion-level `EvaluateSTr` equivalent that performs the same
+termwise operation once on the collected insertion expression.
 The remaining Singlet `cHW` frontier is not solved by target filtering,
 post-result heavy-scalar substitution, or additive `NCM` linearization alone.
 Pure `A^2` `hScalar-lScalar` Wilson-line terms reach the pre-commutator stage

@@ -556,3 +556,44 @@ passes was also tested and found to be neutral or slightly slower on the worst
 entry. The remaining performance frontier is still structural: implement a
 more Matchete-like insertion-level collected `EvaluateSTr` expression
 pipeline, rather than optimizing the existing raw-path postprocessor further.
+
+## Current Slice Update: Two-Trace Public Composition Performance Audit
+
+The full selected two-trace public composition in pychete is currently slower
+than Matchete. The best apples-to-apples conclusion remains the committed
+Matchete Singlet validation timing: Matchete runs a broader full-model
+boundary in roughly 25 seconds total (`Match`, `GreensSimplify`,
+`EOMSimplify`, and `MapEffectiveCouplings`), while pychete's narrower selected
+two-trace public composition still exceeded the useful interactive budget.
+This is not acceptable as a final architecture because the selected pychete
+job should not be slower than Mathematica's broader route.
+
+The relevant Matchete implementation was rechecked directly in
+`Package/SuperTrace.m`. The hot path is:
+`PowerTypeSTr -> GenericPropagatorExpansion -> DeterminePowerInsertions ->
+EvaluateSTr`. `EvaluateSTr` substitutes concrete insertions and `$Xsubs`,
+`$Msubs`, `$Gsubs` into one generic noncommutative expression, then runs
+`ActWithOpenCDs`, `GatherLoopMomenta`,
+`RemoveSymmetryVanishingWilsonTerms`, `CloseFermionLoop`,
+`EvaluateSymmetricLorentzInds`, `ContractMetric`, `WilsonExpand`,
+`LoopIntegrate`, and final index/group/Dirac cleanup. pychete still reaches
+too much of that work through path-derived raw numerators, even after
+same-topology path-sum collection.
+
+A bounded `wolframscript` probe of the direct Matchete helper for the four-slot
+prop-order-2 family completed in about five seconds, but the selected raw sum
+was zero; this repeats the earlier warning that this helper is not the
+nonzero public-composition timing boundary. The useful comparison remains the
+full validation route and the stage structure above.
+
+One local pychete shortcut was tried and rejected: delaying
+`distribute_ncm_additions(...)` until after same-topology path sums are
+collected. Focused Wilson-line tests showed this is not semantics-preserving
+with the current `act_with_open_covariant_derivatives(...)` implementation:
+additive `NCM` operands must be linearized before open-CD action and Wilson
+symmetry pruning. Therefore the next speedup must be structural, not another
+pathwise cache or local distribution reorder. The intended next design is a
+Matchete-like generic `FuncNCM` / insertion-level `EvaluateSTr` representation
+that performs insertion replacement and termwise open-CD/symmetry/Wilson
+staging once per collected insertion expression, then splits only by topology
+or diagnostics.

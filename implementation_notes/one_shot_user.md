@@ -151,6 +151,19 @@ watchdog-wrapped public four-slot `cHD` checkpoint remain green. A
 Symbolica `Transformer.map_terms(...)` prototype was neutral/slower, so the
 next real performance step remains an insertion-level collected
 `EvaluateSTr` pipeline.
+- Two-trace public-composition performance audit, 2026-06-29: yes, pychete's
+  full selected two-trace public composition is currently slower than
+  Matchete's broader Singlet validation route, so this remains a structural
+  performance bug. Re-reading Matchete confirms the needed shape:
+  `PowerTypeSTr` builds a generic propagator expansion, enumerates
+  `DeterminePowerInsertions`, and `EvaluateSTr` runs open-CD, symmetry,
+  Wilson, loop-integration, and cleanup stages on the collected insertion
+  expression. A pychete experiment that simply delayed additive `NCM`
+  distribution past current `ActWithOpenCDs` was rejected by focused tests;
+  the current open-CD engine needs linearized `NCM` operands. The next
+  redesign must therefore introduce a Matchete-like generic
+  `FuncNCM`/insertion-level `EvaluateSTr` representation rather than adding
+  another pathwise cache.
 
 ## Approved Plan
 
