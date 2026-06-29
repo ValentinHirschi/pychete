@@ -1614,3 +1614,17 @@ Green/EOM identity conversion.
   canonicalization must be multiplicity-preserving and should model the
   Matchete field-degree/component weights explicitly before it replaces the
   current path-expanded representation.
+- Latest performance-parity instruction, 2026-06-29: user emphasized that
+  pychete's intermediate parity-comparison stages should be at least as
+  performant as the corresponding Matchete stages. Implementation response:
+  kept this slice bounded to the target-filtered `hScalar-lScalar`/`cHD`
+  frontier, rechecked the committed Matchete and pychete source fixtures, and
+  corrected the stale finite-Higgs-bilinear mismatch interpretation. The
+  local formal-SymGamma source boundary is now treated as aligned after the
+  Matchete-scale `OpScore` fix; the remaining first-parity work is public
+  route composition from that corrected source. For code structure and
+  performance visibility, extracted the CDE/Wilson-line projection-filter
+  policy from `matching.py` into
+  `src/pychete/matching_projection_filters.py`, preserving `pychete.matching`
+  compatibility aliases and validating with focused target-filter tests under
+  the 30 GiB watchdog.

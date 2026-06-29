@@ -147,13 +147,17 @@ Latest narrowed mismatch:
   d-dimensional operator-identity/Green-basis normal form.
 - Refreshed Matchete's `hScalar-lScalar -> cHD` prop-order-4 trace dump. This
   stage contains two Matchete insertions: derivative-on-H and
-  derivative-on-Bar[H] four-derivative bilinears. pychete's selected
-  `hScalar-lScalar#wilson14_o4_0` path agrees with the Matchete pole/log
-  structure for the derivative-on-H insertion, but finite Higgs-bilinear
-  coefficients still differ before scalar-EOM exposure. The final B-source
-  coefficient is still half of Matchete's B replay, so the active mismatch is
-  now localized between the Wilson-line finite Higgs-bilinear checkpoint and
-  Matchete's d-dimensional scalar Green/EOM operator-identity conversion.
+  derivative-on-Bar[H] four-derivative bilinears. A later direct fixture/probe
+  review showed that the apparent finite Higgs-bilinear disagreement was a
+  stage/convention comparison issue: Matchete's `LF` replay carries the
+  finite `+1` term, and pychete's bounded formal-SymGamma source now has the
+  same `-/+ (SG[1,4] - 8 SG[2,4])` orientation polynomial after the
+  Matchete-scale `OpScore` fix. Do not patch tensor reduction or integral
+  evaluation from the older finite-bilinear note. The active mismatch is now
+  public-route/full-coefficient composition from the corrected selected
+  source: selected Wilson-line replacement, unselected remainder,
+  heavy-scalar substitution, vector field redefinition, and registered `cHD`
+  projection.
 - A naive canonical fluctuation-basis prototype reduced the Singlet setup from
   26 discovered modes to 16 and the selected four-slot cHD path map from eight
   duplicated nonzero checkpoint paths to four canonical paths, but it was not
@@ -210,7 +214,15 @@ Current slice progress:
   before path enumeration or tensor reduction can safely collapse duplicates.
 - Generated the Matchete `hScalar-lScalar/cHD` prop-order-4 dump for direct
   finite Higgs-bilinear comparison against pychete's selected
-  `wilson14_o4_0` entry.
+  `wilson14_o4_0` entry, then reinterpreted it after checking the Matchete
+  `LF`/finite-`+1` convention against the refreshed pychete formal-SymGamma
+  source projections.
+- Extracted the target-filtered CDE/Wilson-line projection-filter policy out
+  of `src/pychete/matching.py` into
+  `src/pychete/matching_projection_filters.py`. Existing private imports from
+  `pychete.matching` remain compatibility aliases, while the performance
+  policy now has a dedicated semantic home. This reduced `matching.py` from
+  9,544 to 9,164 lines without changing the bounded cHD route.
 
 ## Performance Budget For This Slice
 
@@ -237,6 +249,14 @@ Current slice progress:
   where the duplicate work lives, but current parity probes must continue to
   use the existing eight path IDs until the replacement carries explicit
   component/DOf weights and preserves the selected cHD aggregate.
+- Projection filtering is now isolated in
+  `src/pychete/matching_projection_filters.py`; keep future performance work
+  there when it is about target-local Wilson-line/CDE pruning rather than
+  supertrace construction itself. The focused extraction gate was:
+  `test_wilson_line_target_filter_skips_impossible_entries_before_generation`,
+  `test_singlet_wilson_line_target_prefilter_matches_matchete_order_four_insertions`,
+  and `test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates`,
+  all under the 30 GiB watchdog.
 
 ## Targeted Commands
 
