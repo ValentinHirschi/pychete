@@ -906,6 +906,275 @@ Current slice progress:
   matches the Matchete order-one pole-through-finite checkpoint in under ten
   seconds under the 30 GiB watchdog.
 
+## Matchete Function-Level Audit For The Active One-Loop Route
+
+This audit was refreshed directly from the local Matchete checkout on
+2026-06-29, primarily from `Package/Matching.m`, `Package/SuperTrace.m`,
+`Package/LoopIntegration.m`, `Package/FunctionalTools.m`,
+`Package/TreeLevelMatching.m`, `Package/EFTCounting.m`,
+`Package/FieldRedef.m`, `Package/Simplifications.m`,
+`Package/CouplingManipulations.m`, and `Package/DevTools/Validation.m`.
+It intentionally lists Matchete's package-level functions and route-level
+concepts, not every Wolfram built-in such as `Cases`, `Table`, `Sum`, or
+`Solve`.
+
+Stage 0, model and validation harness:
+
+- `LoadModel`: loads `Models/Singlet_Scalar_Extension.m`, applies the parent
+  `SM` model, registers the heavy singlet `Phi`, its mass coupling `M`, and
+  interactions `A`, `kappa`, `muPhi`, `lambdaPhi`. For pychete this maps to
+  theory/state construction and must preserve symbol metadata before any
+  expression parse creates placeholder symbols.
+- `ActivateValidationMode`: sets Matchete globals so the next `Match` call
+  records trace pieces, off-shell/on-shell EFT Lagrangians, and matching
+  conditions. pychete's committed fixtures and debug snapshots are the
+  Matchete-independent analogue.
+- `SaveValidationResults`: transforms the raw `Reap` trace stream into
+  simplified named supertraces, computes `GreensSimplify[LagrangianEFT]`,
+  computes `EOMSimplify[LagrangianEFT]`, and for SMEFT-like models calls
+  `MapEffectiveCouplings` against `SMEFT_Warsaw`. This is the source of the
+  important warning for the Singlet `cHD` milestone: a selected raw supertrace,
+  an off-shell simplified trace, an on-shell Lagrangian term, and a final
+  Warsaw coefficient are different validation boundaries.
+
+Stage 1, public matching orchestration:
+
+- `Match`: the public entry point. It rejects unsupported heavy vectors for
+  loop matching, calls `SetCurrentLagrangian`, combines tree-level
+  `ReplaceHeavyEOM` and one-loop `LoopMatch`, then runs
+  `ContractCGs // MatchReduce` and Hermitian symmetrization. pychete's
+  `Theory.match(...)` must therefore expose both the raw/staged one-loop
+  sources and the final reduced result.
+- `SetCurrentLagrangian`: canonicalizes fermion masses, contracts CGs,
+  introduces effective masses, relabels indices, adds gauge-fixing and ghost
+  terms for gauge vectors, updates field metadata, solves heavy EOMs through
+  `DetermineEOMs`, and calls `SetSubstitutions` when loop order is positive.
+  This is not a light wrapper; it is the state-building boundary for all
+  one-loop traces.
+- `MassiveVectorsInLag`: rejects loop-level matching with heavy vector
+  propagators. pychete should keep this as a capability boundary until the
+  corresponding Matchete behavior is intentionally extended.
+- `OccurringFields`, `LagrangianDofs`, `FieldDoFs`, and `FieldType`: classify
+  fields into `hScalar`, `lScalar`, `hFermion`, `lFermion`, `hVector`,
+  `lVector`, ghosts, and conjugate degrees of freedom. pychete's
+  fluctuation-basis discovery must preserve this class/component structure,
+  because the selected `cHD` coefficient already depends on Matchete-style
+  component DOF weights.
+
+Stage 2, heavy EOM and EFT counting:
+
+- `DetermineEOMs`: finds heavy fields, derives their EOMs, solves them
+  order-by-order, and stores inclusive/order-specific solutions in
+  `$currentEOMs`. pychete must keep the heavy-solution state separate from
+  one-loop trace generation so stage-local comparisons can decide whether a
+  Matchete boundary has already substituted heavy fields.
+- `FindUvFields`: identifies heavy field and heavy field-strength labels in
+  the current Lagrangian. This is the basis of both tree-level replacement
+  and loop-time `ReplaceHeavyEOM`.
+- `DeriveEOM`, `VarD`, `FD`, `FuncD`, `FuncDSimplify`, and
+  `FluctuationOperator`: compute variational and fluctuation derivatives.
+  Matchete implements product/sign/index rules explicitly, but pychete should
+  express the equivalent with Symbolica patterns, symbol tags, and native
+  differentiation/replacement whenever possible.
+- `ReplaceHeavyEOM`, `ExpandField`, `ExpandEOM`, `ExpandOperators`,
+  `ExpandOp`, `SolveOneEOMfixedOrder`, `SolveAllEOMfixedOrder`,
+  `FullEomSolution`, and `SolutionToPattern`: implement the order-by-order
+  heavy-field solution and delayed replacement rules. pychete's corresponding
+  heavy-field machinery must not apply the heavy solution twice at the
+  on-shell/vector-EOM replay boundary.
+- `SeriesEFT`, `OperatorDimension`, `FieldDimension`, `TypeDim`,
+  `TruncateOperator`, `TaylorTruncateOperator`, and
+  `TaylorTruncateOperatorExact`: determine EFT order, including heavy-field
+  suppression and denominator Taylor expansion. pychete's dimension filters
+  should rely on registered symbol/coupling metadata and Symbolica rational
+  polynomial support, not string or name heuristics.
+
+Stage 3, X/M/gauge substitutions:
+
+- `SetSubstitutions`: subtracts kinetic terms with `KinOpLagrangian`, computes
+  all X-terms as negative fluctuation operators, drops ghost/vector field
+  insertions where appropriate, lowers open derivatives to
+  `OpenCD - I LoopMom`, splits X-terms by EFT order, loop-momentum order, and
+  open-CD count, and populates `$Xsubs`, `$XOrders`, `$XOrdMin`, `$Msubs`,
+  `$Gsubs`, `$LoopMomOrders`, and evanescent analogues. pychete's
+  `OneLoopSetup` must keep these as structured substitution records, not just
+  an already-summed expression.
+- `GetAllOperatorDimensions`: determines which EFT orders occur in an
+  X-term. The pychete analogue should remain native Symbolica/metadata driven.
+- `Mterm` and `GaugeCTerm` substitution records: map heavy propagator masses
+  and light-vector gauge-coupling insertions into concrete couplings. In
+  pychete this is exactly the kind of localized data that belongs in
+  theory-owned symbol data.
+
+Stage 4, trace enumeration:
+
+- `LoopMatch`: enumerates log traces and power traces, optionally filters with
+  `WhichTraces`, evaluates `LogTypeSTr` and `PowerTypeSTr`, and `Sow`s named
+  trace results for validation. pychete's selected-only public route now
+  mirrors the `WhichTraces` debugging role; it is not the same as full-model
+  matching.
+- `ListPowerTypeTraces`: recursively enumerates trace words with at least one
+  heavy field, removes words above the EFT order, and cyclically deduplicates
+  them. pychete must preserve the cyclic orbit factor; universal `-1/2`
+  prefactors are wrong for periodic words.
+- `LogTypeSTr`, `DetermineLogInsertions`, `GenericLogExpansion`,
+  `PropLogExpand`, `LogBosonExpand`, and `LogFermionExpand`: handle log-type
+  traces for charged fields. They are not the current `cHD` frontier, but the
+  full port must support them before broad integration parity.
+- `PowerTypeSTr`: applies Matchete's `-I*hbar/2` statistics prefactor, computes
+  the maximum propagator expansion order, loops over propagation expansion
+  orders, combines `GenericPropagatorExpansion` with insertion rules, applies
+  `ReplaceHeavyEOM`, and returns expanded terms with the loop prefactor
+  distributed. This is the current explicit Wilson-line core.
+- `PropMomentumPower`: estimates denominator momentum power for divergence
+  mode. pychete's normal matching path mainly needs the matching-mode branch,
+  but divergence/evanescent parity will need this later.
+
+Stage 5, Wilson-line trace blueprint and insertions:
+
+- `GenericPropagatorExpansion`: builds the ordered blueprint
+  `Xop, PropExpand, Xop, PropExpand, ..., WilsonLine` before insertion
+  substitution. This is the central conceptual point from the Matchete authors:
+  Wilson lines are part of the trace word before summing; pychete must not
+  bolt them onto an already-summed trace.
+- `PropExpand`, `PropBosonExpand`, `PropFermionExpand`, and
+  `PropFermionExpandHelper`: expand bosonic/vector/fermionic propagator slots.
+  Vector slots carry Matchete's extra minus sign. Fermion slots carry
+  `(slash(k)+M)` plus open-derivative gamma terms and must feed idenso, not a
+  Python gamma algebra.
+- `DeterminePowerInsertions`, `DeleteDuplicatesByCylcicity`,
+  `CyclicSymFactor`, and `PopulateCovMomOps`: choose concrete field
+  insertions, remove cyclic duplicates, attach symmetry factors, and enumerate
+  how many covariant momentum operators remain as open derivatives. pychete's
+  generated Wilson-line plan filters by total order/entry label should be
+  understood as a debugging view of this insertion structure.
+- `DetermineDivergentInsertions`, `PopulateCovMomOpsLoopExact`, and
+  `DetermineEvanescentInsertions`: parallel insertion engines for divergence
+  and evanescent calculations. They are future parity work, but should not
+  contaminate the current matching-mode implementation.
+
+Stage 6, supertrace evaluation:
+
+- `EvaluateSTr`: applies the insertion replacement, `$Xsubs`, `$Msubs`, and
+  `$Gsubs`, then performs the ordered transform
+  `ActWithOpenCDs -> GatherLoopMomenta -> RemoveSymmetryVanishingWilsonTerms
+  -> CloseFermionLoop -> EvaluateSymmetricLorentzInds -> ContractMetric
+  -> WilsonExpand -> LoopIntegrate -> RelabelIndices -> ExpandGenFSs
+  -> ContractDelta -> ContractCGs -> ContractDelta -> RefineDiracProducts
+  -> EpsExpand`. pychete should keep checkpoints at these exact boundaries
+  when a Matchete comparison disagrees.
+- `ActWithOpenCDs`: moves open covariant derivatives to the right and acts on
+  every later factor; dangling open derivatives vanish. pychete should keep
+  this as Symbolica replacement rules over `WilsonTerm`, fields, and NCM
+  chains rather than Python sum/product recursion.
+- `GatherLoopMomenta`, `ExtractMomenta`, `CollectMomenta`, and `LoopMoms`:
+  extract slashed loop momentum from Dirac products, collect loop-momentum
+  numerators into `SymmetricLorentzInds`, and drop odd-rank loop-momentum
+  terms. pychete should continue delegating tensor reduction to vakint where
+  possible, while preserving Wilson-term symmetry pruning before evaluation.
+- `RemoveSymmetryVanishingWilsonTerms`: drops Wilson terms whose derivative
+  indices are identical or contain a symmetric Lorentz-index subset produced
+  by loop integration. pychete's corresponding helper must stay before
+  Wilson expansion in the Wilson-line path.
+- `CloseFermionLoop`, `FermionTrace`, and `CanonizeSpinorLines`: close Dirac
+  loops when the first propagator is fermionic and simplify spinor lines.
+  pychete should delegate this to idenso/spenso bridges and keep open fermion
+  chains open.
+- `EvaluateSymmetricLorentzInds`, `SymmetricLorentzIndsReplacement`,
+  `SymGammaFactor`, and `EvaluateGammaFactor`: convert symmetric loop
+  tensors into metric sums and gamma-function factors, then epsilon-expand.
+  pychete's internal loop backend and vakint bridge must preserve the same
+  Laurent convention through finite terms.
+- `WilsonExpand`, `WilsonTermExpand`, `DerivativeSubLists`, `PartDrop`,
+  `DevPreFact`, `GaugeIndexSet`, `FSWilsonFactor`, `ExpandGenFSs`, and
+  `DevTermOnWilson`: lower Wilson terms into deltas and field strengths using
+  derivative-sublist combinatorics and gauge/flavor representations. This is
+  not SMEFT-specific; pychete must implement it as generic theory metadata and
+  Symbolica/idenso transformations.
+
+Stage 7, loop integration and off-shell reduction:
+
+- `LoopIntegrate`: multiplies each expression by a temporary `integralType`,
+  lets `Prop[m]` and `Prop[0]` collect into massive and massless powers, then
+  converts to loop functions. pychete's propagator collection must merge
+  identical signatures at arbitrary power, which is already a current
+  invariant.
+- `SingleScaleIntegral` and `MultiScaleIntegral`: evaluate one-loop vacuum
+  integrals analytically. pychete may delegate single-mass cases to vakint as
+  a cross-check/backend, but mixed-mass and zero-mass analytic evaluation
+  must remain pychete-owned in the Matchete style.
+- `LF`, `LFFull`, `LFFull2LF`, `CanonizeLoopFunctions`,
+  `EvaluateLoopFunctions`, `SimplifyMassFunction`, `SimpTempLFRules`, and
+  `TempLFFiniteExtraction`: represent finite/pole loop functions, remove
+  duplicate masses, canonicalize mass order, and apply Matchete's IBP-style
+  finite extraction. pychete's loop-function canonicalization should be used
+  for fixture comparison and public diagnostics.
+- `MatchReduce`: converts certain field-strength index structures, evaluates
+  single-scale `LF` functions, rewrites trivial CGs to deltas, contracts
+  deltas/CGs, and removes redundant flavor sums. It is an off-shell cleanup
+  stage, not the final Wilson-condition solver.
+
+Stage 8, Green-basis and on-shell reduction:
+
+- `CollectOperators` and `InternalCollectOperators`: classify operators,
+  canonicalize flavor/index structure, collect coefficients, and optionally
+  return normal-form operators.
+- `InternalSimplify`: performs `ContractDelta`, `ContractCGs`,
+  `IBPSimplify`, and `CollectCoefficients`, returning either internal atomic
+  operators or normal-form operators.
+- `GreensSimplify`: expands/Hermitian-expands the Lagrangian, removes
+  constants, checks Lagrangian-like structure, applies `IBPSimplify` and
+  coefficient collection, and restores constants. Saved supertraces and the
+  off-shell EFT Lagrangian pass through this stage.
+- `IBPSimplify`, `IBPIdentities`, `ConstructOperatorIdentities`,
+  `IdentitiesIBP`, `IdentitiesCDCommutation`, and related identity builders:
+  generate and solve local operator identities. pychete's functional layer is
+  still an approximation here; full `cHD` parity requires continuing to
+  compare at this boundary when off-shell and on-shell results diverge.
+- `EOMSimplify`: checks kinetic validity, optionally introduces dummy
+  coefficients, runs `InternalSimplify`, performs systematic field
+  redefinitions, and finishes with `GreensSimplify`. Saved on-shell
+  Lagrangians come from this layer.
+- `FieldsToShift`, `PerformSystematicFieldRedefs`,
+  `RenormalizeMatterFields`, `GaugeFieldNormalization`, `ShiftLagrangian`,
+  `DetermineShifts`, `ScalarShift`, `FermionShift`, `VectorShift`,
+  `KinMixingShift`, `DummyShiftTerms`, and `AdjustEOMShifts`: implement the
+  field-redefinition sequence that removes EOM operators. The current Singlet
+  `cHD` frontier uses this layer through the vector-EOM replay; pychete must
+  avoid substituting heavy scalar EOMs again after matching this boundary.
+
+Stage 9, final matching conditions:
+
+- `MapEffectiveCouplings`: removes constants, optionally EOM-simplifies input
+  and target, handles the special EvanescenceFree two-step tree/loop mapping,
+  calls `MapEffectiveCouplingsInternal`, optionally shifts renormalizable
+  couplings, appends effective-coupling definitions, simplifies RHS terms,
+  and returns replacement rules.
+- `MapEffectiveCouplingsInternal`: introduces temporary coefficients for the
+  input Lagrangian, computes `CollectOperators[lagInput - TargetLag]`,
+  extracts `CoefficientEqualities`, identifies target couplings including
+  gauge couplings, solves the system, relabels RHS indices, truncates each
+  solution by EFT order, sorts by EFT order, drops duplicates/trivial rules,
+  and symmetrizes couplings.
+- `SolveMatchingConditions`: sorts equations by target-coupling count,
+  relabels dummy and free indices to avoid accidental collisions, solves
+  equations one coupling at a time, substitutes partial solutions back into
+  the remaining equations, and filters gauge-coupling sign conventions. This
+  is the Matchete concept behind full Warsaw coefficient parity; pychete's
+  target-local `Expression.coefficient(...)` projection is a useful fast path
+  but not yet the full algorithmic equivalent.
+
+Immediate consequence for the next implementation slice: the selected
+four-slot Wilson-line `cHD` source agreement proves only the `PowerTypeSTr` /
+`EvaluateSTr` layer for that trace slice. The first full Singlet `cHD`
+integration milestone still needs pychete to compose the same validation
+layers Matchete uses: stage-local selected supertraces, off-shell
+`GreensSimplify` cleanup, on-shell `EOMSimplify`/field-redefinition replay,
+and final target-basis coefficient extraction with Matchete-equivalent
+truncation and symmetrization. When any of these disagree, the next debug step
+is a Matchete Wolfram dump at the earliest listed function boundary, followed
+by a bounded pychete probe at the same boundary.
+
 ## Targeted Commands
 
 ```sh

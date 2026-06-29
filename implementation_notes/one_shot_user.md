@@ -1827,3 +1827,14 @@ stage-local results, not another coefficient-specific rewrite.
   normalized per-entry through-finite source names. A new focused public
   order-one `cHD` regression uses this decomposition and passes in under ten
   seconds with the 30 GiB watchdog.
+- Latest Matchete source deep dive, 2026-06-29: the implementation notes now
+  contain a function-level audit of the active one-loop route from `LoadModel`
+  and `Match` through `SetCurrentLagrangian`, `SetSubstitutions`,
+  `PowerTypeSTr`, `GenericPropagatorExpansion`, `DeterminePowerInsertions`,
+  `EvaluateSTr`, `WilsonExpand`, `LoopIntegrate`, `MatchReduce`,
+  `GreensSimplify`, `EOMSimplify`, and `MapEffectiveCouplings`. The practical
+  conclusion is that the selected four-slot Wilson-line `cHD` agreement proves
+  the raw supertrace layer only; full Singlet `cHD` parity still has to compose
+  Matchete's validation layers: off-shell Green-basis cleanup, on-shell
+  systematic field redefinitions, and final target-basis Wilson-condition
+  solving/truncation.
