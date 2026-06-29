@@ -1341,6 +1341,84 @@ def test_public_match_selected_chd_tree_staging_preserves_wilson_line_vector_del
     assert "coupling_gY" in canonical_string(projected)
 
 
+@pytest.mark.slow
+def test_public_match_selected_chd_two_trace_finite_composition_matches_matchete_fixture() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = fixture.theory()
+    condition_name, target = _selected_chd_four_slot_target(theory)
+
+    result = theory.match(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=4,
+            integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+            normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+            hbar=theory.external_handle("hbar")(),
+            use_matchete_fluctuation_dof_basis=True,
+            wilson_line_weight_paths_by_component_dofs=True,
+            wilson_line_trace_names=("hScalar-lScalar", "hScalar-lScalar-lVector-lScalar"),
+            wilson_line_max_total_order=4,
+            wilson_line_max_slot_order=4,
+            wilson_line_total_orders_by_trace={
+                "hScalar-lScalar": (0, 2, 4),
+                "hScalar-lScalar-lVector-lScalar": (0, 1, 2),
+            },
+            wilson_line_index_prefix="public_singlet_cHD_two_trace",
+            wilson_line_act_open_derivatives=True,
+            wilson_line_emit_covariant_derivative_commutators=False,
+            wilson_line_emit_covariant_derivative_commutator_passes=1,
+            wilson_line_covariant_derivative_commutator_mode="all_distinct",
+            wilson_line_expand_covariant_derivative_commutators=False,
+            wilson_line_max_derivative_order=4,
+            wilson_line_filter_terms_by_matching_targets=True,
+            wilson_line_include_unselected_traces=False,
+            wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+            wilson_line_expose_scalar_eom_terms=True,
+            wilson_line_tensor_reduce_before_wilson_expand=True,
+            simplify_pychete_color_algebra=True,
+            substitute_heavy_scalar_solutions=True,
+            on_shell_eom_lagrangian=fixture.expression("lagrangian"),
+            on_shell_eom_fields=[theory.field_handle("B")],
+            on_shell_eom_abelian_vector_field_redefinition=True,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={condition_name: target},
+        matching_condition_source="on_shell_eft_lagrangian",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        matching_condition_drop_zero=False,
+    )
+    projected = result.matching_conditions[condition_name]
+    reference_projected = vakint_backend.finite_part(
+        _matchete_fixture_loop_convention_to_vakint(
+            theory,
+            reference.matching_conditions[condition_name],
+        ),
+    )
+
+    assert result.metadata["stage"] == "normalized_interaction_wilson_line_internal_minimal_subtraction_result"
+    assert result.metadata["matching_condition_projection_source"] == "staged"
+    assert result.metadata["wilson_line_selected_only"] is True
+    assert result.metadata["wilson_line_include_unselected_traces"] is False
+    assert result.metadata["use_matchete_fluctuation_dof_basis"] is True
+    assert result.metadata["wilson_line_weight_paths_by_component_dofs"] is True
+    assert result.metadata["interaction_wilson_line_term_count"] == 68
+    assert result.metadata["interaction_wilson_line_component_weighted_term_count"] == 136
+    assert result.metadata["wilson_line_on_shell_projection_source_count"] == 24
+    assert "hScalar-lScalar#wilson14_o4_0" in result.metadata["interaction_wilson_line_nonzero_plan_entries"]
+    assert (
+        "hScalar-lScalar-lVector-lScalar#wilson29_o2_0_0_0"
+        in result.metadata["interaction_wilson_line_nonzero_plan_entries"]
+    )
+    assert_expr_equal((projected - _selected_chd_on_shell_finite_expected(theory)).expand(), Expression.num(0))
+    assert_expr_equal((projected - reference_projected).expand(), Expression.num(0))
+
+
 @pytest.mark.parametrize("path_index", (0, 12, 26, 38))
 def test_selected_chd_four_slot_quarter_paths_match_matchete_insertion_checkpoint(path_index: int) -> None:
     debug = json.loads(_SINGLET_CHD_FOUR_SLOT_DEBUG.read_text(encoding="utf-8"))

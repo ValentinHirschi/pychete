@@ -44,14 +44,18 @@ Singlet Scalar Extension to SMEFT. Current accepted progress:
   Matchete's finite dim6/dev3 replay coefficient in staged probes.
 - The selected four-slot `hScalar-lScalar-lVector-lScalar -> cHD` pole-through
   finite checkpoint can be reproduced when decomposed by bounded public
-  Wilson-line order/entry filters, but a broad aggregate public projection is
-  still too monolithic.
+  Wilson-line order/entry filters.
+- The selected two-trace public `Theory.match(...)` route for Singlet `cHD`
+  now reproduces the finite Matchete-fixture coefficient when run with
+  Matchete-style field-DOF weighting, Wilson-line staged projection sources,
+  `hScalar-lScalar` orders `{0,2,4}`, and
+  `hScalar-lScalar-lVector-lScalar` orders `{0,1,2}`.
 - The committed Singlet fixture has 64 external SMEFT/Wilson entries; 25 are
   nonzero. The broad default fixture report still has all 25 nonzero Wilson
   entries different, because public composition/projection is not yet using
-  the validated staged Wilson-line pieces efficiently. Stage-local nonzero
-  parity is now meaningful for 4 of the 25: selected-route
-  `cHW`, `cHB`, `cHWB`, and staged selected `cHD` after explicit
+  the validated staged Wilson-line pieces efficiently. Nonzero parity is now
+  meaningful for 4 of the 25 selected Wilson coefficients/routes:
+  `cHW`, `cHB`, `cHWB`, and public selected finite `cHD` after explicit
   Matchete-fixture/vakint loop-convention conversion.
 
 The active evidence points away from scalar-Higgs EOM replacement as the first
@@ -98,6 +102,19 @@ Focused watchdog gate passed on 2026-06-29:
 `test_selected_chd_staged_full_composition_matches_matchete_fixture_condition`,
 the staged finite/full `cHD` composition checks, and the selected
 `cHW/cHB/cHWB` public fixture check.
+
+Newest public-route regression: added
+`test_public_match_selected_chd_two_trace_finite_composition_matches_matchete_fixture`.
+This runs the real `Theory.match(...)` Wilson-line path for the selected
+two-trace Singlet `cHD` composition with staged projection sources and checks
+the finite coefficient against the committed Matchete fixture after the
+existing `epsilon`/`mubar2` convention bridge and `vakint` finite-part
+extraction. The first milestone has therefore moved from hand-composed staged
+selected `cHD` parity to public-route selected finite `cHD` parity. Remaining
+work is to broaden this from the selected finite route to the full Singlet
+fixture: pole/renormalization convention coverage where needed, unselected
+trace composition, other nonzero Wilson coefficients, and performance of the
+broader default fixture route.
 
 ## Active Checkpoints
 

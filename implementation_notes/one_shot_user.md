@@ -2016,3 +2016,13 @@ next real performance step remains an insertion-level collected
   metric cleanup as the public matcher. This keeps
   `one_loop_preview_gap_report(...)` aligned with the Matchete-style staged
   composition route instead of projecting only from a monolithic preview.
+- Current continuation, 2026-06-29: added a public-route selected Singlet
+  `cHD` regression for the two-trace Wilson-line composition. The test runs
+  `Theory.match(...)` with the validated `hScalar-lScalar` orders `{0,2,4}`
+  and `hScalar-lScalar-lVector-lScalar` orders `{0,1,2}`, staged projection
+  sources, Matchete-style field-DOF weighting, and internal minimal
+  subtraction, then compares the finite coefficient to the committed Matchete
+  fixture after the existing convention bridge. This records the first
+  selected public-route derivative-sector Wilson coefficient parity; full
+  Singlet fixture parity still requires broadening beyond this selected
+  finite `cHD` route.
