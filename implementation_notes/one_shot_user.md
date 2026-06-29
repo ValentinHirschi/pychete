@@ -190,6 +190,13 @@ next real performance step remains an insertion-level collected
   The UV model is `Singlet_Scalar_Extension`; the effective theory/basis is
   SMEFT Warsaw. Keep this list distinct from the selected public Wilson-line
   parity list, which is `cHW`, `cHB`, `cHWB`, and `cHD`.
+- Follow-up converted-boundary status: the SU(3) group-Fierz basis-map layer
+  now also recovers the coupled colour-current pairs `cqu1/cqu8` and
+  `cqd1/cqd8`. The converted on-shell boundary is therefore green for
+  `cHD`, `cle`, `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and
+  `cquqd1` out of 25 nonzero Singlet Wilson conditions. Validate these colour
+  pairs as coupled target-lagrangian solves, not as isolated one-coefficient
+  projections.
 
 ## Approved Plan
 

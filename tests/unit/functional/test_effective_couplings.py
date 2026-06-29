@@ -158,6 +158,61 @@ def test_map_effective_couplings_uses_chiral_fierz_identity_for_vector_currents(
     assert_expr_equal(mapped["cLe"], -yukawa(i1, i4) * s.Bar(yukawa(i2, i3)) / 2)
 
 
+def test_map_effective_couplings_decomposes_color_fierz_singlet_octet_currents() -> None:
+    theory = Theory("effective_coupling_color_fierz")
+    theory.define_gauge_group("SU3c", s.SU(Expression.num(3)), "gs", "G")
+    color = theory.define_representation("SU3c", "fund")
+    adjoint = theory.define_representation("SU3c", "adj")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    q = theory.define_field("q", s.Fermion, indices=[color, flavor.symbol], chirality="left")
+    u = theory.define_field("u", s.Fermion, indices=[color, flavor.symbol], chirality="right")
+    yukawa = theory.define_coupling("Y", indices=[flavor.symbol, flavor.symbol])
+    gen = theory.cg_tensor_handle("gen_SU3c_fund")
+    mu = theory.index("mu")
+    adj = theory.index("A", adjoint)
+    alpha = theory.index("alpha", color)
+    beta = theory.index("beta", color)
+    delta = theory.index("delta", color)
+    kappa = theory.index("kappa", color)
+    i1 = theory.index("i1", flavor.symbol)
+    i2 = theory.index("i2", flavor.symbol)
+    i3 = theory.index("i3", flavor.symbol)
+    i4 = theory.index("i4", flavor.symbol)
+    c1 = theory.index("c1", color)
+    c2 = theory.index("c2", color)
+    f1 = theory.index("f1", flavor.symbol)
+    f2 = theory.index("f2", flavor.symbol)
+    f3 = theory.index("f3", flavor.symbol)
+    f4 = theory.index("f4", flavor.symbol)
+    singlet_operator = s.NCM(s.Bar(u(beta, i3)), s.Gamma(mu), u(beta, i4)) * s.NCM(
+        s.Bar(q(alpha, i1)),
+        s.Gamma(mu),
+        q(alpha, i2),
+    )
+    octet_operator = (
+        gen(adj, alpha, beta)
+        * gen(adj, delta, kappa)
+        * s.NCM(s.Bar(u(delta, i3)), s.Gamma(mu), u(kappa, i4))
+        * s.NCM(s.Bar(q(alpha, i1)), s.Gamma(mu), q(beta, i2))
+    )
+    source_operator = s.NCM(s.Bar(u(c2, f4)), q(c2, f1)) * s.NCM(s.Bar(q(c1, f3)), u(c1, f2))
+    coefficient = yukawa(f3, f2) * s.Bar(yukawa(f1, f4))
+    c_singlet = theory.define_wilson_coefficient("cqu1", indices=[i1, i2, i3, i4], operator=singlet_operator)
+    c_octet = theory.define_wilson_coefficient("cqu8", indices=[i1, i2, i3, i4], operator=octet_operator)
+
+    mapped = map_effective_couplings(
+        coefficient * source_operator,
+        (
+            EffectiveCouplingTarget("cqu1", c_singlet(), singlet_operator),
+            EffectiveCouplingTarget("cqu8", c_octet(), octet_operator),
+        ),
+    )
+
+    expected = yukawa(i1, i4) * s.Bar(yukawa(i2, i3))
+    assert_expr_equal(mapped["cqu1"], -expected / 6)
+    assert_expr_equal(mapped["cqu8"], -expected)
+
+
 def test_map_effective_couplings_incomplete_target_mode_is_explicit() -> None:
     theory = Theory("effective_coupling_incomplete")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

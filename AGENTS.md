@@ -516,6 +516,18 @@ alignment used for the vector target, and let
 `Expression.solve_linear_system(...)` solve the coefficient equalities. Do not
 apply this plain Dirac identity to targets with extra CG/generator factors;
 those require a separate idenso/spenso-backed group-Fierz decomposition.
+For colour-current `MapEffectiveCouplings` parity, treat singlet/octet pairs
+as a coupled local basis. Discover registered `builtin:gen` CG tensors with
+Symbolica patterns over `CG(label, List(adj, left, right))`, attach each
+generator to the matching vector current by its field colour slots, and use
+the registered SU(N) group metadata to add the generic identity
+`J_cross = J_singlet/N + 2 J_octet` alongside the chiral scalar-to-crossed
+vector Fierz identity. The resulting scalar source maps to
+`-J_singlet/(2N) - J_octet`. Add these as Green-basis identities and alignment
+aliases, then let `Expression.solve_linear_system(...)` determine the Wilson
+coefficients. Do not solve `cqu1` separately from `cqu8` or `cqd1` separately
+from `cqd8` when validating this class; the basis decomposition is inherently
+coupled.
 Whenever a precise Matchete-parity mismatch is identified, first review the
 corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
 side by side before patching pychete. Use intermediate-stage dumps and focused

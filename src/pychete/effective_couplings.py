@@ -8,7 +8,7 @@ from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .backends import idenso
-from .expr import factors, is_head, is_zero, list_items, product_expr, sum_expr, terms
+from .expr import as_int, factors, is_head, is_zero, list_items, product_expr, sum_expr, terms
 from .green_basis import linear_identity_basis_terms, linear_identity_normal_form_from_identities
 from .indices import IndexInfo, collect_indices
 from .symbols import SymbolDataKey, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
@@ -76,7 +76,10 @@ def map_effective_couplings(
     )
     input_expr = input_lagrangian.expand()
     target_expr = target_expr.expand()
-    auto_identities = _target_operator_chiral_fierz_identities(target_tuple)
+    auto_identities = (
+        *_target_operator_chiral_fierz_identities(target_tuple),
+        *_target_operator_color_fierz_identities(target_tuple),
+    )
     identity_tuple = tuple(identity for identity in (*identities, *auto_identities) if not is_zero(identity))
     input_expr = idenso.simplify_pychete_chiral_scalar_projectors(input_expr)
     target_expr = idenso.simplify_pychete_chiral_scalar_projectors(target_expr)
@@ -154,38 +157,47 @@ def _align_target_operator_indices(
         replacement
         for target in targets
         for replacement in _target_operator_alignment_replacements(target)
-    )
+    ) + _target_operator_group_fierz_alignment_replacements(targets)
+    fallback_patterns = tuple(
+        pattern
+        for target in targets
+        for pattern in _target_operator_alignment_operator_patterns(target)
+    ) + _target_operator_group_fierz_alignment_operator_patterns(targets)
     if not replacements:
         return expr
-    aligned_terms = tuple(_align_target_operator_indices_term(term, targets, replacements) for term in terms(expr.expand()))
+    aligned_terms = tuple(
+        _align_target_operator_indices_term(term, replacements, fallback_patterns)
+        for term in terms(expr.expand())
+    )
     return sum_expr(aligned_terms).expand()
 
 
 def _align_target_operator_indices_term(
     term: Expression,
-    targets: Sequence[EffectiveCouplingTarget],
     replacements: Sequence[Replacement],
+    fallback_patterns: Sequence[
+        tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]]
+    ],
 ) -> Expression:
     aligned = term.replace_multiple(replacements).expand()
     if not bool(aligned == term):
         return aligned
-    for target in targets:
-        for (
-            pattern_operator,
-            alias_operator,
-            replacement_operator,
-            alias_sign,
-            wildcards,
-        ) in _target_operator_alignment_operator_patterns(target):
-            for match in term.match(pattern_operator):
-                index_replacements = _target_operator_index_replacements(match, wildcards)
-                relabeled = term.replace_multiple(index_replacements).expand()
-                updated = relabeled.replace(
-                    alias_operator,
-                    Expression.num(alias_sign) * replacement_operator,
-                ).expand()
-                if not bool(updated == term):
-                    return updated
+    for (
+        pattern_operator,
+        alias_operator,
+        replacement_operator,
+        alias_sign,
+        wildcards,
+    ) in fallback_patterns:
+        for match in term.match(pattern_operator):
+            index_replacements = _target_operator_index_replacements(match, wildcards)
+            relabeled = term.replace_multiple(index_replacements).expand()
+            updated = relabeled.replace(
+                alias_operator,
+                Expression.num(alias_sign) * replacement_operator,
+            ).expand()
+            if not bool(updated == term):
+                return updated
     return term
 
 
@@ -196,6 +208,29 @@ class _VectorCurrentPatternMatch:
     right: Expression
     label: Expression
     mu: Expression
+
+
+@dataclass(frozen=True)
+class _GeneratorCurrentMatch:
+    current: _VectorCurrentPatternMatch
+    generator: Expression
+    adjoint_index: Expression
+    left_color: Expression
+    right_color: Expression
+    color_position: int
+    dimension: int
+
+
+@dataclass(frozen=True)
+class _PureVectorTarget:
+    operator: Expression
+    currents: tuple[_VectorCurrentPatternMatch, _VectorCurrentPatternMatch]
+
+
+@dataclass(frozen=True)
+class _ColorOctetTarget:
+    operator: Expression
+    generators: tuple[_GeneratorCurrentMatch, _GeneratorCurrentMatch]
 
 
 def _target_operator_chiral_fierz_identities(
@@ -211,6 +246,142 @@ def _target_operator_chiral_fierz_identities(
             seen.add(key)
             identities.append(identity)
     return tuple(identities)
+
+
+def _target_operator_color_fierz_identities(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[Expression, ...]:
+    pure_targets = _pure_vector_targets(targets)
+    octet_targets = _color_octet_targets(targets)
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    for octet in octet_targets:
+        singlet = _matching_pure_vector_target(octet, pure_targets)
+        if singlet is None:
+            continue
+        crossed = _crossed_color_vector_operator(octet)
+        dimension = octet.generators[0].dimension
+        for identity in (
+            (crossed - singlet.operator / Expression.num(dimension) - Expression.num(2) * octet.operator).expand(),
+            *_chiral_fierz_identities_for_operator(crossed),
+        ):
+            key = canonical_string(identity)
+            if key in seen:
+                continue
+            seen.add(key)
+            identities.append(identity)
+    return tuple(identities)
+
+
+def _target_operator_group_fierz_alignment_replacements(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[Replacement, ...]:
+    aliases: list[tuple[Expression, Expression, int]] = []
+    seen: set[str] = set()
+    for crossed in _target_operator_color_fierz_crossed_vectors(targets):
+        for alias in (crossed, *tuple(channel for channel, _operator in _chiral_fierz_channels_for_operator(crossed))):
+            key = canonical_string(alias)
+            if key in seen:
+                continue
+            seen.add(key)
+            aliases.append((alias, alias, 1))
+    replacements: list[Replacement] = []
+    for alias_position, (alias_operator, replacement_operator, alias_sign) in enumerate(aliases):
+        index_infos = collect_indices(alias_operator * replacement_operator)
+        if not index_infos:
+            continue
+        coefficient = Expression.symbol(f"pychete::effective_coupling_coefficient_group_fierz_{alias_position}_")
+        pattern_operator, _alias_operator, _replacement_operator, _alias_sign, wildcards = (
+            _target_operator_alignment_operator_pattern(
+                alias_operator,
+                replacement_operator,
+                alias_sign,
+                index_infos,
+                safe_target_name="group_fierz",
+                alias_position=alias_position,
+            )
+        )
+        replacements.append(
+            Replacement(
+                coefficient * pattern_operator,
+                _target_operator_alignment_replacement(
+                    coefficient * pattern_operator,
+                    coefficient,
+                    replacement_operator,
+                    wildcards,
+                    alias_sign,
+                ),
+                partial=False,
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _target_operator_group_fierz_alignment_operator_patterns(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]], ...]:
+    patterns: list[tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]]] = []
+    seen: set[str] = set()
+    for alias_position, crossed in enumerate(_target_operator_color_fierz_crossed_vectors(targets)):
+        aliases = (crossed, *tuple(channel for channel, _operator in _chiral_fierz_channels_for_operator(crossed)))
+        for alias_offset, alias_operator in enumerate(aliases):
+            key = canonical_string(alias_operator)
+            if key in seen:
+                continue
+            seen.add(key)
+            patterns.append(
+                _target_operator_alignment_operator_pattern(
+                    alias_operator,
+                    alias_operator,
+                    1,
+                    collect_indices(alias_operator),
+                    safe_target_name="group_fierz_fallback",
+                    alias_position=alias_position * 8 + alias_offset,
+                )
+            )
+    return tuple(patterns)
+
+
+def _target_operator_color_fierz_crossed_vectors(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[Expression, ...]:
+    pure_targets = _pure_vector_targets(targets)
+    out: list[Expression] = []
+    seen: set[str] = set()
+    for target in targets:
+        octet = _color_octet_target(target.operator)
+        if octet is None or _matching_pure_vector_target(octet, pure_targets) is None:
+            continue
+        crossed = _crossed_color_vector_operator(octet)
+        key = canonical_string(crossed)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(crossed)
+    return tuple(out)
+
+
+def _pure_vector_targets(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[_PureVectorTarget, ...]:
+    out: list[_PureVectorTarget] = []
+    for target in targets:
+        candidate = _pure_vector_target(target.operator)
+        if candidate is not None:
+            out.append(candidate)
+    return tuple(out)
+
+
+def _color_octet_targets(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[_ColorOctetTarget, ...]:
+    out: list[_ColorOctetTarget] = []
+    for target in targets:
+        candidate = _color_octet_target(target.operator)
+        if candidate is not None:
+            out.append(candidate)
+    return tuple(out)
 
 
 def _chiral_fierz_identities_for_operator(operator: Expression) -> tuple[Expression, ...]:
@@ -283,6 +454,259 @@ def _vector_current_matches(expr: Expression) -> tuple[_VectorCurrentPatternMatc
 
 def _opposite_nonzero_chiralities(left: FieldChirality, right: FieldChirality) -> bool:
     return {left, right} == {FieldChirality.LEFT, FieldChirality.RIGHT}
+
+
+def _pure_vector_target(operator: Expression) -> _PureVectorTarget | None:
+    operator_terms = terms(operator.expand())
+    if len(operator_terms) != 1:
+        return None
+    operator_term = operator_terms[0]
+    currents = _vector_current_matches(operator_term)
+    if len(currents) != 2:
+        return None
+    remainder = _remove_current_factors(operator_term, currents)
+    if not bool(remainder == Expression.num(1)):
+        return None
+    return _PureVectorTarget(operator=operator_term, currents=(currents[0], currents[1]))
+
+
+def _color_octet_target(operator: Expression) -> _ColorOctetTarget | None:
+    operator_terms = terms(operator.expand())
+    if len(operator_terms) != 1:
+        return None
+    operator_term = operator_terms[0]
+    currents = _vector_current_matches(operator_term)
+    if len(currents) != 2:
+        return None
+    remainder = _remove_current_factors(operator_term, currents)
+    generators = _generator_current_matches(remainder, currents)
+    if len(generators) != 2:
+        return None
+    first, second = generators
+    if not bool(first.adjoint_index == second.adjoint_index):
+        return None
+    if first.dimension <= 0 or first.dimension != second.dimension:
+        return None
+    return _ColorOctetTarget(operator=operator_term, generators=(first, second))
+
+
+def _remove_current_factors(
+    expr: Expression,
+    currents: Sequence[_VectorCurrentPatternMatch],
+) -> Expression:
+    return expr.replace_multiple(tuple(Replacement(current.expr, Expression.num(1)) for current in currents)).expand()
+
+
+def _generator_current_matches(
+    expr: Expression,
+    currents: Sequence[_VectorCurrentPatternMatch],
+) -> tuple[_GeneratorCurrentMatch, ...]:
+    generators = _builtin_generator_atoms(expr)
+    out: list[_GeneratorCurrentMatch] = []
+    used_current_keys: set[str] = set()
+    for generator in generators:
+        indices = list_items(generator[1])
+        adjoint_index, left_color, right_color = indices
+        dimension = _generator_fundamental_dimension(generator)
+        if dimension <= 0:
+            dimension = _index_representation_dimension(left_color)
+        if dimension <= 0:
+            continue
+        for current in currents:
+            current_key = canonical_string(current.expr)
+            if current_key in used_current_keys:
+                continue
+            color_position = _current_color_position(current, left_color, right_color)
+            if color_position is None:
+                continue
+            used_current_keys.add(current_key)
+            out.append(
+                _GeneratorCurrentMatch(
+                    current=current,
+                    generator=generator,
+                    adjoint_index=adjoint_index,
+                    left_color=left_color,
+                    right_color=right_color,
+                    color_position=color_position,
+                    dimension=dimension,
+                )
+            )
+            break
+    return tuple(out)
+
+
+def _builtin_generator_atoms(expr: Expression) -> tuple[Expression, ...]:
+    label = s.head("effective_coupling_generator_label_")
+    adjoint = s.head("effective_coupling_generator_adjoint_")
+    left = s.head("effective_coupling_generator_left_")
+    right = s.head("effective_coupling_generator_right_")
+    pattern = s.CG(label, s.List(adjoint, left, right))
+    out: list[Expression] = []
+    seen: set[str] = set()
+    for match in expr.match(pattern):
+        matched_label = match[label]
+        source = symbol_data(matched_label, SymbolDataKey.CG_SOURCE, "")
+        representations = symbol_data(matched_label, SymbolDataKey.CG_REPRESENTATIONS, [])
+        if source != "builtin:gen" or not isinstance(representations, list) or len(representations) != 3:
+            continue
+        atom = pattern.replace_wildcards(match)
+        key = canonical_string(atom)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(atom)
+    return tuple(out)
+
+
+def _generator_fundamental_dimension(generator: Expression) -> int:
+    representations = symbol_data(generator[0], SymbolDataKey.CG_REPRESENTATIONS, [])
+    if not isinstance(representations, list) or len(representations) < 2:
+        return -1
+    dimension = symbol_data(representations[1], SymbolDataKey.DIMENSION, -1)
+    try:
+        return int(dimension)
+    except (TypeError, ValueError):
+        return -1
+
+
+def _index_representation_dimension(index: Expression) -> int:
+    if not is_head(index, s.Index):
+        return -1
+    representation = index[1]
+    dimension = symbol_data(representation, SymbolDataKey.DIMENSION, -1)
+    try:
+        dimension_int = int(dimension)
+    except (TypeError, ValueError):
+        dimension_int = -1
+    if dimension_int > 0:
+        return dimension_int
+    group_symbol = Expression.symbol(representation.get_name())
+    group_type = symbol_data(group_symbol, SymbolDataKey.GROUP_TYPE)
+    if group_type is not None and is_head(group_type, s.SU):
+        group_size = as_int(group_type[0])
+        return group_size if group_size is not None else -1
+    return -1
+
+
+def _current_color_position(
+    current: _VectorCurrentPatternMatch,
+    left_color: Expression,
+    right_color: Expression,
+) -> int | None:
+    left_indices = list_items(current.left[2])
+    right_indices = list_items(current.right[2])
+    for position, (left_index, right_index) in enumerate(zip(left_indices, right_indices, strict=False)):
+        if bool(left_index == left_color) and bool(right_index == right_color):
+            return position
+    return None
+
+
+def _matching_pure_vector_target(
+    octet: _ColorOctetTarget,
+    pure_targets: Sequence[_PureVectorTarget],
+) -> _PureVectorTarget | None:
+    for pure in pure_targets:
+        if _pure_target_matches_octet(pure, octet):
+            return pure
+    return None
+
+
+def _pure_target_matches_octet(pure: _PureVectorTarget, octet: _ColorOctetTarget) -> bool:
+    pure_by_label = _unique_currents_by_label(pure.currents)
+    octet_by_label = _unique_generators_by_current_label(octet.generators)
+    if pure_by_label is None or octet_by_label is None or set(pure_by_label) != set(octet_by_label):
+        return False
+    for label_key, octet_generator in octet_by_label.items():
+        pure_current = pure_by_label[label_key]
+        pure_position = _singlet_current_color_position(pure_current, octet_generator.left_color)
+        if pure_position is None:
+            return False
+        if not _currents_match_ignoring_color(
+            pure_current,
+            pure_position,
+            octet_generator.current,
+            octet_generator.color_position,
+        ):
+            return False
+    return True
+
+
+def _unique_currents_by_label(
+    currents: Sequence[_VectorCurrentPatternMatch],
+) -> dict[str, _VectorCurrentPatternMatch] | None:
+    out: dict[str, _VectorCurrentPatternMatch] = {}
+    for current in currents:
+        key = canonical_string(current.label)
+        if key in out:
+            return None
+        out[key] = current
+    return out
+
+
+def _unique_generators_by_current_label(
+    generators: Sequence[_GeneratorCurrentMatch],
+) -> dict[str, _GeneratorCurrentMatch] | None:
+    out: dict[str, _GeneratorCurrentMatch] = {}
+    for generator in generators:
+        key = canonical_string(generator.current.label)
+        if key in out:
+            return None
+        out[key] = generator
+    return out
+
+
+def _singlet_current_color_position(
+    current: _VectorCurrentPatternMatch,
+    reference_color: Expression,
+) -> int | None:
+    left_indices = list_items(current.left[2])
+    right_indices = list_items(current.right[2])
+    reference_representation = reference_color[1] if is_head(reference_color, s.Index) else None
+    for position, (left_index, right_index) in enumerate(zip(left_indices, right_indices, strict=False)):
+        if not bool(left_index == right_index):
+            continue
+        if reference_representation is not None and (
+            not is_head(left_index, s.Index) or not bool(left_index[1] == reference_representation)
+        ):
+            continue
+        return position
+    return None
+
+
+def _currents_match_ignoring_color(
+    left: _VectorCurrentPatternMatch,
+    left_color_position: int,
+    right: _VectorCurrentPatternMatch,
+    right_color_position: int,
+) -> bool:
+    if not bool(left.mu == right.mu) or not bool(left.label == right.label):
+        return False
+    return _indices_without_position(left.left, left_color_position) == _indices_without_position(
+        right.left,
+        right_color_position,
+    ) and _indices_without_position(left.right, left_color_position) == _indices_without_position(
+        right.right,
+        right_color_position,
+    )
+
+
+def _indices_without_position(field: Expression, position_to_drop: int) -> tuple[str, ...]:
+    return tuple(
+        canonical_string(index)
+        for position, index in enumerate(list_items(field[2]))
+        if position != position_to_drop
+    )
+
+
+def _crossed_color_vector_operator(octet: _ColorOctetTarget) -> Expression:
+    first, second = octet.generators
+    crossed_second = second.current.expr.replace_multiple(
+        (
+            Replacement(second.left_color, first.right_color),
+            Replacement(second.right_color, first.left_color),
+        )
+    )
+    return (first.current.expr * crossed_second).expand()
 
 
 def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> tuple[Replacement, ...]:

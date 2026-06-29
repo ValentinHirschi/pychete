@@ -991,3 +991,73 @@ Keep the scope distinction explicit: the selected public Wilson-line
 regressions are green for `cHW`, `cHB`, `cHWB`, and `cHD`; the converted
 on-shell effective-coupling-map boundary is now green for `cHD`, `cle`,
 `cledq`, `clequ1`, and `cquqd1`.
+
+## Current Slice Update: SU(3) Group-Fierz Current Basis Map
+
+This slice extends the converted on-shell `MapEffectiveCouplings` boundary
+from 5/25 to 9/25 nonzero Singlet Wilson conditions. The newly matching
+coefficients are the coupled colour-current pairs `cqu1/cqu8` and
+`cqd1/cqd8`.
+
+Mismatch checklist:
+
+- Matchete evidence: committed fixture
+  `assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json`,
+  whose saved Matchete matching conditions include
+  `cqu1 = -hbar*A^2*Yu[i1,i4]*bar(Yu[i2,i3])/(36*M^4)`,
+  `cqu8 = -hbar*A^2*Yu[i1,i4]*bar(Yu[i2,i3])/(6*M^4)`,
+  and the analogous `Yd` pair for `cqd1/cqd8`.
+- Pychete probe: watchdog-wrapped converted on-shell
+  `MatchingResult.map_effective_couplings(...)` calls using registered Wilson
+  targets for the coupled pairs `("cqu1", "cqu8")` and `("cqd1", "cqd8")`.
+- First differing boundary before this slice: the on-shell Lagrangian already
+  contained the scalar colour-contracted bilinear source, but pychete's
+  target-lagrangian basis map only knew the pure chiral Fierz identity. It did
+  not add Matchete's group-Fierz decomposition of the crossed vector current
+  into singlet/octet colour-current basis operators.
+- Generic patch: `map_effective_couplings(...)` now discovers registered
+  `builtin:gen` CG tensors with Symbolica patterns, attaches them to their
+  vector-current colour slots, reads the SU(N) size from registered group
+  metadata, and adds the local Green-basis identity
+  `J_cross = J_singlet/N + 2 J_octet`. The scalar source is still related to
+  `J_cross` through the chiral Fierz identity, so the solve yields
+  `-J_singlet/(2N) - J_octet`. This is a target-local basis-map identity,
+  not a Wilson-name or final-coefficient patch.
+
+Implementation details:
+
+- Added colour-octet target discovery around
+  `NCM(Bar(Field(...)), Gamma(mu), Field(...))` currents and registered
+  `CG(..., List(adj, left, right))` tensors with `CG_SOURCE = builtin:gen`.
+- Added group-Fierz alignment aliases for both the crossed vector current and
+  its scalar Fierz source. The fallback alignment path relabels the whole
+  additive term, which is necessary because Symbolica's coefficient wildcard
+  can match individual coefficient factors in products such as
+  `hbar*A^2*Yu*bar(Yu)/M^4`.
+- Kept the basis decomposition coupled: `cqu1` must be solved with `cqu8`,
+  and `cqd1` with `cqd8`, because the scalar colour source decomposes into
+  both operators.
+
+Validation:
+
+- `tests/unit/functional/test_effective_couplings.py` now includes
+  `test_map_effective_couplings_decomposes_color_fierz_singlet_octet_currents`,
+  using dummy colour/flavour source indices and checking the generic
+  `-1/(2N)` and `-1` coefficients for `N=3`.
+- `tests/integration/validation/test_validation_fixtures.py` now includes a
+  parameterized Singlet fixture regression for `("cqu1", "cqu8")` and
+  `("cqd1", "cqd8")`.
+- Focused validation passed:
+  `tests/unit/functional/test_effective_couplings.py` (`10 passed`), the
+  `cle`, `clequ1`, and colour-Fierz Singlet fixture checks under the 30 GiB
+  watchdog (`4 passed`), and mypy on `src/pychete/effective_couplings.py`.
+
+Corrected converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current pairs:
+
+- Nonzero Matchete Wilson conditions in the fixture: 25.
+- Matching in pychete at this boundary: `cHD`, `cle`, `cledq`, `clequ1`,
+  `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`.
+- Still zero at this boundary: `cHB`, `cHBox`, `cHW`, `cHWB`, `cHd`, `cHe`,
+  `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`.
+- Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
