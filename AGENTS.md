@@ -467,13 +467,17 @@ projection from the Wilson-line representation.
 For one-loop parity work, keep the Matchete function-level pipeline audit in
 `implementation_notes/one_shot_implementation.md` in context. The required
 comparison checklist includes `LoadModel`, `Match`, `SetCurrentLagrangian`,
-`SetSubstitutions`, `LoopMatch`, `ListPowerTypeTraces`, `PowerTypeSTr`,
-`GenericPropagatorExpansion`, `DeterminePowerInsertions`, `EvaluateSTr`,
-`WilsonExpand`, `LoopIntegrate`, `MatchReduce`, `EOMSimplify`,
-`InternalSimplify`, `IBPSimplify`, `ConstructOperatorIdentities`,
-`PerformSystematicFieldRedefs`, and `GreensSimplify`. When a mismatch appears,
-compare pychete against the earliest corresponding Matchete stage in that
-pipeline before patching runtime code.
+`DetermineEOMs`, `ReplaceHeavyEOM`, `SetSubstitutions`, `LoopMatch`,
+`ListPowerTypeTraces`, `PowerTypeSTr`, `GenericPropagatorExpansion`,
+`DeterminePowerInsertions`, `LogTypeSTr`, `DetermineLogInsertions`,
+`GenericLogExpansion`, `EvaluateSTr`, `WilsonExpand`, `LoopIntegrate`,
+`EvaluateLoopFunctions`, `MatchReduce`, `SeriesEFT`, `OperatorDimension`,
+`EOMSimplify`, `InternalSimplify`, `IBPSimplify`,
+`ConstructOperatorIdentities`, `PerformSystematicFieldRedefs`,
+`GreensSimplify`, `SaveValidationResults`, `MapEffectiveCouplings`, and
+`MapEffectiveCouplingsInternal`. When a mismatch appears, compare pychete
+against the earliest corresponding Matchete stage in that pipeline before
+patching runtime code.
 Whenever a precise Matchete-parity mismatch is identified, first review the
 corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
 side by side before patching pychete. Use intermediate-stage dumps and focused

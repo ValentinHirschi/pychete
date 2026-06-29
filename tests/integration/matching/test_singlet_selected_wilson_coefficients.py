@@ -361,6 +361,108 @@ def _selected_chd_four_slot_order_two_finite_expected(theory: Theory) -> Express
 
 
 @cache
+def _selected_chd_four_slot_order_zero_weighted_finite_projection() -> tuple[Theory, Expression]:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    condition_name, target = _selected_chd_four_slot_target(theory)
+    hbar = theory.external_handle("hbar")()
+    lagrangian = fixture.expression("lagrangian")
+    setup = theory.one_loop_setup(
+        lagrangian,
+        eft_order=6,
+        max_trace_order=4,
+        matchete_fluctuation_dof_basis=True,
+        wilson_line_weight_paths_by_component_dofs=True,
+    )
+    heavy_scalar_solutions = matching_module.solve_heavy_scalar_eoms(
+        theory,
+        lagrangian,
+        eft_order=6,
+    )
+    requirements = matching_module._term_atom_requirements_for_targets(
+        theory,
+        {condition_name: target},
+        heavy_scalar_solutions=heavy_scalar_solutions,
+    )
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=("hScalar-lScalar-lVector-lScalar",),
+        max_total_order=0,
+        max_slot_order=0,
+        index_prefix="singlet_chd_order0_weighted_finite",
+    )
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        term_atom_requirements=requirements,
+    )
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped_terms,
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    selected = sum(
+        (term for entry_terms in evaluated_by_entry.values() for term in entry_terms),
+        Expression.num(0),
+    )
+    normalized_finite = (
+        one_loop_normalization_factor(OneLoopNormalization.MATCHETE_EVALUATED_HBAR, hbar=hbar)
+        * vakint_backend.finite_part(selected)
+    ).expand()
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=normalized_finite,
+    )
+    projected = result.project_matching_conditions(
+        {condition_name: target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+    )[condition_name]
+    return theory, projected
+
+
+def _selected_chd_hscalar_lscalar_on_minus_off_finite_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (-S("vakint::mursq").log() / 6 + mass.log() / 3 - Expression.num(17) / 36)
+        / mass**4
+    )
+
+
+def _selected_chd_on_shell_finite_expected(theory: Theory) -> Expression:
+    mass = theory.coupling_handle("M")()
+    return (
+        theory.external_handle("hbar")()
+        * theory.coupling_handle("A")() ** 2
+        * theory.coupling_handle("gY")() ** 2
+        * (-5 * S("vakint::mursq").log() / 3 + 10 * mass.log() / 3 - Expression.num(31) / 18)
+        / mass**4
+    )
+
+
+@cache
 def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
     Theory,
     dict[int, Expression],
@@ -375,6 +477,8 @@ def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
         lagrangian,
         eft_order=6,
         max_trace_order=4,
+        matchete_fluctuation_dof_basis=True,
+        wilson_line_weight_paths_by_component_dofs=True,
     )
     heavy_scalar_solutions = matching_module.solve_heavy_scalar_eoms(
         theory,
@@ -411,6 +515,8 @@ def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
         simplify_pychete_color_algebra=True,
         term_atom_requirements=requirements,
     )
+    metadata = matching_module._wilson_line_expansion_term_metadata(grouped_terms)
+    weighted_counts_by_entry = metadata["interaction_wilson_line_component_weighted_term_count_by_entry"]
     evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
         theory,
         grouped_terms,
@@ -435,7 +541,7 @@ def _selected_chd_four_slot_finite_projection_by_total_order() -> tuple[
         if not entry_terms:
             continue
         order = order_by_entry[entry_label]
-        counts_by_order[order][entry_label] = len(entry_terms)
+        counts_by_order[order][entry_label] = weighted_counts_by_entry[entry_label]
         finite = (normalization * vakint_backend.finite_part(sum(entry_terms, Expression.num(0)))).expand()
         finite_by_order[order] = (finite_by_order.get(order, Expression.num(0)) + finite).expand()
 
@@ -1149,6 +1255,29 @@ def test_selected_chd_four_slot_prop_order_one_two_match_matchete_dumps() -> Non
     )
     assert_expr_equal(
         (projections[2] - _selected_chd_four_slot_order_two_finite_expected(theory)).expand(),
+        Expression.num(0),
+    )
+
+
+@pytest.mark.slow
+def test_selected_chd_staged_finite_composition_matches_matchete_on_shell_coefficient() -> None:
+    """Pin the finite staged source composition before tackling pole/MS plumbing."""
+
+    theory, order_zero = _selected_chd_four_slot_order_zero_weighted_finite_projection()
+    _, projections, _ = _selected_chd_four_slot_finite_projection_by_total_order()
+    off_shell_finite = (order_zero + projections[1] + projections[2]).expand()
+    on_minus_off_finite = _selected_chd_hscalar_lscalar_on_minus_off_finite_expected(theory)
+    on_shell_finite = (off_shell_finite + on_minus_off_finite).expand()
+
+    expected_off_shell = (
+        _selected_chd_four_slot_quarter_finite_expected(theory) * 8
+        + _selected_chd_four_slot_order_one_finite_expected(theory)
+        + _selected_chd_four_slot_order_two_finite_expected(theory)
+    ).expand()
+
+    assert_expr_equal((off_shell_finite - expected_off_shell).expand(), Expression.num(0))
+    assert_expr_equal(
+        (on_shell_finite - _selected_chd_on_shell_finite_expected(theory)).expand(),
         Expression.num(0),
     )
 

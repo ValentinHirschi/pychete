@@ -115,6 +115,12 @@ divergence in this order.
   `ContractCGs`, `RelabelIndices`, and `Contract`; adds gauge-fixing and ghost
   terms; refreshes the current field/mass association; solves heavy-field EOMs
   with `DetermineEOMs`; and, for loop matching, calls `SetSubstitutions`.
+- `DetermineEOMs[...]` and `ReplaceHeavyEOM[...]` are the tree/heavy-field
+  solution boundary. In one-loop matching, `SetCurrentLagrangian` solves the
+  heavy EOMs before loop substitutions are built, and `PowerTypeSTr` applies
+  `ReplaceHeavyEOM` to the selected trace result in matching mode. pychete's
+  scalar-EOM bridge must therefore distinguish Matchete's pre-loop heavy-EOM
+  solution data from the later on-shell `EOMSimplify` field shifts.
 - `SetSubstitutions[...]` is the source-composition boundary for loop
   matching. It builds `$XFieldDofs` through `LagrangianDofs`/`FieldDoFs`,
   subtracts `KinOpLagrangian`, takes `FluctuationOperator` derivatives of the
@@ -151,6 +157,12 @@ divergence in this order.
   returns one replacement bundle for `Xterm`, `Mterm`, `GaugeCTerm`, and the
   closing `WilsonTerm`. pychete's selected-trace parity probes should compare
   here before doing tensor reduction.
+- `LogTypeSTr[...]`, `DetermineLogInsertions[...]`, and
+  `GenericLogExpansion[...]` are the single-propagator log-trace route. They
+  only contribute when the field class has gauge charges or gauge indices;
+  the expansion is still evaluated through `EvaluateSTr`, so the same
+  open-CD, Wilson-line, fermion-trace, tensor-reduction, and loop-integral
+  boundaries apply.
 - `EvaluateSTr[...]` applies the insertion replacements and `$Xsubs/$Msubs/$Gsubs`,
   acts open covariant derivatives with `ActWithOpenCDs`, converts `FuncNCM` to
   `NCM`, gathers loop momenta, removes symmetry-vanishing Wilson terms,
@@ -180,6 +192,12 @@ divergence in this order.
   rewrites field-strength representation indices, evaluates single-scale
   `LF[...]` functions, converts trivial CG deltas, simplifies epsilon CG
   products, and removes redundant `FlavorSum`s.
+- `SeriesEFT[...]` and `OperatorDimension[...]` are used throughout this path
+  to decide which terms/insertion orders survive. `OperatorDimension` returns
+  the minimum dimension of sums and adds one extra counting unit for heavy
+  fields when the heavy-field EFT counting option is active. pychete must keep
+  Wilson target truncation tied to stored field/coupling dimension metadata and
+  Symbolica rational-polynomial inspection instead of name-based guesses.
 - `CovariantLoop[...]` is a diagnostic selected-field path. It still calls
   `SetCurrentLagrangian`, maps fields to Matchete field-type labels, evaluates
   the relevant log/power traces, then applies `ContractCGs // MatchReduce`.
@@ -219,6 +237,23 @@ divergence in this order.
   `AtomicToNormalForm`. It is the broad final cleanup, not a substitute for
   matching the earlier class-local `InternalSimplify` and field-redefinition
   stages.
+- `SaveValidationResults[...]` is Matchete's validation wrapper, not part of
+  ordinary runtime matching. It saves trace-level results after
+  `ContractCGs // MatchReduce // GreensSimplify`, records the off-shell
+  `GreensSimplify` result, records the on-shell
+  `EOMSimplify[..., ReductionIdentities -> dDimensional]` result, and for
+  SMEFT-like models calls `MapEffectiveCouplings` against `SMEFT_Warsaw`.
+  pychete pytest must continue consuming committed fixtures from this boundary
+  rather than executing Matchete.
+- `MapEffectiveCouplings[...]` / `MapEffectiveCouplingsInternal[...]` are the
+  final Wilson-coefficient extraction route in Matchete validation. They drop
+  constants, optionally EOM-simplify input and target, introduce temporary
+  effective couplings, compute `CollectOperators[input-target]`, form
+  coefficient equalities, solve for target couplings with gauge-coupling sign
+  filtering, replace temporary couplings, relabel indices, truncate each RHS
+  with `SeriesEFT`, and sort by EFT order. pychete's registered Wilson
+  projections are allowed to be Pythonic, but parity checks must compare to
+  this semantic boundary and not only to raw on-shell Lagrangians.
 
 Latest narrowed mismatch:
 
@@ -558,6 +593,39 @@ Current slice progress:
   remaining full-coefficient gap is now missing public-source composition
   beyond this selected branch, especially unselected trace remainder and
   pole/MS convention handling.
+- Latest finite `cHD` composition checkpoint, 2026-06-29: after the heavy
+  solution boundary fix, a bounded pychete stage probe showed that the
+  selected `hScalar-lScalar` source has zero direct off-shell `cHD` projection
+  before scalar/EOM exposure and supplies only the finite on-minus-off
+  B-vector replay. The missing off-shell piece is therefore the
+  `hScalar-lScalar-lVector-lScalar` four-slot source. Rechecking Matchete's
+  prop-order dumps against pychete exposed that the default component route is
+  now stale for four-slot prop orders 1 and 2: it produces twice the Matchete
+  coefficient. Switching the helper to the Matchete-style label-level DOF
+  route with component weights gives the expected weighted insertion counts
+  and matches the committed Matchete prop-order-1 and prop-order-2 finite
+  coefficients while evaluating the smaller path set. The new staged finite
+  regression combines weighted four-slot orders 0, 1, and 2 with the
+  `hScalar-lScalar` vector-EOM replay and matches Matchete's finite on-shell
+  `cHD` coefficient
+  `hbar*A^2*gY^2*(-5/3*log(mursq) + 10/3*log(M) - 31/18)/M^4`. This is the
+  first assembled finite on-shell `cHD` parity checkpoint. The remaining
+  full-coefficient gap is now explicit pole/MS plumbing and efficient public
+  route composition, not the finite source coefficients themselves.
+- Latest Matchete source-code pass, 2026-06-29: reread the active one-loop
+  definitions in `Package/Matching.m`, `Package/SuperTrace.m`,
+  `Package/LoopIntegration.m`, `Package/FieldRedef.m`,
+  `Package/Simplifications.m`, `Package/EFTCounting.m`,
+  `Package/CouplingManipulations.m`, and `Package/DevTools/Validation.m`.
+  The current `cHD` parity strategy should now be viewed in Matchete's own
+  validation stages: `hScalar-lScalar-lVector-lScalar` supplies the off-shell
+  finite source through `EvaluateSTr -> LoopIntegrate -> MatchReduce`,
+  `hScalar-lScalar` supplies the on-minus-off vector-EOM replay through
+  `InternalSimplify -> PerformSystematicFieldRedefs`, and final Wilson
+  conditions are checked at the `MapEffectiveCouplings` boundary. The next
+  runtime work should therefore focus on pole/MS propagation and efficient
+  public-route composition across these exact stages, not another
+  coefficient-specific scalar-EOM rewrite.
 
 ## Targeted Commands
 

@@ -1763,3 +1763,13 @@ Green/EOM identity conversion.
   `LoopIntegrate`, `MatchReduce`, `EOMSimplify`, `InternalSimplify`,
   `ConstructOperatorIdentities`, `PerformSystematicFieldRedefs`, and
   `GreensSimplify`.
+- Latest follow-up, 2026-06-29: deepen that audit for the active Singlet
+  one-loop target by reading the Matchete source around matching, supertrace
+  evaluation, loop integration, EFT counting, field redefinitions,
+  simplification, validation saving, and matching-condition extraction.
+  Current response: the implementation notes now explicitly include
+  `DetermineEOMs`, `ReplaceHeavyEOM`, `LogTypeSTr`, `DetermineLogInsertions`,
+  `GenericLogExpansion`, `SeriesEFT`, `OperatorDimension`,
+  `SaveValidationResults`, `MapEffectiveCouplings`, and
+  `MapEffectiveCouplingsInternal`, and tie the active `cHD` strategy to
+  Matchete's validation-stage semantics.
