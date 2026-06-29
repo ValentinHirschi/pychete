@@ -599,6 +599,101 @@ def expose_vector_field_strength_divergences_as_formal_eom(
     return expr.replace_multiple(replacements, repeat=False).expand()
 
 
+def matchete_vector_eom_scalar_bilinear_normal_form(
+    theory: Theory,
+    expr: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+) -> Expression:
+    """Apply Matchete's two-orientation vector-EOM scalar-bilinear representative.
+
+    The current supported subset is the Abelian scalar bilinear class exposed
+    by the Singlet ``cHD`` frontier:
+    ``D Bar[phi] EOM[V] phi`` and ``Bar[phi] EOM[V] D phi`` are reduced to
+    the antisymmetric representative selected by Matchete's d-dimensional
+    ``AtomicOp`` rules.  Discovery uses Symbolica pattern matches and native
+    coefficient extraction; Python only orchestrates the bounded class pairs.
+    """
+
+    theory._validate_registered_expression(expr)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    out = expr
+    for eom_atom in _formal_vector_eom_atoms(expr, allowed_labels=allowed_labels):
+        vector_field = eom_atom[0]
+        if not _is_abelian_gauge_vector_label(theory, field_label(vector_field)):
+            continue
+        lorentz = _vector_field_lorentz_indices(vector_field)
+        if len(lorentz) != 1:
+            continue
+        derivative_index = lorentz[0]
+        for scalar_base in _matchete_vector_eom_scalar_bilinear_bases(
+            out,
+            derivative_index,
+        ):
+            out = _apply_matchete_vector_eom_scalar_bilinear_pair(
+                out,
+                scalar_base,
+                eom_atom,
+                derivative_index,
+            )
+    return out.expand()
+
+
+def _apply_matchete_vector_eom_scalar_bilinear_pair(
+    expr: Expression,
+    scalar_base: Expression,
+    eom_atom: Expression,
+    derivative_index: Expression,
+) -> Expression:
+    scalar_zero = field_with_derivatives(scalar_base, ())
+    scalar_derivative = field_with_derivatives(scalar_base, (derivative_index,))
+    derivative_on_bar = (s.Bar(scalar_derivative) * eom_atom * scalar_zero).expand()
+    derivative_on_field = (s.Bar(scalar_zero) * eom_atom * scalar_derivative).expand()
+    derivative_on_bar_coefficient = expr.coefficient(derivative_on_bar).expand()
+    derivative_on_field_coefficient = expr.coefficient(derivative_on_field).expand()
+    if is_zero(derivative_on_bar_coefficient) and is_zero(derivative_on_field_coefficient):
+        return expr
+    if not is_zero(derivative_on_bar_coefficient.coefficient(derivative_on_bar)):
+        return expr
+    if not is_zero(derivative_on_field_coefficient.coefficient(derivative_on_field)):
+        return expr
+    old = (
+        derivative_on_bar_coefficient * derivative_on_bar
+        + derivative_on_field_coefficient * derivative_on_field
+    ).expand()
+    representative_coefficient = (derivative_on_bar_coefficient - derivative_on_field_coefficient) / 2
+    new = (representative_coefficient * (derivative_on_bar - derivative_on_field)).expand()
+    return (expr - old + new).expand()
+
+
+def _matchete_vector_eom_scalar_bilinear_bases(
+    expr: Expression,
+    derivative_index: Expression,
+) -> tuple[Expression, ...]:
+    bases: dict[str, Expression] = {}
+    label_is_tagged = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    for atom in matching_subexpressions(expr, bar_field_pattern(), label_is_tagged):
+        base = bar_field_inner(atom)
+        if _is_matchete_vector_eom_scalar_candidate(base, derivative_index):
+            scalar_base = field_with_derivatives(base, ())
+            bases.setdefault(canonical_string(scalar_base), scalar_base)
+    for atom in matching_subexpressions(expr, field_pattern(), label_is_tagged):
+        if _is_matchete_vector_eom_scalar_candidate(atom, derivative_index):
+            scalar_base = field_with_derivatives(atom, ())
+            bases.setdefault(canonical_string(scalar_base), scalar_base)
+    return tuple(bases[key] for key in sorted(bases))
+
+
+def _is_matchete_vector_eom_scalar_candidate(
+    field: Expression,
+    derivative_index: Expression,
+) -> bool:
+    if not is_head(field, s.Field) or not bool(field_type(field) == s.Scalar):
+        return False
+    derivatives = field_derivatives(field)
+    return derivatives == () or (len(derivatives) == 1 and bool(derivatives[0] == derivative_index))
+
+
 def scalar_formal_eom_ibp_identities(
     theory: Theory,
     expr: Expression,

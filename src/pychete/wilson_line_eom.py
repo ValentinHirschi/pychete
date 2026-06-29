@@ -13,6 +13,7 @@ from .functional import (
     expose_scalar_derivative_commutator_bilinears,
     expose_vector_field_strength_divergences_as_formal_eom,
     expand_cd_operators,
+    matchete_vector_eom_scalar_bilinear_normal_form,
     normalize_conjugate_scalar_field_slots,
     scalar_derivative_green_normal_form,
     scalar_derivative_green_normal_form_by_operator_class,
@@ -121,6 +122,7 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
     )
     if expose_scalar_eom_terms:
         out = expose_vector_field_strength_divergences_as_formal_eom(theory, out)
+        out = matchete_vector_eom_scalar_bilinear_normal_form(theory, out)
     out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
     return scalarize_commutative_ncm_chains(out)
 

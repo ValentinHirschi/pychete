@@ -1977,6 +1977,23 @@ def test_singlet_reference_chd_debug_records_inert_gamma_vector_source_split() -
     assert dbar_summary["normalized_coefficient_input_form"].startswith("((")
     assert any("*Matchete`PackageScope`SG[1, 4]" in term for term in inert["b_selected_terms_input_form"])
     assert any("8*I" in term and "*Matchete`PackageScope`SG[2, 4]" in term for term in inert["b_selected_terms_input_form"])
+    identity_summary = inert["b_operator_identity_summary"]
+    assert identity_summary["matched_atomic_count"] == 2
+    assert len(identity_summary["class_summaries"]) == 1
+    class_summary = identity_summary["class_summaries"][0]
+    assert class_summary["op_class_input_form"] == "{{H, Matchete`PackageScope`Conj[H]}, 4}"
+    assert class_summary["matched_ids"] == [13, 14]
+    assert class_summary["identity_rule_count"] == 27
+    assert class_summary["touching_rule_count"] == 2
+    operators = {operator["id"]: operator for operator in class_summary["operator_summaries"]}
+    assert operators[13]["score_input_form"] == "10000."
+    assert operators[14]["score_input_form"] == "10000."
+    assert "{B}" in operators[13]["subclass_input_form"]
+    assert "{{H, 0}, {Matchete`PackageScope`Conj[H], 1}}" in operators[13]["subclass_input_form"]
+    assert "{{H, 1}, {Matchete`PackageScope`Conj[H], 0}}" in operators[14]["subclass_input_form"]
+    assert "EoM[Field[B" in operators[13]["operator_form_input_form"]
+    assert "EoM[Field[B" in operators[14]["operator_form_input_form"]
+    assert all("FieldStrength[B" in rule for rule in class_summary["touching_rules_normal_form_input_form"])
 
 
 def test_singlet_reference_chd_source_map_is_single_four_slot_supertrace() -> None:

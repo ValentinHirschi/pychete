@@ -62,9 +62,13 @@ from .loop_integration import (
     symmetric_lorentz_tensor,
 )
 from .logging import configure_logging, disable_logging, get_logger
-from .matching import (
+from .matching_expansion_plans import (
     BosonicCDEExpansionPlan,
     BosonicCDEExpansionPlanEntry,
+    WilsonLineExpansionPlan,
+    WilsonLineExpansionPlanEntry,
+)
+from .matching import (
     BosonicCDETraceExpansionTerm,
     FluctuationBasis,
     FluctuationMode,
@@ -79,8 +83,6 @@ from .matching import (
     PropagatorPlan,
     SupertraceBlockTrace,
     SupertracePlan,
-    WilsonLineExpansionPlan,
-    WilsonLineExpansionPlanEntry,
     WilsonLineTraceExpansionTerm,
     WilsonLineTracePath,
 )

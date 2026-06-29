@@ -1558,3 +1558,14 @@ generic algorithm boundary before runtime pychete changes are accepted.
   identities also gives the wrong sign pattern. The next runtime patch should
   therefore target Matchete's actual `AtomicOp`/`OpScore` representative
   semantics for the class, not caps or commutator-order shortcuts.
+- Latest performance-focused continuation, 2026-06-29: user reinforced that
+  pychete's parity probes and intermediate stages must be at least as
+  performant as Matchete's corresponding stages. Implementation response:
+  preserved the compact live notes while saving this slice's prior snapshot as
+  `one_shot_implementation_part_G.md`, split generated expansion-plan classes
+  out of the oversized `matching.py`, refreshed the Matchete cHD fixture with
+  the exact `{{H, Conj[H]}, 4}` AtomicOp 13/14 identity neighborhood, and
+  implemented a bounded Abelian vector-EOM scalar-bilinear orientation normal
+  form. The new pychete fixture now keeps both `barH_EOMB_DH` and
+  `DbarH_EOMB_H` source orientations, so the remaining cHD frontier is the
+  SymGamma/d-dimensional source coefficient rather than orientation loss.

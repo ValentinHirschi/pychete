@@ -998,11 +998,16 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "H_EOMB_DH_unbarred",
         "DH_EOMB_H_unbarred",
     }
-    assert source_operator_projections["DbarH_EOMB_H"] == "0"
-    assert "1𝑖/12*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
+    assert "-1𝑖/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
+        source_operator_projections["DbarH_EOMB_H"]
+    )
+    assert "-7𝑖/72*Singlet_Scalar_Extension::external_hbar*" in (
+        source_operator_projections["DbarH_EOMB_H"]
+    )
+    assert "1𝑖/24*Singlet_Scalar_Extension::external_hbar*log(vakint::mursq)" in (
         source_operator_projections["barH_EOMB_DH"]
     )
-    assert "+7𝑖/36*Singlet_Scalar_Extension::external_hbar*" in (
+    assert "+7𝑖/72*Singlet_Scalar_Extension::external_hbar*" in (
         source_operator_projections["barH_EOMB_DH"]
     )
     assert "-3𝑖/8*Singlet_Scalar_Extension::external_hbar*" in (
@@ -1014,18 +1019,24 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "H_EOMB_DH_unbarred",
         "DH_EOMB_H_unbarred",
     }
-    assert formal_symgamma_source_operator_projections["DbarH_EOMB_H"] == "0"
+    formal_dbar_source = formal_symgamma_source_operator_projections["DbarH_EOMB_H"]
+    assert "-16*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
+    assert "pychete::SymGammaFactor(1,4)" in formal_dbar_source
+    assert "32*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
+    assert "pychete::SymGammaFactor(2,4)" in formal_dbar_source
+    assert "2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_dbar_source
     formal_bar_source = formal_symgamma_source_operator_projections["barH_EOMB_DH"]
-    assert "32*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "16*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
     assert "pychete::SymGammaFactor(1,4)" in formal_bar_source
-    assert "-64*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "-32*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
     assert "pychete::SymGammaFactor(2,4)" in formal_bar_source
-    assert "-4*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
+    assert "-2*𝜋^2*Singlet_Scalar_Extension::external_hbar*" in formal_bar_source
     assert "vakint::topo(vakint::prop(1" in formal_bar_source
     assert source_trace_probe["summary"][
         "nonzero_formal_symgamma_topology_source_operator_projection_names"
     ] == [
         "barH_EOMB_DH",
+        "DbarH_EOMB_H",
         "H_EOMB_DH_unbarred",
         "DH_EOMB_H_unbarred",
     ]
@@ -1033,6 +1044,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "nonzero_formal_vector_eom_source_operator_projection_names"
     ] == [
         "barH_EOMB_DH",
+        "DbarH_EOMB_H",
         "H_EOMB_DH_unbarred",
         "DH_EOMB_H_unbarred",
     ]
@@ -1045,6 +1057,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
         "nonzero_formal_vector_eom_source_operator_projection_names"
     ] == [
         "barH_EOMB_DH",
+        "DbarH_EOMB_H",
         "H_EOMB_DH_unbarred",
         "DH_EOMB_H_unbarred",
     ]

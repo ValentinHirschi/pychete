@@ -9,6 +9,7 @@ from pychete.functional import (
     expose_scalar_derivative_commutator_bilinears,
     expose_vector_field_strength_divergences_as_formal_eom,
     integrate_by_parts_scalar_laplacians,
+    matchete_vector_eom_scalar_bilinear_normal_form,
     normalize_conjugate_scalar_field_slots,
     scalar_derivative_green_normal_form,
     scalar_derivative_green_normal_form_by_operator_class,
@@ -382,6 +383,43 @@ def test_expose_vector_field_strength_divergences_as_formal_eom_uses_standard_fo
     )
 
     assert_expr_equal(exposed, Expression.num(0))
+
+
+def test_matchete_vector_eom_scalar_bilinear_normal_form_uses_antisymmetric_pair() -> None:
+    left_coefficient = S("vector_eom_left_orientation_coefficient")
+    right_coefficient = S("vector_eom_right_orientation_coefficient")
+    theory, phi, _strength, _target, mu, _nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    formal_eom = s.EOM(vector(mu))
+    derivative_on_bar = s.Bar(phi(derivatives=[mu])) * formal_eom * phi()
+    derivative_on_field = s.Bar(phi()) * formal_eom * phi(derivatives=[mu])
+
+    reduced = matchete_vector_eom_scalar_bilinear_normal_form(
+        theory,
+        left_coefficient * derivative_on_bar + right_coefficient * derivative_on_field,
+        fields=[vector],
+    )
+
+    expected = (
+        (left_coefficient - right_coefficient)
+        * (derivative_on_bar - derivative_on_field)
+        / 2
+    ).expand()
+    assert_expr_equal(reduced, expected)
+
+
+def test_matchete_vector_eom_scalar_bilinear_normal_form_leaves_nonabelian_vector_eoms_formal() -> None:
+    coefficient = S("nonabelian_vector_eom_orientation_coefficient")
+    theory, phi, _target, index, mu, _nu = _scalar_su2_probe()
+    weak = theory.field_handle("W")
+    adjoint = theory.define_representation("SU2L", "adj")
+    adjoint_index = theory.index("A", adjoint)
+    formal_eom = s.EOM(weak(adjoint_index, mu))
+    source = coefficient * s.Bar(phi(index)) * formal_eom * phi(index, derivatives=[mu])
+
+    reduced = matchete_vector_eom_scalar_bilinear_normal_form(theory, source, fields=[weak])
+
+    assert_expr_equal(reduced, source)
 
 
 def test_scalar_derivative_green_standard_form_eom_ignores_interaction_terms() -> None:

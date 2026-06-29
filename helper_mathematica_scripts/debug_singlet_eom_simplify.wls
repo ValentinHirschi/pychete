@@ -261,6 +261,107 @@ sourceOperatorCoefficientSummary[terms_, scalarField_, vectorField_, derivativeO
   |>
 ];
 
+operatorIdentitySummaryForTerms[terms_] := Module[
+  {expr, atomic, atomics, classes},
+  expr = If[terms === {}, 0, Plus @@ terms];
+  atomic = Matchete`PackageScope`MatchOperatorPatterns[expr];
+  atomics = DeleteDuplicates @ Cases[
+    atomic,
+    Matchete`PackageScope`AtomicOp[class_, id_, inds_] :>
+      Matchete`PackageScope`AtomicOp[class, id, inds],
+    Infinity
+  ];
+  classes = DeleteDuplicates @ Cases[
+    atomics,
+    Matchete`PackageScope`AtomicOp[class_, _, _] :> class,
+    Infinity
+  ];
+  <|
+    "matched_atomic_count" -> Length[atomics],
+    "matched_atomic_input_form" -> (shortInputString /@ atomics),
+    "class_summaries" -> (operatorIdentityClassSummary[#, atomics] & /@ classes)
+  |>
+];
+
+operatorIdentityClassSummary[class_, atomics_] := Module[
+  {
+    ids,
+    dummies,
+    rules,
+    touchingRules,
+    touchingRulesNormalForm,
+    operatorSummaries
+  },
+  ids = Sort @ DeleteDuplicates @ Cases[
+    atomics,
+    Matchete`PackageScope`AtomicOp[class, id_, _] :> id,
+    Infinity
+  ];
+  dummies = Matchete`PackageScope`ConstructDummyIndices[
+    First[Matchete`PackageScope`$operators @ class] @ Matchete`PackageScope`IndexType
+  ];
+  rules = Matchete`PackageScope`ConstructOperatorIdentities[
+    class,
+    Matchete`dDimensional
+  ];
+  touchingRules = Select[
+    rules,
+    Intersection[operatorIdsInIdentityRule[class, #], ids] =!= {} &
+  ];
+  touchingRulesNormalForm = Matchete`PackageScope`AtomicToNormalForm[
+    touchingRules /. Verbatim[Pattern][x_, Blank[]] :> x
+  ];
+  operatorSummaries = Table[
+    <|
+      "id" -> id,
+      "score_input_form" -> toInputString[
+        operatorPropertyByName[class, id, "Score"]
+      ],
+      "subclass_input_form" -> toInputString[
+        operatorPropertyByName[class, id, "Subclass"]
+      ],
+      "operator_form_input_form" -> shortInputString[
+        operatorExpansionForAtomic[class, id, dummies]
+      ],
+      "operator_normal_form_input_form" -> shortInputString[
+        Matchete`PackageScope`AtomicToNormalForm[
+          Matchete`PackageScope`AtomicOp[class, id, dummies]
+        ]
+      ]
+    |>,
+    {id, ids}
+  ];
+  <|
+    "op_class_input_form" -> toInputString[class],
+    "matched_ids" -> ids,
+    "operator_summaries" -> operatorSummaries,
+    "identity_rule_count" -> Length[rules],
+    "touching_rule_count" -> Length[touchingRules],
+    "touching_rules_input_form" -> (shortInputString /@ touchingRules),
+    "touching_rules_normal_form_input_form" -> (shortInputString /@ touchingRulesNormalForm)
+  |>
+];
+
+operatorIdsInIdentityRule[class_, rule_] := DeleteDuplicates @ Cases[
+  rule,
+  Matchete`PackageScope`AtomicOp[class, id_, _] :> id,
+  Infinity
+];
+
+operatorPropertyByName[class_, id_, name_String] := Module[{assoc, key},
+  assoc = Matchete`PackageScope`$operators[class, id];
+  key = FirstCase[
+    Keys[assoc],
+    candidate_ /; SymbolName[Unevaluated[candidate]] === name,
+    Missing["KeyAbsent", name]
+  ];
+  If[MissingQ[key], key, assoc[key]]
+];
+
+operatorExpansionForAtomic[class_, id_, dummies_] :=
+  Matchete`PackageScope`AtomicOp[class, id, dummies] /.
+    operatorPropertyByName[class, id, "AtomicOpExpansionPattern"];
+
 fieldSpecificVectorShiftSummary[lag_, field_, devs_Integer, dim_Integer, targetOperator_] := Module[
   {
     maxOrder = 6,
@@ -378,7 +479,8 @@ inertGammaVectorShiftSplitSummary[target_String] := withInertEvaluateGammaFactor
         hField,
         bField,
         True
-      ]
+      ],
+      "b_operator_identity_summary" -> operatorIdentitySummaryForTerms[bTerms]
     |>
   ]
 ];
