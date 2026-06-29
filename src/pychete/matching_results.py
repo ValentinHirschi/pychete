@@ -275,6 +275,227 @@ def _effective_coupling_projection_operator(
     return target.operator
 
 
+def _apply_smeft_hbox_eom_effective_coupling_corrections(
+    result: MatchingResult,
+    mapped: Mapping[str, Expression],
+    targets: Sequence[EffectiveCouplingTarget],
+    *,
+    source_expr: Expression,
+    source_name: str,
+    identities: Sequence[Expression],
+    allow_incomplete_target: bool,
+    max_basis_terms: int,
+    max_identities: int,
+) -> dict[str, Expression]:
+    """Apply Matchete's SMEFT ``Q_HBox`` effective-projection convention.
+
+    Matchete's ``MapEffectiveCouplings`` maps the Green-basis ``Q_HBox``
+    representative into the Warsaw Higgs and Yukawa-Higgs Wilsons and then
+    shifts renormalizable couplings with an EFT-order truncation.  pychete's
+    lower-level map deliberately solves only the explicit target operators, so
+    this bridge keeps the additional convention localized to registered SMEFT
+    Wilson metadata and on-shell sources.
+    """
+
+    if not _source_allows_eom_projection_aliases(source_name):
+        return dict(mapped)
+    if "cHBox" not in result.theory.externals:
+        return dict(mapped)
+    hbox_definition = result.theory.externals["cHBox"]
+    if (
+        hbox_definition.kind is not ExternalKind.WILSON_COEFFICIENT
+        or hbox_definition.basis_name != "SMEFT"
+        or hbox_definition.effective_projection_expr is None
+    ):
+        return dict(mapped)
+    target_by_name = {target.name: target for target in targets}
+    correction_labels = tuple(
+        label for label in ("cH", "cdH", "ceH", "cuH") if label in mapped and label in target_by_name
+    )
+    if not correction_labels:
+        return dict(mapped)
+    if any(not _is_registered_smeft_wilson(result.theory, label) for label in correction_labels):
+        return dict(mapped)
+
+    hbox_coefficient = _hbox_effective_coupling_coefficient(
+        result,
+        mapped,
+        source_expr=source_expr,
+        identities=identities,
+        allow_incomplete_target=allow_incomplete_target,
+        max_basis_terms=max_basis_terms,
+        max_identities=max_identities,
+    )
+    if hbox_coefficient is None or is_zero(hbox_coefficient):
+        return dict(mapped)
+
+    corrected = dict(mapped)
+    for label in correction_labels:
+        target = target_by_name[label]
+        if target.operator is None:
+            continue
+        if label == "cH":
+            correction = _smeft_hbox_higgs_potential_correction(
+                result,
+                mapped[label],
+                hbox_coefficient,
+                target.operator,
+            )
+        else:
+            correction = _smeft_hbox_yukawa_higgs_correction(
+                result,
+                label,
+                mapped[label],
+                hbox_coefficient,
+                target.operator,
+            )
+        if not is_zero(correction):
+            corrected[label] = (corrected[label] + correction).expand()
+    return corrected
+
+
+def _is_registered_smeft_wilson(theory: Theory, label: str) -> bool:
+    definition = theory.externals.get(label)
+    return (
+        definition is not None
+        and definition.kind is ExternalKind.WILSON_COEFFICIENT
+        and definition.basis_name == "SMEFT"
+    )
+
+
+def _hbox_effective_coupling_coefficient(
+    result: MatchingResult,
+    mapped: Mapping[str, Expression],
+    *,
+    source_expr: Expression,
+    identities: Sequence[Expression],
+    allow_incomplete_target: bool,
+    max_basis_terms: int,
+    max_identities: int,
+) -> Expression | None:
+    if "cHBox" in mapped:
+        return mapped["cHBox"]
+    definition = result.theory.externals["cHBox"]
+    operator = definition.effective_projection_expr or definition.operator_expr
+    if operator is None:
+        return None
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    try:
+        hbox_map = map_effective_couplings(
+            source_expr,
+            (EffectiveCouplingTarget(name="cHBox", variable=variable, operator=operator),),
+            identities=identities,
+            allow_incomplete_target=allow_incomplete_target,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+        )
+    except ValueError:
+        return None
+    return hbox_map.get("cHBox")
+
+
+def _smeft_hbox_yukawa_higgs_correction(
+    result: MatchingResult,
+    label: str,
+    mapped_coefficient: Expression,
+    hbox_coefficient: Expression,
+    operator: Expression,
+) -> Expression:
+    yukawa_name_by_label = {"cdH": "Yd", "ceH": "Ye", "cuH": "Yu"}
+    yukawa_name = yukawa_name_by_label[label]
+    theory = result.theory
+    if yukawa_name not in theory.couplings or label not in theory.externals:
+        return Expression.num(0)
+    definition = theory.externals[label]
+    yukawa = theory.couplings[yukawa_name].expr(*definition.index_exprs)
+    correction = hbox_coefficient * yukawa
+    tree_yukawa_weight = _drop_loop_counting_symbols(mapped_coefficient, theory).coefficient(yukawa).expand()
+    renormalizable_condition = _matching_condition_for_coupling(result, yukawa_name, definition.index_exprs)
+    if renormalizable_condition is not None and not is_zero(tree_yukawa_weight):
+        delta_yukawa = (renormalizable_condition - yukawa).expand()
+        correction = (
+            correction
+            - _truncate_effective_operator_coefficient(
+                tree_yukawa_weight * delta_yukawa,
+                operator,
+                theory,
+            )
+        ).expand()
+    return correction.expand()
+
+
+def _smeft_hbox_higgs_potential_correction(
+    result: MatchingResult,
+    mapped_coefficient: Expression,
+    hbox_coefficient: Expression,
+    operator: Expression,
+) -> Expression:
+    theory = result.theory
+    if "lambda" not in theory.couplings:
+        return Expression.num(0)
+    quartic = theory.couplings["lambda"].expr()
+    quartic_condition = _matching_condition_for_coupling(result, "lambda", ())
+    quartic_tree = quartic if quartic_condition is None else _drop_loop_counting_symbols(quartic_condition, theory)
+    correction = -(hbox_coefficient * (-2 * quartic_tree))
+    tree_quartic_weight = _drop_loop_counting_symbols(mapped_coefficient, theory).coefficient(quartic).expand()
+    if quartic_condition is not None and not is_zero(tree_quartic_weight):
+        delta_quartic = (quartic_condition - quartic_tree).expand()
+        correction = (
+            correction
+            - _truncate_effective_operator_coefficient(
+                tree_quartic_weight * delta_quartic,
+                operator,
+                theory,
+            )
+        ).expand()
+    return correction.expand()
+
+
+def _matching_condition_for_coupling(
+    result: MatchingResult,
+    coupling_name: str,
+    indices: Sequence[Expression],
+) -> Expression | None:
+    definition = result.theory.couplings.get(coupling_name)
+    if definition is None:
+        return None
+    variable = definition.expr(*indices)
+    return result.matching_conditions.get(canonical_string(variable))
+
+
+def _drop_loop_counting_symbols(expr: Expression, theory: Theory) -> Expression:
+    replacements = [Replacement(s.HBar, Expression.num(0))]
+    if "hbar" in theory.externals:
+        replacements.append(Replacement(theory.external_handle("hbar")(), Expression.num(0)))
+    return expr.replace_multiple(replacements).expand()
+
+
+def _truncate_effective_operator_coefficient(
+    coefficient_shift: Expression,
+    operator: Expression,
+    theory: Theory,
+) -> Expression:
+    if is_zero(coefficient_shift):
+        return Expression.num(0)
+    target_order = _effective_operator_dimension_order(operator, theory)
+    shifted_operator = (coefficient_shift * operator).expand()
+    return series_eft(
+        shifted_operator,
+        theory,
+        eft_order=target_order,
+        heavy_field_dimension=False,
+    ).coefficient(operator).expand()
+
+
+def _effective_operator_dimension_order(operator: Expression, theory: Theory) -> int:
+    dimension = operator_dimension(operator, theory, heavy_field_dimension=False)
+    if isinstance(dimension, int):
+        return dimension
+    if isinstance(dimension, float) and dimension.is_integer():
+        return int(dimension)
+    return 6
+
+
 @dataclass(frozen=True)
 class MatchingResult:
     """Structured output of a pychete matching calculation.
@@ -711,7 +932,7 @@ class MatchingResult:
                 )
                 for target in effective_targets
             ]
-        return map_effective_couplings(
+        mapped = map_effective_couplings(
             source_expr,
             effective_targets,
             target_lagrangian=target_expr,
@@ -720,6 +941,19 @@ class MatchingResult:
             max_basis_terms=max_basis_terms,
             max_identities=max_identities,
         )
+        if target_lagrangian is None:
+            mapped = _apply_smeft_hbox_eom_effective_coupling_corrections(
+                self,
+                mapped,
+                effective_targets,
+                source_expr=source_expr,
+                source_name=source,
+                identities=identity_tuple,
+                allow_incomplete_target=allow_incomplete_target,
+                max_basis_terms=max_basis_terms,
+                max_identities=max_identities,
+            )
+        return mapped
 
     def with_projected_matching_conditions(
         self,

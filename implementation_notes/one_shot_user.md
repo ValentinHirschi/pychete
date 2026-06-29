@@ -2116,3 +2116,16 @@ next real performance step remains an insertion-level collected
   `cHd`, `cHe`, `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`, `cle`,
   `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and `cquqd1` (`21/25`).
   Remaining converted-boundary gaps are differing `cH/cdH/ceH/cuH`.
+- Current continuation, 2026-06-29: the `Q_HBox`-sensitive
+  `cH/cdH/ceH/cuH` gaps were traced to Matchete's post-map
+  `ShiftRenCouplingsInMC` step. pychete now applies a tightly gated on-shell
+  SMEFT effective-coupling bridge that maps the `cHBox` EOM image into the
+  Higgs/Yukawa-Higgs Wilsons and EFT-truncates the corresponding
+  renormalizable `lambda/Yd/Ye/Yu` shifts using `series_eft`. The standalone
+  converted Matchete on-shell effective-coupling boundary for
+  `Singlet_Scalar_Extension -> SMEFT Warsaw` now matches all 25 nonzero Wilson
+  coefficients: `cH`, `cHB`, `cHBox`, `cHD`, `cHW`, `cHWB`, `cHd`, `cHe`,
+  `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`, `cdH`, `ceH`, `cle`,
+  `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`, and `cuH`.
+  This is converted-boundary parity; the next frontier is moving the same
+  coverage upstream into the public Wilson-line one-loop generation path.

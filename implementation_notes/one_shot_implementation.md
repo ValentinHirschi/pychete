@@ -1474,3 +1474,69 @@ to the same Matchete `EOMSimplify`/field-redefinition target/source boundary.
 Continue with Matchete debug dumps for these coefficients and compare the
 first differing intermediate against pychete before adding any projection
 repair.
+
+## Latest Status After Q_HBox Effective-Coupling Shift Bridge
+
+The standalone converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw` is now 25 exact nonzero matches
+out of 25 at the converted Matchete fixture boundary.
+
+Matchete evidence and first differing boundary:
+
+- `CouplingManipulations.m` applies `MapEffectiveCouplings` and then
+  `ShiftRenCouplingsInMC`. The latter shifts renormalizable couplings in the
+  mapped matching conditions and truncates the resulting EFT order.
+- The previous `cHBox` debug dump,
+  `assets/validation/matchete/debug/singlet_eom_cHBox.debug.json`, showed
+  that `Q_HBox` is not mapped as the raw additive Warsaw operator but through
+  the stored EOM-reduced effective-projection representative.
+- Probing `cH`, `cdH`, `ceH`, and `cuH` showed that their residuals were
+  exactly the missing `Q_HBox` EOM image plus the corresponding
+  `ShiftRenCouplingsInMC` renormalizable-coupling contribution. For the
+  Yukawa-Higgs operators the residual is the `cHBox * Y_f` image followed by
+  the EFT-truncated Yukawa shift. For `cH` it is the Higgs-potential
+  `cHBox * (-2 lambda_tree)` image followed by the EFT-truncated quartic
+  shift.
+
+Implementation:
+
+- `MatchingResult.map_effective_couplings(...)` now applies a tightly gated
+  on-shell SMEFT bridge after the lower-level Symbolica solve when no explicit
+  target Lagrangian was supplied.
+- The bridge is activated only for registered SMEFT Wilson metadata, only
+  when the on-shell source allows EOM projection aliases, and only for the
+  `Q_HBox`-sensitive `cH`, `cdH`, `ceH`, and `cuH` families.
+- The code obtains the `cHBox` coefficient through the same
+  `map_effective_couplings` boundary, uses registered coupling metadata for
+  `lambda`, `Yd`, `Ye`, and `Yu`, removes loop-counting symbols only to read
+  tree weights, and uses `series_eft(coefficient * operator, eft_order=dim)`
+  before extracting the operator coefficient. This mirrors Matchete's
+  renormalizable-coupling shift without adding Python-side symbolic algebra.
+
+Validation:
+
+- New focused fixture regressions cover standalone `cH` and the
+  `cdH`/`ceH`/`cuH` Yukawa-Higgs conditions.
+- Focused validation passed under the 30 GiB watchdog:
+  `test_singlet_reference_effective_coupling_map_recovers_standalone_ch_condition`,
+  `test_singlet_reference_effective_coupling_map_recovers_hbox_shifted_yukawa_higgs_condition`,
+  and the full
+  `tests/integration/validation/test_validation_fixtures.py -k effective_coupling_map_recovers`
+  subset (`20 passed`).
+- Targeted mypy passed on `src/pychete/matching_results.py`.
+- A compact fixture probe over all nonzero SMEFT Warsaw Wilson conditions now
+  reports 25/25 exact matches and no bad labels.
+
+Current standalone converted-boundary matching nonzero list:
+
+`cH`, `cHB`, `cHBox`, `cHD`, `cHW`, `cHWB`, `cHd`, `cHe`, `cHl1`, `cHl3`,
+`cHq1`, `cHq3`, `cHu`, `cHud`, `cdH`, `ceH`, `cle`, `cledq`, `clequ1`,
+`cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`, and `cuH`.
+
+Important limitation: this establishes parity for the converted Matchete
+on-shell effective-coupling mapping boundary of the Singlet Scalar Extension
+fixture. It does not yet mean the full public pychete one-loop pipeline can
+generate every one of those coefficients directly from the UV Lagrangian
+without the converted Matchete fixture stages. The next frontier is to move
+this 25/25 parity upstream into the public Wilson-line one-loop generation
+path.

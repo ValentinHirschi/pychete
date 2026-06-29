@@ -310,6 +310,52 @@ def test_singlet_reference_effective_coupling_map_recovers_standalone_chbox_cond
     )
 
 
+def test_singlet_reference_effective_coupling_map_recovers_standalone_ch_condition() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    definition = result.theory.externals["cH"]
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    reference_name = canonical_string(variable)
+
+    mapped = result.map_effective_couplings(
+        {"cH": variable},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        (mapped["cH"] - result.matching_conditions[reference_name]).expand(),
+        Expression.num(0),
+    )
+
+
+@pytest.mark.parametrize("label", ["cdH", "ceH", "cuH"])
+def test_singlet_reference_effective_coupling_map_recovers_hbox_shifted_yukawa_higgs_condition(
+    label: str,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    definition = result.theory.externals[label]
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    reference_name = canonical_string(variable)
+
+    mapped = result.map_effective_couplings(
+        {label: variable},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        (
+            idenso.canonicalize_pychete_deltas(relabel_dummy_indices(mapped[label], start=1))
+            - idenso.canonicalize_pychete_deltas(
+                relabel_dummy_indices(result.matching_conditions[reference_name], start=1)
+            )
+        ).expand(),
+        Expression.num(0),
+    )
+
+
 @pytest.mark.parametrize("label", ["cHW", "cHB", "cHWB"])
 def test_singlet_reference_effective_coupling_map_recovers_field_strength_condition(
     label: str,
