@@ -64,6 +64,10 @@ from .matching_expansion_plans import (
     wilson_line_plan_expansion_indices as _wilson_line_plan_expansion_indices,
     wilson_line_trace_name_from_entry_label as _wilson_line_trace_name_from_entry_label,
 )
+from .matching_field_dofs import (
+    matchete_fluctuation_dof_basis_fields,
+    wilson_line_path_component_weight,
+)
 from .matching_integrals import (
     cde_vakint_integral_terms_at_stage as _cde_vakint_integral_terms_at_stage,
     combine_propagator_power_shifts as _combine_propagator_power_shifts,
@@ -6370,6 +6374,13 @@ def fluctuation_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasi
     theory._validate_registered_expression(lagrangian)
     fields = _discover_fluctuation_basis(lagrangian)
     _LOGGER.debug("discovered %d fluctuation fields for %s", len(fields), theory.name)
+    return FluctuationBasis(theory=theory, modes=tuple(_fluctuation_mode(theory, field) for field in fields))
+
+
+def matchete_fluctuation_dof_basis(theory: Theory, lagrangian: Expression) -> FluctuationBasis:
+    """Return a label-level fluctuation basis matching Matchete's DOF classing."""
+
+    fields = matchete_fluctuation_dof_basis_fields(theory, lagrangian)
     return FluctuationBasis(theory=theory, modes=tuple(_fluctuation_mode(theory, field) for field in fields))
 
 

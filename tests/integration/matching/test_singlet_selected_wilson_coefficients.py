@@ -1351,6 +1351,55 @@ def test_registered_chd_filter_requirements_keep_vector_eom_alias_candidates() -
     assert (("field", phi_label, 1), ("field_strength", b_label, 1)) in requirements
 
 
+def test_selected_chd_four_slot_matchete_dof_path_weights_match_insertion_boundary() -> None:
+    debug = json.loads(_SINGLET_CHD_FOUR_SLOT_FULL_DEBUG.read_text(encoding="utf-8"))
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    lagrangian = fixture.expression("lagrangian")
+
+    dof_basis = matching_module.matchete_fluctuation_dof_basis(theory, lagrangian)
+    dof_fields = matching_module.matchete_fluctuation_dof_basis_fields(theory, lagrangian)
+    operator = theory.fluctuation_operator(lagrangian, dof_fields)
+    plan = operator.supertrace_plan()
+    setup = matching_module.OneLoopSetup(
+        theory=theory,
+        uv_lagrangian=lagrangian,
+        eft_order=6,
+        fluctuation_operator=operator,
+        supertrace_plan=plan,
+        block_traces=tuple(
+            trace
+            for order in range(1, 5)
+            for trace in plan.closed_category_traces(order)
+        ),
+    )
+
+    paths = setup.interaction_wilson_line_trace_paths_by_trace(
+        trace_names=("hScalar-lScalar-lVector-lScalar",),
+    )["hScalar-lScalar-lVector-lScalar"]
+    b_label = theory.field_handle("B").label
+    b_paths = tuple(
+        path
+        for path in paths
+        if any(bool(mode.label == b_label) for mode in path.propagator_modes)
+    )
+    component_weights = {
+        path.path_index: matching_module.wilson_line_path_component_weight(path)
+        for path in b_paths
+    }
+
+    assert debug["trace_name"] == "hScalar-lScalar-lVector-lScalar"
+    assert debug["target"] == "cHD"
+    assert len(dof_basis.entries) == 16
+    assert dof_basis.entries == dof_fields
+    assert len(paths) == 12
+    assert tuple(path.path_index for path in b_paths) == (0, 1, 6, 7)
+    assert component_weights == {0: 2, 1: 2, 6: 2, 7: 2}
+    assert sum(weight for weight in component_weights.values() if weight is not None) == len(
+        _matchete_nonzero_target_insertion_indices(debug)
+    )
+
+
 def test_selected_chd_four_slot_wilson_coefficient_records_current_source_frontier() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()

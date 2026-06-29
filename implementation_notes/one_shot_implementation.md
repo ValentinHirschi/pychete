@@ -269,6 +269,20 @@ Current slice progress:
   target quarter insertions. Raw Symbolica tensor canonicalization is not yet
   a sufficient fix because several path templates reuse an index label in
   multiple contractions and `canonize_tensors(...)` correctly rejects them.
+- Added the cheap Matchete-DOF path-weight boundary for that frontier. The new
+  `src/pychete/matching_field_dofs.py` helper uses Symbolica tagged
+  field/field-strength matches to build Matchete-style label-level fluctuation
+  DOFs, exposed as `matchete_fluctuation_dof_basis_fields(...)` and
+  `matchete_fluctuation_dof_basis(...)`. On the Singlet fixture this reduces
+  the discovered basis from the current 26 concrete dummy-label modes to 16
+  label-level DOFs. The paired `wilson_line_path_component_weight(...)`
+  diagnostic shows that the canonical
+  `hScalar-lScalar-lVector-lScalar` setup has 12 total paths and four
+  B-containing paths `(0, 1, 6, 7)`, each with SU(2) component weight two,
+  matching Matchete's eight nonzero target insertion checkpoints before any
+  Wilson-term expansion or tensor reduction. This is the performance-correct
+  route to promote later; it is not yet wired into the default one-loop
+  pipeline.
 
 ## Performance Budget For This Slice
 
@@ -295,6 +309,13 @@ Current slice progress:
   where the duplicate work lives, but current parity probes must continue to
   use the existing eight path IDs until the replacement carries explicit
   component/DOf weights and preserves the selected cHD aggregate.
+- The Matchete-DOF helper now pins the intended weighted replacement boundary:
+  use label-level DOFs from `matchete_fluctuation_dof_basis_fields(...)`, then
+  carry `wilson_line_path_component_weight(...)` through selected trace
+  generation. Do not evaluate all sixteen duplicate component paths when the
+  weighted four-path canonical probe is available and validated for the same
+  target; the next runtime promotion must preserve the weighted aggregate and
+  broader model behavior before becoming default.
 - For the four-slot `cHD` factor-two overcount, do not patch projection,
   tensor reduction, or idenso delta contraction next. The next useful slice is
   to port Matchete's field-degree/component weighting at the fluctuation path

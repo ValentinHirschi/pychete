@@ -77,6 +77,8 @@ from .matching import (
     FluctuationPropagator,
     FluctuationSector,
     FluctuationStatistics,
+    matchete_fluctuation_dof_basis,
+    matchete_fluctuation_dof_basis_fields,
     OneLoopMatchingNotImplementedError,
     OneLoopSetup,
     PowerTypeSupertraceContribution,
@@ -85,6 +87,7 @@ from .matching import (
     SupertracePlan,
     WilsonLineTraceExpansionTerm,
     WilsonLineTracePath,
+    wilson_line_path_component_weight,
 )
 from .matching_options import (
     OneLoopIntegralBackend,
@@ -185,6 +188,8 @@ __all__ = [
     "MatchingResult",
     "MatchingResultComparison",
     "MatchingFixtureGapReport",
+    "matchete_fluctuation_dof_basis",
+    "matchete_fluctuation_dof_basis_fields",
     "NumericProbePlan",
     "NumericProbeResult",
     "normalize_ncm_chains",
@@ -288,4 +293,5 @@ __all__ = [
     "symmetric_lorentz_tensor",
     "tensor_index_specs",
     "wilson_term_expansion",
+    "wilson_line_path_component_weight",
 ]

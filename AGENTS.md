@@ -412,6 +412,17 @@ same Lagrangian. Use native indexed variation plus backend delta contraction
 for indexed fields before accepting an exact replacement result; otherwise
 Wilson-line path multiplicities and Matchete component/field-degree factors
 can be silently halved.
+For performance-sensitive one-loop supertrace path generation, compare pychete
+against Matchete's label-level `$XFieldDofs` / `DeterminePowerInsertions`
+boundary before evaluating Wilson terms or tensor integrals. Use
+`matchete_fluctuation_dof_basis_fields(...)` and
+`wilson_line_path_component_weight(...)` to study canonical label-level paths:
+collapsing dummy-label-equivalent fluctuation modes is allowed only when the
+explicit internal component/DOf weights are carried with the path. Do not
+replace the current component-expanded route with a canonical route that
+changes the weighted selected trace aggregate; the Singlet four-slot `cHD`
+frontier specifically requires four label-level B paths with SU(2) component
+weight two to match Matchete's eight insertion checkpoints.
 Momentum lowering must keep derivative information symbolic rather than
 dropping it. Contracted derivative pairs lower to `LoopMomentumSquared`; open
 Lorentz derivative slots lower to explicit `LoopMomentum(index)` numerator
@@ -579,6 +590,17 @@ corresponding intermediate stages. If they are not, treat that as evidence of
 a semantic staging or algorithm-selection mismatch before treating it as an
 acceptable cost. Do not make Matchete-comparison probes broader than the
 Matchete checkpoint they are meant to mirror.
+For the current Singlet four-slot `cHD` multiplicity frontier, the fast
+performance-parity boundary is now pinned before Wilson-term expansion:
+Matchete has label-level DOFs `{phi}`, `{H, Conj[H]}`, and `{B,G,W}`, while
+pychete's current discovered component route has duplicate concrete `H`
+dummy-label modes. The cheap canonical probe has 12 total
+`hScalar-lScalar-lVector-lScalar` paths and four B-containing paths; with
+`wilson_line_path_component_weight(...) == 2` for each, it matches Matchete's
+eight nonzero insertion checkpoints. Future work should promote that weighted
+label-level route only after preserving this aggregate and validating broader
+models, because it is both the semantic Matchete boundary and the scalable
+path-generation strategy.
 The current narrowed Singlet `cHD` EOM boundary is the internal-simplified
 source replay through Matchete `PerformSystematicFieldRedefs`: matter
 renormalization and shifts through `after_shift_dim6_dev4` leave the `cHD`

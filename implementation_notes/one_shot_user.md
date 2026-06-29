@@ -1699,3 +1699,13 @@ Green/EOM identity conversion.
   quarter insertions. The next runtime fix should therefore target generic
   Matchete-style fluctuation component/field-degree weighting, not projection,
   tensor reduction, or delta contraction.
+- Latest performance-boundary update, 2026-06-29: user reinforced that
+  pychete's parity probes should be at least as performant as Matchete's
+  intermediate stages. Implementation response: added a Matchete-style
+  label-level fluctuation-DOF helper and path component-weight diagnostic.
+  The fast Singlet four-slot `cHD` probe now compares pychete directly at
+  Matchete's `$XFieldDofs` / `DeterminePowerInsertions` boundary: the canonical
+  label-level setup has 16 DOFs, 12 total selected trace paths, and four
+  B-containing paths with component weight two, matching Matchete's eight
+  nonzero insertion checkpoints without Wilson-term expansion or tensor
+  reduction. This pins the scalable route for the next runtime promotion.
