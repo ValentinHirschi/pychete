@@ -876,6 +876,7 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_
             wilson_line_expand_covariant_derivative_commutators=False,
             wilson_line_max_derivative_order=4,
             wilson_line_filter_terms_by_matching_targets=True,
+            wilson_line_include_unselected_traces=False,
             wilson_line_expose_scalar_derivative_commutator_bilinears=True,
             wilson_line_tensor_reduce_before_wilson_expand=True,
             simplify_pychete_color_algebra=True,
@@ -953,6 +954,7 @@ def test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches
             wilson_line_expand_covariant_derivative_commutators=False,
             wilson_line_max_derivative_order=4,
             wilson_line_filter_terms_by_matching_targets=True,
+            wilson_line_include_unselected_traces=False,
             wilson_line_expose_scalar_derivative_commutator_bilinears=True,
             wilson_line_tensor_reduce_before_wilson_expand=True,
             simplify_pychete_color_algebra=True,
@@ -976,6 +978,9 @@ def test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches
 
     assert result.metadata["use_matchete_fluctuation_dof_basis"] is True
     assert result.metadata["wilson_line_weight_paths_by_component_dofs"] is True
+    assert result.metadata["wilson_line_include_unselected_traces"] is False
+    assert result.metadata["wilson_line_selected_only"] is True
+    assert result.metadata["stage"] == "normalized_interaction_wilson_line_internal_minimal_subtraction_result"
     assert result.metadata["interaction_wilson_line_paths_weighted_by_component_dofs"] is True
     assert result.metadata["interaction_wilson_line_term_count"] == 4
     assert result.metadata["interaction_wilson_line_component_weighted_term_count"] == 8

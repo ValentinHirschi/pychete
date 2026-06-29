@@ -1799,3 +1799,22 @@ stage-local results, not another coefficient-specific rewrite.
   exposed by `MatchingResult.with_loop_normalization(...)`, while the existing
   staged Singlet `cHD` tests continue to pin the selected pole/finite
   coefficient composition.
+- Latest requested Matchete deep dive, 2026-06-29: re-read the actual
+  Matchete one-loop source for the active validation path and tightened the
+  function ledger around `Match`, `SetCurrentLagrangian`, `SetSubstitutions`,
+  `ListPowerTypeTraces`, `LoopMatch`, `PowerTypeSTr`,
+  `GenericPropagatorExpansion`, `DeterminePowerInsertions`, `EvaluateSTr`,
+  `WilsonExpand`, `LoopIntegrate`, `MatchReduce`, `GreensSimplify`,
+  `EOMSimplify`, and `MapEffectiveCouplings`. The important conclusion is
+  that raw selected supertrace agreement is only the first layer; full Singlet
+  `cHD` parity also needs Matchete's validation-layer off-shell
+  Green-basis cleanup, systematic EOM/field-redefinition shifts, and final
+  Wilson-condition solve.
+- Latest public-route slice, 2026-06-29: added
+  `OneLoopMatchOptions.wilson_line_include_unselected_traces`. The default
+  keeps public Wilson-line matching hybrid, as before. Setting it to `False`
+  runs selected Wilson-line trace families in isolation through
+  `Theory.match(...)`, mirroring Matchete's `WhichTraces` debugging workflow
+  and avoiding the slow unselected interaction-power remainder for
+  target-local parity probes. This is a diagnostic/selected-trace composition
+  mode, not a claim of full-model one-loop parity.

@@ -836,6 +836,57 @@ Current slice progress:
   existing staged Singlet `cHD` tests remain the coefficient-composition
   oracle; the new fast test only pins that public projection source names are
   available without forcing the whole hybrid public route to recompute.
+- Latest top-level Matchete function audit, 2026-06-29: reread the source
+  around the active one-loop validation path and tightened the conceptual
+  ledger. `Match` is only the public orchestrator; the one-loop physics source
+  starts after `SetCurrentLagrangian` has canonicalized the Lagrangian, added
+  gauge-fixing/ghost terms, solved heavy EOMs through `DetermineEOMs`, and
+  populated `$Xsubs`, `$XOrders`, `$XOrdMin`, `$Msubs`, and `$Gsubs` through
+  `SetSubstitutions`. `SetSubstitutions` in turn uses `LagrangianDofs`,
+  `FieldDoFs`, `FluctuationOperator`, `SeriesEFT`, and covariant-momentum
+  lowering to split every X-term by EFT order, loop-momentum order, and open
+  derivative count. `LoopMatch` then enumerates log and power traces with
+  `ListPowerTypeTraces`, and `PowerTypeSTr` is the current explicit
+  Wilson-line core: it applies the Matchete `-I*hbar/2` statistics prefactor,
+  loops over propagator expansion order, calls
+  `GenericPropagatorExpansion`, and combines `DeterminePowerInsertions` /
+  `PopulateCovMomOps` insertion rules with `EvaluateSTr`. `EvaluateSTr` is the
+  key ordered boundary pychete must mirror:
+  insertion replacement, `ActWithOpenCDs`, `GatherLoopMomenta`,
+  `RemoveSymmetryVanishingWilsonTerms`, `CloseFermionLoop`,
+  `EvaluateSymmetricLorentzInds`, `ContractMetric`, `WilsonExpand`,
+  `LoopIntegrate`, `RelabelIndices`, `ExpandGenFSs`, `ContractDelta`,
+  `ContractCGs`, `RefineDiracProducts`, and `EpsExpand`. `WilsonExpand` lowers
+  `WilsonTerm` atoms through `WilsonTermExpand`, `DerivativeSubLists`,
+  `DevPreFact`, `GaugeIndexSet`, `FSWilsonFactor`, and `DevTermOnWilson`.
+  `LoopIntegrate` collects identical massive and massless propagator powers
+  through `integralType`, converts to `LF`/`LFFull`, evaluates
+  `SingleScaleIntegral` or `MultiScaleIntegral`, and reduces finite loop
+  functions with `EvaluateLoopFunctions` / `SimplifyMassFunction`.
+  `MatchReduce` is still only the off-shell contraction/evaluation cleanup.
+  The validation output then deliberately enters a second conceptual layer:
+  `GreensSimplify` uses `InternalSimplify`, `IBPSimplify`,
+  `MatchOperatorPatterns`, `ConstructOperatorIdentities`, and identity
+  generators such as `IdentitiesIBP`/`IdentitiesCDCommutation`;
+  `EOMSimplify` uses `FieldsToShift`, `RenormalizeMatterFields`,
+  `GaugeFieldNormalization`, `ShiftLagrangian`, and `DetermineShifts`; final
+  SMEFT Wilson conditions come from `MapEffectiveCouplings` /
+  `MapEffectiveCouplingsInternal` / `SolveMatchingConditions`. This confirms
+  that pychete must keep comparing stage-local objects at those exact
+  boundaries and must not infer full integration parity from a raw selected
+  `EvaluateSTr` coefficient alone.
+- Latest public-route implementation response, 2026-06-29: added the
+  explicit option `OneLoopMatchOptions.wilson_line_include_unselected_traces`.
+  Its default `True` preserves the Matchete-style public hybrid route where
+  selected Wilson-line trace families replace their interaction-power
+  counterparts and unselected interaction-power traces remain in the source.
+  Setting it to `False` uses the lower-level selected-only Wilson-line result
+  methods from the public `Theory.match(...)` dispatcher, matching Matchete's
+  `WhichTraces` debugging workflow and avoiding forced recomputation of the
+  unselected interaction remainder during target-local parity probes. This is
+  explicitly not a full-model matching result; it is a bounded diagnostic
+  route for composing validated selected trace families such as the Singlet
+  `cHD` four-slot source.
 
 ## Targeted Commands
 

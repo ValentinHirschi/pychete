@@ -172,11 +172,15 @@ class OneLoopMatchOptions:
     legacy CDE options: it builds ordered ``WilsonLineTracePath`` terms,
     lets open derivatives act on the closing ``WilsonTerm`` when requested,
     then lowers supported Wilson terms with ``expand_wilson_terms``. Public
-    matching uses the hybrid selected-trace route: selected trace families are
-    replaced by their Wilson-line aggregate while unselected interaction-power
-    traces remain in the one-loop source. It is intentionally opt-in until the
-    higher-order Wilson-line expansion coverage is validated against committed
-    fixtures.
+    matching uses the hybrid selected-trace route by default: selected trace
+    families are replaced by their Wilson-line aggregate while unselected
+    interaction-power traces remain in the one-loop source. Set
+    ``wilson_line_include_unselected_traces=False`` for Matchete
+    ``WhichTraces``-style target-local diagnostics where the requested
+    Wilson-line traces should be evaluated in isolation and the unselected
+    interaction-power remainder is intentionally omitted. That selected-only
+    mode is not a full-model matching result; it is a bounded parity and
+    regression tool for comparing individual trace families.
     ``wilson_line_emit_covariant_derivative_commutators`` and
     ``wilson_line_expand_covariant_derivative_commutators`` apply the existing
     Symbolica replacement-rule commutator emitter/lowerer to generated
@@ -284,6 +288,7 @@ class OneLoopMatchOptions:
     wilson_line_expand_covariant_derivative_commutators: bool = False
     wilson_line_max_derivative_order: int = 4
     wilson_line_filter_terms_by_matching_targets: bool = False
+    wilson_line_include_unselected_traces: bool = True
     use_matchete_fluctuation_dof_basis: bool = False
     wilson_line_weight_paths_by_component_dofs: bool = False
     wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False
