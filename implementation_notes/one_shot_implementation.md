@@ -1260,6 +1260,77 @@ weak-current pairs and external Delta canonicalization:
 - Separate selected public Wilson-line route matches remain `cHW`, `cHB`,
   `cHWB`, and `cHD`.
 
+## Current Slice Update: Field-Strength Target Canonicalization
+
+This slice extends the standalone converted on-shell `MapEffectiveCouplings`
+boundary from 17/25 exact nonzero Wilson-condition matches to 20/25. The
+newly recorded standalone matches are `cHW`, `cHB`, and `cHWB`.
+
+Mismatch checklist:
+
+- Matchete evidence: the committed Singlet matching fixture has nonzero
+  field-strength Wilson conditions
+  `cHW = hbar A^2 gL^2/(12 M^4)`,
+  `cHB = hbar A^2 gY^2/(12 M^4)`, and
+  `cHWB = hbar A^2 gL gY/(6 M^4)`.
+- Paired pychete probe before this slice: direct native projection already
+  recovered `cHW` and `cHB` from the converted `on_shell_eft_lagrangian`, but
+  the effective-coupling linear map returned zero because alpha-equivalent
+  source and target field-strength monomials used different dummy labels.
+  `cHWB` had a second representation-normalization mismatch: the converted
+  Matchete source used `Bar[Index[..., fund]]` while pychete operator metadata
+  used `Index[..., Bar[fund]]`.
+- First differing boundary: the effective-coupling alignment pattern treated
+  non-numeric scalar normalization factors in registered target operators,
+  such as `1/gL^2` or `1/(gL gY)`, as part of the operator body. Converted
+  Matchete sources store those gauge-normalization factors in the coefficient
+  instead, so the target-alignment replacement could not fire. The remaining
+  dummy-label mismatch then split source and target into separate linear-basis
+  monomials.
+- Generic patch: target-alignment patterns now split an operator into
+  field/field-strength/CG-bearing factors and scalar prefactors. The scalar
+  prefactor is folded into the solved coefficient transform, so registered
+  operator normalizations are handled by Symbolica coefficient solving rather
+  than by requiring the source monomial to carry the same denominator.
+- Generic patch: unindexed field-strength target families are canonized
+  term-by-term with Symbolica's tensor canonicalizer before the effective
+  map constructs its linear operator basis. This is gated to unindexed target
+  variables so indexed Wilson coefficient labels are not relabeled away from
+  the solve variables.
+- Generic patch: `idenso.canonicalize_barred_indices(...)` rewrites
+  `Bar(Index(label, rep))` to `Index(label, Bar(rep))` and removes a double
+  bar when the representation is already conjugated. The effective-coupling
+  map applies this before CG canonicalization and target alignment.
+
+Validation:
+
+- `tests/unit/backends/test_idenso_backend.py` now includes
+  `test_idenso_canonicalizes_barred_index_representation`.
+- `tests/integration/validation/test_validation_fixtures.py` now includes
+  `test_singlet_reference_effective_coupling_map_recovers_field_strength_condition`,
+  parameterized over `cHW`, `cHB`, and `cHWB`.
+- Focused validation passed under the 30 GiB watchdog: the new idenso unit
+  test, the widened Singlet field-strength fixture test, the full
+  `tests/unit/functional/test_effective_couplings.py` module, the complete
+  `tests/unit/backends/test_idenso_backend.py` module, and the broader
+  Singlet `effective_coupling_map_recovers` fixture group.
+- Targeted mypy passed on `src/pychete/effective_couplings.py`,
+  `src/pychete/backends/idenso.py`,
+  `tests/unit/backends/test_idenso_backend.py`, and
+  `tests/unit/functional/test_effective_couplings.py`.
+
+Current standalone converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw`, with coupled colour-current and
+weak-current pairs and external Delta canonicalization:
+
+- Nonzero Matchete Wilson conditions in the fixture: 25.
+- Matching in pychete at this boundary: `cHB`, `cHD`, `cHW`, `cHWB`, `cHd`,
+  `cHe`, `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`, `cle`, `cledq`,
+  `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`.
+- Still zero at this boundary: none.
+- Standalone converted-boundary solve errors: `cHBox`.
+- Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
+
 ## Current Slice Update: Hermitian-Conjugate Alias Gating
 
 This slice extends the standalone converted on-shell `MapEffectiveCouplings`
@@ -1324,3 +1395,19 @@ weak-current pairs and external Delta canonicalization:
 - Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
 - Separate selected public Wilson-line route matches remain `cHW`, `cHB`,
   `cHWB`, and `cHD`.
+
+## Latest Status After Field-Strength Canonicalization
+
+The field-strength target canonicalization slice above is the current status
+and supersedes the older 17/25 count in this Hermitian-alias section. The
+standalone converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw` now has 20 exact nonzero matches
+out of 25:
+
+`cHB`, `cHD`, `cHW`, `cHWB`, `cHd`, `cHe`, `cHl1`, `cHl3`, `cHq1`, `cHq3`,
+`cHu`, `cHud`, `cle`, `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`,
+and `cquqd1`.
+
+Remaining standalone converted-boundary gaps are the `cHBox` linear-system
+inconsistency and the differing `cH`, `cdH`, `ceH`, and `cuH` Higgs/Yukawa
+sector conditions.

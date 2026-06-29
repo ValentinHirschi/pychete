@@ -2093,3 +2093,14 @@ next real performance step remains an insertion-level collected
   `cHud`, `cle`, `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and
   `cquqd1` (`17/25`). Remaining converted-boundary gaps are zero
   `cHB/cHW/cHWB`, solve error `cHBox`, and differing `cH/cdH/ceH/cuH`.
+- Current continuation, 2026-06-29: the latest slice adds Symbolica-backed
+  tensor canonicalization and scalar-normalization splitting for unindexed
+  field-strength target operators, plus idenso barred-index normalization
+  `Bar(Index(label, rep)) -> Index(label, Bar(rep))`. This recovers the
+  standalone converted field-strength coefficients `cHW`, `cHB`, and `cHWB`.
+  The standalone converted-boundary matches for
+  `Singlet_Scalar_Extension -> SMEFT Warsaw` are now `cHB`, `cHD`, `cHW`,
+  `cHWB`, `cHd`, `cHe`, `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`,
+  `cle`, `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and `cquqd1`
+  (`20/25`). Remaining converted-boundary gaps are solve error `cHBox` and
+  differing `cH/cdH/ceH/cuH`.

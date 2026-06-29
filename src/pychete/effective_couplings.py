@@ -8,9 +8,22 @@ from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .backends import idenso
-from .expr import as_int, factors, is_head, is_zero, list_items, product_expr, sum_expr, terms
+from .expr import (
+    as_int,
+    cg_tensor_pattern,
+    factors,
+    field_pattern,
+    field_strength_pattern,
+    is_head,
+    is_zero,
+    list_items,
+    matching_subexpressions,
+    product_expr,
+    sum_expr,
+    terms,
+)
 from .green_basis import linear_identity_basis_terms, linear_identity_normal_form_from_identities
-from .indices import IndexInfo, collect_indices
+from .indices import IndexInfo, canonize_tensor_indices, collect_indices, tensor_index_specs
 from .symbols import SymbolDataKey, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
 from .theory_metadata import FieldChirality, field_chirality_from_label
 
@@ -86,6 +99,9 @@ def map_effective_couplings(
     input_expr = idenso.simplify_pychete_chiral_projectors(input_expr)
     target_expr = idenso.simplify_pychete_chiral_projectors(target_expr)
     identity_tuple = tuple(idenso.simplify_pychete_chiral_projectors(identity) for identity in identity_tuple)
+    input_expr = idenso.canonicalize_barred_indices(input_expr)
+    target_expr = idenso.canonicalize_barred_indices(target_expr)
+    identity_tuple = tuple(idenso.canonicalize_barred_indices(identity) for identity in identity_tuple)
     input_expr = idenso.canonicalize_builtin_epsilon_cg_tensors(input_expr)
     target_expr = idenso.canonicalize_builtin_epsilon_cg_tensors(target_expr)
     identity_tuple = tuple(idenso.canonicalize_builtin_epsilon_cg_tensors(identity) for identity in identity_tuple)
@@ -95,6 +111,13 @@ def map_effective_couplings(
     input_expr = _align_target_operator_indices(input_expr, target_tuple)
     target_expr = _align_target_operator_indices(target_expr, target_tuple)
     identity_tuple = tuple(_align_target_operator_indices(identity, target_tuple) for identity in identity_tuple)
+    if target_lagrangian is None:
+        input_expr, target_tuple, identity_tuple = _canonize_unindexed_field_strength_target_terms(
+            input_expr,
+            target_tuple,
+            identity_tuple,
+        )
+        target_expr = sum_expr(target.variable * target.operator for target in target_tuple).expand()
     if identity_tuple:
         preferred = tuple(
             term
@@ -157,6 +180,67 @@ def map_effective_couplings(
         target.name: idenso.canonicalize_pychete_deltas(solution.replace_multiple(decode_rules)).expand()
         for target, solution in zip(target_tuple, solutions, strict=True)
     }
+
+
+def _canonize_unindexed_field_strength_target_terms(
+    input_expr: Expression,
+    targets: Sequence[EffectiveCouplingTarget],
+    identities: Sequence[Expression],
+) -> tuple[Expression, tuple[EffectiveCouplingTarget, ...], tuple[Expression, ...]]:
+    """Canonize dummy tensor indices for unindexed field-strength targets.
+
+    The effective-coupling map builds a linear operator basis before asking
+    Symbolica to solve for Wilson coefficients.  For gauge-strength operators,
+    otherwise identical source and target monomials often differ only by dummy
+    Lorentz/gauge labels; canonicalize those terms with Symbolica before the
+    basis split.  The helper is intentionally gated to unindexed target
+    variables so coefficient flavor indices are not relabeled away from the
+    solve variables.
+    """
+
+    target_tuple = tuple(targets)
+    identity_tuple = tuple(identities)
+    if not _should_canonize_field_strength_targets(target_tuple):
+        return input_expr, target_tuple, identity_tuple
+    index_specs = tensor_index_specs(
+        *(target.operator for target in target_tuple),
+        input_expr,
+        *identity_tuple,
+    )
+    if not index_specs:
+        return input_expr, target_tuple, identity_tuple
+    canon_targets = tuple(
+        EffectiveCouplingTarget(
+            name=target.name,
+            variable=target.variable,
+            operator=_canonize_effective_coupling_tensor_terms(target.operator, index_specs),
+        )
+        for target in target_tuple
+    )
+    return (
+        _canonize_effective_coupling_tensor_terms(input_expr, index_specs),
+        canon_targets,
+        tuple(_canonize_effective_coupling_tensor_terms(identity, index_specs) for identity in identity_tuple),
+    )
+
+
+def _should_canonize_field_strength_targets(targets: Sequence[EffectiveCouplingTarget]) -> bool:
+    return bool(targets) and all(not collect_indices(target.variable) for target in targets) and any(
+        bool(target.operator.matches(field_strength_pattern())) for target in targets
+    )
+
+
+def _canonize_effective_coupling_tensor_terms(
+    expr: Expression,
+    index_specs: Sequence[tuple[Expression, Expression]],
+) -> Expression:
+    canonized_terms: list[Expression] = []
+    for term in terms(expr.expand()):
+        try:
+            canonized_terms.append(canonize_tensor_indices(term, index_specs).expression)
+        except ValueError:
+            canonized_terms.append(term)
+    return sum_expr(canonized_terms).expand()
 
 
 def _align_target_operator_indices(
@@ -1137,7 +1221,7 @@ def _target_operator_alignment_operator_pattern(
     safe_target_name: str,
     alias_position: int,
 ) -> tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...], _CoefficientTransform]:
-    alias_prefactor, alias_body = _numeric_prefactor_and_body(alias_operator)
+    alias_prefactor, alias_body = _operator_prefactor_and_body(alias_operator)
     wildcards = tuple(
         (
             info,
@@ -1162,15 +1246,26 @@ def _target_operator_alignment_operator_pattern(
     )
 
 
-def _numeric_prefactor_and_body(expr: Expression) -> tuple[Expression, Expression]:
+def _operator_prefactor_and_body(expr: Expression) -> tuple[Expression, Expression]:
     prefactors: list[Expression] = []
     body_factors: list[Expression] = []
     for factor in factors(expr):
-        if factor.get_type() is AtomType.Num:
-            prefactors.append(factor)
-        else:
+        if _is_alignment_operator_factor(factor):
             body_factors.append(factor)
+        else:
+            prefactors.append(factor)
     return product_expr(prefactors), product_expr(body_factors)
+
+
+def _is_alignment_operator_factor(factor: Expression) -> bool:
+    return any(
+        matching_subexpressions(factor, pattern)
+        for pattern in (
+            field_pattern(),
+            field_strength_pattern(),
+            cg_tensor_pattern(),
+        )
+    )
 
 
 def _prefactor_adjusted_coefficient_transform(

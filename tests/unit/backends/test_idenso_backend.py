@@ -662,6 +662,16 @@ def test_idenso_canonicalizes_conjugated_rank_two_builtin_epsilon_cg_tensors() -
     assert _same(idenso.canonicalize_builtin_epsilon_cg_tensors(s.Bar(eps(j, i))), -s.Bar(eps(i, j)))
 
 
+def test_idenso_canonicalizes_barred_index_representation() -> None:
+    theory = Theory("idenso_barred_index_canonical")
+    theory.define_gauge_group("SU2F", s.SU(Expression.num(2)), "g", "W")
+    fund = theory.define_representation("SU2F", "fund")
+    i = theory.index("i", fund)
+
+    assert _same(idenso.canonicalize_barred_indices(s.Bar(i)), s.Index(i[0], s.Bar(fund)))
+    assert _same(idenso.canonicalize_barred_indices(s.Bar(s.Index(i[0], s.Bar(fund)))), i)
+
+
 def test_idenso_canonicalizes_same_representation_pychete_delta_ordering() -> None:
     theory = Theory("idenso_delta_canonical")
     flavor = theory.define_flavor_index("Flavor", 3)

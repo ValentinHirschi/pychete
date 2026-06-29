@@ -209,6 +209,20 @@ def canonicalize_builtin_epsilon_cg_tensors(expr: Expression) -> Expression:
     return expr.replace_multiple(_builtin_epsilon_cg_replacements()).expand()
 
 
+def canonicalize_barred_indices(expr: Expression) -> Expression:
+    """Rewrite ``Bar(Index(label, rep))`` as ``Index(label, Bar(rep))``.
+
+    Matchete-derived fixtures can serialize conjugate-representation indices
+    as a barred index atom, while pychete's native tensor metadata stores the
+    conjugation on the representation.  Normalize that representation with a
+    local Symbolica replacement before CG/operator matching.
+    """
+
+    if not bool(expr.matches(_barred_index_pattern())):
+        return expr
+    return expr.replace(_barred_index_pattern(), _barred_index_replacement, rhs_cache_size=0).expand()
+
+
 def canonicalize_pychete_deltas(expr: Expression) -> Expression:
     """Canonicalize symmetric pychete or registered-Matchete ``Delta`` tensors."""
 
@@ -226,6 +240,18 @@ def _contains_external_delta_function(expr: Expression) -> bool:
     label = s.head("external_delta_contains_label_")
     pattern = label(s.head("external_delta_contains_left_"), s.head("external_delta_contains_right_"))
     return bool(expr.matches(pattern, label.req_tag(SymbolRole.EXTERNAL.value)))
+
+
+@cache
+def _barred_index_pattern() -> Expression:
+    return s.Bar(s.Index(s.head("pychete_barred_index_label_"), s.head("pychete_barred_index_representation_")))
+
+
+def _barred_index_replacement(match: dict[Expression, Expression]) -> Expression:
+    label = match[s.head("pychete_barred_index_label_")]
+    representation = match[s.head("pychete_barred_index_representation_")]
+    conjugate_representation = representation[0] if is_head(representation, s.Bar) else s.Bar(representation)
+    return s.Index(label, conjugate_representation)
 
 
 def decode_native_color_wrappers(
@@ -2764,6 +2790,7 @@ def _pychete_dirac_word(dirac_factors: tuple[Expression, ...]) -> Expression:
 
 
 __all__ = [
+    "canonicalize_barred_indices",
     "canonicalize_builtin_epsilon_cg_tensors",
     "cook_function",
     "cook_indices",
