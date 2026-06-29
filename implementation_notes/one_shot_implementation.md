@@ -669,3 +669,48 @@ Focused validation:
   covers normalized finite/pole Wilson-line stages and their entrywise forms.
 - The idenso field-derivative metric unit test and the staged-source
   MatchingResult smoke test pass.
+
+## Current Slice Update: Hybrid Fixture Preview Staging
+
+This slice carries the same staged Wilson-line projection-source idea into
+hybrid preview and validation-fixture routes. The previous runtime patch
+worked for selected-only public `Theory.match(...)` sources, but
+`ValidationFixture.one_loop_preview(...)` always routes generated Wilson-line
+requests through the hybrid selected-trace-plus-interaction-remainder result.
+That path is used by Matchete-independent gap reports, so it must expose the
+same bounded projection surface.
+
+Implementation details:
+
+- The shared Wilson-line projection-source helper now distinguishes the final
+  aggregate source from the selected Wilson-line entry source.
+- For hybrid internal minimal-subtraction results, the helper uses normalized
+  finite Wilson-line entries as selected staged sources and adds an
+  `interaction_power_type_remainder` staged source for the aggregate hybrid
+  remainder.
+- For raw internal results, it keeps the normalized through-finite entry
+  source convention.
+- `ValidationFixture.one_loop_preview(...)` now applies the same
+  scalar-commutator/EOM transformations to each staged source as it applies to
+  the aggregate source, and records
+  `wilson_line_on_shell_projection_source_count` /
+  `wilson_line_on_shell_projection_sources` metadata.
+- Fixture previews now also run idenso-backed
+  `simplify_pychete_field_derivative_metrics(...)` before
+  `simplify_pychete_field_strength_metrics(...)`, matching public
+  `Theory.match(...)` and keeping derivative-sector targets such as `cHD`
+  in projectable contracted-index form.
+
+Validation:
+
+- `test_singlet_wilson_line_filter_keeps_derivative_higgs_sources_staged_for_projection`
+  now verifies direct fixture previews expose the selected
+  `hScalar-lScalar#wilson0_o0_0` source plus the interaction-power remainder
+  as staged projection sources, with metric cleanup metadata.
+- The affected public Singlet `cHD` staging tests still pass:
+  `test_public_match_selected_chd_tree_staging_preserves_wilson_line_vector_delta`,
+  `test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_frontier`,
+  and
+  `test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches_checkpoint`.
+- Targeted mypy on `matching.py`, `validation_fixtures.py`, and
+  `matching_results.py` passes, and `git diff --check` is clean.

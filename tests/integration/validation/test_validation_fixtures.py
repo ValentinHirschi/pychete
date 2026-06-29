@@ -2325,7 +2325,7 @@ def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_aga
 
 
 @pytest.mark.slow
-def test_singlet_wilson_line_filter_keeps_pre_eom_terms_for_derivative_higgs_target() -> None:
+def test_singlet_wilson_line_filter_keeps_derivative_higgs_sources_staged_for_projection() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
     wilson = theory.external_handle("cHD")
@@ -2362,11 +2362,22 @@ def test_singlet_wilson_line_filter_keeps_pre_eom_terms_for_derivative_higgs_tar
         substitute_heavy_scalar_solutions=True,
     )
 
-    assert raw.metadata["interaction_wilson_line_term_count"] == 0
-    assert eom_aware.metadata["interaction_wilson_line_term_count"] == 2
-    assert eom_aware.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
-        "hScalar-lScalar#wilson0_o0_0",
+    expected_staged_sources = (
+        "wilson_line_on_shell_projection_source[hScalar-lScalar#wilson0_o0_0]",
+        "wilson_line_on_shell_projection_source[interaction_power_type_remainder]",
     )
+    for preview in (raw, eom_aware):
+        staged_sources = preview.staged_projection_sources()
+
+        assert preview.metadata["interaction_wilson_line_term_count"] == 4
+        assert preview.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
+            "hScalar-lScalar#wilson0_o0_0",
+        )
+        assert preview.metadata["wilson_line_on_shell_projection_source_count"] == 2
+        assert preview.metadata["wilson_line_on_shell_projection_sources"] == ",".join(expected_staged_sources)
+        assert preview.metadata["field_derivative_metric_simplified"] is True
+        assert preview.metadata["field_strength_metric_simplified"] is True
+        assert staged_sources == expected_staged_sources
     assert eom_aware.metadata["heavy_scalar_solutions_substituted"] is True
 
 

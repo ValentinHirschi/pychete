@@ -2008,3 +2008,11 @@ next real performance step remains an insertion-level collected
   metric contraction before field-strength metric cleanup, which is required
   for the selected `cHD` source because tensor reduction emits explicit
   Lorentz metrics while the Warsaw target uses contracted derivative slots.
+- Follow-up continuation, 2026-06-29: extended the staged Wilson-line
+  projection-source preservation to hybrid validation previews. Direct
+  fixture previews now expose selected Wilson-line entry sources plus an
+  `interaction_power_type_remainder` source for hybrid results, and they apply
+  the same scalar/EOM transformations and idenso-backed field-derivative
+  metric cleanup as the public matcher. This keeps
+  `one_loop_preview_gap_report(...)` aligned with the Matchete-style staged
+  composition route instead of projecting only from a monolithic preview.

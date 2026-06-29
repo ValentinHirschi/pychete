@@ -7540,7 +7540,7 @@ def _activate_wilson_line_internal_through_finite_source(result: MatchingResult)
     )
 
 
-def _wilson_line_internal_projection_source(
+def _wilson_line_internal_projection_aggregate_source(
     result: MatchingResult,
     selected_backend: OneLoopIntegralBackend,
 ) -> str | None:
@@ -7564,6 +7564,23 @@ def _wilson_line_internal_projection_source(
     return next((source_name for source_name in source_names if source_name in result.supertraces), None)
 
 
+def _wilson_line_internal_projection_entry_source(
+    result: MatchingResult,
+    selected_backend: OneLoopIntegralBackend,
+) -> str | None:
+    if selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION:
+        source_names = (
+            "interaction_wilson_line_normalized_internal_integral_finite_part",
+            "interaction_wilson_line_internal_integral_finite_part",
+        )
+    else:
+        source_names = (
+            "interaction_wilson_line_normalized_internal_integral_through_finite_part",
+            "interaction_wilson_line_internal_integral_through_finite_part",
+        )
+    return next((source_name for source_name in source_names if source_name in result.supertraces), None)
+
+
 def _activated_wilson_line_internal_entry_sources(
     result: MatchingResult,
     source_name: str | None,
@@ -7577,6 +7594,40 @@ def _activated_wilson_line_internal_entry_sources(
 def _wilson_line_on_shell_projection_source_name(entry_source_name: str, aggregate_source_name: str) -> str:
     suffix = entry_source_name[len(aggregate_source_name) :]
     return f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}{suffix}"
+
+
+def _wilson_line_internal_projection_source_expressions(
+    result: MatchingResult,
+    selected_backend: OneLoopIntegralBackend,
+) -> tuple[tuple[str, Expression], ...]:
+    aggregate_source_name = _wilson_line_internal_projection_aggregate_source(result, selected_backend)
+    entry_source_name = _wilson_line_internal_projection_entry_source(result, selected_backend)
+    if aggregate_source_name is None or entry_source_name is None:
+        return ()
+    entry_source_names = _activated_wilson_line_internal_entry_sources(result, entry_source_name)
+    if not entry_source_names:
+        return ()
+    sources = [
+        (
+            _wilson_line_on_shell_projection_source_name(entry_source_name_item, entry_source_name),
+            result.supertraces[entry_source_name_item],
+        )
+        for entry_source_name_item in entry_source_names
+    ]
+    if aggregate_source_name != entry_source_name:
+        selected_aggregate = result.supertraces.get(
+            entry_source_name,
+            sum_expr(entry_source for _name, entry_source in sources),
+        )
+        remainder = (result.supertraces[aggregate_source_name] - selected_aggregate).expand()
+        if not is_zero(remainder):
+            sources.append(
+                (
+                    f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[interaction_power_type_remainder]",
+                    remainder,
+                )
+            )
+    return tuple(sources)
 
 
 def _component_weighted_wilson_line_terms(
@@ -9171,14 +9222,11 @@ def match_one_loop(
                 strict=options.on_shell_eom_strict,
             )
         wilson_line_projection_sources: dict[str, Expression] = {}
-        aggregate_entry_source = _wilson_line_internal_projection_source(result, selected_backend)
-        if (
-            wilson_line_expansion_indices_by_trace is not None
-            and not wilson_line_include_unselected_traces
-            and aggregate_entry_source is not None
-        ):
-            for entry_source_name in _activated_wilson_line_internal_entry_sources(result, aggregate_entry_source):
-                entry_source = result.supertraces[entry_source_name]
+        if wilson_line_expansion_indices_by_trace is not None:
+            for projection_name, entry_source in _wilson_line_internal_projection_source_expressions(
+                result,
+                selected_backend,
+            ):
                 entry_exposed = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
                     theory,
                     entry_source,
@@ -9229,10 +9277,6 @@ def match_one_loop(
                             strict=options.on_shell_eom_strict,
                         )
                     )
-                projection_name = _wilson_line_on_shell_projection_source_name(
-                    entry_source_name,
-                    aggregate_entry_source,
-                )
                 wilson_line_projection_sources[projection_name] = entry_after_scalar_eom
         scalar_supertraces = {
             **result.supertraces,

@@ -22,6 +22,7 @@ from .matching_options import (
 from .matching import (
     BosonicCDEExpansionPlan,
     WilsonLineExpansionPlan,
+    _wilson_line_internal_projection_source_expressions,
     _term_atom_requirements_for_targets,
 )
 from .matching_results import (
@@ -1113,6 +1114,7 @@ class ValidationFixture:
             result = result.with_loop_normalization(normalization, hbar=resolved_hbar)
         if simplify_pychete_color_algebra:
             result = _decode_preview_native_color_wrappers(theory, result)
+        result = _simplify_preview_field_metrics(result)
         skip_heavy_scalar_solutions_for_wilson_line_scalar_eom = bool(
             substitute_heavy_scalar_solutions
             and wilson_line_expose_scalar_eom_terms
@@ -1311,6 +1313,7 @@ class ValidationFixture:
                     )
             after_scalar_eom_field_redefinition = reduced_on_shell
             scalar_eom_field_redefinition_delta = Expression.num(0)
+            scalar_source_lagrangian: Expression | None = None
             if wilson_line_expose_scalar_eom_terms:
                 assert resolved_on_shell_eom_lagrangian is not None
                 scalar_source_lagrangian = (resolved_on_shell_eom_lagrangian + reduced_on_shell).expand()
@@ -1325,6 +1328,63 @@ class ValidationFixture:
                     fields=on_shell_eom_fields,
                     strict=on_shell_eom_strict,
                 )
+            wilson_line_projection_sources: dict[str, Expression] = {}
+            if wilson_line_expansion_request is not None:
+                for projection_name, entry_source in _wilson_line_internal_projection_source_expressions(
+                    result,
+                    selected_backend,
+                ):
+                    entry_exposed = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                        theory,
+                        entry_source,
+                        eom_lagrangian=resolved_on_shell_eom_lagrangian,
+                        eom_fields=on_shell_eom_fields,
+                        expose_scalar_eom_terms=wilson_line_expose_scalar_eom_terms,
+                    )
+                    entry_reduced = entry_exposed
+                    if (
+                        resolved_on_shell_eom_lagrangian is not None
+                        and on_shell_eom_abelian_vector_field_redefinition
+                    ):
+                        entry_reduced, _entry_eom_rule_count, _entry_vector_delta = (
+                            _apply_on_shell_eom_reduction_to_expression(
+                                theory,
+                                entry_exposed,
+                                eom_lagrangian=resolved_on_shell_eom_lagrangian,
+                                fields=on_shell_eom_fields,
+                                eft_order=eft_order,
+                                min_derivative_order=on_shell_eom_min_derivative_order,
+                                strict=on_shell_eom_strict,
+                                abelian_vector_field_redefinition=not staged_scalar_eom_vector_field_redefinition,
+                                repeat=on_shell_replacement_repeat,
+                            )
+                        )
+                        if staged_scalar_eom_vector_field_redefinition:
+                            entry_reduced, _entry_vector_staged_delta = (
+                                _apply_wilson_line_abelian_vector_eom_field_redefinition(
+                                    theory,
+                                    entry_reduced,
+                                    source_lagrangian=resolved_on_shell_eom_lagrangian,
+                                    eom_terms_lagrangian=entry_exposed,
+                                    max_order=eft_order,
+                                    fields=on_shell_eom_fields,
+                                    strict=on_shell_eom_strict,
+                                )
+                            )
+                    entry_after_scalar_eom = entry_reduced
+                    if wilson_line_expose_scalar_eom_terms:
+                        assert scalar_source_lagrangian is not None
+                        entry_after_scalar_eom, _entry_scalar_eom_delta = (
+                            _apply_wilson_line_scalar_eom_field_redefinition(
+                                theory,
+                                entry_reduced,
+                                source_lagrangian=scalar_source_lagrangian,
+                                max_order=eft_order,
+                                fields=on_shell_eom_fields,
+                                strict=on_shell_eom_strict,
+                            )
+                        )
+                    wilson_line_projection_sources[projection_name] = entry_after_scalar_eom
             scalar_supertraces = {
                 **result.supertraces,
                 "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
@@ -1357,7 +1417,10 @@ class ValidationFixture:
             result = replace(
                 result,
                 on_shell_eft_lagrangian=after_scalar_eom_field_redefinition,
-                supertraces=scalar_supertraces,
+                supertraces={
+                    **scalar_supertraces,
+                    **wilson_line_projection_sources,
+                },
                 metadata={
                     **result.metadata,
                     "wilson_line_scalar_commutator_bilinears_reduced": (
@@ -1376,6 +1439,10 @@ class ValidationFixture:
                     "wilson_line_scalar_commutator_abelian_vector_field_redefinition_staged": (
                         staged_scalar_eom_vector_field_redefinition
                         and not bool(scalar_commutator_vector_field_redefinition_delta == Expression.num(0))
+                    ),
+                    "wilson_line_on_shell_projection_source_count": len(wilson_line_projection_sources),
+                    "wilson_line_on_shell_projection_sources": (
+                        ",".join(sorted(wilson_line_projection_sources)) if wilson_line_projection_sources else None
                     ),
                 },
             )
@@ -2009,6 +2076,27 @@ def load_validation_fixture(path: str | Path) -> ValidationFixture:
     """Load a Mathematica-independent pychete validation fixture."""
 
     return ValidationFixture.read_json(path)
+
+
+def _simplify_preview_field_metrics(result: MatchingResult) -> MatchingResult:
+    from .backends import idenso as idenso_backend
+
+    def simplify(expression: Expression) -> Expression:
+        derivative_simplified = idenso_backend.simplify_pychete_field_derivative_metrics(expression)
+        return idenso_backend.simplify_pychete_field_strength_metrics(derivative_simplified)
+
+    return replace(
+        result,
+        off_shell_eft_lagrangian=simplify(result.off_shell_eft_lagrangian),
+        on_shell_eft_lagrangian=simplify(result.on_shell_eft_lagrangian),
+        matching_conditions={name: simplify(expression) for name, expression in result.matching_conditions.items()},
+        supertraces={name: simplify(expression) for name, expression in result.supertraces.items()},
+        metadata={
+            **result.metadata,
+            "field_derivative_metric_simplified": True,
+            "field_strength_metric_simplified": True,
+        },
+    )
 
 
 def _decode_preview_native_color_wrappers(theory: Theory, result: MatchingResult) -> MatchingResult:
