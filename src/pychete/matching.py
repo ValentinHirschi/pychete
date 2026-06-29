@@ -7307,6 +7307,58 @@ def _wilson_line_expansion_term_metadata(
     }
 
 
+def _metadata_wilson_line_total_orders_by_trace(value: Mapping[str, Sequence[int]] | None) -> str | None:
+    if value is None:
+        return None
+    return ";".join(
+        f"{trace_name}:{','.join(str(order) for order in value[trace_name])}" for trace_name in sorted(value)
+    )
+
+
+def _activate_wilson_line_internal_through_finite_source(result: MatchingResult) -> MatchingResult:
+    """Use Matchete's epsilon-expanded Wilson-line source for public follow-up stages."""
+
+    source_names = (
+        "interaction_wilson_line_normalized_hybrid_internal_integral_through_finite_part",
+        "interaction_wilson_line_normalized_internal_integral_through_finite_part",
+        "interaction_wilson_line_hybrid_internal_integral_through_finite_part",
+        "interaction_wilson_line_internal_integral_through_finite_part",
+    )
+    for source_name in source_names:
+        if source_name not in result.supertraces:
+            continue
+        through_finite = result.supertraces[source_name]
+        return replace(
+            result,
+            off_shell_eft_lagrangian=through_finite,
+            on_shell_eft_lagrangian=through_finite,
+            supertraces={
+                **result.supertraces,
+                "off_shell_eft_lagrangian_before_wilson_line_internal_through_finite_activation": (
+                    result.off_shell_eft_lagrangian
+                ),
+                "on_shell_eft_lagrangian_before_wilson_line_internal_through_finite_activation": (
+                    result.on_shell_eft_lagrangian
+                ),
+                "off_shell_eft_lagrangian_after_wilson_line_internal_through_finite_activation": through_finite,
+                "on_shell_eft_lagrangian_after_wilson_line_internal_through_finite_activation": through_finite,
+            },
+            metadata={
+                **result.metadata,
+                "wilson_line_internal_through_finite_source_activated": True,
+                "wilson_line_internal_through_finite_source": source_name,
+            },
+        )
+    return replace(
+        result,
+        metadata={
+            **result.metadata,
+            "wilson_line_internal_through_finite_source_activated": False,
+            "wilson_line_internal_through_finite_source": None,
+        },
+    )
+
+
 def _component_weighted_wilson_line_terms(
     path: WilsonLineTracePath,
     terms: Sequence[WilsonLineTraceExpansionTerm],
@@ -7924,16 +7976,19 @@ def match_one_loop(
             include_light_only=options.include_light_only,
         )
     wilson_line_plan_filters_requested = bool(
-        options.wilson_line_total_orders is not None or options.wilson_line_entry_labels is not None
+        options.wilson_line_total_orders is not None
+        or options.wilson_line_total_orders_by_trace is not None
+        or options.wilson_line_entry_labels is not None
     )
     if wilson_line_plan_filters_requested:
         if not isinstance(wilson_line_expansion_indices_by_trace, WilsonLineExpansionPlan):
             raise ValueError(
-                "wilson_line_total_orders and wilson_line_entry_labels require "
+                "wilson_line_total_orders, wilson_line_total_orders_by_trace, and wilson_line_entry_labels require "
                 "a generated WilsonLineExpansionPlan"
             )
         wilson_line_expansion_indices_by_trace = wilson_line_expansion_indices_by_trace.filtered(
             total_orders=options.wilson_line_total_orders,
+            total_orders_by_trace=options.wilson_line_total_orders_by_trace,
             labels=options.wilson_line_entry_labels,
         )
     if cde_expansion_indices_by_trace is not None and wilson_line_expansion_indices_by_trace is not None:
@@ -8392,6 +8447,8 @@ def match_one_loop(
         and result.metadata.get("loop_normalization_applied") is not True
     ):
         result = result.with_loop_normalization(options.normalization, hbar=options.hbar)
+    if wilson_line_expansion_indices_by_trace is not None and selected_backend is OneLoopIntegralBackend.INTERNAL:
+        result = _activate_wilson_line_internal_through_finite_source(result)
     if options.include_tree_level_matching:
         tree_level = match_tree(theory, matching_lagrangian, eft_order=eft_order)
         result = replace(
@@ -8473,6 +8530,9 @@ def match_one_loop(
                 ",".join(str(order) for order in options.wilson_line_total_orders)
                 if options.wilson_line_total_orders is not None
                 else None
+            ),
+            "wilson_line_total_orders_by_trace": _metadata_wilson_line_total_orders_by_trace(
+                options.wilson_line_total_orders_by_trace
             ),
             "wilson_line_entry_labels": (
                 ",".join(options.wilson_line_entry_labels)

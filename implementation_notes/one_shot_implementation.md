@@ -356,3 +356,65 @@ The practical conclusion for the Singlet `cHD` frontier is:
 Next code slice: use this staged boundary in the remaining Singlet `cHD`
 gap analysis for full public-route composition, especially unselected trace
 remainder and final `MapEffectiveCouplings`-equivalent projection semantics.
+
+## Current Slice Update: Matchete Route Audit And Per-Trace Order Filters
+
+This slice re-opened the live Matchete source bodies for the active route:
+`Match`, `SetCurrentLagrangian`, `SetSubstitutions`, `LoopMatch`,
+`PowerTypeSTr`, `GenericPropagatorExpansion`, `DeterminePowerInsertions`,
+`EvaluateSTr`, `LoopIntegrate`, `InternalSimplify`, `GreensSimplify`,
+`EOMSimplify`, `PerformSystematicFieldRedefs`, `ShiftLagrangian`,
+`VectorShift`, `SaveValidationResults`, and `MapEffectiveCouplings`. The
+ledger above remains correct: Matchete's one-loop validation boundary is a
+composition of stage-local simplified trace results, off-shell Green-basis
+cleanup, on-shell systematic field redefinitions, and final target-basis
+coupling solving. The implementation should keep matching these boundaries in
+order instead of tuning a final Wilson coefficient.
+
+The concrete implementation change from this audit is a generated-plan filter
+for per-trace Wilson-line total orders:
+`OneLoopMatchOptions.wilson_line_total_orders_by_trace`. This mirrors the
+Matchete structure more closely than a single global order filter when
+different trace words require different bounded `DeterminePowerInsertions`
+windows. The existing public four-slot Singlet `cHD` test now exercises this
+per-trace filter and records it in result metadata.
+
+A watchdog-wrapped two-trace public composition probe with
+`hScalar-lScalar` orders `{0,2,4}` and
+`hScalar-lScalar-lVector-lScalar` orders `{0,1,2}` was stopped after it
+remained silent for roughly two minutes. That means the per-trace filter is a
+needed diagnostic/control surface, but the full aggregate public composition
+still needs a performance-aware stage-local composition path before it should
+be promoted to a regression test.
+
+Follow-up performance audit: Matchete's committed Singlet validation record
+reports `Time (Match) -> 5.095216`, `Time (GreensSimplify) -> 0.30953`,
+`Time (EOMSimplify) -> 4.203712`, and
+`Time (MapEffectiveCouplings) -> 15.600245`, i.e. roughly 25 seconds for a
+broader full-model validation boundary than pychete's selected two-trace
+probe. A pychete profile of the selected public route showed the time is not
+dominated by final coefficient projection; it is dominated by repeated
+termwise Wilson-line cleanup: `replace_multiple`, idenso delta/field-strength
+group simplification, NCM scalarization, open-CD action, and projection
+prefilter label generation. Matchete's `EvaluateSTr` does insertion
+replacement, open-CD action, loop-momentum gathering, Wilson expansion, loop
+integration, and algebra cleanup in a collected staged expression flow rather
+than repeatedly running every cleanup pass over every generated term. The
+next performance slice should therefore reshape pychete toward a collected
+stage-local Wilson-line evaluation path, while keeping termwise diagnostics
+available for debugging.
+
+This slice added conservative no-op guards around idenso colour/delta and
+field-strength group simplification so expressions without `Delta`, `CG`,
+`FieldStrength`, or native spenso colour wrappers skip those backend passes.
+The bounded public four-slot `cHD` regression improved from about ten seconds
+to about eight seconds, but the two-trace public composition remains much
+slower than Matchete and should not yet be promoted to a slow regression.
+
+This slice also fixed the public Wilson-line `INTERNAL` source ordering:
+after loop normalization, `Theory.match(...)` now activates the
+`interaction_wilson_line_*_internal_integral_through_finite_part` source as
+the active off/on-shell EFT source for later Matchete-style EOM and projection
+stages. Raw evaluated sums remain in named supertraces for diagnostics. This
+matches Matchete's `EvaluateSTr -> EpsExpand` ordering and prevents positive
+`epsilon` powers from leaking into public on-shell projections.

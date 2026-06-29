@@ -161,18 +161,33 @@ class WilsonLineExpansionPlan:
         self,
         *,
         total_orders: Iterable[int] | None = None,
+        total_orders_by_trace: Mapping[str, Iterable[int]] | None = None,
         labels: Iterable[str] | None = None,
     ) -> WilsonLineExpansionPlan:
         """Return a plan containing only entries matching the requested metadata."""
 
         allowed_orders = None if total_orders is None else frozenset(total_orders)
+        allowed_orders_by_trace = (
+            None
+            if total_orders_by_trace is None
+            else {trace_name: frozenset(orders) for trace_name, orders in total_orders_by_trace.items()}
+        )
         allowed_labels = None if labels is None else frozenset(labels)
         if allowed_orders is not None and any(order < 0 for order in allowed_orders):
             raise ValueError("Wilson-line total-order filters must be non-negative")
+        if allowed_orders_by_trace is not None and any(
+            order < 0 for orders in allowed_orders_by_trace.values() for order in orders
+        ):
+            raise ValueError("Wilson-line per-trace total-order filters must be non-negative")
         entries = tuple(
             entry
             for entry in self.entries
             if (allowed_orders is None or entry.total_order in allowed_orders)
+            and (
+                allowed_orders_by_trace is None
+                or entry.trace_name not in allowed_orders_by_trace
+                or entry.total_order in allowed_orders_by_trace[entry.trace_name]
+            )
             and (allowed_labels is None or entry.label in allowed_labels)
         )
         if not entries:

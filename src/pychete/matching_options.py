@@ -194,11 +194,15 @@ class OneLoopMatchOptions:
     derivative pair and is limited to one pass.
     For generated Wilson-line plans, set ``wilson_line_max_total_order`` and
     optionally ``wilson_line_trace_names``/``wilson_line_max_slot_order``.
-    ``wilson_line_total_orders`` and ``wilson_line_entry_labels`` further
-    filter generated ``WilsonLineExpansionPlan`` entries for Matchete
-    prop-order-style diagnostics and smaller targeted projection tests.
-    This is the preferred convenience route for new Matchete parity probes
-    because it avoids deepening the legacy CDE-named planning surface.
+    ``wilson_line_total_orders``, ``wilson_line_total_orders_by_trace``, and
+    ``wilson_line_entry_labels`` further filter generated
+    ``WilsonLineExpansionPlan`` entries for Matchete prop-order-style
+    diagnostics and smaller targeted projection tests. Use the per-trace
+    order map when composing different Matchete trace families that require
+    different bounded order windows, mirroring ``DeterminePowerInsertions``
+    rather than forcing one broad global order filter. This is the preferred
+    convenience route for new Matchete parity probes because it avoids
+    deepening the legacy CDE-named planning surface.
     ``wilson_line_filter_terms_by_matching_targets`` applies the same
     conservative target-local filtering policy to generated Wilson-line terms
     as the CDE filter does for legacy CDE terms. It uses Symbolica pattern
@@ -284,6 +288,7 @@ class OneLoopMatchOptions:
     wilson_line_max_total_order: int | None = None
     wilson_line_max_slot_order: int | None = None
     wilson_line_total_orders: Sequence[int] | None = None
+    wilson_line_total_orders_by_trace: Mapping[str, Sequence[int]] | None = None
     wilson_line_entry_labels: Sequence[str] | None = None
     wilson_line_index_prefix: str = "wilson_line"
     wilson_line_act_open_derivatives: bool = False

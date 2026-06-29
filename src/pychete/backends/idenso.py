@@ -99,6 +99,61 @@ def simplify_color(expr: Expression) -> Expression:
     return native_module().simplify_color(expr)
 
 
+@cache
+def _delta_pattern() -> Expression:
+    return s.Delta(s.head("pychete_any_delta_left_"), s.head("pychete_any_delta_right_"))
+
+
+@cache
+def _native_color_wrapper_patterns() -> tuple[Expression, ...]:
+    left = s.head("native_color_wrapper_left_")
+    right = s.head("native_color_wrapper_right_")
+    first = s.head("native_color_wrapper_first_")
+    second = s.head("native_color_wrapper_second_")
+    third = s.head("native_color_wrapper_third_")
+    chain_left = s.head("native_color_wrapper_chain_left_")
+    chain_right = s.head("native_color_wrapper_chain_right_")
+    generator = _native_color_symbol("t")
+    return (
+        _native_color_symbol("g")(left, right),
+        generator(first, second, third),
+        _native_color_symbol("f")(first, second, third),
+        *tuple(
+            _native_color_symbol("chain")(
+                chain_left,
+                chain_right,
+                *(
+                    generator(
+                        s.head(f"native_color_wrapper_chain_adjoint_{arity}_{index}_"),
+                        s.head(f"native_color_wrapper_chain_in_{arity}_{index}_"),
+                        s.head(f"native_color_wrapper_chain_out_{arity}_{index}_"),
+                    )
+                    for index in range(arity)
+                ),
+            )
+            for arity in range(1, _MAX_NATIVE_COLOR_CHAIN_ARITY + 1)
+        ),
+    )
+
+
+def _contains_delta(expr: Expression) -> bool:
+    return bool(expr.matches(_delta_pattern()))
+
+
+def _contains_cg_tensor(expr: Expression) -> bool:
+    return bool(expr.matches(cg_tensor_pattern()))
+
+
+def _contains_field_strength(expr: Expression) -> bool:
+    return bool(expr.matches(field_strength_pattern()))
+
+
+def _contains_native_color_wrapper(expr: Expression) -> bool:
+    if any(expr.contains(_native_color_symbol(name)) for name in ("TR", "CA", "CF", "Nc", "NA")):
+        return True
+    return any(bool(expr.matches(pattern)) for pattern in _native_color_wrapper_patterns())
+
+
 def simplify_pychete_color_algebra(
     theory: Any,
     expr: Expression,
@@ -116,9 +171,15 @@ def simplify_pychete_color_algebra(
     pychete CG tensors when the originating group is unambiguous.
     """
 
+    has_delta = _contains_delta(expr)
+    has_cg = _contains_cg_tensor(expr)
+    if not has_delta and not has_cg:
+        return expr
     from . import spenso
 
-    normalized = contract_pychete_deltas(theory, expr)
+    normalized = contract_pychete_deltas(theory, expr) if has_delta else expr
+    if not _contains_cg_tensor(normalized):
+        return normalized.expand() if has_delta else normalized
     normalized = _replace_adjoint_generators_with_structure_constants(theory, normalized)
     groups = _cg_groups_in_expression(theory, normalized)
     if not groups:
@@ -148,6 +209,8 @@ def decode_native_color_wrappers(
     colour wrappers.
     """
 
+    if not _contains_native_color_wrapper(expr):
+        return expr
     groups = tuple(theory.groups)
     decoded = expr
     if substitute_group_constants:
@@ -530,12 +593,20 @@ def simplify_pychete_field_strength_group_algebra(theory: Any, expr: Expression)
     replacement rules backed by idenso colour traces.
     """
 
-    result = simplify_pychete_field_derivative_metrics(expr)
-    result = contract_pychete_deltas(theory, result)
-    result = simplify_pychete_field_strength_metrics(result)
-    result = simplify_su2_field_strength_generator_bilinears(theory, result)
-    result = simplify_su2_u1_field_strength_generator_bilinears(theory, result)
-    return contract_pychete_deltas(theory, result)
+    has_delta = _contains_delta(expr)
+    has_cg = _contains_cg_tensor(expr)
+    has_field_strength = _contains_field_strength(expr)
+    if not has_delta and not has_cg and not has_field_strength:
+        return expr
+    result = simplify_pychete_field_derivative_metrics(expr) if has_field_strength else expr
+    if has_delta:
+        result = contract_pychete_deltas(theory, result)
+    if has_field_strength:
+        result = simplify_pychete_field_strength_metrics(result)
+    if has_field_strength and has_cg:
+        result = simplify_su2_field_strength_generator_bilinears(theory, result)
+        result = simplify_su2_u1_field_strength_generator_bilinears(theory, result)
+    return contract_pychete_deltas(theory, result) if _contains_delta(result) else result
 
 
 def _replace_candidate_terms(
@@ -623,6 +694,8 @@ def contract_pychete_deltas_into_cg_tensors(expr: Expression) -> Expression:
     projectors.
     """
 
+    if not _contains_delta(expr) or not _contains_cg_tensor(expr):
+        return expr
     out = expr
     replacements = _pychete_delta_cg_contraction_replacements()
     for _ in range(8):
@@ -643,6 +716,8 @@ def contract_pychete_deltas(theory: Any, expr: Expression) -> Expression:
     the stored representation dimension.
     """
 
+    if not _contains_delta(expr):
+        return expr
     out = contract_pychete_deltas_into_cg_tensors(expr)
     replacements = (
         *_pychete_delta_identity_replacements(),
@@ -877,7 +952,8 @@ def _is_dummy_index_label(label: Expression) -> bool:
 def decode_native_color_wrappers_and_simplify_field_strengths(theory: Any, expr: Expression) -> Expression:
     """Decode native idenso/spenso colour wrappers and simplify generated gauge bilinears."""
 
-    return simplify_pychete_field_strength_group_algebra(theory, decode_native_color_wrappers(theory, expr))
+    decoded = decode_native_color_wrappers(theory, expr)
+    return simplify_pychete_field_strength_group_algebra(theory, decoded)
 
 
 def to_dots(expr: Expression) -> Expression:

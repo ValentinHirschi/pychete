@@ -1016,7 +1016,7 @@ def test_public_match_selected_chd_four_slot_total_order_filter_matches_checkpoi
             wilson_line_trace_names=("hScalar-lScalar-lVector-lScalar",),
             wilson_line_max_total_order=2,
             wilson_line_max_slot_order=2,
-            wilson_line_total_orders=(1,),
+            wilson_line_total_orders_by_trace={"hScalar-lScalar-lVector-lScalar": (1,)},
             wilson_line_index_prefix="public_singlet_cHD_four_slot_order1",
             wilson_line_act_open_derivatives=True,
             wilson_line_emit_covariant_derivative_commutators=False,
@@ -1033,14 +1033,20 @@ def test_public_match_selected_chd_four_slot_total_order_filter_matches_checkpoi
             truncate_eft_result=False,
         ),
         matching_condition_targets={condition_name: target},
-        matching_condition_source="interaction_wilson_line_normalized_internal_integral_through_finite_part",
+        matching_condition_source="on_shell_eft_lagrangian",
         matching_condition_expand_source=False,
         matching_condition_truncate_eft=True,
         matching_condition_drop_zero=False,
     )
 
     assert result.metadata["wilson_line_plan_filters_applied"] is True
-    assert result.metadata["wilson_line_total_orders"] == "1"
+    assert result.metadata["wilson_line_total_orders"] is None
+    assert result.metadata["wilson_line_total_orders_by_trace"] == "hScalar-lScalar-lVector-lScalar:1"
+    assert result.metadata["wilson_line_internal_through_finite_source_activated"] is True
+    assert (
+        result.metadata["wilson_line_internal_through_finite_source"]
+        == "interaction_wilson_line_normalized_internal_integral_through_finite_part"
+    )
     assert result.metadata["wilson_line_selected_only"] is True
     assert result.metadata["interaction_wilson_line_plan_entry_count"] == 4
     assert_expr_equal(

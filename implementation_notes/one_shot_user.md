@@ -1904,3 +1904,28 @@ stage-local results, not another coefficient-specific rewrite.
   agreement, off-shell `GreensSimplify`, on-shell `EOMSimplify` with staged
   `InternalSimplify`/`ShiftLagrangian` EOM production and replay, and finally
   `MapEffectiveCouplings`-style target-basis solving.
+- Follow-up implementation slice, 2026-06-29: added
+  `OneLoopMatchOptions.wilson_line_total_orders_by_trace` so generated
+  Wilson-line plans can be filtered with different total-order windows for
+  different trace families. This reflects Matchete's
+  `DeterminePowerInsertions` structure better than forcing one global order
+  filter. The bounded public four-slot Singlet `cHD` checkpoint now uses the
+  per-trace filter and passes. A two-trace aggregate public probe remained too
+  slow under the watchdog and was stopped, so the next frontier is still a
+  performance-aware Matchete-stage composition path rather than a monolithic
+  full-source projection.
+- Performance audit follow-up, 2026-06-29: Matchete's committed Singlet
+  validation timing is about 5.1 seconds for `Match`, 0.31 seconds for
+  `GreensSimplify`, 4.2 seconds for `EOMSimplify`, and 15.6 seconds for
+  `MapEffectiveCouplings`; pychete's selected two-trace public composition is
+  therefore definitely slower than Mathematica for a narrower job. Profiling
+  shows the bottleneck is repeated termwise Wilson-line cleanup
+  (`replace_multiple`, idenso delta/field-strength group passes, NCM
+  scalarization, open-CD action, and projection prefilter label generation),
+  not the final Wilson coefficient lookup. Added conservative no-op guards so
+  idenso colour/delta/field-strength group passes are skipped when the
+  relevant atoms are absent, and fixed the public Wilson-line `INTERNAL`
+  source ordering so later EOM/projection stages consume the through-finite
+  epsilon-expanded source, matching Matchete's `EvaluateSTr -> EpsExpand`
+  boundary. The next performance redesign should move toward Matchete-style
+  collected `EvaluateSTr` staging while retaining termwise diagnostics.
