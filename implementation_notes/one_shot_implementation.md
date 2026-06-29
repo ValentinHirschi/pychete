@@ -190,6 +190,23 @@ Latest bounded probes:
   target-filtered source probe stays bounded and mirrors the Matchete class
   boundary. Future cHD parity slices should improve this source-stage
   algorithm, not raise caps or switch back to heavy-first four-slot expansion.
+- A Matchete inert-`SymGammaFactor` replay of the same dim6/dev3 B selection
+  shows the source-level evanescent difference explicitly. Matchete selects
+  `(-G1 + 8 G2) * (1/eps + log(mubar2/M^2) + 1)` multiplying
+  `i hbar A^2 Bar[H] EOM[B] D H / M^4`. Pychete's raw topology/source probe
+  gives `(2 G1 - 4 G2 - 1/4)` multiplying the same single
+  `Prop[0]^3 Prop[M]` topology. These are equal at epsilon^0 but differ by
+  `epsilon/24`; after the topology pole this is exactly the missing finite
+  `+ i hbar A^2/(24 M^4)`. The one-loop topology formula itself was checked
+  against Matchete's `LoopIntegrate[Prop[0]^3 Prop[M]]` and agrees.
+- Ruled-out fixes for this boundary: moving `ContractMetric` before
+  `WilsonExpand` in pychete's pre-Wilson path leaves the source coefficient
+  unchanged; replacing closed Lorentz metric traces by strict `4` leaves it
+  unchanged; explicitly preferring the Matchete B-source orientations in the
+  Green-basis solve leaves it unchanged. The remaining semantic gap is
+  therefore the d-dimensional `InternalSimplify` / identity-set semantics that
+  produce Matchete's evanescent representative, not projection, vector-current
+  insertion, or scalar topology evaluation.
 
 ## Current Implementation Slice
 
@@ -239,6 +256,14 @@ Latest bounded probes:
   relevant source for Matchete `after_shift_dim6_dev3`. Its `Bar[H] EOM[B] D H`
   finite source coefficient is now recorded as `7 i/36`, short of Matchete's
   `17 i/72`, while the pole/log terms align.
+- Additional bounded probes compared the raw pychete topology coefficient and
+  a Matchete run with inert `EvaluateGammaFactor`. The first mismatch is now
+  localized to the evanescent symmetric-tensor representative:
+  Matchete `-G1 + 8 G2` versus pychete `2 G1 - 4 G2 - 1/4` for the same
+  `Bar[H] EOM[B] D H` source. Per-term splitting is still not
+  performance-competitive and hits the Green-basis cap, so the next runtime
+  slice should port the missing class-wise d-dimensional identity semantics in
+  the aggregate source path.
 - Focused validation passed for scalar Green/vector EOM units, scalar EOM
   units, the two public vector-EOM replay integration regressions, py_compile
   on changed files, static typing, and the bounded Singlet cHD debug probe.

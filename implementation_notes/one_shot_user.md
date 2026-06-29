@@ -1518,6 +1518,16 @@ generic algorithm boundary before runtime pychete changes are accepted.
   The diagnostic route remains the target-filtered aggregate source probe,
   because per-term Green splitting is not performance-competitive with the
   corresponding Matchete stage and should not be rescued by raising caps.
+- Latest evanescent-source diagnosis, 2026-06-29: a Matchete replay with
+  inert `EvaluateGammaFactor` shows the dim6/dev3 B source as
+  `(-G1 + 8 G2) * (1/eps + log(mubar2/M^2) + 1)`, while pychete's raw
+  topology/source probe gives `(2 G1 - 4 G2 - 1/4)` on the same
+  `Prop[0]^3 Prop[M]` topology. These agree at strict four dimensions but
+  differ by `epsilon/24`, exactly the finite cHD gap after the topology pole.
+  Checks ruled out metric-contraction order, closed metric-trace epsilon, and
+  preferred Green-basis representative order. The next implementation target
+  is the missing d-dimensional `InternalSimplify`/identity-set semantics that
+  produce Matchete's evanescent representative in the aggregate source path.
 - Latest user instruction and implementation response, 2026-06-28: perform a
   short remaining-gap study for the first full one-loop matching parity target,
   archive the large live implementation notes to
