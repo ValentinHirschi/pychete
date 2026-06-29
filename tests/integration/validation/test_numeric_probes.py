@@ -892,6 +892,30 @@ def test_matching_result_staged_projection_preserves_hbox_tree_alias_with_direct
     )
 
 
+def test_matching_result_staged_projection_prefers_wilson_line_entry_sources() -> None:
+    theory = _singlet_scalar_extension_theory()
+    entry_a = f"{matching_results_module.WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[entry_a]"
+    entry_b = f"{matching_results_module.WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[entry_b]"
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={
+            matching_results_module.LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE: S("loop_source"),
+            matching_results_module.TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE: S("tree_source"),
+            entry_b: S("entry_b_source"),
+            entry_a: S("entry_a_source"),
+        },
+    )
+
+    assert result.staged_projection_sources() == (
+        entry_a,
+        entry_b,
+        matching_results_module.TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
+    )
+
+
 def test_matching_result_projection_canonizes_source_once_for_ibp_aliases(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:

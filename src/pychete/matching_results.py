@@ -78,8 +78,20 @@ _DEFAULT_LOOP_NORMALIZED_SUPERTRACE_SOURCES = {
     "interaction_wilson_line_internal_integral_through_finite_part": (
         "interaction_wilson_line_normalized_internal_integral_through_finite_part"
     ),
+    "interaction_wilson_line_internal_integral_finite_part": (
+        "interaction_wilson_line_normalized_internal_integral_finite_part"
+    ),
+    "interaction_wilson_line_internal_integral_pole_part": (
+        "interaction_wilson_line_normalized_internal_integral_pole_part"
+    ),
     "interaction_wilson_line_hybrid_internal_integral_through_finite_part": (
         "interaction_wilson_line_normalized_hybrid_internal_integral_through_finite_part"
+    ),
+    "interaction_wilson_line_hybrid_internal_integral_finite_part": (
+        "interaction_wilson_line_normalized_hybrid_internal_integral_finite_part"
+    ),
+    "interaction_wilson_line_hybrid_internal_integral_pole_part": (
+        "interaction_wilson_line_normalized_hybrid_internal_integral_pole_part"
     ),
     "interaction_bosonic_cde_internal_integral_through_finite_part": (
         "interaction_bosonic_cde_normalized_internal_integral_through_finite_part"
@@ -110,6 +122,7 @@ LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE = "loop_only_off_shell_projection_source"
 LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE = "loop_only_on_shell_projection_source"
 TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE = "tree_level_off_shell_projection_source"
 TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE = "tree_level_on_shell_projection_source"
+WILSON_LINE_ON_SHELL_PROJECTION_SOURCE = "wilson_line_on_shell_projection_source"
 
 _OFF_SHELL_STAGED_PROJECTION_SOURCES = (
     LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE,
@@ -313,6 +326,20 @@ class MatchingResult:
         if source == "off_shell_eft_lagrangian":
             candidates = _OFF_SHELL_STAGED_PROJECTION_SOURCES
         elif source == "on_shell_eft_lagrangian":
+            wilson_line_sources = tuple(
+                sorted(
+                    name
+                    for name in self.supertraces
+                    if name.startswith(f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[")
+                )
+            )
+            if wilson_line_sources:
+                tree_source = (
+                    (TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,)
+                    if TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE in self.supertraces
+                    else ()
+                )
+                return (*wilson_line_sources, *tree_source)
             candidates = _ON_SHELL_STAGED_PROJECTION_SOURCES
         else:
             return ()

@@ -1996,3 +1996,15 @@ next real performance step remains an insertion-level collected
   epsilon-expanded source, matching Matchete's `EvaluateSTr -> EpsExpand`
   boundary. The next performance redesign should move toward Matchete-style
   collected `EvaluateSTr` staging while retaining termwise diagnostics.
+- Current continuation, 2026-06-29: following the user's instruction to use
+  Matchete as algorithmic inspiration rather than copying Mathematica
+  implementation details, pychete now preserves selected Wilson-line
+  projection sources entrywise across the scalar-commutator/EOM exposure
+  boundary. Internal minimal-subtraction routes project from normalized finite
+  entries, while raw internal routes retain the existing normalized
+  through-finite activation. The selected Singlet four-slot `cHD` public
+  checkpoint now asserts staged projection and still reproduces the nonzero
+  coefficient. The slice also wires result-wide idenso-backed field-derivative
+  metric contraction before field-strength metric cleanup, which is required
+  for the selected `cHD` source because tensor reduction emits explicit
+  Lorentz metrics while the Warsaw target uses contracted derivative slots.

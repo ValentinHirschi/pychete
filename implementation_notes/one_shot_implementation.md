@@ -626,3 +626,46 @@ Matchete-like generic `FuncNCM` / insertion-level `EvaluateSTr` representation
 that performs insertion replacement and termwise open-CD/symmetry/Wilson
 staging once per collected insertion expression, then splits only by topology
 or diagnostics.
+
+## Current Slice Update: Staged Wilson-Line Projection Sources
+
+This slice made selected-only Wilson-line projection closer to Matchete's
+staged composition principle without introducing a Wilson-specific coefficient
+patch. The public selected Singlet `hScalar-lScalar-lVector-lScalar -> cHD`
+route now keeps per-entry Wilson-line sources through the scalar-commutator
+and EOM/exposure boundary, then projects matching conditions from those staged
+sources instead of from one monolithic on-shell expression.
+
+Important details:
+
+- Internal raw Wilson-line results still activate the normalized
+  through-finite source for later stages, matching the existing
+  `EvaluateSTr -> EpsExpand` boundary.
+- Internal minimal-subtraction Wilson-line results now expose normalized
+  finite and pole supertrace stages entrywise, and staged projection uses the
+  normalized finite entries. Activating through-finite sources for the MS
+  backend was tested and found wrong for the selected `cHD` checkpoint because
+  it changed the final finite source being projected.
+- `MatchingResult.staged_projection_sources("on_shell_eft_lagrangian")` now
+  prefers dynamic `wilson_line_on_shell_projection_source[...]` entries, then
+  appends any tree-level on-shell projection source. This keeps projection
+  linear over the same selected trace entries Matchete evaluates in stages.
+- The selected `cHD` source also exposed a missing native cleanup boundary:
+  tensor reduction emits explicit Lorentz metrics contracting field derivative
+  slots, while the Warsaw projection target uses repeated derivative indices.
+  The result-wide metric cleanup now calls idenso-backed
+  `simplify_pychete_field_derivative_metrics(...)` before
+  `simplify_pychete_field_strength_metrics(...)`, so projection sees the
+  native contracted derivative-slot form.
+
+Focused validation:
+
+- `test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches_checkpoint`
+  now asserts staged Wilson-line projection metadata and still reproduces the
+  selected nonzero `cHD` coefficient.
+- `test_public_match_selected_chd_four_slot_total_order_filter_matches_checkpoint`
+  remains green for the raw internal through-finite path.
+- `test_loop_normalization_exposes_through_finite_projection_sources` now also
+  covers normalized finite/pole Wilson-line stages and their entrywise forms.
+- The idenso field-derivative metric unit test and the staged-source
+  MatchingResult smoke test pass.

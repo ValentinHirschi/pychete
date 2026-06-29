@@ -994,6 +994,14 @@ def test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches
     assert result.metadata["wilson_line_include_unselected_traces"] is False
     assert result.metadata["wilson_line_selected_only"] is True
     assert result.metadata["stage"] == "normalized_interaction_wilson_line_internal_minimal_subtraction_result"
+    assert result.metadata["matching_condition_projection_source"] == "staged"
+    assert result.metadata["wilson_line_on_shell_projection_source_count"] == 1
+    assert result.metadata["wilson_line_on_shell_projection_sources"] == (
+        "wilson_line_on_shell_projection_source[hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0]"
+    )
+    assert result.metadata["matching_condition_projection_sources"] == (
+        result.metadata["wilson_line_on_shell_projection_sources"]
+    )
     assert result.metadata["interaction_wilson_line_paths_weighted_by_component_dofs"] is True
     assert result.metadata["interaction_wilson_line_term_count"] == 4
     assert result.metadata["interaction_wilson_line_component_weighted_term_count"] == 8
@@ -1075,10 +1083,20 @@ def test_loop_normalization_exposes_through_finite_projection_sources() -> None:
     hbar = S("through_finite_hbar")
     raw_sources = {
         "interaction_power_type_internal_integral_through_finite_part": S("raw_power_through_finite"),
+        "interaction_wilson_line_internal_integral_finite_part": S("raw_wilson_finite"),
+        "interaction_wilson_line_internal_integral_finite_part[trace#entry]": S(
+            "raw_wilson_entry_finite"
+        ),
+        "interaction_wilson_line_internal_integral_pole_part": S("raw_wilson_pole"),
+        "interaction_wilson_line_internal_integral_pole_part[trace#entry]": S(
+            "raw_wilson_entry_pole"
+        ),
         "interaction_wilson_line_internal_integral_through_finite_part": S("raw_wilson_through_finite"),
         "interaction_wilson_line_internal_integral_through_finite_part[trace#entry]": S(
             "raw_wilson_entry_through_finite"
         ),
+        "interaction_wilson_line_hybrid_internal_integral_finite_part": S("raw_wilson_hybrid_finite"),
+        "interaction_wilson_line_hybrid_internal_integral_pole_part": S("raw_wilson_hybrid_pole"),
         "interaction_wilson_line_hybrid_internal_integral_through_finite_part": S(
             "raw_wilson_hybrid_through_finite"
         ),
@@ -1091,11 +1109,29 @@ def test_loop_normalization_exposes_through_finite_projection_sources() -> None:
         "interaction_power_type_internal_integral_through_finite_part": (
             "interaction_power_type_normalized_internal_integral_through_finite_part"
         ),
+        "interaction_wilson_line_internal_integral_finite_part": (
+            "interaction_wilson_line_normalized_internal_integral_finite_part"
+        ),
+        "interaction_wilson_line_internal_integral_finite_part[trace#entry]": (
+            "interaction_wilson_line_normalized_internal_integral_finite_part[trace#entry]"
+        ),
+        "interaction_wilson_line_internal_integral_pole_part": (
+            "interaction_wilson_line_normalized_internal_integral_pole_part"
+        ),
+        "interaction_wilson_line_internal_integral_pole_part[trace#entry]": (
+            "interaction_wilson_line_normalized_internal_integral_pole_part[trace#entry]"
+        ),
         "interaction_wilson_line_internal_integral_through_finite_part": (
             "interaction_wilson_line_normalized_internal_integral_through_finite_part"
         ),
         "interaction_wilson_line_internal_integral_through_finite_part[trace#entry]": (
             "interaction_wilson_line_normalized_internal_integral_through_finite_part[trace#entry]"
+        ),
+        "interaction_wilson_line_hybrid_internal_integral_finite_part": (
+            "interaction_wilson_line_normalized_hybrid_internal_integral_finite_part"
+        ),
+        "interaction_wilson_line_hybrid_internal_integral_pole_part": (
+            "interaction_wilson_line_normalized_hybrid_internal_integral_pole_part"
         ),
         "interaction_wilson_line_hybrid_internal_integral_through_finite_part": (
             "interaction_wilson_line_normalized_hybrid_internal_integral_through_finite_part"

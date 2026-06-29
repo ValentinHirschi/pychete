@@ -117,6 +117,7 @@ from .matching_results import (
     LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE,
     TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE,
     TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
+    WILSON_LINE_ON_SHELL_PROJECTION_SOURCE,
     MatchingExpressionComparison,
     MatchingResult,
     MatchingResultComparison,
@@ -7539,6 +7540,45 @@ def _activate_wilson_line_internal_through_finite_source(result: MatchingResult)
     )
 
 
+def _wilson_line_internal_projection_source(
+    result: MatchingResult,
+    selected_backend: OneLoopIntegralBackend,
+) -> str | None:
+    metadata_source = result.metadata.get("wilson_line_internal_through_finite_source")
+    if isinstance(metadata_source, str) and metadata_source:
+        return metadata_source
+    if selected_backend is OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION:
+        source_names = (
+            "interaction_wilson_line_normalized_hybrid_internal_integral_finite_part",
+            "interaction_wilson_line_normalized_internal_integral_finite_part",
+            "interaction_wilson_line_hybrid_internal_integral_finite_part",
+            "interaction_wilson_line_internal_integral_finite_part",
+        )
+    else:
+        source_names = (
+            "interaction_wilson_line_normalized_hybrid_internal_integral_through_finite_part",
+            "interaction_wilson_line_normalized_internal_integral_through_finite_part",
+            "interaction_wilson_line_hybrid_internal_integral_through_finite_part",
+            "interaction_wilson_line_internal_integral_through_finite_part",
+        )
+    return next((source_name for source_name in source_names if source_name in result.supertraces), None)
+
+
+def _activated_wilson_line_internal_entry_sources(
+    result: MatchingResult,
+    source_name: str | None,
+) -> tuple[str, ...]:
+    if source_name is None:
+        return ()
+    source_prefix = f"{source_name}["
+    return tuple(sorted(name for name in result.supertraces if name.startswith(source_prefix)))
+
+
+def _wilson_line_on_shell_projection_source_name(entry_source_name: str, aggregate_source_name: str) -> str:
+    suffix = entry_source_name[len(aggregate_source_name) :]
+    return f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}{suffix}"
+
+
 def _component_weighted_wilson_line_terms(
     path: WilsonLineTracePath,
     terms: Sequence[WilsonLineTraceExpansionTerm],
@@ -9115,6 +9155,7 @@ def match_one_loop(
                 )
         after_scalar_eom_field_redefinition = reduced_on_shell
         scalar_eom_field_redefinition_delta = Expression.num(0)
+        scalar_source_lagrangian: Expression | None = None
         if options.wilson_line_expose_scalar_eom_terms:
             assert options.on_shell_eom_lagrangian is not None
             scalar_source_lagrangian = (options.on_shell_eom_lagrangian + reduced_on_shell).expand()
@@ -9129,6 +9170,70 @@ def match_one_loop(
                 fields=options.on_shell_eom_fields,
                 strict=options.on_shell_eom_strict,
             )
+        wilson_line_projection_sources: dict[str, Expression] = {}
+        aggregate_entry_source = _wilson_line_internal_projection_source(result, selected_backend)
+        if (
+            wilson_line_expansion_indices_by_trace is not None
+            and not wilson_line_include_unselected_traces
+            and aggregate_entry_source is not None
+        ):
+            for entry_source_name in _activated_wilson_line_internal_entry_sources(result, aggregate_entry_source):
+                entry_source = result.supertraces[entry_source_name]
+                entry_exposed = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                    theory,
+                    entry_source,
+                    eom_lagrangian=options.on_shell_eom_lagrangian,
+                    eom_fields=options.on_shell_eom_fields,
+                    expose_scalar_eom_terms=options.wilson_line_expose_scalar_eom_terms,
+                )
+                entry_reduced = entry_exposed
+                if (
+                    options.on_shell_eom_lagrangian is not None
+                    and options.on_shell_eom_abelian_vector_field_redefinition
+                ):
+                    entry_reduced, _entry_eom_rule_count, _entry_vector_delta = (
+                        _apply_on_shell_eom_reduction_to_expression(
+                            theory,
+                            entry_exposed,
+                            eom_lagrangian=options.on_shell_eom_lagrangian,
+                            fields=options.on_shell_eom_fields,
+                            eft_order=eft_order,
+                            min_derivative_order=options.on_shell_eom_min_derivative_order,
+                            strict=options.on_shell_eom_strict,
+                            abelian_vector_field_redefinition=not staged_scalar_eom_vector_field_redefinition,
+                            repeat=options.on_shell_replacement_repeat,
+                        )
+                    )
+                    if staged_scalar_eom_vector_field_redefinition:
+                        entry_reduced, _entry_vector_staged_delta = (
+                            _apply_wilson_line_abelian_vector_eom_field_redefinition(
+                                theory,
+                                entry_reduced,
+                                source_lagrangian=options.on_shell_eom_lagrangian,
+                                eom_terms_lagrangian=entry_exposed,
+                                max_order=eft_order,
+                                fields=options.on_shell_eom_fields,
+                                strict=options.on_shell_eom_strict,
+                            )
+                        )
+                entry_after_scalar_eom = entry_reduced
+                if options.wilson_line_expose_scalar_eom_terms:
+                    assert scalar_source_lagrangian is not None
+                    entry_after_scalar_eom, _entry_scalar_eom_delta = (
+                        _apply_wilson_line_scalar_eom_field_redefinition(
+                            theory,
+                            entry_reduced,
+                            source_lagrangian=scalar_source_lagrangian,
+                            max_order=eft_order,
+                            fields=options.on_shell_eom_fields,
+                            strict=options.on_shell_eom_strict,
+                        )
+                    )
+                projection_name = _wilson_line_on_shell_projection_source_name(
+                    entry_source_name,
+                    aggregate_entry_source,
+                )
+                wilson_line_projection_sources[projection_name] = entry_after_scalar_eom
         scalar_supertraces = {
             **result.supertraces,
             "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
@@ -9159,7 +9264,10 @@ def match_one_loop(
         result = replace(
             result,
             on_shell_eft_lagrangian=after_scalar_eom_field_redefinition,
-            supertraces=scalar_supertraces,
+            supertraces={
+                **scalar_supertraces,
+                **wilson_line_projection_sources,
+            },
             metadata={
                 **result.metadata,
                 "wilson_line_scalar_commutator_bilinears_reduced": (
@@ -9178,6 +9286,10 @@ def match_one_loop(
                 "wilson_line_scalar_commutator_abelian_vector_field_redefinition_staged": (
                     staged_scalar_eom_vector_field_redefinition
                     and not is_zero(scalar_commutator_vector_field_redefinition_delta)
+                ),
+                "wilson_line_on_shell_projection_source_count": len(wilson_line_projection_sources),
+                "wilson_line_on_shell_projection_sources": (
+                    ",".join(sorted(wilson_line_projection_sources)) if wilson_line_projection_sources else None
                 ),
             },
         )
@@ -9233,14 +9345,18 @@ def match_one_loop(
 def _simplify_result_field_strength_metrics(result: MatchingResult) -> MatchingResult:
     from .backends import idenso as idenso_backend
 
-    simplified_off_shell = idenso_backend.simplify_pychete_field_strength_metrics(result.off_shell_eft_lagrangian)
-    simplified_on_shell = idenso_backend.simplify_pychete_field_strength_metrics(result.on_shell_eft_lagrangian)
+    def simplify(expression: Expression) -> Expression:
+        derivative_simplified = idenso_backend.simplify_pychete_field_derivative_metrics(expression)
+        return idenso_backend.simplify_pychete_field_strength_metrics(derivative_simplified)
+
+    simplified_off_shell = simplify(result.off_shell_eft_lagrangian)
+    simplified_on_shell = simplify(result.on_shell_eft_lagrangian)
     simplified_matching_conditions = {
-        name: idenso_backend.simplify_pychete_field_strength_metrics(expression)
+        name: simplify(expression)
         for name, expression in result.matching_conditions.items()
     }
     simplified_supertraces = {
-        name: idenso_backend.simplify_pychete_field_strength_metrics(expression)
+        name: simplify(expression)
         for name, expression in result.supertraces.items()
     }
     return replace(
@@ -9251,6 +9367,7 @@ def _simplify_result_field_strength_metrics(result: MatchingResult) -> MatchingR
         supertraces=simplified_supertraces,
         metadata={
             **result.metadata,
+            "field_derivative_metric_simplified": True,
             "field_strength_metric_simplified": True,
         },
     )
