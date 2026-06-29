@@ -1838,3 +1838,19 @@ stage-local results, not another coefficient-specific rewrite.
   Matchete's validation layers: off-shell Green-basis cleanup, on-shell
   systematic field redefinitions, and final target-basis Wilson-condition
   solving/truncation.
+- Follow-up source audit refresh, 2026-06-29: re-read the concrete Matchete
+  source files for the active one-loop path:
+  `Package/Matching.m`, `Package/SuperTrace.m`,
+  `Package/LoopIntegration.m`, `Package/EFTCounting.m`,
+  `Package/Simplifications.m`, `Package/FieldRedef.m`,
+  `Package/CouplingManipulations.m`, and
+  `Package/DevTools/Validation.m`. The live implementation notes now record
+  the source-level concepts behind `SetSubstitutions`,
+  `DeterminePowerInsertions`, `EvaluateSTr`, `LoopIntegrate`,
+  `InternalSimplify`, `ConstructOperatorIdentities`, `IdentitiesIBP`,
+  `EOMSimplify`, `PerformSystematicFieldRedefs`, `ShiftLagrangian`,
+  `VectorShift`, `SelectOperatorDevsAndDim`, and
+  `MapEffectiveCouplingsInternal`. The next Singlet `cHD` target remains the
+  earliest unchecked validation boundary: Matchete's class-local
+  `InternalSimplify` operator identities and the subsequent vector-EOM
+  `ShiftLagrangian` replay, not another final-coefficient patch.
