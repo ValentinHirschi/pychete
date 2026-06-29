@@ -95,6 +95,7 @@ from .matching_options import (
     OneLoopMatchOptions,
     OneLoopNormalization,
     VakintIntegralStage,
+    WilsonLineInternalEvaluationMode,
     one_loop_normalization_factor,
 )
 from .matching_results import (
@@ -216,6 +217,7 @@ __all__ = [
     "Theory",
     "ValidationFixture",
     "VakintIntegralStage",
+    "WilsonLineInternalEvaluationMode",
     "canonical_string",
     "WilsonLineExpansionPlan",
     "WilsonLineExpansionPlanEntry",

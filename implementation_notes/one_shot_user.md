@@ -117,6 +117,18 @@ pychete checkpoints match the finite Singlet `cHD` sources and now also the
 Matchete pole-through-finite Laurent convention locally; the remaining
 frontier is efficient public `Theory.match(...)` composition of these same
 stage-local results, not another coefficient-specific rewrite.
+Latest performance slice, 2026-06-29: pychete now has a public
+`WilsonLineInternalEvaluationMode` and defaults public internal Wilson-line
+matching to `entrywise`. This collects each plan entry, groups same-topology
+pre-Wilson numerators, and evaluates scalar integrals per entry while keeping
+termwise diagnostics available. The four-slot Singlet `cHD` checkpoint still
+passes with this mode. A staged two-trace probe shows setup and plan
+generation are cheap, but Wilson-line term generation itself still takes about
+38 seconds for 68 kept terms; the active slowdown is therefore the repeated
+open-CD/Wilson/postprocess chain over the four-slot path orientations. The
+next performance refactor should follow Matchete more closely by constructing
+collected path-sum entries before `ActWithOpenCDs`, `WilsonExpand`, and idenso
+cleanup, then split only where topology or diagnostics require it.
 
 ## Approved Plan
 

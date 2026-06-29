@@ -9,7 +9,7 @@ from .functional import expand_cd_operators, normalize_conjugate_scalar_field_sl
 from .logging import get_logger, progress
 from .matching_options import VakintIntegralStage
 from .noncommutative import normalize_ncm_chains, scalarize_commutative_ncm_chains
-from .symbols import SymbolRole, s
+from .symbols import SymbolRole, canonical_string, s
 from .theory import CovariantDerivativeCommutatorMode, Theory
 from .wilson_line_eom import _apply_wilson_line_post_integral_scalar_commutator_bilinears
 
@@ -401,6 +401,143 @@ def wilson_line_internal_evaluated_terms_from_terms(
     return evaluated_by_entry["selected"]
 
 
+def wilson_line_internal_evaluated_entry_expressions_by_entry_from_terms(
+    theory: Theory,
+    grouped_terms: Mapping[str, Sequence[Any]],
+    *,
+    tensor_reduce: bool,
+    tensor_reduce_engine: Any | None,
+    tensor_reduce_before_wilson_expand: bool,
+    max_wilson_derivative_order: int,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
+    epsilon: Expression | None,
+    mu_r_squared: Expression | None,
+) -> dict[str, Expression]:
+    """Evaluate Wilson-line terms after collecting each plan entry.
+
+    This is closer to Matchete's ``EvaluateSTr`` staging than the diagnostic
+    termwise path: terms sharing an entry and propagator topology are summed
+    before the expensive pre-Wilson tensor/Wilson/postprocess chain runs.
+    """
+
+    from .backends import vacuum_integrals
+
+    total_terms = sum(len(entry_terms) for entry_terms in grouped_terms.values())
+    evaluated_by_entry: dict[str, Expression] = {}
+    with progress(
+        f"evaluating {total_terms} Wilson-line scalar vacuum integrals by entry",
+        logger=_LOGGER,
+    ):
+        for entry_label, entry_terms in grouped_terms.items():
+            raw = wilson_line_internal_entry_vakint_integral_expression_from_terms(
+                theory,
+                entry_terms,
+                tensor_reduce=tensor_reduce,
+                tensor_reduce_engine=tensor_reduce_engine,
+                tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+                max_wilson_derivative_order=max_wilson_derivative_order,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                epsilon=epsilon,
+            )
+            evaluated_by_entry[entry_label] = vacuum_integrals.evaluate_one_loop_vakint_expression(
+                raw,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+                combine_terms=False,
+            )
+    return evaluated_by_entry
+
+
+def wilson_line_internal_entry_vakint_integral_expression_from_terms(
+    theory: Theory,
+    entry_terms: Sequence[Any],
+    *,
+    tensor_reduce: bool,
+    tensor_reduce_engine: Any | None,
+    tensor_reduce_before_wilson_expand: bool,
+    max_wilson_derivative_order: int,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
+    epsilon: Expression | None,
+) -> Expression:
+    """Return one collected entry-level vakint expression from Wilson-line terms."""
+
+    from .backends import vakint
+
+    pre_wilson_terms_by_topology: dict[
+        tuple[tuple[str, ...], tuple[int, ...]],
+        tuple[tuple[Expression, ...], tuple[int, ...], list[Any]],
+    ] = {}
+    ordinary_raw_terms: list[Expression] = []
+    for term in entry_terms:
+        use_pre_wilson_numerator = (
+            tensor_reduce
+            and tensor_reduce_before_wilson_expand
+            and term.pre_wilson_numerator is not None
+        )
+        if use_pre_wilson_numerator:
+            key = (
+                tuple(canonical_string(mass_squared) for mass_squared in term.mass_squareds),
+                tuple(term.propagator_powers),
+            )
+            if key not in pre_wilson_terms_by_topology:
+                pre_wilson_terms_by_topology[key] = (
+                    tuple(term.mass_squareds),
+                    tuple(term.propagator_powers),
+                    [],
+                )
+            pre_wilson_terms_by_topology[key][2].append(term)
+            continue
+        ordinary_raw_terms.append(term.vakint_integral_expression())
+
+    raw_parts: list[Expression] = []
+    for mass_squareds, propagator_powers, terms_for_topology in pre_wilson_terms_by_topology.values():
+        raw_parts.append(
+            wilson_line_matchete_order_pre_wilson_integral_expression_from_terms(
+                theory,
+                terms_for_topology,
+                mass_squareds=mass_squareds,
+                propagator_powers=propagator_powers,
+                max_wilson_derivative_order=max_wilson_derivative_order,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                epsilon=epsilon,
+            )
+        )
+    if ordinary_raw_terms:
+        ordinary_raw = sum_expr(ordinary_raw_terms)
+        if tensor_reduce:
+            ordinary_raw = vakint.tensor_reduce(ordinary_raw, engine=tensor_reduce_engine)
+            ordinary_raw = vakint.decode_pychete_namespace(theory, ordinary_raw)
+            ordinary_raw = postprocess_wilson_line_tensor_reduced_expression(
+                theory,
+                ordinary_raw,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears_option=False,
+                epsilon=epsilon,
+            )
+        raw_parts.append(ordinary_raw)
+    return sum_expr(raw_parts).expand()
+
+
 def wilson_line_internal_evaluated_terms_by_entry_from_terms(
     theory: Theory,
     grouped_terms: Mapping[str, Sequence[Any]],
@@ -498,6 +635,78 @@ def wilson_line_matchete_order_pre_wilson_integral_expression(
 ) -> Expression:
     """Lower a formal WilsonTerm numerator in Matchete's tensor-stage order."""
 
+    if term.pre_wilson_numerator is None:
+        return term.vakint_integral_expression()
+    return wilson_line_matchete_order_pre_wilson_integral_expression_from_numerator(
+        theory,
+        scalarize_commutative_ncm_chains(term.pre_wilson_numerator),
+        term.mass_squareds,
+        term.propagator_powers,
+        max_wilson_derivative_order=max_wilson_derivative_order,
+        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+        expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
+        epsilon=epsilon,
+    )
+
+
+def wilson_line_matchete_order_pre_wilson_integral_expression_from_terms(
+    theory: Theory,
+    terms_in: Sequence[Any],
+    *,
+    mass_squareds: Sequence[Expression],
+    propagator_powers: Sequence[int],
+    max_wilson_derivative_order: int,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
+    epsilon: Expression | None,
+) -> Expression:
+    """Lower a same-topology group of formal WilsonTerm numerators."""
+
+    numerator = sum_expr(
+        scalarize_commutative_ncm_chains(term.pre_wilson_numerator)
+        for term in terms_in
+        if term.pre_wilson_numerator is not None
+    ).expand()
+    return wilson_line_matchete_order_pre_wilson_integral_expression_from_numerator(
+        theory,
+        numerator,
+        mass_squareds,
+        propagator_powers,
+        max_wilson_derivative_order=max_wilson_derivative_order,
+        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=epsilon,
+    )
+
+
+def wilson_line_matchete_order_pre_wilson_integral_expression_from_numerator(
+    theory: Theory,
+    numerator: Expression,
+    mass_squareds: Sequence[Expression],
+    propagator_powers: Sequence[int],
+    *,
+    max_wilson_derivative_order: int,
+    emit_covariant_derivative_commutators: bool,
+    emit_covariant_derivative_commutator_passes: int,
+    covariant_derivative_commutator_mode: CovariantDerivativeCommutatorMode,
+    expand_covariant_derivative_commutators: bool,
+    simplify_pychete_color_algebra: bool,
+    expose_scalar_derivative_commutator_bilinears: bool,
+    epsilon: Expression | None,
+) -> Expression:
+    """Lower a formal WilsonTerm numerator in Matchete's tensor-stage order."""
+
     from .backends import vakint
     from .loop_integration import (
         collect_loop_momenta_to_symmetric_lorentz,
@@ -506,9 +715,6 @@ def wilson_line_matchete_order_pre_wilson_integral_expression(
     )
     from .wilson_lines import expand_wilson_terms, remove_symmetry_vanishing_wilson_terms
 
-    if term.pre_wilson_numerator is None:
-        return term.vakint_integral_expression()
-    numerator = scalarize_commutative_ncm_chains(term.pre_wilson_numerator)
     numerator = collect_loop_momenta_to_symmetric_lorentz(
         numerator,
         include_massless_denominator_shift=True,
@@ -542,8 +748,8 @@ def wilson_line_matchete_order_pre_wilson_integral_expression(
     )
     return wilson_line_matchete_order_numerator_to_vakint_integral(
         numerator,
-        term.mass_squareds,
-        term.propagator_powers,
+        mass_squareds,
+        propagator_powers,
         vakint_module=vakint,
     )
 

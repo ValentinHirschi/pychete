@@ -87,6 +87,7 @@ from .matching_integrals import (
     theory_owned_generated_lorentz_index as _theory_owned_generated_lorentz_index,
     vakint_expression_at_stage as _vakint_expression_at_stage,
     vakint_integral_terms_at_stage as _vakint_integral_terms_at_stage,
+    wilson_line_internal_evaluated_entry_expressions_by_entry_from_terms as _wilson_line_internal_evaluated_entry_expressions_by_entry_from_terms,
     wilson_line_internal_evaluated_terms_by_entry_from_terms as _wilson_line_internal_evaluated_terms_by_entry_from_terms,
     wilson_line_internal_evaluated_terms_from_terms as _wilson_line_internal_evaluated_terms_from_terms,
     wilson_line_internal_expression_map_by_entry as _wilson_line_internal_expression_map_by_entry,
@@ -100,6 +101,7 @@ from .matching_options import (
     OneLoopNormalization,
     OneLoopNormalizationInput,
     VakintIntegralStage,
+    WilsonLineInternalEvaluationMode,
     one_loop_normalization_label,
 )
 from .matching_projection_filters import (
@@ -1980,6 +1982,11 @@ class OneLoopSetup:
             include_light_only=include_light_only,
             trace_names=tuple(entry.trace_name for entry in plan_entries),
         )
+        path_term_cache: dict[
+            tuple[str, tuple[tuple[str, ...], ...], str],
+            tuple[WilsonLineTracePath, tuple[WilsonLineTraceExpansionTerm, ...]],
+        ] = {}
+        path_cache_hits = 0
         for entry in plan_entries:
             terms: list[WilsonLineTraceExpansionTerm] = []
             for path in paths_by_trace[entry.trace_name]:
@@ -1990,16 +1997,25 @@ class OneLoopSetup:
                 ):
                     continue
                 path = _wilson_line_path_with_projection_filtered_entries(path, term_atom_requirements)
-                path_terms = path.propagator_expansion_terms(
-                    entry.expansion_indices,
-                    act_open_derivatives=act_open_derivatives,
-                    emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-                    emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-                    covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
-                    expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-                    max_wilson_derivative_order=max_wilson_derivative_order,
-                    simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-                )
+                cache_key = _wilson_line_path_term_cache_key(path, entry)
+                cached = path_term_cache.get(cache_key) if cache_key is not None else None
+                if cached is None:
+                    path_terms = path.propagator_expansion_terms(
+                        entry.expansion_indices,
+                        act_open_derivatives=act_open_derivatives,
+                        emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                        emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                        covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                        expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                        max_wilson_derivative_order=max_wilson_derivative_order,
+                        simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                    )
+                    if cache_key is not None:
+                        path_term_cache[cache_key] = (path, path_terms)
+                else:
+                    source_path, source_terms = cached
+                    path_terms = _clone_wilson_line_terms_for_path(source_terms, source_path, path)
+                    path_cache_hits += 1
                 if self.wilson_line_weight_paths_by_component_dofs:
                     path_terms = _component_weighted_wilson_line_terms(
                         path,
@@ -2010,6 +2026,8 @@ class OneLoopSetup:
                 terms,
                 term_atom_requirements,
             )
+        if path_cache_hits:
+            _LOGGER.debug("reused %s cached Wilson-line path-template expansions", path_cache_hits)
         return grouped
 
     def interaction_wilson_line_expansion_terms(
@@ -2433,6 +2451,7 @@ class OneLoopSetup:
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
         expose_scalar_derivative_commutator_bilinears: bool = False,
+        internal_evaluation_mode: WilsonLineInternalEvaluationMode | str = WilsonLineInternalEvaluationMode.TERMWISE,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the Wilson-line-expanded interaction result evaluated internally."""
@@ -2456,22 +2475,45 @@ class OneLoopSetup:
         terms = _flatten_wilson_line_terms(grouped_terms)
         raw_vakint_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
         raw_vakint_sum = _wilson_line_raw_integral_sum_from_expressions(raw_vakint_integrals.values())
-        evaluated_terms_by_entry = _wilson_line_internal_evaluated_terms_by_entry_from_terms(
-            self.theory,
-            grouped_terms,
-            tensor_reduce=tensor_reduce,
-            tensor_reduce_engine=tensor_reduce_engine,
-            tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
-            max_wilson_derivative_order=max_wilson_derivative_order,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
-            epsilon=epsilon,
-            mu_r_squared=mu_r_squared,
-        )
+        selected_internal_evaluation_mode = WilsonLineInternalEvaluationMode.from_user(internal_evaluation_mode)
+        evaluated_terms_by_entry: dict[str, tuple[Expression, ...]]
+        if selected_internal_evaluation_mode is WilsonLineInternalEvaluationMode.ENTRYWISE:
+            evaluated_entry_expressions = _wilson_line_internal_evaluated_entry_expressions_by_entry_from_terms(
+                self.theory,
+                grouped_terms,
+                tensor_reduce=tensor_reduce,
+                tensor_reduce_engine=tensor_reduce_engine,
+                tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+                max_wilson_derivative_order=max_wilson_derivative_order,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+            )
+            evaluated_terms_by_entry = {
+                entry_label: (entry_expression,)
+                for entry_label, entry_expression in evaluated_entry_expressions.items()
+            }
+        else:
+            evaluated_terms_by_entry = _wilson_line_internal_evaluated_terms_by_entry_from_terms(
+                self.theory,
+                grouped_terms,
+                tensor_reduce=tensor_reduce,
+                tensor_reduce_engine=tensor_reduce_engine,
+                tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+                max_wilson_derivative_order=max_wilson_derivative_order,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+            )
         evaluated_terms = _flatten_expression_slots(evaluated_terms_by_entry.values())
         evaluated_by_entry = _wilson_line_internal_expression_map_by_entry(
             evaluated_terms_by_entry,
@@ -2610,7 +2652,10 @@ class OneLoopSetup:
                 "interaction_wilson_line_tensor_reduce_before_wilson_expand": (
                     tensor_reduce_before_wilson_expand
                 ),
-                "interaction_wilson_line_internal_termwise_evaluation": True,
+                "interaction_wilson_line_internal_evaluation_mode": selected_internal_evaluation_mode.value,
+                "interaction_wilson_line_internal_termwise_evaluation": (
+                    selected_internal_evaluation_mode is WilsonLineInternalEvaluationMode.TERMWISE
+                ),
                 "combine_terms": combine_terms,
                 "uses_interaction_operator": True,
                 "uses_wilson_line_expansion": True,
@@ -2640,6 +2685,7 @@ class OneLoopSetup:
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
         expose_scalar_derivative_commutator_bilinears: bool = False,
+        internal_evaluation_mode: WilsonLineInternalEvaluationMode | str = WilsonLineInternalEvaluationMode.TERMWISE,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the internal Wilson-line result after minimal-subtraction pole removal."""
@@ -2663,22 +2709,45 @@ class OneLoopSetup:
         terms = _flatten_wilson_line_terms(grouped_terms)
         raw_vakint_integrals = _wilson_line_vakint_integral_expression_map_from_terms(grouped_terms)
         raw_vakint_sum = _wilson_line_raw_integral_sum_from_expressions(raw_vakint_integrals.values())
-        evaluated_terms_by_entry = _wilson_line_internal_evaluated_terms_by_entry_from_terms(
-            self.theory,
-            grouped_terms,
-            tensor_reduce=tensor_reduce,
-            tensor_reduce_engine=tensor_reduce_engine,
-            tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
-            max_wilson_derivative_order=max_wilson_derivative_order,
-            emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
-            emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
-            covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
-            expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
-            simplify_pychete_color_algebra=simplify_pychete_color_algebra,
-            expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
-            epsilon=epsilon,
-            mu_r_squared=mu_r_squared,
-        )
+        selected_internal_evaluation_mode = WilsonLineInternalEvaluationMode.from_user(internal_evaluation_mode)
+        evaluated_terms_by_entry: dict[str, tuple[Expression, ...]]
+        if selected_internal_evaluation_mode is WilsonLineInternalEvaluationMode.ENTRYWISE:
+            evaluated_entry_expressions = _wilson_line_internal_evaluated_entry_expressions_by_entry_from_terms(
+                self.theory,
+                grouped_terms,
+                tensor_reduce=tensor_reduce,
+                tensor_reduce_engine=tensor_reduce_engine,
+                tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+                max_wilson_derivative_order=max_wilson_derivative_order,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+            )
+            evaluated_terms_by_entry = {
+                entry_label: (entry_expression,)
+                for entry_label, entry_expression in evaluated_entry_expressions.items()
+            }
+        else:
+            evaluated_terms_by_entry = _wilson_line_internal_evaluated_terms_by_entry_from_terms(
+                self.theory,
+                grouped_terms,
+                tensor_reduce=tensor_reduce,
+                tensor_reduce_engine=tensor_reduce_engine,
+                tensor_reduce_before_wilson_expand=tensor_reduce_before_wilson_expand,
+                max_wilson_derivative_order=max_wilson_derivative_order,
+                emit_covariant_derivative_commutators=emit_covariant_derivative_commutators,
+                emit_covariant_derivative_commutator_passes=emit_covariant_derivative_commutator_passes,
+                covariant_derivative_commutator_mode=covariant_derivative_commutator_mode,
+                expand_covariant_derivative_commutators=expand_covariant_derivative_commutators,
+                simplify_pychete_color_algebra=simplify_pychete_color_algebra,
+                expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
+                epsilon=epsilon,
+                mu_r_squared=mu_r_squared,
+            )
         evaluated_terms = _flatten_expression_slots(evaluated_terms_by_entry.values())
         evaluated_by_entry = _wilson_line_internal_expression_map_by_entry(
             evaluated_terms_by_entry,
@@ -2819,8 +2888,13 @@ class OneLoopSetup:
                 "interaction_wilson_line_tensor_reduce_before_wilson_expand": (
                     tensor_reduce_before_wilson_expand
                 ),
-                "interaction_wilson_line_internal_termwise_evaluation": True,
-                "interaction_wilson_line_internal_termwise_minimal_subtraction": True,
+                "interaction_wilson_line_internal_evaluation_mode": selected_internal_evaluation_mode.value,
+                "interaction_wilson_line_internal_termwise_evaluation": (
+                    selected_internal_evaluation_mode is WilsonLineInternalEvaluationMode.TERMWISE
+                ),
+                "interaction_wilson_line_internal_termwise_minimal_subtraction": (
+                    selected_internal_evaluation_mode is WilsonLineInternalEvaluationMode.TERMWISE
+                ),
                 "combine_terms": combine_terms,
                 "uses_interaction_operator": True,
                 "uses_wilson_line_expansion": True,
@@ -3118,6 +3192,7 @@ class OneLoopSetup:
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
         expose_scalar_derivative_commutator_bilinears: bool = False,
+        internal_evaluation_mode: WilsonLineInternalEvaluationMode | str = WilsonLineInternalEvaluationMode.TERMWISE,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid Wilson-line/interaction result evaluated internally."""
@@ -3156,6 +3231,7 @@ class OneLoopSetup:
             combine_terms=combine_terms,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
+            internal_evaluation_mode=internal_evaluation_mode,
             term_atom_requirements=term_atom_requirements,
         )
         result = _combine_interaction_expansion_hybrid_results(
@@ -3214,6 +3290,7 @@ class OneLoopSetup:
         combine_terms: bool = False,
         simplify_pychete_color_algebra: bool = False,
         expose_scalar_derivative_commutator_bilinears: bool = False,
+        internal_evaluation_mode: WilsonLineInternalEvaluationMode | str = WilsonLineInternalEvaluationMode.TERMWISE,
         term_atom_requirements: ProjectionAtomRequirementGroups | None = None,
     ) -> MatchingResult:
         """Return the hybrid internal Wilson-line result after pole removal."""
@@ -3240,6 +3317,7 @@ class OneLoopSetup:
             combine_terms=combine_terms,
             simplify_pychete_color_algebra=simplify_pychete_color_algebra,
             expose_scalar_derivative_commutator_bilinears=expose_scalar_derivative_commutator_bilinears,
+            internal_evaluation_mode=internal_evaluation_mode,
             term_atom_requirements=term_atom_requirements,
         )
         pole = unrenormalized.expression("interaction_wilson_line_hybrid_internal_integral_pole_part")
@@ -7391,6 +7469,62 @@ def _component_weighted_wilson_line_terms(
     )
 
 
+def _wilson_line_path_term_cache_key(
+    path: WilsonLineTracePath,
+    entry: WilsonLineExpansionPlanEntry,
+) -> tuple[str, tuple[tuple[str, ...], ...], str] | None:
+    """Return a conservative cache key for bosonic Wilson-line path templates."""
+
+    if any(mode.statistics is FluctuationStatistics.FERMIONIC for mode in path.propagator_modes):
+        return None
+    path_key_parts = (
+        canonical_string(path.prefactor),
+        canonical_string(path.closing_field_label),
+        tuple(canonical_string(path_entry) for path_entry in path.entries),
+        tuple(canonical_string(mode.field) for mode in path.propagator_modes),
+        tuple(canonical_string(mode.field) for mode in path.propagation_target_modes),
+    )
+    return (
+        path.trace_name,
+        tuple(tuple(canonical_string(index) for index in slot) for slot in entry.expansion_indices),
+        repr(path_key_parts),
+    )
+
+
+def _clone_wilson_line_terms_for_path(
+    terms: Sequence[WilsonLineTraceExpansionTerm],
+    source_path: WilsonLineTracePath,
+    target_path: WilsonLineTracePath,
+) -> tuple[WilsonLineTraceExpansionTerm, ...]:
+    """Clone cached bosonic Wilson-line terms onto another equivalent path."""
+
+    replacements = [
+        Replacement(source_index, target_index)
+        for source_index, target_index in zip(source_path.link_indices, target_path.link_indices, strict=True)
+        if not bool(source_index == target_index)
+    ]
+
+    def remap(expr: Expression | None) -> Expression | None:
+        if expr is None or not replacements:
+            return expr
+        return expr.replace_multiple(replacements)
+
+    def remap_required(expr: Expression) -> Expression:
+        if not replacements:
+            return expr
+        return expr.replace_multiple(replacements)
+
+    return tuple(
+        replace(
+            term,
+            path_index=target_path.path_index,
+            numerator=remap_required(term.numerator),
+            pre_wilson_numerator=remap(term.pre_wilson_numerator),
+        )
+        for term in terms
+    )
+
+
 def _combine_bosonic_cde_hybrid_results(
     interaction_remainder: MatchingResult,
     cde_result: MatchingResult,
@@ -8047,6 +8181,7 @@ def match_one_loop(
                 expose_scalar_derivative_commutator_bilinears=(
                     wilson_line_builder_expose_scalar_derivative_commutator_bilinears
                 ),
+                internal_evaluation_mode=options.wilson_line_internal_evaluation_mode,
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
         else:
@@ -8080,6 +8215,7 @@ def match_one_loop(
                 expose_scalar_derivative_commutator_bilinears=(
                     wilson_line_builder_expose_scalar_derivative_commutator_bilinears
                 ),
+                internal_evaluation_mode=options.wilson_line_internal_evaluation_mode,
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
     elif (
@@ -8119,6 +8255,7 @@ def match_one_loop(
                 expose_scalar_derivative_commutator_bilinears=(
                     wilson_line_builder_expose_scalar_derivative_commutator_bilinears
                 ),
+                internal_evaluation_mode=options.wilson_line_internal_evaluation_mode,
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
         else:
@@ -8152,6 +8289,7 @@ def match_one_loop(
                 expose_scalar_derivative_commutator_bilinears=(
                     wilson_line_builder_expose_scalar_derivative_commutator_bilinears
                 ),
+                internal_evaluation_mode=options.wilson_line_internal_evaluation_mode,
                 term_atom_requirements=wilson_line_term_atom_requirements,
             )
     elif (

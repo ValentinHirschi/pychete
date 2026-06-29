@@ -1042,6 +1042,8 @@ def test_public_match_selected_chd_four_slot_total_order_filter_matches_checkpoi
     assert result.metadata["wilson_line_plan_filters_applied"] is True
     assert result.metadata["wilson_line_total_orders"] is None
     assert result.metadata["wilson_line_total_orders_by_trace"] == "hScalar-lScalar-lVector-lScalar:1"
+    assert result.metadata["interaction_wilson_line_internal_evaluation_mode"] == "entrywise"
+    assert result.metadata["interaction_wilson_line_internal_termwise_evaluation"] is False
     assert result.metadata["wilson_line_internal_through_finite_source_activated"] is True
     assert (
         result.metadata["wilson_line_internal_through_finite_source"]

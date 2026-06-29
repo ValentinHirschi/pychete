@@ -25,6 +25,7 @@ from pychete import (
     SymbolRole,
     Theory,
     VakintIntegralStage,
+    WilsonLineInternalEvaluationMode,
     WilsonLineTraceExpansionTerm,
     WilsonLineTracePath,
     WilsonLineExpansionPlan,
@@ -2345,6 +2346,24 @@ def test_wilson_line_internal_evaluation_can_tensor_reduce_before_wilson_expansi
     assert "pychete::WilsonTerm" not in rendered
     assert "pychete::Metric" not in rendered
     assert "pychete::FieldStrength" in rendered
+
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_entry_expressions_by_entry_from_terms(
+        theory,
+        {"probe#wilson0": (term,)},
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="inversions",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+
+    assert_expr_equal(evaluated_by_entry["probe#wilson0"], evaluated[0])
 
 
 def test_one_loop_match_can_use_selected_wilson_line_expansion_route() -> None:

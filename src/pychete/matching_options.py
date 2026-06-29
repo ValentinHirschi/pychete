@@ -70,6 +70,25 @@ class OneLoopNormalization(StrEnum):
             ) from exc
 
 
+class WilsonLineInternalEvaluationMode(StrEnum):
+    """Evaluation granularity for internal Wilson-line scalar integrals."""
+
+    TERMWISE = "termwise"
+    ENTRYWISE = "entrywise"
+
+    @classmethod
+    def from_user(
+        cls,
+        value: WilsonLineInternalEvaluationMode | str,
+    ) -> WilsonLineInternalEvaluationMode:
+        """Normalize a user-provided Wilson-line internal evaluation mode."""
+
+        try:
+            return cls(value)
+        except ValueError as exc:
+            raise ValueError("Wilson-line internal evaluation mode must be 'termwise' or 'entrywise'") from exc
+
+
 OneLoopNormalizationInput: TypeAlias = OneLoopNormalization | str | Expression | None
 OnShellReplacementInput: TypeAlias = Mapping[Expression, Expression] | Sequence[Replacement] | None
 TensorComponentInput: TypeAlias = Expression | int | float | complex
@@ -235,6 +254,13 @@ class OneLoopMatchOptions:
     the omitted internal-index component multiplicity as a small integer
     Wilson-line path weight. Keep both options opt-in until the weighted route
     has been validated beyond the Singlet ``cHD`` four-slot frontier.
+    ``wilson_line_internal_evaluation_mode`` controls the granularity of
+    pychete's internal analytic Wilson-line integral evaluation. Public
+    matching defaults to ``"entrywise"`` so each generated plan entry is
+    collected before scalar integral evaluation, with same-topology
+    pre-Wilson numerators summed before the expensive Matchete-order
+    tensor/Wilson/postprocess chain. Use ``"termwise"`` when debugging one
+    generated Wilson-line term at a time.
     """
 
     max_trace_order: int = 2
@@ -304,6 +330,9 @@ class OneLoopMatchOptions:
     wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False
     wilson_line_expose_scalar_eom_terms: bool = False
     wilson_line_tensor_reduce_before_wilson_expand: bool = False
+    wilson_line_internal_evaluation_mode: WilsonLineInternalEvaluationMode | str = (
+        WilsonLineInternalEvaluationMode.ENTRYWISE
+    )
     simplify_pychete_color_algebra: bool = False
     loop_momentum_squared: Expression | None = None
     require_registered_mass: bool = True
@@ -365,6 +394,7 @@ __all__ = [
     "BosonicCDEExpansionInput",
     "WilsonLineExpansionInput",
     "VakintIntegralStage",
+    "WilsonLineInternalEvaluationMode",
     "one_loop_normalization_factor",
     "one_loop_normalization_label",
 ]

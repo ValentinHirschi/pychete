@@ -942,6 +942,16 @@ traces can introduce `Metric(mu,nu)` factors that must contract with
 `LoopMomentum(mu) LoopMomentum(nu)` to `LoopMomentumSquared`; do not leave
 those contractions for a Python-side vacuum-integral parser or projection-time
 special cases.
+For internal Wilson-line scalar-integral evaluation, prefer entrywise
+collection over termwise evaluation in public matching. Use
+`WilsonLineInternalEvaluationMode.ENTRYWISE` /
+`OneLoopMatchOptions.wilson_line_internal_evaluation_mode` for the public
+Matchete-parity route, and keep termwise evaluation as a diagnostic surface.
+When performance is still poor, do not keep adding local per-term cleanup
+tweaks; move the boundary earlier toward Matchete's collected
+`DeterminePowerInsertions -> EvaluateSTr` staging by constructing collected
+path-sum entries before `ActWithOpenCDs`, `WilsonExpand`, and idenso cleanup,
+then split only where propagator topology or debugging diagnostics require it.
 The remaining Singlet `cHW` frontier is not solved by target filtering,
 post-result heavy-scalar substitution, or additive `NCM` linearization alone.
 Pure `A^2` `hScalar-lScalar` Wilson-line terms reach the pre-commutator stage

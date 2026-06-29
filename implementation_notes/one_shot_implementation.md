@@ -418,3 +418,58 @@ the active off/on-shell EFT source for later Matchete-style EOM and projection
 stages. Raw evaluated sums remain in named supertraces for diagnostics. This
 matches Matchete's `EvaluateSTr -> EpsExpand` ordering and prevents positive
 `epsilon` powers from leaking into public on-shell projections.
+
+## Current Slice Update: Entrywise Internal Wilson-Line Evaluation
+
+The follow-up performance slice added
+`WilsonLineInternalEvaluationMode` with public
+`OneLoopMatchOptions.wilson_line_internal_evaluation_mode`. Public internal
+Wilson-line matching now defaults to `entrywise`, while the setup-level
+diagnostic methods still default to `termwise`. The entrywise evaluator keeps
+the existing per-entry diagnostics but evaluates each plan entry as a collected
+sum. For the pre-Wilson tensor-reduction path it additionally groups terms by
+identical propagator topology, sums their formal `WilsonTerm` numerators, and
+then runs the Matchete-order tensor/Wilson/postprocess chain once per topology
+instead of once per term. This is a step toward Matchete's collected
+`EvaluateSTr` staging without removing the termwise debug route.
+
+Focused checks:
+
+- `tests/integration/matching/test_fluctuation_operator.py::test_wilson_line_internal_evaluation_can_tensor_reduce_before_wilson_expansion`
+  now verifies entrywise and termwise pre-Wilson evaluation agree on the same
+  formal Wilson-term input.
+- The watchdog-wrapped public Singlet four-slot `cHD` order-one checkpoint
+  still passes and records
+  `interaction_wilson_line_internal_evaluation_mode == "entrywise"`.
+- Public API export/docstring checks for the new enum passed.
+
+Performance evidence:
+
+- Setup and plan generation for the selected two-trace Singlet `cHD` public
+  composition remain cheap: about 1.9 seconds for setup and 0.02 seconds for
+  the 24-entry generated plan.
+- Wilson-line term generation is still the main bottleneck: the same staged
+  probe took about 38 seconds to build 68 kept terms across 13 non-empty plan
+  entries before scalar integral evaluation or final projection.
+- The slow entries are the four-slot
+  `hScalar-lScalar-lVector-lScalar` total-order-two families, especially
+  derivative allocations on earlier slots such as `o2_0_0_0`,
+  `o0_2_0_0`, `o1_1_0_0`, `o1_0_1_0`, and `o0_0_2_0`.
+- A conservative bosonic path-template cache was added for exact duplicate
+  path templates, remapping Wilson-link symbols and preserving per-path
+  component weights. It is intentionally strict and does not hit the active
+  Singlet slow paths, because paths `0`, `1`, `6`, and `7` are different
+  Higgs/bar-Higgs orientations rather than identical templates. This confirms
+  that a naive path collapse would risk the multiplicity/charge-orientation
+  problem already identified earlier.
+
+Next performance direction:
+
+- The remaining Matchete-vs-pychete speed gap is not solved by entrywise
+  scalar integral evaluation alone. The next real refactor should build a
+  collected path-sum representation for a plan entry before
+  `ActWithOpenCDs`, symmetry pruning, `WilsonExpand`, and idenso cleanup,
+  then split only where topology or diagnostics require it. This mirrors
+  Matchete's `DeterminePowerInsertions -> EvaluateSTr` ordering more closely
+  than running the full open-CD/Wilson/postprocess chain independently on
+  every path and every generated term.
