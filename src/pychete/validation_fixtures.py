@@ -28,6 +28,8 @@ from .matching import (
 from .matching_results import (
     MatchingConditionTarget,
     MatchingResult,
+    WILSON_LINE_ON_SHELL_PROJECTION_SOURCE,
+    WILSON_LINE_PRE_SCALAR_EOM_PROJECTION_SOURCE,
     _canonize_comparison_indices,
     registered_wilson_matching_condition_targets,
 )
@@ -59,6 +61,11 @@ MetadataJsonValue = dict[str, Any] | list[Any] | str | int | float | bool | None
 _PROBE_NAME_PRESETS = {"common", "canonical_different", "wilson", "canonical_different_wilson"}
 _WILSON_PROBE_NAME_PRESETS = {"wilson", "canonical_different_wilson"}
 _LOGGER = get_logger("validation")
+
+
+def _wilson_line_pre_scalar_eom_projection_source_name(on_shell_projection_source_name: str) -> str:
+    suffix = on_shell_projection_source_name[len(WILSON_LINE_ON_SHELL_PROJECTION_SOURCE) :]
+    return f"{WILSON_LINE_PRE_SCALAR_EOM_PROJECTION_SOURCE}{suffix}"
 
 
 @dataclass(frozen=True)
@@ -1391,7 +1398,17 @@ class ValidationFixture:
                                 strict=on_shell_eom_strict,
                             )
                         )
+                    wilson_line_projection_sources[
+                        _wilson_line_pre_scalar_eom_projection_source_name(projection_name)
+                    ] = entry_source
                     wilson_line_projection_sources[projection_name] = entry_after_scalar_eom
+            on_shell_wilson_line_projection_source_names = tuple(
+                sorted(
+                    name
+                    for name in wilson_line_projection_sources
+                    if name.startswith(f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[")
+                )
+            )
             scalar_supertraces = {
                 **result.supertraces,
                 "on_shell_eft_lagrangian_before_scalar_commutator_bilinear_exposure": (
@@ -1447,9 +1464,11 @@ class ValidationFixture:
                         staged_scalar_eom_vector_field_redefinition
                         and not bool(scalar_commutator_vector_field_redefinition_delta == Expression.num(0))
                     ),
-                    "wilson_line_on_shell_projection_source_count": len(wilson_line_projection_sources),
+                    "wilson_line_on_shell_projection_source_count": len(on_shell_wilson_line_projection_source_names),
                     "wilson_line_on_shell_projection_sources": (
-                        ",".join(sorted(wilson_line_projection_sources)) if wilson_line_projection_sources else None
+                        ",".join(on_shell_wilson_line_projection_source_names)
+                        if on_shell_wilson_line_projection_source_names
+                        else None
                     ),
                 },
             )

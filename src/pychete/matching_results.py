@@ -124,6 +124,7 @@ LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE = "loop_only_on_shell_projection_source"
 TREE_LEVEL_OFF_SHELL_PROJECTION_SOURCE = "tree_level_off_shell_projection_source"
 TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE = "tree_level_on_shell_projection_source"
 WILSON_LINE_ON_SHELL_PROJECTION_SOURCE = "wilson_line_on_shell_projection_source"
+WILSON_LINE_PRE_SCALAR_EOM_PROJECTION_SOURCE = "wilson_line_pre_scalar_eom_projection_source"
 
 _OFF_SHELL_STAGED_PROJECTION_SOURCES = (
     LOOP_ONLY_OFF_SHELL_PROJECTION_SOURCE,
@@ -591,6 +592,125 @@ def _apply_incomplete_effective_coupling_projection_fallback(
     return corrected
 
 
+def _wilson_line_pre_scalar_eom_source_for(source: str) -> str | None:
+    prefix = f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}["
+    if not source.startswith(prefix):
+        return None
+    suffix = source[len(WILSON_LINE_ON_SHELL_PROJECTION_SOURCE) :]
+    return f"{WILSON_LINE_PRE_SCALAR_EOM_PROJECTION_SOURCE}{suffix}"
+
+
+def _registered_wilson_targets_by_name(
+    theory: Theory,
+    targets: Sequence[MatchingConditionTarget],
+) -> dict[str, MatchingConditionTarget]:
+    registered: dict[str, MatchingConditionTarget] = {}
+    for target in targets:
+        if _uses_registered_wilson_operator_aliases(target):
+            registered[target.name] = target
+            continue
+        definition = theory.externals.get(target.name)
+        if (
+            definition is not None
+            and definition.kind is ExternalKind.WILSON_COEFFICIENT
+            and definition.operator_expr is not None
+        ):
+            registered[target.name] = target
+    return registered
+
+
+def _apply_wilson_line_pre_scalar_eom_projection_fallback(
+    result: MatchingResult,
+    projected: Mapping[str, Expression],
+    targets: Sequence[MatchingConditionTarget],
+    *,
+    source: str,
+    expand_source: bool,
+    canonize_indices: bool,
+    normalize_derivative_operators: bool,
+    normalize_ibp_scalar_bilinears: bool,
+    eft_order: int | tuple[int, ...] | None,
+    heavy_field_dimension: bool,
+) -> dict[str, Expression]:
+    """Recover registered Wilson projections erased by formal scalar-EOM exposure.
+
+    Wilson-line scalar/EOM exposure is the right post-integral source for
+    vector-EOM operators such as the Singlet ``cHD`` frontier, but it can move
+    raw scalar-derivative operators such as SMEFT ``Q_HBox`` into formal EOM
+    representatives before matching-condition projection.  The paired
+    pre-scalar-EOM source is therefore used only as a zero-output fallback for
+    registered Wilson targets on the same Wilson-line staged source.
+    """
+
+    pre_source = _wilson_line_pre_scalar_eom_source_for(source)
+    if pre_source is None or pre_source not in result.supertraces:
+        return dict(projected)
+    fallback_targets = {
+        name: target.expression
+        for name, target in _registered_wilson_targets_by_name(result.theory, targets).items()
+        if is_zero(projected.get(name, Expression.num(0)))
+    }
+    if not fallback_targets:
+        return dict(projected)
+    fallback = result.project_matching_conditions(
+        fallback_targets,
+        source=pre_source,
+        expand_source=expand_source,
+        canonize_indices=canonize_indices,
+        normalize_derivative_operators=normalize_derivative_operators,
+        normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
+        drop_zero=False,
+        include_coupling_identities=False,
+        eft_order=eft_order,
+        heavy_field_dimension=heavy_field_dimension,
+    )
+    corrected = dict(projected)
+    for name, coefficient in fallback.items():
+        if not is_zero(coefficient):
+            corrected[name] = coefficient
+    return corrected
+
+
+def _apply_wilson_line_pre_scalar_eom_effective_map_fallback(
+    result: MatchingResult,
+    mapped: Mapping[str, Expression],
+    targets: Sequence[MatchingConditionTarget],
+    *,
+    source: str,
+    identities: Sequence[Expression],
+    allow_incomplete_target: bool,
+    normalize_derivative_operators: bool,
+    max_basis_terms: int,
+    max_identities: int,
+) -> dict[str, Expression]:
+    """Recover registered Wilson effective maps from paired pre-EOM sources."""
+
+    pre_source = _wilson_line_pre_scalar_eom_source_for(source)
+    if pre_source is None or pre_source not in result.supertraces:
+        return dict(mapped)
+    fallback_targets = {
+        name: target.expression
+        for name, target in _registered_wilson_targets_by_name(result.theory, targets).items()
+        if is_zero(mapped.get(name, Expression.num(0)))
+    }
+    if not fallback_targets:
+        return dict(mapped)
+    fallback = result.map_effective_couplings(
+        fallback_targets,
+        source=pre_source,
+        identities=identities,
+        allow_incomplete_target=allow_incomplete_target,
+        normalize_derivative_operators=normalize_derivative_operators,
+        max_basis_terms=max_basis_terms,
+        max_identities=max_identities,
+    )
+    corrected = dict(mapped)
+    for name, coefficient in fallback.items():
+        if not is_zero(coefficient):
+            corrected[name] = coefficient
+    return corrected
+
+
 def _effective_targets_need_smeft_hbox_bridge(
     theory: Theory,
     targets: Sequence[EffectiveCouplingTarget],
@@ -903,6 +1023,7 @@ class MatchingResult:
         if not source_names:
             raise ValueError("staged matching-condition projection requires at least one source")
         conditions: dict[str, Expression] = {}
+        structured_targets = matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets))
         for source in source_names:
             projected = self.project_matching_conditions(
                 targets,
@@ -916,11 +1037,23 @@ class MatchingResult:
                 eft_order=eft_order,
                 heavy_field_dimension=heavy_field_dimension,
             )
+            projected = _apply_wilson_line_pre_scalar_eom_projection_fallback(
+                self,
+                projected,
+                structured_targets,
+                source=source,
+                expand_source=expand_source,
+                canonize_indices=canonize_indices,
+                normalize_derivative_operators=normalize_derivative_operators,
+                normalize_ibp_scalar_bilinears=normalize_ibp_scalar_bilinears,
+                eft_order=eft_order,
+                heavy_field_dimension=heavy_field_dimension,
+            )
             for name, coefficient in projected.items():
                 previous = conditions.get(name, Expression.num(0))
                 conditions[name] = (previous + coefficient).expand()
         if include_coupling_identities:
-            for target in matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets)):
+            for target in structured_targets:
                 identity = _tree_level_coupling_identity(self.theory, target)
                 if identity is not None:
                     previous = conditions.get(target.name, Expression.num(0))
@@ -1160,9 +1293,21 @@ class MatchingResult:
         if not source_names:
             raise ValueError("staged effective-coupling mapping requires at least one source")
         conditions: dict[str, Expression] = {}
+        structured_targets = matching_condition_targets(_resolve_matching_condition_targets(self.theory, targets))
         for source in source_names:
             mapped = self.map_effective_couplings(
                 targets,
+                source=source,
+                identities=identities,
+                allow_incomplete_target=allow_incomplete_target,
+                normalize_derivative_operators=normalize_derivative_operators,
+                max_basis_terms=max_basis_terms,
+                max_identities=max_identities,
+            )
+            mapped = _apply_wilson_line_pre_scalar_eom_effective_map_fallback(
+                self,
+                mapped,
+                structured_targets,
                 source=source,
                 identities=identities,
                 allow_incomplete_target=allow_incomplete_target,

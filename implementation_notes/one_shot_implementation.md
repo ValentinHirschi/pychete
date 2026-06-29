@@ -76,8 +76,10 @@ Current public Wilson-line accepted subset:
 - Source-stage scalar-sector progress for `cHBox` is now pinned separately:
   selected `hScalar-hScalar` contributes
   `-hbar*kappa^2/(24 M^2)` at
-  `interaction_wilson_line_normalized_internal_integral_finite_part`. This is
-  not yet a final public `on_shell_eft_lagrangian` `cHBox` condition.
+  `interaction_wilson_line_normalized_internal_integral_finite_part`, and the
+  public staged effective-map path now recovers that same contribution through
+  a paired pre-scalar-EOM projection source. This is still only the first
+  pure-heavy scalar-loop sub-frontier, not the full public `cHBox` condition.
 
 ## Latest Milestone
 
@@ -202,8 +204,34 @@ the final converted-boundary bridge:
   should use narrower total-order plans for pure-heavy scalar traces before
   broadening further.
 - Validation for the latest scalar-stage regression:
-  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_public_match_selected_hscalar_hscalar_chbox_stage_records_scalar_loop_contribution`
-  passed under the 30 GiB watchdog (`1 passed` in about 16 seconds).
+- New implementation boundary: the paired pychete probe showed
+  `interaction_wilson_line_normalized_internal_integral_finite_part` and the
+  entry source `hScalar-hScalar#wilson5_o2_0` project to
+  `-hbar*kappa^2/(24 M^2)` before scalar/EOM exposure, while
+  `_apply_wilson_line_post_integral_scalar_commutator_bilinears(...)` moves
+  the post-EOM staged source to a formal-EOM representative that projects and
+  maps to zero for `cHBox`. The Matchete-side guide remains
+  `assets/validation/matchete/debug/singlet_hScalar_cHBox.debug.json`, which
+  shows selected `hScalar` prop-order-4 is zero while full power-type traces
+  remain nonzero.
+- Runtime patch: Wilson-line scalar/EOM exposure now stores paired
+  `wilson_line_pre_scalar_eom_projection_source[...]` entries alongside the
+  public `wilson_line_on_shell_projection_source[...]` entries. Staged direct
+  projection and staged effective-coupling mapping use the paired pre-EOM
+  source only when the post-EOM source gives zero for a registered Wilson
+  target. This preserves EOM-dependent routes such as `cHD` while recovering
+  raw scalar-derivative operators such as `Q_HBox` without adding a
+  coefficient-specific rule.
+- Validation for the latest fallback slice: the updated
+  `test_public_match_selected_hscalar_hscalar_chbox_effective_map_recovers_scalar_loop_contribution`
+  passed under the 30 GiB watchdog (`1 passed` in about 16 seconds);
+  `test_matching_result_staged_projection_prefers_wilson_line_entry_sources`
+  passed; targeted mypy passed on `matching.py`, `matching_results.py`, and
+  `validation_fixtures.py`; the validation fixture staged-source test
+  `test_singlet_wilson_line_filter_keeps_derivative_higgs_sources_staged_for_projection`
+  passed under the watchdog (`1 passed` in about 105 seconds); and the
+  representative selected `cHD` public two-trace finite composition test
+  passed under the watchdog (`1 passed` in about 215 seconds).
 
 ## Next Implementation Slices
 

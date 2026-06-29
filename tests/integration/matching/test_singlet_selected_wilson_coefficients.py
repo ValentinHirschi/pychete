@@ -879,11 +879,12 @@ def test_public_match_selected_higgs_gauge_partial_wilson_coefficient_is_accepte
 
 
 @pytest.mark.slow
-def test_public_match_selected_hscalar_hscalar_chbox_stage_records_scalar_loop_contribution() -> None:
+def test_public_match_selected_hscalar_hscalar_chbox_effective_map_recovers_scalar_loop_contribution() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
-    target = smeft_warsaw_operator(theory, "cHBox")
-    assert target is not None
+    operator = smeft_warsaw_operator(theory, "cHBox")
+    assert operator is not None
+    target = theory.external_handle("cHBox")()
     hbar = theory.external_handle("hbar")()
 
     result = theory.match(
@@ -919,16 +920,40 @@ def test_public_match_selected_hscalar_hscalar_chbox_stage_records_scalar_loop_c
             on_shell_eom_abelian_vector_field_redefinition=True,
             truncate_eft_result=False,
         ),
+        matching_condition_targets={"cHBox": target},
+        matching_condition_source="on_shell_eft_lagrangian",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        matching_condition_drop_zero=False,
+        matching_condition_effective_coupling_map=True,
+        matching_condition_effective_coupling_allow_incomplete_target=True,
     )
     assert isinstance(result, MatchingResult)
-    source = result.supertraces["interaction_wilson_line_normalized_internal_integral_finite_part"]
-    projected = MatchingResult(
+    source_name = f"{matching_results_module.WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[hScalar-hScalar#wilson5_o2_0]"
+    pre_source_name = (
+        f"{matching_results_module.WILSON_LINE_PRE_SCALAR_EOM_PROJECTION_SOURCE}[hScalar-hScalar#wilson5_o2_0]"
+    )
+    post_source = result.supertraces[source_name]
+    pre_source = result.supertraces[pre_source_name]
+    post_projected = MatchingResult(
         theory=theory,
         uv_lagrangian=Expression.num(0),
-        off_shell_eft_lagrangian=source,
-        on_shell_eft_lagrangian=source,
+        off_shell_eft_lagrangian=post_source,
+        on_shell_eft_lagrangian=post_source,
     ).project_matching_conditions(
-        {"cHBox": target},
+        {"cHBox": operator},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+        drop_zero=False,
+    )["cHBox"]
+    pre_projected = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=pre_source,
+        on_shell_eft_lagrangian=pre_source,
+    ).project_matching_conditions(
+        {"cHBox": operator},
         expand_source=False,
         normalize_derivative_operators=True,
         eft_order=6,
@@ -938,12 +963,23 @@ def test_public_match_selected_hscalar_hscalar_chbox_stage_records_scalar_loop_c
 
     assert result.metadata["interaction_wilson_line_term_count"] == 8
     assert result.metadata["interaction_wilson_line_component_weighted_term_count"] == 8
+    assert result.metadata["matching_condition_projection_mode"] == "effective_coupling_map"
+    assert result.metadata["wilson_line_on_shell_projection_source_count"] == 15
+    assert len(
+        [
+            name
+            for name in result.supertraces
+            if name.startswith(f"{matching_results_module.WILSON_LINE_PRE_SCALAR_EOM_PROJECTION_SOURCE}[")
+        ]
+    ) == 15
     assert result.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
         "hScalar-hScalar#wilson0_o0_0",
         "hScalar-hScalar#wilson5_o2_0",
         "hScalar-hScalar#wilson14_o4_0",
     )
-    assert_expr_equal((projected - expected).expand(), Expression.num(0))
+    assert_expr_equal(post_projected, Expression.num(0))
+    assert_expr_equal((pre_projected - expected).expand(), Expression.num(0))
+    assert_expr_equal((result.matching_conditions["cHBox"] - expected).expand(), Expression.num(0))
 
 
 @pytest.mark.slow

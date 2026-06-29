@@ -82,6 +82,12 @@ currently has accepted full-condition coverage for `cHW`, `cHB`, `cHWB`, and
 `cHD`, plus a newly pinned source-stage scalar-sector `cHBox` contribution
 `-hbar*kappa^2/(24 M^2)` from selected `hScalar-hScalar` at
 `interaction_wilson_line_normalized_internal_integral_finite_part`.
+Follow-up status: public staged effective mapping now also recovers that
+selected `hScalar-hScalar` `cHBox` scalar-loop term by retaining paired
+pre-scalar-EOM Wilson-line projection sources and using them only as zero
+fallbacks for registered Wilson targets. This is generic projection-source
+plumbing, not a `cHBox` coefficient shortcut, and the representative selected
+`cHD` EOM-dependent route remains green.
 
 Latest mismatch-debugging instruction, 2026-06-28: keep confirming and using
 the paired Matchete/pychete debug workflow during the active Singlet frontier.
