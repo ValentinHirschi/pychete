@@ -1854,3 +1854,19 @@ stage-local results, not another coefficient-specific rewrite.
   earliest unchecked validation boundary: Matchete's class-local
   `InternalSimplify` operator identities and the subsequent vector-EOM
   `ShiftLagrangian` replay, not another final-coefficient patch.
+- Latest Matchete deep-dive/log-management slice, 2026-06-29: the user asked
+  to take a step back and deeply inspect every top-level Mathematica function
+  in the one-loop route being reproduced. The long live implementation note
+  was archived unchanged as
+  `implementation_notes/one_shot_implementation_part_H.md`, and the refreshed
+  `implementation_notes/one_shot_implementation.md` now keeps a compact active
+  plan plus a source-derived function ledger from `LoadModel` and `Match`
+  through `SetCurrentLagrangian`, `SetSubstitutions`, `LoopMatch`,
+  `PowerTypeSTr`, `EvaluateSTr`, `WilsonExpand`, `LoopIntegrate`,
+  `MatchReduce`, `InternalSimplify`, `IBPSimplify`,
+  `PerformSystematicFieldRedefs`, `ShiftLagrangian`,
+  `SaveValidationResults`, and `MapEffectiveCouplings`. The practical
+  conclusion is unchanged but sharper: raw selected Wilson-line agreement is
+  only the supertrace layer; the active Singlet `cHD` parity slice should next
+  mirror Matchete's staged `InternalSimplify` and vector-EOM
+  field-redefinition loop before broad public-route projection.
