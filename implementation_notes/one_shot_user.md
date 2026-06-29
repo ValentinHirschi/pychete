@@ -1893,3 +1893,14 @@ stage-local results, not another coefficient-specific rewrite.
   inactive, from formal-EOM exposure, where the staged vector companion is
   applied. Focused integration checks, the two active Singlet `cHD` frontier
   tests, mypy, and `git diff --check` passed.
+- Latest requested Matchete source refresh, 2026-06-29: re-read the active
+  one-loop call path in Matchete's matching, supertrace, loop-integration,
+  functional-derivative, EFT-counting, simplification, field-redefinition,
+  coupling-mapping, tree-matching, and validation modules. The function-level
+  ledger in `one_shot_implementation.md` remains the compact reference for
+  the concepts behind each top-level function in the route. The key course
+  correction is to keep judging the first Singlet `cHD` milestone at
+  Matchete's validation boundary: raw selected `EvaluateSTr`/Wilson-line
+  agreement, off-shell `GreensSimplify`, on-shell `EOMSimplify` with staged
+  `InternalSimplify`/`ShiftLagrangian` EOM production and replay, and finally
+  `MapEffectiveCouplings`-style target-basis solving.

@@ -317,6 +317,42 @@ Focused validation passed:
 - `dependencies/.venv/bin/python -m mypy`
 - `git diff --check`
 
+## Matchete Deep-Dive Refresh
+
+This slice re-read the active one-loop call path directly in Matchete:
+`Matching.m`, `SuperTrace.m`, `LoopIntegration.m`, `FunctionalTools.m`,
+`EFTCounting.m`, `Simplifications.m`, `FieldRedef.m`,
+`CouplingManipulations.m`, `TreeLevelMatching.m`, and
+`DevTools/Validation.m`. The ledger above remains the authoritative local
+summary of each top-level Mathematica function in the active route.
+
+The practical conclusion for the Singlet `cHD` frontier is:
+
+- Raw selected Wilson-line agreement is necessary but not sufficient. The
+  Matchete integration test boundary is `SaveValidationResults[...]`, which
+  compares per-trace simplified results, the off-shell `GreensSimplify`
+  result, the on-shell `EOMSimplify` result, and the final
+  `MapEffectiveCouplings` target-basis rules.
+- `EvaluateSTr[...]` has a strict semantic order: insertion replacement,
+  open-CD action, loop-momentum collection/tensor reduction, symmetry
+  pruning, fermion trace closure, Wilson expansion, loop integration, and
+  algebra cleanup. Pychete mismatch probes must keep comparing against this
+  order instead of jumping directly to Wilson coefficients.
+- `EOMSimplify[...]` is a staged field-redefinition algorithm, not just EOM
+  replacement. The committed vector replay bridge now matches the
+  `PerformSystematicFieldRedefs` / `ShiftLagrangian` consumer boundary for
+  already-exposed Abelian vector EOM terms.
+- The next unchecked generic boundary is still the producer side:
+  Matchete's class-local `InternalSimplify` / `IBPSimplify` /
+  `IdentitiesIBP` route that rewrites the selected `cHD` source into the
+  formal scalar/vector EOM representatives consumed by `ShiftLagrangian`.
+- Final matching-condition parity will need a closer
+  `MapEffectiveCouplings` analogue than isolated coefficient lookup for the
+  full model: introduce/track temporary effective couplings, collect the
+  input-target operator difference, solve target couplings with index-aware
+  rules, symmetrize, and truncate each RHS by EFT order. Native Symbolica
+  coefficient extraction can remain the fast path for targeted probes.
+
 Next code slice: use this staged boundary in the remaining Singlet `cHD`
 gap analysis for full public-route composition, especially unselected trace
 remainder and final `MapEffectiveCouplings`-equivalent projection semantics.
