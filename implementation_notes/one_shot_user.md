@@ -1818,3 +1818,12 @@ stage-local results, not another coefficient-specific rewrite.
   and avoiding the slow unselected interaction-power remainder for
   target-local parity probes. This is a diagnostic/selected-trace composition
   mode, not a claim of full-model one-loop parity.
+- Latest public-route decomposition, 2026-06-29: a bounded public probe of
+  the selected-only, Matchete-DOF weighted four-slot `cHD` source at total
+  Wilson-line orders 0/1/2 now matches the staged Matchete pole-through-finite
+  checkpoint exactly, but it remains too slow as one aggregate public
+  projection. The public API now has `wilson_line_total_orders` and
+  `wilson_line_entry_labels` filters for generated Wilson-line plans, plus
+  normalized per-entry through-finite source names. A new focused public
+  order-one `cHD` regression uses this decomposition and passes in under ten
+  seconds with the 30 GiB watchdog.

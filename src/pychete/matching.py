@@ -7922,6 +7922,19 @@ def match_one_loop(
             require_registered_mass=options.require_registered_mass,
             include_light_only=options.include_light_only,
         )
+    wilson_line_plan_filters_requested = bool(
+        options.wilson_line_total_orders is not None or options.wilson_line_entry_labels is not None
+    )
+    if wilson_line_plan_filters_requested:
+        if not isinstance(wilson_line_expansion_indices_by_trace, WilsonLineExpansionPlan):
+            raise ValueError(
+                "wilson_line_total_orders and wilson_line_entry_labels require "
+                "a generated WilsonLineExpansionPlan"
+            )
+        wilson_line_expansion_indices_by_trace = wilson_line_expansion_indices_by_trace.filtered(
+            total_orders=options.wilson_line_total_orders,
+            labels=options.wilson_line_entry_labels,
+        )
     if cde_expansion_indices_by_trace is not None and wilson_line_expansion_indices_by_trace is not None:
         raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
     cde_term_atom_requirements = (
@@ -8455,6 +8468,17 @@ def match_one_loop(
             ),
             "wilson_line_max_total_order": options.wilson_line_max_total_order,
             "wilson_line_max_slot_order": options.wilson_line_max_slot_order,
+            "wilson_line_total_orders": (
+                ",".join(str(order) for order in options.wilson_line_total_orders)
+                if options.wilson_line_total_orders is not None
+                else None
+            ),
+            "wilson_line_entry_labels": (
+                ",".join(options.wilson_line_entry_labels)
+                if options.wilson_line_entry_labels is not None
+                else None
+            ),
+            "wilson_line_plan_filters_applied": wilson_line_plan_filters_requested,
             "wilson_line_index_prefix": options.wilson_line_index_prefix,
             "wilson_line_act_open_derivatives": options.wilson_line_act_open_derivatives,
             "wilson_line_commutators_emitted": options.wilson_line_emit_covariant_derivative_commutators,

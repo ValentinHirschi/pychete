@@ -194,6 +194,9 @@ class OneLoopMatchOptions:
     derivative pair and is limited to one pass.
     For generated Wilson-line plans, set ``wilson_line_max_total_order`` and
     optionally ``wilson_line_trace_names``/``wilson_line_max_slot_order``.
+    ``wilson_line_total_orders`` and ``wilson_line_entry_labels`` further
+    filter generated ``WilsonLineExpansionPlan`` entries for Matchete
+    prop-order-style diagnostics and smaller targeted projection tests.
     This is the preferred convenience route for new Matchete parity probes
     because it avoids deepening the legacy CDE-named planning surface.
     ``wilson_line_filter_terms_by_matching_targets`` applies the same
@@ -280,6 +283,8 @@ class OneLoopMatchOptions:
     wilson_line_trace_names: Sequence[str] | None = None
     wilson_line_max_total_order: int | None = None
     wilson_line_max_slot_order: int | None = None
+    wilson_line_total_orders: Sequence[int] | None = None
+    wilson_line_entry_labels: Sequence[str] | None = None
     wilson_line_index_prefix: str = "wilson_line"
     wilson_line_act_open_derivatives: bool = False
     wilson_line_emit_covariant_derivative_commutators: bool = False

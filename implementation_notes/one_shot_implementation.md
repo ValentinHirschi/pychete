@@ -887,6 +887,24 @@ Current slice progress:
   explicitly not a full-model matching result; it is a bounded diagnostic
   route for composing validated selected trace families such as the Singlet
   `cHD` four-slot source.
+- Latest public decomposition slice, 2026-06-29: probed the public
+  selected-only Matchete-DOF weighted four-slot `cHD` route for total
+  Wilson-line orders 0/1/2 using the normalized
+  `interaction_wilson_line_internal_integral_through_finite_part` source.
+  The projected pole-through-finite coefficient matched the staged Matchete
+  checkpoint exactly, but the monolithic public projection took roughly two
+  and a half minutes for 52 generated terms / 104 component-weighted terms.
+  Runtime now exposes generated-plan filters through
+  `OneLoopMatchOptions.wilson_line_total_orders` and
+  `wilson_line_entry_labels`, backed by `WilsonLineExpansionPlan.filtered(...)`.
+  This gives Matchete prop-order-style public diagnostics without changing the
+  native Symbolica projection path. Loop normalization also now propagates
+  aggregate source mappings to bracketed per-entry supertrace names, so
+  selected Wilson-line entries can be projected and summed stage-wise through
+  `MatchingResult.project_matching_conditions_from_sources(...)`. The new
+  public order-one `cHD` regression uses `wilson_line_total_orders=(1,)` and
+  matches the Matchete order-one pole-through-finite checkpoint in under ten
+  seconds under the 30 GiB watchdog.
 
 ## Targeted Commands
 

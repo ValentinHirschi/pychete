@@ -2,7 +2,7 @@ from __future__ import annotations
 
 from dataclasses import dataclass
 from html import escape
-from typing import Any, Iterator, Mapping, Sequence, TypeAlias
+from typing import Any, Iterable, Iterator, Mapping, Sequence, TypeAlias
 
 from symbolica import Expression
 
@@ -156,6 +156,35 @@ class WilsonLineExpansionPlan:
         """Return one-entry expansion maps for each generated plan entry."""
 
         return tuple(entry.as_explicit_map() for entry in self.entries)
+
+    def filtered(
+        self,
+        *,
+        total_orders: Iterable[int] | None = None,
+        labels: Iterable[str] | None = None,
+    ) -> WilsonLineExpansionPlan:
+        """Return a plan containing only entries matching the requested metadata."""
+
+        allowed_orders = None if total_orders is None else frozenset(total_orders)
+        allowed_labels = None if labels is None else frozenset(labels)
+        if allowed_orders is not None and any(order < 0 for order in allowed_orders):
+            raise ValueError("Wilson-line total-order filters must be non-negative")
+        entries = tuple(
+            entry
+            for entry in self.entries
+            if (allowed_orders is None or entry.total_order in allowed_orders)
+            and (allowed_labels is None or entry.label in allowed_labels)
+        )
+        if not entries:
+            raise ValueError("Wilson-line plan filters removed every generated entry")
+        trace_names = tuple(dict.fromkeys(entry.trace_name for entry in entries))
+        return WilsonLineExpansionPlan(
+            theory=self.theory,
+            entries=entries,
+            trace_names=trace_names,
+            max_total_order=self.max_total_order,
+            max_slot_order=self.max_slot_order,
+        )
 
     def __iter__(self) -> Iterator[WilsonLineExpansionPlanEntry]:
         """Iterate over generated plan entries in deterministic evaluation order."""

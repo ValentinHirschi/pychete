@@ -754,6 +754,12 @@ class MatchingResult:
         for source_name, target_name in stage_sources.items():
             if source_name in self.supertraces:
                 supertraces[target_name] = (factor * self.supertraces[source_name]).expand()
+            source_prefix = f"{source_name}["
+            for entry_source_name, entry_source in self.supertraces.items():
+                if not entry_source_name.startswith(source_prefix):
+                    continue
+                entry_suffix = entry_source_name[len(source_name) :]
+                supertraces[f"{target_name}{entry_suffix}"] = (factor * entry_source).expand()
         previous_stage = self.metadata.get("stage")
         normalized_stage = stage
         if normalized_stage is None:

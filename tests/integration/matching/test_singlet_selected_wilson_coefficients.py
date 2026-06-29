@@ -995,12 +995,69 @@ def test_public_match_selected_chd_four_slot_matchete_dof_weighted_route_matches
     assert_expr_equal((projected - expected).expand(), Expression.num(0))
 
 
+@pytest.mark.slow
+def test_public_match_selected_chd_four_slot_total_order_filter_matches_checkpoint() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    condition_name, target = _selected_chd_four_slot_target(theory)
+    hbar = theory.external_handle("hbar")()
+
+    result = theory.match(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=4,
+            integral_backend=OneLoopIntegralBackend.INTERNAL,
+            normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+            hbar=hbar,
+            use_matchete_fluctuation_dof_basis=True,
+            wilson_line_weight_paths_by_component_dofs=True,
+            wilson_line_trace_names=("hScalar-lScalar-lVector-lScalar",),
+            wilson_line_max_total_order=2,
+            wilson_line_max_slot_order=2,
+            wilson_line_total_orders=(1,),
+            wilson_line_index_prefix="public_singlet_cHD_four_slot_order1",
+            wilson_line_act_open_derivatives=True,
+            wilson_line_emit_covariant_derivative_commutators=False,
+            wilson_line_emit_covariant_derivative_commutator_passes=1,
+            wilson_line_covariant_derivative_commutator_mode="all_distinct",
+            wilson_line_expand_covariant_derivative_commutators=False,
+            wilson_line_max_derivative_order=4,
+            wilson_line_filter_terms_by_matching_targets=True,
+            wilson_line_include_unselected_traces=False,
+            wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+            wilson_line_tensor_reduce_before_wilson_expand=True,
+            tensor_reduce=True,
+            simplify_pychete_color_algebra=True,
+            truncate_eft_result=False,
+        ),
+        matching_condition_targets={condition_name: target},
+        matching_condition_source="interaction_wilson_line_normalized_internal_integral_through_finite_part",
+        matching_condition_expand_source=False,
+        matching_condition_truncate_eft=True,
+        matching_condition_drop_zero=False,
+    )
+
+    assert result.metadata["wilson_line_plan_filters_applied"] is True
+    assert result.metadata["wilson_line_total_orders"] == "1"
+    assert result.metadata["wilson_line_selected_only"] is True
+    assert result.metadata["interaction_wilson_line_plan_entry_count"] == 4
+    assert_expr_equal(
+        (result.matching_conditions[condition_name] - _selected_chd_four_slot_order_one_expected(theory)).expand(),
+        Expression.num(0),
+    )
+
+
 def test_loop_normalization_exposes_through_finite_projection_sources() -> None:
     theory = Theory("through_finite_projection_sources")
     hbar = S("through_finite_hbar")
     raw_sources = {
         "interaction_power_type_internal_integral_through_finite_part": S("raw_power_through_finite"),
         "interaction_wilson_line_internal_integral_through_finite_part": S("raw_wilson_through_finite"),
+        "interaction_wilson_line_internal_integral_through_finite_part[trace#entry]": S(
+            "raw_wilson_entry_through_finite"
+        ),
         "interaction_wilson_line_hybrid_internal_integral_through_finite_part": S(
             "raw_wilson_hybrid_through_finite"
         ),
@@ -1015,6 +1072,9 @@ def test_loop_normalization_exposes_through_finite_projection_sources() -> None:
         ),
         "interaction_wilson_line_internal_integral_through_finite_part": (
             "interaction_wilson_line_normalized_internal_integral_through_finite_part"
+        ),
+        "interaction_wilson_line_internal_integral_through_finite_part[trace#entry]": (
+            "interaction_wilson_line_normalized_internal_integral_through_finite_part[trace#entry]"
         ),
         "interaction_wilson_line_hybrid_internal_integral_through_finite_part": (
             "interaction_wilson_line_normalized_hybrid_internal_integral_through_finite_part"
