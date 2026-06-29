@@ -432,6 +432,9 @@ inertGammaVectorShiftSplitSummary[target_String] := withInertEvaluateGammaFactor
       raw,
       internal,
       targetOperator,
+      rawSelectedTerms,
+      rawBTerms,
+      rawWTerms,
       selectedTerms,
       bTerms,
       wTerms,
@@ -450,9 +453,12 @@ inertGammaVectorShiftSplitSummary[target_String] := withInertEvaluateGammaFactor
       raw,
       Matchete`ReductionIdentities -> Matchete`dDimensional
     ];
+    rawSelectedTerms = Matchete`FieldRedef`PackagePrivate`SelectOperatorDevsAndDim[raw, 3, 6];
     selectedTerms = Matchete`FieldRedef`PackagePrivate`SelectOperatorDevsAndDim[internal, 3, 6];
     hField = ToExpression["H"];
     bField = ToExpression["B"];
+    rawBTerms = termList[eomTermsForField[rawSelectedTerms, bField]];
+    rawWTerms = termList[eomTermsForField[rawSelectedTerms, ToExpression["W"]]];
     bTerms = termList[eomTermsForField[selectedTerms, bField]];
     wTerms = termList[eomTermsForField[selectedTerms, ToExpression["W"]]];
     split = vectorShiftSplitSummary[internal, 3, 6, targetOperator];
@@ -465,6 +471,21 @@ inertGammaVectorShiftSplitSummary[target_String] := withInertEvaluateGammaFactor
         "dim" -> 6
       |>,
       "split" -> split,
+      "raw_b_selected_term_count" -> Length[rawBTerms],
+      "raw_w_selected_term_count" -> Length[rawWTerms],
+      "raw_b_selected_terms_input_form" -> (shortInputString /@ rawBTerms),
+      "raw_barH_EOMB_DH_normalized_source_coefficient" -> sourceOperatorCoefficientSummary[
+        rawBTerms,
+        hField,
+        bField,
+        False
+      ],
+      "raw_DbarH_EOMB_H_normalized_source_coefficient" -> sourceOperatorCoefficientSummary[
+        rawBTerms,
+        hField,
+        bField,
+        True
+      ],
       "b_selected_term_count" -> Length[bTerms],
       "w_selected_term_count" -> Length[wTerms],
       "b_selected_terms_input_form" -> (shortInputString /@ bTerms),

@@ -978,6 +978,35 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert source_trace_probe["controls"]["max_total_order"] == 4
     assert source_trace_probe["controls"]["filter_terms_by_matching_targets"] is True
     assert source_trace_probe["term_counts_by_total_order"] == {"0": 2, "1": 0, "2": 4, "3": 0, "4": 10}
+    stage_probe = source_trace_probe["pre_wilson_stage_probe"]
+    assert stage_probe["entry_label"] == "hScalar-lScalar#wilson14_o4_0"
+    assert stage_probe["source_exposure_stages"] == [
+        "matchete_contract_before_wilson_topology_lowered",
+        "topology_lowered",
+    ]
+    assert stage_probe["by_stage"]["pre_wilson_numerator"]["source_operator_projection_skipped"] == (
+        "metadata-only stage"
+    )
+    assert stage_probe["by_stage"]["symgamma_formal_uncontracted"]["byte_count"] > (
+        stage_probe["by_stage"]["postprocessed_numerator"]["byte_count"]
+    )
+    assert stage_probe["by_stage"]["topology_lowered"]["byte_count"] < 150_000
+    assert (
+        stage_probe["by_stage"]["topology_lowered"][
+            "scalar_eom_exposed_source_operator_projections"
+        ]
+        == stage_probe["by_stage"]["matchete_contract_before_wilson_topology_lowered"][
+            "scalar_eom_exposed_source_operator_projections"
+        ]
+    )
+    assert stage_probe["by_stage"]["topology_lowered"][
+        "nonzero_scalar_eom_exposed_source_operator_projection_names"
+    ] == [
+        "barH_EOMB_DH",
+        "DbarH_EOMB_H",
+        "H_EOMB_DH_unbarred",
+        "DH_EOMB_H_unbarred",
+    ]
     assert source_trace_probe["summary"]["entry_count"] == 3
     assert source_trace_probe["summary"]["nonzero_vector_field_redefinition_delta_entry_count"] == 1
     assert source_trace_probe["summary"]["nonzero_vector_field_redefinition_delta_projection_entry_count"] == 1

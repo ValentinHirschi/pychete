@@ -45,6 +45,7 @@ from pychete.expr import (
 from pychete.functional import expose_abelian_vector_eom_currents, scalar_eom_identities
 from pychete.matching_results import registered_wilson_matching_condition_targets
 
+_SOURCE_STAGE_ENTRY_LABEL = "hScalar-lScalar#wilson14_o4_0"
 _MATHEMATICA_XTERM_PATTERN = re.compile(
     r"Xterm\[\{([^}]*)\},\s*\{[^}]*\},\s*(\d+),\s*(\d+),\s*(\d+)\]"
 )
@@ -211,6 +212,235 @@ def _source_vector_eom_operator_targets(
         "DbarH_EOMB_H": s.Bar(derivative_higgs) * vector_eom * higgs_field,
         "H_EOMB_DH_unbarred": higgs_field * vector_eom * derivative_higgs,
         "DH_EOMB_H_unbarred": derivative_higgs * vector_eom * higgs_field,
+    }
+
+
+def _source_trace_pre_wilson_stage_terms_by_name(
+    theory: Any,
+    entry_terms: tuple[Any, ...],
+    *,
+    max_wilson_derivative_order: int,
+) -> dict[str, list[Expression]]:
+    from pychete.loop_integration import (
+        collect_loop_momenta_to_symmetric_lorentz,
+        contract_lorentz_metrics,
+        evaluate_symmetric_lorentz_indices,
+    )
+    from pychete.noncommutative import scalarize_commutative_ncm_chains
+    from pychete.wilson_lines import expand_wilson_terms, remove_symmetry_vanishing_wilson_terms
+
+    stages: dict[str, list[Expression]] = {
+        "pre_wilson_numerator": [],
+        "loop_momenta_collected": [],
+        "symmetry_vanishing_removed": [],
+        "symgamma_formal_uncontracted": [],
+        "symgamma_formal_metric_contracted_pre_wilson": [],
+        "wilson_terms_expanded": [],
+        "lorentz_metrics_contracted": [],
+        "postprocessed_numerator": [],
+        "topology_lowered": [],
+        "matchete_contract_before_wilson_terms_expanded": [],
+        "matchete_contract_before_wilson_postprocessed_numerator": [],
+        "matchete_contract_before_wilson_topology_lowered": [],
+    }
+    for term in entry_terms:
+        if term.pre_wilson_numerator is None:
+            continue
+        numerator = scalarize_commutative_ncm_chains(term.pre_wilson_numerator)
+        stages["pre_wilson_numerator"].append(numerator)
+
+        numerator = collect_loop_momenta_to_symmetric_lorentz(
+            numerator,
+            include_massless_denominator_shift=True,
+            loop_momentum_squared=s.LoopMomentumSquared,
+        )
+        stages["loop_momenta_collected"].append(numerator)
+
+        numerator = remove_symmetry_vanishing_wilson_terms(numerator)
+        stages["symmetry_vanishing_removed"].append(numerator)
+
+        numerator = evaluate_symmetric_lorentz_indices(
+            numerator,
+            evaluate_gamma=False,
+            contract_metrics=False,
+        )
+        stages["symgamma_formal_uncontracted"].append(numerator)
+
+        contracted_before_wilson = contract_lorentz_metrics(numerator)
+        stages["symgamma_formal_metric_contracted_pre_wilson"].append(
+            contracted_before_wilson
+        )
+
+        current = expand_wilson_terms(
+            theory,
+            numerator,
+            max_derivative_order=max_wilson_derivative_order,
+        )
+        stages["wilson_terms_expanded"].append(current)
+
+        current = contract_lorentz_metrics(current)
+        stages["lorentz_metrics_contracted"].append(current)
+
+        current = matching_module._postprocess_wilson_line_tensor_reduced_expression(
+            theory,
+            current,
+            emit_covariant_derivative_commutators=False,
+            emit_covariant_derivative_commutator_passes=1,
+            covariant_derivative_commutator_mode="all_distinct",
+            expand_covariant_derivative_commutators=False,
+            simplify_pychete_color_algebra=True,
+            expose_scalar_derivative_commutator_bilinears_option=False,
+            epsilon=None,
+        )
+        stages["postprocessed_numerator"].append(current)
+        stages["topology_lowered"].append(
+            matching_module._wilson_line_matchete_order_numerator_to_vakint_integral(
+                current,
+                term.mass_squareds,
+                term.propagator_powers,
+                vakint_module=vakint_backend,
+            )
+        )
+
+        matchete_order = expand_wilson_terms(
+            theory,
+            contracted_before_wilson,
+            max_derivative_order=max_wilson_derivative_order,
+        )
+        stages["matchete_contract_before_wilson_terms_expanded"].append(matchete_order)
+
+        matchete_order = matching_module._postprocess_wilson_line_tensor_reduced_expression(
+            theory,
+            matchete_order,
+            emit_covariant_derivative_commutators=False,
+            emit_covariant_derivative_commutator_passes=1,
+            covariant_derivative_commutator_mode="all_distinct",
+            expand_covariant_derivative_commutators=False,
+            simplify_pychete_color_algebra=True,
+            expose_scalar_derivative_commutator_bilinears_option=False,
+            epsilon=None,
+        )
+        stages["matchete_contract_before_wilson_postprocessed_numerator"].append(
+            matchete_order
+        )
+        stages["matchete_contract_before_wilson_topology_lowered"].append(
+            matching_module._wilson_line_matchete_order_numerator_to_vakint_integral(
+                matchete_order,
+                term.mass_squareds,
+                term.propagator_powers,
+                vakint_module=vakint_backend,
+            )
+        )
+    return stages
+
+
+def _source_trace_pre_wilson_stage_probe(
+    theory: Any,
+    lagrangian: Expression,
+    entry_terms: tuple[Any, ...],
+    source_operator_targets: dict[str, Expression],
+    normalization: Expression,
+    *,
+    vector_field: str,
+    max_wilson_derivative_order: int,
+) -> dict[str, Any]:
+    stages = _source_trace_pre_wilson_stage_terms_by_name(
+        theory,
+        entry_terms,
+        max_wilson_derivative_order=max_wilson_derivative_order,
+    )
+    source_exposure_stages = {
+        "topology_lowered",
+        "matchete_contract_before_wilson_topology_lowered",
+    }
+    source_projection_stages = source_exposure_stages
+    max_source_exposure_byte_count = 150_000
+    by_stage: dict[str, dict[str, Any]] = {}
+    for stage_name, stage_terms in stages.items():
+        if not stage_terms:
+            continue
+        normalized = (normalization * sum(stage_terms, Expression.num(0))).expand()
+        row: dict[str, Any] = {
+            "term_count": len(stage_terms),
+            "byte_count": normalized.get_byte_size(),
+            "expanded_term_count": len(terms(normalized)),
+            "formal_vector_eom_count": _formal_vector_eom_count(
+                theory,
+                normalized,
+                field_name=vector_field,
+            ),
+        }
+        if stage_name in source_projection_stages:
+            raw_projections = _project_source_operator_coefficients(
+                theory,
+                source_operator_targets,
+                normalized,
+            )
+            row.update(
+                {
+                    "raw_source_operator_projections": {
+                        name: canonical_string(projected)
+                        for name, projected in raw_projections.items()
+                    },
+                    "nonzero_raw_source_operator_projection_names": [
+                        name
+                        for name, projected in raw_projections.items()
+                        if not is_zero(projected)
+                    ],
+                }
+            )
+        else:
+            row["source_operator_projection_skipped"] = "metadata-only stage"
+        if stage_name in source_exposure_stages:
+            if normalized.get_byte_size() > max_source_exposure_byte_count:
+                row["scalar_eom_exposure_skipped"] = (
+                    f"byte_count>{max_source_exposure_byte_count}"
+                )
+            else:
+                try:
+                    exposed = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+                        theory,
+                        normalized,
+                        eom_lagrangian=lagrangian,
+                        expose_scalar_eom_terms=True,
+                    )
+                except Exception as exc:  # pragma: no cover - debug fixture metadata
+                    row["scalar_eom_exposure_error"] = f"{type(exc).__name__}: {exc}"
+                else:
+                    exposed_projections = _project_source_operator_coefficients(
+                        theory,
+                        source_operator_targets,
+                        exposed,
+                    )
+                    row.update(
+                        {
+                            "scalar_eom_exposed_byte_count": exposed.get_byte_size(),
+                            "scalar_eom_exposed_formal_vector_eom_count": (
+                                _formal_vector_eom_count(
+                                    theory,
+                                    exposed,
+                                    field_name=vector_field,
+                                )
+                            ),
+                            "scalar_eom_exposed_source_operator_projections": {
+                                name: canonical_string(projected)
+                                for name, projected in exposed_projections.items()
+                            },
+                            "nonzero_scalar_eom_exposed_source_operator_projection_names": [
+                                name
+                                for name, projected in exposed_projections.items()
+                                if not is_zero(projected)
+                            ],
+                        }
+                    )
+        by_stage[stage_name] = row
+    return {
+        "entry_label": _SOURCE_STAGE_ENTRY_LABEL,
+        "max_wilson_derivative_order": max_wilson_derivative_order,
+        "max_source_exposure_byte_count": max_source_exposure_byte_count,
+        "stage_order": list(stages),
+        "source_exposure_stages": sorted(source_exposure_stages),
+        "by_stage": by_stage,
     }
 
 
@@ -634,6 +864,15 @@ def _source_trace_vector_eom_probe(
         vector_field=vector_field,
         index_prefix=f"{index_prefix}_source_projection",
     )
+    pre_wilson_stage_probe = _source_trace_pre_wilson_stage_probe(
+        theory,
+        lagrangian,
+        tuple(grouped_terms.get(_SOURCE_STAGE_ENTRY_LABEL, ())),
+        source_operator_targets,
+        normalization,
+        vector_field=vector_field,
+        max_wilson_derivative_order=4,
+    )
     formal_symgamma_by_entry: dict[str, dict[str, Any]] = {}
     formal_symgamma_source_operator_projection_sums: dict[str, list[Expression]] = {
         name: [] for name in source_operator_targets
@@ -767,6 +1006,7 @@ def _source_trace_vector_eom_probe(
         "formal_symgamma_raw_term_counts_by_entry": {
             entry: len(terms) for entry, terms in formal_symgamma_raw_by_entry.items()
         },
+        "pre_wilson_stage_probe": pre_wilson_stage_probe,
         "by_entry": by_entry,
         "formal_symgamma_by_entry": formal_symgamma_by_entry,
         "summary": {

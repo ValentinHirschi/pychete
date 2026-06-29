@@ -1965,6 +1965,18 @@ def test_singlet_reference_chd_debug_records_inert_gamma_vector_source_split() -
         "dim": 6,
     }
     assert inert["split"]["fields_input_form"] == "{B, W}"
+    assert inert["raw_b_selected_term_count"] == 0
+    assert inert["raw_w_selected_term_count"] == 0
+    assert inert["raw_barH_EOMB_DH_normalized_source_coefficient"] == {
+        "term_count": 0,
+        "terms_input_form": [],
+        "normalized_coefficient_input_form": "0",
+    }
+    assert inert["raw_DbarH_EOMB_H_normalized_source_coefficient"] == {
+        "term_count": 0,
+        "terms_input_form": [],
+        "normalized_coefficient_input_form": "0",
+    }
     assert inert["b_selected_term_count"] == 12
     assert inert["w_selected_term_count"] == 12
     assert bar_summary["term_count"] == 6

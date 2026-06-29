@@ -860,6 +860,155 @@
       "hScalar-lScalar#wilson8_o2_1": 0,
       "hScalar-lScalar#wilson9_o3_0": 0
     },
+    "pre_wilson_stage_probe": {
+      "by_stage": {
+        "loop_momenta_collected": {
+          "byte_count": 264512,
+          "expanded_term_count": 596,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "lorentz_metrics_contracted": {
+          "byte_count": 97871,
+          "expanded_term_count": 250,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "matchete_contract_before_wilson_postprocessed_numerator": {
+          "byte_count": 73812,
+          "expanded_term_count": 236,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "matchete_contract_before_wilson_terms_expanded": {
+          "byte_count": 97871,
+          "expanded_term_count": 250,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "matchete_contract_before_wilson_topology_lowered": {
+          "byte_count": 99948,
+          "expanded_term_count": 236,
+          "formal_vector_eom_count": 0,
+          "nonzero_raw_source_operator_projection_names": [],
+          "nonzero_scalar_eom_exposed_source_operator_projection_names": [
+            "barH_EOMB_DH",
+            "DbarH_EOMB_H",
+            "H_EOMB_DH_unbarred",
+            "DH_EOMB_H_unbarred"
+          ],
+          "raw_source_operator_projections": {
+            "DH_EOMB_H_unbarred": "0",
+            "DbarH_EOMB_H": "0",
+            "H_EOMB_DH_unbarred": "0",
+            "barH_EOMB_DH": "0"
+          },
+          "scalar_eom_exposed_byte_count": 169059,
+          "scalar_eom_exposed_formal_vector_eom_count": 4,
+          "scalar_eom_exposed_source_operator_projections": {
+            "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "DbarH_EOMB_H": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+2*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "barH_EOMB_DH": "16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-2*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+          },
+          "term_count": 10
+        },
+        "postprocessed_numerator": {
+          "byte_count": 73812,
+          "expanded_term_count": 236,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "pre_wilson_numerator": {
+          "byte_count": 257190,
+          "expanded_term_count": 596,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "symgamma_formal_metric_contracted_pre_wilson": {
+          "byte_count": 219378,
+          "expanded_term_count": 524,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "symgamma_formal_uncontracted": {
+          "byte_count": 324306,
+          "expanded_term_count": 700,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "symmetry_vanishing_removed": {
+          "byte_count": 253536,
+          "expanded_term_count": 568,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        },
+        "topology_lowered": {
+          "byte_count": 99948,
+          "expanded_term_count": 236,
+          "formal_vector_eom_count": 0,
+          "nonzero_raw_source_operator_projection_names": [],
+          "nonzero_scalar_eom_exposed_source_operator_projection_names": [
+            "barH_EOMB_DH",
+            "DbarH_EOMB_H",
+            "H_EOMB_DH_unbarred",
+            "DH_EOMB_H_unbarred"
+          ],
+          "raw_source_operator_projections": {
+            "DH_EOMB_H_unbarred": "0",
+            "DbarH_EOMB_H": "0",
+            "H_EOMB_DH_unbarred": "0",
+            "barH_EOMB_DH": "0"
+          },
+          "scalar_eom_exposed_byte_count": 169059,
+          "scalar_eom_exposed_formal_vector_eom_count": 4,
+          "scalar_eom_exposed_source_operator_projections": {
+            "DH_EOMB_H_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "DbarH_EOMB_H": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))+2*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "H_EOMB_DH_unbarred": "-16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))",
+            "barH_EOMB_DH": "16*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(1,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-32*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*pychete::SymGammaFactor(2,4)*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))-2*\ud835\udf0b^2*Singlet_Scalar_Extension::external_hbar*pychete::Coupling(Singlet_Scalar_Extension::coupling_A,pychete::List(),0)^2*vakint::topo(vakint::prop(1,vakint::edge(1,1),vakint::k(1),0,3)*vakint::prop(2,vakint::edge(1,1),vakint::k(1),pychete::Coupling(Singlet_Scalar_Extension::coupling_M,pychete::List(),0)^2,1))"
+          },
+          "term_count": 10
+        },
+        "wilson_terms_expanded": {
+          "byte_count": 158996,
+          "expanded_term_count": 354,
+          "formal_vector_eom_count": 0,
+          "source_operator_projection_skipped": "metadata-only stage",
+          "term_count": 10
+        }
+      },
+      "entry_label": "hScalar-lScalar#wilson14_o4_0",
+      "max_source_exposure_byte_count": 150000,
+      "max_wilson_derivative_order": 4,
+      "source_exposure_stages": [
+        "matchete_contract_before_wilson_topology_lowered",
+        "topology_lowered"
+      ],
+      "stage_order": [
+        "pre_wilson_numerator",
+        "loop_momenta_collected",
+        "symmetry_vanishing_removed",
+        "symgamma_formal_uncontracted",
+        "symgamma_formal_metric_contracted_pre_wilson",
+        "wilson_terms_expanded",
+        "lorentz_metrics_contracted",
+        "postprocessed_numerator",
+        "topology_lowered",
+        "matchete_contract_before_wilson_terms_expanded",
+        "matchete_contract_before_wilson_postprocessed_numerator",
+        "matchete_contract_before_wilson_topology_lowered"
+      ]
+    },
     "summary": {
       "entry_count": 3,
       "formal_symgamma_topology_source_operator_projection_sums": {

@@ -1569,3 +1569,16 @@ generic algorithm boundary before runtime pychete changes are accepted.
   form. The new pychete fixture now keeps both `barH_EOMB_DH` and
   `DbarH_EOMB_H` source orientations, so the remaining cHD frontier is the
   SymGamma/d-dimensional source coefficient rather than orientation loss.
+- Latest stage-parity/performance update, 2026-06-29: user asked to keep
+  pychete's intermediate parity probes at least as performant as Matchete.
+  Implementation response: added a bounded pychete per-stage probe only for
+  `hScalar-lScalar#wilson14_o4_0`, with coefficient projection limited to the
+  topology-lowered current and Matchete-order boundaries. The probe shows that
+  current pychete order and diagnostic `ContractMetric`-before-`WilsonExpand`
+  order give identical source projections, while the selected expression
+  shrinks from about 324 KB at formal SymGamma to about 99 KB at topology
+  lowering. The Matchete debug fixture now also records that inert-SymGamma
+  B/W vector-EOM source counts are zero before
+  `InternalSimplify[..., dDimensional]` and become 12 B plus 12 W terms after
+  that stage. This pins the next runtime fix to d-dimensional
+  `InternalSimplify`/Green-basis identity semantics.

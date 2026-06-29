@@ -115,6 +115,24 @@ Latest narrowed mismatch:
   `barH_EOMB_DH` and `DbarH_EOMB_H` projections. The remaining cHD gap is
   therefore the d-dimensional SymGamma/source coefficient, not loss of the
   conjugate orientation.
+- The latest Matchete debug refresh records the same source boundary before
+  and after `InternalSimplify[..., ReductionIdentities -> dDimensional]` with
+  `EvaluateGammaFactor` left inert. Before `InternalSimplify`, the selected
+  B/W vector-EOM source counts are both zero. After `InternalSimplify`, the
+  selected source contains 12 B terms and 12 W terms, with the B orientations
+  carrying the normalized coefficients
+  `-/+ (1 + eps + eps log) (SG[1,4] - 8 SG[2,4]) / eps`. This confirms that
+  Matchete creates the relevant vector-EOM source through its d-dimensional
+  operator-identity stage; pychete should not keep looking for this gap in
+  topology evaluation or contraction order.
+- The latest pychete debug refresh adds a per-stage probe for the single
+  selected `hScalar-lScalar#wilson14_o4_0` entry. The expression is roughly
+  324 KB at formal SymGamma, 74 KB after postprocessing, and 99 KB after
+  topology lowering. Current pychete order and a diagnostic Matchete-style
+  `ContractMetric`-before-`WilsonExpand` order give identical topology-lowered
+  source projections. The contraction-order hypothesis is therefore ruled out
+  for the present cHD finite mismatch, and the next fix must target the
+  d-dimensional operator-identity/Green-basis normal form.
 
 ## Current Implementation Slice
 
@@ -147,6 +165,10 @@ Current slice progress:
 - Implemented and unit-tested the Abelian vector-EOM scalar-bilinear
   orientation normal form, and refreshed the pychete cHD fixture to record the
   new paired orientation frontier.
+- Added bounded pychete stage diagnostics for the selected source entry and
+  refreshed the Matchete cHD debug fixture with raw-before-`InternalSimplify`
+  inert-`SymGammaFactor` source counts. The new evidence points directly to a
+  d-dimensional `InternalSimplify`/Green-basis identity gap.
 
 ## Performance Budget For This Slice
 
