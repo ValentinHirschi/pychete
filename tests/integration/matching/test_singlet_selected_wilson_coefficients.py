@@ -696,6 +696,12 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_
     assert result.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
         "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0",
     )
+    assert result.metadata["interaction_wilson_line_term_count_by_entry_path"] == {
+        "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0": {
+            str(path_index): 1
+            for path_index in (0, 1, 2, 3, 12, 13, 14, 15, 24, 25, 26, 27, 36, 37, 38, 39)
+        }
+    }
     assert_expr_equal((projected - 2 * expected).expand(), Expression.num(0))
 
 

@@ -166,6 +166,18 @@ def test_idenso_bridge_reduces_open_identity_delta_to_one() -> None:
     assert _same(simplified, coefficient)
 
 
+def test_idenso_bridge_preserves_open_delta_with_distinct_labels() -> None:
+    theory = Theory("idenso_color_su2_open_distinct_delta")
+    theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")
+    fund = theory.define_representation("SU2L", "fund")
+    left = theory.index("i", fund)
+    right = theory.index("j", s.Bar(fund))
+
+    simplified = idenso.contract_pychete_deltas(theory, s.Delta(left, right))
+
+    assert _same(simplified, s.Delta(left, right))
+
+
 def test_idenso_bridge_contracts_pychete_delta_through_registered_field_index() -> None:
     theory = Theory("idenso_color_su2_field_pychete_delta")
     theory.define_gauge_group("SU2L", s.SU(Expression.num(2)), "gL", "W")

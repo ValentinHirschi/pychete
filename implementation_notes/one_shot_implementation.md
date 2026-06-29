@@ -254,6 +254,21 @@ Current slice progress:
   insertions. The tests now record this as a factor-two
   multiplicity-preserving canonical-basis frontier instead of claiming that
   aggregate as matched.
+- Added a sharper diagnostic for that four-slot multiplicity frontier. The
+  Matchete checkpoint is
+  `assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop0.full.debug.json`;
+  the paired pychete probe is
+  `test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_source_frontier`.
+  The first ruled-out boundary is idenso delta contraction: unequal open
+  fundamental/anti-fundamental labels remain explicit, so the factor two is
+  not caused by a too-broad `Delta(Index(i,R), Index(j,Bar(R))) -> 1` rule.
+  The current suspected first divergence is fluctuation path component
+  enumeration versus Matchete's component/field-degree weighting: pychete
+  enumerates paths `0,1,2,3,12,13,14,15,24,25,26,27,36,37,38,39`, all
+  projecting to the same quarter contribution, while Matchete records eight
+  target quarter insertions. Raw Symbolica tensor canonicalization is not yet
+  a sufficient fix because several path templates reuse an index label in
+  multiple contractions and `canonize_tensors(...)` correctly rejects them.
 
 ## Performance Budget For This Slice
 
@@ -280,6 +295,11 @@ Current slice progress:
   where the duplicate work lives, but current parity probes must continue to
   use the existing eight path IDs until the replacement carries explicit
   component/DOf weights and preserves the selected cHD aggregate.
+- For the four-slot `cHD` factor-two overcount, do not patch projection,
+  tensor reduction, or idenso delta contraction next. The next useful slice is
+  to port Matchete's field-degree/component weighting at the fluctuation path
+  enumeration boundary, or to refresh the Matchete dump with the exact
+  component/field-degree metadata needed to derive those weights generically.
 - Projection filtering is now isolated in
   `src/pychete/matching_projection_filters.py`; keep future performance work
   there when it is about target-local Wilson-line/CDE pruning rather than

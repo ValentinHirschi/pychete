@@ -1689,3 +1689,13 @@ Green/EOM identity conversion.
   old aggregate. The tests now record this honestly as a multiplicity-
   preserving canonical-basis frontier; the currently matched cHD sub-check is
   the selected `hScalar-lScalar` B-vector dim6/dev3 replay.
+- Latest four-slot multiplicity diagnostic, 2026-06-29: the first suspected
+  backend boundary was ruled out. idenso now has a regression check showing
+  that equal-label open identity deltas reduce to one, while distinct-label
+  open deltas such as `Delta(Index(i,R), Index(j,Bar(R)))` remain explicit.
+  The public four-slot cHD frontier test now also pins the exact sixteen
+  pychete path IDs (`0,1,2,3,12,13,14,15,24,25,26,27,36,37,38,39`) that each
+  contribute the same quarter term, compared with Matchete's eight target
+  quarter insertions. The next runtime fix should therefore target generic
+  Matchete-style fluctuation component/field-degree weighting, not projection,
+  tensor reduction, or delta contraction.
