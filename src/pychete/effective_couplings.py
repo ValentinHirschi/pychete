@@ -12,6 +12,7 @@ from .expr import factors, is_head, is_zero, list_items, product_expr, sum_expr,
 from .green_basis import linear_identity_basis_terms, linear_identity_normal_form_from_identities
 from .indices import IndexInfo, collect_indices
 from .symbols import SymbolDataKey, canonical_string, display_string, latex_string, s, safe_symbol_name, symbol_data
+from .theory_metadata import FieldChirality, field_chirality_from_label
 
 _DEFAULT_MAX_EFFECTIVE_COUPLING_BASIS_TERMS = 128
 _DEFAULT_MAX_EFFECTIVE_COUPLING_IDENTITIES = 256
@@ -75,7 +76,8 @@ def map_effective_couplings(
     )
     input_expr = input_lagrangian.expand()
     target_expr = target_expr.expand()
-    identity_tuple = tuple(identity for identity in identities if not is_zero(identity))
+    auto_identities = _target_operator_chiral_fierz_identities(target_tuple)
+    identity_tuple = tuple(identity for identity in (*identities, *auto_identities) if not is_zero(identity))
     input_expr = idenso.simplify_pychete_chiral_scalar_projectors(input_expr)
     target_expr = idenso.simplify_pychete_chiral_scalar_projectors(target_expr)
     identity_tuple = tuple(idenso.simplify_pychete_chiral_scalar_projectors(identity) for identity in identity_tuple)
@@ -168,17 +170,119 @@ def _align_target_operator_indices_term(
     if not bool(aligned == term):
         return aligned
     for target in targets:
-        for pattern_operator, alias_operator, alias_sign, wildcards in _target_operator_alignment_operator_patterns(target):
+        for (
+            pattern_operator,
+            alias_operator,
+            replacement_operator,
+            alias_sign,
+            wildcards,
+        ) in _target_operator_alignment_operator_patterns(target):
             for match in term.match(pattern_operator):
                 index_replacements = _target_operator_index_replacements(match, wildcards)
                 relabeled = term.replace_multiple(index_replacements).expand()
                 updated = relabeled.replace(
                     alias_operator,
-                    Expression.num(alias_sign) * target.operator,
+                    Expression.num(alias_sign) * replacement_operator,
                 ).expand()
                 if not bool(updated == term):
                     return updated
     return term
+
+
+@dataclass(frozen=True)
+class _VectorCurrentPatternMatch:
+    expr: Expression
+    left: Expression
+    right: Expression
+    label: Expression
+    mu: Expression
+
+
+def _target_operator_chiral_fierz_identities(
+    targets: Sequence[EffectiveCouplingTarget],
+) -> tuple[Expression, ...]:
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    for target in targets:
+        for identity in _chiral_fierz_identities_for_operator(target.operator):
+            key = canonical_string(identity)
+            if key in seen:
+                continue
+            seen.add(key)
+            identities.append(identity)
+    return tuple(identities)
+
+
+def _chiral_fierz_identities_for_operator(operator: Expression) -> tuple[Expression, ...]:
+    return tuple(
+        (scalar_channel + operator_term / Expression.num(2)).expand()
+        for scalar_channel, operator_term in _chiral_fierz_channels_for_operator(operator)
+    )
+
+
+def _chiral_fierz_channels_for_operator(operator: Expression) -> tuple[tuple[Expression, Expression], ...]:
+    channels: list[tuple[Expression, Expression]] = []
+    for operator_term in terms(operator.expand()):
+        currents = _vector_current_matches(operator_term)
+        if len(currents) != 2:
+            continue
+        first, second = currents
+        noncurrent_remainder = operator_term.replace_multiple(
+            (
+                Replacement(first.expr, Expression.num(1)),
+                Replacement(second.expr, Expression.num(1)),
+            )
+        ).expand()
+        if not bool(noncurrent_remainder == Expression.num(1)):
+            continue
+        if not bool(first.mu == second.mu):
+            continue
+        first_chirality = field_chirality_from_label(first.label)
+        second_chirality = field_chirality_from_label(second.label)
+        if not _opposite_nonzero_chiralities(first_chirality, second_chirality):
+            continue
+        scalar_channel = s.NCM(s.Bar(first.left), second.right) * s.NCM(s.Bar(second.left), first.right)
+        channels.append((scalar_channel.expand(), operator_term))
+    return tuple(channels)
+
+
+def _vector_current_matches(expr: Expression) -> tuple[_VectorCurrentPatternMatch, ...]:
+    left_label = s.head("effective_coupling_vector_left_label_")
+    left_indices = s.head("effective_coupling_vector_left_indices_")
+    left_derivatives = s.head("effective_coupling_vector_left_derivatives_")
+    right_label = s.head("effective_coupling_vector_right_label_")
+    right_indices = s.head("effective_coupling_vector_right_indices_")
+    right_derivatives = s.head("effective_coupling_vector_right_derivatives_")
+    mu = s.head("effective_coupling_vector_mu_")
+    left = s.Field(left_label, s.Fermion, left_indices, left_derivatives)
+    right = s.Field(right_label, s.Fermion, right_indices, right_derivatives)
+    pattern = s.NCM(s.Bar(left), s.Gamma(mu), right)
+    out: list[_VectorCurrentPatternMatch] = []
+    seen: set[str] = set()
+    for match in expr.match(pattern):
+        if not bool(match[left_label] == match[right_label]):
+            continue
+        if not bool(match[left_derivatives] == s.List()) or not bool(match[right_derivatives] == s.List()):
+            continue
+        current = pattern.replace_wildcards(match)
+        key = canonical_string(current)
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append(
+            _VectorCurrentPatternMatch(
+                expr=current,
+                left=left.replace_wildcards(match),
+                right=right.replace_wildcards(match),
+                label=match[left_label],
+                mu=match[mu],
+            )
+        )
+    return tuple(out)
+
+
+def _opposite_nonzero_chiralities(left: FieldChirality, right: FieldChirality) -> bool:
+    return {left, right} == {FieldChirality.LEFT, FieldChirality.RIGHT}
 
 
 def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> tuple[Replacement, ...]:
@@ -188,25 +292,35 @@ def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> 
     index_infos = collect_indices(target.operator)
     if not index_infos:
         return ()
-    aliases = _epsilon_orientation_aliases(target.operator)
     safe_target_name = safe_symbol_name(target.name)
     replacements: list[Replacement] = []
-    for alias_position, (alias_operator, alias_sign) in enumerate(aliases):
+    for alias_position, (alias_operator, replacement_operator, alias_sign) in enumerate(
+        _target_operator_alignment_aliases(target)
+    ):
         coefficient = Expression.symbol(
             f"pychete::effective_coupling_coefficient_{safe_target_name}_{alias_position}_"
         )
-        pattern_operator, _alias_operator, _alias_sign, wildcards = _target_operator_alignment_operator_pattern(
-            alias_operator,
-            alias_sign,
-            index_infos,
-            safe_target_name=safe_target_name,
-            alias_position=alias_position,
+        pattern_operator, _alias_operator, _replacement_operator, _alias_sign, wildcards = (
+            _target_operator_alignment_operator_pattern(
+                alias_operator,
+                replacement_operator,
+                alias_sign,
+                index_infos,
+                safe_target_name=safe_target_name,
+                alias_position=alias_position,
+            )
         )
         pattern = coefficient * pattern_operator
         replacements.append(
             Replacement(
                 pattern,
-                _target_operator_alignment_replacement(pattern, coefficient, target, wildcards, alias_sign),
+                _target_operator_alignment_replacement(
+                    pattern,
+                    coefficient,
+                    replacement_operator,
+                    wildcards,
+                    alias_sign,
+                ),
                 partial=False,
                 rhs_cache_size=0,
             )
@@ -216,7 +330,7 @@ def _target_operator_alignment_replacements(target: EffectiveCouplingTarget) -> 
 
 def _target_operator_alignment_operator_patterns(
     target: EffectiveCouplingTarget,
-) -> tuple[tuple[Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]], ...]:
+) -> tuple[tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]], ...]:
     operator_terms = terms(target.operator.expand())
     if len(operator_terms) != 1:
         return ()
@@ -227,23 +341,48 @@ def _target_operator_alignment_operator_patterns(
     return tuple(
         _target_operator_alignment_operator_pattern(
             alias_operator,
+            replacement_operator,
             alias_sign,
             index_infos,
             safe_target_name=safe_target_name,
             alias_position=alias_position,
         )
-        for alias_position, (alias_operator, alias_sign) in enumerate(_epsilon_orientation_aliases(target.operator))
+        for alias_position, (alias_operator, replacement_operator, alias_sign) in enumerate(
+            _target_operator_alignment_aliases(target)
+        )
     )
+
+
+def _target_operator_alignment_aliases(
+    target: EffectiveCouplingTarget,
+) -> tuple[tuple[Expression, Expression, int], ...]:
+    out: list[tuple[Expression, Expression, int]] = []
+    seen: set[str] = set()
+    for alias_operator, alias_sign in _epsilon_orientation_aliases(target.operator):
+        key = f"{canonical_string(alias_operator)}->{canonical_string(target.operator)}:{alias_sign}"
+        if key in seen:
+            continue
+        seen.add(key)
+        out.append((alias_operator, target.operator, alias_sign))
+    for scalar_channel, _operator_term in _chiral_fierz_channels_for_operator(target.operator):
+        for alias_operator, alias_sign in _epsilon_orientation_aliases(scalar_channel):
+            key = f"{canonical_string(alias_operator)}->{canonical_string(scalar_channel)}:{alias_sign}"
+            if key in seen:
+                continue
+            seen.add(key)
+            out.append((alias_operator, scalar_channel, alias_sign))
+    return tuple(out)
 
 
 def _target_operator_alignment_operator_pattern(
     alias_operator: Expression,
+    replacement_operator: Expression,
     alias_sign: int,
     index_infos: Sequence[IndexInfo],
     *,
     safe_target_name: str,
     alias_position: int,
-) -> tuple[Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]]:
+) -> tuple[Expression, Expression, Expression, int, tuple[tuple[IndexInfo, Expression], ...]]:
     wildcards = tuple(
         (
             info,
@@ -258,7 +397,7 @@ def _target_operator_alignment_operator_pattern(
             s.Index(wildcard, info.representation),
             allow_new_wildcards_on_rhs=True,
         )
-    return pattern_operator, alias_operator, alias_sign, wildcards
+    return pattern_operator, alias_operator, replacement_operator, alias_sign, wildcards
 
 
 def _epsilon_orientation_aliases(expr: Expression) -> tuple[tuple[Expression, int], ...]:
@@ -298,14 +437,14 @@ def _rank_two_builtin_epsilon_atoms(expr: Expression) -> tuple[Expression, ...]:
 def _target_operator_alignment_replacement(
     pattern: Expression,
     coefficient_wildcard: Expression,
-    target: EffectiveCouplingTarget,
+    replacement_operator: Expression,
     wildcards: Sequence[tuple[IndexInfo, Expression]],
     alias_sign: int,
 ) -> Callable[[dict[Expression, Expression]], Expression]:
     def replace_term(match: dict[Expression, Expression]) -> Expression:
         coefficient = match[coefficient_wildcard]
         replacements = _target_operator_index_replacements(match, wildcards)
-        return (Expression.num(alias_sign) * coefficient.replace_multiple(replacements) * target.operator).expand()
+        return (Expression.num(alias_sign) * coefficient.replace_multiple(replacements) * replacement_operator).expand()
 
     return replace_term
 

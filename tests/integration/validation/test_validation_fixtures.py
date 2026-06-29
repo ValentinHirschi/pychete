@@ -204,6 +204,21 @@ def test_singlet_reference_effective_coupling_map_recovers_clequ1_condition() ->
     assert_expr_equal((mapped["clequ1"] - result.matching_conditions[reference_name]).expand(), Expression.num(0))
 
 
+def test_singlet_reference_effective_coupling_map_recovers_cle_condition() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    cle = result.theory.external_handle("cle")
+    reference_name = next(name for name in result.matching_conditions if "external_cle," in name)
+
+    mapped = result.map_effective_couplings(
+        {"cle": cle()},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal((mapped["cle"] - result.matching_conditions[reference_name]).expand(), Expression.num(0))
+
+
 def test_committed_model_fixtures_store_matching_smeft_wilson_metadata() -> None:
     for model in ("Singlet_Scalar_Extension", "E_VLL", "S1S3LQs"):
         model_fixture = load_validation_fixture(Path(f"assets/validation/pychete/{model}.model_fixture.json"))

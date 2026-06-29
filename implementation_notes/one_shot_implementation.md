@@ -938,3 +938,56 @@ converted-on-shell effective-coupling projection for `clequ1`. The full
 default all-Wilson Singlet integration test is still not green; this `clequ1`
 success is at the final basis-map boundary, not yet the full public
 one-loop-generation route for that coefficient.
+
+## Current Slice Update: Target-Local Chiral Fierz Basis Map
+
+This slice moved the converted on-shell `MapEffectiveCouplings` boundary from
+4/25 to 5/25 nonzero Singlet Wilson conditions. The new agreement is `cle`,
+which Matchete obtains through a delayed Fierz/basis-map step rather than
+direct coefficient extraction from the on-shell EFT Lagrangian.
+
+Implementation details:
+
+- `map_effective_couplings(...)` now builds target-local chiral Fierz
+  identities for pure two-vector-current targets. The identity is added to the
+  Green-basis solve as
+  `(bar A B)(bar B A) + 1/2 (bar A gamma_mu A)(bar B gamma_mu B) = 0` only
+  when Symbolica pattern matching finds two `NCM(Bar(Field(...)), Gamma(mu),
+  Field(...))` currents with opposite registered field chiralities.
+- The identity is not applied to targets with extra CG/generator factors.
+  Colour singlet/octet current coefficients such as `cqu1/cqu8` and
+  `cqd1/cqd8` still need the separate SU(3) group-Fierz decomposition.
+- Target-index alignment now includes both the registered vector target and
+  the scalar Fierz alias, so dummy-index source terms are relabelled into the
+  target Wilson-index convention before Symbolica solves the coefficient
+  equalities.
+
+Validation:
+
+- `tests/unit/functional/test_effective_couplings.py` now has a dummy-index
+  chiral Fierz regression that maps a scalar bilinear source to the vector
+  target with the expected `-1/2` factor.
+- `test_singlet_reference_effective_coupling_map_recovers_cle_condition`
+  verifies the committed Singlet Matchete reference:
+  `cle = -hbar*A^2*Ye[i1,i4]*bar(Ye[i2,i3])/(12*M^4)`.
+- Focused validation passed:
+  `tests/unit/functional/test_effective_couplings.py` (`9 passed`),
+  the `cle`/`clequ1` Singlet fixture checks under the 30 GiB watchdog
+  (`2 passed`), and mypy on `src/pychete/effective_couplings.py`.
+
+Corrected converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw`, using registered Wilson target
+metadata:
+
+- Nonzero Matchete Wilson conditions in the fixture: 25.
+- Matching in pychete at this boundary: `cHD`, `cle`, `cledq`, `clequ1`,
+  `cquqd1`.
+- Still zero at this boundary: `cHB`, `cHBox`, `cHW`, `cHWB`, `cHd`, `cHe`,
+  `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`, `cqd1`, `cqd8`, `cqu1`,
+  `cqu8`.
+- Nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
+
+Keep the scope distinction explicit: the selected public Wilson-line
+regressions are green for `cHW`, `cHB`, `cHWB`, and `cHD`; the converted
+on-shell effective-coupling-map boundary is now green for `cHD`, `cle`,
+`cledq`, `clequ1`, and `cquqd1`.

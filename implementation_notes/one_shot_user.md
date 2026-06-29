@@ -184,6 +184,12 @@ next real performance step remains an insertion-level collected
   four-fermion coefficients; these should be attacked through Matchete-inspired
   staged source composition and `MapEffectiveCouplings`-style target solving,
   not coefficient-specific formulas.
+- Latest converted-boundary status, 2026-06-29: the converted on-shell
+  effective-coupling-map boundary now matches `cHD`, `cle`, `cledq`,
+  `clequ1`, and `cquqd1` out of the 25 nonzero Singlet Wilson conditions.
+  The UV model is `Singlet_Scalar_Extension`; the effective theory/basis is
+  SMEFT Warsaw. Keep this list distinct from the selected public Wilson-line
+  parity list, which is `cHW`, `cHB`, `cHWB`, and `cHD`.
 
 ## Approved Plan
 

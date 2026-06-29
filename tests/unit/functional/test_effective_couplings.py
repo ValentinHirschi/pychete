@@ -129,6 +129,35 @@ def test_map_effective_couplings_canonicalizes_builtin_epsilon_orientation() -> 
     assert_expr_equal(mapped["cLq"], -coupling())
 
 
+def test_map_effective_couplings_uses_chiral_fierz_identity_for_vector_currents() -> None:
+    theory = Theory("effective_coupling_chiral_fierz")
+    flavor = theory.define_flavor_index("Flavor", 3)
+    left = theory.define_field("l", s.Fermion, indices=[flavor.symbol], chirality="left")
+    right = theory.define_field("e", s.Fermion, indices=[flavor.symbol], chirality="right")
+    yukawa = theory.define_coupling("Y", indices=[flavor.symbol, flavor.symbol])
+    mu = theory.index("mu")
+    i1 = theory.index("i1", flavor.symbol)
+    i2 = theory.index("i2", flavor.symbol)
+    i3 = theory.index("i3", flavor.symbol)
+    i4 = theory.index("i4", flavor.symbol)
+    a = theory.index("a", flavor.symbol)
+    b = theory.index("b", flavor.symbol)
+    c = theory.index("c", flavor.symbol)
+    d = theory.index("d", flavor.symbol)
+    target_operator = s.NCM(s.Bar(right(i3)), s.Gamma(mu), right(i4)) * s.NCM(
+        s.Bar(left(i1)), s.Gamma(mu), left(i2)
+    )
+    source_operator = s.NCM(s.Bar(right(c)), left(b)) * s.NCM(s.Bar(left(a)), right(d))
+    wilson = theory.define_wilson_coefficient("cLe", indices=[i1, i2, i3, i4], operator=target_operator)
+
+    mapped = map_effective_couplings(
+        yukawa(a, d) * s.Bar(yukawa(b, c)) * source_operator,
+        (EffectiveCouplingTarget("cLe", wilson(), target_operator),),
+    )
+
+    assert_expr_equal(mapped["cLe"], -yukawa(i1, i4) * s.Bar(yukawa(i2, i3)) / 2)
+
+
 def test_map_effective_couplings_incomplete_target_mode_is_explicit() -> None:
     theory = Theory("effective_coupling_incomplete")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

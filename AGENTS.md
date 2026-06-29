@@ -505,6 +505,17 @@ antisymmetric: include target-aware `eps(j,i) = -eps(i,j)` aliases because a
 global lexical epsilon canonicalization can still be opposite to the field
 slot order used by the Wilson target. This is generic basis-map semantics,
 not a Warsaw-name-specific repair.
+For chiral vector-current targets in `MapEffectiveCouplings`, add the
+target-local Fierz identity at the Green-basis layer, not as a direct Wilson
+coefficient shortcut. The supported pure-current identity is
+`(bar A B)(bar B A) = -1/2 (bar A gamma_mu A)(bar B gamma_mu B)` when the two
+registered field labels carry opposite nonzero chiralities. Discover the
+currents with Symbolica patterns over `NCM(Bar(Field(...)), Gamma(mu),
+Field(...))`, canonicalize the scalar Fierz alias with the same target-index
+alignment used for the vector target, and let
+`Expression.solve_linear_system(...)` solve the coefficient equalities. Do not
+apply this plain Dirac identity to targets with extra CG/generator factors;
+those require a separate idenso/spenso-backed group-Fierz decomposition.
 Whenever a precise Matchete-parity mismatch is identified, first review the
 corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
 side by side before patching pychete. Use intermediate-stage dumps and focused
