@@ -112,7 +112,12 @@ class OneLoopMatchOptions:
     solutions before final EFT truncation and projection by enabling
     ``substitute_heavy_scalar_solutions``. This is opt-in while the full
     Matchete-scale projection path is still being optimized for large
-    expressions.
+    expressions. When the Wilson-line scalar/EOM bridge is active through
+    ``wilson_line_expose_scalar_eom_terms``, that bridge owns the
+    Matchete-style ``InternalSimplify``/field-redefinition boundary and the
+    heavy-scalar solution replacement stage is recorded but skipped, because
+    applying it afterwards can reintroduce heavy-source branches that Matchete
+    has already simplified away.
     ``heavy_scalar_solution_expand`` controls whether that replacement stage
     immediately expands the reduced on-shell expression; keep it disabled for
     exploratory large-model projection when a less-expanded expression scales

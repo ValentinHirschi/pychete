@@ -1112,7 +1112,11 @@ class ValidationFixture:
             result = result.with_loop_normalization(normalization, hbar=resolved_hbar)
         if simplify_pychete_color_algebra:
             result = _decode_preview_native_color_wrappers(theory, result)
-        if substitute_heavy_scalar_solutions:
+        skip_heavy_scalar_solutions_for_wilson_line_scalar_eom = bool(
+            substitute_heavy_scalar_solutions
+            and wilson_line_expose_scalar_eom_terms
+        )
+        if substitute_heavy_scalar_solutions and not skip_heavy_scalar_solutions_for_wilson_line_scalar_eom:
             solutions = heavy_scalar_solutions or {}
             replacement_rules = heavy_scalar_solution_replacements(solutions, fresh_dummy_indices=True)
             if replacement_rules:
@@ -1137,6 +1141,33 @@ class ValidationFixture:
                     ),
                     "heavy_scalar_solution_expand": heavy_scalar_solution_expand,
                     "heavy_scalar_solution_fresh_dummy_indices": True,
+                    "heavy_scalar_solution_skipped_for_wilson_line_scalar_eom": False,
+                    "heavy_scalar_solution_skip_reason": None,
+                },
+            )
+        elif substitute_heavy_scalar_solutions:
+            solutions = heavy_scalar_solutions or {}
+            replacement_rules = heavy_scalar_solution_replacements(solutions, fresh_dummy_indices=True)
+            if replacement_rules:
+                _LOGGER.info(
+                    "skipping %d heavy scalar solution substitution rule(s) for fixture %s at the Wilson-line scalar/EOM boundary",
+                    len(replacement_rules),
+                    self.name,
+                )
+            result = replace(
+                result,
+                metadata={
+                    **result.metadata,
+                    "heavy_scalar_solutions_substituted": False,
+                    "heavy_scalar_solution_count": len(solutions),
+                    "heavy_scalar_solution_rule_count": len(replacement_rules),
+                    "heavy_scalar_solution_source": (
+                        "option" if explicit_heavy_scalar_solution_lagrangian else "matching_lagrangian"
+                    ),
+                    "heavy_scalar_solution_expand": heavy_scalar_solution_expand,
+                    "heavy_scalar_solution_fresh_dummy_indices": False,
+                    "heavy_scalar_solution_skipped_for_wilson_line_scalar_eom": True,
+                    "heavy_scalar_solution_skip_reason": "wilson_line_scalar_eom_internal_simplify_boundary",
                 },
             )
         else:
@@ -1150,6 +1181,8 @@ class ValidationFixture:
                     "heavy_scalar_solution_source": "disabled",
                     "heavy_scalar_solution_expand": False,
                     "heavy_scalar_solution_fresh_dummy_indices": False,
+                    "heavy_scalar_solution_skipped_for_wilson_line_scalar_eom": False,
+                    "heavy_scalar_solution_skip_reason": None,
                 },
             )
         defer_on_shell_eom_to_wilson_line_scalar_eom = bool(

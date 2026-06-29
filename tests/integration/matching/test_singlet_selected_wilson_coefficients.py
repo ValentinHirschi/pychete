@@ -837,7 +837,13 @@ def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_front
     reference_projected = reference.matching_conditions[condition_name]
     projected_str = canonical_string(projected)
 
-    assert result.metadata["heavy_scalar_solution_eft_limited"] is True
+    assert result.metadata["heavy_scalar_solutions_substituted"] is False
+    assert result.metadata["heavy_scalar_solution_eft_limited"] is False
+    assert result.metadata["heavy_scalar_solution_skipped_for_wilson_line_scalar_eom"] is True
+    assert (
+        result.metadata["heavy_scalar_solution_skip_reason"]
+        == "wilson_line_scalar_eom_internal_simplify_boundary"
+    )
     assert result.metadata["wilson_line_scalar_eom_terms_reduced"] is True
     assert result.metadata["tensor_reduce"] is True
     assert result.metadata["use_matchete_fluctuation_dof_basis"] is True
@@ -872,8 +878,8 @@ def test_public_match_selected_chd_hscalar_lscalar_eom_bridge_records_next_front
     )
     assert_expr_equal((delta_projection - selected_vector_delta).expand(), Expression.num(0))
     assert "coupling_gY" in projected_str
-    assert "coupling_kappa" in projected_str
-    assert "coupling_muphi" in projected_str
+    assert "coupling_kappa" not in projected_str
+    assert "coupling_muphi" not in projected_str
     assert not bool((projected - reference_projected).expand() == Expression.num(0))
 
 

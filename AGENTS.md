@@ -464,6 +464,16 @@ one-loop implementation slices should instead extend the explicit Wilson-line
 path, including fermion-loop closure, Wilson-term expansion, index/gamma/group
 algebra, tensor reduction, integral evaluation, and matching-condition
 projection from the Wilson-line representation.
+For one-loop parity work, keep the Matchete function-level pipeline audit in
+`implementation_notes/one_shot_implementation.md` in context. The required
+comparison checklist includes `LoadModel`, `Match`, `SetCurrentLagrangian`,
+`SetSubstitutions`, `LoopMatch`, `ListPowerTypeTraces`, `PowerTypeSTr`,
+`GenericPropagatorExpansion`, `DeterminePowerInsertions`, `EvaluateSTr`,
+`WilsonExpand`, `LoopIntegrate`, `MatchReduce`, `EOMSimplify`,
+`InternalSimplify`, `IBPSimplify`, `ConstructOperatorIdentities`,
+`PerformSystematicFieldRedefs`, and `GreensSimplify`. When a mismatch appears,
+compare pychete against the earliest corresponding Matchete stage in that
+pipeline before patching runtime code.
 Whenever a precise Matchete-parity mismatch is identified, first review the
 corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
 side by side before patching pychete. Use intermediate-stage dumps and focused
@@ -1046,6 +1056,16 @@ not separately set `tensor_reduce=True`: unreduced loop-momentum numerators
 can hide the selected B-source from Symbolica coefficient projection. Treat
 this as mandatory native backend preparation for vector-EOM parity, not as a
 Python-side momentum simplification.
+When `substitute_heavy_scalar_solutions=True` is requested together with
+`wilson_line_expose_scalar_eom_terms=True`, do not apply the heavy-scalar
+solution replacements after this scalar/EOM bridge. Matchete's corresponding
+boundary is `InternalSimplify` followed by systematic field redefinitions; for
+the Singlet `hScalar-lScalar -> cHD` probe, the source just before the
+replacement is already free of `kappa` and `muphi`, while applying the
+tree-level heavy-scalar solution afterwards reintroduces a spurious
+`A^2*kappa/M^4` branch. Record the requested solution count and the explicit
+`heavy_scalar_solution_skipped_for_wilson_line_scalar_eom` metadata instead,
+then continue projection from the scalar/EOM-exposed source.
 `WilsonLineTracePath.wilson_term_expanded_template_expression(...)` and
 `WilsonLineTracePath.wilson_term_expanded_kernel_expression(...)` are
 structural bridge methods; do not wire them into the default one-loop result

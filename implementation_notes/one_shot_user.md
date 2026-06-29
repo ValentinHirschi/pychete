@@ -1745,3 +1745,21 @@ Green/EOM identity conversion.
   source with the final on-shell expression. This preserves generated
   Wilson-line vector-field contributions during staged projection; it does
   not yet resolve the full `cHD` heavy-solution/source-composition gap.
+- Latest user focus, 2026-06-29: keep the work centered on finishing the first
+  Matchete/pychete one-loop matching parity test, and whenever a result
+  disagrees, dump as many Matchete intermediate stages as possible and compare
+  them with bounded pychete probes to locate the first mismatch. Current
+  response: the Singlet `cHD` scalar/EOM bridge was dissected at the
+  Matchete `InternalSimplify` / systematic-field-redefinition boundary, which
+  showed that pychete should skip post-bridge heavy-scalar solution
+  substitution because the source is already `kappa/muphi`-free at that stage.
+- Follow-up direction, 2026-06-29: take a step back and deeply inspect the
+  Matchete source behind the one-loop matching path so pychete can mirror the
+  conceptual algorithm, not only final Wilson coefficients. Current response:
+  `one_shot_implementation.md` now contains a Matchete one-loop pipeline audit
+  covering `LoadModel`, `Match`, `SetCurrentLagrangian`, `SetSubstitutions`,
+  `LoopMatch`, `PowerTypeSTr`, `GenericPropagatorExpansion`,
+  `DeterminePowerInsertions`, `EvaluateSTr`, `WilsonExpand`,
+  `LoopIntegrate`, `MatchReduce`, `EOMSimplify`, `InternalSimplify`,
+  `ConstructOperatorIdentities`, `PerformSystematicFieldRedefs`, and
+  `GreensSimplify`.
