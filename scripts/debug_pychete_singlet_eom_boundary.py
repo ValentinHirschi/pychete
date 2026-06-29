@@ -35,8 +35,10 @@ from pychete.expr import (
     field_strength_label,
     field_strength_pattern,
     is_head,
+    is_zero,
     list_items,
     matching_subexpressions,
+    terms,
 )
 from pychete.functional import expose_abelian_vector_eom_currents, scalar_eom_identities
 from pychete.matching_results import registered_wilson_matching_condition_targets
@@ -191,6 +193,26 @@ def _formal_vector_eom_count(theory: Any, expr: Expression, *, field_name: str) 
     return count
 
 
+def _formal_vector_eom_term_samples(
+    theory: Any,
+    expr: Expression,
+    *,
+    field_name: str,
+    max_samples: int = 3,
+) -> list[str]:
+    label = theory.field_handle(field_name).label
+    samples: list[str] = []
+    for term in terms(expr.expand()):
+        if is_zero(term):
+            continue
+        if not any(matching_subexpressions(term, s.EOM(field_pattern(label)))):
+            continue
+        samples.append(canonical_string(term))
+        if len(samples) >= max_samples:
+            break
+    return samples
+
+
 def _eom_exposure_probe(
     theory: Any,
     lagrangian: Expression,
@@ -330,6 +352,11 @@ def _eom_exposure_probe(
             "scalar_eom_exposed_byte_count": scalar_eom_exposed.get_byte_size(),
             "scalar_eom_exposed_formal_eom_count": _formal_eom_count(scalar_eom_exposed),
             "scalar_eom_exposed_formal_vector_eom_count": formal_vector_count,
+            "scalar_eom_exposed_formal_vector_eom_term_samples": _formal_vector_eom_term_samples(
+                theory,
+                scalar_eom_exposed,
+                field_name=vector_field,
+            ),
             "scalar_eom_exposed_vector_field_strength_divergence_count": (
                 _field_strength_divergence_count(
                     theory,
@@ -443,6 +470,148 @@ def _eom_exposure_probe(
         ),
     }
     return by_entry, summary
+
+
+def _source_trace_vector_eom_probe(
+    theory: Any,
+    lagrangian: Expression,
+    setup: Any,
+    requirements: Any,
+    normalization: Expression,
+    *,
+    condition_name: str,
+    target: Expression,
+    vector_field: str,
+    trace_name: str,
+    max_total_order: int,
+    max_slot_order: int,
+    index_prefix: str,
+) -> dict[str, Any]:
+    plan = setup.interaction_wilson_line_expansion_plan(
+        trace_names=(trace_name,),
+        max_total_order=max_total_order,
+        max_slot_order=max_slot_order,
+        index_prefix=index_prefix,
+    )
+    grouped_terms = setup.interaction_wilson_line_expansion_terms_by_trace(
+        plan,
+        act_open_derivatives=True,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        max_wilson_derivative_order=4,
+        simplify_pychete_color_algebra=True,
+        term_atom_requirements=requirements,
+    )
+    evaluated_by_entry = matching_module._wilson_line_internal_evaluated_terms_by_entry_from_terms(
+        theory,
+        grouped_terms,
+        tensor_reduce=True,
+        tensor_reduce_engine=None,
+        tensor_reduce_before_wilson_expand=True,
+        max_wilson_derivative_order=4,
+        emit_covariant_derivative_commutators=False,
+        emit_covariant_derivative_commutator_passes=1,
+        covariant_derivative_commutator_mode="all_distinct",
+        expand_covariant_derivative_commutators=False,
+        simplify_pychete_color_algebra=True,
+        expose_scalar_derivative_commutator_bilinears=False,
+        epsilon=None,
+        mu_r_squared=None,
+    )
+    plan_entries_by_label = {entry.label: entry for entry in plan.entries}
+    by_entry: dict[str, dict[str, Any]] = {}
+    projections: list[Expression] = []
+    for entry_label, evaluated_terms in sorted(evaluated_by_entry.items()):
+        if not evaluated_terms:
+            continue
+        normalized = (normalization * sum(evaluated_terms, Expression.num(0))).expand()
+        pole_finite = (
+            vakint_backend.pole_part(normalized)
+            + vakint_backend.finite_part(normalized)
+        ).expand()
+        scalar_eom_exposed = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+            theory,
+            pole_finite,
+            eom_lagrangian=lagrangian,
+            expose_scalar_eom_terms=True,
+        )
+        vector_delta = theory.abelian_vector_eom_field_redefinition_delta(
+            lagrangian,
+            scalar_eom_exposed,
+            fields=[vector_field],
+            strict=True,
+        )
+        projection = _project(theory, condition_name, target, vector_delta)
+        projections.append(projection)
+        by_entry[entry_label] = {
+            "total_order": plan_entries_by_label[entry_label].total_order,
+            "slot_orders": list(plan_entries_by_label[entry_label].slot_orders),
+            "evaluated_term_count": len(evaluated_terms),
+            "pole_finite_byte_count": pole_finite.get_byte_size(),
+            "scalar_eom_exposed_byte_count": scalar_eom_exposed.get_byte_size(),
+            "scalar_eom_exposed_formal_vector_eom_count": _formal_vector_eom_count(
+                theory,
+                scalar_eom_exposed,
+                field_name=vector_field,
+            ),
+            "scalar_eom_exposed_formal_vector_eom_term_samples": (
+                _formal_vector_eom_term_samples(
+                    theory,
+                    scalar_eom_exposed,
+                    field_name=vector_field,
+                )
+            ),
+            "vector_field_redefinition_delta_is_zero": bool(vector_delta == Expression.num(0)),
+            "vector_field_redefinition_delta_byte_count": vector_delta.get_byte_size(),
+            "vector_field_redefinition_delta_projection": canonical_string(projection),
+            "vector_field_redefinition_delta_projection_is_zero": bool(
+                projection == Expression.num(0)
+            ),
+        }
+    return {
+        "controls": {
+            "trace_name": trace_name,
+            "max_total_order": max_total_order,
+            "max_slot_order": max_slot_order,
+            "index_prefix": index_prefix,
+            "act_open_derivatives": True,
+            "tensor_reduce_before_wilson_expand": True,
+            "filter_terms_by_matching_targets": requirements is not None,
+        },
+        "term_counts_by_entry": {entry: len(terms) for entry, terms in grouped_terms.items()},
+        "term_counts_by_total_order": {
+            str(order): sum(
+                len(grouped_terms[entry.label])
+                for entry in plan.entries
+                if entry.total_order == order
+            )
+            for order in sorted({entry.total_order for entry in plan.entries})
+        },
+        "evaluated_term_counts_by_entry": {
+            entry: len(evaluated_by_entry.get(entry, ())) for entry in grouped_terms
+        },
+        "by_entry": by_entry,
+        "summary": {
+            "entry_count": len(by_entry),
+            "nonzero_vector_field_redefinition_delta_entry_count": sum(
+                not row["vector_field_redefinition_delta_is_zero"]
+                for row in by_entry.values()
+            ),
+            "nonzero_vector_field_redefinition_delta_projection_entry_count": sum(
+                not row["vector_field_redefinition_delta_projection_is_zero"]
+                for row in by_entry.values()
+            ),
+            "scalar_eom_exposed_formal_vector_eom_count": sum(
+                row["scalar_eom_exposed_formal_vector_eom_count"]
+                for row in by_entry.values()
+            ),
+            "vector_field_redefinition_delta_projection_sum": canonical_string(
+                _sum_expressions(projections)
+            ),
+        },
+    }
 
 
 def _matchete_internal_dim6_dev3_delta(matchete_eom_debug: dict[str, Any]) -> dict[str, Any]:
@@ -691,6 +860,20 @@ def main() -> int:
         scalar_field="H",
         heavy_replacements=heavy_replacements,
     )
+    source_trace_vector_eom_probe = _source_trace_vector_eom_probe(
+        theory,
+        lagrangian,
+        setup,
+        requirements,
+        normalization,
+        condition_name=condition_name,
+        target=target,
+        vector_field="B",
+        trace_name="hScalar-lScalar",
+        max_total_order=4,
+        max_slot_order=4,
+        index_prefix=f"{args.index_prefix}_source_trace_eom",
+    )
     payload = {
         "schema_version": 1,
         "generator": "scripts/debug_pychete_singlet_eom_boundary.py",
@@ -737,6 +920,7 @@ def main() -> int:
         "evaluated_term_counts_by_path": {},
         "eom_exposure_probe_by_entry": eom_probe_by_entry,
         "eom_exposure_probe_summary": eom_probe_summary,
+        "source_trace_vector_eom_probe": source_trace_vector_eom_probe,
         "matchete_quarter_insertions": matchete_quarter_insertions,
         "matchete_quarter_insertion_count": len(matchete_quarter_insertions),
         "pychete_nonzero_path_count": len(terms_by_path),
@@ -767,16 +951,17 @@ def main() -> int:
             "Matchete's InternalSimplify exposes EOM-proportional structures "
             "that feed PerformSystematicFieldRedefs. The refreshed Matchete "
             "replay locates the first nonzero cHD delta at dim6/dev3 vector "
-            "EOM selection over B/W. pychete now exposes one formal B-vector "
-            "EOM in wilson13_o1_1_0_0 and obtains a nonzero Abelian vector "
-            "field-redefinition delta, but that delta still projects to zero "
-            "for cHD both before and after heavy-scalar substitution. Filtered "
-            "and unfiltered Wilson-line generation have identical term counts "
-            "through total order 2, so the remaining gap is not target-term "
-            "filtering or heavy-substitution ordering. The next boundary is "
-            "the missing Matchete InternalSimplify vector-EOM producer content "
-            "that creates the dim6/dev3 B/W source terms selected by "
-            "PerformSystematicFieldRedefs."
+            "EOM selection over B/W. A follow-up source-trace probe shows that "
+            "the relevant two-Higgs B-vector EOM source is generated by the "
+            "hScalar-lScalar order-four Wilson-line trace, not by the "
+            "hScalar-lScalar-lVector-lScalar four-slot trace alone. pychete "
+            "now exposes that bounded hScalar-lScalar B-vector EOM source and "
+            "gets a nonzero cHD projection from its Abelian vector field "
+            "redefinition, but the coefficient is still short of Matchete's "
+            "after_shift_dim6_dev3 delta. The next boundary is therefore the "
+            "Matchete InternalSimplify scalar Green/EoMSplitter coefficient "
+            "parity for the hScalar-lScalar two-Higgs source, plus the later "
+            "non-Abelian W-vector EOM treatment if needed."
         ),
     }
     args.out.parent.mkdir(parents=True, exist_ok=True)

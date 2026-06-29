@@ -35,6 +35,7 @@ outFileOption = optionValue[
 outFile = If[absolutePathQ[outFileOption], outFileOption, FileNameJoin[{repoRoot, outFileOption}]];
 targetOption = optionValue["target", "cHD"];
 sampleChars = ToExpression @ optionValue["sample-chars", "2500"];
+sampleTerms = ToExpression @ optionValue["sample-terms", "5"];
 
 If[!DirectoryQ[matcheteRoot],
   Print["Matchete checkout not found: ", matcheteRoot];
@@ -121,10 +122,10 @@ shiftSelectionSummary[lag_, devs_Integer, dim_Integer] := Module[
     "devs" -> devs,
     "selected_term_count" -> Length[termList[eomTerms]],
     "selected_eom_field_labels_input_form" -> toInputString[fields],
-    "selected_eom_terms_input_form" -> (shortInputString /@ Take[termList[eomTerms], UpTo[5]]),
+    "selected_eom_terms_input_form" -> (shortInputString /@ Take[termList[eomTerms], UpTo[sampleTerms]]),
     "selected_h_term_count" -> Length[hTerms],
     "selected_h_eom_term_count" -> Length[hEomTerms],
-    "selected_h_eom_terms_input_form" -> (shortInputString /@ Take[hEomTerms, UpTo[5]]),
+    "selected_h_eom_terms_input_form" -> (shortInputString /@ Take[hEomTerms, UpTo[sampleTerms]]),
     "selected_h_scalar_shift_rules_input_form" -> shortInputString[rules]
   |>
 ];
@@ -330,7 +331,7 @@ fieldsToShiftPreparation[expr_] := Module[{fields, freeL, list, shiftFields, pre
     "input_field_labels_input_form" -> toInputString[fields],
     "eom_term_count" -> Length[list],
     "eom_field_labels_input_form" -> toInputString[shiftFields],
-    "sample_eom_terms_input_form" -> (shortInputString /@ Take[list, UpTo[5]])
+    "sample_eom_terms_input_form" -> (shortInputString /@ Take[list, UpTo[sampleTerms]])
   |>
 ];
 

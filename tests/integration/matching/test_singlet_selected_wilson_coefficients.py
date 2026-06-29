@@ -871,6 +871,8 @@ def test_singlet_chd_matchete_eom_dump_records_dim6_dev3_shift_boundary() -> Non
     assert "6 + 17*\\[Epsilon] + 6*\\[Epsilon]*Log" in (
         stages["after_shift_dim6_dev3"]["delta_from_replay_source_input_form"]
     )
+    assert stages["after_shift_dim6_dev3"]["selection_before_shift"]["selected_term_count"] == 12
+    assert len(stages["after_shift_dim6_dev3"]["selection_before_shift"]["selected_eom_terms_input_form"]) == 12
     assert stages["after_shift_dim6_dev3"]["coefficient_input_form"] == (
         stages["after_shift_dim6_dev2"]["coefficient_input_form"]
     )
@@ -885,6 +887,7 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     projections = debug["selected_stage_projections"]
     projections_by_order = debug["selected_stage_projections_by_total_order"]
     eom_probe = debug["eom_exposure_probe_summary"]
+    source_trace_probe = debug["source_trace_vector_eom_probe"]
 
     assert debug["generator"] == "scripts/debug_pychete_singlet_eom_boundary.py"
     assert debug["target"] == "cHD"
@@ -915,15 +918,25 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert "30 + 31*\\[Epsilon] + 30*\\[Epsilon]*Log" in references["matchete_eom_on_shell_input_form"]
     assert "representative-conversion boundary" in debug["first_differing_boundary"]
     assert "dim6/dev3 vector EOM selection over B/W" in debug["first_differing_boundary"]
-    assert "no B formal vector EOM" in debug["first_differing_boundary"]
+    assert "hScalar-lScalar order-four Wilson-line trace" in debug["first_differing_boundary"]
     assert eom_probe == {
         "entry_count": 10,
         "field_strength_count": 0,
         "formal_vector_eom_count": 0,
+        "nonzero_scalar_eom_exposed_heavy_vector_field_redefinition_delta_entry_count": 1,
+        "nonzero_scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection_entry_count": 0,
+        "nonzero_scalar_eom_exposed_vector_field_redefinition_delta_entry_count": 1,
+        "nonzero_scalar_eom_exposed_vector_field_redefinition_delta_projection_entry_count": 0,
         "nonzero_scalar_eom_field_redefinition_delta_entry_count": 4,
         "nonzero_vector_eom_current_exposed_delta_entry_count": 0,
         "nonzero_vector_field_redefinition_delta_entry_count": 0,
-        "scalar_eom_exposed_formal_eom_count": 40,
+        "scalar_eom_exposed_formal_eom_count": 41,
+        "scalar_eom_exposed_formal_vector_eom_count": 1,
+        "scalar_eom_exposed_heavy_vector_field_redefinition_delta_error_count": 0,
+        "scalar_eom_exposed_heavy_vector_field_redefinition_delta_projection_sum": "0",
+        "scalar_eom_exposed_vector_field_redefinition_delta_error_count": 0,
+        "scalar_eom_exposed_vector_field_redefinition_delta_projection_sum": "0",
+        "scalar_eom_exposed_vector_field_strength_divergence_count": 0,
         "scalar_eom_exposure_error_count": 0,
         "scalar_eom_field_redefinition_delta_error_count": 0,
         "scalar_eom_identity_count": 28,
@@ -961,6 +974,23 @@ def test_selected_chd_pychete_boundary_fixture_records_pre_eom_gap() -> None:
     assert debug["eom_exposure_probe_by_entry"]["hScalar-lScalar-lVector-lScalar#wilson14_o2_0_0_0"][
         "scalar_eom_identity_count"
     ] == 10
+    assert source_trace_probe["controls"]["trace_name"] == "hScalar-lScalar"
+    assert source_trace_probe["controls"]["max_total_order"] == 4
+    assert source_trace_probe["controls"]["filter_terms_by_matching_targets"] is True
+    assert source_trace_probe["term_counts_by_total_order"] == {"0": 2, "1": 0, "2": 4, "3": 0, "4": 10}
+    assert source_trace_probe["summary"]["entry_count"] == 3
+    assert source_trace_probe["summary"]["nonzero_vector_field_redefinition_delta_entry_count"] == 1
+    assert source_trace_probe["summary"]["nonzero_vector_field_redefinition_delta_projection_entry_count"] == 1
+    assert source_trace_probe["summary"]["scalar_eom_exposed_formal_vector_eom_count"] == 4
+    source_projection = source_trace_probe["summary"]["vector_field_redefinition_delta_projection_sum"]
+    assert "Coupling(Singlet_Scalar_Extension::coupling_A" in source_projection
+    assert "Coupling(Singlet_Scalar_Extension::coupling_gY" in source_projection
+    assert "vakint::ε" in source_projection
+    assert {
+        entry
+        for entry, row in source_trace_probe["by_entry"].items()
+        if not row["vector_field_redefinition_delta_projection_is_zero"]
+    } == {"hScalar-lScalar#wilson14_o4_0"}
     assert debug["matchete_quarter_insertion_count"] == 8
     assert [row["index"] for row in debug["matchete_quarter_insertions"]] == [
         1,

@@ -238,6 +238,18 @@ when a factored/native coefficient route is available, expose explicit controls
 for expensive projection or simplification stages, and prefer algorithms whose
 cost grows with the selected targets or backend operation rather than the full
 SMEFT expression whenever practical.
+When comparing pychete against Matchete intermediate stages, the comparison
+method itself must be performance-competitive with Matchete. Prefer
+target-filtered selected trace/source probes, entry-local projections, and
+small source-class diagnostics. Do not use heavy-first expansion of large
+Wilson-line expressions as a routine parity strategy: if a single selected
+entry jumps to tens of megabytes before exposing the desired structure, stop
+that route and find the earlier source trace or Matchete simplification
+boundary that produces the same operator class cheaply. The Singlet `cHD`
+frontier is the current example: the dim6/dev3 vector-EOM shift is sourced by
+the target-filtered `hScalar-lScalar` order-four two-Higgs trace, not by
+expanding the four-slot `hScalar-lScalar-lVector-lScalar` entries after heavy
+substitution.
 For matching-condition extraction from large one-loop expressions, prefer
 `matching_condition_expand_source=False` plus
 `matching_condition_truncate_eft=True` when appropriate. This projects each

@@ -1487,6 +1487,17 @@ generic algorithm boundary before runtime pychete changes are accepted.
   records 105 Higgs formal-EOM terms after `InternalSimplify`. The next generic
   port target is therefore Matchete `InternalSimplify`'s operator-basis /
   identity-neighborhood control, not final-coefficient tuning.
+- Latest performance/parity correction, 2026-06-29: the `cHD` on-shell
+  vector-EOM shift should be dissected through the target-filtered
+  `hScalar-lScalar` order-four two-Higgs source trace, not by heavy-first
+  expansion of the four-slot `hScalar-lScalar-lVector-lScalar` entries. The
+  four-slot trace remains the off-shell cHD source, but the Matchete
+  `after_shift_dim6_dev3` field-redefinition delta is fed by
+  hScalar-lScalar two-Higgs formal B/W vector-EOM terms. pychete now records a
+  bounded hScalar-lScalar B-vector EOM source and nonzero cHD projection in
+  the debug fixture; the remaining gap is coefficient parity for the scalar
+  Green / EoMSplitter source, with W-vector EOM support tracked separately if
+  needed.
 - Latest user instruction and implementation response, 2026-06-28: perform a
   short remaining-gap study for the first full one-loop matching parity target,
   archive the large live implementation notes to
