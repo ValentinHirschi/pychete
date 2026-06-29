@@ -20,6 +20,10 @@
   WolframScript dumps, compare them against bounded pychete probes at the
   same trace/target/order/stage boundary, and patch only the first generic
   semantic divergence. Never tune a final Wilson coefficient directly.
+- Use Matchete to guide algorithmic stage boundaries and expected
+  intermediate invariants, while implementing the pychete side with
+  Symbolica/idenso/spenso/vakint-native mechanisms instead of copying
+  Mathematica-specific mechanics.
 - Treat performance parity as part of semantic parity. Pychete probes should
   be at least as targeted as the corresponding Matchete stage.
 - Run memory-risk tests and matching probes through
@@ -66,18 +70,19 @@ the selected pre-shift terms contain formal vector-EOM sources over `{B, W}`
 and no selected Higgs-EOM terms. The B-only replay carries the `cHD` shift; W
 is selected but currently projects zero to `cHD`.
 
-Immediate next implementation direction:
+Immediate next broadening direction:
 
-- Mirror Matchete's class-local `InternalSimplify` / `IBPSimplify`
-  vector-EOM-producing semantics deeply enough for the selected Singlet `cHD`
-  source.
-- Feed the resulting formal Abelian `B` EOM source into pychete's bounded
-  vector field-redefinition consumer, preserving Matchete's
-  `SelectOperatorDevsAndDim` order and derivative-count staging.
-- Verify full public-route composition only after the stage-local source and
-  replay match: selected Wilson-line replacement, unselected trace remainder,
-  heavy-scalar solution policy, on-shell ordering, and registered `cHD`
-  projection.
+- Keep the selected `cHD` route as the first green derivative-sector
+  checkpoint, and broaden toward the remaining 24 nonzero Singlet Wilson
+  entries by following Matchete's stage order, not by coefficient patching.
+- Separate remaining gaps into two classes before coding: Wilson-line source
+  generation/algebra gaps, and final `MapEffectiveCouplings`-style
+  basis-decomposition gaps. Several four-fermion and Higgs-current Wilson
+  entries are now known to be projection/basis-map dominated because pychete
+  cannot extract them even from the converted Matchete on-shell Lagrangian.
+- Port the missing basis-map/Fierz/Green-reduction semantics generically,
+  with idenso/spenso handling gamma, colour, and tensor algebra wherever
+  native support exists. Do not add Warsaw-name-specific coefficient repairs.
 
 Performance follow-up on the two-trace public composition: a transient
 Symbolica `is_linear=True` head prototype for pychete `FuncNCM` was tested
@@ -155,6 +160,63 @@ Mismatch checklist for this slice:
   The gap-report route also now forwards
   `wilson_line_include_unselected_traces` so selected-trace Matchete parity
   probes can be expressed without a monolithic hybrid remainder.
+
+## Current Slice Update: NCM Hoisting And Projection Frontier
+
+This slice followed the Matchete `EvaluateSTr` cleanup order for the next
+remaining Singlet family. A selected `clequ1` probe over
+`hScalar-lScalar-lFermion-lFermion-lScalar` showed that unfiltered Wilson-line
+term generation produces 20 terms, but target-filtered generation produces no
+terms and the projected `clequ1` coefficient remains zero. Inspecting the
+source showed mixed `NCM(...)` chains with known-commutative operands
+embedded between fermion endpoints and gamma/projector factors, preventing
+the existing idenso open-chain simplifier from seeing contiguous Dirac words.
+
+Generic implementation:
+
+- Added `hoist_commutative_ncm_operands(...)` in
+  `src/pychete/noncommutative.py`. It uses bounded Symbolica replacement
+  rules over `NCM(...)` chains and hoists only pychete-known commutative
+  operands: couplings, deltas, metrics, CG tensors, loop-momentum factors,
+  non-fermion fields, and products/powers thereof. Plain untagged symbols are
+  intentionally not hoisted because tests and diagnostics may use them as
+  abstract noncommutative endpoints.
+- Wired this pass into `postprocess_wilson_line_numerator(...)` before the
+  idenso Dirac simplification boundary, so generated Wilson-line sources are
+  normalized closer to Matchete's `NCM` cleanup without hand-written gamma
+  algebra.
+
+Resulting diagnosis:
+
+- The hoist/idenso boundary is now covered by focused unit tests and does not
+  regress the selected `cHW/cHB/cHWB/cHD` validation routes.
+- The selected `clequ1` probe still projects to zero after hoisting because
+  the selected trace source contains no direct `Ye*Yu` term. Separately,
+  projecting pychete's Warsaw target against the converted Matchete off-shell
+  and on-shell Lagrangians also gives zero for `clequ1`, while Matchete's
+  saved `Matching Conditions` has the nonzero coefficient. This pins
+  `clequ1` and related four-fermion/Higgs-current gaps to a missing
+  Matchete-style `MapEffectiveCouplings` / Fierz / basis-decomposition layer,
+  not only to Wilson-line trace generation.
+- Direct projection checks against the converted Matchete Lagrangian show
+  `cHW` and `cHB` are direct-projection coefficients, selected `cHD` is now
+  direct-projectable through the validated route, while `cHBox`,
+  Higgs-current/Yukawa, and four-fermion coefficients need richer basis-map
+  semantics.
+
+Validation for this slice:
+
+- `PYTHONPATH=src dependencies/.venv/bin/python -m pytest
+  tests/unit/functional/test_noncommutative.py
+  tests/unit/backends/test_idenso_backend.py::test_wilson_line_numerator_hoists_commutative_operands_before_open_chain_dirac_simplification
+  tests/unit/backends/test_idenso_backend.py::test_idenso_bridge_simplifies_registered_open_fermion_chains_through_native_gamma`
+- `PYTHONPATH=src dependencies/.venv/bin/python -m mypy
+  src/pychete/noncommutative.py src/pychete/matching_integrals.py`
+- Watchdog-wrapped selected parity gate:
+  `tests/integration/validation/test_validation_fixtures.py::test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_against_matchete_fixture`
+  and
+  `tests/integration/validation/test_validation_fixtures.py::test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fixture`
+  passed in 205.65s under the 30 GiB cap.
 
 ## Active Checkpoints
 

@@ -478,6 +478,13 @@ comparison checklist includes `LoadModel`, `Match`, `SetCurrentLagrangian`,
 `MapEffectiveCouplingsInternal`. When a mismatch appears, compare pychete
 against the earliest corresponding Matchete stage in that pipeline before
 patching runtime code.
+Use Matchete as the algorithmic reference for stage boundaries, invariants,
+and expected intermediate forms, not as a reason to copy Mathematica-specific
+implementation mechanics. Port the same generic semantics into pychete with
+Symbolica replacement rules and native idenso/spenso/vakint operations. When a
+Matchete stage succeeds by a delayed basis map, Green-basis identity, Fierz
+map, or `MapEffectiveCouplings` solve, implement that generic stage in
+pychete rather than repairing individual Wilson coefficient names.
 Whenever a precise Matchete-parity mismatch is identified, first review the
 corresponding Matchete Mathematica algorithm and the relevant pychete algorithm
 side by side before patching pychete. Use intermediate-stage dumps and focused
@@ -908,12 +915,15 @@ the requested derivative order must remain formal until their combinatoric
 coverage is explicitly requested and tested.
 Generated Wilson-line numerators must normalize pychete noncommutative chains
 before backend simplification. Use `normalize_ncm_chains(...)` to flatten
-nested `NCM(...)` operands and hoist only commutative scalar coefficients, then
-delegate compact projector/gamma words to
+nested `NCM(...)` operands and `hoist_commutative_ncm_operands(...)` to move
+known pychete-commutative operands out of mixed open chains, then delegate
+compact projector/gamma words to
 `idenso.simplify_pychete_dirac_algebra(...)` before scalarizing commutative
 chains. This mirrors Matchete's `NCM`/`DiracProduct` cleanup while keeping the
 actual gamma algebra in the native backend; do not leave generated
 Wilson-line terms with `NCM(..., NCM(...), ...)` nesting that blocks idenso.
+Plain untagged symbols must not be hoisted out of mixed chains, because tests
+and diagnostics may use them as abstract noncommutative endpoints.
 Before applying open covariant derivatives, Wilson-line symmetry pruning, or
 target-local filtering to generated `NCM(...)` chains, linearize additive
 operands with `distribute_ncm_additions(...)`. Matchete's noncommutative

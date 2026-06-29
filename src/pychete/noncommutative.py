@@ -7,6 +7,7 @@ from symbolica import Expression, Replacement
 from symbolica.core import AtomType
 
 from .expr import (
+    as_int,
     bar_field_pattern,
     factors,
     field_pattern,
@@ -14,6 +15,7 @@ from .expr import (
     is_head,
     is_zero,
     matching_subexpressions,
+    pow_parts,
     product_expr,
     sum_expr,
     terms,
@@ -62,6 +64,31 @@ def scalarize_commutative_ncm_chains(expr: Expression) -> Expression:
     return normalize_ncm_chains(expr).replace_multiple(_scalar_ncm_replacements()).expand()
 
 
+def hoist_commutative_ncm_operands(expr: Expression, *, max_passes: int = 8) -> Expression:
+    """Move known-commutative operands out of mixed pychete ``NCM`` chains.
+
+    This is deliberately narrower than ``scalarize_commutative_ncm_chains``:
+    it keeps open fermion chains noncommutative, but moves pychete-native
+    scalar objects such as couplings, deltas, CG tensors, metrics, loop
+    momenta, and non-fermion fields outside the chain so the idenso Dirac
+    bridge can see contiguous fermion/gamma/projector words. Plain untagged
+    symbols are not hoisted, because callers may use them as abstract
+    noncommutative endpoints in tests or diagnostics.
+    """
+
+    if max_passes < 0:
+        raise ValueError("max_passes must be non-negative")
+    if not _contains_ncm(expr):
+        return expr
+    out = normalize_ncm_chains(expr)
+    for _ in range(max_passes):
+        updated = out.replace_multiple(_hoist_commutative_ncm_operand_replacements()).expand()
+        if bool(updated == out):
+            return updated
+        out = updated
+    return out
+
+
 def distribute_ncm_additions(
     expr: Expression,
     *,
@@ -106,6 +133,46 @@ def _normalize_ncm_replacements() -> tuple[Replacement, ...]:
             )
         )
     return tuple(replacements)
+
+
+@cache
+def _hoist_commutative_ncm_operand_replacements() -> tuple[Replacement, ...]:
+    replacements: list[Replacement] = []
+    for arity in range(1, _MAX_SCALAR_NCM_ARITY + 1):
+        wildcards = _ncm_operand_wildcards(arity)
+        pattern = s.NCM(*wildcards)
+        replacements.append(
+            Replacement(
+                pattern,
+                _hoist_commutative_ncm_operand_replacement(pattern, wildcards),
+                rhs_cache_size=0,
+            )
+        )
+    return tuple(replacements)
+
+
+def _hoist_commutative_ncm_operand_replacement(
+    pattern: Expression,
+    wildcards: tuple[Expression, ...],
+) -> Callable[[dict[Expression, Expression]], Expression]:
+    def replace_chain(match: dict[Expression, Expression]) -> Expression:
+        operands = tuple(match[wildcard] for wildcard in wildcards)
+        coefficient = Expression.num(1)
+        kept: list[Expression] = []
+        changed = False
+        for operand in operands:
+            if _is_known_commutative_ncm_operand(operand):
+                coefficient *= operand
+                changed = True
+            else:
+                kept.append(operand)
+        if not changed:
+            return pattern.replace_wildcards(match)
+        if not kept:
+            return coefficient
+        return coefficient * s.NCM(*kept)
+
+    return replace_chain
 
 
 def _normalize_ncm_replacement(
@@ -251,6 +318,43 @@ def _is_commutative_ncm_operand(expr: Expression) -> bool:
     return True
 
 
+def _is_known_commutative_ncm_operand(expr: Expression) -> bool:
+    if is_zero(expr) or bool(expr == Expression.num(1)):
+        return True
+    if _contains_noncommutative_marker(expr):
+        return False
+    kind = expr.get_type()
+    if kind is AtomType.Num:
+        return True
+    if kind is AtomType.Var:
+        return False
+    parts = pow_parts(expr)
+    if parts is not None:
+        base, exponent = parts
+        exponent_int = as_int(exponent)
+        return exponent_int is not None and _is_known_commutative_ncm_operand(base)
+    if len(terms(expr)) > 1:
+        return all(_is_known_commutative_ncm_operand(term) for term in terms(expr))
+    factor_tuple = factors(expr)
+    if len(factor_tuple) > 1:
+        return all(_is_known_commutative_ncm_operand(factor) for factor in factor_tuple)
+    if is_head(expr, s.Field):
+        return not bool(field_type(expr) == s.Fermion)
+    if is_head(expr, s.Bar) and len(expr) == 1 and is_head(expr[0], s.Field):
+        return not bool(field_type(expr[0]) == s.Fermion)
+    return any(
+        is_head(expr, head)
+        for head in (
+            s.Coupling,
+            s.Delta,
+            s.Metric,
+            s.CG,
+            s.LoopMomentum,
+            s.LoopMomentumSquared,
+        )
+    )
+
+
 def _contains_noncommutative_marker(expr: Expression) -> bool:
     if bool(expr == s.PR) or bool(expr == s.PL):
         return True
@@ -294,4 +398,9 @@ def _ncm_operand_wildcards(arity: int) -> tuple[Expression, ...]:
     return tuple(s.head(f"scalar_ncm_operand_{arity}_{index}_") for index in range(arity))
 
 
-__all__ = ["distribute_ncm_additions", "normalize_ncm_chains", "scalarize_commutative_ncm_chains"]
+__all__ = [
+    "distribute_ncm_additions",
+    "hoist_commutative_ncm_operands",
+    "normalize_ncm_chains",
+    "scalarize_commutative_ncm_chains",
+]

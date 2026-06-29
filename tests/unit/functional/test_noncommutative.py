@@ -2,7 +2,12 @@ from __future__ import annotations
 
 from pychete import Theory, s
 from pychete.cde import open_covariant_derivative
-from pychete.noncommutative import distribute_ncm_additions, normalize_ncm_chains, scalarize_commutative_ncm_chains
+from pychete.noncommutative import (
+    distribute_ncm_additions,
+    hoist_commutative_ncm_operands,
+    normalize_ncm_chains,
+    scalarize_commutative_ncm_chains,
+)
 
 from tests.conftest import assert_expr_equal
 
@@ -32,6 +37,37 @@ def test_normalize_ncm_chains_flattens_nested_chains_and_hoists_scalars() -> Non
     expected = y() * s.Bar(y()) * s.NCM(s.Bar(psi()), s.PR, s.PL, psi(), s.PR, s.PL)
 
     assert_expr_equal(normalize_ncm_chains(expr), expected)
+
+
+def test_hoist_commutative_ncm_operands_moves_known_scalars_out_of_mixed_chain() -> None:
+    theory = Theory("hoist_ncm_known_scalars")
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    left = theory.define_field("psiL", s.Fermion, mass=0)
+    right = theory.define_field("psiR", s.Fermion, mass=0)
+    coupling = theory.define_coupling("y")
+    theory.define_index_type("Flavor")
+    i = theory.index("i", "Flavor")
+    j = theory.index("j", "Flavor")
+
+    expr = s.NCM(
+        -coupling() * s.Bar(scalar()),
+        s.Bar(left()),
+        s.Delta(i, j),
+        s.PR,
+        right(),
+    )
+    expected = -coupling() * s.Bar(scalar()) * s.Delta(i, j) * s.NCM(s.Bar(left()), s.PR, right())
+
+    assert_expr_equal(hoist_commutative_ncm_operands(expr), expected)
+
+
+def test_hoist_commutative_ncm_operands_preserves_plain_symbol_placeholders() -> None:
+    left = s.head("abstract_left")
+    right = s.head("abstract_right")
+
+    expr = s.NCM(left, s.PR, right)
+
+    assert_expr_equal(hoist_commutative_ncm_operands(expr), expr)
 
 
 def test_distribute_ncm_additions_linearizes_additive_operands_before_open_cd() -> None:

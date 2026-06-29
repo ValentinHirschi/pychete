@@ -8,7 +8,11 @@ from .expr import as_int, factors, is_head, pow_parts, product_expr, sum_expr, t
 from .functional import expand_cd_operators, normalize_conjugate_scalar_field_slots, simplify_trivial_cd_operators
 from .logging import get_logger, progress
 from .matching_options import VakintIntegralStage
-from .noncommutative import normalize_ncm_chains, scalarize_commutative_ncm_chains
+from .noncommutative import (
+    hoist_commutative_ncm_operands,
+    normalize_ncm_chains,
+    scalarize_commutative_ncm_chains,
+)
 from .symbols import SymbolRole, canonical_string, s
 from .theory import CovariantDerivativeCommutatorMode, Theory
 from .wilson_line_eom import _apply_wilson_line_post_integral_scalar_commutator_bilinears
@@ -23,7 +27,7 @@ def postprocess_wilson_line_numerator(
 ) -> Expression:
     from .backends import idenso
 
-    normalized = normalize_ncm_chains(numerator)
+    normalized = hoist_commutative_ncm_operands(normalize_ncm_chains(numerator))
     if close_fermion_loop:
         traced = idenso.trace_pychete_closed_dirac_chains(normalized)
         if (

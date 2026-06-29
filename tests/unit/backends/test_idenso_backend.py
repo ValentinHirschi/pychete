@@ -7,6 +7,7 @@ from pychete import Theory
 from pychete.backends import idenso, vakint
 from pychete.expr import field_with_derivatives
 from pychete.group_algebra import simplify_color, simplify_gamma, simplify_metrics, simplify_pychete_color
+from pychete.matching_integrals import postprocess_wilson_line_numerator
 from pychete.symbols import SymbolRole, canonical_string, s
 
 
@@ -851,6 +852,36 @@ def test_idenso_bridge_simplifies_registered_open_fermion_chains_through_native_
         ),
         4 * s.NCM(s.Bar(left()), right()),
     )
+
+
+def test_wilson_line_numerator_hoists_commutative_operands_before_open_chain_dirac_simplification() -> None:
+    theory = Theory("idenso_open_chain_with_commutative_operands")
+    scalar = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    left = theory.define_field("psi", s.Fermion)
+    right = theory.define_field("Psi", s.Fermion)
+    coupling = theory.define_coupling("y")
+    theory.define_index_type("Flavor")
+    i = theory.index("i", "Flavor")
+    j = theory.index("j", "Flavor")
+    mu = s.Index(s.dummy_index(0), s.Lorentz)
+
+    expr = s.NCM(
+        -coupling() * s.Bar(scalar()),
+        s.Bar(left()),
+        s.Delta(i, j),
+        s.PR,
+        s.Gamma(mu),
+        s.PL,
+        right(),
+    )
+    expected = (
+        -coupling()
+        * s.Bar(scalar())
+        * s.Delta(i, j)
+        * s.NCM(s.Bar(left()), s.DiracProduct(s.Gamma(mu), s.PL), right())
+    )
+
+    assert _same(postprocess_wilson_line_numerator(expr), expected)
 
 
 def test_idenso_open_fermion_chain_bridge_requires_registered_field_labels() -> None:
