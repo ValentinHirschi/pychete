@@ -2032,3 +2032,15 @@ next real performance step remains an insertion-level collected
   Wilson-line order windows used by the public selected `cHD` parity route,
   instead of forcing one global Wilson-line order bound for all selected trace
   families.
+- Current continuation, 2026-06-29: promoted selected Singlet `cHD` parity
+  into the validation gap-report route. The new slow regression runs the
+  public matcher through `one_loop_preview_gap_report(...)` with selected-only
+  Wilson-line traces, per-trace order windows, Matchete-style field-DOF
+  weighting, internal through-finite evaluation, theory-owned
+  `epsilon`/`mubar2`, scalar/EOM exposure, and staged projection sources.
+  The remaining mismatch was only Matchete's compact
+  `log(mubar2/M^2)` versus pychete's backend-natural
+  `log(mubar2)-2 log(M)` representation, so an opt-in Symbolica-pattern
+  comparison normalization `expand_loop_scale_logs_for_comparison` was added.
+  This is a generic loop-scale comparison boundary, not a final-coefficient
+  patch.

@@ -46,17 +46,18 @@ Singlet Scalar Extension to SMEFT. Current accepted progress:
   finite checkpoint can be reproduced when decomposed by bounded public
   Wilson-line order/entry filters.
 - The selected two-trace public `Theory.match(...)` route for Singlet `cHD`
-  now reproduces the finite Matchete-fixture coefficient when run with
+  now reproduces the Matchete-fixture coefficient through pole and finite
+  order when run through `one_loop_preview_gap_report(...)` with
   Matchete-style field-DOF weighting, Wilson-line staged projection sources,
-  `hScalar-lScalar` orders `{0,2,4}`, and
+  selected-only trace composition, `hScalar-lScalar` orders `{0,2,4}`, and
   `hScalar-lScalar-lVector-lScalar` orders `{0,1,2}`.
 - The committed Singlet fixture has 64 external SMEFT/Wilson entries; 25 are
   nonzero. The broad default fixture report still has all 25 nonzero Wilson
   entries different, because public composition/projection is not yet using
   the validated staged Wilson-line pieces efficiently. Nonzero parity is now
   meaningful for 4 of the 25 selected Wilson coefficients/routes:
-  `cHW`, `cHB`, `cHWB`, and public selected finite `cHD` after explicit
-  Matchete-fixture/vakint loop-convention conversion.
+  `cHW`, `cHB`, `cHWB`, and public selected full `cHD` through the validation
+  gap-report route.
 
 The active evidence points away from scalar-Higgs EOM replacement as the first
 source of the remaining `cHD` mismatch. Matchete's first nonzero `cHD` delta
@@ -122,6 +123,38 @@ accept and forward `wilson_line_total_orders_by_trace`. This lets
 Wilson-line order windows as the public `Theory.match(...)` route, which is
 required for the selected two-trace Singlet `cHD` parity configuration without
 over-broadening either trace family.
+
+Current validation-route milestone: added
+`test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fixture`.
+This runs the selected two-trace Singlet `cHD` configuration through
+`one_loop_preview_gap_report(...)` using the public matcher, the internal
+through-finite backend, theory-owned `epsilon`/`mubar2`, selected-only
+Wilson-line traces, per-trace order filters, Matchete-style field-DOF
+weighting, scalar/EOM exposure, and staged projection sources. The report now
+accepts the committed Matchete `cHD` matching condition as a common Wilson
+coefficient.
+
+Mismatch checklist for this slice:
+
+- Matchete evidence: committed fixture
+  `assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json`
+  generated from Matchete's validation result, where `cHD` uses the compact
+  scale log `log(mubar2/M^2)`.
+- Pychete probe: watchdog-wrapped selected public `Theory.match(...)` and the
+  new validation gap-report regression above, using the same selected
+  Wilson-line trace/order configuration as the staged `cHD` checks.
+- First differing boundary: loop-scale log representation after internal
+  analytic vacuum-integral evaluation. pychete emits
+  `log(mubar2) - 2 log(M)` from its Symbolica/vakint-style analytic backend;
+  Matchete stores `log(mubar2/M^2)`. The coefficients, pole, and finite
+  pieces agree once this representation difference is normalized.
+- Generic patch: added opt-in validation comparison normalization
+  `expand_loop_scale_logs_for_comparison`, implemented with a Symbolica
+  pattern replacement over `log(mu_r_squared * inverse_factor_)`. This is a
+  comparison-only scale-log normalization, not a Wilson-coefficient repair.
+  The gap-report route also now forwards
+  `wilson_line_include_unselected_traces` so selected-trace Matchete parity
+  probes can be expressed without a monolithic hybrid remainder.
 
 ## Active Checkpoints
 

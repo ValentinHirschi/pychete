@@ -389,6 +389,40 @@ def evaluate_loop_functions(
     )
 
 
+def expand_loop_scale_log_ratios(
+    expr: Expression,
+    *,
+    mu_r_squared: Expression | None = None,
+) -> Expression:
+    """Expand compact loop-scale logarithms for validation comparison.
+
+    Matchete fixtures often keep scale logs as ``log(mu^2 / M^2)``, while
+    pychete's analytic backend naturally emits ``log(mu^2) - 2 log(M)``.
+    This comparison helper rewrites only logarithms whose numerator is the
+    selected renormalization scale. It uses Symbolica's native pattern
+    replacement machinery and is intentionally opt-in because logarithm
+    splitting is branch-sensitive outside the positive mass-scale convention
+    used by these one-loop validation expressions.
+    """
+
+    scale_squared = mu_r_squared_symbol() if mu_r_squared is None else mu_r_squared
+    inverse_factor = S("pychete_loop_scale_inverse_factor_")
+    pattern = (scale_squared * inverse_factor).log()
+
+    def expand_scale_log(match: dict[Expression, Expression]) -> Expression:
+        matched = pattern.replace_wildcards(match)
+        parts = pow_parts(match[inverse_factor])
+        if parts is None:
+            return matched
+        base, exponent = parts
+        power = as_int(exponent)
+        if power is None or power >= 0:
+            return matched
+        return (scale_squared.log() + power * base.log()).expand()
+
+    return expr.replace(pattern, expand_scale_log, rhs_cache_size=0).expand()
+
+
 def evaluate_one_loop_single_scale_vacuum_integral(
     numerator: Expression,
     mass: Expression,
@@ -1109,6 +1143,7 @@ __all__ = [
     "evaluate_one_loop_single_scale_vacuum_integral",
     "evaluate_one_loop_single_scale_vacuum_integral_from_mass_squared",
     "evaluate_one_loop_vakint_expression",
+    "expand_loop_scale_log_ratios",
     "imaginary_unit_symbol",
     "loop_function",
     "loop_function_pole_part",

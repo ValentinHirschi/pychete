@@ -1618,6 +1618,7 @@ class ValidationFixture:
         wilson_line_expand_covariant_derivative_commutators: bool = False,
         wilson_line_max_derivative_order: int = 4,
         wilson_line_filter_terms_by_matching_targets: bool = False,
+        wilson_line_include_unselected_traces: bool = True,
         use_matchete_fluctuation_dof_basis: bool = False,
         wilson_line_weight_paths_by_component_dofs: bool = False,
         wilson_line_expose_scalar_derivative_commutator_bilinears: bool = False,
@@ -1648,6 +1649,7 @@ class ValidationFixture:
         use_public_match_api: bool = False,
         simplify_loop_functions_for_comparison: bool = False,
         evaluate_loop_functions_for_comparison: bool = False,
+        expand_loop_scale_logs_for_comparison: bool = False,
         comparison_combine_terms: bool = True,
         comparison_canonize_indices: bool = True,
     ) -> MatchingFixtureGapReport:
@@ -1678,6 +1680,10 @@ class ValidationFixture:
         Wilson-line expansion requests. It works through the public matcher or
         this fixture's direct preview route as long as reference matching
         conditions are being projected.
+        ``wilson_line_include_unselected_traces=False`` is forwarded only to
+        the public matcher for selected-trace parity probes. The direct preview
+        route remains hybrid by construction and always keeps the interaction
+        remainder.
         ``use_matchete_fluctuation_dof_basis`` and
         ``wilson_line_weight_paths_by_component_dofs`` forward the opt-in
         Matchete-style label-level fluctuation-DOF route. Use the DOF flag
@@ -1723,6 +1729,11 @@ class ValidationFixture:
         ``comparison_canonize_indices`` keeps Symbolica tensor-index
         canonicalization enabled for common-expression comparisons so fixture
         reports do not flag alpha-equivalent dummy-index relabelings as gaps.
+        ``expand_loop_scale_logs_for_comparison`` normalizes Matchete-style
+        compact scale logs such as ``log(mubar2/M^2)`` to pychete's internal
+        ``log(mubar2)-2 log(M)`` form for comparison only. It is opt-in
+        because logarithm splitting relies on the positive mass-scale
+        convention of these one-loop validation expressions.
         """
 
         _LOGGER.info("building one-loop preview gap report for fixture %s against %s", self.name, reference_name)
@@ -1740,6 +1751,10 @@ class ValidationFixture:
         if wilson_line_filter_terms_by_matching_targets and not project_reference_matching_conditions:
             raise ValueError(
                 "Wilson-line target filtering in fixture reports requires project_reference_matching_conditions=True"
+            )
+        if not wilson_line_include_unselected_traces and not use_public_match_api:
+            raise ValueError(
+                "wilson_line_include_unselected_traces=False in fixture reports requires use_public_match_api=True"
             )
         projected_target_selection = (
             _matching_condition_projection_targets(
@@ -1843,6 +1858,7 @@ class ValidationFixture:
                     ),
                     wilson_line_max_derivative_order=wilson_line_max_derivative_order,
                     wilson_line_filter_terms_by_matching_targets=wilson_line_filter_terms_by_matching_targets,
+                    wilson_line_include_unselected_traces=wilson_line_include_unselected_traces,
                     use_matchete_fluctuation_dof_basis=use_matchete_fluctuation_dof_basis,
                     wilson_line_weight_paths_by_component_dofs=wilson_line_weight_paths_by_component_dofs,
                     wilson_line_expose_scalar_derivative_commutator_bilinears=(
@@ -2022,6 +2038,8 @@ class ValidationFixture:
                 comparison_expression_transform=_comparison_expression_transform(
                     simplify_loop_functions_for_comparison=simplify_loop_functions_for_comparison,
                     evaluate_loop_functions_for_comparison=evaluate_loop_functions_for_comparison,
+                    expand_loop_scale_logs_for_comparison=expand_loop_scale_logs_for_comparison,
+                    mu_r_squared=mu_r_squared,
                     comparison_combine_terms=comparison_combine_terms,
                 ),
                 comparison_canonize_indices=comparison_canonize_indices,
@@ -2657,9 +2675,15 @@ def _comparison_expression_transform(
     *,
     simplify_loop_functions_for_comparison: bool = False,
     evaluate_loop_functions_for_comparison: bool,
+    expand_loop_scale_logs_for_comparison: bool = False,
+    mu_r_squared: Expression | None = None,
     comparison_combine_terms: bool,
 ) -> Callable[[Expression], Expression] | None:
-    if not simplify_loop_functions_for_comparison and not evaluate_loop_functions_for_comparison:
+    if (
+        not simplify_loop_functions_for_comparison
+        and not evaluate_loop_functions_for_comparison
+        and not expand_loop_scale_logs_for_comparison
+    ):
         return None
 
     from .backends import vacuum_integrals
@@ -2675,6 +2699,11 @@ def _comparison_expression_transform(
             transformed = vacuum_integrals.evaluate_loop_functions(
                 transformed,
                 combine_terms=comparison_combine_terms,
+            )
+        if expand_loop_scale_logs_for_comparison:
+            transformed = vacuum_integrals.expand_loop_scale_log_ratios(
+                transformed,
+                mu_r_squared=mu_r_squared,
             )
         return transformed
 

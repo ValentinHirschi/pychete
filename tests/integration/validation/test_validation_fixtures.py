@@ -1652,6 +1652,7 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
         wilson_line_covariant_derivative_commutator_mode="all_distinct",
         wilson_line_max_derivative_order=3,
         wilson_line_filter_terms_by_matching_targets=True,
+        wilson_line_include_unselected_traces=False,
         use_matchete_fluctuation_dof_basis=True,
         wilson_line_weight_paths_by_component_dofs=True,
         wilson_line_expose_scalar_derivative_commutator_bilinears=True,
@@ -1673,6 +1674,7 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     assert options.wilson_line_covariant_derivative_commutator_mode == "all_distinct"
     assert options.wilson_line_max_derivative_order == 3
     assert options.wilson_line_filter_terms_by_matching_targets is True
+    assert options.wilson_line_include_unselected_traces is False
     assert options.use_matchete_fluctuation_dof_basis is True
     assert options.wilson_line_weight_paths_by_component_dofs is True
     assert options.wilson_line_expose_scalar_derivative_commutator_bilinears is True
@@ -2327,6 +2329,83 @@ def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_aga
 
 
 @pytest.mark.slow
+def test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fixture() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    reference = load_validation_fixture(
+        Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
+    ).matching_result("matchete_previous")
+    theory = fixture.theory()
+    condition_name, _target = next(
+        (name, target)
+        for name, target in registered_wilson_matching_condition_targets(theory, basis="SMEFT").items()
+        if "external_cHD" in name
+    )
+
+    report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="Singlet_Scalar_Extension.matchete_previous",
+        max_trace_order=4,
+        integral_backend=OneLoopIntegralBackend.INTERNAL,
+        normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+        hbar=theory.external_handle("hbar")(),
+        epsilon=theory.external_handle("epsilon")(),
+        mu_r_squared=theory.external_handle("mubar2")(),
+        use_public_match_api=True,
+        wilson_line_trace_names=("hScalar-lScalar", "hScalar-lScalar-lVector-lScalar"),
+        wilson_line_max_total_order=4,
+        wilson_line_max_slot_order=4,
+        wilson_line_total_orders_by_trace={
+            "hScalar-lScalar": (0, 2, 4),
+            "hScalar-lScalar-lVector-lScalar": (0, 1, 2),
+        },
+        wilson_line_index_prefix="singlet_cHD_gap",
+        wilson_line_act_open_derivatives=True,
+        wilson_line_emit_covariant_derivative_commutators=False,
+        wilson_line_emit_covariant_derivative_commutator_passes=1,
+        wilson_line_covariant_derivative_commutator_mode="all_distinct",
+        wilson_line_expand_covariant_derivative_commutators=False,
+        wilson_line_max_derivative_order=4,
+        wilson_line_filter_terms_by_matching_targets=True,
+        wilson_line_include_unselected_traces=False,
+        use_matchete_fluctuation_dof_basis=True,
+        wilson_line_weight_paths_by_component_dofs=True,
+        wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+        wilson_line_expose_scalar_eom_terms=True,
+        wilson_line_tensor_reduce_before_wilson_expand=True,
+        simplify_pychete_color_algebra=True,
+        substitute_heavy_scalar_solutions=True,
+        on_shell_eom_lagrangian=fixture.expression("lagrangian"),
+        on_shell_eom_fields=[theory.field_handle("B")],
+        on_shell_eom_abelian_vector_field_redefinition=True,
+        project_reference_matching_conditions=True,
+        matching_condition_projection_names=("cHD",),
+        matching_condition_projection_source="on_shell_eft_lagrangian",
+        matching_condition_projection_expand_source=False,
+        matching_condition_projection_truncate_eft=True,
+        matching_condition_projection_drop_zero=False,
+        truncate_eft_result=False,
+        expand_loop_scale_logs_for_comparison=True,
+    )
+
+    assert report.candidate_stage == "normalized_interaction_wilson_line_internal_integral_result"
+    assert report.candidate_matching_condition_count == 1
+    assert report.reference_matching_condition_count == 1
+    assert report.common_matching_condition_names == (condition_name,)
+    assert report.accepted_common_wilson_matching_condition_names == (condition_name,)
+    assert report.different_after_probe_common_matching_condition_names == ()
+    assert report.matching_condition_projection_registered_wilson_names == (condition_name,)
+    assert report.candidate_metadata["matching_condition_projection_source"] == "staged"
+    assert report.candidate_metadata["wilson_line_selected_only"] is True
+    assert report.candidate_metadata["wilson_line_include_unselected_traces"] is False
+    assert report.candidate_metadata["wilson_line_total_orders_by_trace"] == (
+        "hScalar-lScalar:0,2,4;hScalar-lScalar-lVector-lScalar:0,1,2"
+    )
+    assert report.candidate_metadata["interaction_wilson_line_term_count"] == 68
+    assert report.candidate_metadata["interaction_wilson_line_component_weighted_term_count"] == 136
+    assert report.candidate_metadata["wilson_line_on_shell_projection_source_count"] == 24
+
+
+@pytest.mark.slow
 def test_singlet_wilson_line_filter_keeps_derivative_higgs_sources_staged_for_projection() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
@@ -2687,6 +2766,49 @@ def test_validation_fixture_gap_report_can_evaluate_loop_functions_for_compariso
     assert raw_report.canonical_equal_common_supertrace_names == ()
     assert raw_report.canonical_different_common_supertrace_names == ("loop",)
     assert transformed_report.canonical_equal_common_supertrace_names == ("loop",)
+    assert transformed_report.canonical_different_common_supertrace_names == ()
+
+
+def test_validation_fixture_gap_report_can_expand_loop_scale_logs_for_comparison(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    mass = theory.coupling_handle("M")()
+    scale = theory.external_handle("mubar2")()
+    candidate_expr = (scale.log() - 2 * mass.log()).expand()
+    reference_expr = (scale / mass**2).log()
+    candidate = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"scale_log": candidate_expr},
+    )
+    reference = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=Expression.num(0),
+        supertraces={"scale_log": reference_expr},
+    )
+
+    def fake_preview(self: object, **_kwargs: object) -> MatchingResult:
+        return candidate
+
+    monkeypatch.setattr(type(fixture), "one_loop_preview", fake_preview)
+
+    raw_report = fixture.one_loop_preview_gap_report(reference, reference_name="scale_log_reference")
+    transformed_report = fixture.one_loop_preview_gap_report(
+        reference,
+        reference_name="scale_log_reference",
+        mu_r_squared=scale,
+        expand_loop_scale_logs_for_comparison=True,
+    )
+
+    assert raw_report.canonical_equal_common_supertrace_names == ()
+    assert raw_report.canonical_different_common_supertrace_names == ("scale_log",)
+    assert transformed_report.canonical_equal_common_supertrace_names == ("scale_log",)
     assert transformed_report.canonical_different_common_supertrace_names == ()
 
 
