@@ -73,6 +73,11 @@ Current public Wilson-line accepted subset:
   assemble the validated selected Wilson-line pieces and the
   effective-coupling map efficiently enough to reproduce all 25 conditions
   directly from the UV Lagrangian.
+- Source-stage scalar-sector progress for `cHBox` is now pinned separately:
+  selected `hScalar-hScalar` contributes
+  `-hbar*kappa^2/(24 M^2)` at
+  `interaction_wilson_line_normalized_internal_integral_finite_part`. This is
+  not yet a final public `on_shell_eft_lagrangian` `cHBox` condition.
 
 ## Latest Milestone
 
@@ -183,12 +188,22 @@ the final converted-boundary bridge:
   maps the tree `-A^2/(2 M^4)` contribution correctly but still differs from
   the full Matchete `cHBox` condition because the selected
   `hScalar-lScalar` / `hScalar-lScalar-lVector-lScalar` families do not
-  generate the missing one-loop scalar-sector terms. A bounded pure-heavy
-  trace probe showed that `hScalar-hScalar` contributes the reference
-  `-hbar*kappa^2/(24 M^2)` term; broader `hScalar-hScalar-hScalar` probing
-  was stopped with `stop.order` because the unrestricted derivative-order plan
-  was too slow. The next `cHBox` work should use narrower total-order plans
-  for pure-heavy scalar traces before broadening further.
+  generate the missing one-loop scalar-sector terms. A focused Matchete dump
+  for `hScalar -> cHBox`
+  (`assets/validation/matchete/debug/singlet_hScalar_cHBox.debug.json`)
+  shows a zero selected prop-order-4 Wilson-line insertion sum but nonzero
+  full power-type and previous validation traces, so the next `hScalar` issue
+  is full power-trace composition rather than a selected-order coefficient
+  mismatch. A bounded public pychete probe now has a regression showing that
+  `hScalar-hScalar` contributes the reference `-hbar*kappa^2/(24 M^2)` term
+  at the normalized Wilson-line finite stage. Broader
+  `hScalar-hScalar-hScalar` probing was stopped with `stop.order` because the
+  unrestricted derivative-order plan was too slow. The next `cHBox` work
+  should use narrower total-order plans for pure-heavy scalar traces before
+  broadening further.
+- Validation for the latest scalar-stage regression:
+  `tests/integration/matching/test_singlet_selected_wilson_coefficients.py::test_public_match_selected_hscalar_hscalar_chbox_stage_records_scalar_loop_contribution`
+  passed under the 30 GiB watchdog (`1 passed` in about 16 seconds).
 
 ## Next Implementation Slices
 

@@ -70,6 +70,19 @@ integration of the internal mixed/zero-mass analytic integral backend,
 complete converted model fixtures, and generic operator-basis projection
 without Warsaw-specific core assumptions.
 
+Current Singlet coefficient status, 2026-06-30: the active UV theory is
+`Singlet_Scalar_Extension` and the matched effective theory/basis is SMEFT
+Warsaw. At the converted Matchete on-shell `MapEffectiveCouplings` boundary,
+pychete matches all 25 nonzero Wilson coefficients:
+`cH`, `cHB`, `cHBox`, `cHD`, `cHW`, `cHWB`, `cHd`, `cHe`, `cHl1`, `cHl3`,
+`cHq1`, `cHq3`, `cHu`, `cHud`, `cdH`, `ceH`, `cle`, `cledq`, `clequ1`,
+`cqd1`, `cqd8`, `cqu1`, `cqu8`, `cquqd1`, and `cuH`. Keep this distinct
+from public one-loop generation parity: the selected public Wilson-line route
+currently has accepted full-condition coverage for `cHW`, `cHB`, `cHWB`, and
+`cHD`, plus a newly pinned source-stage scalar-sector `cHBox` contribution
+`-hbar*kappa^2/(24 M^2)` from selected `hScalar-hScalar` at
+`interaction_wilson_line_normalized_internal_integral_finite_part`.
+
 Latest mismatch-debugging instruction, 2026-06-28: keep confirming and using
 the paired Matchete/pychete debug workflow during the active Singlet frontier.
 When the two systems disagree, refresh focused Matchete WolframScript dumps,

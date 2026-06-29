@@ -879,6 +879,74 @@ def test_public_match_selected_higgs_gauge_partial_wilson_coefficient_is_accepte
 
 
 @pytest.mark.slow
+def test_public_match_selected_hscalar_hscalar_chbox_stage_records_scalar_loop_contribution() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
+    theory = fixture.theory()
+    target = smeft_warsaw_operator(theory, "cHBox")
+    assert target is not None
+    hbar = theory.external_handle("hbar")()
+
+    result = theory.match(
+        fixture.expression("lagrangian"),
+        eft_order=6,
+        loop_order=1,
+        one_loop_options=OneLoopMatchOptions(
+            max_trace_order=2,
+            integral_backend=OneLoopIntegralBackend.INTERNAL_MINIMAL_SUBTRACTION,
+            normalization=OneLoopNormalization.MATCHETE_EVALUATED_HBAR,
+            hbar=hbar,
+            use_matchete_fluctuation_dof_basis=True,
+            wilson_line_weight_paths_by_component_dofs=True,
+            wilson_line_trace_names=("hScalar-hScalar",),
+            wilson_line_max_total_order=4,
+            wilson_line_max_slot_order=4,
+            wilson_line_index_prefix="public_singlet_cHBox_hscalar_hscalar_stage",
+            wilson_line_act_open_derivatives=True,
+            wilson_line_emit_covariant_derivative_commutators=False,
+            wilson_line_emit_covariant_derivative_commutator_passes=1,
+            wilson_line_covariant_derivative_commutator_mode="all_distinct",
+            wilson_line_expand_covariant_derivative_commutators=False,
+            wilson_line_max_derivative_order=4,
+            wilson_line_filter_terms_by_matching_targets=True,
+            wilson_line_include_unselected_traces=False,
+            wilson_line_expose_scalar_derivative_commutator_bilinears=True,
+            wilson_line_expose_scalar_eom_terms=True,
+            wilson_line_tensor_reduce_before_wilson_expand=True,
+            simplify_pychete_color_algebra=True,
+            substitute_heavy_scalar_solutions=True,
+            on_shell_eom_lagrangian=fixture.expression("lagrangian"),
+            on_shell_eom_fields=[theory.field_handle("B")],
+            on_shell_eom_abelian_vector_field_redefinition=True,
+            truncate_eft_result=False,
+        ),
+    )
+    assert isinstance(result, MatchingResult)
+    source = result.supertraces["interaction_wilson_line_normalized_internal_integral_finite_part"]
+    projected = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=source,
+        on_shell_eft_lagrangian=source,
+    ).project_matching_conditions(
+        {"cHBox": target},
+        expand_source=False,
+        normalize_derivative_operators=True,
+        eft_order=6,
+        drop_zero=False,
+    )["cHBox"]
+    expected = -hbar * theory.coupling_handle("kappa")() ** 2 / (24 * theory.coupling_handle("M")() ** 2)
+
+    assert result.metadata["interaction_wilson_line_term_count"] == 8
+    assert result.metadata["interaction_wilson_line_component_weighted_term_count"] == 8
+    assert result.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
+        "hScalar-hScalar#wilson0_o0_0",
+        "hScalar-hScalar#wilson5_o2_0",
+        "hScalar-hScalar#wilson14_o4_0",
+    )
+    assert_expr_equal((projected - expected).expand(), Expression.num(0))
+
+
+@pytest.mark.slow
 def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_source_frontier() -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     theory = fixture.theory()
