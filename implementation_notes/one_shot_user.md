@@ -1669,3 +1669,23 @@ Green/EOM identity conversion.
   replay coefficient for `cHD`. The remaining work is full Singlet public-route
   composition, including heavy-solution terms, unselected trace remainder, and
   pole/MS convention handling.
+- Latest performance/code-organization continuation, 2026-06-29: user again
+  emphasized that pychete parity probes and intermediate stages must be at
+  least as performant as the corresponding Matchete stages. Implementation
+  response: kept the live implementation note compact instead of duplicating
+  archives, and extracted the Wilson-line/CDE vakint staging, internal
+  termwise evaluation, propagator-power shifting, and postprocessing helpers
+  from `src/pychete/matching.py` into `src/pychete/matching_integrals.py`.
+  Existing private imports from `pychete.matching` remain compatibility
+  aliases for tests/debug notebooks, while the performance-critical
+  tensor-reduction/evaluation boundary has a dedicated module. This reduced
+  `matching.py` from 9,190 to 8,563 lines without widening the selected cHD
+  parity route.
+- Same slice clarification: the focused slow checks exposed that the older
+  selected four-slot `hScalar-lScalar-lVector-lScalar -> cHD` prop-order-0
+  aggregate is no longer a matched aggregate after the indexed-variation fix.
+  Matchete's committed dump has eight target quarter insertions, while
+  pychete now keeps sixteen alpha-aware component paths and projects twice the
+  old aggregate. The tests now record this honestly as a multiplicity-
+  preserving canonical-basis frontier; the currently matched cHD sub-check is
+  the selected `hScalar-lScalar` B-vector dim6/dev3 replay.

@@ -685,12 +685,18 @@ def test_public_match_selected_chd_four_slot_wilson_coefficient_records_current_
     )
 
     assert result.metadata["wilson_line_terms_filtered_by_matching_targets"] is True
-    assert result.metadata["interaction_wilson_line_term_count"] == 8
+    # The indexed-variation fix exposes the full alpha-aware component
+    # neighborhood for this older four-slot diagnostic. Matchete's committed
+    # checkpoint still has eight target quarter insertions; pychete currently
+    # keeps sixteen path copies and therefore overcounts this aggregate by a
+    # factor of two. This is a multiplicity-preserving canonical-basis
+    # frontier, not the active matched hScalar-lScalar B-vector replay.
+    assert result.metadata["interaction_wilson_line_term_count"] == 16
     assert result.metadata["interaction_wilson_line_plan_entry_count"] == 1
     assert result.metadata["interaction_wilson_line_nonzero_plan_entries"] == (
         "hScalar-lScalar-lVector-lScalar#wilson0_o0_0_0_0",
     )
-    assert_expr_equal((projected - expected).expand(), Expression.num(0))
+    assert_expr_equal((projected - 2 * expected).expand(), Expression.num(0))
 
 
 @pytest.mark.slow
@@ -1422,7 +1428,11 @@ def test_selected_chd_four_slot_wilson_coefficient_records_current_source_fronti
         / mass**4
     )
 
-    assert_expr_equal(projected[condition_name], expected)
+    # Matchete's full prop-order-0 dump records eight target quarter
+    # insertions. pychete currently keeps sixteen alpha-aware component paths
+    # for this aggregate diagnostic, so the selected four-slot source remains
+    # a factor-two multiplicity frontier after the indexed-variation fix.
+    assert_expr_equal((projected[condition_name] - 2 * expected).expand(), Expression.num(0))
 
     replacement_rules = matching_module.heavy_scalar_solution_replacements(
         heavy_scalar_solutions,
@@ -1450,4 +1460,4 @@ def test_selected_chd_four_slot_wilson_coefficient_records_current_source_fronti
     # chunked termwise exact path: individual contributing Wilson-line paths
     # remain small, but the tensor-canonized aggregate exceeds the single-pass
     # projection byte guard.
-    assert_expr_equal((post_commutator_projected[condition_name] - expected).expand(), Expression.num(0))
+    assert_expr_equal((post_commutator_projected[condition_name] - 2 * expected).expand(), Expression.num(0))

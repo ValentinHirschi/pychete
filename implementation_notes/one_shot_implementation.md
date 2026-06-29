@@ -38,15 +38,18 @@
 
 The first realistic full one-loop matching integration test remains the
 Singlet Scalar Extension to SMEFT, with `cHD` as the hard coefficient. The
-selected `hScalar-lScalar-lVector-lScalar -> cHD` Wilson-line
-trace/integral/projection path matches Matchete's off-shell checkpoint through
-propagation orders 0, 1, and 2. The selected `hScalar-lScalar -> cHD`
-B-vector EOM replay now reaches Matchete's finite dim6/dev3 replay
-coefficient after fixing indexed functional-derivative alpha matching. The
-remaining blocker is full public-route composition beyond this selected
-source: heavy-scalar solution terms, unselected trace remainder, pole/MS
-convention handling, and broad Singlet `cHD` projection against Matchete's
-full on-shell result.
+selected `hScalar-lScalar -> cHD` B-vector EOM replay now reaches Matchete's
+finite dim6/dev3 replay coefficient after fixing indexed
+functional-derivative alpha matching. The older
+`hScalar-lScalar-lVector-lScalar -> cHD` four-slot prop-order-0 aggregate is
+now explicitly recorded as a factor-two multiplicity frontier: Matchete's
+debug checkpoint has eight target quarter insertions, while pychete currently
+keeps sixteen alpha-aware component paths after the indexed-variation fix.
+The remaining blocker is full public-route composition beyond the matched
+selected B-vector source: heavy-scalar solution terms, unselected trace
+remainder, pole/MS convention handling, multiplicity-preserving component
+canonicalization, and broad Singlet `cHD` projection against Matchete's full
+on-shell result.
 
 The active evidence points away from scalar-Higgs EOM replacement as the first
 source of the mismatch. Matchete's first nonzero `cHD` delta appears at
@@ -174,20 +177,19 @@ Latest narrowed mismatch:
 
 ## Current Implementation Slice
 
-1. Keep the refactor/context cleanup small and semantic: archive the long live
-   notes, then split a coherent helper family out of the oversized
-   `src/pychete/matching.py` without changing behavior.
-2. Refresh a narrow Matchete `ConstructOperatorIdentities` dump for the
-   two-Higgs/four-derivative class and the AtomicOp IDs that correspond to
-   `Bar[H] EOM[B] D H` and `D Bar[H] EOM[B] H`.
-3. Use the refreshed dump to design a bounded, generic pychete class-representative
-   improvement. The implementation must use Symbolica pattern/coefficient/
-   solve primitives and must not broaden the source more than Matchete's
-   operator class.
-4. Add focused tests that assert the paired Matchete/pychete checkpoint and
-   include enough performance metadata to catch accidental broadening.
-5. Run only targeted checks for the touched slice, then stage, commit, and push
+1. Keep the current refactor/context cleanup semantic: the live note is still
+   compact after the `part_G` archive, so do not create duplicate archives;
+   instead keep updating this summary.
+2. Continue splitting performance-critical helper families out of the
+   oversized `src/pychete/matching.py` without changing behavior or widening
+   any cHD parity probe.
+3. Preserve compatibility aliases from `pychete.matching` for existing tests,
+   notebooks, and debug scripts while giving each subsystem a semantic module
+   home.
+4. Run only targeted checks for the touched slice, then stage, commit, and push
    through `listener.py` once the slice is coherent.
+5. Resume the full Singlet `cHD` public-route composition frontier after this
+   code-organization slice is green.
 
 Current slice progress:
 
@@ -228,6 +230,13 @@ Current slice progress:
   `pychete.matching` remain compatibility aliases, while the performance
   policy now has a dedicated semantic home. This reduced `matching.py` from
   9,544 to 9,164 lines without changing the bounded cHD route.
+- Extracted Wilson-line/CDE vakint staging, internal termwise evaluation, and
+  Wilson-line postprocessing helpers from `src/pychete/matching.py` into
+  `src/pychete/matching_integrals.py`. Existing private names remain imported
+  compatibility aliases from `pychete.matching`, while the performance-critical
+  tensor-reduction/evaluation boundary is now easier to inspect. This reduced
+  `matching.py` from 9,190 to 8,563 lines in this slice without changing the
+  selected cHD evaluation order.
 - Fixed the indexed functional-derivative alpha-matching boundary in
   `src/pychete/functional.py`: indexed targets now try the native indexed
   Symbolica-pattern variation before accepting exact replacement output. This
@@ -239,6 +248,12 @@ Current slice progress:
   open identity deltas such as `Delta(Index(i,R), Index(i,Bar(R)))` reduce to
   one, while closed deltas with independent dummy labels continue to reduce to
   the registered representation dimension.
+- Updated the older selected four-slot cHD frontier assertions after the
+  indexed-variation fix exposed sixteen alpha-aware component paths where the
+  committed Matchete prop-order-0 checkpoint has eight target quarter
+  insertions. The tests now record this as a factor-two
+  multiplicity-preserving canonical-basis frontier instead of claiming that
+  aggregate as matched.
 
 ## Performance Budget For This Slice
 
