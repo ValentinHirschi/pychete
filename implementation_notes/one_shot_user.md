@@ -2149,3 +2149,14 @@ next real performance step remains an insertion-level collected
   structured result method, public gap-report forwarding, the existing
   converted effective-map group, targeted mypy, and the selected public
   Singlet `cHW/cHB/cHWB` and `cHD` regressions.
+- Current continuation, 2026-06-29: the first real public selected `cHD`
+  effective-map probe failed at the map-time Green-basis size cap, not at
+  source generation. pychete now maps effective couplings from staged
+  projection sources with
+  `map_effective_couplings_from_sources(...)` /
+  `with_mapped_effective_couplings_from_sources(...)`, and incomplete maps
+  prefilter source terms with the existing Symbolica-pattern projection atom
+  requirements. The filter is disabled for the SMEFT `Q_HBox` bridge labels
+  (`cH`, `cdH`, `ceH`, `cuH`) because those require the `Q_HBox` EOM image.
+  The selected public `cHW/cHB/cHWB` and `cHD` routes now pass through staged
+  effective-coupling mapping.

@@ -121,14 +121,44 @@ the final converted-boundary bridge:
   `theory.py`, and `validation_fixtures.py`, plus the selected public Singlet
   `cHW/cHB/cHWB` and `cHD` regressions (`2 passed`, including the known slow
   `cHD` route).
+- Follow-up public mapping slice: the first real selected `cHD` public
+  effective-map probe failed after source generation with
+  `Green-basis reduction discovered more than 128 basis terms`. This
+  identified the next boundary as map-time source size rather than Wilson-line
+  generation or a final-coefficient convention.
+- Implemented staged effective-coupling mapping:
+  `MatchingResult.map_effective_couplings_from_sources(...)` and
+  `with_mapped_effective_couplings_from_sources(...)` solve each selected
+  projection source independently and sum the coefficients. Public
+  `Theory.match(..., loop_order=1)` and direct fixture previews now choose
+  this staged path automatically when effective-coupling mapping is requested
+  and `MatchingResult.staged_projection_sources(...)` exposes selected
+  Wilson-line sources.
+- Added target-local source filtering before incomplete effective-coupling
+  maps, reusing the existing Symbolica-pattern projection atom requirements.
+  The filter is disabled for the registered SMEFT `Q_HBox` bridge targets
+  `cH`, `cdH`, `ceH`, and `cuH`, because those Matchete effective-map
+  conditions require the `Q_HBox` EOM image and renormalizable shifts outside
+  the raw target-operator atom family.
+- New/updated regressions:
+  `test_matching_result_maps_effective_couplings_from_staged_sources`,
+  `test_public_match_selected_higgs_gauge_effective_map_subset_matches_matchete_fixture`,
+  and the parameterized slow
+  `test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fixture`
+  now cover both direct projection and staged effective mapping.
+- Latest validation passed under the 30 GiB watchdog: the new staged unit and
+  Higgs-gauge effective-map tests, the converted effective-map group (`20
+  passed`), targeted mypy on `matching.py`, `matching_results.py`, and
+  `validation_fixtures.py`, and the selected `cHD` direct/effective-map slow
+  regression (`2 passed` in about six minutes).
 
 ## Next Implementation Slices
 
 1. Selected Singlet broadening:
-   use the public map boundary on already validated selected Wilson-line
-   source families, starting with `cHD` and then Higgs-gauge/Higgs-sector
-   subsets. Record whether each failure is source generation, on-shell
-   reduction, effective-coupling decomposition, or performance.
+   use the staged public map boundary to broaden beyond the currently green
+   selected `cHW/cHB/cHWB/cHD` families. Record whether each failure is source
+   generation, on-shell reduction, effective-coupling decomposition, or
+   performance.
 
 2. Trace/source generation parity:
    broaden beyond the selected `cHW/cHB/cHWB/cHD` families by following

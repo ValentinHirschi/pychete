@@ -25,6 +25,36 @@ def test_map_effective_couplings_solves_exact_target_lagrangian_with_symbolica()
     assert_expr_equal(mapped["cPhi2"], coefficient)
 
 
+def test_matching_result_maps_effective_couplings_from_staged_sources() -> None:
+    theory = Theory("effective_coupling_staged_sources")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    operator = phi() ** 2
+    wilson = theory.define_wilson_coefficient("cPhi2", operator=operator)
+    coefficient_a = S("effective_coupling_staged_sources_a")
+    coefficient_b = S("effective_coupling_staged_sources_b")
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=((coefficient_a + coefficient_b) * operator).expand(),
+        supertraces={
+            "stage_a": coefficient_a * operator,
+            "stage_b": coefficient_b * operator,
+        },
+    )
+
+    mapped_result = result.with_mapped_effective_couplings_from_sources(
+        {"cPhi2": wilson()},
+        ("stage_a", "stage_b"),
+        merge=False,
+    )
+
+    assert mapped_result.metadata["matching_condition_projection_source"] == "staged"
+    assert mapped_result.metadata["matching_condition_projection_mode"] == "effective_coupling_map"
+    assert mapped_result.metadata["matching_condition_projection_sources"] == "stage_a,stage_b"
+    assert_expr_equal(mapped_result.matching_conditions["cPhi2"], coefficient_a + coefficient_b)
+
+
 def test_map_effective_couplings_encodes_complex_numeric_coefficients_for_symbolica_solver() -> None:
     theory = Theory("effective_coupling_complex")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)

@@ -496,6 +496,40 @@ def _effective_operator_dimension_order(operator: Expression, theory: Theory) ->
     return 6
 
 
+def _target_local_effective_coupling_source(
+    theory: Theory,
+    source: Expression,
+    targets: Sequence[EffectiveCouplingTarget],
+) -> Expression:
+    """Return the source subset that can contribute to selected targets."""
+
+    operators = tuple(target.operator for target in targets)
+    if not operators:
+        return source
+    extractor = _ProjectionCoefficientExtractor(
+        source,
+        theory=theory,
+        wildcard_index_projection=False,
+    )
+    return extractor._filtered_source_for_expressions(operators)
+
+
+def _effective_targets_need_smeft_hbox_bridge(
+    theory: Theory,
+    targets: Sequence[EffectiveCouplingTarget],
+) -> bool:
+    if "cHBox" not in theory.externals:
+        return False
+    hbox_definition = theory.externals["cHBox"]
+    if (
+        hbox_definition.kind is not ExternalKind.WILSON_COEFFICIENT
+        or hbox_definition.basis_name != "SMEFT"
+        or hbox_definition.effective_projection_expr is None
+    ):
+        return False
+    return any(target.name in {"cH", "cdH", "ceH", "cuH"} for target in targets)
+
+
 @dataclass(frozen=True)
 class MatchingResult:
     """Structured output of a pychete matching calculation.
@@ -932,6 +966,16 @@ class MatchingResult:
                 )
                 for target in effective_targets
             ]
+        if (
+            allow_incomplete_target
+            and target_expr is None
+            and not _effective_targets_need_smeft_hbox_bridge(self.theory, effective_targets)
+        ):
+            source_expr = _target_local_effective_coupling_source(
+                self.theory,
+                source_expr,
+                effective_targets,
+            )
         mapped = map_effective_couplings(
             source_expr,
             effective_targets,
@@ -952,7 +996,7 @@ class MatchingResult:
                 allow_incomplete_target=allow_incomplete_target,
                 max_basis_terms=max_basis_terms,
                 max_identities=max_identities,
-            )
+        )
         return mapped
 
     def with_mapped_effective_couplings(
@@ -1001,6 +1045,90 @@ class MatchingResult:
                 **self.metadata,
                 "matching_conditions_projected": True,
                 "matching_condition_projection_source": source,
+                "matching_condition_projection_count": len(mapped),
+                "matching_condition_projection_mode": "effective_coupling_map",
+                "matching_condition_effective_coupling_map": True,
+                "matching_condition_effective_coupling_allow_incomplete_target": allow_incomplete_target,
+                "matching_condition_effective_coupling_normalize_derivative_operators": (
+                    normalize_derivative_operators
+                ),
+                "matching_condition_effective_coupling_max_basis_terms": max_basis_terms,
+                "matching_condition_effective_coupling_max_identities": max_identities,
+            },
+        )
+
+    def map_effective_couplings_from_sources(
+        self,
+        targets: MatchingConditionTargetInput,
+        sources: Sequence[str],
+        *,
+        identities: Sequence[Expression] = (),
+        allow_incomplete_target: bool = False,
+        normalize_derivative_operators: bool = True,
+        max_basis_terms: int = 128,
+        max_identities: int = 256,
+    ) -> dict[str, Expression]:
+        """Solve target couplings independently from multiple source stages."""
+
+        source_names = tuple(sources)
+        if not source_names:
+            raise ValueError("staged effective-coupling mapping requires at least one source")
+        conditions: dict[str, Expression] = {}
+        for source in source_names:
+            mapped = self.map_effective_couplings(
+                targets,
+                source=source,
+                identities=identities,
+                allow_incomplete_target=allow_incomplete_target,
+                normalize_derivative_operators=normalize_derivative_operators,
+                max_basis_terms=max_basis_terms,
+                max_identities=max_identities,
+            )
+            for name, coefficient in mapped.items():
+                previous = conditions.get(name, Expression.num(0))
+                conditions[name] = (previous + coefficient).expand()
+        return conditions
+
+    def with_mapped_effective_couplings_from_sources(
+        self,
+        targets: MatchingConditionTargetInput,
+        sources: Sequence[str],
+        *,
+        identities: Sequence[Expression] = (),
+        allow_incomplete_target: bool = False,
+        normalize_derivative_operators: bool = True,
+        max_basis_terms: int = 128,
+        max_identities: int = 256,
+        drop_zero: bool = False,
+        merge: bool = True,
+    ) -> MatchingResult:
+        """Return a result with target couplings solved from staged sources."""
+
+        source_names = tuple(sources)
+        mapped = self.map_effective_couplings_from_sources(
+            targets,
+            source_names,
+            identities=identities,
+            allow_incomplete_target=allow_incomplete_target,
+            normalize_derivative_operators=normalize_derivative_operators,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+        )
+        if drop_zero:
+            mapped = {
+                name: coefficient
+                for name, coefficient in mapped.items()
+                if _canonical_expr(coefficient) != "0"
+            }
+        matching_conditions = {**self.matching_conditions, **mapped} if merge else dict(mapped)
+        return replace(
+            self,
+            matching_conditions=matching_conditions,
+            metadata={
+                **self.metadata,
+                "matching_conditions_projected": True,
+                "matching_condition_projection_source": "staged",
+                "matching_condition_projection_sources": ",".join(source_names),
                 "matching_condition_projection_count": len(mapped),
                 "matching_condition_projection_mode": "effective_coupling_map",
                 "matching_condition_effective_coupling_map": True,
@@ -2395,7 +2523,7 @@ def _source_allows_eom_projection_aliases(source: str) -> bool:
         "on_shell_eft_lagrangian",
         LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE,
         TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE,
-    }
+    } or source.startswith(f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[")
 
 
 def _uses_registered_wilson_operator_aliases(target: MatchingConditionTarget) -> bool:

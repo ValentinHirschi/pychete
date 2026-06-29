@@ -2627,7 +2627,10 @@ def test_singlet_wilson_line_gap_report_accepts_selected_higgs_gauge_targets_aga
 
 
 @pytest.mark.slow
-def test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fixture() -> None:
+@pytest.mark.parametrize("effective_coupling_map", [False, True])
+def test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fixture(
+    effective_coupling_map: bool,
+) -> None:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
@@ -2656,7 +2659,9 @@ def test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fi
             "hScalar-lScalar": (0, 2, 4),
             "hScalar-lScalar-lVector-lScalar": (0, 1, 2),
         },
-        wilson_line_index_prefix="singlet_cHD_gap",
+        wilson_line_index_prefix=(
+            "singlet_cHD_gap_effmap" if effective_coupling_map else "singlet_cHD_gap"
+        ),
         wilson_line_act_open_derivatives=True,
         wilson_line_emit_covariant_derivative_commutators=False,
         wilson_line_emit_covariant_derivative_commutator_passes=1,
@@ -2681,6 +2686,8 @@ def test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fi
         matching_condition_projection_expand_source=False,
         matching_condition_projection_truncate_eft=True,
         matching_condition_projection_drop_zero=False,
+        matching_condition_effective_coupling_map=effective_coupling_map,
+        matching_condition_effective_coupling_allow_incomplete_target=effective_coupling_map,
         truncate_eft_result=False,
         expand_loop_scale_logs_for_comparison=True,
     )
@@ -2693,6 +2700,9 @@ def test_singlet_wilson_line_gap_report_accepts_selected_chd_against_matchete_fi
     assert report.different_after_probe_common_matching_condition_names == ()
     assert report.matching_condition_projection_registered_wilson_names == (condition_name,)
     assert report.candidate_metadata["matching_condition_projection_source"] == "staged"
+    if effective_coupling_map:
+        assert report.candidate_metadata["matching_condition_projection_mode"] == "effective_coupling_map"
+        assert report.candidate_metadata["matching_condition_effective_coupling_map"] is True
     assert report.candidate_metadata["wilson_line_selected_only"] is True
     assert report.candidate_metadata["wilson_line_include_unselected_traces"] is False
     assert report.candidate_metadata["wilson_line_total_orders_by_trace"] == (

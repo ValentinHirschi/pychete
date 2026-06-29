@@ -9359,17 +9359,26 @@ def match_one_loop(
     if matching_condition_targets is None:
         _log_one_loop_result(result)
         return result
+    staged_sources = result.staged_projection_sources(matching_condition_source)
     if matching_condition_effective_coupling_map:
-        projected = result.with_mapped_effective_couplings(
-            matching_condition_targets,
-            source=matching_condition_source,
-            allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
-            normalize_derivative_operators=matching_condition_normalize_derivative_operators,
-            drop_zero=matching_condition_drop_zero,
-        )
+        if staged_sources:
+            projected = result.with_mapped_effective_couplings_from_sources(
+                matching_condition_targets,
+                staged_sources,
+                allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
+                normalize_derivative_operators=matching_condition_normalize_derivative_operators,
+                drop_zero=matching_condition_drop_zero,
+            )
+        else:
+            projected = result.with_mapped_effective_couplings(
+                matching_condition_targets,
+                source=matching_condition_source,
+                allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
+                normalize_derivative_operators=matching_condition_normalize_derivative_operators,
+                drop_zero=matching_condition_drop_zero,
+            )
         _log_one_loop_result(projected)
         return projected
-    staged_sources = result.staged_projection_sources(matching_condition_source)
     if staged_sources:
         projected = result.with_projected_matching_conditions_from_sources(
             matching_condition_targets,

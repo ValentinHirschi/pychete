@@ -2018,13 +2018,27 @@ class ValidationFixture:
             )
         if project_reference_matching_conditions and not use_public_match_api:
             if matching_condition_effective_coupling_map:
-                candidate = candidate.with_mapped_effective_couplings(
-                    projected_targets or {},
-                    source=matching_condition_projection_source,
-                    allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
-                    normalize_derivative_operators=matching_condition_projection_normalize_derivative_operators,
-                    drop_zero=matching_condition_projection_drop_zero,
-                )
+                staged_sources = candidate.staged_projection_sources(matching_condition_projection_source)
+                if staged_sources:
+                    candidate = candidate.with_mapped_effective_couplings_from_sources(
+                        projected_targets or {},
+                        staged_sources,
+                        allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
+                        normalize_derivative_operators=(
+                            matching_condition_projection_normalize_derivative_operators
+                        ),
+                        drop_zero=matching_condition_projection_drop_zero,
+                    )
+                else:
+                    candidate = candidate.with_mapped_effective_couplings(
+                        projected_targets or {},
+                        source=matching_condition_projection_source,
+                        allow_incomplete_target=matching_condition_effective_coupling_allow_incomplete_target,
+                        normalize_derivative_operators=(
+                            matching_condition_projection_normalize_derivative_operators
+                        ),
+                        drop_zero=matching_condition_projection_drop_zero,
+                    )
             else:
                 candidate = candidate.with_projected_matching_conditions(
                     projected_targets or {},

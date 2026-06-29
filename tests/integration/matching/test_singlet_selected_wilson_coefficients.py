@@ -181,7 +181,10 @@ def _registered_wilson_condition_name(theory: Theory, external_name: str) -> str
 
 
 @cache
-def _public_selected_higgs_gauge_gap_report() -> tuple[Theory, MatchingFixtureGapReport, dict[str, str]]:
+def _public_selected_higgs_gauge_gap_report(
+    *,
+    effective_coupling_map: bool = False,
+) -> tuple[Theory, MatchingFixtureGapReport, dict[str, str]]:
     fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.model_fixture.json"))
     reference = load_validation_fixture(
         Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json")
@@ -220,6 +223,8 @@ def _public_selected_higgs_gauge_gap_report() -> tuple[Theory, MatchingFixtureGa
         matching_condition_projection_expand_source=False,
         matching_condition_projection_truncate_eft=True,
         matching_condition_projection_drop_zero=False,
+        matching_condition_effective_coupling_map=effective_coupling_map,
+        matching_condition_effective_coupling_allow_incomplete_target=effective_coupling_map,
         use_public_match_api=True,
         truncate_eft_result=False,
     )
@@ -836,6 +841,22 @@ def test_public_match_selected_higgs_gauge_wilson_subset_matches_matchete_fixtur
     assert report.candidate_metadata["wilson_line_weight_paths_by_component_dofs"] is False
     assert report.candidate_metadata["interaction_wilson_line_term_count"] == 14
     assert report.candidate_metadata["interaction_wilson_line_plan_entry_count"] == 15
+    assert report.candidate_matching_condition_names == expected_names
+    assert report.reference_matching_condition_names == expected_names
+    assert report.accepted_common_wilson_matching_condition_names == expected_names
+    assert report.different_after_probe_common_wilson_matching_condition_names == ()
+
+
+def test_public_match_selected_higgs_gauge_effective_map_subset_matches_matchete_fixture() -> None:
+    _, report, condition_names = _public_selected_higgs_gauge_gap_report(effective_coupling_map=True)
+    expected_names = tuple(sorted(condition_names.values()))
+
+    assert report.candidate_stage == "normalized_interaction_wilson_line_hybrid_internal_minimal_subtraction_result"
+    assert report.candidate_metadata["fixture_preview_source"] == "public_match_api"
+    assert report.candidate_metadata["matching_condition_projection_mode"] == "effective_coupling_map"
+    assert report.candidate_metadata["matching_condition_effective_coupling_map"] is True
+    assert report.candidate_metadata["matching_condition_projection_source"] == "staged"
+    assert report.candidate_metadata["interaction_wilson_line_term_count"] == 14
     assert report.candidate_matching_condition_names == expected_names
     assert report.reference_matching_condition_names == expected_names
     assert report.accepted_common_wilson_matching_condition_names == expected_names
