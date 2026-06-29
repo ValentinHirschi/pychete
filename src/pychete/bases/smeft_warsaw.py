@@ -101,6 +101,9 @@ def smeft_warsaw_basis() -> OperatorBasis:
         OperatorBasis(
             "SMEFT",
             {name: builders[name] for name in SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES},
+            effective_projection_builders={
+                "cHBox": _higgs_box_effective_projection_operator,
+            },
         )
     )
 
@@ -388,6 +391,19 @@ def _higgs_box_operator(theory: Theory, indices: tuple[Expression, ...]) -> Expr
         return None
     mu = _index(theory, "mu")
     return h1 * s.CD(list_expr(mu, mu), h2)
+
+
+def _higgs_box_effective_projection_operator(theory: Theory, indices: tuple[Expression, ...]) -> Expression | None:
+    """Return Matchete's EOM-reduced SMEFT ``Q_HBox`` map representative."""
+
+    del indices
+    if not _has(theory, fields=("H",)):
+        return None
+    h = theory.field_handle("H")
+    i = _field_index(theory, "i", "H", 0)
+    j = _field_index(theory, "j", "H", 0)
+    mu = _index(theory, "mu")
+    return 2 * h(i) * s.CD(mu, h(j)) * s.Bar(h(i)) * s.CD(mu, s.Bar(h(j)))
 
 
 def _higgs_derivative_operator(theory: Theory, indices: tuple[Expression, ...]) -> Expression | None:

@@ -247,6 +247,10 @@ def _encode_complex_numeric_coefficients(expr: Expression, imaginary_marker: Exp
 
 
 def _encode_complex_numeric_factor(factor: Expression, imaginary_marker: Expression) -> Expression:
+    if bool(factor == Expression.I):
+        return imaginary_marker
+    if bool(factor == -Expression.I):
+        return -imaginary_marker
     if factor.get_type() is not AtomType.Num:
         return factor
     if bool(factor == factor.conj()):

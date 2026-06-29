@@ -2104,3 +2104,15 @@ next real performance step remains an insertion-level collected
   `cle`, `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and `cquqd1`
   (`20/25`). Remaining converted-boundary gaps are solve error `cHBox` and
   differing `cH/cdH/ceH/cuH`.
+- Current continuation, 2026-06-29: the user asked again for the current
+  nonzero Wilson coefficients matching in pychete and the UV/effective theory
+  names. The active converted-boundary fixture remains
+  `Singlet_Scalar_Extension -> SMEFT Warsaw`. This slice used a new Matchete
+  `cHBox` EOM debug dump to identify that Matchete maps `Q_HBox` through an
+  EOM-reduced cross-derivative target representative. pychete now stores
+  effective-projection operator metadata for Wilson coefficients and the SMEFT
+  Warsaw basis attaches that representative for `cHBox`. The standalone
+  converted-boundary matches are now `cHB`, `cHD`, `cHBox`, `cHW`, `cHWB`,
+  `cHd`, `cHe`, `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`, `cle`,
+  `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and `cquqd1` (`21/25`).
+  Remaining converted-boundary gaps are differing `cH/cdH/ceH/cuH`.

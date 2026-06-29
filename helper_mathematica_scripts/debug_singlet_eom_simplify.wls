@@ -7,6 +7,9 @@
    Usage:
      wolframscript -file helper_mathematica_scripts/debug_singlet_eom_simplify.wls \
        --out assets/validation/matchete/debug/singlet_eom_cHD.debug.json
+     wolframscript -file helper_mathematica_scripts/debug_singlet_eom_simplify.wls \
+       --target cHBox \
+       --out assets/validation/matchete/debug/singlet_eom_cHBox.debug.json
 *)
 
 args = Rest @ $ScriptCommandLine;
@@ -71,17 +74,38 @@ stageSummary[name_String, expr_] := Module[{terms = termList[expr]},
   |>
 ];
 
+safeOperatorCoefficient[expr_, operator_] := Quiet @ Check[
+  FullSimplify[Matchete`GetOperatorCoefficient[expr, operator]],
+  $Failed
+];
+
+targetCoefficientVector[expr_, targetOperator_] :=
+  safeOperatorCoefficient[expr, #] & /@ termList[targetOperator];
+
+coefficientPayload[vector_List] := If[Length[vector] === 1, First[vector], vector];
+
+coefficientVectorDelta[vectorA_List, vectorB_List] := If[
+  Length[vectorA] === Length[vectorB] && FreeQ[{vectorA, vectorB}, $Failed],
+  MapThread[FullSimplify[#1 - #2] &, {vectorA, vectorB}],
+  $Failed
+];
+
 coefficientStageSummary[name_String, expr_, source_, offShellExpr_, targetOperator_] := Module[
   {coef, sourceCoef, offCoef},
-  coef = FullSimplify[Matchete`GetOperatorCoefficient[expr, targetOperator]];
-  sourceCoef = FullSimplify[Matchete`GetOperatorCoefficient[source, targetOperator]];
-  offCoef = FullSimplify[Matchete`GetOperatorCoefficient[offShellExpr, targetOperator]];
+  coef = targetCoefficientVector[expr, targetOperator];
+  sourceCoef = targetCoefficientVector[source, targetOperator];
+  offCoef = targetCoefficientVector[offShellExpr, targetOperator];
   <|
     "name" -> name,
     "byte_count" -> ByteCount[expr],
-    "coefficient_input_form" -> toInputString[coef],
-    "delta_from_replay_source_input_form" -> toInputString[FullSimplify[coef - sourceCoef]],
-    "delta_from_off_shell_input_form" -> toInputString[FullSimplify[coef - offCoef]]
+    "target_operator_term_count" -> Length[coef],
+    "coefficient_input_form" -> toInputString[coefficientPayload[coef]],
+    "delta_from_replay_source_input_form" -> toInputString[
+      coefficientPayload[coefficientVectorDelta[coef, sourceCoef]]
+    ],
+    "delta_from_off_shell_input_form" -> toInputString[
+      coefficientPayload[coefficientVectorDelta[coef, offCoef]]
+    ]
   |>
 ];
 
@@ -377,7 +401,7 @@ fieldSpecificVectorShiftSummary[lag_, field_, devs_Integer, dim_Integer, targetO
   gaugeData = Matchete`FieldRedef`PackagePrivate`GaugeFieldNormalization[lag, maxOrder];
   selectedTerms = Matchete`FieldRedef`PackagePrivate`SelectOperatorDevsAndDim[lag, devs, dim];
   fieldTerms = eomTermsForField[selectedTerms, field];
-  sourceCoef = FullSimplify[Matchete`GetOperatorCoefficient[lag, targetOperator]];
+  sourceCoef = targetCoefficientVector[lag, targetOperator];
   shifted =
     fieldSpecificShiftLagrangian[
       lag,
@@ -389,14 +413,15 @@ fieldSpecificVectorShiftSummary[lag_, field_, devs_Integer, dim_Integer, targetO
       maxOrder,
       loopOrder
     ];
-  shiftedCoef = FullSimplify[Matchete`GetOperatorCoefficient[shifted, targetOperator]];
-  deltaCoef = FullSimplify[shiftedCoef - sourceCoef];
+  shiftedCoef = targetCoefficientVector[shifted, targetOperator];
+  deltaCoef = coefficientVectorDelta[shiftedCoef, sourceCoef];
   <|
     "field_input_form" -> toInputString[field],
     "selected_term_count" -> Length[termList[fieldTerms]],
     "selected_terms_input_form" -> (shortInputString /@ Take[termList[fieldTerms], UpTo[sampleTerms]]),
-    "coefficient_input_form" -> toInputString[shiftedCoef],
-    "delta_from_source_input_form" -> toInputString[deltaCoef]
+    "target_operator_term_count" -> Length[shiftedCoef],
+    "coefficient_input_form" -> toInputString[coefficientPayload[shiftedCoef]],
+    "delta_from_source_input_form" -> toInputString[coefficientPayload[deltaCoef]]
   |>
 ];
 
@@ -530,19 +555,20 @@ coefficientBoundaryStageSummary[
   onShellCoefficient_,
   targetOperator_
 ] := Module[{coef},
-  coef = FullSimplify[Matchete`GetOperatorCoefficient[expr, targetOperator]];
+  coef = targetCoefficientVector[expr, targetOperator];
   <|
     "name" -> name,
     "byte_count" -> ByteCount[expr],
-    "coefficient_input_form" -> toInputString[coef],
+    "target_operator_term_count" -> Length[coef],
+    "coefficient_input_form" -> toInputString[coefficientPayload[coef]],
     "delta_from_boundary_source_input_form" -> toInputString[
-      FullSimplify[coef - boundarySourceCoefficient]
+      coefficientPayload[coefficientVectorDelta[coef, boundarySourceCoefficient]]
     ],
     "delta_from_off_shell_input_form" -> toInputString[
-      FullSimplify[coef - offShellCoefficient]
+      coefficientPayload[coefficientVectorDelta[coef, offShellCoefficient]]
     ],
     "delta_from_on_shell_input_form" -> toInputString[
-      FullSimplify[coef - onShellCoefficient]
+      coefficientPayload[coefficientVectorDelta[coef, onShellCoefficient]]
     ]
   |>
 ];
@@ -572,7 +598,7 @@ rawLagrangianEftBoundarySummary[
   tree = Matchete`RelabelIndices[Matchete`PackageScope`ReplaceHeavyEOM[lag]];
   raw = (tree + loop) // Matchete`ContractCGs // Matchete`PackageScope`MatchReduce;
   targetOperator = operatorForTarget[target];
-  rawCoefficient = FullSimplify[Matchete`GetOperatorCoefficient[raw, targetOperator]];
+  rawCoefficient = targetCoefficientVector[raw, targetOperator];
   internal = Matchete`PackageScope`InternalSimplify[
     raw,
     Matchete`ReductionIdentities -> Matchete`dDimensional
@@ -711,6 +737,10 @@ operatorForTarget["cHD"] := Module[
   {h = ToExpression["H"], i = Unique["i"], j = Unique["j"], nu = Unique["nu"]},
   h[i] Matchete`CD[nu, Matchete`Bar[h[i]]] Matchete`Bar[h[j]] Matchete`CD[nu, h[j]]
 ];
+operatorForTarget["cHBox"] := Module[
+  {h = ToExpression["H"], i = Unique["i"], j = Unique["j"], nu = Unique["nu"]},
+  Matchete`Bar[h[i]] h[i] Matchete`CD[{nu, nu}, Matchete`Bar[h[j]] h[j]]
+];
 operatorForTarget[other_] := (
   Print["Unsupported target for this EOMSimplify dump: ", other];
   Quit[2]
@@ -744,9 +774,9 @@ supertraceSumFieldRedefReplay = fieldRedefReplaySummary[
   operator
 ];
 
-offCoefficient = Matchete`GetOperatorCoefficient[offShell, operator];
-onCoefficient = Matchete`GetOperatorCoefficient[onShell, operator];
-deltaCoefficient = FullSimplify[onCoefficient - offCoefficient];
+offCoefficient = targetCoefficientVector[offShell, operator];
+onCoefficient = targetCoefficientVector[onShell, operator];
+deltaCoefficient = coefficientVectorDelta[onCoefficient, offCoefficient];
 rawBoundary = rawLagrangianEftBoundarySummary[targetOption, offCoefficient, onCoefficient];
 inertGammaVectorShiftBoundary = inertGammaVectorShiftSplitSummary[targetOption];
 
@@ -757,9 +787,10 @@ data = <|
   "target" -> targetOption,
   "previous_validation_file" -> previousValidationFile,
   "operator_input_form" -> toInputString[operator],
-  "off_shell_coefficient_input_form" -> toInputString[offCoefficient],
-  "on_shell_coefficient_input_form" -> toInputString[onCoefficient],
-  "on_minus_off_coefficient_input_form" -> toInputString[deltaCoefficient],
+  "target_operator_term_count" -> Length[offCoefficient],
+  "off_shell_coefficient_input_form" -> toInputString[coefficientPayload[offCoefficient]],
+  "on_shell_coefficient_input_form" -> toInputString[coefficientPayload[onCoefficient]],
+  "on_minus_off_coefficient_input_form" -> toInputString[coefficientPayload[deltaCoefficient]],
   "fields_to_shift_input_form" -> toInputString[fieldsToShift],
   "fields_to_shift_preparation" -> fieldsToShiftPrep,
   "higgs_scalar_shift_summary" -> higgsShift,

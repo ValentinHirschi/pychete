@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 from collections.abc import Callable, Iterable, Mapping
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from html import escape
 from types import MappingProxyType
 from typing import TYPE_CHECKING, cast
@@ -24,12 +24,21 @@ class OperatorBasis:
 
     name: str
     builders: Mapping[str, OperatorBuilder]
+    effective_projection_builders: Mapping[str, OperatorBuilder] = field(default_factory=dict)
 
     def __post_init__(self) -> None:
         object.__setattr__(
             self,
             "builders",
             cast(Mapping[str, OperatorBuilder], MappingProxyType(dict(self.builders))),
+        )
+        object.__setattr__(
+            self,
+            "effective_projection_builders",
+            cast(
+                Mapping[str, OperatorBuilder],
+                MappingProxyType(dict(self.effective_projection_builders)),
+            ),
         )
 
     def operator_names(self) -> tuple[str, ...]:
@@ -71,6 +80,20 @@ class OperatorBasis:
             return None
         return builder(theory, tuple(indices))
 
+    def effective_projection_operator(
+        self,
+        theory: Theory,
+        name: str,
+        indices: Iterable[Expression] = (),
+    ) -> Expression | None:
+        """Build the operator representative used in effective-coupling maps."""
+
+        index_tuple = tuple(indices)
+        projection_builder = self.effective_projection_builders.get(name)
+        if projection_builder is not None:
+            return projection_builder(theory, index_tuple)
+        return self.operator(theory, name, index_tuple)
+
 
 def define_wilson_coefficient_from_basis(
     theory: Theory,
@@ -90,6 +113,7 @@ def define_wilson_coefficient_from_basis(
         eft_order=eft_order,
         basis=operator_basis.name if basis is None else basis,
         operator=operator_basis.operator(theory, name, index_tuple),
+        effective_projection_operator=operator_basis.effective_projection_operator(theory, name, index_tuple),
     )
 
 

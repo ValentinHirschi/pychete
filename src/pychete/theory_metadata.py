@@ -481,6 +481,17 @@ def external_operator_from_label(label: Expression) -> Expression | None:
     return value
 
 
+def external_effective_projection_operator_from_label(label: Expression) -> Expression | None:
+    value = symbol_data(label, SymbolDataKey.EFFECTIVE_PROJECTION_OPERATOR)
+    if value is None:
+        return None
+    if not isinstance(value, Expression):
+        raise ValueError(
+            f"External effective projection operator is not stored as an expression on {canonical_string(label)}"
+        )
+    return value
+
+
 def coupling_eft_order_from_label(label: Expression) -> int:
     return int(symbol_data(label, SymbolDataKey.EFT_ORDER, 0))
 
@@ -1072,6 +1083,7 @@ class ExternalDefinition:
     eft_order: int = 0
     basis: str | None = None
     operator: Expression | None = None
+    effective_projection_operator: Expression | None = None
 
     @property
     def kind(self) -> ExternalKind:
@@ -1103,6 +1115,12 @@ class ExternalDefinition:
 
         return external_operator_from_label(self.label)
 
+    @property
+    def effective_projection_expr(self) -> Expression | None:
+        """EOM/basis-reduced projection representative stored on the label."""
+
+        return external_effective_projection_operator_from_label(self.label)
+
     def expr(self, *args: Expression) -> Expression:
         """Build this external symbol as an atom or function call."""
 
@@ -1123,6 +1141,11 @@ class ExternalDefinition:
             "eft_order": self.order,
             "basis": self.basis_name,
             "operator": canonical_string(operator) if (operator := self.operator_expr) is not None else None,
+            "effective_projection_operator": (
+                canonical_string(effective_projection)
+                if (effective_projection := self.effective_projection_expr) is not None
+                else None
+            ),
         }
 
 

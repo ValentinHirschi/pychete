@@ -573,6 +573,7 @@ class SymbolDataKey(StrEnum):
     EXTERNAL_KIND = "external_kind"
     BASIS = "basis"
     OPERATOR = "operator"
+    EFFECTIVE_PROJECTION_OPERATOR = "effective_projection_operator"
 
 
 class SymbolStore:

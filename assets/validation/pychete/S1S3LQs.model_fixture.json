@@ -522,6 +522,7 @@
           },
           "cHBox": {
             "basis": "SMEFT",
+            "effective_projection_operator": "2*pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_i,S1S3LQs::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_i,S1S3LQs::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(S1S3LQs::index_smeft_mu,pychete::Lorentz),pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_j,S1S3LQs::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(S1S3LQs::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_j,S1S3LQs::group_SU2L(pychete::fund))),pychete::List())))",
             "eft_order": 0,
             "external_kind": "wilson_coefficient",
             "indices": [],
@@ -2670,6 +2671,9 @@
           {
             "data": {
               "basis": "SMEFT",
+              "effective_projection_operator": {
+                "__pychete_expression__": "2*pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_i,S1S3LQs::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_i,S1S3LQs::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(S1S3LQs::index_smeft_mu,pychete::Lorentz),pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_j,S1S3LQs::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(S1S3LQs::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(S1S3LQs::field_H,pychete::Scalar,pychete::List(pychete::Index(S1S3LQs::index_smeft_j,S1S3LQs::group_SU2L(pychete::fund))),pychete::List())))"
+              },
               "eft_order": 0,
               "external_kind": "wilson_coefficient",
               "indices": [],

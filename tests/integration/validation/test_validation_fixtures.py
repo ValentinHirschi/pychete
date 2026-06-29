@@ -173,6 +173,12 @@ def test_committed_matching_fixtures_store_smeft_wilson_metadata() -> None:
     assert theory.external_handle("cHB").definition.index_exprs == ()
     assert theory.external_handle("cHB").definition.operator_expr is not None
     assert "field_B" in canonical_string(theory.external_handle("cHB").definition.operator_expr)
+    chbox_operator = theory.external_handle("cHBox").definition.operator_expr
+    chbox_projection = theory.external_handle("cHBox").definition.effective_projection_expr
+    assert chbox_operator is not None
+    assert chbox_projection is not None
+    assert "pychete::CD(pychete::List(" in canonical_string(chbox_operator)
+    assert "pychete::CD(pychete::List(" not in canonical_string(chbox_projection)
     assert theory.external_handle("cHd").definition.kind is ExternalKind.WILSON_COEFFICIENT
     assert theory.external_handle("cHd").definition.basis_name == "SMEFT"
     assert len(theory.external_handle("cHd").definition.index_exprs) == 2
@@ -281,6 +287,25 @@ def test_singlet_reference_effective_coupling_map_recovers_standalone_chd_condit
 
     assert_expr_equal(
         (mapped["cHD"] - result.matching_conditions[reference_name]).expand(),
+        Expression.num(0),
+    )
+
+
+def test_singlet_reference_effective_coupling_map_recovers_standalone_chbox_condition() -> None:
+    fixture = load_validation_fixture(Path("assets/validation/pychete/Singlet_Scalar_Extension.matching_fixture.json"))
+    result = fixture.matching_result("matchete_previous")
+    definition = result.theory.externals["cHBox"]
+    variable = s.Coupling(definition.label, s.List(*definition.index_exprs), Expression.num(definition.order))
+    reference_name = canonical_string(variable)
+
+    mapped = result.map_effective_couplings(
+        {"cHBox": variable},
+        source="on_shell_eft_lagrangian",
+        allow_incomplete_target=True,
+    )
+
+    assert_expr_equal(
+        (mapped["cHBox"] - result.matching_conditions[reference_name]).expand(),
         Expression.num(0),
     )
 

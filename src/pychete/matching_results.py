@@ -263,6 +263,18 @@ class MatchingConditionTarget:
         return f"<code>MatchingConditionTarget({escape(display_string(self.expression))}{suffix})</code>"
 
 
+def _effective_coupling_projection_operator(
+    theory: Theory,
+    target: MatchingConditionTarget,
+) -> Expression | None:
+    """Return the target operator representative for effective-coupling maps."""
+
+    if target.is_wilson_coefficient and target.name in theory.externals:
+        definition = theory.externals[target.name]
+        return definition.effective_projection_expr or definition.operator_expr
+    return target.operator
+
+
 @dataclass(frozen=True)
 class MatchingResult:
     """Structured output of a pychete matching calculation.
@@ -661,7 +673,7 @@ class MatchingResult:
         effective_targets: list[EffectiveCouplingTarget] = []
         for target in structured_targets:
             variable = target.expression
-            operator = target.operator
+            operator = _effective_coupling_projection_operator(self.theory, target)
             if operator is None and target.name in self.theory.externals:
                 definition = self.theory.externals[target.name]
                 if (
@@ -673,7 +685,7 @@ class MatchingResult:
                         s.List(*definition.index_exprs),
                         Expression.num(definition.order),
                     )
-                    operator = definition.operator_expr
+                    operator = definition.effective_projection_expr or definition.operator_expr
             if operator is None:
                 raise ValueError(
                     "effective-coupling mapping requires targets with stored operator metadata"

@@ -1040,6 +1040,7 @@
           },
           "cHBox": {
             "basis": "SMEFT",
+            "effective_projection_operator": "2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_i,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_i,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(Singlet_Scalar_Extension::index_smeft_mu,pychete::Lorentz),pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_j,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(Singlet_Scalar_Extension::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_j,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())))",
             "eft_order": 0,
             "external_kind": "wilson_coefficient",
             "indices": [],
@@ -3730,6 +3731,9 @@
           {
             "data": {
               "basis": "SMEFT",
+              "effective_projection_operator": {
+                "__pychete_expression__": "2*pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_i,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())*pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_i,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(Singlet_Scalar_Extension::index_smeft_mu,pychete::Lorentz),pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_j,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List()))*pychete::CD(pychete::Index(Singlet_Scalar_Extension::index_smeft_mu,pychete::Lorentz),pychete::Bar(pychete::Field(Singlet_Scalar_Extension::field_H,pychete::Scalar,pychete::List(pychete::Index(Singlet_Scalar_Extension::index_smeft_j,Singlet_Scalar_Extension::group_SU2L(pychete::fund))),pychete::List())))"
+              },
               "eft_order": 0,
               "external_kind": "wilson_coefficient",
               "indices": [],

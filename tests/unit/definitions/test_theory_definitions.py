@@ -731,6 +731,25 @@ def test_linear_identity_normal_form_encodes_relative_complex_regulator_coeffici
     assert_expr_equal(reduced, Expression.I * coefficient * swapped)
 
 
+def test_linear_identity_normal_form_encodes_explicit_imaginary_factor() -> None:
+    coefficient = S("green_basis_explicit_i_coefficient")
+    theory = Theory("green_basis_explicit_i")
+    phi = theory.define_field("phi", s.Scalar, mass=0)
+    mu = theory.index("mu")
+    source = s.Bar(phi()) * phi(derivatives=[mu])
+    preferred = s.Bar(phi(derivatives=[mu])) * phi()
+    identity = coefficient * (source - Expression.I * preferred)
+
+    reduced = linear_identity_normal_form(
+        coefficient * source,
+        (identity,),
+        basis=(source, preferred),
+        preferred=(preferred,),
+    )
+
+    assert_expr_equal(reduced, Expression.I * coefficient * preferred)
+
+
 def test_linear_identity_basis_terms_strip_coefficients_and_normalize_signs() -> None:
     coefficient = S("green_basis_auto_basis_coefficient")
     theory = Theory("green_basis_auto_basis")
@@ -1486,6 +1505,7 @@ def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> Non
     s_flavor = theory.index("s", flavor.symbol)
     t = theory.index("t", flavor.symbol)
     c_h = define_smeft_wilson_coefficient(theory, "cH")
+    c_hbox = define_smeft_wilson_coefficient(theory, "cHBox")
     c_hb = define_smeft_wilson_coefficient(theory, "cHB")
     c_hwb = define_smeft_wilson_coefficient(theory, "cHWB")
     c_hd = define_smeft_wilson_coefficient(theory, "cHd", indices=[p, r])
@@ -1497,20 +1517,32 @@ def test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata() -> Non
     assert smeft_warsaw_operator_names() == SUPPORTED_SMEFT_WARSAW_OPERATOR_NAMES
     assert smeft_warsaw_basis().operator_names() == smeft_warsaw_operator_names()
     for name in smeft_warsaw_operator_names():
-        flavor_indices = ()
+        flavor_indices: tuple[Expression, ...] = ()
         if name in {"cllHH", "ceH", "cuH", "cdH", "ceW", "ceB", "cuG", "cuW", "cuB", "cdG", "cdW", "cdB", "cHl1", "cHl3", "cHe", "cHq1", "cHq3", "cHu", "cHd", "cHud"}:
             flavor_indices = (p, r)
         elif name not in {"cG", "cGt", "cW", "cWt", "cHG", "cHGt", "cHW", "cHWt", "cHB", "cHBt", "cHWB", "cHWtB", "cH", "cHBox", "cHD"}:
             flavor_indices = (p, r, s_flavor, t)
         operator = smeft_warsaw_operator(theory, name, flavor_indices)
+        basis_operator = smeft_warsaw_basis().operator(theory, name, flavor_indices)
         assert operator is not None, name
-        assert_expr_equal(operator, smeft_warsaw_basis().operator(theory, name, flavor_indices))
+        assert basis_operator is not None, name
+        assert_expr_equal(operator, basis_operator)
         theory._validate_registered_expression(operator)
 
-    for handle in (c_h, c_hb, c_hwb, c_hd, c_ew, c_ll, c_duq):
+    for handle in (c_h, c_hbox, c_hb, c_hwb, c_hd, c_ew, c_ll, c_duq):
         assert handle.definition.operator_expr is not None
         theory._validate_registered_expression(handle.definition.operator_expr)
+    assert c_hbox.definition.effective_projection_expr is not None
+    theory._validate_registered_expression(c_hbox.definition.effective_projection_expr)
+    assert c_h.definition.operator_expr is not None
+    assert c_hbox.definition.operator_expr is not None
+    assert c_hb.definition.operator_expr is not None
+    assert c_hwb.definition.operator_expr is not None
+    assert c_hd.definition.operator_expr is not None
+    assert c_ew.definition.operator_expr is not None
     assert "field_H" in canonical_string(c_h.definition.operator_expr)
+    assert "pychete::CD(pychete::List(" in canonical_string(c_hbox.definition.operator_expr)
+    assert "pychete::CD(pychete::List(" not in canonical_string(c_hbox.definition.effective_projection_expr)
     assert "field_B" in canonical_string(c_hb.definition.operator_expr)
     assert "cg_tensor_gen_SU2L_fund" in canonical_string(c_hwb.definition.operator_expr)
     assert "field_d" in canonical_string(c_hd.definition.operator_expr)

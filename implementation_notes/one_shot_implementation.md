@@ -1411,3 +1411,66 @@ and `cquqd1`.
 Remaining standalone converted-boundary gaps are the `cHBox` linear-system
 inconsistency and the differing `cH`, `cdH`, `ceH`, and `cuH` Higgs/Yukawa
 sector conditions.
+
+## Latest Status After cHBox Projection Metadata
+
+The standalone converted-on-shell effective-coupling parity sweep for
+`Singlet_Scalar_Extension -> SMEFT Warsaw` is now 21 exact nonzero matches
+out of 25.
+
+Matchete evidence and first mismatch:
+
+- A new debug dump was produced with
+  `helper_mathematica_scripts/debug_singlet_eom_simplify.wls --target cHBox`
+  and saved as
+  `assets/validation/matchete/debug/singlet_eom_cHBox.debug.json`.
+- The dump shows that Matchete cannot treat the additive `Q_HBox` expression
+  as one `GetOperatorCoefficient` target. After Matchete's
+  `EOMSimplify`/field-redefinition boundary, the three additive `Q_HBox`
+  component coefficients are `{0, nonzero, 0}`.
+- The surviving target representative is the original middle
+  cross-derivative term, including its factor of two. This explains pychete's
+  previous inconsistent equations: pychete was solving against the raw
+  additive Warsaw operator, while Matchete maps against the EOM-reduced target
+  representative.
+
+Implementation:
+
+- `OperatorBasis` now supports optional `effective_projection_builders`.
+- Theory-owned external/Wilson metadata now serializes and restores an
+  `effective_projection_operator` through Symbolica symbol data and JSON
+  checkpoints.
+- The SMEFT Warsaw basis keeps the raw `cHBox` operator as the public basis
+  definition but attaches the Matchete-style EOM-reduced effective-projection
+  representative for `MapEffectiveCouplings`.
+- `MatchingResult.map_effective_couplings(...)` now prefers that
+  effective-projection representative when it is present, otherwise preserving
+  the previous raw-operator behavior.
+
+Validation:
+
+- The isolated Singlet converted-boundary `cHBox` map now exactly matches the
+  committed Matchete condition.
+- Focused tests passed under the 30 GiB watchdog:
+  `tests/unit/definitions/test_theory_definitions.py::test_smeft_warsaw_operator_builders_attach_wilson_operator_metadata`,
+  the Green-basis complex-row tests in
+  `tests/unit/definitions/test_theory_definitions.py`, the full
+  `tests/unit/functional/test_effective_couplings.py`, the committed SMEFT
+  metadata check, the standalone `cHBox` fixture check, and the full
+  `test_validation_fixtures.py -k effective_coupling_map_recovers` subset.
+- Targeted mypy passed on the modified source modules.
+
+Current standalone converted-on-shell effective-coupling parity sweep:
+
+- Nonzero Matchete Wilson conditions in the Singlet fixture: 25.
+- Matching in pychete at this boundary: `cHB`, `cHD`, `cHBox`, `cHW`,
+  `cHWB`, `cHd`, `cHe`, `cHl1`, `cHl3`, `cHq1`, `cHq3`, `cHu`, `cHud`,
+  `cle`, `cledq`, `clequ1`, `cqd1`, `cqd8`, `cqu1`, `cqu8`, and
+  `cquqd1`.
+- Remaining nonzero but different: `cH`, `cdH`, `ceH`, `cuH`.
+
+Next focus: the four remaining Higgs/Yukawa-sector mismatches all point back
+to the same Matchete `EOMSimplify`/field-redefinition target/source boundary.
+Continue with Matchete debug dumps for these coefficients and compare the
+first differing intermediate against pychete before adding any projection
+repair.

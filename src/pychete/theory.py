@@ -114,6 +114,7 @@ from .theory_metadata import (
     field_zero_mode_from_label,
     external_basis_from_label,
     external_eft_order_from_label,
+    external_effective_projection_operator_from_label,
     external_indices_from_label,
     external_kind_from_label,
     external_operator_from_label,
@@ -246,6 +247,7 @@ class Theory:
                 eft_order=external_eft_order_from_label(symbol),
                 basis=external_basis_from_label(symbol),
                 operator=external_operator_from_label(symbol),
+                effective_projection_operator=external_effective_projection_operator_from_label(symbol),
             )
         return self._symbols[key]
 
@@ -650,6 +652,7 @@ class Theory:
         eft_order: int = 0,
         basis: str | None = None,
         operator: Expression | None = None,
+        effective_projection_operator: Expression | None = None,
     ) -> ExternalHandle:
         """Register or return an external symbol owned by this theory.
 
@@ -658,7 +661,9 @@ class Theory:
         primary use is Matchete-derived Wilson-condition labels and helper
         symbols that must still round-trip with Symbolica tags and symbol data.
         ``operator`` may store the EFT operator monomial associated with a
-        Wilson-like matching target.
+        Wilson-like matching target. ``effective_projection_operator`` may
+        store the EOM/basis-reduced representative used by Matchete-style
+        effective-coupling maps.
         """
 
         kind = ExternalKind.from_user(external_kind)
@@ -674,10 +679,12 @@ class Theory:
                 and eft_order == 0
                 and not basis_value
                 and operator is None
+                and effective_projection_operator is None
             )
             if requested_generic:
                 return ExternalHandle(self, definition)
             existing_operator = definition.operator_expr
+            existing_effective_projection_operator = definition.effective_projection_expr
             existing_matches = (
                 definition.kind is kind
                 and [canonical_string(index) for index in definition.index_exprs]
@@ -690,6 +697,15 @@ class Theory:
                         existing_operator is not None
                         and operator is not None
                         and canonical_string(existing_operator) == canonical_string(operator)
+                    )
+                )
+                and (
+                    (existing_effective_projection_operator is None and effective_projection_operator is None)
+                    or (
+                        existing_effective_projection_operator is not None
+                        and effective_projection_operator is not None
+                        and canonical_string(existing_effective_projection_operator)
+                        == canonical_string(effective_projection_operator)
                     )
                 )
             )
@@ -709,6 +725,11 @@ class Theory:
                 SymbolDataKey.EFT_ORDER.value: eft_order,
                 SymbolDataKey.BASIS.value: basis_value,
                 **({SymbolDataKey.OPERATOR.value: operator} if operator is not None else {}),
+                **(
+                    {SymbolDataKey.EFFECTIVE_PROJECTION_OPERATOR.value: effective_projection_operator}
+                    if effective_projection_operator is not None
+                    else {}
+                ),
             },
             tags=_external_symbol_tags(kind, basis_value, name=name),
         )
@@ -720,6 +741,7 @@ class Theory:
             eft_order=eft_order,
             basis=basis_value or None,
             operator=operator,
+            effective_projection_operator=effective_projection_operator,
         )
         self.externals[name] = definition
         return ExternalHandle(self, definition)
@@ -732,6 +754,7 @@ class Theory:
         eft_order: int = 0,
         basis: str | None = None,
         operator: Expression | None = None,
+        effective_projection_operator: Expression | None = None,
     ) -> ExternalHandle:
         """Register a Wilson-coefficient target as a theory-owned external.
 
@@ -750,6 +773,7 @@ class Theory:
             eft_order=eft_order,
             basis=basis,
             operator=operator,
+            effective_projection_operator=effective_projection_operator,
         )
 
     def define_cg_tensor(
@@ -2761,6 +2785,7 @@ class Theory:
             )
         for name, data in obj.get("externals", {}).items():
             operator_data = data.get("operator")
+            effective_projection_operator_data = data.get("effective_projection_operator")
             theory.define_external(
                 str(name),
                 external_kind=str(data.get("external_kind", ExternalKind.GENERIC.value)),
@@ -2770,6 +2795,11 @@ class Theory:
                 operator=(
                     theory._parse_registered_expression(str(operator_data))
                     if operator_data is not None
+                    else None
+                ),
+                effective_projection_operator=(
+                    theory._parse_registered_expression(str(effective_projection_operator_data))
+                    if effective_projection_operator_data is not None
                     else None
                 ),
             )
