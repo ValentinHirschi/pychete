@@ -665,6 +665,19 @@ replacement and field-redefinition companion as the
 `FieldStrength(B, {nu, mu}, {}, {nu})` standard form. This is a consumer-side
 bridge for Matchete `VectorShift` parity, not a full formal-vector-EOM
 producer and not non-Abelian `W` support.
+When a Wilson-line or Green-basis stage has already created Abelian
+field-strength divergences, use
+`expose_vector_field_strength_divergences_as_formal_eom(...)` as the cheap
+Matchete `EoMStandardForm` boundary:
+`FieldStrength(B, {nu, mu}, {}, {nu}) -> EOM(Field(B, Vector(...), {mu}, {}))`
+and the opposite Lorentz ordering with the corresponding minus sign. This
+must be a Symbolica `replace_multiple` pass over registered field-strength
+matches, not a rerun of an unbounded Green-basis identity universe. In the
+Wilson-line post-integral hook, run this immediately after explicit
+`CD(...)`/scalar-commutator expansion when scalar EOM exposure is enabled, so
+the subsequent on-shell vector-EOM replay sees formal vector EOM atoms and not
+raw `D.F` leftovers. Keep the pass Abelian and metadata-gated until non-Abelian
+`W` `VectorShift` semantics are ported from Matchete.
 Latest user reinforcement, 2026-06-28: when a Matchete/pychete mismatch is
 active, repeatedly run or refresh focused debug WolframScripts, dump as many
 Matchete intermediate stages as practical, and compare them against bounded

@@ -252,6 +252,17 @@ def _eom_exposure_probe(
         except ValueError as exc:
             scalar_eom_field_redefinition_delta = Expression.num(0)
             scalar_eom_delta_error = str(exc)
+        scalar_eom_exposed_vector_delta_error: str | None = None
+        try:
+            scalar_eom_exposed_vector_delta = theory.abelian_vector_eom_field_redefinition_delta(
+                lagrangian,
+                scalar_eom_exposed,
+                fields=[vector_field],
+                strict=True,
+            )
+        except ValueError as exc:
+            scalar_eom_exposed_vector_delta = Expression.num(0)
+            scalar_eom_exposed_vector_delta_error = str(exc)
         by_entry[entry_label] = {
             "byte_count": expr.get_byte_size(),
             "field_strength_count": len(matching_subexpressions(expr, field_strength_pattern())),
@@ -277,6 +288,18 @@ def _eom_exposure_probe(
             "scalar_eom_exposure_error": scalar_eom_exposure_error,
             "scalar_eom_exposed_byte_count": scalar_eom_exposed.get_byte_size(),
             "scalar_eom_exposed_formal_eom_count": _formal_eom_count(scalar_eom_exposed),
+            "scalar_eom_exposed_formal_vector_eom_count": _formal_vector_eom_count(
+                theory,
+                scalar_eom_exposed,
+                field_name=vector_field,
+            ),
+            "scalar_eom_exposed_vector_field_strength_divergence_count": (
+                _field_strength_divergence_count(
+                    theory,
+                    scalar_eom_exposed,
+                    field_name=vector_field,
+                )
+            ),
             "scalar_eom_field_redefinition_delta_is_zero": bool(
                 scalar_eom_field_redefinition_delta == Expression.num(0)
             ),
@@ -284,6 +307,15 @@ def _eom_exposure_probe(
                 scalar_eom_field_redefinition_delta.get_byte_size()
             ),
             "scalar_eom_field_redefinition_delta_error": scalar_eom_delta_error,
+            "scalar_eom_exposed_vector_field_redefinition_delta_is_zero": bool(
+                scalar_eom_exposed_vector_delta == Expression.num(0)
+            ),
+            "scalar_eom_exposed_vector_field_redefinition_delta_byte_count": (
+                scalar_eom_exposed_vector_delta.get_byte_size()
+            ),
+            "scalar_eom_exposed_vector_field_redefinition_delta_error": (
+                scalar_eom_exposed_vector_delta_error
+            ),
             "vector_field_redefinition_delta_is_zero": bool(vector_delta == Expression.num(0)),
             "vector_field_redefinition_delta_byte_count": vector_delta.get_byte_size(),
             "vector_eom_current_exposed_delta_is_zero": bool(vector_exposed_delta == Expression.num(0)),
@@ -303,6 +335,12 @@ def _eom_exposure_probe(
         "scalar_eom_exposed_formal_eom_count": sum(
             row["scalar_eom_exposed_formal_eom_count"] for row in by_entry.values()
         ),
+        "scalar_eom_exposed_formal_vector_eom_count": sum(
+            row["scalar_eom_exposed_formal_vector_eom_count"] for row in by_entry.values()
+        ),
+        "scalar_eom_exposed_vector_field_strength_divergence_count": sum(
+            row["scalar_eom_exposed_vector_field_strength_divergence_count"] for row in by_entry.values()
+        ),
         "scalar_eom_exposure_error_count": sum(
             row["scalar_eom_exposure_error"] is not None for row in by_entry.values()
         ),
@@ -311,6 +349,13 @@ def _eom_exposure_probe(
         ),
         "scalar_eom_field_redefinition_delta_error_count": sum(
             row["scalar_eom_field_redefinition_delta_error"] is not None for row in by_entry.values()
+        ),
+        "nonzero_scalar_eom_exposed_vector_field_redefinition_delta_entry_count": sum(
+            not row["scalar_eom_exposed_vector_field_redefinition_delta_is_zero"] for row in by_entry.values()
+        ),
+        "scalar_eom_exposed_vector_field_redefinition_delta_error_count": sum(
+            row["scalar_eom_exposed_vector_field_redefinition_delta_error"] is not None
+            for row in by_entry.values()
         ),
         "nonzero_vector_field_redefinition_delta_entry_count": sum(
             not row["vector_field_redefinition_delta_is_zero"] for row in by_entry.values()

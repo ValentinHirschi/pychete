@@ -7,6 +7,7 @@ from pychete.backends import idenso
 import pychete.matching as matching_module
 from pychete.functional import (
     expose_scalar_derivative_commutator_bilinears,
+    expose_vector_field_strength_divergences_as_formal_eom,
     integrate_by_parts_scalar_laplacians,
     normalize_conjugate_scalar_field_slots,
     scalar_derivative_green_normal_form,
@@ -14,6 +15,7 @@ from pychete.functional import (
     scalar_derivative_ibp_identities,
     scalar_eom_identities,
     scalar_formal_eom_ibp_identities,
+    vector_eom_identities,
 )
 from pychete.expr import (
     bar_field_inner,
@@ -321,6 +323,64 @@ def test_scalar_derivative_green_normal_form_can_prefer_formal_eom_representativ
     assert_expr_equal(reduced, expected)
 
 
+@pytest.mark.parametrize(
+    ("orientation", "identity_eom_sign", "reduced_eom_sign"),
+    (
+        ("standard", -Expression.num(1), Expression.num(1)),
+        ("opposite", Expression.num(1), -Expression.num(1)),
+    ),
+)
+def test_vector_eom_identities_expose_field_strength_divergence_as_formal_eom(
+    orientation: str,
+    identity_eom_sign: Expression,
+    reduced_eom_sign: Expression,
+) -> None:
+    coefficient = S(f"vector_eom_identity_{orientation}_coefficient")
+    theory, phi, _strength, _target, mu, nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    if orientation == "standard":
+        divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    else:
+        divergence = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(nu))
+    prefactor = coefficient * s.Bar(phi()) * phi(derivatives=[mu])
+    formal_eom = s.EOM(vector(mu))
+
+    identities = vector_eom_identities(theory, prefactor * divergence, fields=[vector])
+
+    assert len(identities) == 1
+    assert_expr_equal(identities[0], prefactor * (divergence + identity_eom_sign * formal_eom))
+
+    reduced = scalar_derivative_green_normal_form(
+        theory,
+        prefactor * divergence,
+        include_ibp=False,
+        include_commutators=False,
+        include_eom=True,
+        eom_lagrangian=theory.free_lag(phi, vector),
+        eom_fields=[vector],
+        max_rounds=1,
+    )
+
+    assert_expr_equal(reduced, reduced_eom_sign * prefactor * formal_eom)
+
+
+def test_expose_vector_field_strength_divergences_as_formal_eom_uses_standard_form_signs() -> None:
+    coefficient = S("vector_eom_direct_standard_form_coefficient")
+    theory, phi, _strength, _target, mu, nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    standard_divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    opposite_divergence = s.FieldStrength(vector.label, s.List(mu, nu), s.List(), s.List(nu))
+    prefactor = coefficient * s.Bar(phi()) * phi(derivatives=[mu])
+
+    exposed = expose_vector_field_strength_divergences_as_formal_eom(
+        theory,
+        prefactor * standard_divergence + prefactor * opposite_divergence,
+        fields=[vector],
+    )
+
+    assert_expr_equal(exposed, Expression.num(0))
+
+
 def test_scalar_derivative_green_standard_form_eom_ignores_interaction_terms() -> None:
     coefficient = S("scalar_derivative_green_standard_eom_coefficient")
     theory, higgs, _target, i, mu, _nu = _scalar_su2_probe()
@@ -459,6 +519,68 @@ def test_wilson_line_scalar_green_hook_can_expose_formal_eom_terms() -> None:
     )
 
     assert_expr_equal(reduced, expected)
+
+
+def test_wilson_line_scalar_green_hook_can_expose_formal_vector_eom_terms() -> None:
+    coefficient = S("wilson_line_vector_eom_hook_coefficient")
+    theory, phi, _strength, _target, mu, nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    source = coefficient * s.Bar(phi()) * phi(derivatives=[mu]) * s.FieldStrength(
+        vector.label,
+        s.List(nu, mu),
+        s.List(),
+        s.List(nu),
+    )
+    expected = coefficient * s.Bar(phi()) * phi(derivatives=[mu]) * s.EOM(vector(mu))
+
+    reduced = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        source,
+        eom_lagrangian=theory.free_lag(phi, vector),
+        expose_scalar_eom_terms=True,
+    )
+
+    assert_expr_equal(reduced, expected)
+
+
+def test_wilson_line_scalar_green_hook_exposes_generated_vector_divergence_as_formal_eom() -> None:
+    coefficient = S("wilson_line_generated_vector_eom_hook_coefficient")
+    theory, phi, _strength, _target, mu, nu = _scalar_u1_probe()
+    vector = theory.field_handle("B")
+    source = (
+        coefficient
+        * Expression.I
+        * s.Bar(phi())
+        * phi(derivatives=[mu])
+        * s.CD(nu, s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List()))
+    )
+    divergence = s.FieldStrength(vector.label, s.List(nu, mu), s.List(), s.List(nu))
+    divergence_target = Expression.I * s.Bar(phi()) * phi(derivatives=[mu]) * divergence
+    formal_target = Expression.I * s.Bar(phi()) * phi(derivatives=[mu]) * s.EOM(vector(mu))
+
+    reduced = matching_module._apply_wilson_line_post_integral_scalar_commutator_bilinears(
+        theory,
+        source,
+        eom_lagrangian=theory.free_lag(phi, vector),
+        expose_scalar_eom_terms=True,
+    )
+    result = MatchingResult(
+        theory=theory,
+        uv_lagrangian=Expression.num(0),
+        off_shell_eft_lagrangian=Expression.num(0),
+        on_shell_eft_lagrangian=reduced,
+    )
+    projected = result.project_matching_conditions(
+        {
+            "formal_vector_eom": formal_target,
+            "divergence": divergence_target,
+        },
+        expand_source=False,
+        drop_zero=False,
+    )
+
+    assert_expr_equal(projected["formal_vector_eom"], coefficient)
+    assert_expr_equal(projected["divergence"], Expression.num(0))
 
 
 def test_wilson_line_scalar_green_hook_closes_four_derivative_formal_eom_neighborhood() -> None:

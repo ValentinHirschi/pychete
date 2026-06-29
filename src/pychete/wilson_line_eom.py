@@ -11,6 +11,7 @@ from .functional import (
     abelian_vector_eom_field_redefinition_delta,
     eom_replacement_rules_for_expression,
     expose_scalar_derivative_commutator_bilinears,
+    expose_vector_field_strength_divergences_as_formal_eom,
     expand_cd_operators,
     normalize_conjugate_scalar_field_slots,
     scalar_derivative_green_normal_form,
@@ -118,6 +119,8 @@ def _apply_wilson_line_post_integral_scalar_commutator_bilinears(
         include_gauge_coupling=False,
         expand_commutators=True,
     )
+    if expose_scalar_eom_terms:
+        out = expose_vector_field_strength_divergences_as_formal_eom(theory, out)
     out = idenso.simplify_pychete_field_strength_group_algebra(theory, out)
     return scalarize_commutative_ncm_chains(out)
 

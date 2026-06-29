@@ -522,6 +522,83 @@ def scalar_eom_identities(
     return tuple(identities)
 
 
+def vector_eom_identities(
+    theory: Theory,
+    expr: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+    max_identities: int = _DEFAULT_SCALAR_GREEN_MAX_IDENTITIES,
+) -> tuple[Expression, ...]:
+    """Return formal vector-EOM identities for field-strength divergences.
+
+    This is the vector subset of Matchete's operator standard-form step:
+    ``D_nu F[nu, mu]`` is represented by ``EOM(Vector[mu])`` before the
+    field-redefinition replay consumes it.  Field-strength atoms are collected
+    with Symbolica tag-restricted matches and coefficients are extracted with
+    native ``Expression.coefficient(...)``.
+    """
+
+    if max_identities < 0:
+        raise ValueError("max_identities must be non-negative")
+    theory._validate_registered_expression(expr)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    identities: list[Expression] = []
+    seen: set[str] = set()
+    for target, open_index, sign in _abelian_vector_eom_rule_targets(expr, allowed_labels=allowed_labels):
+        if not _is_abelian_gauge_vector_label(theory, field_strength_label(target)):
+            continue
+        coefficient = expr.coefficient(target).expand()
+        if is_zero(coefficient):
+            continue
+        if not is_zero(coefficient.coefficient(target)):
+            continue
+        formal_eom = s.EOM(_vector_eom_field_for_strength(theory, target, open_index))
+        identity = (coefficient * (target + sign * formal_eom)).expand()
+        if is_zero(identity):
+            continue
+        key = canonical_string(identity)
+        if key in seen:
+            continue
+        seen.add(key)
+        identities.append(identity)
+        if len(identities) > max_identities:
+            raise ValueError(f"vector Green-basis EOM exposure generated more than {max_identities} identities")
+    return tuple(identities)
+
+
+def expose_vector_field_strength_divergences_as_formal_eom(
+    theory: Theory,
+    expr: Expression,
+    *,
+    fields: Iterable[FieldHandle | FieldDefinition | str | Expression] | None = None,
+) -> Expression:
+    """Rewrite Abelian ``D.F`` atoms into formal vector ``EOM`` atoms.
+
+    This is the direct standard-form counterpart to
+    :func:`vector_eom_identities`.  It keeps the operation as a Symbolica
+    ``replace_multiple`` pass over tag-restricted field-strength matches,
+    which is much cheaper than rerunning the full Green-basis solver after a
+    commutator exposure stage has created new divergences.
+    """
+
+    theory._validate_registered_expression(expr)
+    allowed_labels = _eom_rule_allowed_field_labels(theory, fields)
+    replacements: list[Replacement] = []
+    seen: set[str] = set()
+    for target, open_index, sign in _abelian_vector_eom_rule_targets(expr, allowed_labels=allowed_labels):
+        if not _is_abelian_gauge_vector_label(theory, field_strength_label(target)):
+            continue
+        key = canonical_string(target)
+        if key in seen:
+            continue
+        seen.add(key)
+        formal_eom = s.EOM(_vector_eom_field_for_strength(theory, target, open_index))
+        replacements.append(Replacement(target, (-sign * formal_eom).expand()))
+    if not replacements:
+        return expr
+    return expr.replace_multiple(replacements, repeat=False).expand()
+
+
 def scalar_formal_eom_ibp_identities(
     theory: Theory,
     expr: Expression,
@@ -964,6 +1041,14 @@ def _scalar_derivative_identity_sources(
         if eom_lagrangian is None:
             raise ValueError("eom_lagrangian must be provided when include_eom=True")
         identities.extend(
+            vector_eom_identities(
+                theory,
+                expr,
+                fields=eom_fields,
+                max_identities=max_identities,
+            )
+        )
+        identities.extend(
             scalar_formal_eom_ibp_identities(
                 theory,
                 expr,
@@ -1073,7 +1158,7 @@ def _scalar_derivative_green_class_key(
     derivative_count = 0
 
     if include_eom:
-        eom_atoms = _formal_scalar_eom_atoms(masked, allowed_labels=None)
+        eom_atoms = _formal_green_eom_atoms(masked, allowed_labels=None)
         for atom in eom_atoms:
             entry, derivatives = _scalar_green_field_class_entry(atom[0], derivative_bonus=2)
             if entry is not None:
@@ -1212,6 +1297,32 @@ def _formal_scalar_eom_atoms(
         body = atom[0]
         base = bar_field_inner(body) if is_bar_field(body) else body
         if not is_head(base, s.Field) or not bool(field_type(base) == s.Scalar):
+            continue
+        if allowed_labels is not None and canonical_string(field_label(base)) not in allowed_labels:
+            continue
+        kept.setdefault(canonical_string(atom), atom)
+    return tuple(sorted(kept.values(), key=canonical_string))
+
+
+def _formal_green_eom_atoms(
+    expr: Expression,
+    *,
+    allowed_labels: set[str] | None,
+) -> tuple[Expression, ...]:
+    label_is_registered_field = s.FieldLabelWildcard.req_tag(SymbolRole.FIELD.value)
+    atoms = (
+        *matching_subexpressions(expr, s.EOM(field_pattern()), label_is_registered_field),
+        *matching_subexpressions(expr, s.EOM(bar_field_pattern()), label_is_registered_field),
+    )
+    kept: dict[str, Expression] = {}
+    for atom in atoms:
+        if not is_head(atom, s.EOM) or len(atom) != 1:
+            continue
+        body = atom[0]
+        base = bar_field_inner(body) if is_bar_field(body) else body
+        if not is_head(base, s.Field):
+            continue
+        if not bool(field_type(base) == s.Scalar) and not is_head(field_type(base), s.Vector):
             continue
         if allowed_labels is not None and canonical_string(field_label(base)) not in allowed_labels:
             continue
@@ -2867,6 +2978,22 @@ def _eom_rule_base_field(target: Expression) -> Expression:
     return field_with_derivatives(target, ())
 
 
+def _vector_eom_field_for_strength(theory: Theory, target: Expression, open_index: Expression) -> Expression:
+    definition = theory._field_definition_for_label(field_strength_label(target))
+    indices = (open_index, *list_items(target[2]))
+    return s.Field(definition.label, definition.type_expr, list_expr(*indices), s.List())
+
+
+def _is_abelian_gauge_vector_label(theory: Theory, label: Expression) -> bool:
+    definition = theory._field_definition_for_label(label)
+    type_expr = definition.type_expr
+    if not is_head(type_expr, s.Vector) or len(type_expr) != 1:
+        return False
+    group_symbol = type_expr[0]
+    group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
+    return group_kind is GroupKind.GAUGE and bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0))
+
+
 def _abelian_vector_eom_rule_targets(
     expression: Expression,
     *,
@@ -2974,12 +3101,9 @@ def _abelian_vector_eom_replacement_for_label(
 ) -> Replacement | None:
     definition = theory._field_definition_for_label(label)
     type_expr = definition.type_expr
-    if not is_head(type_expr, s.Vector) or len(type_expr) != 1:
+    if not _is_abelian_gauge_vector_label(theory, label):
         return None
     group_symbol = type_expr[0]
-    group_kind = GroupKind.from_user(str(symbol_data(group_symbol, SymbolDataKey.GROUP_KIND, GroupKind.GLOBAL.value)))
-    if group_kind is not GroupKind.GAUGE or not bool(symbol_data(group_symbol, SymbolDataKey.GROUP_ABELIAN, 0)):
-        return None
     coupling_name = symbol_data(group_symbol, SymbolDataKey.GROUP_COUPLING)
     if not isinstance(coupling_name, str) or coupling_name not in theory.couplings:
         return None

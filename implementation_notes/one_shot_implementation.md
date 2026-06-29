@@ -83,35 +83,43 @@ terms over `{B, W}`. `after_shift_dim6_dev4` has one Higgs-EOM selection but
 zero `cHD` delta; `after_shift_dim6_dev2` contains many Higgs-EOM terms but
 does not change the already-created vector-shift delta.
 
-Pychete now has a bounded consumer for formal Abelian vector EOM atoms:
+Pychete now has a bounded producer and consumer for formal Abelian vector EOM
+atoms:
 `EOM(Field(B, Vector(...), {mu}, {}))` is routed through the same scalar-current
 replacement and Abelian vector field-redefinition companion as the
-`FieldStrength(B, {nu, mu}, {}, {nu})` standard form. The derivative selector
-has also been corrected to count vector formal EOMs as two derivatives, matching
-Matchete `EOMDevs[_Vector]`.
+`FieldStrength(B, {nu, mu}, {}, {nu})` standard form. A new standard-form pass
+also converts already-created Abelian `D.F` divergences into formal vector EOM
+atoms using Symbolica `replace_multiple`, without rerunning the full Green-basis
+solver. The derivative selector has also been corrected to count vector formal
+EOMs as two derivatives, matching Matchete `EOMDevs[_Vector]`.
 
-Current runtime ordering now mirrors the producer/consumer shape of Matchete's
-`InternalSimplify` followed by `PerformSystematicFieldRedefs`: after
-Wilson-line scalar commutator exposure, pychete can immediately rerun the
-bounded on-shell EOM replacement and Abelian vector field-redefinition
-companion on the scalar-exposed expression. This is implemented in both
-`Theory.match(...)` and `ValidationFixture.one_loop_preview(...)`, with
-separate supertraces for the raw scalar-exposed checkpoint and the
-post-vector-EOM checkpoint. The remaining generic work is still the deeper
-`InternalSimplify` producer that exposes the formal B/W vector-EOM terms from
-the selected Singlet source itself; the exact current-current bridge still
-finds no useful dim6/dev3 B/W vector-EOM structure in the raw selected pychete
-source.
+Current runtime ordering now mirrors more of the producer/consumer shape of
+Matchete's `InternalSimplify` followed by `PerformSystematicFieldRedefs`: after
+Wilson-line scalar commutator and explicit `CD(...)` exposure, pychete rewrites
+Abelian `D.F` into formal B-vector EOM atoms, then the bounded on-shell EOM
+replacement and Abelian vector field-redefinition companion can run on the
+scalar-exposed expression. This is implemented in both `Theory.match(...)` and
+`ValidationFixture.one_loop_preview(...)`, with separate supertraces for the
+raw scalar-exposed checkpoint and the post-vector-EOM checkpoint. The remaining
+generic work is still the deeper `InternalSimplify` producer that exposes the
+full set of formal B/W vector-EOM terms from the selected Singlet source; the
+exact current-current bridge still finds no useful dim6/dev3 B/W vector-EOM
+structure in the raw selected pychete source.
 
 Latest bounded probes:
 
 - Selected total orders 0 and 1 still have no B field-strength divergence
   after scalar commutator exposure.
-- In total order 2, `wilson13_o1_1_0_0` has one B field-strength divergence
-  after scalar exposure, and the post-exposure vector-EOM consumer finds one
-  rule plus a nonzero Abelian vector field-redefinition delta. That divergence
-  has four-Higgs/heavy-solution field content and projects to zero for both
-  `cHD` and the simple Matchete dim6/dev3
+- In total order 2, `wilson13_o1_1_0_0` used to leave one B field-strength
+  divergence after scalar exposure. The current bounded probe now reports
+  `scalar_eom_exposed_formal_vector_eom_count = 1`,
+  `scalar_eom_exposed_vector_field_strength_divergence_count = 0`, and one
+  nonzero post-exposure Abelian vector field-redefinition delta for that entry.
+  This confirms the formal B-EOM producer/consumer chain is active at the
+  selected-trace boundary.
+- The `wilson13_o1_1_0_0` contribution still has four-Higgs/heavy-solution
+  field content and projects to zero for both `cHD` and the simple Matchete
+  dim6/dev3
   `Bar[D_mu H] H D_nu F_B^{mu nu}` / `Bar[H] D_mu H D_nu F_B^{mu nu}`
   intermediate operators.
 - `wilson14_o2_0_0_0` creates many field-strength atoms after scalar exposure
@@ -124,26 +132,26 @@ Latest bounded probes:
 
 ## Current Implementation Slice
 
-- Added `_apply_on_shell_eom_reduction_to_expression(...)` as a shared
-  bounded helper in `src/pychete/wilson_line_eom.py`.
-- Updated public one-loop matching and validation-preview Wilson-line
-  finalization so scalar commutator exposure can be followed by a second
-  vector-EOM/on-shell reduction pass when the Abelian vector
-  field-redefinition option is enabled.
-- Added focused regressions for the public `Theory.match(...)` route and the
-  direct `ValidationFixture.one_loop_preview(...)` route. Both tests use a
-  bounded scalar derivative source that reveals a vector-current divergence
-  only after scalar commutator exposure.
-- Kept the change performance-local: the second pass runs only on the already
-  scalar-exposed expression and only when the existing on-shell/vector options
-  request it. It does not globally expand or reclassify the full one-loop
-  source.
-- Tightened `expose_abelian_vector_eom_currents(...)` so candidate-budget
-  exhaustion returns the bounded source instead of raising while probing absent
-  current products. Added a unit regression for the no-rewrite budget path.
-- Focused validation currently passed for the four vector-EOM regression tests,
-  py_compile on changed files, and targeted mypy on the changed source
-  modules.
+- Added `vector_eom_identities(...)` as the formal vector-EOM identity source
+  for Abelian `D.F` representatives inside the existing Symbolica-backed
+  Green-basis solver.
+- Added `expose_vector_field_strength_divergences_as_formal_eom(...)` as the
+  cheap standard-form pass for already-created Abelian field-strength
+  divergences. This uses Symbolica `replace_multiple` over tag-restricted
+  field-strength matches, with the Matchete orientation signs, and is gated by
+  registered Abelian gauge-vector metadata.
+- Wired the direct standard-form pass into the Wilson-line post-integral hook
+  immediately after explicit `CD(...)` and scalar-commutator exposure when
+  `wilson_line_expose_scalar_eom_terms` is enabled. This avoids rerunning a
+  broad Green-basis closure just to standardize `D.F` leftovers.
+- Extended Green class grouping so formal vector EOM atoms are classed with
+  their owning field and Matchete's two-derivative EOM bonus.
+- Extended the Singlet cHD debug script with vector-specific post-exposure
+  counters for formal vector EOMs, residual B divergences, and the Abelian
+  vector field-redefinition delta after scalar-EOM exposure.
+- Focused validation passed for scalar Green/vector EOM units, scalar EOM
+  units, the two public vector-EOM replay integration regressions, py_compile
+  on changed files, static typing, and the bounded Singlet cHD debug probe.
 
 ## Focused Tests For This Slice
 
@@ -152,6 +160,8 @@ Run after completing the slice:
 ```sh
 source "$HOME/.bashrc"
 dependencies/.venv/bin/python -m pytest \
+  tests/unit/functional/test_scalar_green_bilinears.py \
+  tests/unit/functional/test_scalar_eom.py \
   tests/unit/functional/test_scalar_eom.py::test_expose_abelian_vector_eom_currents_rewrites_exact_current_product \
   tests/unit/functional/test_scalar_eom.py::test_expose_abelian_vector_eom_currents_returns_bounded_source_when_candidate_budget_is_exhausted \
   tests/integration/matching/test_heavy_scalar_tree.py::test_one_loop_match_generates_abelian_vector_eom_replacements \
@@ -159,11 +169,12 @@ dependencies/.venv/bin/python -m pytest \
   tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_abelian_vector_eom_field_redefinition \
   tests/integration/validation/test_validation_fixtures.py::test_validation_fixture_preview_applies_vector_eom_after_scalar_commutator_exposure -q
 dependencies/.venv/bin/python -m py_compile \
-  src/pychete/functional.py src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py \
-  tests/unit/functional/test_scalar_eom.py \
+  src/pychete/functional.py src/pychete/wilson_line_eom.py scripts/debug_pychete_singlet_eom_boundary.py \
+  tests/unit/functional/test_scalar_green_bilinears.py tests/unit/functional/test_scalar_eom.py \
   tests/integration/matching/test_heavy_scalar_tree.py \
   tests/integration/validation/test_validation_fixtures.py
-dependencies/.venv/bin/python -m mypy \
-  src/pychete/functional.py src/pychete/wilson_line_eom.py src/pychete/matching.py src/pychete/validation_fixtures.py
+dependencies/.venv/bin/python -m pytest tests/test_static_typing.py -q
+dependencies/.venv/bin/python scripts/run_with_memory_watch.py --limit-gb 30 --stop-file /tmp/pychete_singlet_probe.stop -- \
+  dependencies/.venv/bin/python scripts/debug_pychete_singlet_eom_boundary.py --out /tmp/singlet_eom_cHD.pychete.debug.json
 git diff --check
 ```
