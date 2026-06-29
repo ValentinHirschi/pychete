@@ -87,6 +87,20 @@ to run focused Matchete WolframScripts often and dissect their intermediate
 objects against bounded pychete probes. Each progress note should name the
 Matchete script or committed dump, the paired pychete probe, and the suspected
 generic algorithm boundary before runtime pychete changes are accepted.
+Latest performance-focused progress, 2026-06-29: pychete must remain at least
+as targeted as the corresponding Matchete intermediate checks. A concrete
+performance issue was identified in discovered fluctuation-basis dummy labels:
+a naive canonicalization prototype reduced duplicated Hessian modes and
+Wilson-line paths, but it was rejected because it lost Matchete's
+component/field-degree multiplicity and halved the four-slot `cHD` checkpoint.
+A future performance refactor may collapse these modes only if it also carries
+explicit multiplicity/DOf weights through path enumeration, term filtering, and
+tensor-reduction workload.
+The active cHD mismatch is now compared against the committed Matchete
+`hScalar-lScalar/cHD` prop-order-4 dump plus the regenerated pychete cHD
+boundary fixture, with the suspected boundary localized between finite
+Higgs-bilinear Wilson-line evaluation and Matchete's d-dimensional scalar
+Green/EOM identity conversion.
 
 ## Approved Plan
 
@@ -1593,3 +1607,10 @@ generic algorithm boundary before runtime pychete changes are accepted.
   constant term and fixing the local evanescent finite source gap without
   broadening the probe. The next checkpoint is public-route composition to the
   full Singlet `cHD` matching coefficient.
+- Latest performance correction, 2026-06-29: a canonical fluctuation-basis
+  prototype reduced the Singlet setup from 26 modes to 16 and the selected
+  four-slot `cHD` path map from eight nonzero paths to four, but the aggregate
+  coefficient lost a factor of two. The prototype was discarded; future
+  canonicalization must be multiplicity-preserving and should model the
+  Matchete field-degree/component weights explicitly before it replaces the
+  current path-expanded representation.

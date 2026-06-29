@@ -40,6 +40,9 @@ _SINGLET_CHD_FOUR_SLOT_PROP1_DEBUG = Path(
 _SINGLET_CHD_FOUR_SLOT_PROP2_DEBUG = Path(
     "assets/validation/matchete/debug/singlet_hScalar_lScalar_lVector_lScalar_cHD.prop2.debug.json"
 )
+_SINGLET_CHD_HSCALAR_LSCALAR_PROP4_DEBUG = Path(
+    "assets/validation/matchete/debug/singlet_hScalar_lScalar_cHD.prop4.debug.json"
+)
 _SINGLET_CHD_MATCHETE_EOM_DEBUG = Path(
     "assets/validation/matchete/debug/singlet_eom_cHD.debug.json"
 )
@@ -728,9 +731,9 @@ def test_selected_chd_four_slot_post_heavy_path_projection_map_records_frontier(
         assert_expr_equal((projections[path_index] - expected_quarter).expand(), Expression.num(0))
 
     # Matchete records eight equivalent quarter checkpoints in the full
-    # insertion dump. pychete now generates the same eight path-level quarter
-    # projections, so the remaining selected-source mismatch is downstream of
-    # source/path coverage and target filtering.
+    # insertion dump. pychete currently keeps all eight component/dummy-index
+    # path copies because collapsing them requires explicit multiplicity
+    # weights, not just canonical dummy-label normalization.
     quarter_insertions = [
         insertion["index"]
         for insertion in debug["insertions"]
@@ -794,6 +797,42 @@ def test_selected_chd_four_slot_matchete_fixture_records_scalar_vector_frontier(
     assert target_quarter_insertions == [1, 3, 12, 14, 45, 47, 56, 58]
     assert len(target_quarter_coefficients) == 1
     assert "1 + \\[Epsilon] + \\[Epsilon]*Log" in next(iter(target_quarter_coefficients))
+
+
+def test_selected_chd_hscalar_lscalar_prop_order_four_dump_records_bilinear_frontier() -> None:
+    debug = json.loads(_SINGLET_CHD_HSCALAR_LSCALAR_PROP4_DEBUG.read_text(encoding="utf-8"))
+
+    assert debug["trace_name"] == "hScalar-lScalar"
+    assert debug["target"] == "cHD"
+    assert debug["prop_order"] == 4
+    assert debug["skip_full_trace"] is True
+    assert debug["skip_slot_order_summaries"] is True
+    assert debug["power_prefactor_input_form"] == "(-1/2*I)*hbar"
+    assert debug["insertion_count"] == 2
+    assert debug["detailed_insertion_count"] == 2
+
+    insertions = debug["insertions"]
+    assert [insertion["index"] for insertion in insertions] == [1, 2]
+    assert "Xterm[{\\[Phi], H}" in insertions[0]["replacement_input_form"]
+    assert "Xterm[{H, \\[Phi]}" in insertions[0]["replacement_input_form"]
+    assert "Xterm[{\\[Phi], Matchete`PackageScope`Conj[H]}" in insertions[1]["replacement_input_form"]
+    assert "Xterm[{Matchete`PackageScope`Conj[H], \\[Phi]}" in insertions[1]["replacement_input_form"]
+
+    coefficients_by_insertion = [
+        {
+            row["signature"]: row["coefficient_input_form"]
+            for row in insertion["prefactored_evaluate_str_reference_h_bilinear_coefficients"]
+        }
+        for insertion in insertions
+    ]
+    assert set(coefficients_by_insertion[0]) == {"bar=0;field=aabb", "bar=0;field=abab", "bar=0;field=abba"}
+    assert set(coefficients_by_insertion[1]) == {"bar=aabb;field=0", "bar=abab;field=0", "bar=abba;field=0"}
+    assert "- 4*hbar*\\[Epsilon]*Coupling[A" in coefficients_by_insertion[0]["bar=0;field=aabb"]
+    assert "+ 5*hbar*\\[Epsilon]*Coupling[A" in coefficients_by_insertion[0]["bar=0;field=abab"]
+    assert "+ hbar*\\[Epsilon]*Coupling[A" in coefficients_by_insertion[0]["bar=0;field=abba"]
+    assert coefficients_by_insertion[1]["bar=aabb;field=0"] == coefficients_by_insertion[0]["bar=0;field=aabb"]
+    assert coefficients_by_insertion[1]["bar=abab;field=0"] == coefficients_by_insertion[0]["bar=0;field=abab"]
+    assert coefficients_by_insertion[1]["bar=abba;field=0"] == coefficients_by_insertion[0]["bar=0;field=abba"]
 
 
 @pytest.mark.slow

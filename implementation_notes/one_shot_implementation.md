@@ -78,6 +78,11 @@ Pychete checkpoint:
 - `scripts/debug_pychete_singlet_eom_boundary.py`
 - `assets/validation/pychete/debug/singlet_eom_cHD.pychete.debug.json`
 
+Additional hScalar-lScalar/cHD trace checkpoint:
+
+- `helper_mathematica_scripts/debug_singlet_wilson_trace.wls`
+- `assets/validation/matchete/debug/singlet_hScalar_lScalar_cHD.prop4.debug.json`
+
 Latest narrowed mismatch:
 
 - Matchete inert-`SymGammaFactor` replay selects the normalized B-source
@@ -140,6 +145,23 @@ Latest narrowed mismatch:
   source projections. The contraction-order hypothesis is therefore ruled out
   for the present cHD finite mismatch, and the next fix must target the
   d-dimensional operator-identity/Green-basis normal form.
+- Refreshed Matchete's `hScalar-lScalar -> cHD` prop-order-4 trace dump. This
+  stage contains two Matchete insertions: derivative-on-H and
+  derivative-on-Bar[H] four-derivative bilinears. pychete's selected
+  `hScalar-lScalar#wilson14_o4_0` path agrees with the Matchete pole/log
+  structure for the derivative-on-H insertion, but finite Higgs-bilinear
+  coefficients still differ before scalar-EOM exposure. The final B-source
+  coefficient is still half of Matchete's B replay, so the active mismatch is
+  now localized between the Wilson-line finite Higgs-bilinear checkpoint and
+  Matchete's d-dimensional scalar Green/EOM operator-identity conversion.
+- A naive canonical fluctuation-basis prototype reduced the Singlet setup from
+  26 discovered modes to 16 and the selected four-slot cHD path map from eight
+  duplicated nonzero checkpoint paths to four canonical paths, but it was not
+  retained because it lost Matchete's component/field-degree multiplicity and
+  halved the four-slot cHD checkpoint. The performance direction is still
+  correct, but the implementation must carry explicit multiplicity weights or
+  Matchete-style field-degree factors before collapsing dummy-label-equivalent
+  modes.
 
 ## Current Implementation Slice
 
@@ -181,6 +203,14 @@ Current slice progress:
   Matchete-aligned evanescent SymGamma source polynomial and finite
   vector-field-redefinition projection at the bounded hScalar-lScalar source
   checkpoint.
+- Tested a canonical fluctuation-basis normalization prototype, then discarded
+  it after it failed the selected four-slot cHD aggregate by losing a factor of
+  two. This identifies a future performance refactor, not a current runtime
+  change: canonical field-space modes need explicit multiplicity/DOf weights
+  before path enumeration or tensor reduction can safely collapse duplicates.
+- Generated the Matchete `hScalar-lScalar/cHD` prop-order-4 dump for direct
+  finite Higgs-bilinear comparison against pychete's selected
+  `wilson14_o4_0` entry.
 
 ## Performance Budget For This Slice
 
@@ -202,6 +232,11 @@ Current slice progress:
   the refreshed fixture byte counts in several expensive post-EOM summaries,
   so this stage remains at least as targeted as the Matchete intermediate
   checkpoint.
+- A multiplicity-preserving canonical-basis pass remains the next performance
+  guard for setup and Wilson-line path generation. The rejected prototype shows
+  where the duplicate work lives, but current parity probes must continue to
+  use the existing eight path IDs until the replacement carries explicit
+  component/DOf weights and preserves the selected cHD aggregate.
 
 ## Targeted Commands
 
