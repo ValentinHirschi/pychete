@@ -116,6 +116,13 @@ fixture: pole/renormalization convention coverage where needed, unselected
 trace composition, other nonzero Wilson coefficients, and performance of the
 broader default fixture route.
 
+Follow-up API plumbing: validation fixture preview and gap-report routes now
+accept and forward `wilson_line_total_orders_by_trace`. This lets
+`one_loop_preview_gap_report(...)` express the same Matchete-style per-trace
+Wilson-line order windows as the public `Theory.match(...)` route, which is
+required for the selected two-trace Singlet `cHD` parity configuration without
+over-broadening either trace family.
+
 ## Active Checkpoints
 
 Matchete checkpoints:

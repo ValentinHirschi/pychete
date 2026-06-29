@@ -1645,6 +1645,7 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
         wilson_line_trace_names=("hScalar",),
         wilson_line_max_total_order=2,
         wilson_line_max_slot_order=1,
+        wilson_line_total_orders_by_trace={"hScalar": (2,)},
         wilson_line_index_prefix="forwarded_wilson",
         wilson_line_act_open_derivatives=True,
         wilson_line_emit_covariant_derivative_commutators=True,
@@ -1665,6 +1666,7 @@ def test_validation_fixture_gap_report_forwards_wilson_line_to_public_match_api(
     assert options.wilson_line_trace_names == ("hScalar",)
     assert options.wilson_line_max_total_order == 2
     assert options.wilson_line_max_slot_order == 1
+    assert options.wilson_line_total_orders_by_trace == {"hScalar": (2,)}
     assert options.wilson_line_index_prefix == "forwarded_wilson"
     assert options.wilson_line_act_open_derivatives is True
     assert options.wilson_line_emit_covariant_derivative_commutators is True

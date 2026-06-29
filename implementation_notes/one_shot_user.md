@@ -2026,3 +2026,9 @@ next real performance step remains an insertion-level collected
   selected public-route derivative-sector Wilson coefficient parity; full
   Singlet fixture parity still requires broadening beyond this selected
   finite `cHD` route.
+- Same continuation, 2026-06-29: added the missing
+  `wilson_line_total_orders_by_trace` plumbing to validation fixture preview
+  and gap-report routes. Gap reports can now forward the same per-trace
+  Wilson-line order windows used by the public selected `cHD` parity route,
+  instead of forcing one global Wilson-line order bound for all selected trace
+  families.

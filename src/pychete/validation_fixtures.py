@@ -674,6 +674,7 @@ class ValidationFixture:
         wilson_line_trace_names: Sequence[str] | None = None,
         wilson_line_max_total_order: int | None = None,
         wilson_line_max_slot_order: int | None = None,
+        wilson_line_total_orders_by_trace: Mapping[str, Sequence[int]] | None = None,
         wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_emit_covariant_derivative_commutators: bool = False,
@@ -807,6 +808,12 @@ class ValidationFixture:
                 loop_momentum_squared=loop_momentum_squared,
                 require_registered_mass=require_registered_mass,
                 include_light_only=include_light_only,
+            )
+        if wilson_line_total_orders_by_trace is not None:
+            if not isinstance(wilson_line_expansion_request, WilsonLineExpansionPlan):
+                raise ValueError("wilson_line_total_orders_by_trace requires a generated WilsonLineExpansionPlan")
+            wilson_line_expansion_request = wilson_line_expansion_request.filtered(
+                total_orders_by_trace=wilson_line_total_orders_by_trace,
             )
         if bosonic_cde_expansion_request is not None and wilson_line_expansion_request is not None:
             raise ValueError("CDE and Wilson-line expansion options are mutually exclusive")
@@ -1602,6 +1609,7 @@ class ValidationFixture:
         wilson_line_trace_names: Sequence[str] | None = None,
         wilson_line_max_total_order: int | None = None,
         wilson_line_max_slot_order: int | None = None,
+        wilson_line_total_orders_by_trace: Mapping[str, Sequence[int]] | None = None,
         wilson_line_index_prefix: str = "wilson_line",
         wilson_line_act_open_derivatives: bool = False,
         wilson_line_emit_covariant_derivative_commutators: bool = False,
@@ -1705,7 +1713,9 @@ class ValidationFixture:
         matcher and are mutually exclusive with the legacy ``bosonic_cde_*``
         expansion options. For generated Wilson-line plans, set
         ``wilson_line_max_total_order`` and optionally
-        ``wilson_line_trace_names``/``wilson_line_max_slot_order``.
+        ``wilson_line_trace_names``/``wilson_line_max_slot_order``. Use
+        ``wilson_line_total_orders_by_trace`` when different selected trace
+        families need different Matchete-style prop-order windows.
         ``matching_condition_projection_names`` restricts projected reference
         matching conditions to a target-local subset. Entries may be canonical
         condition names or external Wilson names such as ``cHW``; the reserved
@@ -1816,6 +1826,7 @@ class ValidationFixture:
                     wilson_line_trace_names=wilson_line_trace_names,
                     wilson_line_max_total_order=wilson_line_max_total_order,
                     wilson_line_max_slot_order=wilson_line_max_slot_order,
+                    wilson_line_total_orders_by_trace=wilson_line_total_orders_by_trace,
                     wilson_line_index_prefix=wilson_line_index_prefix,
                     wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
                     wilson_line_emit_covariant_derivative_commutators=(
@@ -1939,6 +1950,7 @@ class ValidationFixture:
                 wilson_line_trace_names=wilson_line_trace_names,
                 wilson_line_max_total_order=wilson_line_max_total_order,
                 wilson_line_max_slot_order=wilson_line_max_slot_order,
+                wilson_line_total_orders_by_trace=wilson_line_total_orders_by_trace,
                 wilson_line_index_prefix=wilson_line_index_prefix,
                 wilson_line_act_open_derivatives=wilson_line_act_open_derivatives,
                 wilson_line_emit_covariant_derivative_commutators=(
