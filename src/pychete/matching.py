@@ -8412,6 +8412,7 @@ def match_one_loop(
                     ),
                 },
             )
+            result = _sync_loop_on_shell_projection_source_with_final(result)
         result = replace(
             result,
             metadata={
@@ -8539,6 +8540,7 @@ def match_one_loop(
                 ),
             },
         )
+        result = _sync_loop_on_shell_projection_source_with_final(result)
     if options.truncate_eft_result:
         result = result.with_eft_truncation(
             eft_order,
@@ -8647,6 +8649,38 @@ def _log_one_loop_result(result: MatchingResult) -> None:
         result.theory.name,
         len(result.supertraces),
         len(result.matching_conditions),
+    )
+
+
+def _sync_loop_on_shell_projection_source_with_final(result: MatchingResult) -> MatchingResult:
+    """Keep staged loop/tree on-shell projection sources additive.
+
+    Replacement-rule reductions use ``MatchingResult.with_on_shell_reduction``,
+    which updates staged projection sources directly. Wilson-line scalar/EOM
+    exposure and vector field redefinitions are computed as transformed final
+    on-shell expressions, so when a tree source is present the loop projection
+    source must be refreshed to preserve
+    ``loop_only_on_shell_projection_source + tree_level_on_shell_projection_source
+    == on_shell_eft_lagrangian``.
+    """
+
+    if (
+        LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE not in result.supertraces
+        or TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE not in result.supertraces
+    ):
+        return result
+    tree_source = result.supertraces[TREE_LEVEL_ON_SHELL_PROJECTION_SOURCE]
+    loop_source = (result.on_shell_eft_lagrangian - tree_source).expand()
+    return replace(
+        result,
+        supertraces={
+            **result.supertraces,
+            LOOP_ONLY_ON_SHELL_PROJECTION_SOURCE: loop_source,
+        },
+        metadata={
+            **result.metadata,
+            "on_shell_staged_projection_sources_synchronized": True,
+        },
     )
 
 

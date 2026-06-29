@@ -394,6 +394,26 @@ Current slice progress:
   `wilson14_o4_0` for `cHWB`). This prevents future regressions from silently
   broadening back to explicit component enumeration for the already matched
   selected field-strength subset.
+- Current Singlet Wilson-count audit: the committed
+  `Singlet_Scalar_Extension.matchete_previous` fixture has 72 matching
+  conditions, of which 64 are external SMEFT/Wilson entries and 25 are
+  nonzero external Wilson coefficients. The broad max-trace-1 preview accepts
+  39 Wilson entries, but those are the 39 zero Wilson coefficients. The
+  meaningful nonzero-Wilson parity count is currently 3/25:
+  `cHW`, `cHB`, and `cHWB` through the selected Wilson-line route.
+  `cHD` remains the active first full-coefficient frontier.
+- Staged projection composition fix: a bounded public-route probe showed that
+  Wilson-line scalar/EOM exposure and Abelian vector-field redefinition
+  updated the final on-shell Lagrangian after tree/loop staged projection
+  sources had already been recorded. With `include_tree_level_matching=True`,
+  staged matching-condition projection could therefore miss the generated
+  `A^2*gY^2` vector-field-redefinition contribution even though direct
+  projection from the final on-shell expression saw it. Runtime now
+  re-synchronizes the loop-only on-shell projection source against the final
+  on-shell expression minus the tree-level source after these additive
+  Wilson-line transformations. This is a generic staging/composition fix; it
+  does not claim full `cHD` parity because the heavy-solution
+  `kappa/muphi` source-composition frontier remains.
 
 ## Targeted Commands
 

@@ -1733,3 +1733,15 @@ Green/EOM identity conversion.
   fluctuation DOFs with component path weights disabled, and pins the bounded
   nonzero Wilson-plan entries so this matched subset stays on the targeted
   performance route.
+- Latest Singlet status audit, 2026-06-29: the committed Singlet Matchete
+  fixture has 64 external SMEFT/Wilson entries, 25 of which are nonzero. The
+  broad preview accepts 39/64 only because those are zero Wilson coefficients;
+  the meaningful nonzero-Wilson count currently validated by pychete is 3/25
+  (`cHW`, `cHB`, `cHWB`). `cHD` remains the active first full-coefficient
+  frontier.
+- Latest staged projection fix, 2026-06-29: when tree-level matching is
+  included, Wilson-line scalar/EOM exposure and Abelian vector-field
+  redefinition now re-synchronize the staged loop-only on-shell projection
+  source with the final on-shell expression. This preserves generated
+  Wilson-line vector-field contributions during staged projection; it does
+  not yet resolve the full `cHD` heavy-solution/source-composition gap.
