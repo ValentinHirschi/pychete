@@ -11,6 +11,7 @@ from .spinor import (
     is_right_open_spin_chain,
     ncm_expr,
     normalize_ncm,
+    refine_dirac_products,
     spin_chain_kind,
 )
 from .state import PycheteState, StateExpression, load_state
@@ -46,6 +47,7 @@ __all__ = [
     "operator_dimension",
     "ncm_expr",
     "normalize_ncm",
+    "refine_dirac_products",
     "relabel_dummy_indices",
     "s",
     "series_eft",

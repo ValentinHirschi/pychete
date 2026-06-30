@@ -680,6 +680,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "Ghost": "Ghost",
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
+        "SpacetimeDimension": "d",
         "U1": "U1",
         "SU": "SU",
         "fund": "fund",
@@ -697,6 +698,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "Ghost": "Ghost",
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
+        "SpacetimeDimension": "d",
         "U1": "U1",
         "SU": "SU",
         "fund": "fund",
@@ -714,6 +716,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "Ghost": "Ghost",
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
+        "SpacetimeDimension": "d",
         "U1": "U1",
         "SU": "SU",
         "fund": "Fund",
@@ -731,6 +734,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "Ghost": r"\mathrm{Ghost}",
         "AntiGhost": r"\mathrm{AntiGhost}",
         "Lorentz": r"\mathrm{Lorentz}",
+        "SpacetimeDimension": "d",
         "U1": r"\mathrm{U}(1)",
         "SU": r"\mathrm{SU}",
         "fund": r"\mathbf{fund}",
@@ -748,6 +752,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "Ghost": "Ghost",
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
+        "SpacetimeDimension": "d",
         "U1": "U1",
         "SU": "SU",
         "fund": "fund",
@@ -832,6 +837,7 @@ class SymbolStore:
         "Ghost",
         "AntiGhost",
         "Lorentz",
+        "SpacetimeDimension",
         "U1",
         "SU",
         "fund",
@@ -940,7 +946,7 @@ class SymbolStore:
 
     @cached_property
     def Metric(self) -> Expression:
-        return self.head("Metric", is_scalar=True)
+        return self.head("Metric", is_scalar=True, is_symmetric=True)
 
     @cached_property
     def FlavorSum(self) -> Expression:
@@ -956,7 +962,7 @@ class SymbolStore:
 
     @cached_property
     def Gamma(self) -> Expression:
-        return self.head("Gamma")
+        return self.head("Gamma", is_antisymmetric=True)
 
     @cached_property
     def CG(self) -> Expression:
@@ -997,6 +1003,10 @@ class SymbolStore:
     @cached_property
     def Lorentz(self) -> Expression:
         return self.head("Lorentz")
+
+    @cached_property
+    def SpacetimeDimension(self) -> Expression:
+        return self.head("SpacetimeDimension", is_scalar=True)
 
     @cached_property
     def U1(self) -> Expression:
@@ -1163,11 +1173,13 @@ def safe_symbol_name(name: str) -> str:
     return out
 
 
-def canonical_string(expr: Expression) -> str:
+def canonical_string(expr: Expression, *, show_namespaces: bool = True) -> str:
     """Return the parse-stable canonical representation of ``expr``.
 
-    Canonical strings include namespaces and disable pychete's pretty printer,
-    making them suitable for JSON checkpoints and exact test fixtures.
+    By default, canonical strings include namespaces and disable pychete's
+    pretty printer, making them suitable for JSON checkpoints and exact test
+    fixtures. Pass ``show_namespaces=False`` for a compact Symbolica string
+    that still bypasses pychete's pretty-printer callbacks.
     """
 
     return expr.format(
@@ -1182,7 +1194,7 @@ def canonical_string(expr: Expression) -> str:
         double_star_for_exponentiation=False,
         function_brackets=("(", ")"),
         num_exp_as_superscript=False,
-        show_namespaces=True,
+        show_namespaces=show_namespaces,
         include_attributes=False,
         custom_print_mode={_CUSTOM_PRINT_MODE_KEY: _CANONICAL_PRINT_MODE},
     )

@@ -1,11 +1,12 @@
 from __future__ import annotations
 
 from enum import StrEnum
+from itertools import combinations
 
 from symbolica import Expression, PatternRestriction
 from symbolica.core import AtomType
 
-from .expr import args, factors, field_derivatives, field_label, field_type, field_with_derivatives, is_bar_field, is_head, product_expr, terms
+from .expr import args, factors, field_derivatives, field_label, field_type, field_with_derivatives, index_pattern, is_bar_field, is_head, product_expr, sum_expr, terms
 from .symbols import canonical_string, s
 from .theory import coupling_self_conjugate_from_label, field_self_conjugate_from_label, field_type_from_label
 
@@ -31,7 +32,14 @@ _DIRAC_ATOM_HEADS = frozenset(
         s.PR.get_name(),
     }
 )
-_NONCOMMUTATIVE_SPIN_HEADS = _DIRAC_ATOM_HEADS | frozenset({s.NCM.get_name()})
+_DIRAC_MATRIX_ATOM_HEADS = frozenset(
+    {
+        s.Gamma.get_name(),
+        s.PL.get_name(),
+        s.PR.get_name(),
+    }
+)
+_NONCOMMUTATIVE_SPIN_HEADS = frozenset({s.DiracProduct.get_name(), s.NCM.get_name()})
 
 
 def _seq_items(expr: Expression) -> tuple[Expression, ...]:
@@ -63,8 +71,13 @@ def is_dirac_atom(expr: Expression) -> bool:
     return (kind is AtomType.Fn or kind is AtomType.Var) and expr.get_name() in _DIRAC_ATOM_HEADS
 
 
+def _is_dirac_matrix_atom(expr: Expression) -> bool:
+    kind = expr.get_type()
+    return (kind is AtomType.Fn or kind is AtomType.Var) and expr.get_name() in _DIRAC_MATRIX_ATOM_HEADS
+
+
 def is_commutative_spin_factor(expr: Expression) -> bool:
-    """Return whether an expression can be pulled out of a spinor ``NCM`` chain."""
+    """Return whether ``expr`` is commutative in canonical spinor expressions."""
 
     kind = expr.get_type()
     if kind is AtomType.Num:
@@ -93,7 +106,9 @@ def is_commutative_spin_factor(expr: Expression) -> bool:
     return True
 
 
-def _split_commutative_factor(expr: Expression) -> tuple[Expression, Expression | None]:
+def _split_ncm_factor(expr: Expression) -> tuple[Expression, Expression | None]:
+    if _is_dirac_matrix_atom(expr):
+        return Expression.num(1), expr
     if is_commutative_spin_factor(expr):
         return expr, None
     if expr.get_type() is not AtomType.Mul:
@@ -102,10 +117,10 @@ def _split_commutative_factor(expr: Expression) -> tuple[Expression, Expression 
     commutative: list[Expression] = []
     ordered: list[Expression] = []
     for factor in factors(expr):
-        if is_commutative_spin_factor(factor):
-            commutative.append(factor)
-        else:
+        if _is_dirac_matrix_atom(factor) or not is_commutative_spin_factor(factor):
             ordered.append(factor)
+        else:
+            commutative.append(factor)
 
     scalar = product_expr(commutative)
     rest = product_expr(ordered) if ordered else None
@@ -118,6 +133,30 @@ def _opposite_projector(expr: Expression) -> Expression:
     if bool(expr == s.PL):
         return s.PR
     raise ValueError(f"Expected chiral projector, got {canonical_string(expr)}")
+
+
+def _is_projector(expr: Expression) -> bool:
+    return bool(expr == s.PL) or bool(expr == s.PR)
+
+
+def _is_lorentz_index(expr: Expression) -> bool:
+    return is_head(expr, s.Index) and bool(expr[1] == s.Lorentz)
+
+
+def _gamma_lorentz_indices(expr: Expression) -> tuple[Expression, ...] | None:
+    if not is_head(expr, s.Gamma):
+        return None
+    indices = tuple(expr[i] for i in range(len(expr)))
+    return indices if all(_is_lorentz_index(index) for index in indices) else None
+
+
+def _dirac_gamma_grade(expr: Expression) -> int:
+    indices = _gamma_lorentz_indices(expr)
+    return len(indices) if indices is not None else 1
+
+
+def _projector_moved_through_gamma(projector: Expression, gamma: Expression) -> Expression:
+    return _opposite_projector(projector) if _dirac_gamma_grade(gamma) % 2 else projector
 
 
 def _simplify_projectors(items: list[Expression]) -> tuple[Expression, ...] | None:
@@ -135,11 +174,17 @@ def _simplify_projectors(items: list[Expression]) -> tuple[Expression, ...] | No
             if (bool(left == s.PL) and bool(right == s.PR)) or (bool(left == s.PR) and bool(right == s.PL)):
                 return None
             if (bool(left == s.PL) or bool(left == s.PR)) and is_head(right, s.Gamma):
-                items[i : i + 2] = [right, _opposite_projector(left)]
+                items[i : i + 2] = [right, _projector_moved_through_gamma(left, right)]
                 changed = True
                 continue
             i += 1
     return tuple(items)
+
+
+def _dirac_product_from_items(items: tuple[Expression, ...]) -> Expression:
+    if not items:
+        return Expression.num(1)
+    return s.DiracProduct(*items)
 
 
 def _ncm_from_items(items: tuple[Expression, ...]) -> Expression:
@@ -148,6 +193,62 @@ def _ncm_from_items(items: tuple[Expression, ...]) -> Expression:
     if len(items) == 1:
         return items[0]
     return s.NCM(*items)
+
+
+def _flatten_dirac_product(factor: Expression) -> tuple[Expression, tuple[Expression, ...]]:
+    scalar = Expression.num(1)
+    items: list[Expression] = []
+    for child in tuple(factor[i] for i in range(len(factor))):
+        child_scalar, child_rest = _split_ncm_factor(child)
+        scalar = scalar * child_scalar
+        if child_rest is None:
+            continue
+        if is_head(child_rest, s.DiracProduct):
+            nested_scalar, nested_items = _flatten_dirac_product(child_rest)
+            scalar = scalar * nested_scalar
+            items.extend(nested_items)
+            continue
+        items.append(child_rest)
+    return scalar, tuple(items)
+
+
+def _canonicalize_dirac_segments(items: tuple[Expression, ...]) -> tuple[Expression, tuple[Expression, ...]] | None:
+    scalar = Expression.num(1)
+    output: list[Expression] = []
+    segment: list[Expression] = []
+
+    def flush_segment() -> bool:
+        if not segment:
+            return True
+        simplified = _simplify_projectors(segment)
+        if simplified is None:
+            return False
+        output.append(_dirac_product_from_items(simplified))
+        segment.clear()
+        return True
+
+    for item in items:
+        if is_head(item, s.DiracProduct):
+            item_scalar, flattened = _flatten_dirac_product(item)
+            scalar = scalar * item_scalar
+            for flattened_item in flattened:
+                if _is_dirac_matrix_atom(flattened_item):
+                    segment.append(flattened_item)
+                    continue
+                if not flush_segment():
+                    return None
+                output.append(flattened_item)
+            continue
+        if _is_dirac_matrix_atom(item):
+            segment.append(item)
+            continue
+        if not flush_segment():
+            return None
+        output.append(item)
+
+    if not flush_segment():
+        return None
+    return scalar, tuple(output)
 
 
 def _nested_closed_spinor_line(items: tuple[Expression, ...]) -> tuple[int, int] | None:
@@ -179,28 +280,33 @@ def _normalize_ncm_match(match: dict[Expression, Expression]) -> Expression:
     scalar = Expression.num(1)
     ordered: list[Expression] = []
     for factor in raw_factors:
-        if is_head(factor, s.NCM) or is_head(factor, s.DiracProduct):
+        if is_head(factor, s.NCM):
             nested = tuple(factor[i] for i in range(len(factor)))
             for item in nested:
-                item_scalar, item_rest = _split_commutative_factor(item)
+                item_scalar, item_rest = _split_ncm_factor(item)
                 scalar = scalar * item_scalar
                 if item_rest is not None:
                     ordered.append(item_rest)
             continue
 
-        factor_scalar, factor_rest = _split_commutative_factor(factor)
+        factor_scalar, factor_rest = _split_ncm_factor(factor)
         scalar = scalar * factor_scalar
         if factor_rest is not None:
             ordered.append(factor_rest)
 
-    simplified = _simplify_projectors(ordered)
-    if simplified is None:
+    canonical = _canonicalize_dirac_segments(tuple(ordered))
+    if canonical is None:
         return Expression.num(0)
-    return (scalar * _split_nested_spinor_lines(simplified)).expand()
+    dirac_scalar, dirac_items = canonical
+    return (scalar * dirac_scalar * _split_nested_spinor_lines(dirac_items)).expand()
 
 
 def normalize_ncm(expr: Expression) -> Expression:
-    """Normalize pychete noncommutative products with Symbolica replacements."""
+    """Normalize pychete noncommutative products with Symbolica replacements.
+
+    Consecutive Dirac-space matrix atoms are collected into ``DiracProduct``
+    segments inside the surrounding spinor ``NCM`` chain.
+    """
 
     pattern = s.NCM(s.NCMInnerWildcard)
     out = expr.replace(s.NCM(), Expression.num(1))
@@ -213,9 +319,193 @@ def normalize_ncm(expr: Expression) -> Expression:
 
 
 def ncm_expr(*items: Expression) -> Expression:
-    """Build and normalize a pychete noncommutative product."""
+    """Build and normalize a pychete noncommutative product.
+
+    ``Gamma``, ``PL``, and ``PR`` inputs may be passed directly; normalization
+    collects consecutive Dirac-space atoms into ``DiracProduct`` segments.
+    """
 
     return normalize_ncm(s.NCM(*items))
+
+
+DiracPosition = tuple[int, int]
+DiracPairing = tuple[tuple[DiracPosition, DiracPosition], ...]
+
+
+def _permutation_signature(ranks: tuple[int, ...]) -> int:
+    sign = 1
+    for i, rank in enumerate(ranks):
+        for later in ranks[i + 1 :]:
+            if rank > later:
+                sign = -sign
+    return sign
+
+
+def _metric(left: Expression, right: Expression) -> Expression:
+    return s.Metric(left, right)
+
+
+def _non_overlapping_pairings(items: tuple[DiracPosition, ...]) -> tuple[DiracPairing, ...]:
+    if not items:
+        return ((),)
+
+    first = items[0]
+    pairings: list[DiracPairing] = []
+    for i in range(1, len(items)):
+        second = items[i]
+        rest = items[1:i] + items[i + 1 :]
+        for pairing in _non_overlapping_pairings(rest):
+            pairings.append((((first, second),) + pairing))
+    return tuple(pairings)
+
+
+def _position_index(gamma_indices: tuple[tuple[Expression, ...], ...], position: DiracPosition) -> Expression:
+    gamma_index, index_position = position
+    return gamma_indices[gamma_index][index_position]
+
+
+def _signature_for_positions(sequence: tuple[DiracPosition, ...], natural: tuple[DiracPosition, ...]) -> int:
+    rank = {position: i for i, position in enumerate(natural)}
+    return _permutation_signature(tuple(rank[position] for position in sequence))
+
+
+def _dirac_basis_product(indices: tuple[Expression, ...], trailer: tuple[Expression, ...]) -> Expression:
+    items: list[Expression] = []
+    if indices:
+        gamma = s.Gamma(*indices)
+        if bool(gamma == Expression.num(0)):
+            return Expression.num(0)
+        items.append(gamma)
+    items.extend(trailer)
+    return _dirac_product_from_items(tuple(items))
+
+
+def _refine_gamma_basis(gammas: tuple[Expression, ...], trailer: tuple[Expression, ...] = ()) -> Expression:
+    gamma_indices = tuple(_gamma_lorentz_indices(gamma) for gamma in gammas)
+    if any(indices is None for indices in gamma_indices):
+        return _dirac_product_from_items(gammas + trailer)
+
+    groups = tuple(indices for indices in gamma_indices if indices is not None)
+    positions = tuple((gamma_index, index_position) for gamma_index, indices in enumerate(groups) for index_position in range(len(indices)))
+    out = Expression.num(0)
+    for pair_count in range(0, len(positions) + 1, 2):
+        for selected in combinations(positions, pair_count):
+            selected_set = frozenset(selected)
+            antisymmetric_positions = tuple(position for position in positions if position not in selected_set)
+            for pairing in _non_overlapping_pairings(tuple(selected)):
+                if any(left[0] == right[0] for left, right in pairing):
+                    continue
+                paired_positions = tuple(position for pair in pairing for position in pair)
+                sign = _signature_for_positions(paired_positions + antisymmetric_positions, positions)
+                metrics = tuple(_metric(_position_index(groups, left), _position_index(groups, right)) for left, right in pairing)
+                indices = tuple(_position_index(groups, position) for position in antisymmetric_positions)
+                out = out + sign * product_expr(metrics) * _dirac_basis_product(indices, trailer)
+    return out.expand()
+
+
+def _refine_dirac_product(product: Expression) -> Expression:
+    scalar, flattened = _flatten_dirac_product(product)
+    simplified = _simplify_projectors(list(flattened))
+    if simplified is None:
+        return Expression.num(0)
+    if not simplified:
+        return scalar
+
+    if all(_gamma_lorentz_indices(item) is not None for item in simplified):
+        return (scalar * _refine_gamma_basis(simplified)).expand()
+
+    if _is_projector(simplified[-1]) and all(_gamma_lorentz_indices(item) is not None for item in simplified[:-1]):
+        return (scalar * _refine_gamma_basis(simplified[:-1], (simplified[-1],))).expand()
+
+    return scalar * _dirac_product_from_items(simplified)
+
+
+def _refine_dirac_product_match(match: dict[Expression, Expression]) -> Expression:
+    return _refine_dirac_product(s.DiracProduct(*_seq_items(match[s.NCMInnerWildcard])))
+
+
+def _count_index_occurrences(expr: Expression, index: Expression) -> int:
+    pattern = index_pattern()
+    return sum(1 for match in expr.match(pattern) if bool(pattern.replace_wildcards(match) == index))
+
+
+def _normalize_dirac_product_gammas(expr: Expression) -> Expression:
+    pattern = s.DiracProduct(s.NCMInnerWildcard)
+
+    def normalize(match: dict[Expression, Expression]) -> Expression:
+        items = _seq_items(match[s.NCMInnerWildcard])
+        normalized_items: list[Expression] = []
+        for item in items:
+            indices = _gamma_lorentz_indices(item)
+            if indices is None:
+                normalized_items.append(item)
+                continue
+            gamma = s.Gamma(*indices)
+            if bool(gamma == Expression.num(0)):
+                return Expression.num(0)
+            if len(indices) > 0:
+                normalized_items.append(gamma)
+        return _dirac_product_from_items(tuple(normalized_items))
+
+    return expr.replace(pattern, normalize).expand()
+
+
+def _contract_metric_term(term: Expression) -> Expression:
+    out = term
+    for _ in range(20):
+        term_factors = list(factors(out))
+        changed = False
+        for i, factor in enumerate(term_factors):
+            if not is_head(factor, s.Metric) or len(factor) != 2:
+                continue
+            left, right = factor[0], factor[1]
+            rest = product_expr(term_factors[:i] + term_factors[i + 1 :])
+            if bool(left == right) and _is_lorentz_index(left):
+                out = s.SpacetimeDimension * rest
+                changed = True
+                break
+
+            left_count = _count_index_occurrences(rest, left)
+            right_count = _count_index_occurrences(rest, right)
+            if left_count == 0 and right_count == 0:
+                canonical = _metric(left, right)
+                if bool(canonical == factor):
+                    continue
+                term_factors[i] = canonical
+                out = product_expr(term_factors)
+                changed = True
+                break
+            if right_count == 0:
+                out = rest.replace(left, right)
+                changed = True
+                break
+            out = rest.replace(right, left)
+            changed = True
+            break
+        if not changed:
+            return _normalize_dirac_product_gammas(out)
+        out = _normalize_dirac_product_gammas(out).expand()
+    return out
+
+
+def _contract_metrics(expr: Expression) -> Expression:
+    return sum_expr(_contract_metric_term(term) for term in terms(expr.expand())).expand()
+
+
+def refine_dirac_products(expr: Expression) -> Expression:
+    """Rewrite pychete Dirac products into the antisymmetrized gamma basis.
+
+    This is the pychete analogue of Matchete's ``RefineDiracProducts`` for the
+    currently represented Dirac objects: ``Gamma`` matrices, ``PL``/``PR``
+    projectors, ``DiracProduct`` segments, and surrounding ``NCM`` chains.
+    Products of Lorentz-indexed gamma matrices are expanded into metric terms
+    plus antisymmetrized multi-index ``Gamma`` factors. Repeated Lorentz metric
+    traces contract to ``s.SpacetimeDimension``.
+    """
+
+    normalized = normalize_ncm(expr).replace(s.DiracProduct(), Expression.num(1))
+    refined = normalized.replace(s.DiracProduct(s.NCMInnerWildcard), _refine_dirac_product_match).expand()
+    return normalize_ncm(_contract_metrics(refined))
 
 
 def _bar_atom(body: Expression) -> Expression:
@@ -240,6 +530,23 @@ def _bar_atom(body: Expression) -> Expression:
     if body.get_type() is AtomType.Num:
         return body
     return s.Bar(body)
+
+
+def _chain_gamma_projector_pair(
+    chain: Expression,
+) -> tuple[Expression, Expression, Expression, Expression] | None:
+    if len(chain) == 3:
+        barred, dirac, fermion = (chain[i] for i in range(3))
+        if not is_head(dirac, s.DiracProduct) or len(dirac) != 2:
+            return None
+        gamma, projector = (dirac[i] for i in range(2))
+        return barred, gamma, projector, fermion
+
+    if len(chain) == 4:
+        barred, gamma, projector, fermion = (chain[i] for i in range(4))
+        return barred, gamma, projector, fermion
+
+    return None
 
 
 def _bar_conj_match(match: dict[Expression, Expression]) -> Expression:
@@ -282,12 +589,12 @@ def spin_chain_kind(expr: Expression) -> SpinChainKind:
         noncommutative = tuple(factor for factor in factors(normalized) if not is_commutative_spin_factor(factor))
         items = noncommutative or (normalized,)
 
-    if not items or all(is_commutative_spin_factor(item) for item in items):
+    has_spin_atom = any(is_dirac_atom(item) or is_fermion_field(item) or is_barred_fermion(item) for item in items)
+    if not items or (not has_spin_atom and all(is_commutative_spin_factor(item) for item in items)):
         return SpinChainKind.SCALAR
 
     left_bar = is_barred_fermion(items[0])
     right_field = is_fermion_field(items[-1])
-    has_spin_atom = any(is_dirac_atom(item) or is_fermion_field(item) or is_barred_fermion(item) for item in items)
     if left_bar and right_field:
         return SpinChainKind.CLOSED
     if left_bar:
@@ -369,9 +676,10 @@ def _parse_current_derivative_term(term: Expression) -> tuple[Expression, Expres
     if not _same_field_without_derivatives(scalar_field, derivative_field):
         return None
     mu = field_derivatives(derivative_field)[0]
-    if len(chain) != 4:
+    pair = _chain_gamma_projector_pair(chain)
+    if pair is None:
         return None
-    barred, gamma, projector, fermion = (chain[i] for i in range(4))
+    barred, gamma, projector, fermion = pair
     if not is_barred_fermion(barred) or not is_head(gamma, s.Gamma) or not (bool(projector == s.PL) or bool(projector == s.PR)) or not is_fermion_field(fermion):
         return None
     if not bool(gamma[0] == mu):
@@ -426,8 +734,15 @@ def canonicalize_fermion_derivative_bilinears(expr: Expression) -> Expression:
 def ncm_contains_target(match: dict[Expression, Expression], target: Expression) -> int:
     """Pattern restriction helper returning true when an NCM match contains ``target``."""
 
+    def contains(item: Expression) -> bool:
+        if bool(item == target):
+            return True
+        if is_head(item, s.NCM) or is_head(item, s.DiracProduct):
+            return any(contains(item[i]) for i in range(len(item)))
+        return False
+
     items = _seq_items(match.get(s.NCMInnerWildcard, Expression.num(0)))
-    return 1 if any(bool(item == target) for item in items) else -1
+    return 1 if any(contains(item) for item in items) else -1
 
 
 def ncm_target_restriction(target: Expression) -> PatternRestriction:

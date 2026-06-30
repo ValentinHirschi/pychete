@@ -109,6 +109,23 @@ def test_capitalized_greek_field_names_use_short_internal_labels() -> None:
     assert psi().format(mode=PrintMode.Mathematica, **FORMAT_OPTIONS) == r"\[Psi]"
 
 
+def test_canonical_string_can_omit_symbolica_namespaces() -> None:
+    theory = Theory("compact_canonical")
+    phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
+    mu = theory.lorentz_index("mu")
+    expr = s.CD(mu, phi())
+
+    full = canonical_string(expr)
+    compact = canonical_string(expr, show_namespaces=False)
+
+    assert full == (
+        "pychete::CD(pychete::Index(python::mu,pychete::Lorentz),"
+        "pychete::Field(compact_canonical::field_phi,pychete::Scalar,"
+        "pychete::InternalIndices(),pychete::DerivativeIndices()))"
+    )
+    assert compact == "CD(Index(mu,Lorentz),Field(field_phi,Scalar,InternalIndices(),DerivativeIndices()))"
+
+
 def test_latex_spinor_derivatives_and_closed_ncm_chains_are_readable() -> None:
     theory = Theory("spinor_latex_pretty")
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
@@ -201,6 +218,7 @@ def test_all_builtin_pychete_symbols_have_pretty_print_callbacks() -> None:
         s.Ghost,
         s.AntiGhost,
         s.Lorentz,
+        s.SpacetimeDimension,
         s.U1,
         s.SU(3),
         s.fund,

@@ -46,7 +46,44 @@ def test_projector_rules_and_open_spin_chain_classification() -> None:
     assert spin_chain_kind(ncm_expr(s.Gamma(mu), s.PL)) is SpinChainKind.MATRIX
 
 
-def test_commutative_spin_factor_defaults_to_true_except_spinor_space_objects() -> None:
+def test_ncm_collects_dirac_matrix_atoms_into_dirac_product() -> None:
+    theory = Theory("ncm_dirac_product")
+    psi = theory.define_field("psi", s.Fermion, mass=0)
+    mu = theory.lorentz_index("mu")
+
+    closed = ncm_expr(s.Bar(psi()), s.Gamma(mu), s.PL, psi())
+    matrix = ncm_expr(s.Gamma(mu), s.PL)
+
+    assert bool(
+        closed
+        == s.NCM(
+            s.Bar(psi()),
+            s.DiracProduct(s.Gamma(mu), s.PL),
+            psi(),
+        )
+    )
+    assert bool(matrix == s.DiracProduct(s.Gamma(mu), s.PL))
+
+
+def test_ncm_keeps_repeated_lorentz_gammas_inside_dirac_product() -> None:
+    theory = Theory("ncm_repeated_gamma_dirac_product")
+    mu = theory.lorentz_index("mu")
+
+    expr = ncm_expr(s.Gamma(mu), s.Gamma(mu))
+
+    assert bool(expr == s.DiracProduct(s.Gamma(mu), s.Gamma(mu)))
+
+
+def test_ncm_merges_adjacent_dirac_products() -> None:
+    theory = Theory("ncm_merge_dirac_product")
+    mu = theory.lorentz_index("mu")
+
+    expr = normalize_ncm(s.NCM(s.DiracProduct(s.Gamma(mu)), s.DiracProduct(s.PL)))
+
+    assert bool(expr == s.DiracProduct(s.Gamma(mu), s.PL))
+
+
+def test_commutative_spin_factor_defaults_to_true_except_canonical_spin_objects() -> None:
     theory = Theory("ncm_commutative_hot_path")
     psi = theory.define_field("psi", s.Fermion, mass=0)
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
@@ -56,10 +93,11 @@ def test_commutative_spin_factor_defaults_to_true_except_spinor_space_objects() 
     assert not is_commutative_spin_factor(psi())
     assert not is_commutative_spin_factor(s.Bar(psi()))
     assert not is_commutative_spin_factor(s.CD(mu, psi()))
-    assert not is_commutative_spin_factor(s.Gamma(mu))
-    assert not is_commutative_spin_factor(s.PR)
+    assert not is_commutative_spin_factor(s.DiracProduct(s.Gamma(mu), s.PR))
     assert not is_commutative_spin_factor(ncm_expr(s.Bar(psi()), psi()))
 
+    assert is_commutative_spin_factor(s.Gamma(mu))
+    assert is_commutative_spin_factor(s.PR)
     assert is_commutative_spin_factor(phi())
     assert is_commutative_spin_factor(s.Bar(phi()))
     assert is_commutative_spin_factor(s.CD(mu, phi()))
