@@ -12,7 +12,8 @@ from .expr import (
     is_zero,
     list_items,
 )
-from .symbols import SymbolRole, canonical_string, s
+from .serialization import canonical_string
+from .symbols import SymbolRole, s
 from .spinor import is_barred_fermion, is_fermion_field, ncm_expr, ncm_target_restriction, normalize_ncm
 from .theory import FieldDefinition, FieldHandle, FieldVariation, Theory
 

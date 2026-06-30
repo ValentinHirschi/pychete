@@ -7,7 +7,8 @@ from symbolica import Expression, PatternRestriction
 from symbolica.core import AtomType
 
 from .expr import args, factors, field_derivatives, field_label, field_type, field_with_derivatives, index_pattern, is_bar_field, is_head, product_expr, sum_expr, terms
-from .symbols import canonical_string, s
+from .serialization import canonical_string
+from .symbols import s
 from .theory import coupling_self_conjugate_from_label, field_self_conjugate_from_label, field_type_from_label
 
 

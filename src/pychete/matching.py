@@ -16,7 +16,8 @@ from .expr import (
 )
 from .functional import apply_cd, derive_eom
 from .spinor import bar_expr, canonicalize_fermion_derivative_bilinears, ncm_expr, normalize_ncm
-from .symbols import display_string, latex_string, s
+from .printing import display_string, latex_string
+from .symbols import s
 from .theory import FieldDefinition, FieldVariation, Theory
 
 

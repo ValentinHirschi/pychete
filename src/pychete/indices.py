@@ -7,7 +7,9 @@ from html import escape
 from symbolica import Expression, Replacement, S
 
 from .expr import as_int, index_pattern, is_head, power_pattern
-from .symbols import canonical_string, display_string, latex_string, s
+from .printing import display_string, latex_string
+from .serialization import canonical_string
+from .symbols import s
 
 
 @dataclass(frozen=True)

@@ -15,7 +15,8 @@ from .expr import (
     field_type,
     list_items,
 )
-from .symbols import SymbolRole, canonical_string, s
+from .serialization import canonical_string
+from .symbols import SymbolRole, s
 from .theory import FieldMassKind, Theory, field_mass_kind_from_label
 
 

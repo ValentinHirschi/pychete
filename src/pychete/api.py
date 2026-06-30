@@ -3,6 +3,8 @@ from __future__ import annotations
 from .eft import operator_dimension, series_eft
 from .indices import collect_indices, dummy_indices, open_indices, relabel_dummy_indices
 from .matching import HeavyFieldFamily, HeavyFieldSolution
+from .printing import display_string, latex_string
+from .serialization import canonical_string
 from .spinor import (
     SpinChainKind,
     bar_expr,
@@ -15,7 +17,7 @@ from .spinor import (
     spin_chain_kind,
 )
 from .state import PycheteState, StateExpression, load_state
-from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, latex_string, s
+from .symbols import SymbolDataKey, SymbolRole, s
 from .theory import BuiltinIndexType, CouplingHandle, FieldHandle, FieldMassKind, FieldVariation, GaugeCharge, Theory
 
 __all__ = [

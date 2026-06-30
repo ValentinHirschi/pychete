@@ -6,7 +6,8 @@ from typing import TypeAlias
 from symbolica import Condition, Expression, PatternRestriction
 from symbolica.core import AtomType
 
-from .symbols import canonical_string, s
+from .serialization import canonical_string
+from .symbols import s
 
 Expr: TypeAlias = Expression
 

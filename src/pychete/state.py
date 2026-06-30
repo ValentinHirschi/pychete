@@ -8,7 +8,7 @@ from typing import Any
 
 from symbolica import Expression
 
-from .symbols import canonical_string
+from .serialization import canonical_string
 from .theory import Theory
 
 

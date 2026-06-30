@@ -10,7 +10,9 @@ from typing import TYPE_CHECKING, Any, Iterable, TypeAlias
 from symbolica import Expression, S
 
 from .expr import derivative_indices_expr, internal_indices_expr, is_head, lorentz_indices_expr
-from .symbols import SymbolDataKey, SymbolRole, canonical_string, display_string, expression_from_canonical, latex_string, s, safe_symbol_name, symbol_data
+from .printing import display_string, latex_string
+from .serialization import canonical_string, expression_from_canonical
+from .symbols import SymbolDataKey, SymbolRole, s, safe_symbol_name, symbol_data
 
 if TYPE_CHECKING:
     from .matching import HeavyFieldSolution
