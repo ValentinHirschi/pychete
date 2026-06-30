@@ -695,15 +695,31 @@ def _apply_wilson_line_pre_scalar_eom_effective_map_fallback(
     }
     if not fallback_targets:
         return dict(mapped)
-    fallback = result.map_effective_couplings(
-        fallback_targets,
-        source=pre_source,
-        identities=identities,
-        allow_incomplete_target=allow_incomplete_target,
-        normalize_derivative_operators=normalize_derivative_operators,
-        max_basis_terms=max_basis_terms,
-        max_identities=max_identities,
-    )
+    pre_source_expr = result.supertraces[pre_source]
+    try:
+        fallback = result.map_effective_couplings(
+            fallback_targets,
+            source=pre_source,
+            identities=identities,
+            allow_incomplete_target=allow_incomplete_target,
+            normalize_derivative_operators=normalize_derivative_operators,
+            max_basis_terms=max_basis_terms,
+            max_identities=max_identities,
+        )
+    except ValueError:
+        fallback = {}
+        for target in targets:
+            if target.name not in fallback_targets:
+                continue
+            projected = _direct_project_effective_coupling_target(
+                result,
+                pre_source_expr,
+                target,
+                source_name=pre_source,
+                normalize_derivative_operators=normalize_derivative_operators,
+            )
+            if projected is not None:
+                fallback[target.name] = projected
     corrected = dict(mapped)
     for name, coefficient in fallback.items():
         if not is_zero(coefficient):

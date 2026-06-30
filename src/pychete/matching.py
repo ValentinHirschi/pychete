@@ -1501,7 +1501,11 @@ class PowerTypeSupertraceContribution:
 
         return vakint.one_loop_vacuum_integral(
             self.eft_numerator_expression,
-            _flatten_expression_slots(self.trace.propagator_mass_squared_chain(include_light=include_light)),
+            _flatten_expression_slots(
+                _deduplicate_expression_slots(
+                    self.trace.propagator_mass_squared_chain(include_light=include_light),
+                )
+            ),
         )
 
     def to_expression_map(self, *, prefix: str = "power_type_supertrace") -> dict[str, Expression]:
@@ -7896,6 +7900,20 @@ def _combine_interaction_expansion_hybrid_results(
     )
 
 
+def _deduplicate_expression_slots(
+    slots: Iterable[Iterable[Expression]],
+) -> tuple[tuple[Expression, ...], ...]:
+    deduplicated_slots: list[tuple[Expression, ...]] = []
+    for slot in slots:
+        unique: list[Expression] = []
+        for item in slot:
+            if any(bool(item == existing) for existing in unique):
+                continue
+            unique.append(item)
+        deduplicated_slots.append(tuple(unique))
+    return tuple(deduplicated_slots)
+
+
 def _flatten_expression_slots(slots: Iterable[Iterable[Expression]]) -> tuple[Expression, ...]:
     return tuple(item for slot in slots for item in slot)
 
@@ -9232,11 +9250,29 @@ def match_one_loop(
                 strict=options.on_shell_eom_strict,
             )
         wilson_line_projection_sources: dict[str, Expression] = {}
+        pre_scalar_eom_projection_sources_heavy_reduced = False
+        pre_scalar_eom_projection_sources_heavy_reduced_count = 0
         if wilson_line_expansion_indices_by_trace is not None:
             for projection_name, entry_source in _wilson_line_internal_projection_source_expressions(
                 result,
                 selected_backend,
             ):
+                pre_scalar_eom_entry_source = entry_source
+                if (
+                    projection_name
+                    == f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[interaction_power_type_remainder]"
+                    and skip_heavy_scalar_solutions_for_wilson_line_scalar_eom
+                    and heavy_scalar_solutions
+                ):
+                    pre_scalar_eom_entry_source = replace_heavy_scalar_solutions_eft_limited(
+                        entry_source,
+                        heavy_scalar_solutions,
+                        theory,
+                        eft_order=eft_order,
+                        fresh_dummy_indices=True,
+                    )
+                    pre_scalar_eom_projection_sources_heavy_reduced = True
+                    pre_scalar_eom_projection_sources_heavy_reduced_count += 1
                 entry_exposed = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
                     theory,
                     entry_source,
@@ -9289,7 +9325,7 @@ def match_one_loop(
                     )
                 wilson_line_projection_sources[
                     _wilson_line_pre_scalar_eom_projection_source_name(projection_name)
-                ] = entry_source
+                ] = pre_scalar_eom_entry_source
                 wilson_line_projection_sources[projection_name] = entry_after_scalar_eom
         on_shell_wilson_line_projection_source_names = tuple(
             sorted(
@@ -9356,6 +9392,12 @@ def match_one_loop(
                     ",".join(on_shell_wilson_line_projection_source_names)
                     if on_shell_wilson_line_projection_source_names
                     else None
+                ),
+                "heavy_scalar_solution_applied_to_wilson_line_pre_scalar_eom_projection_sources": (
+                    pre_scalar_eom_projection_sources_heavy_reduced
+                ),
+                "heavy_scalar_solution_wilson_line_pre_scalar_eom_projection_source_count": (
+                    pre_scalar_eom_projection_sources_heavy_reduced_count
                 ),
             },
         )

@@ -38,7 +38,11 @@ from .supertraces import is_unnormalized_supertrace_alias, supertrace_word_order
 from .symbols import SymbolDataKey, s, symbol_data
 from .theory import Theory
 from .theory_metadata import ExternalKind
-from .tree_matching import heavy_scalar_solution_replacements, solve_heavy_scalar_eoms
+from .tree_matching import (
+    heavy_scalar_solution_replacements,
+    replace_heavy_scalar_solutions_eft_limited,
+    solve_heavy_scalar_eoms,
+)
 from .wilson_line_eom import (
     _apply_on_shell_eom_reduction_to_expression,
     _apply_wilson_line_abelian_vector_eom_field_redefinition,
@@ -1343,11 +1347,29 @@ class ValidationFixture:
                     strict=on_shell_eom_strict,
                 )
             wilson_line_projection_sources: dict[str, Expression] = {}
+            pre_scalar_eom_projection_sources_heavy_reduced = False
+            pre_scalar_eom_projection_sources_heavy_reduced_count = 0
             if wilson_line_expansion_request is not None:
                 for projection_name, entry_source in _wilson_line_internal_projection_source_expressions(
                     result,
                     selected_backend,
                 ):
+                    pre_scalar_eom_entry_source = entry_source
+                    if (
+                        projection_name
+                        == f"{WILSON_LINE_ON_SHELL_PROJECTION_SOURCE}[interaction_power_type_remainder]"
+                        and skip_heavy_scalar_solutions_for_wilson_line_scalar_eom
+                        and heavy_scalar_solutions
+                    ):
+                        pre_scalar_eom_entry_source = replace_heavy_scalar_solutions_eft_limited(
+                            entry_source,
+                            heavy_scalar_solutions,
+                            theory,
+                            eft_order=eft_order,
+                            fresh_dummy_indices=True,
+                        )
+                        pre_scalar_eom_projection_sources_heavy_reduced = True
+                        pre_scalar_eom_projection_sources_heavy_reduced_count += 1
                     entry_exposed = _apply_wilson_line_post_integral_scalar_commutator_bilinears(
                         theory,
                         entry_source,
@@ -1400,7 +1422,7 @@ class ValidationFixture:
                         )
                     wilson_line_projection_sources[
                         _wilson_line_pre_scalar_eom_projection_source_name(projection_name)
-                    ] = entry_source
+                    ] = pre_scalar_eom_entry_source
                     wilson_line_projection_sources[projection_name] = entry_after_scalar_eom
             on_shell_wilson_line_projection_source_names = tuple(
                 sorted(
@@ -1469,6 +1491,12 @@ class ValidationFixture:
                         ",".join(on_shell_wilson_line_projection_source_names)
                         if on_shell_wilson_line_projection_source_names
                         else None
+                    ),
+                    "heavy_scalar_solution_applied_to_wilson_line_pre_scalar_eom_projection_sources": (
+                        pre_scalar_eom_projection_sources_heavy_reduced
+                    ),
+                    "heavy_scalar_solution_wilson_line_pre_scalar_eom_projection_source_count": (
+                        pre_scalar_eom_projection_sources_heavy_reduced_count
                     ),
                 },
             )

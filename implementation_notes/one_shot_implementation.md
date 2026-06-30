@@ -203,7 +203,6 @@ the final converted-boundary bridge:
   unrestricted derivative-order plan was too slow. The next `cHBox` work
   should use narrower total-order plans for pure-heavy scalar traces before
   broadening further.
-- Validation for the latest scalar-stage regression:
 - New implementation boundary: the paired pychete probe showed
   `interaction_wilson_line_normalized_internal_integral_finite_part` and the
   entry source `hScalar-hScalar#wilson5_o2_0` project to
@@ -232,15 +231,48 @@ the final converted-boundary bridge:
   passed under the watchdog (`1 passed` in about 105 seconds); and the
   representative selected `cHD` public two-trace finite composition test
   passed under the watchdog (`1 passed` in about 215 seconds).
+- Latest `cHBox` power-remainder slice: Matchete
+  `hScalar-lScalar -> cHBox` debugging showed that the selected prop-order-4
+  Wilson-line insertion simplifies to zero, while the previous-validation
+  contribution comes from the ordinary/full power-type trace. pychete now
+  applies heavy-scalar EOM replacement only to the paired
+  `wilson_line_pre_scalar_eom_projection_source[interaction_power_type_remainder]`
+  source when global heavy-scalar substitution is intentionally skipped at the
+  Wilson-line scalar/EOM boundary. This keeps selected Wilson-line entry
+  sources such as `hScalar-hScalar#wilson5_o2_0` unchanged while letting the
+  remainder follow Matchete's `PowerTypeSTr -> ReplaceHeavyEOM` ordering for
+  target-local projection.
+- The same slice fixed a power-trace topology overcount: duplicate identical
+  masses inside one trace category slot are now deduplicated before lowering a
+  `PowerTypeSupertraceContribution` to vakint/internal topology form. This
+  changes the Matchete-style `hScalar-lScalar` remainder from one massive plus
+  two identical massless propagators to one massive plus one massless
+  propagator, matching the `{hScalar,lScalar}` trace type instead of treating
+  light-component multiplicity as extra `1/k^2` denominators.
+- New public `cHBox` partial parity: selected `hScalar-hScalar` with the
+  unselected power-type remainder retained now projects the combined
+  `-hbar*kappa^2/(24 M^2)` scalar-loop term plus the Matchete
+  `hScalar-lScalar` power-remainder term
+  `2*hbar*A^2*kappa*(log(mubar2)-2*log(M)+1)/M^4`. This is still a partial
+  public Wilson-line result, not full `cHBox` parity, because the remaining
+  nonzero Matchete `cHBox` trace families have not all been reproduced from
+  public source generation yet.
+- Validation for the latest slice: the selected-only and hybrid `cHBox`
+  regressions passed together under the 30 GiB watchdog (`2 passed` in about
+  35 seconds), targeted mypy passed on `matching.py`, `matching_results.py`,
+  and `validation_fixtures.py`, and the representative selected `cHD`
+  two-trace finite-composition regression still passed under the watchdog
+  (`1 passed` in about 208 seconds).
 
 ## Next Implementation Slices
 
 1. Selected Singlet broadening:
    use the staged public map boundary to broaden beyond the currently green
-   selected `cHW/cHB/cHWB/cHD` families. The immediate `cHBox` sub-frontier is
-   pure-heavy scalar trace coverage: keep `hScalar-hScalar` as the first
-   committed partial loop contribution and probe `hScalar-hScalar-hScalar`
-   only with narrow total-order plans. Record whether each failure is source
+   selected `cHW/cHB/cHWB/cHD` families and the partial `cHBox`
+   `hScalar-hScalar + hScalar-lScalar` frontier. The next `cHBox` traces to
+   isolate are `hScalar`, `hScalar-hScalar-lScalar`,
+   `hScalar-lScalar-hScalar-lScalar`, `hScalar-lScalar-lScalar`, and
+   `hScalar-lScalar-lVector-lScalar`; record whether each failure is source
    generation, on-shell reduction, effective-coupling decomposition, or
    performance.
 

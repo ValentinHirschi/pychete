@@ -2192,3 +2192,16 @@ next real performance step remains an insertion-level collected
   produced the expected `-hbar*kappa^2/(24 M^2)` loop term, while broader
   `hScalar-hScalar-hScalar` probing must use narrower total-order plans to
   avoid slow broad derivative expansion.
+- Current continuation, 2026-06-30: the user asked for the current matching
+  nonzero Wilson list and the active UV/EFT names. The active first public
+  parity target remains the Singlet Scalar Extension matched onto SMEFT
+  Warsaw. Converted Matchete on-shell fixture parity is still 25/25 nonzero
+  Wilson coefficients, while the public selected Wilson-line path now covers
+  `cHW`, `cHB`, `cHWB`, `cHD`, and a broader partial `cHBox` frontier. The
+  new `cHBox` public slice keeps the selected `hScalar-hScalar`
+  `-hbar*kappa^2/(24 M^2)` contribution and now also recovers the Matchete
+  `hScalar-lScalar` ordinary power-remainder term
+  `2*hbar*A^2*kappa*(log(mubar2)-2*log(M)+1)/M^4` by applying heavy-scalar
+  EOM replacement only to the paired pre-EOM `interaction_power_type_remainder`
+  projection source and deduplicating identical masses within one power-trace
+  category slot before topology lowering.
