@@ -29,6 +29,7 @@ _DIRAC_ATOM_HEADS = frozenset(
     {
         s.DiracProduct.get_name(),
         s.Gamma.get_name(),
+        s.Gamma5.get_name(),
         s.PL.get_name(),
         s.PR.get_name(),
     }
@@ -36,6 +37,7 @@ _DIRAC_ATOM_HEADS = frozenset(
 _DIRAC_MATRIX_ATOM_HEADS = frozenset(
     {
         s.Gamma.get_name(),
+        s.Gamma5.get_name(),
         s.PL.get_name(),
         s.PR.get_name(),
     }
@@ -346,6 +348,18 @@ def _metric(left: Expression, right: Expression) -> Expression:
     return s.Metric(left, right)
 
 
+def _lc_tensor(indices: tuple[Expression, ...]) -> Expression:
+    return s.LCTensor(*indices)
+
+
+def _gamma5() -> Expression:
+    return s.Gamma5
+
+
+def _is_gamma5(expr: Expression) -> bool:
+    return bool(expr == s.Gamma5)
+
+
 def _non_overlapping_pairings(items: tuple[DiracPosition, ...]) -> tuple[DiracPairing, ...]:
     if not items:
         return ((),)
@@ -423,6 +437,157 @@ def _refine_dirac_product(product: Expression) -> Expression:
 
 def _refine_dirac_product_match(match: dict[Expression, Expression]) -> Expression:
     return _refine_dirac_product(s.DiracProduct(*_seq_items(match[s.NCMInnerWildcard])))
+
+
+def _dirac_trace_gamma_groups(groups: tuple[tuple[Expression, ...], ...]) -> Expression:
+    positions = tuple((gamma_index, index_position) for gamma_index, indices in enumerate(groups) for index_position in range(len(indices)))
+    if len(positions) % 2:
+        return Expression.num(0)
+    if not positions:
+        return Expression.num(4)
+
+    out = Expression.num(0)
+    for pairing in _non_overlapping_pairings(positions):
+        if any(left[0] == right[0] for left, right in pairing):
+            continue
+        paired_positions = tuple(position for pair in pairing for position in pair)
+        sign = _signature_for_positions(paired_positions, positions)
+        metrics = tuple(_metric(_position_index(groups, left), _position_index(groups, right)) for left, right in pairing)
+        out = out + 4 * sign * product_expr(metrics)
+    return out.expand()
+
+
+def _dirac_trace_gamma5_groups(groups: tuple[tuple[Expression, ...], ...]) -> Expression:
+    positions = tuple((gamma_index, index_position) for gamma_index, indices in enumerate(groups) for index_position in range(len(indices)))
+    length = len(positions)
+    if length < 4 or length % 2:
+        return Expression.num(0)
+    if length == 4:
+        indices = tuple(_position_index(groups, position) for position in positions)
+        return -4 * Expression.I * _lc_tensor(indices)
+
+    out = Expression.num(0)
+    for selected in combinations(positions, length - 4):
+        selected_set = frozenset(selected)
+        antisymmetric_positions = tuple(position for position in positions if position not in selected_set)
+        for pairing in _non_overlapping_pairings(tuple(selected)):
+            if any(left[0] == right[0] for left, right in pairing):
+                continue
+            paired_positions = tuple(position for pair in pairing for position in pair)
+            sign = _signature_for_positions(paired_positions + antisymmetric_positions, positions)
+            metrics = tuple(_metric(_position_index(groups, left), _position_index(groups, right)) for left, right in pairing)
+            lc_indices = tuple(_position_index(groups, position) for position in antisymmetric_positions)
+            out = out - 4 * Expression.I * sign * product_expr(metrics) * _lc_tensor(lc_indices)
+    return out.expand()
+
+
+def _dirac_trace_items(items: tuple[Expression, ...]) -> Expression | None:
+    cleaned = tuple(item for item in items if not (is_head(item, s.Gamma) and len(item) == 0))
+    if not cleaned:
+        return Expression.num(4)
+
+    gamma5_count = sum(1 for item in cleaned if _is_gamma5(item))
+    if gamma5_count > 1:
+        remaining: list[Expression] = []
+        sign = 1
+        gamma5_pending = 0
+        for item in cleaned:
+            if _is_gamma5(item):
+                gamma5_pending += 1
+                continue
+            sign *= (-1) ** (gamma5_pending * _dirac_gamma_grade(item))
+            remaining.append(item)
+        if gamma5_pending % 2:
+            remaining.append(_gamma5())
+        traced = _dirac_trace_items(tuple(remaining))
+        return None if traced is None else sign * traced
+
+    has_gamma5 = gamma5_count == 1
+    ordinary_items = tuple(item for item in cleaned if not _is_gamma5(item))
+    if has_gamma5 and not _is_gamma5(cleaned[-1]):
+        gamma5_position = next(i for i, item in enumerate(cleaned) if _is_gamma5(item))
+        right_grade = sum(_dirac_gamma_grade(item) for item in cleaned[gamma5_position + 1 :])
+        traced = _dirac_trace_items(ordinary_items + (_gamma5(),))
+        return None if traced is None else (-1) ** right_grade * traced
+
+    gamma_indices = tuple(_gamma_lorentz_indices(item) for item in ordinary_items)
+    if any(indices is None for indices in gamma_indices):
+        return None
+
+    groups = tuple(indices for indices in gamma_indices if indices is not None)
+    if has_gamma5:
+        return _dirac_trace_gamma5_groups(groups)
+    return _dirac_trace_gamma_groups(groups)
+
+
+def _dirac_trace_product(product: Expression) -> Expression | None:
+    scalar, flattened = _flatten_dirac_product(product)
+    simplified = _simplify_projectors(list(flattened))
+    if simplified is None:
+        return Expression.num(0)
+    if not simplified:
+        return scalar * 4
+
+    if _is_projector(simplified[-1]):
+        sign = 1 if bool(simplified[-1] == s.PR) else -1
+        base_items = simplified[:-1]
+        ordinary = _dirac_trace_items(base_items)
+        with_gamma5 = _dirac_trace_items(base_items + (_gamma5(),))
+        if ordinary is None or with_gamma5 is None:
+            return None
+        return (scalar * (ordinary + sign * with_gamma5) / 2).expand()
+
+    traced = _dirac_trace_items(simplified)
+    return None if traced is None else (scalar * traced).expand()
+
+
+def _dirac_trace_product_match(match: dict[Expression, Expression]) -> Expression:
+    product = s.DiracProduct(*_seq_items(match[s.NCMInnerWildcard]))
+    traced = _dirac_trace_product(product)
+    return product if traced is None else traced
+
+
+def _dirac_product_count(expr: Expression) -> int:
+    pattern = s.DiracProduct(s.NCMInnerWildcard)
+    return sum(1 for _ in expr.match(pattern))
+
+
+def _dimension_expr(dimension: Expression | int | None) -> Expression | None:
+    if dimension is None:
+        return None
+    if isinstance(dimension, Expression):
+        return dimension
+    return Expression.num(dimension)
+
+
+def dirac_trace(expr: Expression, *, dimension: Expression | int | None = None) -> Expression:
+    """Evaluate closed pychete Dirac products with Matchete-style trace rules.
+
+    The native evaluator supports the currently represented pychete Dirac
+    basis: Lorentz-indexed ``Gamma`` factors, antisymmetrized multi-index
+    ``Gamma`` factors, trailing ``PL``/``PR`` projectors, ``DiracProduct``
+    segments, and matrix-only ``NCM`` expressions. Terms without a
+    ``DiracProduct`` are multiplied by the spin trace normalization ``4``.
+    Terms with more than one ``DiracProduct`` are left unchanged.
+    """
+
+    normalized = normalize_ncm(expr).replace(s.DiracProduct(), Expression.num(1)).expand()
+    traced_terms: list[Expression] = []
+    for term in terms(normalized):
+        count = _dirac_product_count(term)
+        if count == 0:
+            traced_terms.append(4 * term)
+            continue
+        if count > 1:
+            traced_terms.append(term)
+            continue
+        traced_terms.append(term.replace(s.DiracProduct(s.NCMInnerWildcard), _dirac_trace_product_match))
+
+    traced = _contract_metrics(sum_expr(traced_terms).expand())
+    concrete_dimension = _dimension_expr(dimension)
+    if concrete_dimension is not None:
+        traced = traced.replace(s.SpacetimeDimension, concrete_dimension).expand()
+    return traced
 
 
 def _count_index_occurrences(expr: Expression, index: Expression) -> int:

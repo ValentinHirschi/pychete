@@ -39,7 +39,7 @@ def _ncm_reference_theory():
     coupling_m = theory.define_coupling("m")
     mu = theory.lorentz_index("mu")
     nu = theory.lorentz_index("nu")
-    gamma5 = s.Gamma(Expression.num(5))
+    gamma5 = s.Gamma5
     return theory, psi_m, psi_d, psi_l, psi_r, phi, coupling_m, mu, nu, gamma5
 
 

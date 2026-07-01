@@ -79,10 +79,12 @@ class SymbolStore:
         "CD",
         "Delta",
         "Metric",
+        "LCTensor",
         "FlavorSum",
         "NCM",
         "DiracProduct",
         "Gamma",
+        "Gamma5",
         "CG",
         "EOM",
         "HeavyFieldOrder",
@@ -211,6 +213,10 @@ class SymbolStore:
         return self.head("Metric", is_scalar=True, is_symmetric=True)
 
     @cached_property
+    def LCTensor(self) -> Expression:
+        return self.head("LCTensor", is_scalar=True, is_antisymmetric=True)
+
+    @cached_property
     def FlavorSum(self) -> Expression:
         return self.head("FlavorSum", is_scalar=True)
 
@@ -225,6 +231,10 @@ class SymbolStore:
     @cached_property
     def Gamma(self) -> Expression:
         return self.head("Gamma", is_antisymmetric=True)
+
+    @cached_property
+    def Gamma5(self) -> Expression:
+        return self.head("Gamma5")
 
     @cached_property
     def CG(self) -> Expression:

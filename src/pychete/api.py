@@ -8,6 +8,7 @@ from .serialization import canonical_string
 from .spinor import (
     SpinChainKind,
     bar_expr,
+    dirac_trace,
     is_closed_spin_chain,
     is_left_open_spin_chain,
     is_right_open_spin_chain,
@@ -39,6 +40,7 @@ __all__ = [
     "canonical_string",
     "collect_indices",
     "display_string",
+    "dirac_trace",
     "dummy_indices",
     "is_closed_spin_chain",
     "is_left_open_spin_chain",

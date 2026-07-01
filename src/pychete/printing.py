@@ -325,6 +325,13 @@ def _print_metric(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> 
     return _call("Metric" if mode is PrintMode.Mathematica else "g", args, mode)
 
 
+def _print_lc_tensor(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
+    args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
+    if mode is PrintMode.Latex:
+        return rf"\epsilon_{{{' '.join(args)}}}"
+    return _call("LCTensor" if mode is PrintMode.Mathematica else "epsilon", args, mode)
+
+
 def _is_fermion_field_endpoint(expr: Expression) -> bool:
     if _is_builtin_fn(expr, "Field"):
         return _is_builtin_symbol(expr[1], "Fermion")
@@ -608,6 +615,8 @@ def _latex_expr(expr: Expression) -> str:
         return rf"\delta_{{{args[0]} {args[1]}}}"
     if name == "Metric" and len(args) == 2:
         return rf"g_{{{args[0]} {args[1]}}}"
+    if name == "LCTensor":
+        return rf"\epsilon_{{{' '.join(args)}}}"
     if name in {"NCM", "DiracProduct"}:
         chain = r"\,".join(args)
         return rf"\left({chain}\right)" if _is_closed_ncm_chain(expr) else chain
@@ -641,6 +650,7 @@ def print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | Non
         "CD": lambda: _print_cd(expr, mode, kwargs),
         "Delta": lambda: _print_delta(expr, mode, kwargs),
         "Metric": lambda: _print_metric(expr, mode, kwargs),
+        "LCTensor": lambda: _print_lc_tensor(expr, mode, kwargs),
         "FlavorSum": lambda: _call("FlavorSum", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "NCM": lambda: _print_ncm(expr, mode, kwargs),
         "DiracProduct": lambda: _print_ncm(expr, mode, kwargs),
@@ -670,6 +680,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "SU": "SU",
         "fund": "fund",
         "adj": "adj",
+        "Gamma5": "gamma5",
         "PR": "P_R",
         "PL": "P_L",
         "eft_order_parameter": "eps_EFT",
@@ -688,6 +699,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "SU": "SU",
         "fund": "fund",
         "adj": "adj",
+        "Gamma5": "gamma5",
         "PR": "P_R",
         "PL": "P_L",
         "eft_order_parameter": "eps_EFT",
@@ -706,6 +718,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "SU": "SU",
         "fund": "Fund",
         "adj": "Adj",
+        "Gamma5": "Gamma5",
         "PR": "PR",
         "PL": "PL",
         "eft_order_parameter": "epsEFT",
@@ -724,6 +737,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "SU": r"\mathrm{SU}",
         "fund": r"\mathbf{fund}",
         "adj": r"\mathbf{adj}",
+        "Gamma5": r"\gamma_5",
         "PR": r"P_R",
         "PL": r"P_L",
         "eft_order_parameter": r"\epsilon_{\mathrm{EFT}}",
@@ -742,6 +756,7 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "SU": "SU",
         "fund": "fund",
         "adj": "adj",
+        "Gamma5": "gamma_5",
         "PR": "P_R",
         "PL": "P_L",
         "eft_order_parameter": "epsilon_EFT",

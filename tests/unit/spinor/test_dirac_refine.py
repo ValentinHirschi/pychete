@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-from symbolica import Expression
 from symbolica.core import SymbolAttribute
 
 from pychete import Theory, ncm_expr, refine_dirac_products, s
@@ -14,10 +13,13 @@ def test_dirac_basis_heads_use_native_symbolica_symmetries() -> None:
     nu = theory.lorentz_index("nu")
 
     assert SymbolAttribute.Symmetric in s.Metric.get_attributes()
+    assert SymbolAttribute.Antisymmetric in s.LCTensor.get_attributes()
     assert SymbolAttribute.Antisymmetric in s.Gamma.get_attributes()
     assert bool(s.Metric(nu, mu) == s.Metric(mu, nu))
+    assert_expr_equal(s.LCTensor(nu, mu), -s.LCTensor(mu, nu))
     assert_expr_equal(s.Gamma(nu, mu), -s.Gamma(mu, nu))
     assert_expr_equal(s.Gamma(mu, mu), 0)
+    assert not bool(s.Gamma5 == s.Gamma(5))
 
 
 def test_refine_dirac_products_expands_two_gammas_to_metric_plus_antisymmetric_basis() -> None:
@@ -89,10 +91,9 @@ def test_refine_dirac_products_distributes_inside_closed_ncm_chain() -> None:
 
 
 def test_refine_dirac_products_leaves_non_lorentz_gamma_atoms_unmatched() -> None:
-    gamma5 = s.Gamma(Expression.num(5))
-    expr = refine_dirac_products(s.DiracProduct(gamma5, gamma5))
+    expr = refine_dirac_products(s.DiracProduct(s.Gamma5, s.Gamma5))
 
-    assert_expr_equal(expr, s.DiracProduct(gamma5, gamma5))
+    assert_expr_equal(expr, s.DiracProduct(s.Gamma5, s.Gamma5))
 
 
 def test_refine_dirac_products_treats_empty_gamma_as_identity() -> None:

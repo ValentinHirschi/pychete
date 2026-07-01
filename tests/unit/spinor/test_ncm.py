@@ -53,6 +53,7 @@ def test_ncm_collects_dirac_matrix_atoms_into_dirac_product() -> None:
 
     closed = ncm_expr(s.Bar(psi()), s.Gamma(mu), s.PL, psi())
     matrix = ncm_expr(s.Gamma(mu), s.PL)
+    gamma5_matrix = ncm_expr(s.Gamma(mu), s.Gamma5)
 
     assert bool(
         closed
@@ -63,6 +64,7 @@ def test_ncm_collects_dirac_matrix_atoms_into_dirac_product() -> None:
         )
     )
     assert bool(matrix == s.DiracProduct(s.Gamma(mu), s.PL))
+    assert bool(gamma5_matrix == s.DiracProduct(s.Gamma(mu), s.Gamma5))
 
 
 def test_ncm_keeps_repeated_lorentz_gammas_inside_dirac_product() -> None:
