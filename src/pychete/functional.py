@@ -9,8 +9,11 @@ from .expr import (
     derivative_indices_expr,
     field_pattern,
     field_with_derivatives,
+    is_bar_field,
+    is_head,
     is_zero,
     list_items,
+    lorentz_indices_expr,
 )
 from .serialization import canonical_string
 from .symbols import SymbolRole, s
@@ -27,6 +30,35 @@ def apply_cd(indices: tuple[Expression, ...] | list[Expression], expr: Expressio
     for index in indices:
         out = _normalize_functional_expression(_single_cd(index, out))
     return out
+
+
+def open_cd_expr(*indices: Expression) -> Expression:
+    """Build an open covariant-derivative operator acting to the right.
+
+    ``OpenCD`` is the functional-matching analogue of ``CD``: it records the
+    derivative operator itself rather than immediately applying it to a field.
+    Multiple indices are stored as an ordered Lorentz-index list.
+    """
+
+    return s.OpenCD(lorentz_indices_expr(*indices))
+
+
+def func_ncm_expr(*items: Expression) -> Expression:
+    """Build the ordered product used by functional fluctuation operators."""
+
+    flattened: list[Expression] = []
+    for item in items:
+        if bool(item == Expression.num(1)):
+            continue
+        if is_head(item, s.FuncNCM):
+            flattened.extend(item[i] for i in range(len(item)))
+            continue
+        flattened.append(item)
+    if not flattened:
+        return Expression.num(1)
+    if len(flattened) == 1:
+        return flattened[0]
+    return s.FuncNCM(*flattened)
 
 
 def _single_cd(index: Expression, expr: Expression) -> Expression:
@@ -127,6 +159,60 @@ def partial_functional_derivative(lagrangian: Expression, target_field: Expressi
 def _field_derivative_sets(lagrangian: Expression, label: Expression, *, barred: bool) -> set[tuple[Expression, ...]]:
     pattern = bar_field_pattern(label) if barred else field_pattern(label)
     return {list_items(match[s.FieldDerivativesWildcard]) for match in lagrangian.match(pattern)}
+
+
+def _target_field_and_barred(target_field: Expression) -> tuple[Expression, bool]:
+    if is_bar_field(target_field):
+        return target_field[0], True
+    if is_head(target_field, s.Field):
+        return target_field, False
+    raise ValueError(f"Expected field or barred field target, got {canonical_string(target_field)}")
+
+
+def functional_derivative_operator(lagrangian: Expression, target_field: Expression) -> Expression:
+    """Return a variational derivative while preserving open derivatives.
+
+    This is the ordered-operator companion to :func:`partial_functional_derivative`.
+    When a variation hits a derivative of the target field, integration by
+    parts is represented by an ``OpenCD`` inside ``FuncNCM`` instead of being
+    applied immediately to the remaining expression.
+    """
+
+    base, barred = _target_field_and_barred(target_field)
+    derivative_sets = _field_derivative_sets(lagrangian, base[0], barred=barred)
+    derivative_sets.add(())
+
+    residual = Expression.num(0)
+    for derivatives in sorted(derivative_sets, key=lambda d: (len(d), tuple(canonical_string(x) for x in d))):
+        target = field_with_derivatives(base, derivatives)
+        if barred:
+            target = s.Bar(target)
+        partial = partial_functional_derivative(lagrangian, target)
+        if is_zero(partial):
+            continue
+        if len(derivatives) == 0:
+            residual = residual + partial
+            continue
+        residual = residual + ((-1) ** len(derivatives)) * func_ncm_expr(open_cd_expr(*tuple(reversed(derivatives))), partial)
+    return _normalize_functional_expression(residual)
+
+
+def second_functional_derivative_operator(
+    lagrangian: Expression,
+    left_target: Expression,
+    right_target: Expression,
+) -> Expression:
+    """Take two ordered variational derivatives of ``lagrangian``."""
+
+    first = functional_derivative_operator(lagrangian, left_target)
+    return functional_derivative_operator(first, right_target)
+
+
+def strip_free_lagrangian(theory: Theory, lagrangian: Expression, field_names: tuple[str, ...] | None = None) -> Expression:
+    """Subtract pychete's registered free Lagrangian terms from ``lagrangian``."""
+
+    selected = tuple(theory.fields) if field_names is None else field_names
+    return _normalize_functional_expression(lagrangian - theory.free_lag(*selected))
 
 
 def derive_eom(

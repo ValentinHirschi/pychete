@@ -56,12 +56,12 @@ def test_vlf_mathematica_asset_matches_python_asset_tree_result() -> None:
     assert_expr_equal(python_matched, expected)
 
 
-def test_matching_rejects_nonzero_loop_order_for_now() -> None:
+def test_matching_rejects_unsupported_loop_orders() -> None:
     theory, expressions, _ = _expected_vlf_tree_result("assets/models/VLF_toy_model.py")
 
     try:
-        theory.match(expressions["lagrangian"], eft_order=6, loop_order=1)
+        theory.match(expressions["lagrangian"], eft_order=6, loop_order=2)
     except NotImplementedError as exc:
-        assert "loop_order=0" in str(exc)
+        assert "supported loop orders" in str(exc)
     else:
-        raise AssertionError("expected nonzero loop order to be rejected")
+        raise AssertionError("expected unsupported loop order to be rejected")

@@ -299,3 +299,19 @@ def match_tree(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) ->
     replaced = _replace_heavy_fields(lagrangian, solutions)
     truncated = series_eft(replaced.expand(), theory, eft_order=eft_order, heavy_field_dimension=False)
     return canonicalize_fermion_derivative_bilinears(_normalize_matching_expression(truncated))
+
+
+def match_one_loop(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
+    """Return tree plus one-loop off-shell matching through ``eft_order``."""
+
+    from .one_loop import covariant_loop
+
+    return _normalize_matching_expression(match_tree(theory, lagrangian, eft_order=eft_order) + covariant_loop(theory, lagrangian, eft_order=eft_order))
+
+
+def match_loop_contribution(theory: Theory, lagrangian: Expression, *, eft_order: int = 6) -> Expression:
+    """Return the one-loop-only off-shell matching contribution."""
+
+    from .one_loop import covariant_loop
+
+    return _normalize_matching_expression(covariant_loop(theory, lagrangian, eft_order=eft_order))

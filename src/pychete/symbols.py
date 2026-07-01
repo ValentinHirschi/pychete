@@ -82,6 +82,22 @@ class SymbolStore:
         "LCTensor",
         "FlavorSum",
         "NCM",
+        "FuncNCM",
+        "OpenCD",
+        "Prop",
+        "LoopMom",
+        "LFFull",
+        "LF",
+        "WilsonLine",
+        "WilsonTerm",
+        "XTerm",
+        "MTerm",
+        "GaugeCTerm",
+        "PowerTypeSTr",
+        "LogTypeSTr",
+        "Transp",
+        "GammaCC",
+        "CConj",
         "DiracProduct",
         "Gamma",
         "Gamma5",
@@ -96,6 +112,19 @@ class SymbolStore:
         "AntiGhost",
         "Lorentz",
         "SpacetimeDimension",
+        "DimRegEpsilon",
+        "MuBar2",
+        "hbar",
+        "hScalar",
+        "lScalar",
+        "hFermion",
+        "lFermion",
+        "hVector",
+        "lVector",
+        "hGhost",
+        "lGhost",
+        "hAntiGhost",
+        "lAntiGhost",
         "U1",
         "SU",
         "fund",
@@ -225,6 +254,70 @@ class SymbolStore:
         return self.head("NCM", is_linear=True)
 
     @cached_property
+    def FuncNCM(self) -> Expression:
+        return self.head("FuncNCM", is_linear=True)
+
+    @cached_property
+    def OpenCD(self) -> Expression:
+        return self.head("OpenCD")
+
+    @cached_property
+    def Prop(self) -> Expression:
+        return self.head("Prop", is_scalar=True)
+
+    @cached_property
+    def LoopMom(self) -> Expression:
+        return self.head("LoopMom", is_scalar=True)
+
+    @cached_property
+    def LFFull(self) -> Expression:
+        return self.head("LFFull", is_scalar=True)
+
+    @cached_property
+    def LF(self) -> Expression:
+        return self.head("LF", is_scalar=True)
+
+    @cached_property
+    def WilsonLine(self) -> Expression:
+        return self.head("WilsonLine", is_scalar=True)
+
+    @cached_property
+    def WilsonTerm(self) -> Expression:
+        return self.head("WilsonTerm", is_scalar=True)
+
+    @cached_property
+    def XTerm(self) -> Expression:
+        return self.head("XTerm")
+
+    @cached_property
+    def MTerm(self) -> Expression:
+        return self.head("MTerm", is_scalar=True)
+
+    @cached_property
+    def GaugeCTerm(self) -> Expression:
+        return self.head("GaugeCTerm", is_scalar=True)
+
+    @cached_property
+    def PowerTypeSTr(self) -> Expression:
+        return self.head("PowerTypeSTr", is_scalar=True)
+
+    @cached_property
+    def LogTypeSTr(self) -> Expression:
+        return self.head("LogTypeSTr", is_scalar=True)
+
+    @cached_property
+    def Transp(self) -> Expression:
+        return self.head("Transp")
+
+    @cached_property
+    def GammaCC(self) -> Expression:
+        return self.head("GammaCC")
+
+    @cached_property
+    def CConj(self) -> Expression:
+        return self.head("CConj")
+
+    @cached_property
     def DiracProduct(self) -> Expression:
         return self.head("DiracProduct")
 
@@ -279,6 +372,58 @@ class SymbolStore:
     @cached_property
     def SpacetimeDimension(self) -> Expression:
         return self.head("SpacetimeDimension", is_scalar=True)
+
+    @cached_property
+    def DimRegEpsilon(self) -> Expression:
+        return self.head("DimRegEpsilon", is_scalar=True)
+
+    @cached_property
+    def MuBar2(self) -> Expression:
+        return self.head("MuBar2", is_scalar=True)
+
+    @cached_property
+    def hbar(self) -> Expression:
+        return self.head("hbar", is_scalar=True)
+
+    @cached_property
+    def hScalar(self) -> Expression:
+        return self.head("hScalar")
+
+    @cached_property
+    def lScalar(self) -> Expression:
+        return self.head("lScalar")
+
+    @cached_property
+    def hFermion(self) -> Expression:
+        return self.head("hFermion")
+
+    @cached_property
+    def lFermion(self) -> Expression:
+        return self.head("lFermion")
+
+    @cached_property
+    def hVector(self) -> Expression:
+        return self.head("hVector")
+
+    @cached_property
+    def lVector(self) -> Expression:
+        return self.head("lVector")
+
+    @cached_property
+    def hGhost(self) -> Expression:
+        return self.head("hGhost")
+
+    @cached_property
+    def lGhost(self) -> Expression:
+        return self.head("lGhost")
+
+    @cached_property
+    def hAntiGhost(self) -> Expression:
+        return self.head("hAntiGhost")
+
+    @cached_property
+    def lAntiGhost(self) -> Expression:
+        return self.head("lAntiGhost")
 
     @cached_property
     def U1(self) -> Expression:

@@ -131,18 +131,23 @@ def test_latex_spinor_derivatives_and_closed_ncm_chains_are_readable() -> None:
     phi = theory.define_field("phi", s.Scalar, self_conjugate=True, mass=0)
     psi = theory.define_field("psi", s.Fermion, mass=0)
     mu = theory.lorentz_index("mu")
+    nu = theory.lorentz_index("nu")
 
     assert s.CD(mu, phi()).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\phi"
     assert s.Bar(psi(derivatives=[mu])).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\bar{\psi}"
     assert s.CD(mu, s.Bar(psi())).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\bar{\psi}"
     assert s.Bar(s.CD(mu, psi())).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"D_{\mu}\bar{\psi}"
+    assert s.Gamma(mu, nu).format(mode=PrintMode.Latex, **FORMAT_OPTIONS) == r"\gamma^{\mu \nu}"
+    assert latex_string(s.Gamma(mu, nu)) == r"\gamma^{\mu \nu}"
     assert latex_string(s.CD(mu, phi()) ** 2) == r"\left(D_{\mu}\phi\right)^{2}"
     assert latex_string(s.CD(mu, s.CD(mu, phi()))) == r"D^{2}\phi"
     assert latex_string(phi(derivatives=[mu, mu])) == r"D^{2}\phi"
 
     closed_chain = ncm_expr(s.Bar(psi()), s.Gamma(mu), psi())
     open_chain = ncm_expr(s.Gamma(mu), psi())
+    multi_gamma_chain = ncm_expr(s.Bar(psi()), s.Gamma(mu, nu), psi())
     assert latex_string(closed_chain) == r"\left(\bar{\psi}\,\gamma^{\mu}\,\psi\right)"
+    assert latex_string(multi_gamma_chain) == r"\left(\bar{\psi}\,\gamma^{\mu \nu}\,\psi\right)"
     assert latex_string(phi() ** 2 * closed_chain) == (
         r"\phi^{2} \left(\bar{\psi}\,\gamma^{\mu}\,\psi\right)"
     )

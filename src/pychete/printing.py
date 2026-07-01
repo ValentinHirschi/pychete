@@ -366,8 +366,8 @@ def _print_ncm(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str
 
 def _print_gamma(expr: Expression, mode: PrintMode, kwargs: dict[str, Any]) -> str:
     args = tuple(_format_child(arg, mode, kwargs) for arg in _items(expr))
-    if mode is PrintMode.Latex and len(args) == 1:
-        return rf"\gamma^{{{args[0]}}}"
+    if mode is PrintMode.Latex and args:
+        return rf"\gamma^{{{' '.join(args)}}}"
     return _call("Gamma" if mode is PrintMode.Mathematica else "gamma", args, mode)
 
 
@@ -586,7 +586,33 @@ def _latex_expr(expr: Expression) -> str:
     args = tuple(_latex_expr(arg) for arg in _items(expr))
     if name == "List":
         return "{" + _join(args, PrintMode.Latex) + "}"
-    if name in {"InternalIndices", "DerivativeIndices", "LorentzIndices", "FlavorSum", "CG", "HeavyFieldOrder", "Vector", "SU", "U1"}:
+    if name in {
+        "InternalIndices",
+        "DerivativeIndices",
+        "LorentzIndices",
+        "FlavorSum",
+        "CG",
+        "HeavyFieldOrder",
+        "Vector",
+        "SU",
+        "U1",
+        "FuncNCM",
+        "OpenCD",
+        "Prop",
+        "LoopMom",
+        "LFFull",
+        "LF",
+        "WilsonLine",
+        "WilsonTerm",
+        "XTerm",
+        "MTerm",
+        "GaugeCTerm",
+        "PowerTypeSTr",
+        "LogTypeSTr",
+        "Transp",
+        "GammaCC",
+        "CConj",
+    }:
         return _latex_call("HFO" if name == "HeavyFieldOrder" else name, args)
     if name == "Field":
         return _latex_field_like(expr)
@@ -620,8 +646,8 @@ def _latex_expr(expr: Expression) -> str:
     if name in {"NCM", "DiracProduct"}:
         chain = r"\,".join(args)
         return rf"\left({chain}\right)" if _is_closed_ncm_chain(expr) else chain
-    if name == "Gamma" and len(args) == 1:
-        return rf"\gamma^{{{args[0]}}}"
+    if name == "Gamma" and args:
+        return rf"\gamma^{{{' '.join(args)}}}"
     if name == "EOM" and len(args) == 2:
         return rf"\mathrm{{EOM}}\left[{args[0]}\right]={args[1]}"
     return _latex_call(name, args)
@@ -653,6 +679,22 @@ def print_builtin(expr: Expression, mode: PrintMode, **kwargs: Any) -> str | Non
         "LCTensor": lambda: _print_lc_tensor(expr, mode, kwargs),
         "FlavorSum": lambda: _call("FlavorSum", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "NCM": lambda: _print_ncm(expr, mode, kwargs),
+        "FuncNCM": lambda: _print_ncm(expr, mode, kwargs),
+        "OpenCD": lambda: _call("OpenCD", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "Prop": lambda: _call("Prop", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "LoopMom": lambda: _call("LoopMom", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "LFFull": lambda: _call("LFFull", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "LF": lambda: _call("LF", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "WilsonLine": lambda: _call("WilsonLine", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "WilsonTerm": lambda: _call("WilsonTerm", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "XTerm": lambda: _call("XTerm", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "MTerm": lambda: _call("MTerm", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "GaugeCTerm": lambda: _call("GaugeCTerm", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "PowerTypeSTr": lambda: _call("PowerTypeSTr", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "LogTypeSTr": lambda: _call("LogTypeSTr", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "Transp": lambda: _call("Transp", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "GammaCC": lambda: _call("GammaCC", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
+        "CConj": lambda: _call("CConj", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
         "DiracProduct": lambda: _print_ncm(expr, mode, kwargs),
         "Gamma": lambda: _print_gamma(expr, mode, kwargs),
         "CG": lambda: _call("CG", tuple(_format_child(arg, mode, kwargs) for arg in _items(expr)), mode),
@@ -676,6 +718,19 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
         "SpacetimeDimension": "d",
+        "DimRegEpsilon": "epsilon",
+        "MuBar2": "MuBar2",
+        "hbar": "hbar",
+        "hScalar": "hScalar",
+        "lScalar": "lScalar",
+        "hFermion": "hFermion",
+        "lFermion": "lFermion",
+        "hVector": "hVector",
+        "lVector": "lVector",
+        "hGhost": "hGhost",
+        "lGhost": "lGhost",
+        "hAntiGhost": "hAntiGhost",
+        "lAntiGhost": "lAntiGhost",
         "U1": "U1",
         "SU": "SU",
         "fund": "fund",
@@ -695,6 +750,19 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
         "SpacetimeDimension": "d",
+        "DimRegEpsilon": "epsilon",
+        "MuBar2": "MuBar2",
+        "hbar": "hbar",
+        "hScalar": "hScalar",
+        "lScalar": "lScalar",
+        "hFermion": "hFermion",
+        "lFermion": "lFermion",
+        "hVector": "hVector",
+        "lVector": "lVector",
+        "hGhost": "hGhost",
+        "lGhost": "lGhost",
+        "hAntiGhost": "hAntiGhost",
+        "lAntiGhost": "lAntiGhost",
         "U1": "U1",
         "SU": "SU",
         "fund": "fund",
@@ -714,6 +782,19 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
         "SpacetimeDimension": "d",
+        "DimRegEpsilon": r"\[Epsilon]",
+        "MuBar2": r"\[Mu]bar2",
+        "hbar": "hbar",
+        "hScalar": "hScalar",
+        "lScalar": "lScalar",
+        "hFermion": "hFermion",
+        "lFermion": "lFermion",
+        "hVector": "hVector",
+        "lVector": "lVector",
+        "hGhost": "hGhost",
+        "lGhost": "lGhost",
+        "hAntiGhost": "hAntiGhost",
+        "lAntiGhost": "lAntiGhost",
         "U1": "U1",
         "SU": "SU",
         "fund": "Fund",
@@ -733,6 +814,19 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "AntiGhost": r"\mathrm{AntiGhost}",
         "Lorentz": r"\mathrm{Lorentz}",
         "SpacetimeDimension": "d",
+        "DimRegEpsilon": r"\epsilon",
+        "MuBar2": r"\bar{\mu}^{2}",
+        "hbar": r"\hbar",
+        "hScalar": r"h\mathrm{Scalar}",
+        "lScalar": r"l\mathrm{Scalar}",
+        "hFermion": r"h\mathrm{Fermion}",
+        "lFermion": r"l\mathrm{Fermion}",
+        "hVector": r"h\mathrm{Vector}",
+        "lVector": r"l\mathrm{Vector}",
+        "hGhost": r"h\mathrm{Ghost}",
+        "lGhost": r"l\mathrm{Ghost}",
+        "hAntiGhost": r"h\mathrm{AntiGhost}",
+        "lAntiGhost": r"l\mathrm{AntiGhost}",
         "U1": r"\mathrm{U}(1)",
         "SU": r"\mathrm{SU}",
         "fund": r"\mathbf{fund}",
@@ -752,6 +846,19 @@ _BUILTIN_VARIABLE_PRINT_NAMES: dict[str, dict[str, str]] = {
         "AntiGhost": "AntiGhost",
         "Lorentz": "Lorentz",
         "SpacetimeDimension": "d",
+        "DimRegEpsilon": "epsilon",
+        "MuBar2": "mu_bar^2",
+        "hbar": "hbar",
+        "hScalar": "hScalar",
+        "lScalar": "lScalar",
+        "hFermion": "hFermion",
+        "lFermion": "lFermion",
+        "hVector": "hVector",
+        "lVector": "lVector",
+        "hGhost": "hGhost",
+        "lGhost": "lGhost",
+        "hAntiGhost": "hAntiGhost",
+        "lAntiGhost": "lAntiGhost",
         "U1": "U1",
         "SU": "SU",
         "fund": "fund",

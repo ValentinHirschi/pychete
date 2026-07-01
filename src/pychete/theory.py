@@ -837,20 +837,28 @@ class Theory:
 
         return solve_heavy_fermion_eoms(self, lagrangian, eft_order=eft_order)
 
-    def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int = 0) -> Expression:
+    def match(self, lagrangian: Expression, *, eft_order: int = 6, loop_order: int | tuple[int, ...] = 0) -> Expression:
         """Integrate out heavy fields at the requested loop order.
 
         The result is a matched light-field Lagrangian truncated through
-        ``eft_order``. Only tree-level matching, ``loop_order=0``, is currently
-        implemented.
+        ``eft_order``. ``loop_order=0`` returns the tree-level result,
+        ``loop_order=1`` returns tree plus one-loop terms, and
+        ``loop_order=(1,)`` returns the one-loop contribution alone.
         """
 
-        if loop_order != 0:
-            raise NotImplementedError("pychete currently implements only tree-level matching with loop_order=0")
+        if loop_order == 0:
+            from .matching import match_tree
 
-        from .matching import match_tree
+            return match_tree(self, lagrangian, eft_order=eft_order)
+        if loop_order == 1:
+            from .matching import match_one_loop
 
-        return match_tree(self, lagrangian, eft_order=eft_order)
+            return match_one_loop(self, lagrangian, eft_order=eft_order)
+        if loop_order == (1,):
+            from .matching import match_loop_contribution
+
+            return match_loop_contribution(self, lagrangian, eft_order=eft_order)
+        raise NotImplementedError("supported loop orders are 0, 1, and (1,)")
 
     def _repr_latex_(self) -> str:
         return rf"$\mathrm{{Theory}}\left({self.name}\right)$"
